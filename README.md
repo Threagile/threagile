@@ -1,4 +1,4 @@
-# threagile
+# Threagile
 #### Agile Threat Modeling Toolkit
 
 Threagile (see [https://threagile.io](https://threagile.io) for more details) is an open-source toolkit for 

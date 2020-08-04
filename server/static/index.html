@@ -1,0 +1,88 @@
+<html>
+<head>
+    <title>Threagile - Agile Threat Modeling</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <style>
+        body {
+            background: white;
+            font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+            font-weight: 300;
+            font-size: 1.8em;
+            color: #5a5a5a;
+        }
+    </style>
+</head>
+<body>
+
+<table width="100%" height="100%" border="0">
+    <tr>
+        <td align="center" valign="bottom">
+            <img border="0" src="threagile.png" width="300"/>
+        </td>
+    </tr>
+    <tr>
+        <td height="5%"></td>
+    </tr>
+    <tr>
+        <td align="center" valign="middle" style="font-size: 1.2em;">
+            Analyze either <br/>
+            the YAML model file directly or <br/>
+            a ZIP archive with resources included:
+        </td>
+    </tr>
+    <tr>
+        <td align="center" valign="top">
+            <form action="/direct/analyze" enctype="multipart/form-data" method="POST">
+                <label class="file">
+                    <input type="file" id="file" name="file" accept="*">
+                    <button type="Analyze">Analyze</button>
+                </label>
+            </form>
+        </td>
+    </tr>
+    <tr>
+        <td height="5%"></td>
+    </tr>
+    <tr>
+        <td align="center" valign="top" style="font-size: 1em;">
+            Example model: <a href="threagile-example-model.yaml">threagile-example-model.yaml</a> <br/>
+            Minimal stub model: <a href="threagile-stub-model.yaml">threagile-stub-model.yaml</a>
+        </td>
+    </tr>
+    <tr>
+        <td height="5%"></td>
+    </tr>
+    <tr>
+        <td align="center" valign="top" style="font-size: 1em;">
+            Enable YAML autocompletion and validation<br/>for models in your IDE via <a
+                    href="schema.json">schema.json</a>.<br/>
+        </td>
+    </tr>
+    <tr>
+        <td height="5%"></td>
+    </tr>
+    <tr>
+        <td align="center" valign="top" style="font-size: 1em;">
+            Code snippets like <a href="live-templates.txt">live-templates.txt</a> might<br/> be a nice
+            addition for asset skeletons in your IDE.
+        </td>
+    </tr>
+    <tr>
+        <td height="5%"></td>
+    </tr>
+    <tr>
+        <td align="center" valign="top" style="font-size: 1em;">
+            Looking for the API?<br/>
+            See <a href="openapi.yaml">openapi.yaml</a> &amp; <a href="swagger-ui">swagger-ui</a>.
+        </td>
+    </tr>
+    <tr>
+        <td height="5%"></td>
+    </tr>
+</table>
+
+</body>
+</html>
