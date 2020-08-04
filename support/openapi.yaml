@@ -1,0 +1,318 @@
+openapi: 3.0.3
+
+info:
+  title: Threagile API
+  description: "<b>Threagile API</b> for Agile Threat Modeling: visit <a href=\"https://threagile.io\">https://threagile.io</a> for more information."
+  version: 1.0.0
+
+servers:
+  - url: /
+    description: Threagile Server
+
+tags:
+  - name: "direct"
+    description: "Direct one-shot calls for on-the-fly analyzing and checking of models"
+  - name: "meta"
+    description: "Meta infos about types and version"
+  - name: "auth"
+    description: "Auth calls for crypto key and token management"
+  - name: "models"
+    description: "Persistent model creation and handling stuff"
+
+paths:
+  /meta/ping:
+    get:
+      tags:
+        - "meta"
+      summary: Simple health check ping
+      description: Used as health check in docker container as well
+      responses:
+        '200':
+          description: Simple pong response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: pong
+  /meta/version:
+    get:
+      tags:
+        - "meta"
+      summary: Version number
+      description: Version number
+      responses:
+        '200':
+          description: Version number
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  version:
+                    type: string
+                    example: 1.0.0
+                  build_timestamp:
+                    type: string
+                    example: 20200518160456
+  /meta/types:
+    get:
+      tags:
+        - "meta"
+      summary: Listing of all enum type values
+      description: Listing of all enum type values
+      responses:
+        '200':
+          description: Listing of all enum type values (example here shows just one)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  confidentiality:
+                    type: array
+                    items:
+                      type: string
+                    example: [public, internal, restricted, confidential, strictly-confidential]
+  /meta/stats:
+    get:
+      tags:
+        - "meta"
+      summary: Model statistics
+      description: Model statistics
+      responses:
+        '200':
+          description: Model statistics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  key_count:
+                    type: integer
+                    example: 13
+                  model_count:
+                    type: integer
+                    example: 42
+                  execution_count:
+                    type: integer
+                    example: 123
+  /direct/stub:
+    get:
+      tags:
+        - "direct"
+      summary: Stub model file
+      description: Stub model file (as a starting point)
+      responses:
+        '200':
+          description: Stub model file
+          content:
+            application/x-yaml:
+              schema:
+                type: string
+  /direct/check:
+    post:
+      tags:
+        - "direct"
+      summary: Direct model check call
+      description: Direct model check call
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Model ok response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: model is ok
+        '400':
+          description: Model not ok response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Missing referenced data asset target: some-stuff"
+  /direct/analyze:
+    post:
+      tags:
+        - "direct"
+      summary: Direct model analyze call
+      description: Direct model analyze call
+      parameters:
+        - in: query
+          name: dpi
+          required: false
+          example: 120
+          schema:
+            type: integer
+          description: The DPI (resolution) to use for the diagram generation
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Model analyzing result response (zipped)
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: Model not ok response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Missing referenced data asset target: some-stuff"
+  /auth/keys:
+    post:
+      tags:
+        - "auth"
+      summary: Create a new auth key
+      description: Create a new auth key
+      responses:
+        '201':
+          description: Key successfully created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  key:
+                    type: string
+                    example: BtM1Q7V47d4B3TrVSw1133CIyL1NUpUM2tJ92vfZMMQ
+        '500':
+          description: Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: unable to create key
+    delete:
+      tags:
+        - "auth"
+      summary: Delete an auth key
+      description: Delete an auth key
+      parameters:
+        - in: header
+          name: key
+          schema:
+            type: string
+          required: true
+          example: BtM1Q7V47d4B3TrVSw1133CIyL1NUpUM2tJ92vfZMMQ
+      responses:
+        '200':
+          description: Key successfully deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: key deleted
+        '404':
+          description: Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: key not found
+  /auth/tokens:
+    post:
+      tags:
+        - "auth"
+      summary: Create a new (time limited) token from an auth key
+      description: Create a new (time limited) token from an auth key
+      parameters:
+        - in: header
+          name: key
+          schema:
+            type: string
+          required: true
+          example: BtM1Q7V47d4B3TrVSw1133CIyL1NUpUM2tJ92vfZMMQ
+      responses:
+        '201':
+          description: Token successfully created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    example: QrlcoMOtjy_h38T2N6JjrWpb4Kodg3Y7NnLN2yiDb69
+        '500':
+          description: Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: unable to create token
+    delete:
+      tags:
+        - "auth"
+      summary: Delete a token
+      description: Delete a token
+      parameters:
+        - in: header
+          name: token
+          schema:
+            type: string
+          required: true
+          example: QrlcoMOtjy_h38T2N6JjrWpb4Kodg3Y7NnLN2yiDb69
+      responses:
+        '200':
+          description: Token successfully deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: token deleted
+        '404':
+          description: Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: token not found
