@@ -1,0 +1,265 @@
+Nice live templates for your IDE:
+
+For IntelliJ IDE see for example: https://blog.jetbrains.com/webstorm/2018/01/using-and-creating-code-snippets/
+Other IDEs like Eclipse, Visual Studio and YAML-supporting text editors like Atom and Sublime have similar template features.
+
+
+
+====================================================
+Live template for a model base:
+====================================================
+
+threagile_version: 1.0.0
+
+title: $title$
+
+date:
+
+author:
+  name: $name$
+  homepage:
+
+
+management_summary_comment:
+
+business_criticality: $business_criticality$
+
+
+business_overview:
+  description: Some more demo text here and even images...
+  images:
+#    - custom-image-1.png: Some dummy image 1
+#    - custom-image-2.png: Some dummy image 2
+
+
+technical_overview:
+  description: Some more demo text here and even images...
+  images:
+#    - custom-image-1.png: Some dummy image 1
+#    - custom-image-2.png: Some dummy image 2
+
+
+questions: # simply use "" as answer to signal "unanswered"
+#  Some question without an answer?: ""
+#  Some question with an answer?: Some answer
+
+
+abuse_cases:
+  Denial-of-Service: >
+    As a hacker I want to disturb the functionality of the backend system in order to cause indirect
+    financial damage via unusable features.
+  CPU-Cycle Theft: >
+    As a hacker I want to steal CPU cycles in order to transform them into money via installed crypto currency miners.
+  Ransomware: >
+    As a hacker I want to encrypt the storage and file systems in order to demand ransom.
+  Identity Theft: >
+    As a hacker I want to steal identity data in order to reuse credentials and/or keys on other targets of the same company or outside.
+  PII Theft: >
+    As a hacker I want to steal PII (Personally Identifiable Information) data in order to blackmail the company and/or damage
+    their repudiation by publishing the stolen data.
+
+
+security_requirements:
+  Input Validation: Strict input validation is required to reduce the overall attack surface.
+  EU-GDPR: Mandatory EU-GDPR
+
+
+# Tags can be used for anything, it's just a tag. Also risk rules can act based on tags if you like.
+tags_available:
+
+
+data_assets:
+
+$END$
+
+
+technical_assets:
+
+
+trust_boundaries:
+
+
+shared_runtimes:
+
+
+individual_risk_categories:
+
+
+# NOTE:
+# For risk tracking each risk-id needs to be defined (the string with the @ sign in it). These unique risk IDs
+# are visible in the PDF report (the small grey string under each risk), the Excel (column "ID"), as well as the JSON responses.
+# Some risk IDs have only one @ sign in them, while others multiple. The idea is to allow for unique but still speaking IDs.
+# Therefore each risk instance creates its individual ID by taking all affected elements causing the risk to be within an @-delimited part.
+# Using wildcards (the * sign) for parts delimited by @ signs allows to handle groups of certain risks at once. Best is to lookup the IDs
+# to use in the created Excel file. Alternatively a model macro "seed-risk-tracking" is available that helps in initially
+# seeding the risk tracking part here based on already identified and not yet handled risks.
+risk_tracking:
+
+
+
+
+
+====================================================
+Live template for a data asset:
+====================================================
+
+  $DataAssetName$:
+    id: $id$
+    description: $END$
+    usage: $usage$
+    tags:
+    origin:
+    owner:
+    quantity: $quantity$
+    confidentiality: $confidentiality$
+    integrity: $integrity$
+    availability: $availability$
+    justification_cia_rating:
+
+
+
+
+
+====================================================
+Live template for a technical asset:
+====================================================
+
+  $TechnicalAssetName$:
+    id: $id$
+    description: $END$
+    type: $type$
+    usage: $usage$
+    used_as_client_by_human: $used_as_client_by_human$
+    out_of_scope: false
+    justification_out_of_scope:
+    size: $size$
+    technology: $technology$
+    tags: $tags$
+    internet: $internet$
+    machine: $machine$
+    encryption: $encryption$
+    owner:
+    confidentiality: $confidentiality$
+    integrity: $integrity$
+    availability: $availability$
+    justification_cia_rating:
+    multi_tenant: $multi_tenant$
+    redundant: $redundant$
+    custom_developed_parts: $custom_developed_parts$
+    data_assets_processed: # sequence of IDs to reference
+    data_assets_stored: # sequence of IDs to reference
+    data_formats_accepted:
+    communication_links:
+
+
+
+
+
+====================================================
+Live template for a communication link:
+====================================================
+
+      $CommunicationLinkName$:
+        target: $target_id$
+        description: $END$
+        protocol: $protocol$
+        authentication: $authentication$
+        authorization: $authorization$
+        tags: $tags$
+        vpn: $vpn$
+        ip_filtered: $ip_filtered$
+        readonly: $readonly$
+        usage: $usage$
+        data_assets_sent: # sequence of IDs to reference
+        data_assets_received: # sequence of IDs to reference
+
+
+
+
+
+====================================================
+Live template for a trust boundary:
+====================================================
+
+  $TrustBoundaryName$:
+    id: $id$
+    description: $END$
+    type: $type$
+    tags: $tags$
+    technical_assets_inside: # sequence of IDs to reference
+    trust_boundaries_nested: # sequence of IDs to reference
+
+
+
+
+
+====================================================
+Live template for a shared runtime:
+====================================================
+
+  $SharedRuntimeName$:
+    id: $id$
+    description: $END$
+    tags: $tags$
+    technical_assets_running: # sequence of IDs to reference
+
+
+
+
+
+====================================================
+Live template for an individual risk category:
+====================================================
+
+  $IndividualRiskCategoryName$:
+    id: $id$
+    description: $END$
+    impact:
+    asvs:
+    cheat_sheet:
+    action:
+    mitigation:
+    check:
+    function: $function$
+    stride: $stride$
+    detection_logic:
+    risk_assessment:
+    false_positives:
+    model_failure_possible_reason: $model_failure_possible_reason$
+    cwe: $cwe$
+    risks_identified:
+
+
+
+
+
+====================================================
+Live template for an individual risk instance:
+====================================================
+
+      $IndividualRiskInstanceName$:
+        severity: $severity$
+        exploitation_likelihood: $exploitation_likelihood$
+        exploitation_impact: $exploitation_impact$
+        data_loss_probability: $data_loss_probability$
+        data_loss_technical_assets: # list of technical asset IDs which might have data loss
+          $END$
+        most_relevant_data_asset: $most_relevant_data_asset$
+        most_relevant_technical_asset: $most_relevant_technical_asset$
+        most_relevant_trust_boundary: $most_relevant_trust_boundary$
+        most_relevant_shared_runtime: $most_relevant_shared_runtime$
+
+
+
+
+
+====================================================
+Live template for a risk tracking:
+====================================================
+
+  $RiskID$: # wildcards "*" between the @ characters are possible
+    status: $status$
+    justification: $END$
+    ticket:
+    date:
+    checked_by:

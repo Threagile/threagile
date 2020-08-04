@@ -1,0 +1,1179 @@
+{
+  "$schema": "https://threagile.io/schema#",
+  "id": "https://threagile.io/schema.json",
+  "title": "Threagile",
+  "description": "Agile Threat Modeling",
+  "type": "object",
+  "properties": {
+    "threagile_version": {
+      "description": "Version of the Threagile toolkit",
+      "type": "string"
+    },
+    "title": {
+      "description": "Title of the model",
+      "type": "string"
+    },
+    "date": {
+      "description": "Date of the model",
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date"
+    },
+    "author": {
+      "description": "Author of the model",
+      "type": "object",
+      "properties": {
+        "name": {
+          "description": "Author name",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "homepage": {
+          "description": "Author homepage",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "name"
+      ]
+    },
+    "management_summary_comment": {
+      "description": "Individual management summary for the report",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "business_criticality": {
+      "description": "Business criticality of the target",
+      "type": "string",
+      "enum": [
+        "archive",
+        "operational",
+        "important",
+        "critical",
+        "mission-critical"
+      ]
+    },
+    "business_overview": {
+      "description": "Individual business overview for the report",
+      "type": "object",
+      "properties": {
+        "description": {
+          "description": "Individual business overview for the report",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "images": {
+          "description": "Custom images for the report",
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true
+        }
+      }
+    },
+    "technical_overview": {
+      "description": "Individual technical overview for the report",
+      "type": "object",
+      "properties": {
+        "description": {
+          "description": "Individual technical overview for the report",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "images": {
+          "description": "Custom images for the report",
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true
+        }
+      }
+    },
+    "questions": {
+      "description": "Custom questions for the report",
+      "type": [
+        "object",
+        "null"
+      ],
+      "uniqueItems": true
+    },
+    "abuse_cases": {
+      "description": "Custom abuse cases for the report",
+      "type": [
+        "object",
+        "null"
+      ],
+      "uniqueItems": true
+    },
+    "security_requirements": {
+      "description": "Custom security requirements for the report",
+      "type": [
+        "object",
+        "null"
+      ],
+      "uniqueItems": true
+    },
+    "tags_available": {
+      "description": "Tags available",
+      "type": [
+        "array",
+        "null"
+      ],
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    },
+    "data_assets": {
+      "description": "Data assets",
+      "type": "object",
+      "uniqueItems": true,
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "description": "ID",
+            "type": "string"
+          },
+          "description": {
+            "description": "Description",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "usage": {
+            "description": "Usage",
+            "type": "string",
+            "enum": [
+              "business",
+              "devops"
+            ]
+          },
+          "tags": {
+            "description": "Tags",
+            "type": [
+              "array",
+              "null"
+            ],
+            "uniqueItems": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "origin": {
+            "description": "Origin",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "owner": {
+            "description": "Owner",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "quantity": {
+            "description": "Quantity",
+            "type": "string",
+            "enum": [
+              "very-few",
+              "few",
+              "many",
+              "very-many"
+            ]
+          },
+          "confidentiality": {
+            "description": "Confidentiality",
+            "type": "string",
+            "enum": [
+              "public",
+              "internal",
+              "restricted",
+              "confidential",
+              "strictly-confidential"
+            ]
+          },
+          "integrity": {
+            "description": "Integrity",
+            "type": "string",
+            "enum": [
+              "archive",
+              "operational",
+              "important",
+              "critical",
+              "mission-critical"
+            ]
+          },
+          "availability": {
+            "description": "Availability",
+            "type": "string",
+            "enum": [
+              "archive",
+              "operational",
+              "important",
+              "critical",
+              "mission-critical"
+            ]
+          },
+          "justification_cia_rating": {
+            "description": "Justification of the rating",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "description",
+          "usage",
+          "quantity",
+          "confidentiality",
+          "integrity",
+          "availability"
+        ]
+      }
+    },
+    "technical_assets": {
+      "description": "Technical assets",
+      "type": "object",
+      "uniqueItems": true,
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "description": "ID",
+            "type": "string"
+          },
+          "description": {
+            "description": "Description",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "type": {
+            "description": "Type",
+            "type": "string",
+            "enum": [
+              "external-entity",
+              "process",
+              "datastore"
+            ]
+          },
+          "usage": {
+            "description": "Usage",
+            "type": "string",
+            "enum": [
+              "business",
+              "devops"
+            ]
+          },
+          "used_as_client_by_human": {
+            "description": "Used as client by human",
+            "type": "boolean"
+          },
+          "out_of_scope": {
+            "description": "Out of scope",
+            "type": "boolean"
+          },
+          "justification_out_of_scope": {
+            "description": "Justification of out of scope",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "size": {
+            "description": "Size",
+            "type": "string",
+            "enum": [
+              "system",
+              "service",
+              "application",
+              "component"
+            ]
+          },
+          "technology": {
+            "description": "Technology",
+            "type": "string",
+            "enum": [
+              "unknown-technology",
+              "client-system",
+              "browser",
+              "desktop",
+              "mobile-app",
+              "devops-client",
+              "web-server",
+              "web-application",
+              "application-server",
+              "database",
+              "file-server",
+              "local-file-system",
+              "erp",
+              "cms",
+              "web-service-rest",
+              "web-service-soap",
+              "ejb",
+              "search-index",
+              "search-engine",
+              "service-registry",
+              "reverse-proxy",
+              "load-balancer",
+              "build-pipeline",
+              "sourcecode-repository",
+              "artifact-registry",
+              "code-inspection-platform",
+              "monitoring",
+              "ldap-server",
+              "container-platform",
+              "batch-processing",
+              "event-listener",
+              "identity-provider",
+              "identity-store-ldap",
+              "identity-store-database",
+              "tool",
+              "cli",
+              "task",
+              "function",
+              "gateway",
+              "iot-device",
+              "message-queue",
+              "stream-processing",
+              "service-mesh",
+              "data-lake",
+              "report-engine",
+              "ai",
+              "mail-server",
+              "vault",
+              "hsm",
+              "waf",
+              "ids",
+              "ips",
+              "scheduler",
+              "mainframe",
+              "block-storage",
+              "library"
+            ]
+          },
+          "tags": {
+            "description": "Tags",
+            "type": [
+              "array",
+              "null"
+            ],
+            "uniqueItems": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "internet": {
+            "description": "Internet",
+            "type": "boolean"
+          },
+          "machine": {
+            "description": "Machine",
+            "type": "string",
+            "enum": [
+              "physical",
+              "virtual",
+              "container",
+              "serverless"
+            ]
+          },
+          "encryption": {
+            "description": "Encryption",
+            "type": "string",
+            "enum": [
+              "none",
+              "transparent",
+              "data-with-symmetric-shared-key",
+              "data-with-asymmetric-shared-key",
+              "data-with-enduser-individual-key"
+            ]
+          },
+          "owner": {
+            "description": "Owner",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "confidentiality": {
+            "description": "Confidentiality",
+            "type": "string",
+            "enum": [
+              "public",
+              "internal",
+              "restricted",
+              "confidential",
+              "strictly-confidential"
+            ]
+          },
+          "integrity": {
+            "description": "Integrity",
+            "type": "string",
+            "enum": [
+              "archive",
+              "operational",
+              "important",
+              "critical",
+              "mission-critical"
+            ]
+          },
+          "availability": {
+            "description": "Availability",
+            "type": "string",
+            "enum": [
+              "archive",
+              "operational",
+              "important",
+              "critical",
+              "mission-critical"
+            ]
+          },
+          "justification_cia_rating": {
+            "description": "Justification of the rating",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "multi_tenant": {
+            "description": "Multi tenant",
+            "type": "boolean"
+          },
+          "redundant": {
+            "description": "Redundant",
+            "type": "boolean"
+          },
+          "custom_developed_parts": {
+            "description": "Custom developed parts",
+            "type": "boolean"
+          },
+          "data_assets_processed": {
+            "description": "Data assets processed",
+            "type": [
+              "array",
+              "null"
+            ],
+            "uniqueItems": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "data_assets_stored": {
+            "description": "Data assets stored",
+            "type": [
+              "array",
+              "null"
+            ],
+            "uniqueItems": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "data_formats_accepted": {
+            "description": "Data formats accepted",
+            "type": [
+              "array",
+              "null"
+            ],
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "enum": [
+                "json",
+                "xml",
+                "serialization",
+                "file",
+                "csv"
+              ]
+            }
+          },
+          "diagram_tweak_order": {
+            "description": "diagram tweak order (affects left to right positioning)",
+            "type": "integer"
+          },
+          "communication_links": {
+            "description": "Communication links",
+            "type": [
+              "object",
+              "null"
+            ],
+            "uniqueItems": true,
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "target": {
+                  "description": "Target",
+                  "type": "string"
+                },
+                "description": {
+                  "description": "Description",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "protocol": {
+                  "description": "Protocol",
+                  "type": "string",
+                  "enum": [
+                    "unknown-protocol",
+                    "http",
+                    "https",
+                    "ws",
+                    "wss",
+                    "reverse-proxy-web-protocol",
+                    "reverse-proxy-web-protocol-encrypted",
+                    "mqtt",
+                    "jdbc",
+                    "jdbc-encrypted",
+                    "odbc",
+                    "odbc-encrypted",
+                    "sql-access-protocol",
+                    "sql-access-protocol-encrypted",
+                    "nosql-access-protocol",
+                    "nosql-access-protocol-encrypted",
+                    "binary",
+                    "binary-encrypted",
+                    "text",
+                    "text-encrypted",
+                    "ssh",
+                    "ssh-tunnel",
+                    "smtp",
+                    "smtp-encrypted",
+                    "pop3",
+                    "pop3-encrypted",
+                    "imap",
+                    "imap-encrypted",
+                    "ftp",
+                    "ftps",
+                    "sftp",
+                    "scp",
+                    "ldap",
+                    "ldaps",
+                    "jms",
+                    "nfs",
+                    "smb",
+                    "smb-encrypted",
+                    "local-file-access",
+                    "nrpe",
+                    "xmpp",
+                    "iiop",
+                    "iiop-encrypted",
+                    "jrmp",
+                    "jrmp-encrypted",
+                    "in-process-library-call",
+                    "container-spawning"
+                  ]
+                },
+                "authentication": {
+                  "description": "Authentication",
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "credentials",
+                    "session-id",
+                    "token",
+                    "client-certificate",
+                    "two-factor",
+                    "externalized"
+                  ]
+                },
+                "authorization": {
+                  "description": "Authorization",
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "technical-user",
+                    "enduser-identity-propagation"
+                  ]
+                },
+                "tags": {
+                  "description": "Tags",
+                  "type": [
+                    "array",
+                    "null"
+                  ],
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "vpn": {
+                  "description": "VPN",
+                  "type": "boolean"
+                },
+                "ip_filtered": {
+                  "description": "IP filtered",
+                  "type": "boolean"
+                },
+                "readonly": {
+                  "description": "readonly",
+                  "type": "boolean"
+                },
+                "usage": {
+                  "description": "Usage",
+                  "type": "string",
+                  "enum": [
+                    "business",
+                    "devops"
+                  ]
+                },
+                "data_assets_sent": {
+                  "description": "Data assets sent",
+                  "type": [
+                    "array",
+                    "null"
+                  ],
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "data_assets_received": {
+                  "description": "Data assets received",
+                  "type": [
+                    "array",
+                    "null"
+                  ],
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "diagram_tweak_weight": {
+                  "description": "diagram tweak weight",
+                  "type": "integer"
+                },
+                "diagram_tweak_constraint": {
+                  "description": "diagram tweak constraint",
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "target",
+                "description",
+                "protocol",
+                "authentication",
+                "authorization",
+                "vpn",
+                "ip_filtered",
+                "readonly",
+                "usage",
+                "data_assets_sent",
+                "data_assets_received"
+              ]
+            }
+          },
+          "required": [
+            "id",
+            "description",
+            "type",
+            "usage",
+            "used_as_client_by_human",
+            "out_of_scope",
+            "size",
+            "technology",
+            "internet",
+            "machine",
+            "encryption",
+            "owner",
+            "confidentiality",
+            "integrity",
+            "availability",
+            "multi_tenant",
+            "redundant",
+            "custom_developed_parts",
+            "data_assets_processed",
+            "data_assets_stored",
+            "data_formats_accepted",
+            "communication_links"
+          ]
+        }
+      }
+    },
+    "trust_boundaries": {
+      "description": "Trust boundaries",
+      "type": "object",
+      "uniqueItems": true,
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "description": "ID",
+            "type": "string"
+          },
+          "description": {
+            "description": "Description",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "type": {
+            "description": "Type",
+            "type": "string",
+            "enum": [
+              "network-on-prem",
+              "network-dedicated-hoster",
+              "network-virtual-lan",
+              "network-cloud-provider",
+              "network-cloud-security-group",
+              "network-policy-namespace-isolation",
+              "execution-environment"
+            ]
+          },
+          "tags": {
+            "description": "Tags",
+            "type": [
+              "array",
+              "null"
+            ],
+            "uniqueItems": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "technical_assets_inside": {
+            "description": "Technical assets inside",
+            "type": [
+              "array",
+              "null"
+            ],
+            "uniqueItems": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "trust_boundaries_nested": {
+            "description": "Trust boundaries nested",
+            "type": [
+              "array",
+              "null"
+            ],
+            "uniqueItems": true,
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "description",
+          "type",
+          "technical_assets_inside",
+          "trust_boundaries_nested"
+        ]
+      }
+    },
+    "shared_runtimes": {
+      "description": "Shared runtimes",
+      "type": "object",
+      "uniqueItems": true,
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "description": "ID",
+            "type": "string"
+          },
+          "description": {
+            "description": "Description",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "tags": {
+            "description": "Tags",
+            "type": [
+              "array",
+              "null"
+            ],
+            "uniqueItems": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "technical_assets_running": {
+            "description": "Technical assets running",
+            "type": [
+              "array",
+              "null"
+            ],
+            "uniqueItems": true,
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "description",
+          "technical_assets_running"
+        ]
+      }
+    },
+    "individual_risk_categories": {
+      "description": "Individual risk categories",
+      "type": [
+        "object",
+        "null"
+      ],
+      "uniqueItems": true,
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "description": "ID",
+            "type": "string"
+          },
+          "description": {
+            "description": "Description",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "impact": {
+            "description": "Impact",
+            "type": "string"
+          },
+          "asvs": {
+            "description": "ASVS",
+            "type": "string"
+          },
+          "cheat_sheet": {
+            "description": "Cheat sheet",
+            "type": "string"
+          },
+          "action": {
+            "description": "Action",
+            "type": "string"
+          },
+          "mitigation": {
+            "description": "Mitigation",
+            "type": "string"
+          },
+          "check": {
+            "description": "Check",
+            "type": "string"
+          },
+          "function": {
+            "description": "Function",
+            "type": "string",
+            "enum": [
+              "business-side",
+              "architecture",
+              "development",
+              "operations"
+            ]
+          },
+          "stride": {
+            "description": "STRIDE",
+            "type": "string",
+            "enum": [
+              "spoofing",
+              "tampering",
+              "repudiation",
+              "information-disclosure",
+              "denial-of-service",
+              "elevation-of-privilege"
+            ]
+          },
+          "detection_logic": {
+            "description": "Detection logic",
+            "type": "string"
+          },
+          "risk_assessment": {
+            "description": "Risk assessment",
+            "type": "string"
+          },
+          "false_positives": {
+            "description": "False positives",
+            "type": "string"
+          },
+          "model_failure_possible_reason": {
+            "description": "Model failure possible reason",
+            "type": "boolean"
+          },
+          "cwe": {
+            "description": "CWE",
+            "type": "integer"
+          },
+          "risks_identified": {
+            "description": "Risks identified",
+            "type": "object",
+            "uniqueItems": true,
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "severity": {
+                  "description": "Severity",
+                  "type": "string",
+                  "enum": [
+                    "low",
+                    "medium",
+                    "elevated",
+                    "high",
+                    "critical"
+                  ]
+                },
+                "exploitation_likelihood": {
+                  "description": "Exploitation likelihood",
+                  "type": "string",
+                  "enum": [
+                    "unlikely",
+                    "likely",
+                    "very-likely",
+                    "frequent"
+                  ]
+                },
+                "exploitation_impact": {
+                  "description": "Exploitation impact",
+                  "type": "string",
+                  "enum": [
+                    "low",
+                    "medium",
+                    "high",
+                    "very-high"
+                  ]
+                },
+                "data_loss_probability": {
+                  "description": "Data loss probability",
+                  "type": "string",
+                  "enum": [
+                    "improbable",
+                    "possible",
+                    "probable"
+                  ]
+                },
+                "data_loss_technical_assets": {
+                  "description": "Data loss technical assets",
+                  "type": [
+                    "array",
+                    "null"
+                  ],
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "most_relevant_data_asset": {
+                  "description": "Most relevant data asset",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "most_relevant_technical_asset": {
+                  "description": "Most relevant technical asset",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "most_relevant_communication_link": {
+                  "description": "Most relevant communication link",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "most_relevant_trust_boundary": {
+                  "description": "Most relevant trust boundary",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "most_relevant_shared_runtime": {
+                  "description": "Most relevant shared runtime",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "id",
+          "description",
+          "impact",
+          "asvs",
+          "cheat_sheet",
+          "action",
+          "mitigation",
+          "check",
+          "function",
+          "stride",
+          "detection_logic",
+          "risk_assessment",
+          "false_positives",
+          "model_failure_possible_reason",
+          "cwe",
+          "risks_identified"
+        ]
+      }
+    },
+    "risk_tracking": {
+      "description": "Risk tracking",
+      "type": [
+        "object",
+        "null"
+      ],
+      "uniqueItems": true,
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Status",
+            "type": "string",
+            "enum": [
+              "unchecked",
+              "in-discussion",
+              "accepted",
+              "in-progress",
+              "mitigated",
+              "false-positive"
+            ]
+          },
+          "justification": {
+            "description": "Justification",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "ticket": {
+            "description": "Ticket",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "date": {
+            "description": "Date",
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "checked_by": {
+            "description": "Checked by",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "status",
+          "justification",
+          "ticket",
+          "date",
+          "checked_by"
+        ]
+      }
+    },
+    "diagram_tweak_suppress_edge_labels": {
+      "description": "Diagram tweak suppress edge labels",
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "diagram_tweak_layout_left_to_right": {
+      "description": "Diagram tweak layout left to right",
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "diagram_tweak_edge_layout": {
+      "description": "Diagram tweak edge layout",
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "",
+        "ortho",
+        "spline",
+        "polyline",
+        "false",
+        "curved"
+      ]
+    },
+    "diagram_tweak_nodesep": {
+      "description": "Diagram tweak nodesep",
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "diagram_tweak_ranksep": {
+      "description": "Diagram tweak ranksep",
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "diagram_tweak_invisible_connections_between_assets": {
+      "description": "Diagram tweak invisible connections between assets",
+      "type": [
+        "array",
+        "null"
+      ],
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    },
+    "diagram_tweak_same_rank_assets": {
+      "description": "Diagram tweak same rank assets",
+      "type": [
+        "array",
+        "null"
+      ],
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "threagile_version",
+    "title",
+    "author",
+    "business_criticality",
+    "tags_available",
+    "data_assets",
+    "technical_assets",
+    "shared_runtimes"
+  ]
+}
