@@ -3878,7 +3878,7 @@ func printExamples() {
 		"threagile/threagile -server 8080")
 	fmt.Println()
 	fmt.Println("If you want to find out about the different enum values usable in the model yaml file: ")
-	fmt.Println(" docker run --rm -it threagile/threagile -types")
+	fmt.Println(" docker run --rm -it threagile/threagile -list-types")
 	fmt.Println()
 	fmt.Println("If you want to use some nice editing help (syntax validation, autocompletion, and live templates) in your favourite IDE: ")
 	fmt.Println(" docker run --rm -it -v \"$(pwd)\":/app/work threagile/threagile -create-editing-support -output /app/work")
