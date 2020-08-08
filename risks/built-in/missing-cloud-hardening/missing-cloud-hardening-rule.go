@@ -2,6 +2,7 @@ package missing_cloud_hardening
 
 import (
 	"github.com/threagile/threagile/model"
+	"sort"
 )
 
 func Category() model.RiskCategory {
@@ -341,7 +342,12 @@ func addAccordingToBasetag(techAsset model.TechnicalAsset, tags []string,
 
 func findMostSensitiveTechnicalAsset(techAssets map[string]bool) model.TechnicalAsset {
 	var mostRelevantAsset model.TechnicalAsset
-	for _, id := range model.SortedTechnicalAssetIDs() {
+	keys := make([]string, 0, len(techAssets))
+	for k := range techAssets {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, id := range keys {
 		tA := model.ParsedModelRoot.TechnicalAssets[id]
 		if mostRelevantAsset.IsZero() || tA.HighestSensitivityScore() > mostRelevantAsset.HighestSensitivityScore() {
 			mostRelevantAsset = tA
