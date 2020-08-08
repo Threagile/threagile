@@ -96,9 +96,12 @@ paths:
                   model_count:
                     type: integer
                     example: 42
-                  execution_count:
+                  success_count:
                     type: integer
                     example: 123
+                  error_count:
+                    type: integer
+                    example: 0
   /direct/stub:
     get:
       tags:

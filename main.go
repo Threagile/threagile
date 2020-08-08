@@ -95,7 +95,7 @@ const backupHistoryFilesToKeep = 50
 const baseFolder, reportFilename, excelRisksFilename, excelTagsFilename, jsonRisksFilename, jsonTechnicalAssetsFilename, jsonStatsFilename, dataFlowDiagramFilenameDOT, dataFlowDiagramFilenamePNG, dataAssetDiagramFilenameDOT, dataAssetDiagramFilenamePNG, graphvizDataFlowDiagramConversionCall, graphvizDataAssetDiagramConversionCall = "/data", "report.pdf", "risks.xlsx", "tags.xlsx", "risks.json", "technical-assets.json", "stats.json", "data-flow-diagram.gv", "data-flow-diagram.png", "data-asset-diagram.gv", "data-asset-diagram.png", "render-data-flow-diagram.sh", "render-data-asset-diagram.sh"
 
 var globalLock sync.Mutex
-var executionCount = 0
+var successCount, errorCount = 0, 0
 
 var modelInput model.ModelInput
 
@@ -1282,10 +1282,8 @@ func execute(context *gin.Context, dryRun bool) (yamlContent []byte, ok bool) {
 	defer func() {
 		var err error
 		if r := recover(); r != nil {
+			errorCount++
 			err = r.(error)
-			if *verbose {
-				log.Println(err)
-			}
 			log.Println(err)
 			context.JSON(http.StatusBadRequest, gin.H{
 				"error": err.Error(),
@@ -1386,7 +1384,7 @@ func execute(context *gin.Context, dryRun bool) (yamlContent []byte, ok bool) {
 		}
 		context.FileAttachment(tmpResultFile.Name(), "threagile-result.zip")
 	}
-	executionCount++
+	successCount++
 	return yamlContent, true
 }
 
@@ -2160,9 +2158,10 @@ func stats(context *gin.Context) {
 	}
 	// TODO collect and deliver more stats (old model count?) and health info
 	context.JSON(http.StatusOK, gin.H{
-		"key_count":       keyCount,
-		"model_count":     modelCount,
-		"execution_count": executionCount,
+		"key_count":     keyCount,
+		"model_count":   modelCount,
+		"success_count": successCount,
+		"error_count":   errorCount,
 	})
 }
 
