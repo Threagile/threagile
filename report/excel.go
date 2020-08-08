@@ -136,7 +136,7 @@ func WriteRisksExcelToFile(filename string) {
 			err = excel.SetCellValue(sheetName, "H"+strconv.Itoa(excelRow), techAsset.Title)
 			err = excel.SetCellValue(sheetName, "I"+strconv.Itoa(excelRow), commLink.Title)
 			err = excel.SetCellFloat(sheetName, "J"+strconv.Itoa(excelRow), techAsset.RAA, 0, 32)
-			err = excel.SetCellValue(sheetName, "K"+strconv.Itoa(excelRow), removeBoldTags(risk.Title))
+			err = excel.SetCellValue(sheetName, "K"+strconv.Itoa(excelRow), removeFormattingTags(risk.Title))
 			err = excel.SetCellValue(sheetName, "L"+strconv.Itoa(excelRow), risk.Category.Action)
 			err = excel.SetCellValue(sheetName, "M"+strconv.Itoa(excelRow), risk.Category.Mitigation)
 			err = excel.SetCellValue(sheetName, "N"+strconv.Itoa(excelRow), risk.Category.Check)
@@ -329,6 +329,9 @@ func determineColumnLetter(i int) string {
 	return alphabet[(i/26)-1] + alphabet[i%26]
 }
 
-func removeBoldTags(content string) interface{} {
-	return strings.ReplaceAll(strings.ReplaceAll(content, "<b>", ""), "</b>", "")
+func removeFormattingTags(content string) interface{} {
+	result := strings.ReplaceAll(strings.ReplaceAll(content, "<b>", ""), "</b>", "")
+	result = strings.ReplaceAll(strings.ReplaceAll(result, "<i>", ""), "</i>", "")
+	result = strings.ReplaceAll(strings.ReplaceAll(result, "<u>", ""), "</u>", "")
+	return result
 }
