@@ -5558,7 +5558,7 @@ func addCustomImages(customImages []map[string]string, baseFolder string, html g
 			imageFilenameWithoutPath := filepath.Base(imageFilename)
 			// check JPEG, PNG or GIF
 			extension := strings.ToLower(filepath.Ext(imageFilenameWithoutPath))
-			if extension == ".jpeg" || extension == ".png" || extension == ".gif" {
+			if extension == ".jpeg" || extension == ".jpg" || extension == ".png" || extension == ".gif" {
 				imageFullFilename := baseFolder + "/" + imageFilenameWithoutPath
 				if pdf.GetY()+getHeightWhenWidthIsFix(imageFullFilename, 180) > 250 {
 					pageBreak()
