@@ -3647,6 +3647,8 @@ func parseCommandlineArgs() {
 		fmt.Println()
 		printTypes("Criticality (for integrity and availability)", model.CriticalityValues())
 		fmt.Println()
+		printTypes("Encryption", model.EncryptionStyleValues())
+		fmt.Println()
 		printTypes("Technical Asset Type", model.TechnicalAssetTypeValues())
 		fmt.Println()
 		printTypes("Technical Asset Size", model.TechnicalAssetSizeValues())
