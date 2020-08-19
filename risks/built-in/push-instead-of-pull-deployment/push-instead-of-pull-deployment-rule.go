@@ -9,15 +9,15 @@ func Category() model.RiskCategory {
 		Id:    "push-instead-of-pull-deployment",
 		Title: "Push instead of Pull Deployment",
 		Description: "When comparing push-based vs. pull-based deployments from a security perspective, pull-based " +
-			"deployments improve the overall security of the deployment targets. Every exposed interface to accept a deployment " +
-			"increases the attack surface of the deployment targets, thus a pull-based approach exposes less attack surface relevant " +
+			"deployments improve the overall security of the deployment targets. Every exposed interface of a production system to accept a deployment " +
+			"increases the attack surface of the production system, thus a pull-based approach exposes less attack surface relevant " +
 			"interfaces.",
 		Impact: "If this risk is unmitigated, attackers might have more potential target vectors for attacks, as the overall attack surface is " +
 			"unnecessarily increased.",
 		ASVS:       "V1 - Architecture, Design and Threat Modeling Requirements",
 		CheatSheet: "https://cheatsheetseries.owasp.org/cheatsheets/Attack_Surface_Analysis_Cheat_Sheet.html",
 		Action:     "Build Pipeline Hardening",
-		Mitigation: "Try to prefer pull-based deployments (like GitOps scenarios offer) over push-based deployments.",
+		Mitigation: "Try to prefer pull-based deployments (like GitOps scenarios offer) over push-based deployments to reduce the attack surface of the production system.",
 		Check:      "Are recommendations from the linked cheat sheet and referenced ASVS chapter applied?",
 		Function:   model.Architecture,
 		STRIDE:     model.Tampering,
