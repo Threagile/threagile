@@ -18,7 +18,9 @@ func Category() model.RiskCategory {
 		Check:      "Are recommendations from the linked cheat sheet and referenced ASVS chapter applied?",
 		Function:   model.Operations,
 		STRIDE:     model.InformationDisclosure,
-		DetectionLogic: "In-scope unencrypted technical assets (excluding " + model.ReverseProxy.String() + ", " + model.LoadBalancer.String() + ", " + model.WAF.String() + ", " + model.IDS.String() + ", and " + model.IPS.String() + ") " +
+		DetectionLogic: "In-scope unencrypted technical assets (excluding " + model.ReverseProxy.String() +
+			", " + model.LoadBalancer.String() + ", " + model.WAF.String() + ", " + model.IDS.String() +
+			", " + model.IPS.String() + " and embedded components like " + model.Library.String() + ") " +
 			"storing data assets rated at least as " + model.Confidential.String() + " or " + model.Critical.String() + ". " +
 			"For technical assets storing data assets rated as " + model.StrictlyConfidential.String() + " or " + model.MissionCritical.String() + " the " +
 			"encryption must be of type " + model.DataWithEnduserIndividualKey.String() + ".",
@@ -62,7 +64,9 @@ func GenerateRisks() []model.Risk {
 // Simple routing assets like 'Reverse Proxy' or 'Load Balancer' usually don't have their own storage and thus have no
 // encryption requirement for the asset itself (though for the communication, but that's a different rule)
 func IsEncryptionWaiver(asset model.TechnicalAsset) bool {
-	return asset.Technology == model.ReverseProxy || asset.Technology == model.LoadBalancer || asset.Technology == model.WAF || asset.Technology == model.IDS || asset.Technology == model.IPS
+	return asset.Technology == model.ReverseProxy || asset.Technology == model.LoadBalancer ||
+		asset.Technology == model.WAF || asset.Technology == model.IDS || asset.Technology == model.IPS ||
+		asset.Technology.IsEmbeddedComponent()
 }
 
 func createRisk(technicalAsset model.TechnicalAsset, impact model.RiskExploitationImpact, requiresEnduserKey bool) model.Risk {

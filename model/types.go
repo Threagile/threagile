@@ -947,6 +947,10 @@ func (what TechnicalAssetTechnology) IsTrafficForwarding() bool {
 	return what == LoadBalancer || what == ReverseProxy || what == WAF
 }
 
+func (what TechnicalAssetTechnology) IsEmbeddedComponent() bool {
+	return what == Library
+}
+
 type TechnicalAssetMachine int
 
 const (
