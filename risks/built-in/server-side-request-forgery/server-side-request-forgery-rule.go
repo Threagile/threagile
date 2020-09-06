@@ -23,7 +23,7 @@ func Category() model.RiskCategory {
 		DetectionLogic: "In-scope non-client systems accessing (using outgoing communication links) targets with either HTTP or HTTPS protocol.",
 		RiskAssessment: "The risk rating (low or medium) depends on the sensitivity of the data assets receivable via web protocols from " +
 			"targets within the same network trust-boundary as well on the sensitivity of the data assets receivable via web protocols from the target asset itself. " +
-			"Also for cloud-based environments the exploitation impact is ar least medium, as cloud backend services can be attacked via SSRF.",
+			"Also for cloud-based environments the exploitation impact is at least medium, as cloud backend services can be attacked via SSRF.",
 		FalsePositives: "Servers not sending outgoing web requests can be considered " +
 			"as false positives after review.",
 		ModelFailurePossibleReason: false,

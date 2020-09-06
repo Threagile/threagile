@@ -21,7 +21,8 @@ func Category() model.RiskCategory {
 		Function:       model.Development,
 		STRIDE:         model.InformationDisclosure,
 		DetectionLogic: "In-scope technical assets accepting XML data formats.",
-		RiskAssessment: "The risk rating depends on the sensitivity of the technical asset itself and of the data assets processed and stored.",
+		RiskAssessment: "The risk rating depends on the sensitivity of the technical asset itself and of the data assets processed and stored. " +
+			"Also for cloud-based environments the exploitation impact is at least medium, as cloud backend services can be attacked via SSRF (and XXE vulnerabilities are often also SSRF vulnerabilities).",
 		FalsePositives: "Fully trusted (i.e. cryptographically signed or similar) XML data can be considered " +
 			"as false positives after individual review.",
 		ModelFailurePossibleReason: false,
