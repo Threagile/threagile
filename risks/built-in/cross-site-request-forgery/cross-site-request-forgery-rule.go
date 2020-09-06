@@ -72,8 +72,8 @@ func createRisk(technicalAsset model.TechnicalAsset, incomingFlow model.Communic
 		Title:                           title,
 		MostRelevantTechnicalAssetId:    technicalAsset.Id,
 		MostRelevantCommunicationLinkId: incomingFlow.Id,
-		DataLossProbability:             model.Improbable,
-		DataLossTechnicalAssetIDs:       []string{technicalAsset.Id},
+		DataBreachProbability:           model.Improbable,
+		DataBreachTechnicalAssetIDs:     []string{technicalAsset.Id},
 	}
 	risk.SyntheticId = risk.Category.Id + "@" + technicalAsset.Id + "@" + incomingFlow.Id
 	return risk

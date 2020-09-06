@@ -383,8 +383,8 @@ func createRiskForSharedRuntime(sharedRuntime model.SharedRuntime, prefix, detai
 		ExploitationImpact:          impact,
 		Title:                       title,
 		MostRelevantSharedRuntimeId: sharedRuntime.Id,
-		DataLossProbability:         model.Probable,
-		DataLossTechnicalAssetIDs:   sharedRuntime.TechnicalAssetsRunning,
+		DataBreachProbability:       model.Probable,
+		DataBreachTechnicalAssetIDs: sharedRuntime.TechnicalAssetsRunning,
 	}
 	risk.SyntheticId = risk.Category.Id + "@" + sharedRuntime.Id
 	return risk
@@ -417,8 +417,8 @@ func createRiskForTrustBoundary(trustBoundary model.TrustBoundary, prefix, detai
 		ExploitationImpact:          impact,
 		Title:                       title,
 		MostRelevantTrustBoundaryId: trustBoundary.Id,
-		DataLossProbability:         model.Probable,
-		DataLossTechnicalAssetIDs:   trustBoundary.RecursivelyAllTechnicalAssetIDsInside(),
+		DataBreachProbability:       model.Probable,
+		DataBreachTechnicalAssetIDs: trustBoundary.RecursivelyAllTechnicalAssetIDsInside(),
 	}
 	risk.SyntheticId = risk.Category.Id + "@" + trustBoundary.Id
 	return risk
@@ -451,8 +451,8 @@ func createRiskForTechnicalAsset(technicalAsset model.TechnicalAsset, prefix, de
 		ExploitationImpact:           impact,
 		Title:                        title,
 		MostRelevantTechnicalAssetId: technicalAsset.Id,
-		DataLossProbability:          model.Probable,
-		DataLossTechnicalAssetIDs:    []string{technicalAsset.Id},
+		DataBreachProbability:        model.Probable,
+		DataBreachTechnicalAssetIDs:  []string{technicalAsset.Id},
 	}
 	risk.SyntheticId = risk.Category.Id + "@" + technicalAsset.Id
 	return risk

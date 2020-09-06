@@ -1504,7 +1504,7 @@ func startServer() {
 			"technical_asset_technology":   arrayOfStringValues(model.TechnicalAssetTechnologyValues()),
 			"technical_asset_machine":      arrayOfStringValues(model.TechnicalAssetMachineValues()),
 			"trust_boundary_type":          arrayOfStringValues(model.TrustBoundaryTypeValues()),
-			"data_loss_probability":        arrayOfStringValues(model.DataLossProbabilityValues()),
+			"data_breach_probability":      arrayOfStringValues(model.DataBreachProbabilityValues()),
 			"risk_severity":                arrayOfStringValues(model.RiskSeverityValues()),
 			"risk_exploitation_likelihood": arrayOfStringValues(model.RiskExploitationLikelihoodValues()),
 			"risk_exploitation_impact":     arrayOfStringValues(model.RiskExploitationImpactValues()),
@@ -3649,9 +3649,9 @@ func parseCommandlineArgs() {
 		fmt.Println()
 		printTypes("Criticality (for integrity and availability)", model.CriticalityValues())
 		fmt.Println()
-		printTypes("Data Format", model.DataFormatValues())
+		printTypes("Data Breach Probability", model.DataBreachProbabilityValues())
 		fmt.Println()
-		printTypes("Data Loss Probability", model.DataLossProbabilityValues())
+		printTypes("Data Format", model.DataFormatValues())
 		fmt.Println()
 		printTypes("Encryption", model.EncryptionStyleValues())
 		fmt.Println()
@@ -4768,8 +4768,8 @@ func parseModel(inputFilename string) {
 					var exploitationLikelihood model.RiskExploitationLikelihood
 					var exploitationImpact model.RiskExploitationImpact
 					var mostRelevantDataAssetId, mostRelevantTechnicalAssetId, mostRelevantCommunicationLinkId, mostRelevantTrustBoundaryId, mostRelevantSharedRuntimeId string
-					var dataLossProbability model.DataLossProbability
-					var dataLossTechnicalAssetIDs []string
+					var dataBreachProbability model.DataBreachProbability
+					var dataBreachTechnicalAssetIDs []string
 
 					switch indivRiskInstance.Severity {
 					case model.LowSeverity.String():
@@ -4837,23 +4837,23 @@ func parseModel(inputFilename string) {
 						checkSharedRuntimeExists(mostRelevantSharedRuntimeId)
 					}
 
-					switch indivRiskInstance.Data_loss_probability {
+					switch indivRiskInstance.Data_breach_probability {
 					case model.Improbable.String():
-						dataLossProbability = model.Improbable
+						dataBreachProbability = model.Improbable
 					case model.Possible.String():
-						dataLossProbability = model.Possible
+						dataBreachProbability = model.Possible
 					case model.Probable.String():
-						dataLossProbability = model.Probable
+						dataBreachProbability = model.Probable
 					default:
-						panic(errors.New("Unknown 'data_loss_probability' value of individual risk instance: " + fmt.Sprintf("%v", indivRiskInstance.Data_loss_probability)))
+						panic(errors.New("Unknown 'data_breach_probability' value of individual risk instance: " + fmt.Sprintf("%v", indivRiskInstance.Data_breach_probability)))
 					}
 
-					if indivRiskInstance.Data_loss_technical_assets != nil {
-						dataLossTechnicalAssetIDs = make([]string, len(indivRiskInstance.Data_loss_technical_assets))
-						for i, parsedReferencedAsset := range indivRiskInstance.Data_loss_technical_assets {
+					if indivRiskInstance.Data_breach_technical_assets != nil {
+						dataBreachTechnicalAssetIDs = make([]string, len(indivRiskInstance.Data_breach_technical_assets))
+						for i, parsedReferencedAsset := range indivRiskInstance.Data_breach_technical_assets {
 							assetId := fmt.Sprintf("%v", parsedReferencedAsset)
 							checkTechnicalAssetExists(assetId, false)
-							dataLossTechnicalAssetIDs[i] = assetId
+							dataBreachTechnicalAssetIDs[i] = assetId
 						}
 					}
 
@@ -4871,8 +4871,8 @@ func parseModel(inputFilename string) {
 						MostRelevantCommunicationLinkId: mostRelevantCommunicationLinkId,
 						MostRelevantTrustBoundaryId:     mostRelevantTrustBoundaryId,
 						MostRelevantSharedRuntimeId:     mostRelevantSharedRuntimeId,
-						DataLossProbability:             dataLossProbability,
-						DataLossTechnicalAssetIDs:       dataLossTechnicalAssetIDs,
+						DataBreachProbability:           dataBreachProbability,
+						DataBreachTechnicalAssetIDs:     dataBreachTechnicalAssetIDs,
 					}
 					model.GeneratedRisksByCategory[cat] = append(model.GeneratedRisksByCategory[cat], indivRiskInstance)
 				}
@@ -5146,7 +5146,7 @@ func writeDataAssetDiagramGraphvizDOT(diagramFilenameDOT string, dpi int) *os.Fi
 	for _, dataAsset := range model.ParsedModelRoot.DataAssets {
 		dataAssets = append(dataAssets, dataAsset)
 	}
-	sort.Sort(model.ByDataAssetDataLossProbabilityAndTitleSort(dataAssets))
+	sort.Sort(model.ByDataAssetDataBreachProbabilityAndTitleSort(dataAssets))
 	for _, dataAsset := range dataAssets {
 		dotContent.WriteString(makeDataAssetNode(dataAsset))
 		dotContent.WriteString("\n")
@@ -5537,7 +5537,7 @@ func makeTechAssetNode(technicalAsset model.TechnicalAsset, simplified bool) str
 
 func makeDataAssetNode(dataAsset model.DataAsset) string {
 	var color string
-	switch dataAsset.IdentifiedDataLossProbabilityStillAtRisk() {
+	switch dataAsset.IdentifiedDataBreachProbabilityStillAtRisk() {
 	case model.Probable:
 		color = colors.RgbHexColorHighRisk()
 	case model.Possible:
@@ -5547,7 +5547,7 @@ func makeDataAssetNode(dataAsset model.DataAsset) string {
 	default:
 		color = "#444444" // since black is too dark here as fill color
 	}
-	if !dataAsset.IsDataLossPotentialStillAtRisk() {
+	if !dataAsset.IsDataBreachPotentialStillAtRisk() {
 		color = "#444444" // since black is too dark here as fill color
 	}
 	return "  " + hash(dataAsset.Id) + ` [ label=<<b>` + encode(dataAsset.Title) + `</b>> penwidth="3.0" style="filled" fillcolor="` + color + `" color="` + color + "\"\n  ]; "

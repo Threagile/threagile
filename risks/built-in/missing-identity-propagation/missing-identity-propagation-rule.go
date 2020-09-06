@@ -92,8 +92,8 @@ func createRisk(technicalAsset model.TechnicalAsset, incomingAccess model.Commun
 			"to <b>" + technicalAsset.Title + "</b>",
 		MostRelevantTechnicalAssetId:    technicalAsset.Id,
 		MostRelevantCommunicationLinkId: incomingAccess.Id,
-		DataLossProbability:             model.Improbable,
-		DataLossTechnicalAssetIDs:       []string{technicalAsset.Id},
+		DataBreachProbability:           model.Improbable,
+		DataBreachTechnicalAssetIDs:     []string{technicalAsset.Id},
 	}
 	risk.SyntheticId = risk.Category.Id + "@" + incomingAccess.Id + "@" + model.ParsedModelRoot.TechnicalAssets[incomingAccess.SourceId].Id + "@" + technicalAsset.Id
 	return risk

@@ -67,8 +67,8 @@ func createRisk(buildPipeline model.TechnicalAsset, deploymentTarget model.Techn
 		Title:                           title,
 		MostRelevantTechnicalAssetId:    deploymentTarget.Id,
 		MostRelevantCommunicationLinkId: deploymentCommLink.Id,
-		DataLossProbability:             model.Improbable,
-		DataLossTechnicalAssetIDs:       []string{deploymentTarget.Id},
+		DataBreachProbability:           model.Improbable,
+		DataBreachTechnicalAssetIDs:     []string{deploymentTarget.Id},
 	}
 	risk.SyntheticId = risk.Category.Id + "@" + buildPipeline.Id
 	return risk

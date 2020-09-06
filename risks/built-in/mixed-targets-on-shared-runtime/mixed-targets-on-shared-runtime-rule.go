@@ -85,8 +85,8 @@ func createRisk(sharedRuntime model.SharedRuntime) model.Risk {
 		Title: "<b>Mixed Targets on Shared Runtime</b> named <b>" + sharedRuntime.Title + "</b> might enable attackers moving from one less " +
 			"valuable target to a more valuable one", // TODO list at least the assets in the text which are running on the shared HW
 		MostRelevantSharedRuntimeId: sharedRuntime.Id,
-		DataLossProbability:         model.Improbable,
-		DataLossTechnicalAssetIDs:   sharedRuntime.TechnicalAssetsRunning,
+		DataBreachProbability:       model.Improbable,
+		DataBreachTechnicalAssetIDs: sharedRuntime.TechnicalAssetsRunning,
 	}
 	risk.SyntheticId = risk.Category.Id + "@" + sharedRuntime.Id
 	return risk

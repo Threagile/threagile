@@ -10,7 +10,7 @@ func Category() model.RiskCategory {
 		Title:       "Service Registry Poisoning",
 		Description: "When a service registry used for discovery of trusted service endpoints Service Registry Poisoning risks might arise.",
 		Impact: "If this risk remains unmitigated, attackers might be able to poison the service registry with malicious service endpoints or " +
-			"malicious lookup and config data leading to loss of sensitive data.",
+			"malicious lookup and config data leading to breach of sensitive data.",
 		ASVS:           "V10 - Malicious Code Verification Requirements",
 		CheatSheet:     "https://cheatsheetseries.owasp.org/cheatsheets/Access_Control_Cheat_Sheet.html",
 		Action:         "Service Registry Integrity Check",
@@ -65,8 +65,8 @@ func createRisk(technicalAsset model.TechnicalAsset, incomingFlows []model.Commu
 		ExploitationImpact:           impact,
 		Title:                        title,
 		MostRelevantTechnicalAssetId: technicalAsset.Id,
-		DataLossProbability:          model.Improbable,
-		DataLossTechnicalAssetIDs:    []string{technicalAsset.Id}, // TODO: find all service-lookup-using tech assets, which then might use spoofed lookups?
+		DataBreachProbability:        model.Improbable,
+		DataBreachTechnicalAssetIDs:  []string{technicalAsset.Id}, // TODO: find all service-lookup-using tech assets, which then might use spoofed lookups?
 	}
 	risk.SyntheticId = risk.Category.Id + "@" + technicalAsset.Id
 	return risk

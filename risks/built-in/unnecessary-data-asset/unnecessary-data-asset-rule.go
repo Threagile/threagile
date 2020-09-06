@@ -72,14 +72,14 @@ func createRisk(unusedDataAssetID string) model.Risk {
 	unusedDataAsset := model.ParsedModelRoot.DataAssets[unusedDataAssetID]
 	title := "<b>Unnecessary Data Asset</b> named <b>" + unusedDataAsset.Title + "</b>"
 	risk := model.Risk{
-		Category:                  Category(),
-		Severity:                  model.CalculateSeverity(model.Unlikely, model.LowImpact),
-		ExploitationLikelihood:    model.Unlikely,
-		ExploitationImpact:        model.LowImpact,
-		Title:                     title,
-		MostRelevantDataAssetId:   unusedDataAsset.Id,
-		DataLossProbability:       model.Improbable,
-		DataLossTechnicalAssetIDs: []string{unusedDataAsset.Id},
+		Category:                    Category(),
+		Severity:                    model.CalculateSeverity(model.Unlikely, model.LowImpact),
+		ExploitationLikelihood:      model.Unlikely,
+		ExploitationImpact:          model.LowImpact,
+		Title:                       title,
+		MostRelevantDataAssetId:     unusedDataAsset.Id,
+		DataBreachProbability:       model.Improbable,
+		DataBreachTechnicalAssetIDs: []string{unusedDataAsset.Id},
 	}
 	risk.SyntheticId = risk.Category.Id + "@" + unusedDataAsset.Id
 	return risk

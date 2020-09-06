@@ -522,26 +522,26 @@ func createTableOfContents() {
 		}
 		pdf.SetFont("Helvetica", "B", fontSizeBody)
 		pdfColorBlack()
-		pdf.Text(11, y, "Data Loss Probabilities by Data Asset")
+		pdf.Text(11, y, "Data Breach Probabilities by Data Asset")
 		pdf.SetFont("Helvetica", "", fontSizeBody)
 		y += 6
-		pdf.Text(11, y, "    "+"Identified Data Loss Probabilities grouped by Data Asset")
+		pdf.Text(11, y, "    "+"Identified Data Breach Probabilities grouped by Data Asset")
 		pdf.Text(175, y, "{intro-risks-by-data-asset}")
 		pdf.Line(15.6, y+1.3, 11+171.5, y+1.3)
 		pdf.Link(10, y-5, 172.5, 6.5, pdf.AddLink())
-		for _, dataAsset := range model.SortedDataAssetsByDataLossProbabilityAndTitle() {
+		for _, dataAsset := range model.SortedDataAssetsByDataBreachProbabilityAndTitle() {
 			y += 6
 			if y > 275 {
 				pageBreakInLists()
 				y = 40
 			}
-			risks := dataAsset.IdentifiedDataLossProbabilityRisks()
+			risks := dataAsset.IdentifiedDataBreachProbabilityRisks()
 			countStillAtRisk := len(model.ReduceToOnlyStillAtRisk(risks))
 			suffix := strconv.Itoa(countStillAtRisk) + " / " + strconv.Itoa(len(risks)) + " Risk"
 			if len(risks) != 1 {
 				suffix += "s"
 			}
-			switch dataAsset.IdentifiedDataLossProbabilityStillAtRisk() {
+			switch dataAsset.IdentifiedDataBreachProbabilityStillAtRisk() {
 			case model.Probable:
 				colors.ColorHighRisk(pdf)
 			case model.Possible:
@@ -551,7 +551,7 @@ func createTableOfContents() {
 			default:
 				pdfColorBlack()
 			}
-			if !dataAsset.IsDataLossPotentialStillAtRisk() {
+			if !dataAsset.IsDataBreachPotentialStillAtRisk() {
 				pdfColorBlack()
 			}
 			pdf.Text(11, y, "    "+uni(dataAsset.Title)+": "+suffix)
@@ -3301,7 +3301,7 @@ func createTechnicalAssets() {
 
 func createDataAssets() {
 	uni := pdf.UnicodeTranslatorFromDescriptor("")
-	title := "Identified Data Loss Probabilities grouped by Data Asset"
+	title := "Identified Data Breach Probabilities grouped by Data Asset"
 	pdfColorBlack()
 	addHeadline(title, false)
 	defineLinkTarget("{intro-risks-by-data-asset}")
@@ -3314,13 +3314,13 @@ func createDataAssets() {
 		"<b>"+strconv.Itoa(len(model.FilteredByOnlyMediumRisks()))+" as medium</b>, "+
 		"and <b>"+strconv.Itoa(len(model.FilteredByOnlyLowRisks()))+" as low</b>. "+
 		"<br><br>These risks are distributed across <b>"+strconv.Itoa(len(model.ParsedModelRoot.DataAssets))+" data assets</b>. ")
-	html.Write(5, "The following sub-chapters of this section describe the derived data loss probabilities grouped by data asset.<br>") // TODO more explanation text
+	html.Write(5, "The following sub-chapters of this section describe the derived data breach probabilities grouped by data asset.<br>") // TODO more explanation text
 	pdf.SetFont("Helvetica", "", fontSizeSmall)
 	pdfColorGray()
 	html.Write(5, "Technical asset names and risk IDs are clickable and link to the corresponding chapter.")
 	pdf.SetFont("Helvetica", "", fontSizeBody)
 	currentChapterTitleBreadcrumb = title
-	for _, dataAsset := range model.SortedDataAssetsByDataLossProbabilityAndTitle() {
+	for _, dataAsset := range model.SortedDataAssetsByDataBreachProbabilityAndTitle() {
 		if pdf.GetY() > 280 { // 280 as only small font previously (not 250)
 			pageBreak()
 			pdf.SetY(36)
@@ -3328,7 +3328,7 @@ func createDataAssets() {
 			html.Write(5, "<br><br><br>")
 		}
 		pdfColorBlack()
-		switch dataAsset.IdentifiedDataLossProbabilityStillAtRisk() {
+		switch dataAsset.IdentifiedDataBreachProbabilityStillAtRisk() {
 		case model.Probable:
 			colors.ColorHighRisk(pdf)
 		case model.Possible:
@@ -3338,10 +3338,10 @@ func createDataAssets() {
 		default:
 			pdfColorBlack()
 		}
-		if !dataAsset.IsDataLossPotentialStillAtRisk() {
+		if !dataAsset.IsDataBreachPotentialStillAtRisk() {
 			pdfColorBlack()
 		}
-		risks := dataAsset.IdentifiedDataLossProbabilityRisks()
+		risks := dataAsset.IdentifiedDataBreachProbabilityRisks()
 		countStillAtRisk := len(model.ReduceToOnlyStillAtRisk(risks))
 		suffix := strconv.Itoa(countStillAtRisk) + " / " + strconv.Itoa(len(risks)) + " Risk"
 		if len(risks) != 1 {
@@ -3358,11 +3358,11 @@ func createDataAssets() {
 		/*
 			pdfColorGray()
 			pdf.CellFormat(5, 6, "", "0", 0, "", false, 0, "")
-			pdf.CellFormat(40, 6, "Indirect Loss:", "0", 0, "", false, 0, "")
+			pdf.CellFormat(40, 6, "Indirect Breach:", "0", 0, "", false, 0, "")
 			pdfColorBlack()
 			pdf.SetFont("Helvetica", "B", fontSizeBody)
-			probability := dataAsset.IdentifiedDataLossProbability()
-			dataLossText := probability.String()
+			probability := dataAsset.IdentifiedDataBreachProbability()
+			dataBreachText := probability.String()
 			switch probability {
 			case model.Probable:
 				colors.ColorHighRisk(pdf)
@@ -3373,11 +3373,11 @@ func createDataAssets() {
 			default:
 				pdfColorBlack()
 			}
-			if !dataAsset.IsDataLossPotentialStillAtRisk() {
+			if !dataAsset.IsDataBreachPotentialStillAtRisk() {
 				pdfColorBlack()
-				dataLossText = "none"
+				dataBreachText = "none"
 			}
-			pdf.MultiCell(145, 6, dataLossText, "0", "0", false)
+			pdf.MultiCell(145, 6, dataBreachText, "0", "0", false)
 			pdf.SetFont("Helvetica", "", fontSizeBody)
 			if pdf.GetY() > 265 {
 				pageBreak()
@@ -3643,12 +3643,12 @@ func createDataAssets() {
 
 		pdfColorGray()
 		pdf.CellFormat(5, 6, "", "0", 0, "", false, 0, "")
-		pdf.CellFormat(40, 6, "Data Loss:", "0", 0, "", false, 0, "")
+		pdf.CellFormat(40, 6, "Data Breach:", "0", 0, "", false, 0, "")
 		pdfColorBlack()
 		pdf.SetFont("Helvetica", "B", fontSizeBody)
-		dataLossProbability := dataAsset.IdentifiedDataLossProbabilityStillAtRisk()
-		riskText := dataLossProbability.String()
-		switch dataLossProbability {
+		dataBreachProbability := dataAsset.IdentifiedDataBreachProbabilityStillAtRisk()
+		riskText := dataBreachProbability.String()
+		switch dataBreachProbability {
 		case model.Probable:
 			colors.ColorHighRisk(pdf)
 		case model.Possible:
@@ -3658,7 +3658,7 @@ func createDataAssets() {
 		default:
 			pdfColorBlack()
 		}
-		if !dataAsset.IsDataLossPotentialStillAtRisk() {
+		if !dataAsset.IsDataBreachPotentialStillAtRisk() {
 			pdfColorBlack()
 			riskText = "none"
 		}
@@ -3670,32 +3670,32 @@ func createDataAssets() {
 		}
 
 		// how can is this data asset be indirectly lost (i.e. why)
-		dataLossRisksStillAtRisk := dataAsset.IdentifiedDataLossProbabilityRisksStillAtRisk()
-		sort.Sort(model.ByDataLossProbabilitySort(dataLossRisksStillAtRisk))
+		dataBreachRisksStillAtRisk := dataAsset.IdentifiedDataBreachProbabilityRisksStillAtRisk()
+		sort.Sort(model.ByDataBreachProbabilitySort(dataBreachRisksStillAtRisk))
 		if pdf.GetY() > 265 {
 			pageBreak()
 			pdf.SetY(36)
 		}
 		pdfColorGray()
 		pdf.CellFormat(5, 6, "", "0", 0, "", false, 0, "")
-		pdf.CellFormat(40, 6, "Data Loss Risks:", "0", 0, "", false, 0, "")
-		if len(dataLossRisksStillAtRisk) == 0 {
+		pdf.CellFormat(40, 6, "Data Breach Risks:", "0", 0, "", false, 0, "")
+		if len(dataBreachRisksStillAtRisk) == 0 {
 			pdfColorGray()
-			pdf.MultiCell(145, 6, "This data asset has no data loss potential.", "0", "0", false)
+			pdf.MultiCell(145, 6, "This data asset has no data breach potential.", "0", "0", false)
 		} else {
 			pdfColorBlack()
 			riskRemainingStr := "risks"
 			if countStillAtRisk == 1 {
 				riskRemainingStr = "risk"
 			}
-			pdf.MultiCell(145, 6, "This data asset has data loss potential because of "+
+			pdf.MultiCell(145, 6, "This data asset has data breach potential because of "+
 				""+strconv.Itoa(countStillAtRisk)+" remaining "+riskRemainingStr+":", "0", "0", false)
-			for _, dataLossRisk := range dataLossRisksStillAtRisk {
+			for _, dataBreachRisk := range dataBreachRisksStillAtRisk {
 				if pdf.GetY() > 280 { // 280 as only small font here
 					pageBreak()
 					pdf.SetY(36)
 				}
-				switch dataLossRisk.DataLossProbability {
+				switch dataBreachRisk.DataBreachProbability {
 				case model.Probable:
 					colors.ColorHighRisk(pdf)
 				case model.Possible:
@@ -3705,15 +3705,15 @@ func createDataAssets() {
 				default:
 					pdfColorBlack()
 				}
-				if !dataLossRisk.GetRiskTrackingStatusDefaultingUnchecked().IsStillAtRisk() {
+				if !dataBreachRisk.GetRiskTrackingStatusDefaultingUnchecked().IsStillAtRisk() {
 					pdfColorBlack()
 				}
 				pdf.CellFormat(10, 6, "", "0", 0, "", false, 0, "")
 				posY := pdf.GetY()
 				pdf.SetFont("Helvetica", "", fontSizeVerySmall)
-				pdf.MultiCell(185, 5, dataLossRisk.DataLossProbability.Title()+": "+uni(dataLossRisk.SyntheticId), "0", "0", false)
+				pdf.MultiCell(185, 5, dataBreachRisk.DataBreachProbability.Title()+": "+uni(dataBreachRisk.SyntheticId), "0", "0", false)
 				pdf.SetFont("Helvetica", "", fontSizeBody)
-				pdf.Link(20, posY, 180, pdf.GetY()-posY, tocLinkIdByAssetId[dataLossRisk.Category.Id])
+				pdf.Link(20, posY, 180, pdf.GetY()-posY, tocLinkIdByAssetId[dataBreachRisk.Category.Id])
 			}
 			pdfColorBlack()
 		}
@@ -5700,8 +5700,8 @@ func embedDataRiskMapping(diagramFilenamePNG string) {
 
 	var intro strings.Builder
 	intro.WriteString("The following diagram was generated by Threagile based on the model input and gives a high-level " +
-		"distribution of data assets across technical assets. The color matches the identified data loss probability and risk level " +
-		"(see the \"Data Loss Probabilities\" chapter for more details). " +
+		"distribution of data assets across technical assets. The color matches the identified data breach probability and risk level " +
+		"(see the \"Data Breach Probabilities\" chapter for more details). " +
 		"A solid line stands for <i>data is stored by the asset</i> and a dashed one means " +
 		"<i>data is processed by the asset</i>. For a full high-resolution version of this diagram please refer to the PNG image " +
 		"file alongside this report.")

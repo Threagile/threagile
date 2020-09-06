@@ -65,8 +65,8 @@ func createRisk(technicalAsset model.TechnicalAsset) model.Risk {
 		ExploitationImpact:           impact,
 		Title:                        title,
 		MostRelevantTechnicalAssetId: technicalAsset.Id,
-		DataLossProbability:          model.Probable,
-		DataLossTechnicalAssetIDs:    []string{technicalAsset.Id}, // TODO: use the same logic here as for SSRF rule, as XXE is also SSRF ;)
+		DataBreachProbability:        model.Probable,
+		DataBreachTechnicalAssetIDs:  []string{technicalAsset.Id}, // TODO: use the same logic here as for SSRF rule, as XXE is also SSRF ;)
 	}
 	risk.SyntheticId = risk.Category.Id + "@" + technicalAsset.Id
 	return risk

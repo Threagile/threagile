@@ -97,8 +97,8 @@ func createRisk(dataStore model.TechnicalAsset, dataFlow model.CommunicationLink
 			clientFromInternet.Title + "</b>" + " via <b>" + dataFlow.Title + "</b>",
 		MostRelevantTechnicalAssetId:    dataStore.Id,
 		MostRelevantCommunicationLinkId: dataFlow.Id,
-		DataLossProbability:             model.Possible,
-		DataLossTechnicalAssetIDs:       []string{dataStore.Id},
+		DataBreachProbability:           model.Possible,
+		DataBreachTechnicalAssetIDs:     []string{dataStore.Id},
 	}
 	risk.SyntheticId = risk.Category.Id + "@" + dataStore.Id + "@" + clientFromInternet.Id + "@" + dataFlow.Id
 	return risk

@@ -241,8 +241,8 @@ Live template for an individual risk instance:
         severity: $severity$
         exploitation_likelihood: $exploitation_likelihood$
         exploitation_impact: $exploitation_impact$
-        data_loss_probability: $data_loss_probability$
-        data_loss_technical_assets: # list of technical asset IDs which might have data loss
+        data_breach_probability: $data_breach_probability$
+        data_breach_technical_assets: # list of technical asset IDs which might have data breach
           $END$
         most_relevant_data_asset: $most_relevant_data_asset$
         most_relevant_technical_asset: $most_relevant_technical_asset$
