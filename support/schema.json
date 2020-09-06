@@ -960,8 +960,8 @@
                     "very-high"
                   ]
                 },
-                "data_loss_probability": {
-                  "description": "Data loss probability",
+                "data_breach_probability": {
+                  "description": "Data breach probability",
                   "type": "string",
                   "enum": [
                     "improbable",
@@ -969,8 +969,8 @@
                     "probable"
                   ]
                 },
-                "data_loss_technical_assets": {
-                  "description": "Data loss technical assets",
+                "data_breach_technical_assets": {
+                  "description": "Data breach technical assets",
                   "type": [
                     "array",
                     "null"

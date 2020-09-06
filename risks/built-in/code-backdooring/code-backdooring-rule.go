@@ -80,24 +80,24 @@ func createRisk(technicalAsset model.TechnicalAsset, elevatedRisk bool) model.Ri
 			}
 		}
 	}
-	// data loss at all deployment targets
-	uniqueDataLossTechnicalAssetIDs := make(map[string]interface{})
-	uniqueDataLossTechnicalAssetIDs[technicalAsset.Id] = true
+	// data breach at all deployment targets
+	uniqueDataBreachTechnicalAssetIDs := make(map[string]interface{})
+	uniqueDataBreachTechnicalAssetIDs[technicalAsset.Id] = true
 	for _, codeDeploymentTargetCommLink := range technicalAsset.CommunicationLinks {
 		if codeDeploymentTargetCommLink.Usage == model.DevOps {
 			for _, dataAssetID := range codeDeploymentTargetCommLink.DataAssetsSent {
 				// it appears to be code when elevated integrity rating of sent data asset
 				if model.ParsedModelRoot.DataAssets[dataAssetID].Integrity >= model.Important {
 					// here we've got a deployment target which has its data assets at risk via deployment of backdoored code
-					uniqueDataLossTechnicalAssetIDs[codeDeploymentTargetCommLink.TargetId] = true
+					uniqueDataBreachTechnicalAssetIDs[codeDeploymentTargetCommLink.TargetId] = true
 					break
 				}
 			}
 		}
 	}
-	dataLossTechnicalAssetIDs := make([]string, 0)
-	for key, _ := range uniqueDataLossTechnicalAssetIDs {
-		dataLossTechnicalAssetIDs = append(dataLossTechnicalAssetIDs, key)
+	dataBreachTechnicalAssetIDs := make([]string, 0)
+	for key, _ := range uniqueDataBreachTechnicalAssetIDs {
+		dataBreachTechnicalAssetIDs = append(dataBreachTechnicalAssetIDs, key)
 	}
 	// create risk
 	risk := model.Risk{
@@ -107,8 +107,8 @@ func createRisk(technicalAsset model.TechnicalAsset, elevatedRisk bool) model.Ri
 		ExploitationImpact:           impact,
 		Title:                        title,
 		MostRelevantTechnicalAssetId: technicalAsset.Id,
-		DataLossProbability:          model.Probable,
-		DataLossTechnicalAssetIDs:    dataLossTechnicalAssetIDs,
+		DataBreachProbability:        model.Probable,
+		DataBreachTechnicalAssetIDs:  dataBreachTechnicalAssetIDs,
 	}
 	risk.SyntheticId = risk.Category.Id + "@" + technicalAsset.Id
 	return risk

@@ -61,13 +61,13 @@ func createRisk(technicalAsset model.TechnicalAsset, outgoingFlow model.Communic
 		impact = model.MediumImpact
 	}
 	// check all potential attack targets within the same trust boundary (accessible via web protocols)
-	uniqueDataLossTechnicalAssetIDs := make(map[string]interface{})
-	uniqueDataLossTechnicalAssetIDs[technicalAsset.Id] = true
+	uniqueDataBreachTechnicalAssetIDs := make(map[string]interface{})
+	uniqueDataBreachTechnicalAssetIDs[technicalAsset.Id] = true
 	for _, potentialTargetAsset := range model.ParsedModelRoot.TechnicalAssets {
 		if technicalAsset.IsSameTrustBoundaryNetworkOnly(potentialTargetAsset.Id) {
 			for _, commLinkIncoming := range model.IncomingTechnicalCommunicationLinksMappedByTargetId[potentialTargetAsset.Id] {
 				if commLinkIncoming.Protocol.IsPotentialWebAccessProtocol() {
-					uniqueDataLossTechnicalAssetIDs[potentialTargetAsset.Id] = true
+					uniqueDataBreachTechnicalAssetIDs[potentialTargetAsset.Id] = true
 					if potentialTargetAsset.HighestConfidentiality() == model.StrictlyConfidential {
 						impact = model.MediumImpact
 					}
@@ -79,9 +79,9 @@ func createRisk(technicalAsset model.TechnicalAsset, outgoingFlow model.Communic
 	if impact == model.LowImpact && model.ParsedModelRoot.TrustBoundaries[technicalAsset.GetTrustBoundaryId()].Type.IsWithinCloud() {
 		impact = model.MediumImpact
 	}
-	dataLossTechnicalAssetIDs := make([]string, 0)
-	for key, _ := range uniqueDataLossTechnicalAssetIDs {
-		dataLossTechnicalAssetIDs = append(dataLossTechnicalAssetIDs, key)
+	dataBreachTechnicalAssetIDs := make([]string, 0)
+	for key, _ := range uniqueDataBreachTechnicalAssetIDs {
+		dataBreachTechnicalAssetIDs = append(dataBreachTechnicalAssetIDs, key)
 	}
 	likelihood := model.Likely
 	if outgoingFlow.Usage == model.DevOps {
@@ -95,8 +95,8 @@ func createRisk(technicalAsset model.TechnicalAsset, outgoingFlow model.Communic
 		Title:                           title,
 		MostRelevantTechnicalAssetId:    technicalAsset.Id,
 		MostRelevantCommunicationLinkId: outgoingFlow.Id,
-		DataLossProbability:             model.Possible,
-		DataLossTechnicalAssetIDs:       dataLossTechnicalAssetIDs,
+		DataBreachProbability:           model.Possible,
+		DataBreachTechnicalAssetIDs:     dataBreachTechnicalAssetIDs,
 	}
 	risk.SyntheticId = risk.Category.Id + "@" + technicalAsset.Id + "@" + target.Id + "@" + outgoingFlow.Id
 	return risk

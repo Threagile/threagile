@@ -59,11 +59,11 @@ func createRisk(technicalAsset model.TechnicalAsset) model.Risk {
 		technicalAsset.HighestAvailability() == model.MissionCritical {
 		impact = model.HighImpact
 	}
-	// data loss at all container assets
-	dataLossTechnicalAssetIDs := make([]string, 0)
+	// data breach at all container assets
+	dataBreachTechnicalAssetIDs := make([]string, 0)
 	for id, techAsset := range model.ParsedModelRoot.TechnicalAssets {
 		if techAsset.Machine == model.Container {
-			dataLossTechnicalAssetIDs = append(dataLossTechnicalAssetIDs, id)
+			dataBreachTechnicalAssetIDs = append(dataBreachTechnicalAssetIDs, id)
 		}
 	}
 	// create risk
@@ -74,8 +74,8 @@ func createRisk(technicalAsset model.TechnicalAsset) model.Risk {
 		ExploitationImpact:           impact,
 		Title:                        title,
 		MostRelevantTechnicalAssetId: technicalAsset.Id,
-		DataLossProbability:          model.Probable,
-		DataLossTechnicalAssetIDs:    dataLossTechnicalAssetIDs,
+		DataBreachProbability:        model.Probable,
+		DataBreachTechnicalAssetIDs:  dataBreachTechnicalAssetIDs,
 	}
 	risk.SyntheticId = risk.Category.Id + "@" + technicalAsset.Id
 	return risk

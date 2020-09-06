@@ -89,8 +89,8 @@ func createRisk(techAsset model.TechnicalAsset, moreRisky bool) model.Risk {
 		Title: "<b>Missing Network Segmentation</b> to further encapsulate and protect <b>" + techAsset.Title + "</b> against unrelated " +
 			"lower protected assets in the same network segment, which might be easier to compromise by attackers",
 		MostRelevantTechnicalAssetId: techAsset.Id,
-		DataLossProbability:          model.Improbable,
-		DataLossTechnicalAssetIDs:    []string{techAsset.Id},
+		DataBreachProbability:        model.Improbable,
+		DataBreachTechnicalAssetIDs:  []string{techAsset.Id},
 	}
 	risk.SyntheticId = risk.Category.Id + "@" + techAsset.Id
 	return risk

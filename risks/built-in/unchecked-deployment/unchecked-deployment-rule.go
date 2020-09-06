@@ -49,16 +49,16 @@ func createRisk(technicalAsset model.TechnicalAsset) model.Risk {
 	title := "<b>Unchecked Deployment</b> risk at <b>" + technicalAsset.Title + "</b>"
 	// impact is depending on highest rating
 	impact := model.LowImpact
-	// data loss at all deployment targets
-	uniqueDataLossTechnicalAssetIDs := make(map[string]interface{})
-	uniqueDataLossTechnicalAssetIDs[technicalAsset.Id] = true
+	// data breach at all deployment targets
+	uniqueDataBreachTechnicalAssetIDs := make(map[string]interface{})
+	uniqueDataBreachTechnicalAssetIDs[technicalAsset.Id] = true
 	for _, codeDeploymentTargetCommLink := range technicalAsset.CommunicationLinks {
 		if codeDeploymentTargetCommLink.Usage == model.DevOps {
 			for _, dataAssetID := range codeDeploymentTargetCommLink.DataAssetsSent {
 				// it appears to be code when elevated integrity rating of sent data asset
 				if model.ParsedModelRoot.DataAssets[dataAssetID].Integrity >= model.Important {
 					// here we've got a deployment target which has its data assets at risk via deployment of backdoored code
-					uniqueDataLossTechnicalAssetIDs[codeDeploymentTargetCommLink.TargetId] = true
+					uniqueDataBreachTechnicalAssetIDs[codeDeploymentTargetCommLink.TargetId] = true
 					targetTechAsset := model.ParsedModelRoot.TechnicalAssets[codeDeploymentTargetCommLink.TargetId]
 					if targetTechAsset.HighestConfidentiality() >= model.Confidential ||
 						targetTechAsset.HighestIntegrity() >= model.Critical ||
@@ -70,9 +70,9 @@ func createRisk(technicalAsset model.TechnicalAsset) model.Risk {
 			}
 		}
 	}
-	dataLossTechnicalAssetIDs := make([]string, 0)
-	for key, _ := range uniqueDataLossTechnicalAssetIDs {
-		dataLossTechnicalAssetIDs = append(dataLossTechnicalAssetIDs, key)
+	dataBreachTechnicalAssetIDs := make([]string, 0)
+	for key, _ := range uniqueDataBreachTechnicalAssetIDs {
+		dataBreachTechnicalAssetIDs = append(dataBreachTechnicalAssetIDs, key)
 	}
 	// create risk
 	risk := model.Risk{
@@ -82,8 +82,8 @@ func createRisk(technicalAsset model.TechnicalAsset) model.Risk {
 		ExploitationImpact:           impact,
 		Title:                        title,
 		MostRelevantTechnicalAssetId: technicalAsset.Id,
-		DataLossProbability:          model.Possible,
-		DataLossTechnicalAssetIDs:    dataLossTechnicalAssetIDs,
+		DataBreachProbability:        model.Possible,
+		DataBreachTechnicalAssetIDs:  dataBreachTechnicalAssetIDs,
 	}
 	risk.SyntheticId = risk.Category.Id + "@" + technicalAsset.Id
 	return risk

@@ -197,8 +197,8 @@ type InputRiskIdentified struct {
 	Severity                         string   `json:"severity"`
 	Exploitation_likelihood          string   `json:"exploitation_likelihood"`
 	Exploitation_impact              string   `json:"exploitation_impact"`
-	Data_loss_probability            string   `json:"data_loss_probability"`
-	Data_loss_technical_assets       []string `json:"data_loss_technical_assets"`
+	Data_breach_probability          string   `json:"data_breach_probability"`
+	Data_breach_technical_assets     []string `json:"data_breach_technical_assets"`
 	Most_relevant_data_asset         string   `json:"most_relevant_data_asset"`
 	Most_relevant_technical_asset    string   `json:"most_relevant_technical_asset"`
 	Most_relevant_communication_link string   `json:"most_relevant_communication_link"`
@@ -1140,9 +1140,9 @@ func (what DataAsset) IdentifiedRisksByResponsibleTechnicalAssetId() map[string]
 	return result
 }
 
-func (what DataAsset) IsDataLossPotentialStillAtRisk() bool {
+func (what DataAsset) IsDataBreachPotentialStillAtRisk() bool {
 	for _, risk := range FilteredByStillAtRisk() {
-		for _, techAsset := range risk.DataLossTechnicalAssetIDs {
+		for _, techAsset := range risk.DataBreachTechnicalAssetIDs {
 			if Contains(ParsedModelRoot.TechnicalAssets[techAsset].DataAssetsProcessed, what.Id) {
 				return true
 			}
@@ -1154,19 +1154,19 @@ func (what DataAsset) IsDataLossPotentialStillAtRisk() bool {
 	return false
 }
 
-func (what DataAsset) IdentifiedDataLossProbability() DataLossProbability {
+func (what DataAsset) IdentifiedDataBreachProbability() DataBreachProbability {
 	highestProbability := Improbable
 	for _, risk := range AllRisks() {
-		for _, techAsset := range risk.DataLossTechnicalAssetIDs {
+		for _, techAsset := range risk.DataBreachTechnicalAssetIDs {
 			if Contains(ParsedModelRoot.TechnicalAssets[techAsset].DataAssetsProcessed, what.Id) {
-				if risk.DataLossProbability > highestProbability {
-					highestProbability = risk.DataLossProbability
+				if risk.DataBreachProbability > highestProbability {
+					highestProbability = risk.DataBreachProbability
 					break
 				}
 			}
 			if Contains(ParsedModelRoot.TechnicalAssets[techAsset].DataAssetsStored, what.Id) {
-				if risk.DataLossProbability > highestProbability {
-					highestProbability = risk.DataLossProbability
+				if risk.DataBreachProbability > highestProbability {
+					highestProbability = risk.DataBreachProbability
 					break
 				}
 			}
@@ -1175,19 +1175,19 @@ func (what DataAsset) IdentifiedDataLossProbability() DataLossProbability {
 	return highestProbability
 }
 
-func (what DataAsset) IdentifiedDataLossProbabilityStillAtRisk() DataLossProbability {
+func (what DataAsset) IdentifiedDataBreachProbabilityStillAtRisk() DataBreachProbability {
 	highestProbability := Improbable
 	for _, risk := range FilteredByStillAtRisk() {
-		for _, techAsset := range risk.DataLossTechnicalAssetIDs {
+		for _, techAsset := range risk.DataBreachTechnicalAssetIDs {
 			if Contains(ParsedModelRoot.TechnicalAssets[techAsset].DataAssetsProcessed, what.Id) {
-				if risk.DataLossProbability > highestProbability {
-					highestProbability = risk.DataLossProbability
+				if risk.DataBreachProbability > highestProbability {
+					highestProbability = risk.DataBreachProbability
 					break
 				}
 			}
 			if Contains(ParsedModelRoot.TechnicalAssets[techAsset].DataAssetsStored, what.Id) {
-				if risk.DataLossProbability > highestProbability {
-					highestProbability = risk.DataLossProbability
+				if risk.DataBreachProbability > highestProbability {
+					highestProbability = risk.DataBreachProbability
 					break
 				}
 			}
@@ -1196,10 +1196,10 @@ func (what DataAsset) IdentifiedDataLossProbabilityStillAtRisk() DataLossProbabi
 	return highestProbability
 }
 
-func (what DataAsset) IdentifiedDataLossProbabilityRisksStillAtRisk() []Risk {
+func (what DataAsset) IdentifiedDataBreachProbabilityRisksStillAtRisk() []Risk {
 	result := make([]Risk, 0)
 	for _, risk := range FilteredByStillAtRisk() {
-		for _, techAsset := range risk.DataLossTechnicalAssetIDs {
+		for _, techAsset := range risk.DataBreachTechnicalAssetIDs {
 			if Contains(ParsedModelRoot.TechnicalAssets[techAsset].DataAssetsProcessed, what.Id) {
 				result = append(result, risk)
 				break
@@ -1213,10 +1213,10 @@ func (what DataAsset) IdentifiedDataLossProbabilityRisksStillAtRisk() []Risk {
 	return result
 }
 
-func (what DataAsset) IdentifiedDataLossProbabilityRisks() []Risk {
+func (what DataAsset) IdentifiedDataBreachProbabilityRisks() []Risk {
 	result := make([]Risk, 0)
 	for _, risk := range AllRisks() {
-		for _, techAsset := range risk.DataLossTechnicalAssetIDs {
+		for _, techAsset := range risk.DataBreachTechnicalAssetIDs {
 			if Contains(ParsedModelRoot.TechnicalAssets[techAsset].DataAssetsProcessed, what.Id) {
 				result = append(result, risk)
 				break
@@ -1510,33 +1510,33 @@ func (what TechnicalAsset) HighestRiskSeverity() RiskSeverity {
 }
 */
 
-type ByDataAssetDataLossProbabilityAndTitleSort []DataAsset
+type ByDataAssetDataBreachProbabilityAndTitleSort []DataAsset
 
-func (what ByDataAssetDataLossProbabilityAndTitleSort) Len() int { return len(what) }
-func (what ByDataAssetDataLossProbabilityAndTitleSort) Swap(i, j int) {
+func (what ByDataAssetDataBreachProbabilityAndTitleSort) Len() int { return len(what) }
+func (what ByDataAssetDataBreachProbabilityAndTitleSort) Swap(i, j int) {
 	what[i], what[j] = what[j], what[i]
 }
-func (what ByDataAssetDataLossProbabilityAndTitleSort) Less(i, j int) bool {
-	highestDataLossProbabilityLeft := what[i].IdentifiedDataLossProbability()
-	highestDataLossProbabilityRight := what[j].IdentifiedDataLossProbability()
-	if highestDataLossProbabilityLeft == highestDataLossProbabilityRight {
+func (what ByDataAssetDataBreachProbabilityAndTitleSort) Less(i, j int) bool {
+	highestDataBreachProbabilityLeft := what[i].IdentifiedDataBreachProbability()
+	highestDataBreachProbabilityRight := what[j].IdentifiedDataBreachProbability()
+	if highestDataBreachProbabilityLeft == highestDataBreachProbabilityRight {
 		return what[i].Title < what[j].Title
 	}
-	return highestDataLossProbabilityLeft > highestDataLossProbabilityRight
+	return highestDataBreachProbabilityLeft > highestDataBreachProbabilityRight
 }
 
-type ByDataAssetDataLossProbabilityAndTitleSortStillAtRisk []DataAsset
+type ByDataAssetDataBreachProbabilityAndTitleSortStillAtRisk []DataAsset
 
-func (what ByDataAssetDataLossProbabilityAndTitleSortStillAtRisk) Len() int { return len(what) }
-func (what ByDataAssetDataLossProbabilityAndTitleSortStillAtRisk) Swap(i, j int) {
+func (what ByDataAssetDataBreachProbabilityAndTitleSortStillAtRisk) Len() int { return len(what) }
+func (what ByDataAssetDataBreachProbabilityAndTitleSortStillAtRisk) Swap(i, j int) {
 	what[i], what[j] = what[j], what[i]
 }
-func (what ByDataAssetDataLossProbabilityAndTitleSortStillAtRisk) Less(i, j int) bool {
-	risksLeft := what[i].IdentifiedDataLossProbabilityRisksStillAtRisk()
-	risksRight := what[j].IdentifiedDataLossProbabilityRisksStillAtRisk()
-	highestDataLossProbabilityLeft := what[i].IdentifiedDataLossProbabilityStillAtRisk()
-	highestDataLossProbabilityRight := what[j].IdentifiedDataLossProbabilityStillAtRisk()
-	if highestDataLossProbabilityLeft == highestDataLossProbabilityRight {
+func (what ByDataAssetDataBreachProbabilityAndTitleSortStillAtRisk) Less(i, j int) bool {
+	risksLeft := what[i].IdentifiedDataBreachProbabilityRisksStillAtRisk()
+	risksRight := what[j].IdentifiedDataBreachProbabilityRisksStillAtRisk()
+	highestDataBreachProbabilityLeft := what[i].IdentifiedDataBreachProbabilityStillAtRisk()
+	highestDataBreachProbabilityRight := what[j].IdentifiedDataBreachProbabilityStillAtRisk()
+	if highestDataBreachProbabilityLeft == highestDataBreachProbabilityRight {
 		if len(risksLeft) == 0 && len(risksRight) > 0 {
 			return false
 		}
@@ -1545,7 +1545,7 @@ func (what ByDataAssetDataLossProbabilityAndTitleSortStillAtRisk) Less(i, j int)
 		}
 		return what[i].Title < what[j].Title
 	}
-	return highestDataLossProbabilityLeft > highestDataLossProbabilityRight
+	return highestDataBreachProbabilityLeft > highestDataBreachProbabilityRight
 }
 
 type ByOrderAndIdSort []TechnicalAsset
@@ -2107,22 +2107,22 @@ func SortedDataAssetsByTitle() []DataAsset {
 }
 
 // as in Go ranging over map is random order, range over them in sorted (hence reproducible) way:
-func SortedDataAssetsByDataLossProbabilityAndTitleStillAtRisk() []DataAsset {
+func SortedDataAssetsByDataBreachProbabilityAndTitleStillAtRisk() []DataAsset {
 	assets := make([]DataAsset, 0)
 	for _, asset := range ParsedModelRoot.DataAssets {
 		assets = append(assets, asset)
 	}
-	sort.Sort(ByDataAssetDataLossProbabilityAndTitleSortStillAtRisk(assets))
+	sort.Sort(ByDataAssetDataBreachProbabilityAndTitleSortStillAtRisk(assets))
 	return assets
 }
 
 // as in Go ranging over map is random order, range over them in sorted (hence reproducible) way:
-func SortedDataAssetsByDataLossProbabilityAndTitle() []DataAsset {
+func SortedDataAssetsByDataBreachProbabilityAndTitle() []DataAsset {
 	assets := make([]DataAsset, 0)
 	for _, asset := range ParsedModelRoot.DataAssets {
 		assets = append(assets, asset)
 	}
-	sort.Sort(ByDataAssetDataLossProbabilityAndTitleSortStillAtRisk(assets))
+	sort.Sort(ByDataAssetDataBreachProbabilityAndTitleSortStillAtRisk(assets))
 	return assets
 }
 
@@ -2612,15 +2612,15 @@ func (what TechnicalAsset) DetermineShapeFillColor() string {
 
 // === Risk stuff ========================================
 
-type DataLossProbability int
+type DataBreachProbability int
 
 const (
-	Improbable DataLossProbability = iota
+	Improbable DataBreachProbability = iota
 	Possible
 	Probable
 )
 
-func DataLossProbabilityValues() []TypeEnum {
+func DataBreachProbabilityValues() []TypeEnum {
 	return []TypeEnum{
 		Improbable,
 		Possible,
@@ -2628,16 +2628,16 @@ func DataLossProbabilityValues() []TypeEnum {
 	}
 }
 
-func (what DataLossProbability) String() string {
+func (what DataBreachProbability) String() string {
 	// NOTE: maintain list also in schema.json for validation in IDEs
 	return [...]string{"improbable", "possible", "probable"}[what]
 }
 
-func (what DataLossProbability) Title() string {
+func (what DataBreachProbability) Title() string {
 	return [...]string{"Improbable", "Possible", "Probable"}[what]
 }
 
-func (what DataLossProbability) MarshalJSON() ([]byte, error) {
+func (what DataBreachProbability) MarshalJSON() ([]byte, error) {
 	return json.Marshal(what.String())
 }
 
@@ -2943,8 +2943,8 @@ type Risk struct {
 	MostRelevantTrustBoundaryId     string                     `json:"most_relevant_trust_boundary"`
 	MostRelevantSharedRuntimeId     string                     `json:"most_relevant_shared_runtime"`
 	MostRelevantCommunicationLinkId string                     `json:"most_relevant_communication_link"`
-	DataLossProbability             DataLossProbability        `json:"data_loss_probability"`
-	DataLossTechnicalAssetIDs       []string                   `json:"data_loss_technical_assets"`
+	DataBreachProbability           DataBreachProbability      `json:"data_breach_probability"`
+	DataBreachTechnicalAssetIDs     []string                   `json:"data_breach_technical_assets"`
 	// TODO: refactor all "Id" here to "ID"?
 }
 
@@ -3001,14 +3001,14 @@ func (what ByRiskSeveritySort) Less(i, j int) bool {
 	return what[i].Severity > what[j].Severity
 }
 
-type ByDataLossProbabilitySort []Risk
+type ByDataBreachProbabilitySort []Risk
 
-func (what ByDataLossProbabilitySort) Len() int { return len(what) }
-func (what ByDataLossProbabilitySort) Swap(i, j int) {
+func (what ByDataBreachProbabilitySort) Len() int { return len(what) }
+func (what ByDataBreachProbabilitySort) Swap(i, j int) {
 	what[i], what[j] = what[j], what[i]
 }
-func (what ByDataLossProbabilitySort) Less(i, j int) bool {
-	if what[i].DataLossProbability == what[j].DataLossProbability {
+func (what ByDataBreachProbabilitySort) Less(i, j int) bool {
+	if what[i].DataBreachProbability == what[j].DataBreachProbability {
 		trackingStatusLeft := what[i].GetRiskTrackingStatusDefaultingUnchecked()
 		trackingStatusRight := what[j].GetRiskTrackingStatusDefaultingUnchecked()
 		if trackingStatusLeft == trackingStatusRight {
@@ -3017,7 +3017,7 @@ func (what ByDataLossProbabilitySort) Less(i, j int) bool {
 			return trackingStatusLeft < trackingStatusRight
 		}
 	}
-	return what[i].DataLossProbability > what[j].DataLossProbability
+	return what[i].DataBreachProbability > what[j].DataBreachProbability
 }
 
 type RiskTracking struct {

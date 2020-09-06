@@ -89,8 +89,8 @@ func createRisk(techAsset model.TechnicalAsset, moreImpact bool, sameExecutionEn
 		Title: "<b>Missing Vault Isolation</b> to further encapsulate and protect vault-related asset <b>" + techAsset.Title + "</b> against unrelated " +
 			"lower protected assets " + others + ", which might be easier to compromise by attackers",
 		MostRelevantTechnicalAssetId: techAsset.Id,
-		DataLossProbability:          model.Improbable,
-		DataLossTechnicalAssetIDs:    []string{techAsset.Id},
+		DataBreachProbability:        model.Improbable,
+		DataBreachTechnicalAssetIDs:  []string{techAsset.Id},
 	}
 	risk.SyntheticId = risk.Category.Id + "@" + techAsset.Id
 	return risk

@@ -90,8 +90,8 @@ func createRisk(techAsset model.TechnicalAsset, dataFlow model.CommunicationLink
 			"</b> via <b>" + dataFlow.Title + "</b>" + hopBetween,
 		MostRelevantTechnicalAssetId:    techAsset.Id,
 		MostRelevantCommunicationLinkId: dataFlow.Id,
-		DataLossProbability:             model.Improbable,
-		DataLossTechnicalAssetIDs:       []string{},
+		DataBreachProbability:           model.Improbable,
+		DataBreachTechnicalAssetIDs:     []string{},
 	}
 	risk.SyntheticId = risk.Category.Id + "@" + techAsset.Id + "@" + clientOutsideTrustBoundary.Id + "@" + dataFlow.Id
 	return risk

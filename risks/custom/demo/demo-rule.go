@@ -50,8 +50,8 @@ func createRisk(technicalAsset model.TechnicalAsset) model.Risk {
 		ExploitationImpact:           model.MediumImpact,
 		Title:                        "<b>Demo</b> risk at <b>" + technicalAsset.Title + "</b>",
 		MostRelevantTechnicalAssetId: technicalAsset.Id,
-		DataLossProbability:          model.Possible,
-		DataLossTechnicalAssetIDs:    []string{technicalAsset.Id},
+		DataBreachProbability:        model.Possible,
+		DataBreachTechnicalAssetIDs:  []string{technicalAsset.Id},
 	}
 	risk.SyntheticId = risk.Category.Id + "@" + technicalAsset.Id
 	return risk
