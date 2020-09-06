@@ -410,7 +410,7 @@ func createTableOfContents() {
 		pdf.Text(11, y, "Risks by Vulnerability Category")
 		pdf.SetFont("Helvetica", "", fontSizeBody)
 		y += 6
-		pdf.Text(11, y, "    "+"Identified Risks grouped by Vulnerability Category")
+		pdf.Text(11, y, "    "+"Identified Risks by Vulnerability Category")
 		pdf.Text(175, y, "{intro-risks-by-vulnerability-category}")
 		pdf.Line(15.6, y+1.3, 11+171.5, y+1.3)
 		pdf.Link(10, y-5, 172.5, 6.5, pdf.AddLink())
@@ -465,7 +465,7 @@ func createTableOfContents() {
 		pdf.Text(11, y, "Risks by Technical Asset")
 		pdf.SetFont("Helvetica", "", fontSizeBody)
 		y += 6
-		pdf.Text(11, y, "    "+"Identified Risks grouped by Technical Asset")
+		pdf.Text(11, y, "    "+"Identified Risks by Technical Asset")
 		pdf.Text(175, y, "{intro-risks-by-technical-asset}")
 		pdf.Line(15.6, y+1.3, 11+171.5, y+1.3)
 		pdf.Link(10, y-5, 172.5, 6.5, pdf.AddLink())
@@ -525,7 +525,7 @@ func createTableOfContents() {
 		pdf.Text(11, y, "Data Breach Probabilities by Data Asset")
 		pdf.SetFont("Helvetica", "", fontSizeBody)
 		y += 6
-		pdf.Text(11, y, "    "+"Identified Data Breach Probabilities grouped by Data Asset")
+		pdf.Text(11, y, "    "+"Identified Data Breach Probabilities by Data Asset")
 		pdf.Text(175, y, "{intro-risks-by-data-asset}")
 		pdf.Line(15.6, y+1.3, 11+171.5, y+1.3)
 		pdf.Link(10, y-5, 172.5, 6.5, pdf.AddLink())
@@ -2223,7 +2223,7 @@ func createTagListing() {
 func createRiskCategories() {
 	uni := pdf.UnicodeTranslatorFromDescriptor("")
 	// category title
-	title := "Identified Risks grouped by Vulnerability Category"
+	title := "Identified Risks by Vulnerability Category"
 	pdfColorBlack()
 	addHeadline(title, false)
 	defineLinkTarget("{intro-risks-by-vulnerability-category}")
@@ -2490,7 +2490,7 @@ func writeRiskTrackingStatus(risk model.Risk) {
 func createTechnicalAssets() {
 	uni := pdf.UnicodeTranslatorFromDescriptor("")
 	// category title
-	title := "Identified Risks grouped by Technical Asset"
+	title := "Identified Risks by Technical Asset"
 	pdfColorBlack()
 	addHeadline(title, false)
 	defineLinkTarget("{intro-risks-by-technical-asset}")
@@ -3301,7 +3301,7 @@ func createTechnicalAssets() {
 
 func createDataAssets() {
 	uni := pdf.UnicodeTranslatorFromDescriptor("")
-	title := "Identified Data Breach Probabilities grouped by Data Asset"
+	title := "Identified Data Breach Probabilities by Data Asset"
 	pdfColorBlack()
 	addHeadline(title, false)
 	defineLinkTarget("{intro-risks-by-data-asset}")
