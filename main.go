@@ -4782,6 +4782,8 @@ func parseModel(inputFilename string) {
 						severity = model.HighSeverity
 					case model.CriticalSeverity.String():
 						severity = model.CriticalSeverity
+					case "": // added default
+						severity = model.MediumSeverity
 					default:
 						panic(errors.New("Unknown 'severity' value of individual risk instance: " + fmt.Sprintf("%v", indivRiskInstance.Severity)))
 					}
@@ -4795,6 +4797,8 @@ func parseModel(inputFilename string) {
 						exploitationLikelihood = model.VeryLikely
 					case model.Frequent.String():
 						exploitationLikelihood = model.Frequent
+					case "": // added default
+						exploitationLikelihood = model.Likely
 					default:
 						panic(errors.New("Unknown 'exploitation_likelihood' value of individual risk instance: " + fmt.Sprintf("%v", indivRiskInstance.Exploitation_likelihood)))
 					}
@@ -4808,6 +4812,8 @@ func parseModel(inputFilename string) {
 						exploitationImpact = model.HighImpact
 					case model.VeryHighImpact.String():
 						exploitationImpact = model.VeryHighImpact
+					case "": // added default
+						exploitationImpact = model.MediumImpact
 					default:
 						panic(errors.New("Unknown 'exploitation_impact' value of individual risk instance: " + fmt.Sprintf("%v", indivRiskInstance.Exploitation_impact)))
 					}
@@ -4844,6 +4850,8 @@ func parseModel(inputFilename string) {
 						dataBreachProbability = model.Possible
 					case model.Probable.String():
 						dataBreachProbability = model.Probable
+					case "": // added default
+						dataBreachProbability = model.Possible
 					default:
 						panic(errors.New("Unknown 'data_breach_probability' value of individual risk instance: " + fmt.Sprintf("%v", indivRiskInstance.Data_breach_probability)))
 					}
