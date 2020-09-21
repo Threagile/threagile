@@ -18,8 +18,8 @@ func Category() model.RiskCategory {
 		Mitigation: "Apply hardening of all container infrastructures (see for example the <i>CIS-Benchmarks for Docker and Kubernetes</i> and the <i>Docker Bench for Security</i>). " +
 			"Use only trusted base images of the original vendors, verify digital signatures and apply image creation best practices. " +
 			"Also consider using Google's <i>Distroless</i> base images or otherwise very small base images. " +
-			"Regularly execute container image vulnerability scans with tools checking the layers for known vulnerable components.",
-		Check:          "Are recommendations from the linked cheat sheet and referenced ASVS or CSVS chapter applied?",
+			"Regularly execute container image scans with tools checking the layers for vulnerable components.",
+		Check:          "Are recommendations from the linked cheat sheet and referenced ASVS/CSVS applied?",
 		Function:       model.Operations,
 		STRIDE:         model.Tampering,
 		DetectionLogic: "In-scope technical assets running as containers.",
