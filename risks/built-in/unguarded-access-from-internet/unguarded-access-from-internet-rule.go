@@ -28,7 +28,7 @@ func Category() model.RiskCategory {
 			model.WebServer.String() + ", " + model.WebApplication.String() + ", " + model.ReverseProxy.String() + ", " + model.WAF.String() + ", and " + model.Gateway.String() + " assets are exempted from this risk when " +
 			"they do not consist of custom developed code and " +
 			"the data-flow only consists of HTTP or FTP protocols. Access from " + model.Monitoring.String() + " systems " +
-			"as well as VPN-protected connections are exempted from this risk.",
+			"as well as VPN-protected connections are exempted.",
 		RiskAssessment: "The matching technical assets are at " + model.LowSeverity.String() + " risk. When either the " +
 			"confidentiality rating is " + model.StrictlyConfidential.String() + " or the integrity rating " +
 			"is " + model.MissionCritical.String() + ", the risk-rating is considered " + model.MediumSeverity.String() + ". " +
