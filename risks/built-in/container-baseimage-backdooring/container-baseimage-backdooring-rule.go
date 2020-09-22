@@ -23,7 +23,7 @@ func Category() model.RiskCategory {
 		Function:       model.Operations,
 		STRIDE:         model.Tampering,
 		DetectionLogic: "In-scope technical assets running as containers.",
-		RiskAssessment: "The risk rating depends on the sensitivity of the technical asset itself and of the data assets processed and stored.",
+		RiskAssessment: "The risk rating depends on the sensitivity of the technical asset itself and of the data assets.",
 		FalsePositives: "Fully trusted (i.e. reviewed and cryptographically signed or similar) base images of containers can be considered " +
 			"as false positives after individual review.",
 		ModelFailurePossibleReason: false,
