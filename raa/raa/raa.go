@@ -136,7 +136,7 @@ func calculateAttackerAttractiveness(techAsset model.TechnicalAsset) float64 {
 	if techAsset.Technology == model.IdentityProvider || techAsset.Technology == model.IdentityStoreDatabase || techAsset.Technology == model.IdentityStoreLDAP {
 		score = score * 2.5
 	} else if techAsset.Type == model.Datastore {
-		score = score * 1.5
+		score = score * 2
 	}
 	if techAsset.MultiTenant {
 		score = score * 1.5
