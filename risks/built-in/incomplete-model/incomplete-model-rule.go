@@ -34,12 +34,14 @@ func GenerateRisks() []model.Risk {
 	risks := make([]model.Risk, 0)
 	for _, id := range model.SortedTechnicalAssetIDs() {
 		technicalAsset := model.ParsedModelRoot.TechnicalAssets[id]
-		if technicalAsset.Technology == model.UnknownTechnology {
-			risks = append(risks, createRiskTechAsset(technicalAsset))
-		}
-		for _, commLink := range technicalAsset.CommunicationLinks {
-			if commLink.Protocol == model.UnknownProtocol {
-				risks = append(risks, createRiskCommLink(technicalAsset, commLink))
+		if !technicalAsset.OutOfScope {
+			if technicalAsset.Technology == model.UnknownTechnology {
+				risks = append(risks, createRiskTechAsset(technicalAsset))
+			}
+			for _, commLink := range technicalAsset.CommunicationLinks {
+				if commLink.Protocol == model.UnknownProtocol {
+					risks = append(risks, createRiskCommLink(technicalAsset, commLink))
+				}
 			}
 		}
 	}
