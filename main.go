@@ -2111,7 +2111,7 @@ func importModel(context *gin.Context) {
 	lockFolder(folderNameOfKey)
 	defer unlockFolder(folderNameOfKey)
 
-	uuid := context.Param("model-id")
+	uuid := context.Param("model-id") // UUID is syntactically validated in readModel+checkModelFolder (next line) via uuid.Parse(modelUUID)
 	_, _, ok = readModel(context, uuid, key, folderNameOfKey)
 	if ok {
 		// first analyze it simply by executing the full risk process (just discard the result) to ensure that everything would work
