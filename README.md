@@ -1,8 +1,8 @@
 # Threagile
-#### Agile Threat Modeling Toolkit
 
 [![Threagile Community Chat](https://badges.gitter.im/Threagile/community.svg)](https://gitter.im/Threagile/community)
 
+#### Agile Threat Modeling Toolkit
 Threagile (see [https://threagile.io](https://threagile.io) for more details) is an open-source toolkit for 
 agile threat modeling: 
 
