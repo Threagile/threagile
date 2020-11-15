@@ -1214,7 +1214,7 @@ func applyRAA() string {
 	// use the plugin
 	raaCalcFunc, ok := symCalculateRAA.(func() string) // symCalculateRAA.(func(model.ParsedModel) string)
 	if !ok {
-		panic("RAA plugin has no 'CalculateRAA() string' function")
+		panic(errors.New("RAA plugin has no 'CalculateRAA() string' function"))
 	}
 	// call it
 	return raaCalcFunc()
@@ -1242,7 +1242,7 @@ func loadCustomRiskRules() {
 				// register the risk rule plugin for later use: in this case interface type model.CustomRiskRule (defined above)
 				symCustomRiskRuleVar, ok := symCustomRiskRule.(model.CustomRiskRule)
 				if !ok {
-					panic("Custom risk rule plugin has no 'CustomRiskRule' variable")
+					panic(errors.New("custom risk rule plugin has no 'CustomRiskRule' variable"))
 				}
 				// simply add to a map (just convenience) where key is the category id and value the rule's execution function
 				ruleID := symCustomRiskRuleVar.Category().Id
@@ -1286,7 +1286,7 @@ func execute(context *gin.Context, dryRun bool) (yamlContent []byte, ok bool) {
 			err = r.(error)
 			log.Println(err)
 			context.JSON(http.StatusBadRequest, gin.H{
-				"error": err.Error(),
+				"error": strings.TrimSpace(err.Error()),
 			})
 			ok = false
 		}
@@ -1298,7 +1298,7 @@ func execute(context *gin.Context, dryRun bool) (yamlContent []byte, ok bool) {
 	fileUploaded, header, err := context.Request.FormFile("file")
 	checkErr(err)
 
-	if header.Size > 30000000 {
+	if header.Size > 50000000 {
 		msg := "maximum model upload file size exceeded (denial-of-service protection)"
 		log.Println(msg)
 		context.JSON(http.StatusRequestEntityTooLarge, gin.H{
@@ -1427,19 +1427,13 @@ func doItViaRuntimeCall(modelFile string, outputDir string, executeModelMacro st
 	}
 	self := os.Args[0]
 	cmd = exec.Command(self, args...)
-	errBuf := bytes.NewBuffer(make([]byte, 100))
-	cmd.Stderr = errBuf
-	if stdout, err := cmd.Output(); err != nil { // TODO needs improvement (better direct stderr handling to communicate)
-		errStr := errBuf.String()
-		lines := strings.Split(errStr, "\n")
-		if len(lines) > 2 {
-			errStr = lines[len(lines)-2]
-		}
-		panic(errors.New(errStr))
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		panic(errors.New(string(out)))
 	} else {
-		if *verbose && len(stdout) > 0 {
+		if *verbose && len(out) > 0 {
 			fmt.Println("---")
-			fmt.Print(string(stdout))
+			fmt.Print(string(out))
 			fmt.Println("---")
 		}
 	}
@@ -1855,7 +1849,7 @@ func deleteTokenHashFromMaps(tokenHash string) {
 
 func xor(key []byte, xor []byte) []byte {
 	if len(key) != len(xor) {
-		panic("Key length not matching XOR length")
+		panic(errors.New("key length not matching XOR length"))
 	}
 	result := make([]byte, len(xor))
 	for i, b := range key {
@@ -1880,7 +1874,7 @@ func analyzeModelOnServerDirectly(context *gin.Context) {
 			}
 			log.Println(err)
 			context.JSON(http.StatusBadRequest, gin.H{
-				"error": err.Error(),
+				"error": strings.TrimSpace(err.Error()),
 			})
 			ok = false
 		}
@@ -2001,7 +1995,7 @@ func streamResponse(context *gin.Context, responseType responseType) {
 			}
 			log.Println(err)
 			context.JSON(http.StatusBadRequest, gin.H{
-				"error": err.Error(),
+				"error": strings.TrimSpace(err.Error()),
 			})
 			ok = false
 		}
@@ -2933,7 +2927,7 @@ func setOverview(context *gin.Context) {
 func handleErrorInServiceCall(err error, context *gin.Context) {
 	log.Println(err)
 	context.JSON(http.StatusBadRequest, gin.H{
-		"error": err.Error(),
+		"error": strings.TrimSpace(err.Error()),
 	})
 }
 
@@ -3944,14 +3938,14 @@ func parseModel(inputFilename string) {
 		case model.MissionCritical.String():
 			businessCriticality = model.MissionCritical
 		default:
-			panic(errors.New("Unknown 'business_criticality' of application: " + modelInput.Business_criticality))
+			panic(errors.New("unknown 'business_criticality' value of application: " + modelInput.Business_criticality))
 		}
 
 		reportDate := time.Now()
 		if len(modelInput.Date) > 0 {
 			reportDate, err = time.Parse("2006-01-02", modelInput.Date)
 			if err != nil {
-				panic(errors.New("Unable to parse 'date' of model"))
+				panic(errors.New("unable to parse 'date' value of model file"))
 			}
 		}
 
@@ -3994,7 +3988,7 @@ func parseModel(inputFilename string) {
 			case model.DevOps.String():
 				usage = model.DevOps
 			default:
-				panic(errors.New("Unknown 'usage' of data asset: " + asset.Usage))
+				panic(errors.New("unknown 'usage' value of data asset '" + title + "': " + asset.Usage))
 			}
 
 			var quantity model.Quantity
@@ -4008,7 +4002,7 @@ func parseModel(inputFilename string) {
 			case model.VeryMany.String():
 				quantity = model.VeryMany
 			default:
-				panic(errors.New("Unknown 'quantity' of data asset: " + asset.Quantity))
+				panic(errors.New("unknown 'quantity' value of data asset '" + title + "': " + asset.Quantity))
 			}
 
 			var confidentiality model.Confidentiality
@@ -4024,7 +4018,7 @@ func parseModel(inputFilename string) {
 			case model.StrictlyConfidential.String():
 				confidentiality = model.StrictlyConfidential
 			default:
-				panic(errors.New("Unknown 'confidentiality' of data asset: " + asset.Confidentiality))
+				panic(errors.New("unknown 'confidentiality' value of data asset '" + title + "': " + asset.Confidentiality))
 			}
 
 			var integrity model.Criticality
@@ -4040,7 +4034,7 @@ func parseModel(inputFilename string) {
 			case model.MissionCritical.String():
 				integrity = model.MissionCritical
 			default:
-				panic(errors.New("Unknown 'integrity' of data asset: " + asset.Integrity))
+				panic(errors.New("unknown 'integrity' value of data asset '" + title + "': " + asset.Integrity))
 			}
 
 			var availability model.Criticality
@@ -4056,7 +4050,7 @@ func parseModel(inputFilename string) {
 			case model.MissionCritical.String():
 				availability = model.MissionCritical
 			default:
-				panic(errors.New("Unknown 'availability' of data asset: " + asset.Availability))
+				panic(errors.New("unknown 'availability' value of data asset '" + title + "': " + asset.Availability))
 			}
 
 			checkIdSyntax(id)
@@ -4069,7 +4063,7 @@ func parseModel(inputFilename string) {
 				Usage:                  usage,
 				Description:            withDefault(fmt.Sprintf("%v", asset.Description), title),
 				Quantity:               quantity,
-				Tags:                   checkTags(lowerCaseAndTrim(asset.Tags)),
+				Tags:                   checkTags(lowerCaseAndTrim(asset.Tags), "data asset '"+title+"'"),
 				Origin:                 fmt.Sprintf("%v", asset.Origin),
 				Owner:                  fmt.Sprintf("%v", asset.Owner),
 				Confidentiality:        confidentiality,
@@ -4091,7 +4085,7 @@ func parseModel(inputFilename string) {
 			case model.DevOps.String():
 				usage = model.DevOps
 			default:
-				panic(errors.New("Unknown 'usage' of technical asset: " + fmt.Sprintf("%v", asset.Usage)))
+				panic(errors.New("unknown 'usage' value of technical asset '" + title + "': " + fmt.Sprintf("%v", asset.Usage)))
 			}
 
 			var dataAssetsProcessed = make([]string, 0)
@@ -4099,7 +4093,7 @@ func parseModel(inputFilename string) {
 				dataAssetsProcessed = make([]string, len(asset.Data_assets_processed))
 				for i, parsedProcessedAsset := range asset.Data_assets_processed {
 					referencedAsset := fmt.Sprintf("%v", parsedProcessedAsset)
-					checkDataAssetTargetExists(referencedAsset)
+					checkDataAssetTargetExists(referencedAsset, "technical asset '"+title+"'")
 					dataAssetsProcessed[i] = referencedAsset
 				}
 			}
@@ -4109,7 +4103,7 @@ func parseModel(inputFilename string) {
 				dataAssetsStored = make([]string, len(asset.Data_assets_stored))
 				for i, parsedStoredAssets := range asset.Data_assets_stored {
 					referencedAsset := fmt.Sprintf("%v", parsedStoredAssets)
-					checkDataAssetTargetExists(referencedAsset)
+					checkDataAssetTargetExists(referencedAsset, "technical asset '"+title+"'")
 					dataAssetsStored[i] = referencedAsset
 				}
 			}
@@ -4123,7 +4117,7 @@ func parseModel(inputFilename string) {
 			case model.Datastore.String():
 				technicalAssetType = model.Datastore
 			default:
-				panic(errors.New("Unknown 'type' of technical asset: " + fmt.Sprintf("%v", asset.Type)))
+				panic(errors.New("unknown 'type' value of technical asset '" + title + "': " + fmt.Sprintf("%v", asset.Type)))
 			}
 
 			var technicalAssetSize model.TechnicalAssetSize
@@ -4137,7 +4131,7 @@ func parseModel(inputFilename string) {
 			case model.Component.String():
 				technicalAssetSize = model.Component
 			default:
-				panic(errors.New("Unknown 'size' of technical asset: " + fmt.Sprintf("%v", asset.Size)))
+				panic(errors.New("unknown 'size' value of technical asset '" + title + "': " + fmt.Sprintf("%v", asset.Size)))
 			}
 
 			var technicalAssetTechnology model.TechnicalAssetTechnology
@@ -4257,7 +4251,7 @@ func parseModel(inputFilename string) {
 			case model.Library.String():
 				technicalAssetTechnology = model.Library
 			default:
-				panic(errors.New("Unknown 'technology' of technical asset: " + fmt.Sprintf("%v", asset.Technology)))
+				panic(errors.New("unknown 'technology' value of technical asset '" + title + "': " + fmt.Sprintf("%v", asset.Technology)))
 			}
 
 			var encryption model.EncryptionStyle
@@ -4273,7 +4267,7 @@ func parseModel(inputFilename string) {
 			case model.DataWithEnduserIndividualKey.String():
 				encryption = model.DataWithEnduserIndividualKey
 			default:
-				panic(errors.New("Unknown 'encryption' of technical asset: " + fmt.Sprintf("%v", asset.Encryption)))
+				panic(errors.New("unknown 'encryption' value of technical asset '" + title + "': " + fmt.Sprintf("%v", asset.Encryption)))
 			}
 
 			var technicalAssetMachine model.TechnicalAssetMachine
@@ -4287,7 +4281,7 @@ func parseModel(inputFilename string) {
 			case model.Serverless.String():
 				technicalAssetMachine = model.Serverless
 			default:
-				panic(errors.New("Unknown 'machine' of technical asset: " + fmt.Sprintf("%v", asset.Machine)))
+				panic(errors.New("unknown 'machine' value of technical asset '" + title + "': " + fmt.Sprintf("%v", asset.Machine)))
 			}
 
 			var confidentiality model.Confidentiality
@@ -4303,7 +4297,7 @@ func parseModel(inputFilename string) {
 			case model.StrictlyConfidential.String():
 				confidentiality = model.StrictlyConfidential
 			default:
-				panic(errors.New("Unknown 'confidentiality' of technical asset: " + fmt.Sprintf("%v", asset.Confidentiality)))
+				panic(errors.New("unknown 'confidentiality' value of technical asset '" + title + "': " + fmt.Sprintf("%v", asset.Confidentiality)))
 			}
 
 			var integrity model.Criticality
@@ -4319,7 +4313,7 @@ func parseModel(inputFilename string) {
 			case model.MissionCritical.String():
 				integrity = model.MissionCritical
 			default:
-				panic(errors.New("Unknown 'integrity' of technical asset: " + fmt.Sprintf("%v", asset.Integrity)))
+				panic(errors.New("unknown 'integrity' value of technical asset '" + title + "': " + fmt.Sprintf("%v", asset.Integrity)))
 			}
 
 			var availability model.Criticality
@@ -4335,7 +4329,7 @@ func parseModel(inputFilename string) {
 			case model.MissionCritical.String():
 				availability = model.MissionCritical
 			default:
-				panic(errors.New("Unknown 'availability' of technical asset: " + fmt.Sprintf("%v", asset.Availability)))
+				panic(errors.New("unknown 'availability' value of technical asset '" + title + "': " + fmt.Sprintf("%v", asset.Availability)))
 			}
 
 			dataFormatsAccepted := make([]model.DataFormat, 0)
@@ -4353,14 +4347,14 @@ func parseModel(inputFilename string) {
 					case model.CSV.String():
 						dataFormatsAccepted = append(dataFormatsAccepted, model.CSV)
 					default:
-						panic(errors.New("Unknown 'data_formats_accepted' value of technical asset: " + fmt.Sprintf("%v", dataFormatName)))
+						panic(errors.New("unknown 'data_formats_accepted' value of technical asset '" + title + "': " + fmt.Sprintf("%v", dataFormatName)))
 					}
 				}
 			}
 
 			communicationLinks := make([]model.CommunicationLink, 0)
 			if asset.Communication_links != nil {
-				for title, commLink := range asset.Communication_links {
+				for commLinkTitle, commLink := range asset.Communication_links {
 					constraint := true
 					weight := 1
 					var protocol model.Protocol
@@ -4386,7 +4380,7 @@ func parseModel(inputFilename string) {
 					case model.Externalized.String():
 						authentication = model.Externalized
 					default:
-						panic(errors.New("Unknown 'authentication' value of technical asset: " + fmt.Sprintf("%v", commLink.Authentication)))
+						panic(errors.New("unknown 'authentication' value of technical asset '" + title + "' communication link '" + commLinkTitle + "': " + fmt.Sprintf("%v", commLink.Authentication)))
 					}
 
 					switch commLink.Authorization {
@@ -4397,7 +4391,7 @@ func parseModel(inputFilename string) {
 					case model.EnduserIdentityPropagation.String():
 						authorization = model.EnduserIdentityPropagation
 					default:
-						panic(errors.New("Unknown 'authorization' value of technical asset: " + fmt.Sprintf("%v", commLink.Authorization)))
+						panic(errors.New("unknown 'authorization' value of technical asset '" + title + "' communication link '" + commLinkTitle + "': " + fmt.Sprintf("%v", commLink.Authorization)))
 					}
 
 					switch commLink.Usage {
@@ -4406,7 +4400,7 @@ func parseModel(inputFilename string) {
 					case model.DevOps.String():
 						usage = model.DevOps
 					default:
-						panic(errors.New("Unknown 'usage' value of technical asset: " + fmt.Sprintf("%v", commLink.Usage)))
+						panic(errors.New("unknown 'usage' value of technical asset '" + title + "' communication link '" + commLinkTitle + "': " + fmt.Sprintf("%v", commLink.Usage)))
 					}
 
 					switch commLink.Protocol {
@@ -4501,13 +4495,13 @@ func parseModel(inputFilename string) {
 					case model.ContainerSpawning.String():
 						protocol = model.ContainerSpawning
 					default:
-						panic(errors.New("Unknown 'protocol' of technical asset: " + fmt.Sprintf("%v", commLink.Protocol)))
+						panic(errors.New("unknown 'protocol' of technical asset '" + title + "' communication link '" + commLinkTitle + "': " + fmt.Sprintf("%v", commLink.Protocol)))
 					}
 
 					if commLink.Data_assets_sent != nil {
 						for _, dataAssetSent := range commLink.Data_assets_sent {
 							referencedAsset := fmt.Sprintf("%v", dataAssetSent)
-							checkDataAssetTargetExists(referencedAsset)
+							checkDataAssetTargetExists(referencedAsset, "communication link '"+commLinkTitle+"' of technical asset '"+title+"'")
 							dataAssetsSent = append(dataAssetsSent, referencedAsset)
 						}
 					}
@@ -4515,7 +4509,7 @@ func parseModel(inputFilename string) {
 					if commLink.Data_assets_received != nil {
 						for _, dataAssetReceived := range commLink.Data_assets_received {
 							referencedAsset := fmt.Sprintf("%v", dataAssetReceived)
-							checkDataAssetTargetExists(referencedAsset)
+							checkDataAssetTargetExists(referencedAsset, "communication link '"+commLinkTitle+"' of technical asset '"+title+"'")
 							dataAssetsReceived = append(dataAssetsReceived, referencedAsset)
 						}
 					}
@@ -4528,7 +4522,7 @@ func parseModel(inputFilename string) {
 
 					checkErr(err)
 
-					dataFlowTitle := fmt.Sprintf("%v", title)
+					dataFlowTitle := fmt.Sprintf("%v", commLinkTitle)
 					commLink := model.CommunicationLink{
 						Id:                     createDataFlowId(id, dataFlowTitle),
 						SourceId:               id,
@@ -4539,7 +4533,7 @@ func parseModel(inputFilename string) {
 						Authentication:         authentication,
 						Authorization:          authorization,
 						Usage:                  usage,
-						Tags:                   checkTags(lowerCaseAndTrim(commLink.Tags)),
+						Tags:                   checkTags(lowerCaseAndTrim(commLink.Tags), "communication link '"+commLinkTitle+"' of technical asset '"+title+"'"),
 						VPN:                    commLink.VPN,
 						IpFiltered:             commLink.IP_filtered,
 						Readonly:               commLink.Readonly,
@@ -4569,7 +4563,7 @@ func parseModel(inputFilename string) {
 				Type:                    technicalAssetType,
 				Size:                    technicalAssetSize,
 				Technology:              technicalAssetTechnology,
-				Tags:                    checkTags(lowerCaseAndTrim(asset.Tags)),
+				Tags:                    checkTags(lowerCaseAndTrim(asset.Tags), "technical asset '"+title+"'"),
 				Machine:                 technicalAssetMachine,
 				Internet:                asset.Internet,
 				Encryption:              encryption,
@@ -4606,10 +4600,10 @@ func parseModel(inputFilename string) {
 					technicalAssetsInside[i] = fmt.Sprintf("%v", parsedInsideAsset)
 					_, found := model.ParsedModelRoot.TechnicalAssets[technicalAssetsInside[i]]
 					if !found {
-						panic(errors.New("Technical asset " + technicalAssetsInside[i] + " does not exist (that's not possible)."))
+						panic(errors.New("missing referenced technical asset " + technicalAssetsInside[i] + " at trust boundary '" + title + "'"))
 					}
 					if checklistToAvoidAssetBeingModeledInMultipleTrustBoundaries[technicalAssetsInside[i]] == true {
-						panic(errors.New("Technical asset " + technicalAssetsInside[i] + " is modeled in multiple trust boundaries (that's not possible)."))
+						panic(errors.New("referenced technical asset " + technicalAssetsInside[i] + " at trust boundary '" + title + "' is modeled in multiple trust boundaries"))
 					}
 					checklistToAvoidAssetBeingModeledInMultipleTrustBoundaries[technicalAssetsInside[i]] = true
 					//fmt.Println("asset "+technicalAssetsInside[i]+" at i="+strconv.Itoa(i))
@@ -4642,7 +4636,7 @@ func parseModel(inputFilename string) {
 			case model.ExecutionEnvironment.String():
 				trustBoundaryType = model.ExecutionEnvironment
 			default:
-				panic(errors.New("Unknown 'type' of trust boundary: " + fmt.Sprintf("%v", boundary.Type)))
+				panic(errors.New("unknown 'type' of trust boundary '" + title + "': " + fmt.Sprintf("%v", boundary.Type)))
 			}
 
 			trustBoundary := model.TrustBoundary{
@@ -4650,7 +4644,7 @@ func parseModel(inputFilename string) {
 				Title:                 title, //fmt.Sprintf("%v", boundary["title"]),
 				Description:           withDefault(fmt.Sprintf("%v", boundary.Description), title),
 				Type:                  trustBoundaryType,
-				Tags:                  checkTags(lowerCaseAndTrim(boundary.Tags)),
+				Tags:                  checkTags(lowerCaseAndTrim(boundary.Tags), "trust boundary '"+title+"'"),
 				TechnicalAssetsInside: technicalAssetsInside,
 				TrustBoundariesNested: trustBoundariesNested,
 			}
@@ -4677,7 +4671,7 @@ func parseModel(inputFilename string) {
 				technicalAssetsRunning = make([]string, len(parsedRunningAssets))
 				for i, parsedRunningAsset := range parsedRunningAssets {
 					assetId := fmt.Sprintf("%v", parsedRunningAsset)
-					checkTechnicalAssetExists(assetId, false)
+					checkTechnicalAssetExists(assetId, "shared runtime '"+title+"'", false)
 					technicalAssetsRunning[i] = assetId
 				}
 			}
@@ -4686,7 +4680,7 @@ func parseModel(inputFilename string) {
 				Id:                     id,
 				Title:                  title, //fmt.Sprintf("%v", boundary["title"]),
 				Description:            withDefault(fmt.Sprintf("%v", runtime.Description), title),
-				Tags:                   checkTags((runtime.Tags)),
+				Tags:                   checkTags((runtime.Tags), "shared runtime '"+title+"'"),
 				TechnicalAssetsRunning: technicalAssetsRunning,
 			}
 			checkIdSyntax(id)
@@ -4715,7 +4709,7 @@ func parseModel(inputFilename string) {
 			case model.Operations.String():
 				function = model.Operations
 			default:
-				panic(errors.New("Unknown 'function' value of individual risk category: " + fmt.Sprintf("%v", indivCat.Function)))
+				panic(errors.New("unknown 'function' value of individual risk category '" + title + "': " + fmt.Sprintf("%v", indivCat.Function)))
 			}
 
 			var stride model.STRIDE
@@ -4733,7 +4727,7 @@ func parseModel(inputFilename string) {
 			case model.ElevationOfPrivilege.String():
 				stride = model.ElevationOfPrivilege
 			default:
-				panic(errors.New("Unknown 'stride' value of individual risk category: " + fmt.Sprintf("%v", indivCat.STRIDE)))
+				panic(errors.New("unknown 'stride' value of individual risk category '" + title + "': " + fmt.Sprintf("%v", indivCat.STRIDE)))
 			}
 
 			cat := model.RiskCategory{
@@ -4785,7 +4779,7 @@ func parseModel(inputFilename string) {
 					case "": // added default
 						severity = model.MediumSeverity
 					default:
-						panic(errors.New("Unknown 'severity' value of individual risk instance: " + fmt.Sprintf("%v", indivRiskInstance.Severity)))
+						panic(errors.New("unknown 'severity' value of individual risk instance '" + title + "': " + fmt.Sprintf("%v", indivRiskInstance.Severity)))
 					}
 
 					switch indivRiskInstance.Exploitation_likelihood {
@@ -4800,7 +4794,7 @@ func parseModel(inputFilename string) {
 					case "": // added default
 						exploitationLikelihood = model.Likely
 					default:
-						panic(errors.New("Unknown 'exploitation_likelihood' value of individual risk instance: " + fmt.Sprintf("%v", indivRiskInstance.Exploitation_likelihood)))
+						panic(errors.New("unknown 'exploitation_likelihood' value of individual risk instance '" + title + "': " + fmt.Sprintf("%v", indivRiskInstance.Exploitation_likelihood)))
 					}
 
 					switch indivRiskInstance.Exploitation_impact {
@@ -4815,32 +4809,32 @@ func parseModel(inputFilename string) {
 					case "": // added default
 						exploitationImpact = model.MediumImpact
 					default:
-						panic(errors.New("Unknown 'exploitation_impact' value of individual risk instance: " + fmt.Sprintf("%v", indivRiskInstance.Exploitation_impact)))
+						panic(errors.New("unknown 'exploitation_impact' value of individual risk instance '" + title + "': " + fmt.Sprintf("%v", indivRiskInstance.Exploitation_impact)))
 					}
 
 					if len(indivRiskInstance.Most_relevant_data_asset) > 0 {
 						mostRelevantDataAssetId = fmt.Sprintf("%v", indivRiskInstance.Most_relevant_data_asset)
-						checkDataAssetTargetExists(mostRelevantDataAssetId)
+						checkDataAssetTargetExists(mostRelevantDataAssetId, "individual risk '"+title+"'")
 					}
 
 					if len(indivRiskInstance.Most_relevant_technical_asset) > 0 {
 						mostRelevantTechnicalAssetId = fmt.Sprintf("%v", indivRiskInstance.Most_relevant_technical_asset)
-						checkTechnicalAssetExists(mostRelevantTechnicalAssetId, false)
+						checkTechnicalAssetExists(mostRelevantTechnicalAssetId, "individual risk '"+title+"'", false)
 					}
 
 					if len(indivRiskInstance.Most_relevant_communication_link) > 0 {
 						mostRelevantCommunicationLinkId = fmt.Sprintf("%v", indivRiskInstance.Most_relevant_communication_link)
-						checkCommunicationLinkExists(mostRelevantCommunicationLinkId)
+						checkCommunicationLinkExists(mostRelevantCommunicationLinkId, "individual risk '"+title+"'")
 					}
 
 					if len(indivRiskInstance.Most_relevant_trust_boundary) > 0 {
 						mostRelevantTrustBoundaryId = fmt.Sprintf("%v", indivRiskInstance.Most_relevant_trust_boundary)
-						checkTrustBoundaryExists(mostRelevantTrustBoundaryId)
+						checkTrustBoundaryExists(mostRelevantTrustBoundaryId, "individual risk '"+title+"'")
 					}
 
 					if len(indivRiskInstance.Most_relevant_shared_runtime) > 0 {
 						mostRelevantSharedRuntimeId = fmt.Sprintf("%v", indivRiskInstance.Most_relevant_shared_runtime)
-						checkSharedRuntimeExists(mostRelevantSharedRuntimeId)
+						checkSharedRuntimeExists(mostRelevantSharedRuntimeId, "individual risk '"+title+"'")
 					}
 
 					switch indivRiskInstance.Data_breach_probability {
@@ -4853,14 +4847,14 @@ func parseModel(inputFilename string) {
 					case "": // added default
 						dataBreachProbability = model.Possible
 					default:
-						panic(errors.New("Unknown 'data_breach_probability' value of individual risk instance: " + fmt.Sprintf("%v", indivRiskInstance.Data_breach_probability)))
+						panic(errors.New("unknown 'data_breach_probability' value of individual risk instance '" + title + "': " + fmt.Sprintf("%v", indivRiskInstance.Data_breach_probability)))
 					}
 
 					if indivRiskInstance.Data_breach_technical_assets != nil {
 						dataBreachTechnicalAssetIDs = make([]string, len(indivRiskInstance.Data_breach_technical_assets))
 						for i, parsedReferencedAsset := range indivRiskInstance.Data_breach_technical_assets {
 							assetId := fmt.Sprintf("%v", parsedReferencedAsset)
-							checkTechnicalAssetExists(assetId, false)
+							checkTechnicalAssetExists(assetId, "data breach technical assets of individual risk '"+title+"'", false)
 							dataBreachTechnicalAssetIDs[i] = assetId
 						}
 					}
@@ -4897,7 +4891,7 @@ func parseModel(inputFilename string) {
 			if len(riskTracking.Date) > 0 {
 				date, err = time.Parse("2006-01-02", riskTracking.Date)
 				if err != nil {
-					panic(errors.New("Unable to parse 'date' of risk tracking: " + syntheticRiskId))
+					panic(errors.New("unable to parse 'date' of risk tracking '" + syntheticRiskId + "': " + riskTracking.Date))
 				}
 			}
 
@@ -4916,7 +4910,7 @@ func parseModel(inputFilename string) {
 			case model.FalsePositive.String():
 				status = model.FalsePositive
 			default:
-				panic(errors.New("Unknown 'status' value of risk tracking: " + riskTracking.Status))
+				panic(errors.New("unknown 'status' value of risk tracking '" + syntheticRiskId + "': " + riskTracking.Status))
 			}
 
 			tracking := model.RiskTracking{
@@ -4937,7 +4931,7 @@ func parseModel(inputFilename string) {
 		// ====================== model consistency check (linking)
 		for _, technicalAsset := range model.ParsedModelRoot.TechnicalAssets {
 			for _, commLink := range technicalAsset.CommunicationLinks {
-				checkTechnicalAssetExists(commLink.TargetId, false)
+				checkTechnicalAssetExists(commLink.TargetId, "communication link '"+commLink.Title+"' of technical asset '"+technicalAsset.Title+"'", false)
 			}
 		}
 	} else {
@@ -4952,13 +4946,13 @@ func lowerCaseAndTrim(tags []string) []string {
 	return tags
 }
 
-func checkTags(tags []string) []string {
+func checkTags(tags []string, where string) []string {
 	var tagsUsed = make([]string, 0)
 	if tags != nil {
 		tagsUsed = make([]string, len(tags))
 		for i, parsedEntry := range tags {
 			referencedTag := fmt.Sprintf("%v", parsedEntry)
-			checkTagExists(referencedTag)
+			checkTagExists(referencedTag, where)
 			tagsUsed[i] = referencedTag
 		}
 	}
@@ -5001,7 +4995,7 @@ func applyWildcardRiskTrackingEvaluation() {
 			if *ignoreOrphanedRiskTracking {
 				fmt.Println("Wildcard risk tracking does not match any risk id: " + syntheticRiskIdPattern)
 			} else {
-				panic(errors.New("Wildcard risk tracking does not match any risk id: " + syntheticRiskIdPattern))
+				panic(errors.New("wildcard risk tracking does not match any risk id: " + syntheticRiskIdPattern))
 			}
 		}
 	}
@@ -5049,43 +5043,43 @@ func createSyntheticId(categoryId string,
 	return result
 }
 
-func checkTagExists(referencedTag string) {
+func checkTagExists(referencedTag, where string) {
 	if !model.Contains(model.ParsedModelRoot.TagsAvailable, referencedTag) {
-		panic(errors.New("Missing referenced tag: " + referencedTag))
+		panic(errors.New("missing referenced tag in overall tag list at " + where + ": " + referencedTag))
 	}
 }
 
-func checkDataAssetTargetExists(referencedAsset string) {
+func checkDataAssetTargetExists(referencedAsset, where string) {
 	if _, ok := model.ParsedModelRoot.DataAssets[referencedAsset]; !ok {
-		panic(errors.New("Missing referenced data asset target: " + referencedAsset))
+		panic(errors.New("missing referenced data asset target at " + where + ": " + referencedAsset))
 	}
 }
 
-func checkTrustBoundaryExists(referencedId string) {
+func checkTrustBoundaryExists(referencedId, where string) {
 	if _, ok := model.ParsedModelRoot.TrustBoundaries[referencedId]; !ok {
-		panic(errors.New("Missing referenced trust boundary: " + referencedId))
+		panic(errors.New("missing referenced trust boundary at " + where + ": " + referencedId))
 	}
 }
 
-func checkSharedRuntimeExists(referencedId string) {
+func checkSharedRuntimeExists(referencedId, where string) {
 	if _, ok := model.ParsedModelRoot.SharedRuntimes[referencedId]; !ok {
-		panic(errors.New("Missing referenced shared runtime: " + referencedId))
+		panic(errors.New("missing referenced shared runtime at " + where + ": " + referencedId))
 	}
 }
 
-func checkCommunicationLinkExists(referencedId string) {
+func checkCommunicationLinkExists(referencedId, where string) {
 	if _, ok := model.CommunicationLinks[referencedId]; !ok {
-		panic(errors.New("Missing referenced communication link: " + referencedId))
+		panic(errors.New("missing referenced communication link at " + where + ": " + referencedId))
 	}
 }
 
-func checkTechnicalAssetExists(referencedAsset string, onlyForTweak bool) {
+func checkTechnicalAssetExists(referencedAsset, where string, onlyForTweak bool) {
 	if _, ok := model.ParsedModelRoot.TechnicalAssets[referencedAsset]; !ok {
 		suffix := ""
 		if onlyForTweak {
 			suffix = " (only referenced in diagram tweak)"
 		}
-		panic(errors.New("Missing referenced technical asset target" + suffix + ": " + referencedAsset))
+		panic(errors.New("missing referenced technical asset target" + suffix + " at " + where + ": " + referencedAsset))
 	}
 }
 
@@ -5093,7 +5087,7 @@ func checkNestedTrustBoundariesExisting() {
 	for _, trustBoundary := range model.ParsedModelRoot.TrustBoundaries {
 		for _, nestedId := range trustBoundary.TrustBoundariesNested {
 			if _, ok := model.ParsedModelRoot.TrustBoundaries[nestedId]; !ok {
-				panic(errors.New("Missing referenced nested trust boundary: " + nestedId))
+				panic(errors.New("missing referenced nested trust boundary: " + nestedId))
 			}
 		}
 	}
@@ -5226,7 +5220,7 @@ func writeDataFlowDiagramGraphvizDOT(diagramFilenameDOT string, dpi int) *os.Fil
 			splines = "false"
 			drawSpaceLinesForLayoutUnfortunatelyFurtherSeparatesAllRanks = false
 		default:
-			panic(errors.New("Unknown value for diagram_tweak_suppress_edge_labels (spline, polyline, ortho, curved, false): " +
+			panic(errors.New("unknown value for diagram_tweak_suppress_edge_labels (spline, polyline, ortho, curved, false): " +
 				model.ParsedModelRoot.DiagramTweakEdgeLayout))
 		}
 	}
@@ -5441,8 +5435,8 @@ func makeDiagramInvisibleConnectionsTweaks() string {
 		for _, invisibleConnections := range model.ParsedModelRoot.DiagramTweakInvisibleConnectionsBetweenAssets {
 			assetIDs := strings.Split(invisibleConnections, ":")
 			if len(assetIDs) == 2 {
-				checkTechnicalAssetExists(assetIDs[0], true)
-				checkTechnicalAssetExists(assetIDs[1], true)
+				checkTechnicalAssetExists(assetIDs[0], "diagram tweak connections", true)
+				checkTechnicalAssetExists(assetIDs[1], "diagram tweak connections", true)
 				tweak += "\n" + hash(assetIDs[0]) + " -> " + hash(assetIDs[1]) + " [style=invis]; \n"
 			}
 		}
@@ -5459,9 +5453,9 @@ func makeDiagramSameRankNodeTweaks() string {
 			if len(assetIDs) > 0 {
 				tweak += "{ rank=same; "
 				for _, id := range assetIDs {
-					checkTechnicalAssetExists(id, true)
+					checkTechnicalAssetExists(id, "diagram tweak same-rank", true)
 					if len(model.ParsedModelRoot.TechnicalAssets[id].GetTrustBoundaryId()) > 0 {
-						panic(errors.New("Technical assets (referenced in same rank diagram tweak) are inside trust boundaries: " +
+						panic(errors.New("technical assets (referenced in same rank diagram tweak) are inside trust boundaries: " +
 							fmt.Sprintf("%v", model.ParsedModelRoot.DiagramTweakSameRankAssets)))
 					}
 					tweak += " " + hash(id) + "; "
@@ -5597,7 +5591,7 @@ func renderDataFlowDiagramGraphvizImage(dotFile *os.File, targetDir string) {
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
 	if err != nil {
-		panic(errors.New("Graph rendering call failed with error:" + err.Error()))
+		panic(errors.New("graph rendering call failed with error:" + err.Error()))
 	}
 	// copy into resulting file
 	input, err = ioutil.ReadFile(tmpFilePNG.Name())
@@ -5645,7 +5639,7 @@ func renderDataAssetDiagramGraphvizImage(dotFile *os.File, targetDir string) { /
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
 	if err != nil {
-		panic(errors.New("Graph rendering call failed with error: " + err.Error()))
+		panic(errors.New("graph rendering call failed with error: " + err.Error()))
 	}
 	// copy into resulting file
 	input, err = ioutil.ReadFile(tmpFilePNG.Name())
