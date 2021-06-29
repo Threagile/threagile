@@ -4598,6 +4598,29 @@ func parseModel(inputFilename string) {
 			}
 		}
 
+		// A target of a communication link implicitly processes all data assets that are sent to or received by that target
+		for id, techAsset := range model.ParsedModelRoot.TechnicalAssets {
+			for _, commLink := range techAsset.CommunicationLinks {
+				if commLink.TargetId == id {
+					continue
+				}
+				targetTechAsset := model.ParsedModelRoot.TechnicalAssets[commLink.TargetId]
+				dataAssetsProcessedByTarget := targetTechAsset.DataAssetsProcessed
+				for _, dataAssetSent := range commLink.DataAssetsSent {
+					if !model.Contains(dataAssetsProcessedByTarget, dataAssetSent) {
+						dataAssetsProcessedByTarget = append(dataAssetsProcessedByTarget, dataAssetSent)
+					}
+				}
+				for _, dataAssetReceived := range commLink.DataAssetsReceived {
+					if !model.Contains(dataAssetsProcessedByTarget, dataAssetReceived) {
+						dataAssetsProcessedByTarget = append(dataAssetsProcessedByTarget, dataAssetReceived)
+					}
+				}
+				targetTechAsset.DataAssetsProcessed = dataAssetsProcessedByTarget
+				model.ParsedModelRoot.TechnicalAssets[commLink.TargetId] = targetTechAsset
+			}
+		}
+
 		// Trust Boundaries ===============================================================================
 		checklistToAvoidAssetBeingModeledInMultipleTrustBoundaries := make(map[string]bool)
 		model.ParsedModelRoot.TrustBoundaries = make(map[string]model.TrustBoundary)
