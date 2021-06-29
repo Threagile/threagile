@@ -4599,12 +4599,24 @@ func parseModel(inputFilename string) {
 		for id, techAsset := range model.ParsedModelRoot.TechnicalAssets {
 			if techAsset.Confidentiality < 0 {
 				techAsset.Confidentiality = techAsset.HighestConfidentiality()
+				if techAsset.Confidentiality < 0 {
+					// no data asset is processed or stored, thus falling back to the lowest level
+					techAsset.Confidentiality = model.Public
+				}
 			}
 			if techAsset.Integrity < 0 {
 				techAsset.Integrity = techAsset.HighestIntegrity()
+				if techAsset.Integrity < 0 {
+					// no data asset is processed or stored, thus falling back to the lowest level
+					techAsset.Integrity = model.Archive
+				}
 			}
 			if techAsset.Availability < 0 {
 				techAsset.Availability = techAsset.HighestAvailability()
+				if techAsset.Availability < 0 {
+					// no data asset is processed or stored, thus falling back to the lowest level
+					techAsset.Availability = model.Archive
+				}
 			}
 			model.ParsedModelRoot.TechnicalAssets[id] = techAsset
 		}
