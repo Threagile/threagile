@@ -98,12 +98,14 @@ func calculateAttackerAttractiveness(techAsset model.TechnicalAsset) float64 {
 		score += dataAsset.Integrity.AttackerAttractivenessForProcessedOrStoredData() * dataAsset.Quantity.QuantityFactor()
 		score += dataAsset.Availability.AttackerAttractivenessForProcessedOrStoredData()
 	}
+	// NOTE: Assuming all stored data is also processed, this effectively scores stored data twice
 	for _, dataAssetStored := range techAsset.DataAssetsStored {
 		dataAsset := model.ParsedModelRoot.DataAssets[dataAssetStored]
 		score += dataAsset.Confidentiality.AttackerAttractivenessForProcessedOrStoredData() * dataAsset.Quantity.QuantityFactor()
 		score += dataAsset.Integrity.AttackerAttractivenessForProcessedOrStoredData() * dataAsset.Quantity.QuantityFactor()
 		score += dataAsset.Availability.AttackerAttractivenessForProcessedOrStoredData()
 	}
+	// NOTE: To send or receive data effectively is processing that data and it's questionable if the attractiveness increases further
 	for _, dataFlow := range techAsset.CommunicationLinks {
 		for _, dataAssetSent := range dataFlow.DataAssetsSent {
 			dataAsset := model.ParsedModelRoot.DataAssets[dataAssetSent]

@@ -9,15 +9,15 @@ func Category() model.RiskCategory {
 	return model.RiskCategory{
 		Id:    "unnecessary-data-transfer",
 		Title: "Unnecessary Data Transfer",
-		Description: "When a technical asset sends or receives data assets, which it neither processes or stores this is " +
+		Description: "When a technical asset sends or receives data assets, which it does not processes this is " +
 			"an indicator for unnecessarily transferred data (or for an incomplete model). When the unnecessarily " +
 			"transferred data assets are sensitive, this poses an unnecessary risk of an increased attack surface.",
 		Impact:     "If this risk is unmitigated, attackers might be able to target unnecessarily transferred data.",
 		ASVS:       "V1 - Architecture, Design and Threat Modeling Requirements",
 		CheatSheet: "https://cheatsheetseries.owasp.org/cheatsheets/Attack_Surface_Analysis_Cheat_Sheet.html",
 		Action:     "Attack Surface Reduction",
-		Mitigation: "Try to avoid sending or receiving sensitive data assets which are not required (i.e. neither " +
-			"processed or stored) by the involved technical asset.",
+		Mitigation: "Try to avoid sending or receiving sensitive data assets which are not required (i.e. not " +
+			"processed) by the involved technical asset.",
 		Check:    "Are recommendations from the linked cheat sheet and referenced ASVS chapter applied?",
 		Function: model.Architecture,
 		STRIDE:   model.ElevationOfPrivilege,
@@ -28,7 +28,7 @@ func Category() model.RiskCategory {
 			"either " + model.LowSeverity.String() + " or " + model.MediumSeverity.String() + ".",
 		FalsePositives: "Technical assets missing the model entries of either processing or storing the mentioned data assets " +
 			"can be considered as false positives (incomplete models) after individual review. These should then be addressed by " +
-			"completing the model so that all necessary data assets are processed and/or stored by the technical asset involved.",
+			"completing the model so that all necessary data assets are processed by the technical asset involved.",
 		ModelFailurePossibleReason: true,
 		CWE:                        1008,
 	}

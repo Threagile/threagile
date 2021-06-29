@@ -10,7 +10,7 @@ func Category() model.RiskCategory {
 		Id:    "missing-authentication-second-factor",
 		Title: "Missing Two-Factor Authentication (2FA)",
 		Description: "Technical assets (especially multi-tenant systems) should authenticate incoming requests with " +
-			"two-factor (2FA) authentication when the asset processes or stores highly sensitive data (in terms of confidentiality, integrity, and availability) and is accessed by humans.",
+			"two-factor (2FA) authentication when the asset processes highly sensitive data (in terms of confidentiality, integrity, and availability) and is accessed by humans.",
 		Impact:     "If this risk is unmitigated, attackers might be able to access or modify highly sensitive data without strong authentication.",
 		ASVS:       "V2 - Authentication Verification Requirements",
 		CheatSheet: "https://cheatsheetseries.owasp.org/cheatsheets/Multifactor_Authentication_Cheat_Sheet.html",
@@ -21,7 +21,7 @@ func Category() model.RiskCategory {
 		Function: model.BusinessSide,
 		STRIDE:   model.ElevationOfPrivilege,
 		DetectionLogic: "In-scope technical assets (except " + model.LoadBalancer.String() + ", " + model.ReverseProxy.String() + ", " + model.WAF.String() + ", " + model.IDS.String() + ", and " + model.IPS.String() + ") should authenticate incoming requests via two-factor authentication (2FA) " +
-			"when the asset processes or stores highly sensitive data (in terms of confidentiality, integrity, and availability) and is accessed by a client used by a human user.",
+			"when the asset processes highly sensitive data (in terms of confidentiality, integrity, and availability) and is accessed by a client used by a human user.",
 		RiskAssessment: model.MediumSeverity.String(),
 		FalsePositives: "Technical assets which do not process requests regarding functionality or data linked to end-users (customers) " +
 			"can be considered as false positives after individual review.",

@@ -21,7 +21,7 @@ func Category() model.RiskCategory {
 		Function:       model.Development,
 		STRIDE:         model.Tampering,
 		DetectionLogic: "In-scope web applications.",
-		RiskAssessment: "The risk rating depends on the sensitivity of the data processed or stored in the web application.",
+		RiskAssessment: "The risk rating depends on the sensitivity of the data processed in the web application.",
 		FalsePositives: "When the technical asset " +
 			"is not accessed via a browser-like component (i.e not by a human user initiating the request that " +
 			"gets passed through all components until it reaches the web application) this can be considered a false positive.",

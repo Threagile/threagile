@@ -4088,23 +4088,25 @@ func parseModel(inputFilename string) {
 				panic(errors.New("unknown 'usage' value of technical asset '" + title + "': " + fmt.Sprintf("%v", asset.Usage)))
 			}
 
-			var dataAssetsProcessed = make([]string, 0)
-			if asset.Data_assets_processed != nil {
-				dataAssetsProcessed = make([]string, len(asset.Data_assets_processed))
-				for i, parsedProcessedAsset := range asset.Data_assets_processed {
-					referencedAsset := fmt.Sprintf("%v", parsedProcessedAsset)
-					checkDataAssetTargetExists(referencedAsset, "technical asset '"+title+"'")
-					dataAssetsProcessed[i] = referencedAsset
+			var dataAssetsStored = make([]string, 0)
+			if asset.Data_assets_stored != nil {
+				for _, parsedStoredAssets := range asset.Data_assets_stored {
+					referencedAsset := fmt.Sprintf("%v", parsedStoredAssets)
+					if !model.Contains(dataAssetsStored, referencedAsset) {
+						checkDataAssetTargetExists(referencedAsset, "technical asset '"+title+"'")
+						dataAssetsStored = append(dataAssetsStored, referencedAsset)
+					}
 				}
 			}
 
-			var dataAssetsStored = make([]string, 0)
-			if asset.Data_assets_stored != nil {
-				dataAssetsStored = make([]string, len(asset.Data_assets_stored))
-				for i, parsedStoredAssets := range asset.Data_assets_stored {
-					referencedAsset := fmt.Sprintf("%v", parsedStoredAssets)
-					checkDataAssetTargetExists(referencedAsset, "technical asset '"+title+"'")
-					dataAssetsStored[i] = referencedAsset
+			var dataAssetsProcessed = dataAssetsStored
+			if asset.Data_assets_processed != nil {
+				for _, parsedProcessedAsset := range asset.Data_assets_processed {
+					referencedAsset := fmt.Sprintf("%v", parsedProcessedAsset)
+					if !model.Contains(dataAssetsProcessed, referencedAsset) {
+						checkDataAssetTargetExists(referencedAsset, "technical asset '"+title+"'")
+						dataAssetsProcessed = append(dataAssetsProcessed, referencedAsset)
+					}
 				}
 			}
 
@@ -4501,16 +4503,26 @@ func parseModel(inputFilename string) {
 					if commLink.Data_assets_sent != nil {
 						for _, dataAssetSent := range commLink.Data_assets_sent {
 							referencedAsset := fmt.Sprintf("%v", dataAssetSent)
-							checkDataAssetTargetExists(referencedAsset, "communication link '"+commLinkTitle+"' of technical asset '"+title+"'")
-							dataAssetsSent = append(dataAssetsSent, referencedAsset)
+							if !model.Contains(dataAssetsSent, referencedAsset) {
+								checkDataAssetTargetExists(referencedAsset, "communication link '"+commLinkTitle+"' of technical asset '"+title+"'")
+								dataAssetsSent = append(dataAssetsSent, referencedAsset)
+								if !model.Contains(dataAssetsProcessed, referencedAsset) {
+									dataAssetsProcessed = append(dataAssetsProcessed, referencedAsset)
+								}
+							}
 						}
 					}
 
 					if commLink.Data_assets_received != nil {
 						for _, dataAssetReceived := range commLink.Data_assets_received {
 							referencedAsset := fmt.Sprintf("%v", dataAssetReceived)
-							checkDataAssetTargetExists(referencedAsset, "communication link '"+commLinkTitle+"' of technical asset '"+title+"'")
-							dataAssetsReceived = append(dataAssetsReceived, referencedAsset)
+							if !model.Contains(dataAssetsSent, referencedAsset) {
+								checkDataAssetTargetExists(referencedAsset, "communication link '"+commLinkTitle+"' of technical asset '"+title+"'")
+								dataAssetsReceived = append(dataAssetsReceived, referencedAsset)
+								if !model.Contains(dataAssetsProcessed, referencedAsset) {
+									dataAssetsProcessed = append(dataAssetsProcessed, referencedAsset)
+								}
+							}
 						}
 					}
 
@@ -4583,6 +4595,29 @@ func parseModel(inputFilename string) {
 				DataFormatsAccepted:     dataFormatsAccepted,
 				CommunicationLinks:      communicationLinks,
 				DiagramTweakOrder:       asset.Diagram_tweak_order,
+			}
+		}
+
+		// A target of a communication link implicitly processes all data assets that are sent to or received by that target
+		for id, techAsset := range model.ParsedModelRoot.TechnicalAssets {
+			for _, commLink := range techAsset.CommunicationLinks {
+				if commLink.TargetId == id {
+					continue
+				}
+				targetTechAsset := model.ParsedModelRoot.TechnicalAssets[commLink.TargetId]
+				dataAssetsProcessedByTarget := targetTechAsset.DataAssetsProcessed
+				for _, dataAssetSent := range commLink.DataAssetsSent {
+					if !model.Contains(dataAssetsProcessedByTarget, dataAssetSent) {
+						dataAssetsProcessedByTarget = append(dataAssetsProcessedByTarget, dataAssetSent)
+					}
+				}
+				for _, dataAssetReceived := range commLink.DataAssetsReceived {
+					if !model.Contains(dataAssetsProcessedByTarget, dataAssetReceived) {
+						dataAssetsProcessedByTarget = append(dataAssetsProcessedByTarget, dataAssetReceived)
+					}
+				}
+				targetTechAsset.DataAssetsProcessed = dataAssetsProcessedByTarget
+				model.ParsedModelRoot.TechnicalAssets[commLink.TargetId] = targetTechAsset
 			}
 		}
 
@@ -5137,7 +5172,7 @@ func writeDataAssetDiagramGraphvizDOT(diagramFilenameDOT string, dpi int) *os.Fi
 	}
 	sort.Sort(model.ByOrderAndIdSort(techAssets))
 	for _, technicalAsset := range techAssets {
-		if len(technicalAsset.DataAssetsStored) > 0 || len(technicalAsset.DataAssetsProcessed) > 0 {
+		if len(technicalAsset.DataAssetsProcessed) > 0 {
 			dotContent.WriteString(makeTechAssetNode(technicalAsset, true))
 			dotContent.WriteString("\n")
 		}

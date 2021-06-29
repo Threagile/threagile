@@ -8,14 +8,14 @@ func Category() model.RiskCategory {
 	return model.RiskCategory{
 		Id:    "unnecessary-technical-asset",
 		Title: "Unnecessary Technical Asset",
-		Description: "When a technical asset does not process or store any data assets, this is " +
+		Description: "When a technical asset does not process any data assets, this is " +
 			"an indicator for an unnecessary technical asset (or for an incomplete model). " +
 			"This is also the case if the asset has no communication links (either outgoing or incoming).",
 		Impact:                     "If this risk is unmitigated, attackers might be able to target unnecessary technical assets.",
 		ASVS:                       "V1 - Architecture, Design and Threat Modeling Requirements",
 		CheatSheet:                 "https://cheatsheetseries.owasp.org/cheatsheets/Attack_Surface_Analysis_Cheat_Sheet.html",
 		Action:                     "Attack Surface Reduction",
-		Mitigation:                 "Try to avoid using technical assets that do not process or store anything.",
+		Mitigation:                 "Try to avoid using technical assets that do not process anything.",
 		Check:                      "Are recommendations from the linked cheat sheet and referenced ASVS chapter applied?",
 		Function:                   model.Architecture,
 		STRIDE:                     model.ElevationOfPrivilege,
@@ -35,7 +35,7 @@ func GenerateRisks() []model.Risk {
 	risks := make([]model.Risk, 0)
 	for _, id := range model.SortedTechnicalAssetIDs() {
 		technicalAsset := model.ParsedModelRoot.TechnicalAssets[id]
-		if len(technicalAsset.DataAssetsProcessed) == 0 && len(technicalAsset.DataAssetsStored) == 0 ||
+		if len(technicalAsset.DataAssetsProcessed) == 0 ||
 			(len(technicalAsset.CommunicationLinks) == 0 && len(model.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id]) == 0) {
 			risks = append(risks, createRisk(technicalAsset))
 		}

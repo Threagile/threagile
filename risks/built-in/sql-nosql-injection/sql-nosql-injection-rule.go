@@ -9,7 +9,7 @@ func Category() model.RiskCategory {
 		Id:    "sql-nosql-injection",
 		Title: "SQL/NoSQL-Injection",
 		Description: "When a database is accessed via database access protocols SQL/NoSQL-Injection risks might arise. " +
-			"The risk rating depends on the sensitivity technical asset itself and of the data assets processed or stored.",
+			"The risk rating depends on the sensitivity technical asset itself and of the data assets processed.",
 		Impact:     "If this risk is unmitigated, attackers might be able to modify SQL/NoSQL queries to steal and modify data and eventually further escalate towards a deeper system penetration via code executions.",
 		ASVS:       "V5 - Validation, Sanitization and Encoding Verification Requirements",
 		CheatSheet: "https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html",
@@ -20,7 +20,7 @@ func Category() model.RiskCategory {
 		Function:       model.Development,
 		STRIDE:         model.Tampering,
 		DetectionLogic: "Database accessed via typical database access protocols by in-scope clients.",
-		RiskAssessment: "The risk rating depends on the sensitivity of the data stored inside the database.",
+		RiskAssessment: "The risk rating depends on the sensitivity of the data processed inside the database.",
 		FalsePositives: "Database accesses by queries not consisting of parts controllable by the caller can be considered " +
 			"as false positives after individual review.",
 		ModelFailurePossibleReason: false,

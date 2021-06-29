@@ -24,7 +24,7 @@ func Category() model.RiskCategory {
 		Function:       model.Development,
 		STRIDE:         model.Tampering,
 		DetectionLogic: "In-scope clients accessing search engine servers via typical search access protocols.",
-		RiskAssessment: "The risk rating depends on the sensitivity of the search engine server itself and of the data assets processed or stored.",
+		RiskAssessment: "The risk rating depends on the sensitivity of the search engine server itself and of the data assets processed.",
 		FalsePositives: "Server engine queries by search values not consisting of parts controllable by the caller can be considered " +
 			"as false positives after individual review.",
 		ModelFailurePossibleReason: false,

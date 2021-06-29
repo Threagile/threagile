@@ -21,7 +21,7 @@ func Category() model.RiskCategory {
 		STRIDE:         model.Spoofing,
 		DetectionLogic: "Models with authenticated data-flows authorized via enduser-identity missing an in-scope identity store.",
 		RiskAssessment: "The risk rating depends on the sensitivity of the enduser-identity authorized technical assets and " +
-			"their data assets processed and stored.",
+			"their data assets processed.",
 		FalsePositives: "Models only offering data/services without any real authentication need " +
 			"can be considered as false positives after individual review.",
 		ModelFailurePossibleReason: true,

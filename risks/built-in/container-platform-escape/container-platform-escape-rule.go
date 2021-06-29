@@ -28,7 +28,7 @@ func Category() model.RiskCategory {
 		Function:       model.Operations,
 		STRIDE:         model.ElevationOfPrivilege,
 		DetectionLogic: "In-scope container platforms.",
-		RiskAssessment: "The risk rating depends on the sensitivity of the technical asset itself and of the data assets processed and stored.",
+		RiskAssessment: "The risk rating depends on the sensitivity of the technical asset itself and of the data assets processed.",
 		FalsePositives: "Container platforms not running parts of the target architecture can be considered " +
 			"as false positives after individual review.",
 		ModelFailurePossibleReason: false,
