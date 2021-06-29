@@ -20,7 +20,7 @@ func Category() model.RiskCategory {
 		STRIDE:         model.Spoofing,
 		DetectionLogic: "In-scope service registries.",
 		RiskAssessment: "The risk rating depends on the sensitivity of the technical assets accessing the service registry " +
-			"as well as the data assets processed or stored.",
+			"as well as the data assets processed.",
 		FalsePositives: "Service registries not used for service discovery " +
 			"can be considered as false positives after individual review.",
 		ModelFailurePossibleReason: false,

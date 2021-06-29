@@ -9,7 +9,7 @@ func Category() model.RiskCategory {
 		Id:    "path-traversal",
 		Title: "Path-Traversal",
 		Description: "When a filesystem is accessed Path-Traversal or Local-File-Inclusion (LFI) risks might arise. " +
-			"The risk rating depends on the sensitivity of the technical asset itself and of the data assets processed or stored.",
+			"The risk rating depends on the sensitivity of the technical asset itself and of the data assets processed.",
 		Impact: "If this risk is unmitigated, attackers might be able to read sensitive files (configuration data, key/credential files, deployment files, " +
 			"business data files, etc.) from the filesystem of affected components.",
 		ASVS:       "V12 - File and Resources Verification Requirements",
@@ -23,7 +23,7 @@ func Category() model.RiskCategory {
 		Function:       model.Development,
 		STRIDE:         model.InformationDisclosure,
 		DetectionLogic: "Filesystems accessed by in-scope callers.",
-		RiskAssessment: "The risk rating depends on the sensitivity of the data stored inside the technical asset.",
+		RiskAssessment: "The risk rating depends on the sensitivity of the data processed inside the technical asset.",
 		FalsePositives: "File accesses by filenames not consisting of parts controllable by the caller can be considered " +
 			"as false positives after individual review.",
 		ModelFailurePossibleReason: false,

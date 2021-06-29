@@ -1146,9 +1146,6 @@ func (what DataAsset) IsDataBreachPotentialStillAtRisk() bool {
 			if Contains(ParsedModelRoot.TechnicalAssets[techAsset].DataAssetsProcessed, what.Id) {
 				return true
 			}
-			if Contains(ParsedModelRoot.TechnicalAssets[techAsset].DataAssetsStored, what.Id) {
-				return true
-			}
 		}
 	}
 	return false
@@ -1159,12 +1156,6 @@ func (what DataAsset) IdentifiedDataBreachProbability() DataBreachProbability {
 	for _, risk := range AllRisks() {
 		for _, techAsset := range risk.DataBreachTechnicalAssetIDs {
 			if Contains(ParsedModelRoot.TechnicalAssets[techAsset].DataAssetsProcessed, what.Id) {
-				if risk.DataBreachProbability > highestProbability {
-					highestProbability = risk.DataBreachProbability
-					break
-				}
-			}
-			if Contains(ParsedModelRoot.TechnicalAssets[techAsset].DataAssetsStored, what.Id) {
 				if risk.DataBreachProbability > highestProbability {
 					highestProbability = risk.DataBreachProbability
 					break
@@ -1185,12 +1176,6 @@ func (what DataAsset) IdentifiedDataBreachProbabilityStillAtRisk() DataBreachPro
 					break
 				}
 			}
-			if Contains(ParsedModelRoot.TechnicalAssets[techAsset].DataAssetsStored, what.Id) {
-				if risk.DataBreachProbability > highestProbability {
-					highestProbability = risk.DataBreachProbability
-					break
-				}
-			}
 		}
 	}
 	return highestProbability
@@ -1204,10 +1189,6 @@ func (what DataAsset) IdentifiedDataBreachProbabilityRisksStillAtRisk() []Risk {
 				result = append(result, risk)
 				break
 			}
-			if Contains(ParsedModelRoot.TechnicalAssets[techAsset].DataAssetsStored, what.Id) {
-				result = append(result, risk)
-				break
-			}
 		}
 	}
 	return result
@@ -1218,10 +1199,6 @@ func (what DataAsset) IdentifiedDataBreachProbabilityRisks() []Risk {
 	for _, risk := range AllRisks() {
 		for _, techAsset := range risk.DataBreachTechnicalAssetIDs {
 			if Contains(ParsedModelRoot.TechnicalAssets[techAsset].DataAssetsProcessed, what.Id) {
-				result = append(result, risk)
-				break
-			}
-			if Contains(ParsedModelRoot.TechnicalAssets[techAsset].DataAssetsStored, what.Id) {
 				result = append(result, risk)
 				break
 			}
@@ -1387,12 +1364,6 @@ func (what TechnicalAsset) HighestConfidentiality() Confidentiality {
 			highest = dataAsset.Confidentiality
 		}
 	}
-	for _, dataId := range what.DataAssetsStored {
-		dataAsset := ParsedModelRoot.DataAssets[dataId]
-		if dataAsset.Confidentiality > highest {
-			highest = dataAsset.Confidentiality
-		}
-	}
 	return highest
 }
 
@@ -1440,24 +1411,12 @@ func (what TechnicalAsset) HighestIntegrity() Criticality {
 			highest = dataAsset.Integrity
 		}
 	}
-	for _, dataId := range what.DataAssetsStored {
-		dataAsset := ParsedModelRoot.DataAssets[dataId]
-		if dataAsset.Integrity > highest {
-			highest = dataAsset.Integrity
-		}
-	}
 	return highest
 }
 
 func (what TechnicalAsset) HighestAvailability() Criticality {
 	highest := what.Availability
 	for _, dataId := range what.DataAssetsProcessed {
-		dataAsset := ParsedModelRoot.DataAssets[dataId]
-		if dataAsset.Availability > highest {
-			highest = dataAsset.Availability
-		}
-	}
-	for _, dataId := range what.DataAssetsStored {
 		dataAsset := ParsedModelRoot.DataAssets[dataId]
 		if dataAsset.Availability > highest {
 			highest = dataAsset.Availability
@@ -2234,9 +2193,9 @@ func (what CommunicationLink) DetermineArrowLineStyle() string {
 	return "solid"
 }
 
-// dotted when model forgery attempt (i.e. nothing being processed or stored)
+// dotted when model forgery attempt (i.e. nothing being processed)
 func (what TechnicalAsset) DetermineShapeBorderLineStyle() string {
-	if len(what.DataAssetsProcessed) == 0 && len(what.DataAssetsStored) == 0 || what.OutOfScope {
+	if len(what.DataAssetsProcessed) == 0 || what.OutOfScope {
 		return "dotted" // dotted, because it's strange when too many technical communication links transfer no data... some ok, but many in a diagram ist a sign of model forgery...
 	}
 	return "solid"
@@ -2358,26 +2317,16 @@ func (what TechnicalAsset) IsZero() bool {
 }
 
 func (what TechnicalAsset) ProcessesOrStoresDataAsset(dataAssetId string) bool {
-	if Contains(what.DataAssetsProcessed, dataAssetId) {
-		return true
-	}
-	if Contains(what.DataAssetsStored, dataAssetId) {
-		return true
-	}
-	return false
+	return Contains(what.DataAssetsProcessed, dataAssetId)
 }
 
-// red when >= confidential data stored in unencrypted technical asset
+// red when >= confidential data processed in unencrypted technical asset
+// NOTE: maybe this should only check stored data, not processed data?
 func (what TechnicalAsset) DetermineLabelColor() string {
 	// TODO: Just move into main.go and let the generated risk determine the color, don't duplicate the logic here
 	// Check for red
 	if what.Integrity == MissionCritical {
 		return colors.Red
-	}
-	for _, storedDataAsset := range what.DataAssetsStored {
-		if ParsedModelRoot.DataAssets[storedDataAsset].Integrity == MissionCritical {
-			return colors.Red
-		}
 	}
 	for _, processedDataAsset := range what.DataAssetsProcessed {
 		if ParsedModelRoot.DataAssets[processedDataAsset].Integrity == MissionCritical {
@@ -2387,11 +2336,6 @@ func (what TechnicalAsset) DetermineLabelColor() string {
 	// Check for amber
 	if what.Integrity == Critical {
 		return colors.Amber
-	}
-	for _, storedDataAsset := range what.DataAssetsStored {
-		if ParsedModelRoot.DataAssets[storedDataAsset].Integrity == Critical {
-			return colors.Amber
-		}
 	}
 	for _, processedDataAsset := range what.DataAssetsProcessed {
 		if ParsedModelRoot.DataAssets[processedDataAsset].Integrity == Critical {
@@ -2426,17 +2370,12 @@ func (what TechnicalAsset) DetermineLabelColor() string {
 
 // red when mission-critical integrity, but still unauthenticated (non-readonly) channels access it
 // amber when critical integrity, but still unauthenticated (non-readonly) channels access it
-// pink when model forgery attempt (i.e. nothing being processed or stored)
+// pink when model forgery attempt (i.e. nothing being processed)
 func (what TechnicalAsset) DetermineShapeBorderColor() string {
 	// TODO: Just move into main.go and let the generated risk determine the color, don't duplicate the logic here
 	// Check for red
 	if what.Confidentiality == StrictlyConfidential {
 		return colors.Red
-	}
-	for _, storedDataAsset := range what.DataAssetsStored {
-		if ParsedModelRoot.DataAssets[storedDataAsset].Confidentiality == StrictlyConfidential {
-			return colors.Red
-		}
 	}
 	for _, processedDataAsset := range what.DataAssetsProcessed {
 		if ParsedModelRoot.DataAssets[processedDataAsset].Confidentiality == StrictlyConfidential {
@@ -2446,11 +2385,6 @@ func (what TechnicalAsset) DetermineShapeBorderColor() string {
 	// Check for amber
 	if what.Confidentiality == Confidential {
 		return colors.Amber
-	}
-	for _, storedDataAsset := range what.DataAssetsStored {
-		if ParsedModelRoot.DataAssets[storedDataAsset].Confidentiality == Confidential {
-			return colors.Amber
-		}
 	}
 	for _, processedDataAsset := range what.DataAssetsProcessed {
 		if ParsedModelRoot.DataAssets[processedDataAsset].Confidentiality == Confidential {
@@ -2587,7 +2521,7 @@ func (what CommunicationLink) DetermineArrowColor() string {
 
 func (what TechnicalAsset) DetermineShapeFillColor() string {
 	fillColor := colors.VeryLightGray
-	if len(what.DataAssetsProcessed) == 0 && len(what.DataAssetsStored) == 0 ||
+	if len(what.DataAssetsProcessed) == 0 ||
 		what.Technology == UnknownTechnology {
 		fillColor = colors.LightPink // lightPink, because it's strange when too many technical assets process no data... some ok, but many in a diagram ist a sign of model forgery...
 	} else if len(what.CommunicationLinks) == 0 && len(IncomingTechnicalCommunicationLinksMappedByTargetId[what.Id]) == 0 {

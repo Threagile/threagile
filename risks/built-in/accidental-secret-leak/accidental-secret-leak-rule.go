@@ -23,7 +23,7 @@ func Category() model.RiskCategory {
 		Function:                   model.Operations,
 		STRIDE:                     model.InformationDisclosure,
 		DetectionLogic:             "In-scope sourcecode repositories and artifact registries.",
-		RiskAssessment:             "The risk rating depends on the sensitivity of the technical asset itself and of the data assets processed and stored.",
+		RiskAssessment:             "The risk rating depends on the sensitivity of the technical asset itself and of the data assets processed.",
 		FalsePositives:             "Usually no false positives.",
 		ModelFailurePossibleReason: false,
 		CWE:                        200,

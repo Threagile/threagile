@@ -470,7 +470,7 @@
             "type": "boolean"
           },
           "data_assets_processed": {
-            "description": "Data assets processed",
+            "description": "Data assets processed; all data assets stored or send or received via a communication link are implicitly also processed",
             "type": [
               "array",
               "null"
@@ -680,9 +680,7 @@
                 "vpn",
                 "ip_filtered",
                 "readonly",
-                "usage",
-                "data_assets_sent",
-                "data_assets_received"
+                "usage"
               ]
             }
           },
@@ -705,8 +703,6 @@
             "multi_tenant",
             "redundant",
             "custom_developed_parts",
-            "data_assets_processed",
-            "data_assets_stored",
             "data_formats_accepted",
             "communication_links"
           ]
