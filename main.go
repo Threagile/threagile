@@ -4296,6 +4296,9 @@ func parseModel(inputFilename string) {
 				confidentiality = model.Confidential
 			case model.StrictlyConfidential.String():
 				confidentiality = model.StrictlyConfidential
+			case "":
+				// Temporary placeholder, will later be set to `HighestConfidentiality()`
+				confidentiality = -1
 			default:
 				panic(errors.New("unknown 'confidentiality' value of technical asset '" + title + "': " + fmt.Sprintf("%v", asset.Confidentiality)))
 			}
@@ -4312,6 +4315,9 @@ func parseModel(inputFilename string) {
 				integrity = model.Critical
 			case model.MissionCritical.String():
 				integrity = model.MissionCritical
+			case "":
+				// Temporary placeholder, will later be set to `HighestIntegrity()`
+				integrity = -1
 			default:
 				panic(errors.New("unknown 'integrity' value of technical asset '" + title + "': " + fmt.Sprintf("%v", asset.Integrity)))
 			}
@@ -4328,6 +4334,9 @@ func parseModel(inputFilename string) {
 				availability = model.Critical
 			case model.MissionCritical.String():
 				availability = model.MissionCritical
+			case "":
+				// Temporary placeholder, will later be set to `HighestAvailability()`
+				availability = -1
 			default:
 				panic(errors.New("unknown 'availability' value of technical asset '" + title + "': " + fmt.Sprintf("%v", asset.Availability)))
 			}
@@ -4584,6 +4593,20 @@ func parseModel(inputFilename string) {
 				CommunicationLinks:      communicationLinks,
 				DiagramTweakOrder:       asset.Diagram_tweak_order,
 			}
+		}
+
+		// If CIA was not set (i.e. equals -1) it is implicitly set to its highest calculated value
+		for id, techAsset := range model.ParsedModelRoot.TechnicalAssets {
+			if techAsset.Confidentiality < 0 {
+				techAsset.Confidentiality = techAsset.HighestConfidentiality()
+			}
+			if techAsset.Integrity < 0 {
+				techAsset.Integrity = techAsset.HighestIntegrity()
+			}
+			if techAsset.Availability < 0 {
+				techAsset.Availability = techAsset.HighestAvailability()
+			}
+			model.ParsedModelRoot.TechnicalAssets[id] = techAsset
 		}
 
 		// Trust Boundaries ===============================================================================
