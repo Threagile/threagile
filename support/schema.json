@@ -418,7 +418,7 @@
             ]
           },
           "confidentiality": {
-            "description": "Confidentiality",
+            "description": "Confidentiality; defaults to the highest confidentiality value of all processed data asset",
             "type": "string",
             "enum": [
               "public",
@@ -429,7 +429,7 @@
             ]
           },
           "integrity": {
-            "description": "Integrity",
+            "description": "Integrity; defaults to the highest integrity value of all processed data asset",
             "type": "string",
             "enum": [
               "archive",
@@ -440,7 +440,7 @@
             ]
           },
           "availability": {
-            "description": "Availability",
+            "description": "Availability; defaults to the highest availability value of all processed data asset",
             "type": "string",
             "enum": [
               "archive",
@@ -699,9 +699,6 @@
             "machine",
             "encryption",
             "owner",
-            "confidentiality",
-            "integrity",
-            "availability",
             "multi_tenant",
             "redundant",
             "custom_developed_parts",
