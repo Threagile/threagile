@@ -5,8 +5,6 @@ FROM alpine/git as clone
 WORKDIR /app
 RUN git clone https://github.com/threagile/threagile.git
 
-
-
 ######
 ## Stage 2: Build application with Go's build tools
 ######
@@ -22,9 +20,6 @@ RUN GOOS=linux go build -a -trimpath -ldflags="-s -w -X main.buildTimestamp=$(da
 RUN GOOS=linux go build -a -trimpath -ldflags="-s -w -X main.buildTimestamp=$(date '+%Y%m%d%H%M%S')" -gcflags="all=-trimpath=/src" -asmflags="all=-trimpath=/src" -o threagile
 # add the -race parameter to go build call in order to instrument with race condition detector: https://blog.golang.org/race-detector
 
-
-
-
 ######
 ## Stage 3: Make final small image
 ######
@@ -38,7 +33,6 @@ RUN apk add --update --no-cache graphviz ttf-freefont && apk add ca-certificates
 RUN mkdir /lib64 && ln -s /lib/libc.musl-x86_64.so.1 /lib64/ld-linux-x86-64.so.2
 
 WORKDIR /app
-
 COPY --from=build /app/threagile /app/threagile
 COPY --from=build /app/raa.so /app/raa.so
 COPY --from=build /app/dummy.so /app/dummy.so
@@ -55,9 +49,6 @@ COPY --from=build /app/demo/example/threagile.yaml /app/threagile-example-model.
 COPY --from=build /app/demo/stub/threagile.yaml /app/threagile-stub-model.yaml
 
 RUN mkdir /data
-
-RUN chown -R 1000:1000 /app /data
-USER 1000:1000
 
 ENV PATH=/app:$PATH
 ENV GIN_MODE=release
