@@ -140,7 +140,7 @@ technical_assets:
         data_assets_received: # sequence of IDs to reference
 
 
-  Some Other Tecnical Asset:
+  Some Other Technical Asset:
     id: some-other-component
     description: Some Description
     type: process # values: external-entity, process, datastore
