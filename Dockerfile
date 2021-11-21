@@ -7,15 +7,18 @@ RUN git clone https://github.com/threagile/threagile.git
 
 
 
+
 ######
 ## Stage 2: Build application with Go's build tools
 ######
 FROM golang as build
 ENV GO111MODULE=on
+# https://stackoverflow.com/questions/36279253/go-compiled-binary-wont-run-in-an-alpine-docker-container-on-ubuntu-host
+#ENV CGO_ENABLED=0 # cannot be set as otherwise plugins don't run
 WORKDIR /app
 COPY --from=clone /app/threagile /app
-RUN go mod download
 RUN go version
+RUN	go test ./...
 RUN GOOS=linux go build -a -trimpath -ldflags="-s -w -X main.buildTimestamp=$(date '+%Y%m%d%H%M%S')" -gcflags="all=-trimpath=/src" -asmflags="all=-trimpath=/src" -buildmode=plugin -o raa.so raa/raa/raa.go
 RUN GOOS=linux go build -a -trimpath -ldflags="-s -w -X main.buildTimestamp=$(date '+%Y%m%d%H%M%S')" -gcflags="all=-trimpath=/src" -asmflags="all=-trimpath=/src" -buildmode=plugin -o dummy.so raa/dummy/dummy.go
 RUN GOOS=linux go build -a -trimpath -ldflags="-s -w -X main.buildTimestamp=$(date '+%Y%m%d%H%M%S')" -gcflags="all=-trimpath=/src" -asmflags="all=-trimpath=/src" -buildmode=plugin -o demo-rule.so risks/custom/demo/demo-rule.go
@@ -32,10 +35,17 @@ FROM alpine
 
 # label used in other scripts to filter
 LABEL type="threagile"
-RUN apk add --update --no-cache graphviz ttf-freefont && apk add ca-certificates && apk add curl && rm -rf /var/cache/apk/*
 
+# add certificates
+RUN apk add ca-certificates
+# add graphviz, fonts
+RUN apk add --update --no-cache graphviz ttf-freefont
+# https://stackoverflow.com/questions/66963068/docker-alpine-executable-binary-not-found-even-if-in-path
+RUN apk add libc6-compat
 # https://stackoverflow.com/questions/34729748/installed-go-binary-not-found-in-path-on-alpine-linux-docker
 RUN mkdir /lib64 && ln -s /lib/libc.musl-x86_64.so.1 /lib64/ld-linux-x86-64.so.2
+# clean apk cache
+RUN rm -rf /var/cache/apk/*
 
 WORKDIR /app
 

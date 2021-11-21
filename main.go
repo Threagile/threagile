@@ -3769,7 +3769,7 @@ func parseCommandlineArgs() {
 		fmt.Println(" - graphviz (CPL License): https://graphviz.gitlab.io/license/")
 		fmt.Println(" - gofpdf (MIT License): https://github.com/jung-kurt/gofpdf/blob/master/LICENSE")
 		fmt.Println(" - go-chart (MIT License): https://github.com/wcharczuk/go-chart/blob/master/LICENSE")
-		fmt.Println(" - excelize (BSD License): https://github.com/360EntSecGroup-Skylar/excelize/blob/master/LICENSE")
+		fmt.Println(" - excelize (BSD License): https://github.com/qax-os/excelize/blob/master/LICENSE")
 		fmt.Println(" - graphics-go (BSD License): https://github.com/BurntSushi/graphics-go/blob/master/LICENSE")
 		fmt.Println(" - google-uuid (BSD License): https://github.com/google/uuid/blob/master/LICENSE")
 		fmt.Println(" - gin-gonic (MIT License): https://github.com/gin-gonic/gin/blob/master/LICENSE")
