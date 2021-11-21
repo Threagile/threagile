@@ -1,9 +1,9 @@
 package report
 
 import (
-	"github.com/360EntSecGroup-Skylar/excelize/v2"
 	"github.com/threagile/threagile/colors"
 	"github.com/threagile/threagile/model"
+	"github.com/xuri/excelize/v2"
 	"sort"
 	"strconv"
 	"strings"
