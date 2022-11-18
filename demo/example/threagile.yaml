@@ -67,7 +67,7 @@ abuse_cases:
     As a hacker I want to steal identity data in order to reuse credentials and/or keys on other targets of the same company or outside.
   PII Theft: >
     As a hacker I want to steal PII (Personally Identifiable Information) data in order to blackmail the company and/or damage
-    their repudiation by publishing them.
+    their reputation by publishing them.
 
   ERP-System Compromise: >
     As a hacker I want to access the ERP-System in order to steal/modify sensitive business data.
