@@ -18,8 +18,8 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/wcharczuk/go-chart v2.0.1+incompatible
 	github.com/xuri/excelize/v2 v2.4.1
-	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97
-	golang.org/x/image v0.0.0-20210628002857-a66eb6448b8d // indirect
+	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
+	golang.org/x/image v0.5.0 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
