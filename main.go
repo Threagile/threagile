@@ -3589,6 +3589,9 @@ func parseCommandlineArgs() {
 	listTypes := flag.Bool("list-types", false, "print type information (enum values to be used in models)")
 	listRiskRules := flag.Bool("list-risk-rules", false, "print risk rules")
 	listModelMacros := flag.Bool("list-model-macros", false, "print model macros")
+	explainTypes := flag.Bool("explain-types", false, "Detailed explanation of all the types")
+	explainRiskRules := flag.Bool("explain-risk-rules", false, "Detailed explanation of all the risk rules")
+	explainModelMacros := flag.Bool("explain-model-macros", false, "Detailed explanation of all the model macros")
 	print3rdParty := flag.Bool("print-3rd-party-licenses", false, "print 3rd-party license information")
 	license := flag.Bool("print-license", false, "print license information")
 	flag.Usage = func() {
@@ -3761,6 +3764,97 @@ func parseCommandlineArgs() {
 		fmt.Println()
 		os.Exit(0)
 	}
+	if *explainTypes {
+		printLogo()
+		fmt.Println("Explanation for the types:")
+		fmt.Println()
+		printExplainTypes("Authentication", model.AuthenticationValues())
+		printExplainTypes("Authorization", model.AuthorizationValues())
+		printExplainTypes("Confidentiality", model.ConfidentialityValues())
+		printExplainTypes("Criticality", model.CriticalityValues())
+		printExplainTypes("Data Breach Probability", model.DataBreachProbabilityValues())
+		printExplainTypes("Data Format", model.DataFormatValues())
+		printExplainTypes("Encryption", model.EncryptionStyleValues())
+		printExplainTypes("Protocol", model.ProtocolValues())
+		printExplainTypes("Quantity", model.QuantityValues())
+		printExplainTypes("Risk Exploitation Impact", model.RiskExploitationImpactValues())
+		printExplainTypes("Risk Exploitation likelihood", model.RiskExploitationLikelihoodValues())
+		printExplainTypes("Risk Function", model.RiskFunctionValues())
+		printExplainTypes("Risk Severity", model.RiskSeverityValues())
+		printExplainTypes("Risk Status", model.RiskStatusValues())
+		printExplainTypes("STRIDE", model.STRIDEValues())
+		printExplainTypes("Technical Asset Machine", model.TechnicalAssetMachineValues())
+		printExplainTypes("Technical Asset Size", model.TechnicalAssetSizeValues())
+		printExplainTypes("Technical Asset Technology", model.TechnicalAssetTechnologyValues())
+		printExplainTypes("Technical Asset Type", model.TechnicalAssetTypeValues())
+		printExplainTypes("Trust Boundary Type", model.TrustBoundaryTypeValues())
+		printExplainTypes("Usage", model.UsageValues())
+
+		os.Exit(0)
+	}
+	if *explainModelMacros {
+		printLogo()
+		fmt.Println("Explanation for the model macros:")
+		fmt.Println()
+		fmt.Printf("%v: %v\n", add_build_pipeline.GetMacroDetails().ID, add_build_pipeline.GetMacroDetails().Description)
+		fmt.Printf("%v: %v\n", add_vault.GetMacroDetails().ID, add_vault.GetMacroDetails().Description)
+		fmt.Printf("%v: %v\n", pretty_print.GetMacroDetails().ID, pretty_print.GetMacroDetails().Description)
+		fmt.Printf("%v: %v\n", remove_unused_tags.GetMacroDetails().ID, remove_unused_tags.GetMacroDetails().Description)
+		fmt.Printf("%v: %v\n", seed_risk_tracking.GetMacroDetails().ID, seed_risk_tracking.GetMacroDetails().Description)
+		fmt.Printf("%v: %v\n", seed_tags.GetMacroDetails().ID, seed_tags.GetMacroDetails().Description)
+		fmt.Println()
+		os.Exit(0)
+
+	}
+	if *explainRiskRules {
+		printLogo()
+		fmt.Println("Explanation for risk rules:")
+		fmt.Println()
+		fmt.Printf("%v: %v\n", accidental_secret_leak.Category().Id, accidental_secret_leak.Category().Description)
+		fmt.Printf("%v: %v\n", code_backdooring.Category().Id, code_backdooring.Category().Description)
+		fmt.Printf("%v: %v\n", container_baseimage_backdooring.Category().Id, container_baseimage_backdooring.Category().Description)
+		fmt.Printf("%v: %v\n", container_platform_escape.Category().Id, container_platform_escape.Category().Description)
+		fmt.Printf("%v: %v\n", cross_site_request_forgery.Category().Id, cross_site_request_forgery.Category().Description)
+		fmt.Printf("%v: %v\n", cross_site_scripting.Category().Id, cross_site_scripting.Category().Description)
+		fmt.Printf("%v: %v\n", dos_risky_access_across_trust_boundary.Category().Id, dos_risky_access_across_trust_boundary.Category().Description)
+		fmt.Printf("%v: %v\n", incomplete_model.Category().Id, incomplete_model.Category().Description)
+		fmt.Printf("%v: %v\n", ldap_injection.Category().Id, ldap_injection.Category().Description)
+		fmt.Printf("%v: %v\n", missing_authentication.Category().Id, missing_authentication.Category().Description)
+		fmt.Printf("%v: %v\n", missing_authentication_second_factor.Category().Id, missing_authentication_second_factor.Category().Description)
+		fmt.Printf("%v: %v\n", missing_build_infrastructure.Category().Id, missing_build_infrastructure.Category().Description)
+		fmt.Printf("%v: %v\n", missing_cloud_hardening.Category().Id, missing_cloud_hardening.Category().Description)
+		fmt.Printf("%v: %v\n", missing_file_validation.Category().Id, missing_file_validation.Category().Description)
+		fmt.Printf("%v: %v\n", missing_hardening.Category().Id, missing_hardening.Category().Description)
+		fmt.Printf("%v: %v\n", missing_identity_propagation.Category().Id, missing_identity_propagation.Category().Description)
+		fmt.Printf("%v: %v\n", missing_identity_provider_isolation.Category().Id, missing_identity_provider_isolation.Category().Description)
+		fmt.Printf("%v: %v\n", missing_identity_store.Category().Id, missing_identity_store.Category().Description)
+		fmt.Printf("%v: %v\n", missing_network_segmentation.Category().Id, missing_network_segmentation.Category().Description)
+		fmt.Printf("%v: %v\n", missing_vault.Category().Id, missing_vault.Category().Description)
+		fmt.Printf("%v: %v\n", missing_vault_isolation.Category().Id, missing_vault_isolation.Category().Description)
+		fmt.Printf("%v: %v\n", missing_waf.Category().Id, missing_waf.Category().Description)
+		fmt.Printf("%v: %v\n", mixed_targets_on_shared_runtime.Category().Id, mixed_targets_on_shared_runtime.Category().Description)
+		fmt.Printf("%v: %v\n", path_traversal.Category().Id, path_traversal.Category().Description)
+		fmt.Printf("%v: %v\n", push_instead_of_pull_deployment.Category().Id, push_instead_of_pull_deployment.Category().Description)
+		fmt.Printf("%v: %v\n", search_query_injection.Category().Id, search_query_injection.Category().Description)
+		fmt.Printf("%v: %v\n", server_side_request_forgery.Category().Id, server_side_request_forgery.Category().Description)
+		fmt.Printf("%v: %v\n", service_registry_poisoning.Category().Id, service_registry_poisoning.Category().Description)
+		fmt.Printf("%v: %v\n", sql_nosql_injection.Category().Id, sql_nosql_injection.Category().Description)
+		fmt.Printf("%v: %v\n", unchecked_deployment.Category().Id, unchecked_deployment.Category().Description)
+		fmt.Printf("%v: %v\n", unencrypted_asset.Category().Id, unencrypted_asset.Category().Description)
+		fmt.Printf("%v: %v\n", unencrypted_communication.Category().Id, unencrypted_communication.Category().Description)
+		fmt.Printf("%v: %v\n", unguarded_access_from_internet.Category().Id, unguarded_access_from_internet.Category().Description)
+		fmt.Printf("%v: %v\n", unguarded_direct_datastore_access.Category().Id, unguarded_direct_datastore_access.Category().Description)
+		fmt.Printf("%v: %v\n", unnecessary_communication_link.Category().Id, unnecessary_communication_link.Category().Description)
+		fmt.Printf("%v: %v\n", unnecessary_data_asset.Category().Id, unnecessary_data_asset.Category().Description)
+		fmt.Printf("%v: %v\n", unnecessary_data_transfer.Category().Id, unnecessary_data_transfer.Category().Description)
+		fmt.Printf("%v: %v\n", unnecessary_technical_asset.Category().Id, unnecessary_technical_asset.Category().Description)
+		fmt.Printf("%v: %v\n", untrusted_deserialization.Category().Id, untrusted_deserialization.Category().Description)
+		fmt.Printf("%v: %v\n", wrong_communication_link_content.Category().Id, wrong_communication_link_content.Category().Description)
+		fmt.Printf("%v: %v\n", wrong_trust_boundary_content.Category().Id, wrong_trust_boundary_content.Category().Description)
+		fmt.Printf("%v: %v\n", xml_external_entity.Category().Id, xml_external_entity.Category().Description)
+		fmt.Println()
+		os.Exit(0)
+	}
 	if *print3rdParty {
 		printLogo()
 		fmt.Println("Kudos & Credits to the following open-source projects:")
@@ -3887,6 +3981,14 @@ func printExamples() {
 
 func printTypes(title string, value interface{}) {
 	fmt.Println(fmt.Sprintf("  %v: %v", title, value))
+}
+
+// explainTypes prints and explanation block and a header
+func printExplainTypes(title string, value []model.TypeEnum) {
+	fmt.Println(title)
+	for _, candidate := range value {
+		fmt.Printf("\t %v: %v\n", candidate, candidate.Explain())
+	}
 }
 
 func copyFile(src, dst string) (int64, error) {
