@@ -9,6 +9,7 @@ import (
 	"sort"
 	"strings"
 	"time"
+
 )
 
 const ThreagileVersion = "1.0.0" // Also update into example and stub model files and openapi.yaml
@@ -1206,11 +1207,11 @@ var TechnicalAssetMachineTypeDescription = [...]TypeDescription{
 }
 
 func (what TechnicalAssetMachine) String() string {
-	return AuthenticationTypeDescription[what].Name
+	return TechnicalAssetMachineTypeDescription[what].Name
 }
 
 func (what TechnicalAssetMachine) Explain() string {
-	return AuthenticationTypeDescription[what].Description
+	return TechnicalAssetMachineTypeDescription[what].Description
 }
 
 type TrustBoundaryType int
