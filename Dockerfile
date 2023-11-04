@@ -28,11 +28,33 @@ RUN GOOS=linux go build -a -trimpath -ldflags="-s -w -X main.buildTimestamp=$(da
 RUN cp /app/demo/example/threagile.yaml /app/demo/example/threagile-example-model.yaml && \
     cp /app/demo/stub/threagile.yaml /app/demo/stub/threagile-stub-model.yaml
 
+######
+## Stage 3: Copy needed files into desired folder structure
+######
 
+FROM scratch AS files
 
+COPY --from=build --chown=1000:1000 \
+    /app/threagile \
+    /app/raa.so \
+    /app/dummy.so \
+    /app/demo-rule.so \
+    /app/LICENSE.txt \
+    /app/report/template/background.pdf \
+    /app/support/openapi.yaml \
+    /app/support/schema.json \
+    /app/support/live-templates.txt \
+    /app/support/render-data-asset-diagram.sh \
+    /app/support/render-data-flow-diagram.sh \
+    /app/demo/example/threagile-example-model.yaml \
+    /app/demo/stub/threagile-stub-model.yaml \
+    \
+    /app/
+
+COPY --from=build --chown=1000:1000 /app/server /app/server
 
 ######
-## Stage 3: Make final small image
+## Stage 4: Make final small image
 ######
 FROM alpine
 
@@ -53,23 +75,7 @@ RUN apk add --update --no-cache ca-certificates \
     mkdir -p /app /data && \
     chown -R 1000:1000 /app /data
 
-COPY --from=build --chown=1000:1000 \
-    /app/threagile \
-    /app/raa.so \
-    /app/dummy.so \
-    /app/demo-rule.so \
-    /app/LICENSE.txt \
-    /app/report/template/background.pdf \
-    /app/support/openapi.yaml \
-    /app/support/schema.json \
-    /app/support/live-templates.txt \
-    /app/support/render-data-asset-diagram.sh \
-    /app/support/render-data-flow-diagram.sh \
-    /app/demo/example/threagile-example-model.yaml \
-    /app/demo/stub/threagile-stub-model.yaml \
-    /app/server \
-    \
-    /app/
+COPY --from=files / /
 
 USER 1000:1000
 WORKDIR /app
