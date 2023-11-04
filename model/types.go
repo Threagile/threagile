@@ -9,6 +9,7 @@ import (
 	"sort"
 	"strings"
 	"time"
+
 )
 
 const ThreagileVersion = "1.0.0" // Also update into example and stub model files and openapi.yaml
@@ -214,8 +215,15 @@ type InputRiskTracking struct {
 	Checked_by    string `json:"checked_by"`
 }
 
+// TypeDescription contains a name for a type and its description
+type TypeDescription struct {
+	Name        string
+	Description string
+}
+
 type TypeEnum interface {
 	String() string
+	Explain() string
 }
 
 type Quantity int
@@ -246,9 +254,20 @@ func ParseQuantity(value string) (quantity Quantity, err error) {
 	return quantity, errors.New("Unable to parse into type: " + value)
 }
 
+var QuantityTypeDescription = [...]TypeDescription{
+	{"very-few", "Very few"},
+	{"few", "Few"},
+	{"many", "Many"},
+	{"very-many", "Very many"},
+}
+
 func (what Quantity) String() string {
 	// NOTE: maintain list also in schema.json for validation in IDEs
-	return [...]string{"very-few", "few", "many", "very-many"}[what]
+	return QuantityTypeDescription[what].Name
+}
+
+func (what Quantity) Explain() string {
+	return QuantityTypeDescription[what].Description
 }
 
 func (what Quantity) Title() string {
@@ -290,9 +309,21 @@ func ParseConfidentiality(value string) (confidentiality Confidentiality, err er
 	return confidentiality, errors.New("Unable to parse into type: " + value)
 }
 
+var ConfidentialityTypeDescription = [...]TypeDescription{
+	{"public", "Public available information"},
+	{"internal", "(Company) internal information - but all people in the institution can access it"},
+	{"restricted", "Internal and with restricted access"},
+	{"confidential", "Only a few selected people have access"},
+	{"strictly-confidential", "Highest secrecy level"},
+}
+
 func (what Confidentiality) String() string {
 	// NOTE: maintain list also in schema.json for validation in IDEs
-	return [...]string{"public", "internal", "restricted", "confidential", "strictly-confidential"}[what]
+	return ConfidentialityTypeDescription[what].Name
+}
+
+func (what Confidentiality) Explain() string {
+	return ConfidentialityTypeDescription[what].Description
 }
 
 func (what Confidentiality) AttackerAttractivenessForAsset() float64 {
@@ -359,9 +390,21 @@ func ParseCriticality(value string) (criticality Criticality, err error) {
 	return criticality, errors.New("Unable to parse into type: " + value)
 }
 
+var CriticalityTypeDescription = [...]TypeDescription{
+	{"archive", "Stored, not active"},
+	{"operational", "If this fails, people will just have an ad-hoc coffee break until it is back"},
+	{"important", "Issues here results in angry people"},
+	{"critical", "Failure is really expensive or crippling"},
+	{"mission-critical", "This must not fail"},
+}
+
 func (what Criticality) String() string {
 	// NOTE: maintain list also in schema.json for validation in IDEs
-	return [...]string{"archive", "operational", "important", "critical", "mission-critical"}[what]
+	return CriticalityTypeDescription[what].Name
+}
+
+func (what Criticality) Explain() string {
+	return CriticalityTypeDescription[what].Description
 }
 
 func (what Criticality) AttackerAttractivenessForAsset() float64 {
@@ -414,9 +457,19 @@ func TechnicalAssetTypeValues() []TypeEnum {
 	}
 }
 
+var TechnicalAssetTypeDescription = [...]TypeDescription{
+	{"external-entity", "This asset is hosted and managed by a third party"},
+	{"process", "A software process"},
+	{"datastore", "This asset stores data"},
+}
+
 func (what TechnicalAssetType) String() string {
 	// NOTE: maintain list also in schema.json for validation in IDEs
-	return [...]string{"external-entity", "process", "datastore"}[what]
+	return TechnicalAssetTypeDescription[what].Name
+}
+
+func (what TechnicalAssetType) Explain() string {
+	return TechnicalAssetTypeDescription[what].Description
 }
 
 type TechnicalAssetSize int
@@ -437,9 +490,20 @@ func TechnicalAssetSizeValues() []TypeEnum {
 	}
 }
 
+var TechnicalAssetSizeDescription = [...]TypeDescription{
+	{"system", "A system consists of several services"},
+	{"service", "A specific service (web, mail, ...)"},
+	{"application", "A single application"},
+	{"component", "TODO"},
+}
+
 func (what TechnicalAssetSize) String() string {
 	// NOTE: maintain list also in schema.json for validation in IDEs
-	return [...]string{"system", "service", "application", "component"}[what]
+	return TechnicalAssetSizeDescription[what].Name
+}
+
+func (what TechnicalAssetSize) Explain() string {
+	return TechnicalAssetSizeDescription[what].Description
 }
 
 type Authorization int
@@ -458,9 +522,19 @@ func AuthorizationValues() []TypeEnum {
 	}
 }
 
+var AuthorizationTypeDescription = [...]TypeDescription{
+	{"none", "No authorization"},
+	{"technical-user", "TODO"},
+	{"enduser-identity-propagation", "Identity of end user propagates to this service"},
+}
+
 func (what Authorization) String() string {
 	// NOTE: maintain list also in schema.json for validation in IDEs
-	return [...]string{"none", "technical-user", "enduser-identity-propagation"}[what]
+	return AuthorizationTypeDescription[what].Name
+}
+
+func (what Authorization) Explain() string {
+	return AuthorizationTypeDescription[what].Description
 }
 
 type Authentication int
@@ -487,9 +561,24 @@ func AuthenticationValues() []TypeEnum {
 	}
 }
 
+var AuthenticationTypeDescription = [...]TypeDescription{
+	{"none", "No authentication"},
+	{"credentials", "Username and password, pin or passphrase"},
+	{"session-id", "A server generated session id with limited life span"},
+	{"token", "A server generated token. Containing session id, other data and is cryptographically signed"},
+	{"client-certificate", "A certificate file stores on the client identifying this specific client"},
+	{"two-factor", "Credentials plus another factor like a physical object (card) or biometrics"},
+	{"externalized", "Some external company handles authentication"},
+}
+
 func (what Authentication) String() string {
 	// NOTE: maintain list also in schema.json for validation in IDEs
-	return [...]string{"none", "credentials", "session-id", "token", "client-certificate", "two-factor", "externalized"}[what]
+	//return [...]string{"none", "credentials", "session-id", "token", "client-certificate", "two-factor", "externalized"}[what]
+	return AuthenticationTypeDescription[what].Name
+}
+
+func (what Authentication) Explain() string {
+	return AuthenticationTypeDescription[what].Description
 }
 
 type Usage int
@@ -516,9 +605,19 @@ func ParseUsage(value string) (usage Usage, err error) {
 	return usage, errors.New("Unable to parse into type: " + value)
 }
 
+var UsageTypeDescription = [...]TypeDescription{
+	{"business", "This system is operational and does business tasks"},
+	{"devops", "This system is for development"},
+}
+
 func (what Usage) String() string {
 	// NOTE: maintain list also in schema.json for validation in IDEs
-	return [...]string{"business", "devops"}[what]
+	//return [...]string{"business", "devops"}[what]
+	return UsageTypeDescription[what].Name
+}
+
+func (what Usage) Explain() string {
+	return UsageTypeDescription[what].Description
 }
 
 func (what Usage) Title() string {
@@ -555,9 +654,21 @@ func ParseEncryptionStyle(value string) (encryptionStyle EncryptionStyle, err er
 	return encryptionStyle, errors.New("Unable to parse into type: " + value)
 }
 
+var EncryptionStyleTypeDescription = [...]TypeDescription{
+	{"none", "No encryption"},
+	{"transparent", "Encrypted data at rest"},
+	{"data-with-symmetric-shared-key", "Both communication partners have the same key. This must be kept secret"},
+	{"data-with-asymmetric-shared-key", "The key is split into public and private. Those two are shared between partners"},
+	{"data-with-enduser-individual-key", "TODO"},
+}
+
 func (what EncryptionStyle) String() string {
 	// NOTE: maintain list also in schema.json for validation in IDEs
-	return [...]string{"none", "transparent", "data-with-symmetric-shared-key", "data-with-asymmetric-shared-key", "data-with-enduser-individual-key"}[what]
+	return EncryptionStyleTypeDescription[what].Name
+}
+
+func (what EncryptionStyle) Explain() string {
+	return EncryptionStyleTypeDescription[what].Description
 }
 
 func (what EncryptionStyle) Title() string {
@@ -584,9 +695,21 @@ func DataFormatValues() []TypeEnum {
 	}
 }
 
+var DataFormatTypeDescription = [...]TypeDescription{
+	{"json", "JSON"},
+	{"xml", "XML"},
+	{"serialization", "Serialized program objects"},
+	{"file", "Specific file types for data"},
+	{"csv", "CSV"},
+}
+
 func (what DataFormat) String() string {
 	// NOTE: maintain list also in schema.json for validation in IDEs
-	return [...]string{"json", "xml", "serialization", "file", "csv"}[what]
+	return DataFormatTypeDescription[what].Name
+}
+
+func (what DataFormat) Explain() string {
+	return DataFormatTypeDescription[what].Description
 }
 
 func (what DataFormat) Title() string {
@@ -702,13 +825,63 @@ func ProtocolValues() []TypeEnum {
 	}
 }
 
+var ProtocolTypeDescription = [...]TypeDescription{
+	{"unknown-protocol", "Unknown protocol"},
+	{"http", "HTTP protocol"},
+	{"https", "HTTPS protocol (encrypted)"},
+	{"ws", "WebSocket"},
+	{"wss", "WebSocket but encrypted"},
+	{"reverse-proxy-web-protocol", "TODO"},
+	{"reverse-proxy-web-protocol-encrypted", "TODO"},
+	{"mqtt", "MQTT Message protocol. Encryption via TLS is optional"},
+	{"jdbc", "Java Database Connectivity"},
+	{"jdbc-encrypted", "Java Database Connectivity but encrypted"},
+	{"odbc", "Open Database Connectivity"},
+	{"odbc-encrypted", "Open Database Connectivity but encrypted"},
+	{"sql-access-protocol", "SQL access protocol"},
+	{"sql-access-protocol-encrypted", "SQL access protocol but encrypted"},
+	{"nosql-access-protocol", "NOSQL access protocol"},
+	{"nosql-access-protocol-encrypted", "NOSQL access protocol but encrypted"},
+	{"binary", "Some other binary protocol"},
+	{"binary-encrypted", "Some other binary protocol, encrypted"},
+	{"text", "Some other text protocol"},
+	{"text-encrypted", "Some other text protocol, encrypted"},
+	{"ssh", "Secure Shell to execute commands"},
+	{"ssh-tunnel", "Secure Shell as a tunnel"},
+	{"smtp", "Mail transfer protocol (sending)"},
+	{"smtp-encrypted", "Mail transfer protocol (sending), encrypted"},
+	{"pop3", "POP 3 mail fetching"},
+	{"pop3-encrypted", "POP 3 mail fetching, encrypted"},
+	{"imap", "IMAP mail sync protocol"},
+	{"imap-encrypted", "IMAP mail sync protocol, encrypted"},
+	{"ftp", "File Transfer Protocol"},
+	{"ftps", "FTP with TLS"},
+	{"sftp", "FTP on SSH"},
+	{"scp", "Secure Shell to copy files"},
+	{"ldap", "Lightweight Directory Access Protocol - User directories"},
+	{"ldaps", "Lightweight Directory Access Protocol - User directories on TLS"},
+	{"jms", "Jakarta Messaging"},
+	{"nfs", "Network File System"},
+	{"smb", "Server Message Block"},
+	{"smb-encrypted", "Server Message Block, but encrypted"},
+	{"local-file-access", "Data files are on the local system"},
+	{"nrpe", "Nagios Remote Plugin Executor"},
+	{"xmpp", "Extensible Messaging and Presence Protocol"},
+	{"iiop", "Internet Inter-ORB Protocol "},
+	{"iiop-encrypted", "Internet Inter-ORB Protocol , encrypted"},
+	{"jrmp", "Java Remote Method Protocol"},
+	{"jrmp-encrypted", "Java Remote Method Protocol, encrypted"},
+	{"in-process-library-call", "Call to local library"},
+	{"container-spawning", "Spawn a container"},
+}
+
 func (what Protocol) String() string {
 	// NOTE: maintain list also in schema.json for validation in IDEs
-	return [...]string{"unknown-protocol", "http", "https", "ws", "wss", "reverse-proxy-web-protocol", "reverse-proxy-web-protocol-encrypted",
-		"mqtt", "jdbc", "jdbc-encrypted", "odbc", "odbc-encrypted",
-		"sql-access-protocol", "sql-access-protocol-encrypted", "nosql-access-protocol", "nosql-access-protocol-encrypted", "binary", "binary-encrypted", "text", "text-encrypted",
-		"ssh", "ssh-tunnel", "smtp", "smtp-encrypted", "pop3", "pop3-encrypted", "imap", "imap-encrypted", "ftp", "ftps", "sftp", "scp", "ldap", "ldaps", "jms", "nfs", "smb", "smb-encrypted", "local-file-access", "nrpe", "xmpp",
-		"iiop", "iiop-encrypted", "jrmp", "jrmp-encrypted", "in-process-library-call", "container-spawning"}[what]
+	return ProtocolTypeDescription[what].Name
+}
+
+func (what Protocol) Explain() string {
+	return ProtocolTypeDescription[what].Description
 }
 
 func (what Protocol) IsProcessLocal() bool {
@@ -860,16 +1033,73 @@ func TechnicalAssetTechnologyValues() []TypeEnum {
 	}
 }
 
+var TechnicalAssetTechnologyTypeDescription = [...]TypeDescription{
+	{"unknown-technology", "Unknown technology"},
+	{"client-system", "A client system"},
+	{"browser", "A web browser"},
+	{"desktop", "A desktop system (or laptop)"},
+	{"mobile-app", "A mobile app (smartphone, tablet)"},
+	{"devops-client", "A client used for DevOps"},
+	{"web-server", "A web server"},
+	{"web-application", "A web application"},
+	{"application-server", "An application server (Apache Tomcat, ...)"},
+	{"database", "A database"},
+	{"file-server", "A file server"},
+	{"local-file-system", "The local file system"},
+	{"erp", "Enterprise-Resource-Planning"},
+	{"cms", "Content Management System"},
+	{"web-service-rest", "A REST web service (API)"},
+	{"web-service-soap", "A SOAP web service (API)"},
+	{"ejb", "Jakarta Enterprise Beans fka Enterprise JavaBeans"},
+	{"search-index", "The index database of a search engine"},
+	{"search-engine", "A search engine"},
+	{"service-registry", "A central place where data schemas can be found and distributed"},
+	{"reverse-proxy", "A proxy hiding internal infrastructure from caller making requests. Can also reduce load"},
+	{"load-balancer", "A load balancer directing incoming requests to available internal infrastructure"},
+	{"build-pipeline", "A software build pipeline"},
+	{"sourcecode-repository", "Git or similar"},
+	{"artifact-registry", "A registry to store build artifacts"},
+	{"code-inspection-platform", "(Static) Code Analysis)"},
+	{"monitoring", "A monitoring system (SIEM, logs)"},
+	{"ldap-server", "A LDAP server"},
+	{"container-platform", "A platform for hosting and executing containers"},
+	{"batch-processing", "A set of tools automatically processing data"},
+	{"event-listener", "An event listener waiting to be triggered and spring to action"},
+	{"identity-provider", "A authentication provider"},
+	{"identity-store-ldap", "Authentication data as LDAP"},
+	{"identity-store-database", "Authentication data as database"},
+	{"tool", "A specific tool"},
+	{"cli", "A command line tool"},
+	{"task", "A specific task"},
+	{"function", "A specific function (maybe RPC ?)"},
+	{"gateway", "A gateway connecting two systems or trust boundaries"},
+	{"iot-device", "An IoT device"},
+	{"message-queue", "A message queue (like MQTT)"},
+	{"stream-processing", "Data stream processing"},
+	{"service-mesh", "Infrastructure for service-to-service communication"},
+	{"data-lake", "A huge database"},
+	{"big-data-platform", "Storage for big data"},
+	{"report-engine", "Software for report generation"},
+	{"ai", "An Artificial Intelligence service"},
+	{"mail-server", "A Mail server"},
+	{"vault", "Encryption and key management"},
+	{"hsm", "Hardware Security Module"},
+	{"waf", "Web Application Firewall"},
+	{"ids", "Intrusion Detection System"},
+	{"ips", "Intrusion Prevention System"},
+	{"scheduler", "Scheduled tasks"},
+	{"mainframe", "A central, big computer"},
+	{"block-storage", "SAN or similar central file storage"},
+	{"library", "A software library"},
+}
+
 func (what TechnicalAssetTechnology) String() string {
 	// NOTE: maintain list also in schema.json for validation in IDEs
-	return [...]string{"unknown-technology", "client-system", "browser", "desktop", "mobile-app", "devops-client",
-		"web-server", "web-application", "application-server", "database", "file-server", "local-file-system", "erp", "cms",
-		"web-service-rest", "web-service-soap", "ejb", "search-index", "search-engine", "service-registry", "reverse-proxy",
-		"load-balancer", "build-pipeline", "sourcecode-repository", "artifact-registry", "code-inspection-platform", "monitoring", "ldap-server",
-		"container-platform", "batch-processing", "event-listener", "identity-provider", "identity-store-ldap",
-		"identity-store-database", "tool", "cli", "task", "function", "gateway", "iot-device", "message-queue", "stream-processing",
-		"service-mesh", "data-lake", "big-data-platform", "report-engine", "ai", "mail-server", "vault", "hsm", "waf", "ids", "ips",
-		"scheduler", "mainframe", "block-storage", "library"}[what]
+	return TechnicalAssetTechnologyTypeDescription[what].Name
+}
+
+func (what TechnicalAssetTechnology) Explain() string {
+	return TechnicalAssetTechnologyTypeDescription[what].Description
 }
 
 func (what TechnicalAssetTechnology) IsWebApplication() bool {
@@ -969,8 +1199,19 @@ func TechnicalAssetMachineValues() []TypeEnum {
 	}
 }
 
+var TechnicalAssetMachineTypeDescription = [...]TypeDescription{
+	{"physical", "A physical machine"},
+	{"virtual", "A virtual machine"},
+	{"container", "A container"},
+	{"serverless", "A serverless application"},
+}
+
 func (what TechnicalAssetMachine) String() string {
-	return [...]string{"physical", "virtual", "container", "serverless"}[what]
+	return TechnicalAssetMachineTypeDescription[what].Name
+}
+
+func (what TechnicalAssetMachine) Explain() string {
+	return TechnicalAssetMachineTypeDescription[what].Description
 }
 
 type TrustBoundaryType int
@@ -997,11 +1238,23 @@ func TrustBoundaryTypeValues() []TypeEnum {
 	}
 }
 
+var TrustBoundaryTypeDescription = [...]TypeDescription{
+	{"network-on-prem", "The whole network is on prem"},
+	{"network-dedicated-hoster", "The network is at a dedicated hoster"},
+	{"network-virtual-lan", "Network is a VLAN"},
+	{"network-cloud-provider", "Network is at a cloud provider"},
+	{"network-cloud-security-group", "Cloud rules controlling network traffic"},
+	{"network-policy-namespace-isolation", "Segregation in a Kubernetes cluster"},
+	{"execution-environment", "TODO"},
+}
+
 func (what TrustBoundaryType) String() string {
 	// NOTE: maintain list also in schema.json for validation in IDEs
-	return [...]string{"network-on-prem", "network-dedicated-hoster", "network-virtual-lan",
-		"network-cloud-provider", "network-cloud-security-group", "network-policy-namespace-isolation",
-		"execution-environment"}[what]
+	return TrustBoundaryTypeDescription[what].Name
+}
+
+func (what TrustBoundaryType) Explain() string {
+	return TrustBoundaryTypeDescription[what].Description
 }
 
 func (what TrustBoundaryType) IsNetworkBoundary() bool {
@@ -2628,9 +2881,19 @@ func DataBreachProbabilityValues() []TypeEnum {
 	}
 }
 
+var DataBreachProbabilityTypeDescription = [...]TypeDescription{
+	{"improbable", "Improbable"},
+	{"possible", "Possible"},
+	{"probable", "Probable"},
+}
+
 func (what DataBreachProbability) String() string {
 	// NOTE: maintain list also in schema.json for validation in IDEs
-	return [...]string{"improbable", "possible", "probable"}[what]
+	return DataBreachProbabilityTypeDescription[what].Name
+}
+
+func (what DataBreachProbability) Explain() string {
+	return DataBreachProbabilityTypeDescription[what].Description
 }
 
 func (what DataBreachProbability) Title() string {
@@ -2678,9 +2941,21 @@ func RiskSeverityValues() []TypeEnum {
 	}
 }
 
+var RiskSeverityTypeDescription = [...]TypeDescription{
+	{"low", "Low"},
+	{"medium", "Medium"},
+	{"elevated", "Elevated"},
+	{"high", "High"},
+	{"critical", "Critical"},
+}
+
 func (what RiskSeverity) String() string {
 	// NOTE: maintain list also in schema.json for validation in IDEs
-	return [...]string{"low", "medium", "elevated", "high", "critical"}[what]
+	return RiskSeverityTypeDescription[what].Name
+}
+
+func (what RiskSeverity) Explain() string {
+	return RiskSeverityTypeDescription[what].Description
 }
 
 func (what RiskSeverity) Title() string {
@@ -2709,9 +2984,20 @@ func RiskExploitationLikelihoodValues() []TypeEnum {
 	}
 }
 
+var RiskExploitationLikelihoodTypeDescription = [...]TypeDescription{
+	{"unlikely", "Unlikely"},
+	{"likely", "Likely"},
+	{"very-likely", "Very-Likely"},
+	{"frequent", "Frequent"},
+}
+
 func (what RiskExploitationLikelihood) String() string {
 	// NOTE: maintain list also in schema.json for validation in IDEs
-	return [...]string{"unlikely", "likely", "very-likely", "frequent"}[what]
+	return RiskExploitationLikelihoodTypeDescription[what].Name
+}
+
+func (what RiskExploitationLikelihood) Explain() string {
+	return RiskExploitationLikelihoodTypeDescription[what].Description
 }
 
 func (what RiskExploitationLikelihood) Title() string {
@@ -2744,9 +3030,20 @@ func RiskExploitationImpactValues() []TypeEnum {
 	}
 }
 
+var RiskExploitationImpactTypeDescription = [...]TypeDescription{
+	{"low", "Low"},
+	{"medium", "Medium"},
+	{"high", "High"},
+	{"very-high", "Very High"},
+}
+
 func (what RiskExploitationImpact) String() string {
 	// NOTE: maintain list also in schema.json for validation in IDEs
-	return [...]string{"low", "medium", "high", "very-high"}[what]
+	return RiskExploitationImpactTypeDescription[what].Name
+}
+
+func (what RiskExploitationImpact) Explain() string {
+	return RiskExploitationImpactTypeDescription[what].Description
 }
 
 func (what RiskExploitationImpact) Title() string {
@@ -2779,9 +3076,20 @@ func RiskFunctionValues() []TypeEnum {
 	}
 }
 
+var RiskFunctionTypeDescription = [...]TypeDescription{
+	{"business-side", "TODO"},
+	{"architecture", "TODO"},
+	{"development", "TODO"},
+	{"operations", "TODO"},
+}
+
 func (what RiskFunction) String() string {
 	// NOTE: maintain list also in schema.json for validation in IDEs
-	return [...]string{"business-side", "architecture", "development", "operations"}[what]
+	return RiskFunctionTypeDescription[what].Name
+}
+
+func (what RiskFunction) Explain() string {
+	return RiskFunctionTypeDescription[what].Description
 }
 
 func (what RiskFunction) Title() string {
@@ -2814,9 +3122,22 @@ func STRIDEValues() []TypeEnum {
 	}
 }
 
+var StrideTypeDescription = [...]TypeDescription{
+	{"spoofing", "Spoofing - Authenticity"},
+	{"tampering", "Tampering - Integrity"},
+	{"repudiation", "Repudiation - Non-repudiability"},
+	{"information-disclosure", "Information disclosure - Confidentiality"},
+	{"denial-of-service", "Denial of service - Availability"},
+	{"elevation-of-privilege", "Elevation of privilege - Authorization"},
+}
+
 func (what STRIDE) String() string {
 	// NOTE: maintain list also in schema.json for validation in IDEs
-	return [...]string{"spoofing", "tampering", "repudiation", "information-disclosure", "denial-of-service", "elevation-of-privilege"}[what]
+	return StrideTypeDescription[what].Name
+}
+
+func (what STRIDE) Explain() string {
+	return StrideTypeDescription[what].Description
 }
 
 func (what STRIDE) Title() string {
@@ -3048,9 +3369,22 @@ func RiskStatusValues() []TypeEnum {
 	}
 }
 
+var RiskStatusTypeDescription = [...]TypeDescription{
+	{"unchecked", "TODO"},
+	{"in-discussion", "TODO"},
+	{"accepted", "TODO"},
+	{"in-progress", "TODO"},
+	{"mitigated", "TODO"},
+	{"false-positive", "TODO"},
+}
+
 func (what RiskStatus) String() string {
 	// NOTE: maintain list also in schema.json for validation in IDEs
-	return [...]string{"unchecked", "in-discussion", "accepted", "in-progress", "mitigated", "false-positive"}[what]
+	return RiskStatusTypeDescription[what].Name
+}
+
+func (what RiskStatus) Explain() string {
+	return RiskStatusTypeDescription[what].Description
 }
 
 func (what RiskStatus) Title() string {
