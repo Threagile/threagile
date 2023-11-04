@@ -9,7 +9,6 @@ import (
 	"sort"
 	"strings"
 	"time"
-
 )
 
 const ThreagileVersion = "1.0.0" // Also update into example and stub model files and openapi.yaml
@@ -494,7 +493,7 @@ var TechnicalAssetSizeDescription = [...]TypeDescription{
 	{"system", "A system consists of several services"},
 	{"service", "A specific service (web, mail, ...)"},
 	{"application", "A single application"},
-	{"component", "TODO"},
+	{"component", "A component of an application (smaller unit like a microservice)"},
 }
 
 func (what TechnicalAssetSize) String() string {
@@ -524,7 +523,7 @@ func AuthorizationValues() []TypeEnum {
 
 var AuthorizationTypeDescription = [...]TypeDescription{
 	{"none", "No authorization"},
-	{"technical-user", "TODO"},
+	{"technical-user", "Technical user (service-to-service) like DB user credentials"},
 	{"enduser-identity-propagation", "Identity of end user propagates to this service"},
 }
 
@@ -566,7 +565,7 @@ var AuthenticationTypeDescription = [...]TypeDescription{
 	{"credentials", "Username and password, pin or passphrase"},
 	{"session-id", "A server generated session id with limited life span"},
 	{"token", "A server generated token. Containing session id, other data and is cryptographically signed"},
-	{"client-certificate", "A certificate file stores on the client identifying this specific client"},
+	{"client-certificate", "A certificate file stored on the client identifying this specific client"},
 	{"two-factor", "Credentials plus another factor like a physical object (card) or biometrics"},
 	{"externalized", "Some external company handles authentication"},
 }
@@ -607,7 +606,7 @@ func ParseUsage(value string) (usage Usage, err error) {
 
 var UsageTypeDescription = [...]TypeDescription{
 	{"business", "This system is operational and does business tasks"},
-	{"devops", "This system is for development"},
+	{"devops", "This system is for development and/or deployment or other operational tasks"},
 }
 
 func (what Usage) String() string {
@@ -659,7 +658,7 @@ var EncryptionStyleTypeDescription = [...]TypeDescription{
 	{"transparent", "Encrypted data at rest"},
 	{"data-with-symmetric-shared-key", "Both communication partners have the same key. This must be kept secret"},
 	{"data-with-asymmetric-shared-key", "The key is split into public and private. Those two are shared between partners"},
-	{"data-with-enduser-individual-key", "TODO"},
+	{"data-with-enduser-individual-key", "The key is (managed) by the end user"},
 }
 
 func (what EncryptionStyle) String() string {
@@ -831,8 +830,8 @@ var ProtocolTypeDescription = [...]TypeDescription{
 	{"https", "HTTPS protocol (encrypted)"},
 	{"ws", "WebSocket"},
 	{"wss", "WebSocket but encrypted"},
-	{"reverse-proxy-web-protocol", "TODO"},
-	{"reverse-proxy-web-protocol-encrypted", "TODO"},
+	{"reverse-proxy-web-protocol", "Protocols used by reverse proxies"},
+	{"reverse-proxy-web-protocol-encrypted", "Protocols used by reverse proxies but encrypted"},
 	{"mqtt", "MQTT Message protocol. Encryption via TLS is optional"},
 	{"jdbc", "Java Database Connectivity"},
 	{"jdbc-encrypted", "Java Database Connectivity but encrypted"},
@@ -1245,7 +1244,7 @@ var TrustBoundaryTypeDescription = [...]TypeDescription{
 	{"network-cloud-provider", "Network is at a cloud provider"},
 	{"network-cloud-security-group", "Cloud rules controlling network traffic"},
 	{"network-policy-namespace-isolation", "Segregation in a Kubernetes cluster"},
-	{"execution-environment", "TODO"},
+	{"execution-environment", "Logical group of items (not a protective network boundary in that sense). More like a namespace or another logical group of items"},
 }
 
 func (what TrustBoundaryType) String() string {
@@ -3077,10 +3076,10 @@ func RiskFunctionValues() []TypeEnum {
 }
 
 var RiskFunctionTypeDescription = [...]TypeDescription{
-	{"business-side", "TODO"},
-	{"architecture", "TODO"},
-	{"development", "TODO"},
-	{"operations", "TODO"},
+	{"business-side", "Business"},
+	{"architecture", "Architecture"},
+	{"development", "Development"},
+	{"operations", "Operations"},
 }
 
 func (what RiskFunction) String() string {
@@ -3370,12 +3369,12 @@ func RiskStatusValues() []TypeEnum {
 }
 
 var RiskStatusTypeDescription = [...]TypeDescription{
-	{"unchecked", "TODO"},
-	{"in-discussion", "TODO"},
-	{"accepted", "TODO"},
-	{"in-progress", "TODO"},
-	{"mitigated", "TODO"},
-	{"false-positive", "TODO"},
+	{"unchecked", "Risk has not yet been reviewed"},
+	{"in-discussion", "Risk is currently being discussed (during review)"},
+	{"accepted", "Risk has been accepted (as possibly a corporate risk acceptance process defines)"},
+	{"in-progress", "Risk mitigation is currently in progress"},
+	{"mitigated", "Risk has been mitigated"},
+	{"false-positive", "Risk is a false positive (i.e. no risk at all or not applicable)"},
 }
 
 func (what RiskStatus) String() string {
