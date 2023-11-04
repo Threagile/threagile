@@ -685,32 +685,32 @@
                 "data_assets_received"
               ]
             }
-          },
-          "required": [
-            "id",
-            "description",
-            "type",
-            "usage",
-            "used_as_client_by_human",
-            "out_of_scope",
-            "size",
-            "technology",
-            "internet",
-            "machine",
-            "encryption",
-            "owner",
-            "confidentiality",
-            "integrity",
-            "availability",
-            "multi_tenant",
-            "redundant",
-            "custom_developed_parts",
-            "data_assets_processed",
-            "data_assets_stored",
-            "data_formats_accepted",
-            "communication_links"
-          ]
-        }
+          }
+        },
+        "required": [
+          "id",
+          "description",
+          "type",
+          "usage",
+          "used_as_client_by_human",
+          "out_of_scope",
+          "size",
+          "technology",
+          "internet",
+          "machine",
+          "encryption",
+          "owner",
+          "confidentiality",
+          "integrity",
+          "availability",
+          "multi_tenant",
+          "redundant",
+          "custom_developed_parts",
+          "data_assets_processed",
+          "data_assets_stored",
+          "data_formats_accepted",
+          "communication_links"
+        ]
       }
     },
     "trust_boundaries": {
