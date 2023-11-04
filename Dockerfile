@@ -67,9 +67,9 @@ COPY --from=build --chown=1000:1000 \
     /app/support/render-data-flow-diagram.sh \
     /app/demo/example/threagile-example-model.yaml \
     /app/demo/stub/threagile-stub-model.yaml \
-    /app/server \
     \
     /app/
+COPY --from=build --chown=1000:1000 /app/server /app/server/
 
 USER 1000:1000
 WORKDIR /app
