@@ -1,0 +1,7 @@
+name: container-spawning
+description: Spawn a container
+isProcessLocal: true
+isEncrypted: false
+isPotentialDatabaseAccessProtocol: false
+IsLaxDatabaseProtocol: false
+isPotentialWebAccessProtocol: false

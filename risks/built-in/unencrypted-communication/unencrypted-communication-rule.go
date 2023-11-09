@@ -1,10 +1,24 @@
 package unencrypted_communication
 
 import (
+	"log"
+
 	"github.com/threagile/threagile/model"
 )
 
 func Category() model.RiskCategory {
+
+	// Just to make sure the protocol yaml files were properly loaded
+	local_file_access_protocol, err := model.GetProtocol("local-file-access")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	in_process_library_call_protocol, err := model.GetProtocol("local-file-access")
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	return model.RiskCategory{
 		Id:    "unencrypted-communication",
 		Title: "Unencrypted Communication",
@@ -18,7 +32,7 @@ func Category() model.RiskCategory {
 		Check:      "Are recommendations from the linked cheat sheet and referenced ASVS chapter applied?",
 		Function:   model.Operations,
 		STRIDE:     model.InformationDisclosure,
-		DetectionLogic: "Unencrypted technical communication links of in-scope technical assets (excluding " + model.Monitoring.String() + " traffic as well as " + model.LocalFileAccess.String() + " and " + model.InProcessLibraryCall.String() + ") " +
+		DetectionLogic: "Unencrypted technical communication links of in-scope technical assets (excluding " + model.Monitoring.String() + " traffic as well as " + local_file_access_protocol.String() + " and " + in_process_library_call_protocol.String() + ") " +
 			"transferring sensitive data.", // TODO more detailed text required here
 		RiskAssessment: "Depending on the confidentiality rating of the transferred data-assets either medium or high risk.",
 		FalsePositives: "When all sensitive data sent over the communication link is already fully encrypted on document or data level. " +

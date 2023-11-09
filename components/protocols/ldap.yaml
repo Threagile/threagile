@@ -1,0 +1,7 @@
+name: ldap
+description: Lightweight Directory Access Protocol - User directories
+isProcessLocal: false
+isEncrypted: false
+isPotentialDatabaseAccessProtocol: false
+IsLaxDatabaseProtocol: false
+isPotentialWebAccessProtocol: false

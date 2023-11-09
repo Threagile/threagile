@@ -1,0 +1,7 @@
+name: xmpp
+description: Extensible Messaging and Presence Protocol
+isProcessLocal: false
+isEncrypted: false
+isPotentialDatabaseAccessProtocol: false
+IsLaxDatabaseProtocol: false
+isPotentialWebAccessProtocol: false

@@ -1,8 +1,9 @@
 package unguarded_access_from_internet
 
 import (
-	"github.com/threagile/threagile/model"
 	"sort"
+
+	"github.com/threagile/threagile/model"
 )
 
 func Category() model.RiskCategory {
@@ -54,11 +55,11 @@ func GenerateRisks() []model.Risk {
 				if technicalAsset.Technology != model.LoadBalancer {
 					if !technicalAsset.CustomDevelopedParts {
 						if (technicalAsset.Technology == model.WebServer || technicalAsset.Technology == model.WebApplication || technicalAsset.Technology == model.ReverseProxy || technicalAsset.Technology == model.WAF || technicalAsset.Technology == model.Gateway) &&
-							(incomingAccess.Protocol == model.HTTP || incomingAccess.Protocol == model.HTTPS) {
+							(incomingAccess.Protocol.String() == "http" || incomingAccess.Protocol.String() == "https") {
 							continue
 						}
 						if technicalAsset.Technology == model.Gateway &&
-							(incomingAccess.Protocol == model.FTP || incomingAccess.Protocol == model.FTPS || incomingAccess.Protocol == model.SFTP) {
+							(incomingAccess.Protocol.String() == "ftp" || incomingAccess.Protocol.String() == "ftps" || incomingAccess.Protocol.String() == "sftp") {
 							continue
 						}
 					}

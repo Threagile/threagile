@@ -1,0 +1,7 @@
+name: nrpe
+description: Nagios Remote Plugin Executor
+isProcessLocal: false
+isEncrypted: false
+isPotentialDatabaseAccessProtocol: false
+IsLaxDatabaseProtocol: false
+isPotentialWebAccessProtocol: false

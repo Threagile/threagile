@@ -42,8 +42,8 @@ func GenerateRisks() []model.Risk {
 				if model.ParsedModelRoot.TechnicalAssets[incomingFlow.SourceId].OutOfScope {
 					continue
 				}
-				if incomingFlow.Protocol == model.HTTP || incomingFlow.Protocol == model.HTTPS ||
-					incomingFlow.Protocol == model.BINARY || incomingFlow.Protocol == model.BINARY_encrypted {
+				if incomingFlow.Protocol.String() == "http" || incomingFlow.Protocol.String() == "https" ||
+					incomingFlow.Protocol.String() == "binary" || incomingFlow.Protocol.String() == "binary-encrypted" {
 					likelihood := model.VeryLikely
 					if incomingFlow.Usage == model.DevOps {
 						likelihood = model.Likely

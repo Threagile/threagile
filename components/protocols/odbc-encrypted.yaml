@@ -1,0 +1,7 @@
+name: odbc-encrypted
+description: Open Database Connectivity but encrypted
+isProcessLocal: false
+isEncrypted: true
+isPotentialDatabaseAccessProtocol: true
+IsLaxDatabaseProtocol: false
+isPotentialWebAccessProtocol: false

@@ -1,0 +1,7 @@
+name: https
+description: HTTPS protocol (encrypted)
+isProcessLocal: false
+isEncrypted: true
+isPotentialDatabaseAccessProtocol: false
+IsLaxDatabaseProtocol: true
+isPotentialWebAccessProtocol: true

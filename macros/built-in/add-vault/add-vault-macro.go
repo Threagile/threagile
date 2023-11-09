@@ -2,9 +2,11 @@ package add_vault
 
 import (
 	"fmt"
-	"github.com/threagile/threagile/model"
+	"log"
 	"sort"
 	"strings"
+
+	"github.com/threagile/threagile/model"
 )
 
 func GetMacroDetails() model.MacroDetails {
@@ -175,6 +177,22 @@ func Execute(modelInput *model.ModelInput) (message string, validResult bool, er
 }
 
 func applyChange(modelInput *model.ModelInput, changeLogCollector *[]string, dryRun bool) (message string, validResult bool, err error) {
+
+	local_file_access_protocol, err := model.GetProtocol("local-file-access")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	sql_access_protocol, err := model.GetProtocol("sql-access-protocol")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	https_protocol, err := model.GetProtocol("https")
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	model.AddTagToModelInput(modelInput, macroState["vault-name"][0], dryRun, changeLogCollector)
 
 	var serverSideTechAssets = make([]string, 0)
@@ -256,7 +274,7 @@ func applyChange(modelInput *model.ModelInput, changeLogCollector *[]string, dry
 			accessLink := model.InputCommunicationLink{
 				Target:                   storageID,
 				Description:              "Vault Storage Access",
-				Protocol:                 model.LocalFileAccess.String(),
+				Protocol:                 local_file_access_protocol.String(),
 				Authentication:           model.Credentials.String(),
 				Authorization:            model.TechnicalUser.String(),
 				Tags:                     []string{},
@@ -270,7 +288,7 @@ func applyChange(modelInput *model.ModelInput, changeLogCollector *[]string, dry
 				Diagram_tweak_constraint: false,
 			}
 			if databaseUsed {
-				accessLink.Protocol = model.SQL_access_protocol.String() // TODO ask if encrypted and ask if NoSQL? or to detailed for a wizard?
+				accessLink.Protocol = sql_access_protocol.String() // TODO ask if encrypted and ask if NoSQL? or to detailed for a wizard?
 			}
 			commLinks["Vault Storage Access"] = accessLink
 		}
@@ -289,7 +307,7 @@ func applyChange(modelInput *model.ModelInput, changeLogCollector *[]string, dry
 			clientAccessCommLink := model.InputCommunicationLink{
 				Target:                   vaultID,
 				Description:              "Vault Access Traffic (by " + clientID + ")",
-				Protocol:                 model.HTTPS.String(),
+				Protocol:                 https_protocol.String(),
 				Authentication:           authentication,
 				Authorization:            model.TechnicalUser.String(),
 				Tags:                     []string{},

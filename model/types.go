@@ -4,11 +4,17 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/threagile/threagile/colors"
+	"log"
+	"os"
+	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/threagile/threagile/colors"
+	// "gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 const ThreagileVersion = "1.0.0" // Also update into example and stub model files and openapi.yaml
@@ -34,6 +40,9 @@ func Init() {
 	GeneratedRisksByCategory = make(map[RiskCategory][]Risk, 0)
 	GeneratedRisksBySyntheticId = make(map[string]Risk, 0)
 	AllSupportedTags = make(map[string]bool, 0)
+
+	LoadProtocols("components/protocols")
+
 }
 
 func AddToListOfSupportedTags(tags []string) {
@@ -720,192 +729,138 @@ func (what DataFormat) Description() string {
 		"File input/uploads", "CSV tabular data"}[what]
 }
 
-type Protocol int
-
-const (
-	UnknownProtocol Protocol = iota
-	HTTP
-	HTTPS
-	WS
-	WSS
-	Reverse_proxy_web_protocol
-	Reverse_proxy_web_protocol_encrypted
-	MQTT
-	JDBC
-	JDBC_encrypted
-	ODBC
-	ODBC_encrypted
-	SQL_access_protocol
-	SQL_access_protocol_encrypted
-	NoSQL_access_protocol
-	NoSQL_access_protocol_encrypted
-	BINARY
-	BINARY_encrypted
-	TEXT
-	TEXT_encrypted
-	SSH
-	SSH_tunnel
-	SMTP
-	SMTP_encrypted
-	POP3
-	POP3_encrypted
-	IMAP
-	IMAP_encrypted
-	FTP
-	FTPS
-	SFTP
-	SCP
-	LDAP
-	LDAPS
-	JMS
-	NFS
-	SMB
-	SMB_encrypted
-	LocalFileAccess
-	NRPE
-	XMPP
-	IIOP
-	IIOP_encrypted
-	JRMP
-	JRMP_encrypted
-	InProcessLibraryCall
-	ContainerSpawning
-)
-
-func ProtocolValues() []TypeEnum {
-	return []TypeEnum{
-		UnknownProtocol,
-		HTTP,
-		HTTPS,
-		WS,
-		WSS,
-		Reverse_proxy_web_protocol,
-		Reverse_proxy_web_protocol_encrypted,
-		MQTT,
-		JDBC,
-		JDBC_encrypted,
-		ODBC,
-		ODBC_encrypted,
-		SQL_access_protocol,
-		SQL_access_protocol_encrypted,
-		NoSQL_access_protocol,
-		NoSQL_access_protocol_encrypted,
-		BINARY,
-		BINARY_encrypted,
-		TEXT,
-		TEXT_encrypted,
-		SSH,
-		SSH_tunnel,
-		SMTP,
-		SMTP_encrypted,
-		POP3,
-		POP3_encrypted,
-		IMAP,
-		IMAP_encrypted,
-		FTP,
-		FTPS,
-		SFTP,
-		SCP,
-		LDAP,
-		LDAPS,
-		JMS,
-		NFS,
-		SMB,
-		SMB_encrypted,
-		LocalFileAccess,
-		NRPE,
-		XMPP,
-		IIOP,
-		IIOP_encrypted,
-		JRMP,
-		JRMP_encrypted,
-		InProcessLibraryCall,
-		ContainerSpawning,
-	}
+type ProtocolYaml struct {
+	Name                              string `yaml:"name"`
+	Description                       string `yaml:"description"`
+	IsProcessLocal                    bool   `yaml:"isProcessLocal"`
+	IsEncrypted                       bool   `yaml:"isEncrypted"`
+	IsPotentialDatabaseAccessProtocol bool   `yaml:"isPotentialDatabaseAccessProtocol"`
+	IsLaxDatabaseProtocol             bool   `yaml:"isLaxDatabaseProtocol"`
+	IsPotentialWebAccessProtocol      bool   `yaml:"isPotentialWebAccessProtocol"`
 }
 
-var ProtocolTypeDescription = [...]TypeDescription{
-	{"unknown-protocol", "Unknown protocol"},
-	{"http", "HTTP protocol"},
-	{"https", "HTTPS protocol (encrypted)"},
-	{"ws", "WebSocket"},
-	{"wss", "WebSocket but encrypted"},
-	{"reverse-proxy-web-protocol", "Protocols used by reverse proxies"},
-	{"reverse-proxy-web-protocol-encrypted", "Protocols used by reverse proxies but encrypted"},
-	{"mqtt", "MQTT Message protocol. Encryption via TLS is optional"},
-	{"jdbc", "Java Database Connectivity"},
-	{"jdbc-encrypted", "Java Database Connectivity but encrypted"},
-	{"odbc", "Open Database Connectivity"},
-	{"odbc-encrypted", "Open Database Connectivity but encrypted"},
-	{"sql-access-protocol", "SQL access protocol"},
-	{"sql-access-protocol-encrypted", "SQL access protocol but encrypted"},
-	{"nosql-access-protocol", "NOSQL access protocol"},
-	{"nosql-access-protocol-encrypted", "NOSQL access protocol but encrypted"},
-	{"binary", "Some other binary protocol"},
-	{"binary-encrypted", "Some other binary protocol, encrypted"},
-	{"text", "Some other text protocol"},
-	{"text-encrypted", "Some other text protocol, encrypted"},
-	{"ssh", "Secure Shell to execute commands"},
-	{"ssh-tunnel", "Secure Shell as a tunnel"},
-	{"smtp", "Mail transfer protocol (sending)"},
-	{"smtp-encrypted", "Mail transfer protocol (sending), encrypted"},
-	{"pop3", "POP 3 mail fetching"},
-	{"pop3-encrypted", "POP 3 mail fetching, encrypted"},
-	{"imap", "IMAP mail sync protocol"},
-	{"imap-encrypted", "IMAP mail sync protocol, encrypted"},
-	{"ftp", "File Transfer Protocol"},
-	{"ftps", "FTP with TLS"},
-	{"sftp", "FTP on SSH"},
-	{"scp", "Secure Shell to copy files"},
-	{"ldap", "Lightweight Directory Access Protocol - User directories"},
-	{"ldaps", "Lightweight Directory Access Protocol - User directories on TLS"},
-	{"jms", "Jakarta Messaging"},
-	{"nfs", "Network File System"},
-	{"smb", "Server Message Block"},
-	{"smb-encrypted", "Server Message Block, but encrypted"},
-	{"local-file-access", "Data files are on the local system"},
-	{"nrpe", "Nagios Remote Plugin Executor"},
-	{"xmpp", "Extensible Messaging and Presence Protocol"},
-	{"iiop", "Internet Inter-ORB Protocol "},
-	{"iiop-encrypted", "Internet Inter-ORB Protocol , encrypted"},
-	{"jrmp", "Java Remote Method Protocol"},
-	{"jrmp-encrypted", "Java Remote Method Protocol, encrypted"},
-	{"in-process-library-call", "Call to local library"},
-	{"container-spawning", "Spawn a container"},
+// Protocol contains details for a specific protocol
+type Protocol struct {
+	Name                                  string
+	Description                           string
+	IsProcessLocalData                    bool
+	IsEncryptedData                       bool
+	IsPotentialDatabaseAccessProtocolData bool
+	IsLaxDatabaseProtocolData             bool
+	IsPotentialWebAccessProtocolData      bool
+}
+
+const UnknownProtocol = 0
+
+// unknown is always set as default
+var AllProtocolDetails = []Protocol{
+	{"unknown-protocol", "Unknown protocol", false, false, false, false, false},
+}
+
+func ProtocolFromYaml(filename string) Protocol {
+	t := ProtocolYaml{}
+	var res Protocol
+
+	content, err := os.ReadFile(filename)
+	if err != nil {
+		log.Fatalf("error: %v", err)
+	}
+
+	err = yaml.Unmarshal(content, &t)
+	if err != nil {
+		log.Fatalf("error: %v", err)
+	}
+	// fmt.Printf("%v", t)
+	res.Name = t.Name
+	res.Description = t.Description
+	res.IsProcessLocalData = t.IsProcessLocal
+	res.IsEncryptedData = t.IsEncrypted
+	res.IsPotentialDatabaseAccessProtocolData = t.IsPotentialDatabaseAccessProtocol
+	res.IsLaxDatabaseProtocolData = t.IsLaxDatabaseProtocol
+	res.IsPotentialWebAccessProtocolData = t.IsPotentialWebAccessProtocol
+
+	return res
+}
+
+func LoadProtocols(path string) {
+
+	files, err := os.ReadDir(path)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, file := range files {
+		if filepath.Ext(file.Name()) == ".yaml" {
+			np := ProtocolFromYaml(filepath.Join(path, file.Name()))
+			if GetProtocolID(np.Name) != 0 {
+				log.Fatal("Protocol registered already. Check file ", filepath.Join(path, file.Name()))
+			}
+			AllProtocolDetails = append(AllProtocolDetails, np)
+		}
+	}
+
+}
+
+func GetProtocolID(name string) int {
+	for index, protocol := range AllProtocolDetails {
+		if name == protocol.Name {
+			return index
+		}
+	}
+	return 0
+}
+
+func GetProtocol(name string) (Protocol, error) {
+	for _, protocol := range AllProtocolDetails {
+		if name == protocol.Name {
+			return protocol, nil
+		}
+	}
+	var res Protocol // Maybe have a "broken" special Protocol ?
+
+	return res, errors.New("Core protocol not present")
+}
+
+func GetProtocolNameList() []string {
+	var res []string
+
+	for _, protocol := range AllProtocolDetails {
+		res = append(res, protocol.Name)
+	}
+
+	return res
 }
 
 func (what Protocol) String() string {
 	// NOTE: maintain list also in schema.json for validation in IDEs
-	return ProtocolTypeDescription[what].Name
+	return what.Name
 }
 
 func (what Protocol) Explain() string {
-	return ProtocolTypeDescription[what].Description
+	return what.Description
 }
 
 func (what Protocol) IsProcessLocal() bool {
-	return what == InProcessLibraryCall || what == LocalFileAccess || what == ContainerSpawning
+	//return what == InProcessLibraryCall || what == LocalFileAccess || what == ContainerSpawning
+	return what.IsProcessLocalData
 }
 
 func (what Protocol) IsEncrypted() bool {
-	return what == HTTPS || what == WSS || what == JDBC_encrypted || what == ODBC_encrypted ||
-		what == NoSQL_access_protocol_encrypted || what == SQL_access_protocol_encrypted || what == BINARY_encrypted || what == TEXT_encrypted || what == SSH || what == SSH_tunnel ||
-		what == FTPS || what == SFTP || what == SCP || what == LDAPS || what == Reverse_proxy_web_protocol_encrypted ||
-		what == IIOP_encrypted || what == JRMP_encrypted || what == SMB_encrypted || what == SMTP_encrypted || what == POP3_encrypted || what == IMAP_encrypted
+	return what.IsEncryptedData
 }
 
 func (what Protocol) IsPotentialDatabaseAccessProtocol(includingLaxDatabaseProtocols bool) bool {
-	strictlyDatabaseOnlyProtocol := what == JDBC_encrypted || what == ODBC_encrypted ||
-		what == NoSQL_access_protocol_encrypted || what == SQL_access_protocol_encrypted || what == JDBC || what == ODBC || what == NoSQL_access_protocol || what == SQL_access_protocol
+	strictlyDatabaseOnlyProtocol := what.IsPotentialDatabaseAccessProtocolData
+
 	if includingLaxDatabaseProtocols {
 		// include HTTP for REST-based NoSQL-DBs as well as unknown binary
-		return strictlyDatabaseOnlyProtocol || what == HTTPS || what == HTTP || what == BINARY || what == BINARY_encrypted
+		return strictlyDatabaseOnlyProtocol || what.IsLaxDatabaseProtocolData
 	}
 	return strictlyDatabaseOnlyProtocol
 }
 
 func (what Protocol) IsPotentialWebAccessProtocol() bool {
-	return what == HTTP || what == HTTPS || what == WS || what == WSS || what == Reverse_proxy_web_protocol || what == Reverse_proxy_web_protocol_encrypted
+	return what.IsPotentialWebAccessProtocolData
 }
 
 type TechnicalAssetTechnology int
@@ -2772,7 +2727,7 @@ func (what CommunicationLink) DetermineLabelColor() string {
 func (what CommunicationLink) DetermineArrowColor() string {
 	// TODO: Just move into main.go and let the generated risk determine the color, don't duplicate the logic here
 	if len(what.DataAssetsSent) == 0 && len(what.DataAssetsReceived) == 0 ||
-		what.Protocol == UnknownProtocol {
+		what.Protocol.String() == "unknown-protocol" {
 		return colors.Pink // pink, because it's strange when too many technical communication links transfer no data... some ok, but many in a diagram ist a sign of model forgery...
 	}
 	if what.Usage == DevOps {

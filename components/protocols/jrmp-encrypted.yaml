@@ -1,0 +1,7 @@
+name: jrmp-encrypted
+description: Java Remote Method Protocol, encrypted
+isProcessLocal: false
+isEncrypted: true
+isPotentialDatabaseAccessProtocol: false
+IsLaxDatabaseProtocol: false
+isPotentialWebAccessProtocol: false

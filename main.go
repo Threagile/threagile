@@ -1495,7 +1495,7 @@ func startServer() {
 			"usage":                        arrayOfStringValues(model.UsageValues()),
 			"encryption":                   arrayOfStringValues(model.EncryptionStyleValues()),
 			"data_format":                  arrayOfStringValues(model.DataFormatValues()),
-			"protocol":                     arrayOfStringValues(model.ProtocolValues()),
+			"protocol":                     model.GetProtocolNameList(),
 			"technical_asset_technology":   arrayOfStringValues(model.TechnicalAssetTechnologyValues()),
 			"technical_asset_machine":      arrayOfStringValues(model.TechnicalAssetMachineValues()),
 			"trust_boundary_type":          arrayOfStringValues(model.TrustBoundaryTypeValues()),
@@ -3636,6 +3636,7 @@ func parseCommandlineArgs() {
 		os.Exit(0)
 	}
 	if *listTypes {
+		model.LoadProtocols("components/protocols") // Todo: Would be better to init everything, I guess
 		printLogo()
 		fmt.Println("The following types are available (can be extended for custom rules):")
 		fmt.Println()
@@ -3653,7 +3654,7 @@ func parseCommandlineArgs() {
 		fmt.Println()
 		printTypes("Encryption", model.EncryptionStyleValues())
 		fmt.Println()
-		printTypes("Protocol", model.ProtocolValues())
+		printTypes("Protocol", model.GetProtocolNameList())
 		fmt.Println()
 		printTypes("Quantity", model.QuantityValues())
 		fmt.Println()
@@ -3767,6 +3768,7 @@ func parseCommandlineArgs() {
 		os.Exit(0)
 	}
 	if *explainTypes {
+		model.LoadProtocols("components/protocols") // Todo: Would be better to init everything, I guess
 		printLogo()
 		fmt.Println("Explanation for the types:")
 		fmt.Println()
@@ -3777,7 +3779,7 @@ func parseCommandlineArgs() {
 		printExplainTypes("Data Breach Probability", model.DataBreachProbabilityValues())
 		printExplainTypes("Data Format", model.DataFormatValues())
 		printExplainTypes("Encryption", model.EncryptionStyleValues())
-		printExplainTypes("Protocol", model.ProtocolValues())
+		printExplainTypesPD("Protocol", model.AllProtocolDetails)
 		printExplainTypes("Quantity", model.QuantityValues())
 		printExplainTypes("Risk Exploitation Impact", model.RiskExploitationImpactValues())
 		printExplainTypes("Risk Exploitation likelihood", model.RiskExploitationLikelihoodValues())
@@ -3990,6 +3992,14 @@ func printExplainTypes(title string, value []model.TypeEnum) {
 	fmt.Println(title)
 	for _, candidate := range value {
 		fmt.Printf("\t %v: %v\n", candidate, candidate.Explain())
+	}
+}
+
+// explainTypesPD prints and explanation block and a header
+func printExplainTypesPD(title string, value []model.Protocol) {
+	fmt.Println(title)
+	for _, candidate := range value {
+		fmt.Printf("\t %v: %v\n", candidate.Name, candidate.Description)
 	}
 }
 
@@ -4507,99 +4517,9 @@ func parseModel(inputFilename string) {
 						panic(errors.New("unknown 'usage' value of technical asset '" + title + "' communication link '" + commLinkTitle + "': " + fmt.Sprintf("%v", commLink.Usage)))
 					}
 
-					switch commLink.Protocol {
-					case model.UnknownProtocol.String():
-						protocol = model.UnknownProtocol
-					case model.HTTP.String():
-						protocol = model.HTTP
-					case model.HTTPS.String():
-						protocol = model.HTTPS
-					case model.WS.String():
-						protocol = model.WS
-					case model.WSS.String():
-						protocol = model.WSS
-					case model.MQTT.String():
-						protocol = model.MQTT
-					case model.JDBC.String():
-						protocol = model.JDBC
-					case model.JDBC_encrypted.String():
-						protocol = model.JDBC_encrypted
-					case model.ODBC.String():
-						protocol = model.ODBC
-					case model.ODBC_encrypted.String():
-						protocol = model.ODBC_encrypted
-					case model.SQL_access_protocol.String():
-						protocol = model.SQL_access_protocol
-					case model.SQL_access_protocol_encrypted.String():
-						protocol = model.SQL_access_protocol_encrypted
-					case model.NoSQL_access_protocol.String():
-						protocol = model.NoSQL_access_protocol
-					case model.NoSQL_access_protocol_encrypted.String():
-						protocol = model.NoSQL_access_protocol_encrypted
-					case model.TEXT.String():
-						protocol = model.TEXT
-					case model.TEXT_encrypted.String():
-						protocol = model.TEXT_encrypted
-					case model.BINARY.String():
-						protocol = model.BINARY
-					case model.BINARY_encrypted.String():
-						protocol = model.BINARY_encrypted
-					case model.SSH.String():
-						protocol = model.SSH
-					case model.SSH_tunnel.String():
-						protocol = model.SSH_tunnel
-					case model.SMTP.String():
-						protocol = model.SMTP
-					case model.SMTP_encrypted.String():
-						protocol = model.SMTP_encrypted
-					case model.POP3.String():
-						protocol = model.POP3
-					case model.POP3_encrypted.String():
-						protocol = model.POP3_encrypted
-					case model.IMAP.String():
-						protocol = model.IMAP
-					case model.IMAP_encrypted.String():
-						protocol = model.IMAP_encrypted
-					case model.FTP.String():
-						protocol = model.FTP
-					case model.FTPS.String():
-						protocol = model.FTPS
-					case model.SFTP.String():
-						protocol = model.SFTP
-					case model.SCP.String():
-						protocol = model.SCP
-					case model.LDAP.String():
-						protocol = model.LDAP
-					case model.LDAPS.String():
-						protocol = model.LDAPS
-					case model.JMS.String():
-						protocol = model.JMS
-					case model.NFS.String():
-						protocol = model.NFS
-					case model.SMB.String():
-						protocol = model.SMB
-					case model.SMB_encrypted.String():
-						protocol = model.SMB_encrypted
-					case model.LocalFileAccess.String():
-						protocol = model.LocalFileAccess
-					case model.NRPE.String():
-						protocol = model.NRPE
-					case model.XMPP.String():
-						protocol = model.XMPP
-					case model.IIOP.String():
-						protocol = model.IIOP
-					case model.IIOP_encrypted.String():
-						protocol = model.IIOP_encrypted
-					case model.JRMP.String():
-						protocol = model.JRMP
-					case model.JRMP_encrypted.String():
-						protocol = model.JRMP_encrypted
-					case model.InProcessLibraryCall.String():
-						protocol = model.InProcessLibraryCall
-					case model.ContainerSpawning.String():
-						protocol = model.ContainerSpawning
-					default:
-						panic(errors.New("unknown 'protocol' of technical asset '" + title + "' communication link '" + commLinkTitle + "': " + fmt.Sprintf("%v", commLink.Protocol)))
+					protocol, err = model.GetProtocol(commLink.Protocol)
+					if err != nil {
+						log.Fatal(err)
 					}
 
 					if commLink.Data_assets_sent != nil {

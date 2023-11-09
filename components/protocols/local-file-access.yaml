@@ -1,0 +1,7 @@
+name: local-file-access
+description: Data files are on the local system
+isProcessLocal: true
+isEncrypted: false
+isPotentialDatabaseAccessProtocol: false
+IsLaxDatabaseProtocol: false
+isPotentialWebAccessProtocol: false

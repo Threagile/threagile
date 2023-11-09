@@ -1,0 +1,7 @@
+name: smtp-encrypted
+description: Mail transfer protocol (sending), encrypted
+isProcessLocal: false
+isEncrypted: true
+isPotentialDatabaseAccessProtocol: false
+IsLaxDatabaseProtocol: false
+isPotentialWebAccessProtocol: false

@@ -1,0 +1,7 @@
+name: smb-encrypted
+description: Server Message Block, but encrypted
+isProcessLocal: false
+isEncrypted: true
+isPotentialDatabaseAccessProtocol: false
+IsLaxDatabaseProtocol: false
+isPotentialWebAccessProtocol: false

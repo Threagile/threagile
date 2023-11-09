@@ -37,7 +37,7 @@ func GenerateRisks() []model.Risk {
 			if model.ParsedModelRoot.TechnicalAssets[incomingFlow.SourceId].OutOfScope {
 				continue
 			}
-			if incomingFlow.Protocol == model.LDAP || incomingFlow.Protocol == model.LDAPS {
+			if incomingFlow.Protocol.String() == "ldap" || incomingFlow.Protocol.String() == "ldaps" {
 				likelihood := model.Likely
 				if incomingFlow.Usage == model.DevOps {
 					likelihood = model.Unlikely

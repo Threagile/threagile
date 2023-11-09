@@ -1,0 +1,7 @@
+name: pop3-encrypted
+description: POP 3 mail fetching, encrypted
+isProcessLocal: false
+isEncrypted: true
+isPotentialDatabaseAccessProtocol: false
+IsLaxDatabaseProtocol: false
+isPotentialWebAccessProtocol: false

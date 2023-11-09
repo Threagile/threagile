@@ -1,0 +1,7 @@
+name: imap-encrypted
+description: IMAP mail sync protocol, encrypted
+isProcessLocal: false
+isEncrypted: true
+isPotentialDatabaseAccessProtocol: false
+IsLaxDatabaseProtocol: false
+isPotentialWebAccessProtocol: false

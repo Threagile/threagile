@@ -63,7 +63,7 @@ func GenerateRisks() []model.Risk {
 
 func FileServerAccessViaFTP(technicalAsset model.TechnicalAsset, incomingAccess model.CommunicationLink) bool {
 	return technicalAsset.Technology == model.FileServer &&
-		(incomingAccess.Protocol == model.FTP || incomingAccess.Protocol == model.FTPS || incomingAccess.Protocol == model.SFTP)
+		(incomingAccess.Protocol.String() == "ftp" || incomingAccess.Protocol.String() == "ftps" || incomingAccess.Protocol.String() == "sftp")
 }
 
 func createRisk(dataStore model.TechnicalAsset, dataFlow model.CommunicationLink, clientOutsideTrustBoundary model.TechnicalAsset, moreRisky bool) model.Risk {

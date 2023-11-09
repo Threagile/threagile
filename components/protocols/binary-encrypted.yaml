@@ -1,0 +1,7 @@
+name: binary-encrypted
+description: Some other binary protocol, encrypted
+isProcessLocal: false
+isEncrypted: true
+isPotentialDatabaseAccessProtocol: false
+IsLaxDatabaseProtocol: true
+isPotentialWebAccessProtocol: false

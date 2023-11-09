@@ -1,0 +1,7 @@
+name: jms
+description: Jakarta Messaging
+isProcessLocal: false
+isEncrypted: false
+isPotentialDatabaseAccessProtocol: false
+IsLaxDatabaseProtocol: false
+isPotentialWebAccessProtocol: false

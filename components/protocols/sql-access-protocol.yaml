@@ -1,0 +1,7 @@
+name: sql-access-protocol
+description: SQL access protocol
+isProcessLocal: false
+isEncrypted: false
+isPotentialDatabaseAccessProtocol: true
+IsLaxDatabaseProtocol: false
+isPotentialWebAccessProtocol: false
