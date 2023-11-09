@@ -1,0 +1,7 @@
+name: text-encrypted
+description: Some other text protocol, encrypted
+isProcessLocal: false
+isEncrypted: true
+isPotentialDatabaseAccessProtocol: false
+IsLaxDatabaseProtocol: false
+isPotentialWebAccessProtocol: false

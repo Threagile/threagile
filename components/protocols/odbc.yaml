@@ -1,0 +1,7 @@
+name: odbc
+description: Open Database Connectivity
+isProcessLocal: false
+isEncrypted: false
+isPotentialDatabaseAccessProtocol: true
+IsLaxDatabaseProtocol: false
+isPotentialWebAccessProtocol: false

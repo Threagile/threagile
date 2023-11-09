@@ -1,0 +1,7 @@
+name: sftp
+description: FTP on SSH
+isProcessLocal: false
+isEncrypted: true
+isPotentialDatabaseAccessProtocol: false
+IsLaxDatabaseProtocol: false
+isPotentialWebAccessProtocol: false

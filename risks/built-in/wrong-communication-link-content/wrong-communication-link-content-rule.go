@@ -1,6 +1,8 @@
 package wrong_communication_link_content
 
 import (
+	"log"
+
 	"github.com/threagile/threagile/model"
 )
 
@@ -32,6 +34,21 @@ func SupportedTags() []string {
 }
 
 func GenerateRisks() []model.Risk {
+
+	// Just to verify yaml files are present and properly loaded...maybe overkill ?
+	in_process_library_call_protocol, err := model.GetProtocol("in-process-library-call")
+	if err != nil {
+		log.Fatal(err)
+	}
+	local_file_access_protocol, err := model.GetProtocol("local-file-access")
+	if err != nil {
+		log.Fatal(err)
+	}
+	container_spawning_protocol, err := model.GetProtocol("container-spawning")
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	risks := make([]model.Risk, 0)
 	for _, techAsset := range model.ParsedModelRoot.TechnicalAssets {
 		for _, commLink := range techAsset.CommunicationLinks {
@@ -49,17 +66,17 @@ func GenerateRisks() []model.Risk {
 			}
 			// check for protocol inconsistencies
 			targetAsset := model.ParsedModelRoot.TechnicalAssets[commLink.TargetId]
-			if commLink.Protocol == model.InProcessLibraryCall && targetAsset.Technology != model.Library {
+			if commLink.Protocol.String() == "in-process-library-call" && targetAsset.Technology != model.Library {
 				risks = append(risks, createRisk(techAsset, commLink,
-					"(protocol type \""+model.InProcessLibraryCall.String()+"\" does not match target technology type \""+targetAsset.Technology.String()+"\": expected \""+model.Library.String()+"\")"))
+					"(protocol type \""+in_process_library_call_protocol.String()+"\" does not match target technology type \""+targetAsset.Technology.String()+"\": expected \""+model.Library.String()+"\")"))
 			}
-			if commLink.Protocol == model.LocalFileAccess && targetAsset.Technology != model.LocalFileSystem {
+			if commLink.Protocol.String() == "local-file-access" && targetAsset.Technology != model.LocalFileSystem {
 				risks = append(risks, createRisk(techAsset, commLink,
-					"(protocol type \""+model.LocalFileAccess.String()+"\" does not match target technology type \""+targetAsset.Technology.String()+"\": expected \""+model.LocalFileSystem.String()+"\")"))
+					"(protocol type \""+local_file_access_protocol.String()+"\" does not match target technology type \""+targetAsset.Technology.String()+"\": expected \""+model.LocalFileSystem.String()+"\")"))
 			}
-			if commLink.Protocol == model.ContainerSpawning && targetAsset.Machine != model.Container {
+			if commLink.Protocol.String() == "container-spawning" && targetAsset.Machine != model.Container {
 				risks = append(risks, createRisk(techAsset, commLink,
-					"(protocol type \""+model.ContainerSpawning.String()+"\" does not match target machine type \""+targetAsset.Machine.String()+"\": expected \""+model.Container.String()+"\")"))
+					"(protocol type \""+container_spawning_protocol.String()+"\" does not match target machine type \""+targetAsset.Machine.String()+"\": expected \""+model.Container.String()+"\")"))
 			}
 		}
 	}

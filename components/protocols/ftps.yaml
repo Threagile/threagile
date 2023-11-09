@@ -1,0 +1,7 @@
+name: ftps
+description: File Transfer Protocol with TLS
+isProcessLocal: false
+isEncrypted: true
+isPotentialDatabaseAccessProtocol: false
+IsLaxDatabaseProtocol: false
+isPotentialWebAccessProtocol: false

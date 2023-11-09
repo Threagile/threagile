@@ -1,0 +1,7 @@
+name: iiop-encrypted
+description: Internet Inter-ORB Protocol, encrypted
+isProcessLocal: false
+isEncrypted: true
+isPotentialDatabaseAccessProtocol: false
+IsLaxDatabaseProtocol: false
+isPotentialWebAccessProtocol: false

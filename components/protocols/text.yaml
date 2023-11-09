@@ -1,0 +1,7 @@
+name: text
+description: Some other text protocol
+isProcessLocal: false
+isEncrypted: false
+isPotentialDatabaseAccessProtocol: false
+IsLaxDatabaseProtocol: false
+isPotentialWebAccessProtocol: false

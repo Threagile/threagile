@@ -1,0 +1,7 @@
+name: http
+description: HTTP protocol
+isProcessLocal: false
+isEncrypted: false
+isPotentialDatabaseAccessProtocol: false
+IsLaxDatabaseProtocol: true
+isPotentialWebAccessProtocol: true

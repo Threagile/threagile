@@ -1,0 +1,7 @@
+name: smb
+description: Server Message Block
+isProcessLocal: false
+isEncrypted: false
+isPotentialDatabaseAccessProtocol: false
+IsLaxDatabaseProtocol: false
+isPotentialWebAccessProtocol: false

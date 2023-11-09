@@ -1,0 +1,7 @@
+name: ssh
+description: Secure Shell to execute commands
+isProcessLocal: false
+isEncrypted: true
+isPotentialDatabaseAccessProtocol: false
+IsLaxDatabaseProtocol: false
+isPotentialWebAccessProtocol: false

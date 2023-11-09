@@ -1,0 +1,7 @@
+name: in-process-library-call
+description: Call to local library
+isProcessLocal: true
+isEncrypted: false
+isPotentialDatabaseAccessProtocol: false
+IsLaxDatabaseProtocol: false
+isPotentialWebAccessProtocol: false

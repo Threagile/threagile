@@ -39,7 +39,7 @@ func GenerateRisks() []model.Risk {
 				risks = append(risks, createRiskTechAsset(technicalAsset))
 			}
 			for _, commLink := range technicalAsset.CommunicationLinks {
-				if commLink.Protocol == model.UnknownProtocol {
+				if commLink.Protocol.String() == "unknown-protocol" {
 					risks = append(risks, createRiskCommLink(technicalAsset, commLink))
 				}
 			}

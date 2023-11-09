@@ -1,0 +1,7 @@
+name: reverse-proxy-web-protocol-encrypted
+description: Protocols used by reverse proxies but encrypted
+isProcessLocal: false
+isEncrypted: true
+isPotentialDatabaseAccessProtocol: false
+IsLaxDatabaseProtocol: false
+isPotentialWebAccessProtocol: true

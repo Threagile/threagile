@@ -53,6 +53,7 @@ RUN rm -rf /var/cache/apk/*
 WORKDIR /app
 
 COPY --from=build /app/threagile /app/threagile
+COPY --from=build /app/components /app/components
 COPY --from=build /app/raa.so /app/raa.so
 COPY --from=build /app/dummy.so /app/dummy.so
 COPY --from=build /app/demo-rule.so /app/demo-rule.so

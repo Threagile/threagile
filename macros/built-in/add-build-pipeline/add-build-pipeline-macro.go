@@ -2,9 +2,11 @@ package add_build_pipeline
 
 import (
 	"fmt"
-	"github.com/threagile/threagile/model"
+	"log"
 	"sort"
 	"strings"
+
+	"github.com/threagile/threagile/model"
 )
 
 func GetMacroDetails() model.MacroDetails {
@@ -259,6 +261,21 @@ func Execute(modelInput *model.ModelInput) (message string, validResult bool, er
 
 func applyChange(modelInput *model.ModelInput, changeLogCollector *[]string, dryRun bool) (message string, validResult bool, err error) {
 	var serverSideTechAssets = make([]string, 0)
+
+	https_protocol, err := model.GetProtocol("https")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	ssh_protocol, err := model.GetProtocol("ssh")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	container_protocol, err := model.GetProtocol("container-spawning")
+	if err != nil {
+		log.Fatal(err)
+	}
 	// ################################################
 	model.AddTagToModelInput(modelInput, macroState["source-repository"][0], dryRun, changeLogCollector)
 	model.AddTagToModelInput(modelInput, macroState["build-pipeline"][0], dryRun, changeLogCollector)
@@ -342,7 +359,7 @@ func applyChange(modelInput *model.ModelInput, changeLogCollector *[]string, dry
 		commLinks["Sourcecode Repository Traffic"] = model.InputCommunicationLink{
 			Target:                   sourceRepoID,
 			Description:              "Sourcecode Repository Traffic",
-			Protocol:                 model.HTTPS.String(),
+			Protocol:                 https_protocol.String(),
 			Authentication:           model.Credentials.String(),
 			Authorization:            model.EnduserIdentityPropagation.String(),
 			Tags:                     []string{},
@@ -358,7 +375,7 @@ func applyChange(modelInput *model.ModelInput, changeLogCollector *[]string, dry
 		commLinks["Build Pipeline Traffic"] = model.InputCommunicationLink{
 			Target:                   buildPipelineID,
 			Description:              "Build Pipeline Traffic",
-			Protocol:                 model.HTTPS.String(),
+			Protocol:                 https_protocol.String(),
 			Authentication:           model.Credentials.String(),
 			Authorization:            model.EnduserIdentityPropagation.String(),
 			Tags:                     []string{},
@@ -374,7 +391,7 @@ func applyChange(modelInput *model.ModelInput, changeLogCollector *[]string, dry
 		commLinks["Artifact Registry Traffic"] = model.InputCommunicationLink{
 			Target:                   artifactRegistryID,
 			Description:              "Artifact Registry Traffic",
-			Protocol:                 model.HTTPS.String(),
+			Protocol:                 https_protocol.String(),
 			Authentication:           model.Credentials.String(),
 			Authorization:            model.EnduserIdentityPropagation.String(),
 			Tags:                     []string{},
@@ -391,7 +408,7 @@ func applyChange(modelInput *model.ModelInput, changeLogCollector *[]string, dry
 			commLinks["Container Registry Traffic"] = model.InputCommunicationLink{
 				Target:                   containerRepoID,
 				Description:              "Container Registry Traffic",
-				Protocol:                 model.HTTPS.String(),
+				Protocol:                 https_protocol.String(),
 				Authentication:           model.Credentials.String(),
 				Authorization:            model.EnduserIdentityPropagation.String(),
 				Tags:                     []string{},
@@ -407,7 +424,7 @@ func applyChange(modelInput *model.ModelInput, changeLogCollector *[]string, dry
 			commLinks["Container Platform Traffic"] = model.InputCommunicationLink{
 				Target:                   containerPlatformID,
 				Description:              "Container Platform Traffic",
-				Protocol:                 model.HTTPS.String(),
+				Protocol:                 https_protocol.String(),
 				Authentication:           model.Credentials.String(),
 				Authorization:            model.EnduserIdentityPropagation.String(),
 				Tags:                     []string{},
@@ -425,7 +442,7 @@ func applyChange(modelInput *model.ModelInput, changeLogCollector *[]string, dry
 			commLinks["Code Inspection Platform Traffic"] = model.InputCommunicationLink{
 				Target:                   codeInspectionPlatformID,
 				Description:              "Code Inspection Platform Traffic",
-				Protocol:                 model.HTTPS.String(),
+				Protocol:                 https_protocol.String(),
 				Authentication:           model.Credentials.String(),
 				Authorization:            model.EnduserIdentityPropagation.String(),
 				Tags:                     []string{},
@@ -615,7 +632,7 @@ func applyChange(modelInput *model.ModelInput, changeLogCollector *[]string, dry
 		commLinks["Sourcecode Repository Traffic"] = model.InputCommunicationLink{
 			Target:                   sourceRepoID,
 			Description:              "Sourcecode Repository Traffic",
-			Protocol:                 model.HTTPS.String(),
+			Protocol:                 https_protocol.String(),
 			Authentication:           model.Credentials.String(),
 			Authorization:            model.TechnicalUser.String(),
 			Tags:                     []string{},
@@ -631,7 +648,7 @@ func applyChange(modelInput *model.ModelInput, changeLogCollector *[]string, dry
 		commLinks["Artifact Registry Traffic"] = model.InputCommunicationLink{
 			Target:                   artifactRegistryID,
 			Description:              "Artifact Registry Traffic",
-			Protocol:                 model.HTTPS.String(),
+			Protocol:                 https_protocol.String(),
 			Authentication:           model.Credentials.String(),
 			Authorization:            model.TechnicalUser.String(),
 			Tags:                     []string{},
@@ -648,7 +665,7 @@ func applyChange(modelInput *model.ModelInput, changeLogCollector *[]string, dry
 			commLinks["Container Registry Traffic"] = model.InputCommunicationLink{
 				Target:                   containerRepoID,
 				Description:              "Container Registry Traffic",
-				Protocol:                 model.HTTPS.String(),
+				Protocol:                 https_protocol.String(),
 				Authentication:           model.Credentials.String(),
 				Authorization:            model.TechnicalUser.String(),
 				Tags:                     []string{},
@@ -665,7 +682,7 @@ func applyChange(modelInput *model.ModelInput, changeLogCollector *[]string, dry
 				commLinks["Container Platform Push"] = model.InputCommunicationLink{
 					Target:                   containerPlatformID,
 					Description:              "Container Platform Push",
-					Protocol:                 model.HTTPS.String(),
+					Protocol:                 https_protocol.String(),
 					Authentication:           model.Credentials.String(),
 					Authorization:            model.TechnicalUser.String(),
 					Tags:                     []string{},
@@ -682,7 +699,7 @@ func applyChange(modelInput *model.ModelInput, changeLogCollector *[]string, dry
 				commLinkPull := model.InputCommunicationLink{
 					Target:                   containerRepoID,
 					Description:              "Container Platform Pull",
-					Protocol:                 model.HTTPS.String(),
+					Protocol:                 https_protocol.String(),
 					Authentication:           model.Credentials.String(),
 					Authorization:            model.TechnicalUser.String(),
 					Tags:                     []string{},
@@ -710,7 +727,7 @@ func applyChange(modelInput *model.ModelInput, changeLogCollector *[]string, dry
 			commLinks["Code Inspection Platform Traffic"] = model.InputCommunicationLink{
 				Target:                   codeInspectionPlatformID,
 				Description:              "Code Inspection Platform Traffic",
-				Protocol:                 model.HTTPS.String(),
+				Protocol:                 https_protocol.String(),
 				Authentication:           model.Credentials.String(),
 				Authorization:            model.TechnicalUser.String(),
 				Tags:                     []string{},
@@ -736,7 +753,7 @@ func applyChange(modelInput *model.ModelInput, changeLogCollector *[]string, dry
 					containerPlatform.Communication_links["Container Spawning ("+deployTargetID+")"] = model.InputCommunicationLink{
 						Target:                   deployTargetID,
 						Description:              "Container Spawning " + deployTargetID,
-						Protocol:                 model.ContainerSpawning.String(),
+						Protocol:                 container_protocol.String(),
 						Authentication:           model.NoneAuthentication.String(),
 						Authorization:            model.NoneAuthorization.String(),
 						Tags:                     []string{},
@@ -756,7 +773,7 @@ func applyChange(modelInput *model.ModelInput, changeLogCollector *[]string, dry
 					commLinks["Deployment Push ("+deployTargetID+")"] = model.InputCommunicationLink{
 						Target:                   deployTargetID,
 						Description:              "Deployment Push to " + deployTargetID,
-						Protocol:                 model.SSH.String(),
+						Protocol:                 ssh_protocol.String(),
 						Authentication:           model.ClientCertificate.String(),
 						Authorization:            model.TechnicalUser.String(),
 						Tags:                     []string{},
@@ -774,7 +791,7 @@ func applyChange(modelInput *model.ModelInput, changeLogCollector *[]string, dry
 					commLinkPull := model.InputCommunicationLink{
 						Target:                   pullFromWhere,
 						Description:              "Deployment Pull from " + deployTargetID,
-						Protocol:                 model.HTTPS.String(),
+						Protocol:                 https_protocol.String(),
 						Authentication:           model.Credentials.String(),
 						Authorization:            model.TechnicalUser.String(),
 						Tags:                     []string{},

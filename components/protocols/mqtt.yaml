@@ -1,0 +1,7 @@
+name: mqtt
+description: MQTT Message protocol. Encryption via TLS is optional
+isProcessLocal: false
+isEncrypted: false
+isPotentialDatabaseAccessProtocol: false
+IsLaxDatabaseProtocol: false
+isPotentialWebAccessProtocol: false
