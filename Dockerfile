@@ -36,7 +36,7 @@ FROM scratch AS files
 
 COPY --from=build --chown=1000:1000 \
     /app/threagile \
-    /app/components \
+    /app/components/* \
     /app/raa.so \
     /app/dummy.so \
     /app/demo-rule.so \
