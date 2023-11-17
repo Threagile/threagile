@@ -44,8 +44,6 @@ COPY --from=build --chown=1000:1000 \
     /app/support/openapi.yaml \
     /app/support/schema.json \
     /app/support/live-templates.txt \
-    /app/support/render-data-asset-diagram.sh \
-    /app/support/render-data-flow-diagram.sh \
     /app/demo/example/threagile-example-model.yaml \
     /app/demo/stub/threagile-stub-model.yaml \
     \

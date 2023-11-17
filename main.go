@@ -93,7 +93,17 @@ const defaultGraphvizDPI, maxGraphvizDPI = 120, 240
 
 const backupHistoryFilesToKeep = 50
 
-const baseFolder, reportFilename, excelRisksFilename, excelTagsFilename, jsonRisksFilename, jsonTechnicalAssetsFilename, jsonStatsFilename, dataFlowDiagramFilenameDOT, dataFlowDiagramFilenamePNG, dataAssetDiagramFilenameDOT, dataAssetDiagramFilenamePNG, graphvizDataFlowDiagramConversionCall, graphvizDataAssetDiagramConversionCall = "/data", "report.pdf", "risks.xlsx", "tags.xlsx", "risks.json", "technical-assets.json", "stats.json", "data-flow-diagram.gv", "data-flow-diagram.png", "data-asset-diagram.gv", "data-asset-diagram.png", "render-data-flow-diagram.sh", "render-data-asset-diagram.sh"
+const baseFolder = "/data"
+const reportFilename = "report.pdf"
+const excelRisksFilename = "risks.xlsx"
+const excelTagsFilename = "tags.xlsx"
+const jsonRisksFilename = "risks.json"
+const jsonTechnicalAssetsFilename = "technical-assets.json"
+const jsonStatsFilename = "stats.json"
+const dataFlowDiagramFilenameDOT = "data-flow-diagram.gv"
+const dataFlowDiagramFilenamePNG = "data-flow-diagram.png"
+const dataAssetDiagramFilenameDOT = "data-asset-diagram.gv"
+const dataAssetDiagramFilenamePNG = "data-asset-diagram.png"
 
 var globalLock sync.Mutex
 var successCount, errorCount = 0, 0
@@ -3572,7 +3582,7 @@ func parseCommandlineArgs() {
 	createStubModel = flag.Bool("create-stub-model", false, "just create a minimal stub model named threagile-stub-model.yaml in the output directory")
 	createEditingSupport = flag.Bool("create-editing-support", false, "just create some editing support stuff in the output directory")
 	serverPort = flag.Int("server", 0, "start a server (instead of commandline execution) on the given port")
-	templateFilename = flag.String("background", "background.pdf", "background pdf file")
+	var backgroundFlag = flag.String("background", "background.pdf", "background pdf file")
 	generateDataFlowDiagram = flag.Bool("generate-data-flow-diagram", true, "generate data-flow diagram")
 	generateDataAssetDiagram = flag.Bool("generate-data-asset-diagram", true, "generate data asset diagram")
 	generateRisksJSON = flag.Bool("generate-risks-json", true, "generate risks json")
@@ -3595,6 +3605,7 @@ func parseCommandlineArgs() {
 	explainModelMacros := flag.Bool("explain-model-macros", false, "Detailed explanation of all the model macros")
 	print3rdParty := flag.Bool("print-3rd-party-licenses", false, "print 3rd-party license information")
 	license := flag.Bool("print-license", false, "print license information")
+	var tempFolderFlag = flag.String("tmp-folder", "/dev/shm", "temporary folder for graphviz conversion")
 	flag.Usage = func() {
 		printLogo()
 		fmt.Fprintf(os.Stderr, "Usage: threagile [options]")
@@ -3625,7 +3636,12 @@ func parseCommandlineArgs() {
 		printExamples()
 		fmt.Println()
 	}
+
 	flag.Parse()
+
+	model.TempFolder = *tempFolderFlag
+	templateFilename = backgroundFlag
+
 	if *diagramDPI < 20 {
 		*diagramDPI = 20
 	} else if *diagramDPI > maxGraphvizDPI {
@@ -5690,7 +5706,7 @@ func renderDataFlowDiagramGraphvizImage(dotFile *os.File, targetDir string) {
 	}
 
 	// exec
-	cmd := exec.Command(graphvizDataFlowDiagramConversionCall, tmpFileDOT.Name(), tmpFilePNG.Name())
+	cmd := exec.Command("dot", "-Tpng", tmpFileDOT.Name(), "-o", tmpFilePNG.Name())
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
@@ -5738,7 +5754,7 @@ func renderDataAssetDiagramGraphvizImage(dotFile *os.File, targetDir string) { /
 	}
 
 	// exec
-	cmd := exec.Command(graphvizDataAssetDiagramConversionCall, tmpFileDOT.Name(), tmpFilePNG.Name())
+	cmd := exec.Command("dot", "-Tpng", tmpFileDOT.Name(), "-o", tmpFilePNG.Name())
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()

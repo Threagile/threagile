@@ -119,3 +119,7 @@ The easiest way to execute Threagile on the commandline is via its Docker contai
     
     If you want to execute a certain model macro on the model yaml file (here the macro add-build-pipeline): 
      docker run --rm -it -v "$(pwd)":/app/work threagile/threagile -model /app/work/threagile.yaml -output /app/work -execute-model-macro add-build-pipeline
+
+#### Contribute
+
+Threat modelling is a very important part of software development cycle and it always nice to improve current solution. Useful documentation can be found [here](setup-local-development.md)
