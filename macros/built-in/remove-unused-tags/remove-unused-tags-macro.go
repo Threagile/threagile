@@ -18,7 +18,7 @@ func GetNextQuestion() (nextQuestion model.MacroQuestion, err error) {
 	return model.NoMoreQuestions(), nil
 }
 
-func ApplyAnswer(questionID string, answer ...string) (message string, validResult bool, err error) {
+func ApplyAnswer(_ string, _ ...string) (message string, validResult bool, err error) {
 	return "Answer processed", true, nil
 }
 
@@ -26,12 +26,12 @@ func GoBack() (message string, validResult bool, err error) {
 	return "Cannot go back further", false, nil
 }
 
-func GetFinalChangeImpact(modelInput *model.ModelInput) (changes []string, message string, validResult bool, err error) {
+func GetFinalChangeImpact(_ *model.ModelInput) (changes []string, message string, validResult bool, err error) {
 	return []string{"remove unused tags from the model file"}, "Changeset valid", true, err
 }
 
 func Execute(modelInput *model.ModelInput) (message string, validResult bool, err error) {
-	tagUsageMap := make(map[string]bool, 0)
+	tagUsageMap := make(map[string]bool)
 	for _, tag := range model.ParsedModelRoot.TagsAvailable {
 		tagUsageMap[tag] = false // false = tag is not used
 	}
@@ -70,6 +70,6 @@ func Execute(modelInput *model.ModelInput) (message string, validResult bool, er
 		}
 	}
 	sort.Strings(tagsSorted)
-	modelInput.Tags_available = tagsSorted
+	modelInput.TagsAvailable = tagsSorted
 	return "Model file removal of " + strconv.Itoa(counter) + " unused tags successful", true, nil
 }

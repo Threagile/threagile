@@ -17,7 +17,6 @@ import (
 	"fmt"
 	"hash/fnv"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -34,56 +33,56 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/threagile/threagile/colors"
-	add_build_pipeline "github.com/threagile/threagile/macros/built-in/add-build-pipeline"
-	add_vault "github.com/threagile/threagile/macros/built-in/add-vault"
-	pretty_print "github.com/threagile/threagile/macros/built-in/pretty-print"
-	remove_unused_tags "github.com/threagile/threagile/macros/built-in/remove-unused-tags"
-	seed_risk_tracking "github.com/threagile/threagile/macros/built-in/seed-risk-tracking"
-	seed_tags "github.com/threagile/threagile/macros/built-in/seed-tags"
+	addbuildpipeline "github.com/threagile/threagile/macros/built-in/add-build-pipeline"
+	addvault "github.com/threagile/threagile/macros/built-in/add-vault"
+	prettyprint "github.com/threagile/threagile/macros/built-in/pretty-print"
+	removeunusedtags "github.com/threagile/threagile/macros/built-in/remove-unused-tags"
+	seedrisktracking "github.com/threagile/threagile/macros/built-in/seed-risk-tracking"
+	seedtags "github.com/threagile/threagile/macros/built-in/seed-tags"
 	"github.com/threagile/threagile/model"
 	"github.com/threagile/threagile/report"
-	accidental_secret_leak "github.com/threagile/threagile/risks/built-in/accidental-secret-leak"
-	code_backdooring "github.com/threagile/threagile/risks/built-in/code-backdooring"
-	container_baseimage_backdooring "github.com/threagile/threagile/risks/built-in/container-baseimage-backdooring"
-	container_platform_escape "github.com/threagile/threagile/risks/built-in/container-platform-escape"
-	cross_site_request_forgery "github.com/threagile/threagile/risks/built-in/cross-site-request-forgery"
-	cross_site_scripting "github.com/threagile/threagile/risks/built-in/cross-site-scripting"
-	dos_risky_access_across_trust_boundary "github.com/threagile/threagile/risks/built-in/dos-risky-access-across-trust-boundary"
-	incomplete_model "github.com/threagile/threagile/risks/built-in/incomplete-model"
-	ldap_injection "github.com/threagile/threagile/risks/built-in/ldap-injection"
-	missing_authentication "github.com/threagile/threagile/risks/built-in/missing-authentication"
-	missing_authentication_second_factor "github.com/threagile/threagile/risks/built-in/missing-authentication-second-factor"
-	missing_build_infrastructure "github.com/threagile/threagile/risks/built-in/missing-build-infrastructure"
-	missing_cloud_hardening "github.com/threagile/threagile/risks/built-in/missing-cloud-hardening"
-	missing_file_validation "github.com/threagile/threagile/risks/built-in/missing-file-validation"
-	missing_hardening "github.com/threagile/threagile/risks/built-in/missing-hardening"
-	missing_identity_propagation "github.com/threagile/threagile/risks/built-in/missing-identity-propagation"
-	missing_identity_provider_isolation "github.com/threagile/threagile/risks/built-in/missing-identity-provider-isolation"
-	missing_identity_store "github.com/threagile/threagile/risks/built-in/missing-identity-store"
-	missing_network_segmentation "github.com/threagile/threagile/risks/built-in/missing-network-segmentation"
-	missing_vault "github.com/threagile/threagile/risks/built-in/missing-vault"
-	missing_vault_isolation "github.com/threagile/threagile/risks/built-in/missing-vault-isolation"
-	missing_waf "github.com/threagile/threagile/risks/built-in/missing-waf"
-	mixed_targets_on_shared_runtime "github.com/threagile/threagile/risks/built-in/mixed-targets-on-shared-runtime"
-	path_traversal "github.com/threagile/threagile/risks/built-in/path-traversal"
-	push_instead_of_pull_deployment "github.com/threagile/threagile/risks/built-in/push-instead-of-pull-deployment"
-	search_query_injection "github.com/threagile/threagile/risks/built-in/search-query-injection"
-	server_side_request_forgery "github.com/threagile/threagile/risks/built-in/server-side-request-forgery"
-	service_registry_poisoning "github.com/threagile/threagile/risks/built-in/service-registry-poisoning"
-	sql_nosql_injection "github.com/threagile/threagile/risks/built-in/sql-nosql-injection"
-	unchecked_deployment "github.com/threagile/threagile/risks/built-in/unchecked-deployment"
-	unencrypted_asset "github.com/threagile/threagile/risks/built-in/unencrypted-asset"
-	unencrypted_communication "github.com/threagile/threagile/risks/built-in/unencrypted-communication"
-	unguarded_access_from_internet "github.com/threagile/threagile/risks/built-in/unguarded-access-from-internet"
-	unguarded_direct_datastore_access "github.com/threagile/threagile/risks/built-in/unguarded-direct-datastore-access"
-	unnecessary_communication_link "github.com/threagile/threagile/risks/built-in/unnecessary-communication-link"
-	unnecessary_data_asset "github.com/threagile/threagile/risks/built-in/unnecessary-data-asset"
-	unnecessary_data_transfer "github.com/threagile/threagile/risks/built-in/unnecessary-data-transfer"
-	unnecessary_technical_asset "github.com/threagile/threagile/risks/built-in/unnecessary-technical-asset"
-	untrusted_deserialization "github.com/threagile/threagile/risks/built-in/untrusted-deserialization"
-	wrong_communication_link_content "github.com/threagile/threagile/risks/built-in/wrong-communication-link-content"
-	wrong_trust_boundary_content "github.com/threagile/threagile/risks/built-in/wrong-trust-boundary-content"
-	xml_external_entity "github.com/threagile/threagile/risks/built-in/xml-external-entity"
+	accidentalsecretleak "github.com/threagile/threagile/risks/built-in/accidental-secret-leak"
+	codebackdooring "github.com/threagile/threagile/risks/built-in/code-backdooring"
+	containerbaseimagebackdooring "github.com/threagile/threagile/risks/built-in/container-baseimage-backdooring"
+	containerplatformescape "github.com/threagile/threagile/risks/built-in/container-platform-escape"
+	crosssiterequestforgery "github.com/threagile/threagile/risks/built-in/cross-site-request-forgery"
+	crosssitescripting "github.com/threagile/threagile/risks/built-in/cross-site-scripting"
+	dosriskyaccessacrosstrustboundary "github.com/threagile/threagile/risks/built-in/dos-risky-access-across-trust-boundary"
+	incompletemodel "github.com/threagile/threagile/risks/built-in/incomplete-model"
+	ldapinjection "github.com/threagile/threagile/risks/built-in/ldap-injection"
+	missingauthentication "github.com/threagile/threagile/risks/built-in/missing-authentication"
+	missingauthenticationsecondfactor "github.com/threagile/threagile/risks/built-in/missing-authentication-second-factor"
+	missingbuildinfrastructure "github.com/threagile/threagile/risks/built-in/missing-build-infrastructure"
+	missingcloudhardening "github.com/threagile/threagile/risks/built-in/missing-cloud-hardening"
+	missingfilevalidation "github.com/threagile/threagile/risks/built-in/missing-file-validation"
+	missinghardening "github.com/threagile/threagile/risks/built-in/missing-hardening"
+	missingidentitypropagation "github.com/threagile/threagile/risks/built-in/missing-identity-propagation"
+	missingidentityproviderisolation "github.com/threagile/threagile/risks/built-in/missing-identity-provider-isolation"
+	missingidentitystore "github.com/threagile/threagile/risks/built-in/missing-identity-store"
+	missingnetworksegmentation "github.com/threagile/threagile/risks/built-in/missing-network-segmentation"
+	missingvault "github.com/threagile/threagile/risks/built-in/missing-vault"
+	missingvaultisolation "github.com/threagile/threagile/risks/built-in/missing-vault-isolation"
+	missingwaf "github.com/threagile/threagile/risks/built-in/missing-waf"
+	mixedtargetsonsharedruntime "github.com/threagile/threagile/risks/built-in/mixed-targets-on-shared-runtime"
+	pathtraversal "github.com/threagile/threagile/risks/built-in/path-traversal"
+	pushinsteadofpulldeployment "github.com/threagile/threagile/risks/built-in/push-instead-of-pull-deployment"
+	searchqueryinjection "github.com/threagile/threagile/risks/built-in/search-query-injection"
+	serversiderequestforgery "github.com/threagile/threagile/risks/built-in/server-side-request-forgery"
+	serviceregistrypoisoning "github.com/threagile/threagile/risks/built-in/service-registry-poisoning"
+	sqlnosqlinjection "github.com/threagile/threagile/risks/built-in/sql-nosql-injection"
+	uncheckeddeployment "github.com/threagile/threagile/risks/built-in/unchecked-deployment"
+	unencryptedasset "github.com/threagile/threagile/risks/built-in/unencrypted-asset"
+	unencryptedcommunication "github.com/threagile/threagile/risks/built-in/unencrypted-communication"
+	unguardedaccessfrominternet "github.com/threagile/threagile/risks/built-in/unguarded-access-from-internet"
+	unguardeddirectdatastoreaccess "github.com/threagile/threagile/risks/built-in/unguarded-direct-datastore-access"
+	unnecessarycommunicationlink "github.com/threagile/threagile/risks/built-in/unnecessary-communication-link"
+	unnecessarydataasset "github.com/threagile/threagile/risks/built-in/unnecessary-data-asset"
+	unnecessarydatatransfer "github.com/threagile/threagile/risks/built-in/unnecessary-data-transfer"
+	unnecessarytechnicalasset "github.com/threagile/threagile/risks/built-in/unnecessary-technical-asset"
+	untrusteddeserialization "github.com/threagile/threagile/risks/built-in/untrusted-deserialization"
+	wrongcommunicationlinkcontent "github.com/threagile/threagile/risks/built-in/wrong-communication-link-content"
+	wrongtrustboundarycontent "github.com/threagile/threagile/risks/built-in/wrong-trust-boundary-content"
+	xmlexternalentity "github.com/threagile/threagile/risks/built-in/xml-external-entity"
 	"golang.org/x/crypto/argon2"
 	"gopkg.in/yaml.v3"
 )
@@ -123,465 +122,465 @@ func applyRiskGeneration() {
 		}
 	}
 
-	if _, ok := skippedRules[unencrypted_asset.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", unencrypted_asset.Category().Id)
-		delete(skippedRules, unencrypted_asset.Category().Id)
+	if _, ok := skippedRules[unencryptedasset.Category().Id]; ok {
+		fmt.Println("Skipping risk rule:", unencryptedasset.Category().Id)
+		delete(skippedRules, unencryptedasset.Category().Id)
 	} else {
-		model.AddToListOfSupportedTags(unencrypted_asset.SupportedTags())
-		risks := unencrypted_asset.GenerateRisks()
+		model.AddToListOfSupportedTags(unencryptedasset.SupportedTags())
+		risks := unencryptedasset.GenerateRisks()
 		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[unencrypted_asset.Category()] = risks
+			model.GeneratedRisksByCategory[unencryptedasset.Category()] = risks
 		}
 	}
 
-	if _, ok := skippedRules[unencrypted_communication.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", unencrypted_communication.Category().Id)
-		delete(skippedRules, unencrypted_communication.Category().Id)
+	if _, ok := skippedRules[unencryptedcommunication.Category().Id]; ok {
+		fmt.Println("Skipping risk rule:", unencryptedcommunication.Category().Id)
+		delete(skippedRules, unencryptedcommunication.Category().Id)
 	} else {
-		model.AddToListOfSupportedTags(unencrypted_communication.SupportedTags())
-		risks := unencrypted_communication.GenerateRisks()
+		model.AddToListOfSupportedTags(unencryptedcommunication.SupportedTags())
+		risks := unencryptedcommunication.GenerateRisks()
 		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[unencrypted_communication.Category()] = risks
+			model.GeneratedRisksByCategory[unencryptedcommunication.Category()] = risks
 		}
 	}
 
-	if _, ok := skippedRules[unguarded_direct_datastore_access.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", unguarded_direct_datastore_access.Category().Id)
-		delete(skippedRules, unguarded_direct_datastore_access.Category().Id)
+	if _, ok := skippedRules[unguardeddirectdatastoreaccess.Category().Id]; ok {
+		fmt.Println("Skipping risk rule:", unguardeddirectdatastoreaccess.Category().Id)
+		delete(skippedRules, unguardeddirectdatastoreaccess.Category().Id)
 	} else {
-		model.AddToListOfSupportedTags(unguarded_direct_datastore_access.SupportedTags())
-		risks := unguarded_direct_datastore_access.GenerateRisks()
+		model.AddToListOfSupportedTags(unguardeddirectdatastoreaccess.SupportedTags())
+		risks := unguardeddirectdatastoreaccess.GenerateRisks()
 		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[unguarded_direct_datastore_access.Category()] = risks
+			model.GeneratedRisksByCategory[unguardeddirectdatastoreaccess.Category()] = risks
 		}
 	}
 
-	if _, ok := skippedRules[unguarded_access_from_internet.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", unguarded_access_from_internet.Category().Id)
-		delete(skippedRules, unguarded_access_from_internet.Category().Id)
+	if _, ok := skippedRules[unguardedaccessfrominternet.Category().Id]; ok {
+		fmt.Println("Skipping risk rule:", unguardedaccessfrominternet.Category().Id)
+		delete(skippedRules, unguardedaccessfrominternet.Category().Id)
 	} else {
-		model.AddToListOfSupportedTags(unguarded_access_from_internet.SupportedTags())
-		risks := unguarded_access_from_internet.GenerateRisks()
+		model.AddToListOfSupportedTags(unguardedaccessfrominternet.SupportedTags())
+		risks := unguardedaccessfrominternet.GenerateRisks()
 		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[unguarded_access_from_internet.Category()] = risks
+			model.GeneratedRisksByCategory[unguardedaccessfrominternet.Category()] = risks
 		}
 	}
 
-	if _, ok := skippedRules[dos_risky_access_across_trust_boundary.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", dos_risky_access_across_trust_boundary.Category().Id)
-		delete(skippedRules, dos_risky_access_across_trust_boundary.Category().Id)
+	if _, ok := skippedRules[dosriskyaccessacrosstrustboundary.Category().Id]; ok {
+		fmt.Println("Skipping risk rule:", dosriskyaccessacrosstrustboundary.Category().Id)
+		delete(skippedRules, dosriskyaccessacrosstrustboundary.Category().Id)
 	} else {
-		model.AddToListOfSupportedTags(dos_risky_access_across_trust_boundary.SupportedTags())
-		risks := dos_risky_access_across_trust_boundary.GenerateRisks()
+		model.AddToListOfSupportedTags(dosriskyaccessacrosstrustboundary.SupportedTags())
+		risks := dosriskyaccessacrosstrustboundary.GenerateRisks()
 		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[dos_risky_access_across_trust_boundary.Category()] = risks
+			model.GeneratedRisksByCategory[dosriskyaccessacrosstrustboundary.Category()] = risks
 		}
 	}
 
-	if _, ok := skippedRules[missing_network_segmentation.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", missing_network_segmentation.Category().Id)
-		delete(skippedRules, missing_network_segmentation.Category().Id)
+	if _, ok := skippedRules[missingnetworksegmentation.Category().Id]; ok {
+		fmt.Println("Skipping risk rule:", missingnetworksegmentation.Category().Id)
+		delete(skippedRules, missingnetworksegmentation.Category().Id)
 	} else {
-		model.AddToListOfSupportedTags(missing_network_segmentation.SupportedTags())
-		risks := missing_network_segmentation.GenerateRisks()
+		model.AddToListOfSupportedTags(missingnetworksegmentation.SupportedTags())
+		risks := missingnetworksegmentation.GenerateRisks()
 		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[missing_network_segmentation.Category()] = risks
+			model.GeneratedRisksByCategory[missingnetworksegmentation.Category()] = risks
 		}
 	}
 
-	if _, ok := skippedRules[mixed_targets_on_shared_runtime.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", mixed_targets_on_shared_runtime.Category().Id)
-		delete(skippedRules, mixed_targets_on_shared_runtime.Category().Id)
+	if _, ok := skippedRules[mixedtargetsonsharedruntime.Category().Id]; ok {
+		fmt.Println("Skipping risk rule:", mixedtargetsonsharedruntime.Category().Id)
+		delete(skippedRules, mixedtargetsonsharedruntime.Category().Id)
 	} else {
-		model.AddToListOfSupportedTags(mixed_targets_on_shared_runtime.SupportedTags())
-		risks := mixed_targets_on_shared_runtime.GenerateRisks()
+		model.AddToListOfSupportedTags(mixedtargetsonsharedruntime.SupportedTags())
+		risks := mixedtargetsonsharedruntime.GenerateRisks()
 		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[mixed_targets_on_shared_runtime.Category()] = risks
+			model.GeneratedRisksByCategory[mixedtargetsonsharedruntime.Category()] = risks
 		}
 	}
 
-	if _, ok := skippedRules[missing_identity_propagation.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", missing_identity_propagation.Category().Id)
-		delete(skippedRules, missing_identity_propagation.Category().Id)
+	if _, ok := skippedRules[missingidentitypropagation.Category().Id]; ok {
+		fmt.Println("Skipping risk rule:", missingidentitypropagation.Category().Id)
+		delete(skippedRules, missingidentitypropagation.Category().Id)
 	} else {
-		model.AddToListOfSupportedTags(missing_identity_propagation.SupportedTags())
-		risks := missing_identity_propagation.GenerateRisks()
+		model.AddToListOfSupportedTags(missingidentitypropagation.SupportedTags())
+		risks := missingidentitypropagation.GenerateRisks()
 		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[missing_identity_propagation.Category()] = risks
+			model.GeneratedRisksByCategory[missingidentitypropagation.Category()] = risks
 		}
 	}
 
-	if _, ok := skippedRules[missing_identity_store.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", missing_identity_store.Category().Id)
-		delete(skippedRules, missing_identity_store.Category().Id)
+	if _, ok := skippedRules[missingidentitystore.Category().Id]; ok {
+		fmt.Println("Skipping risk rule:", missingidentitystore.Category().Id)
+		delete(skippedRules, missingidentitystore.Category().Id)
 	} else {
-		model.AddToListOfSupportedTags(missing_identity_store.SupportedTags())
-		risks := missing_identity_store.GenerateRisks()
+		model.AddToListOfSupportedTags(missingidentitystore.SupportedTags())
+		risks := missingidentitystore.GenerateRisks()
 		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[missing_identity_store.Category()] = risks
+			model.GeneratedRisksByCategory[missingidentitystore.Category()] = risks
 		}
 	}
 
-	if _, ok := skippedRules[missing_authentication.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", missing_authentication.Category().Id)
-		delete(skippedRules, missing_authentication.Category().Id)
+	if _, ok := skippedRules[missingauthentication.Category().Id]; ok {
+		fmt.Println("Skipping risk rule:", missingauthentication.Category().Id)
+		delete(skippedRules, missingauthentication.Category().Id)
 	} else {
-		model.AddToListOfSupportedTags(missing_authentication.SupportedTags())
-		risks := missing_authentication.GenerateRisks()
+		model.AddToListOfSupportedTags(missingauthentication.SupportedTags())
+		risks := missingauthentication.GenerateRisks()
 		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[missing_authentication.Category()] = risks
+			model.GeneratedRisksByCategory[missingauthentication.Category()] = risks
 		}
 	}
 
-	if _, ok := skippedRules[missing_authentication_second_factor.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", missing_authentication_second_factor.Category().Id)
-		delete(skippedRules, missing_authentication_second_factor.Category().Id)
+	if _, ok := skippedRules[missingauthenticationsecondfactor.Category().Id]; ok {
+		fmt.Println("Skipping risk rule:", missingauthenticationsecondfactor.Category().Id)
+		delete(skippedRules, missingauthenticationsecondfactor.Category().Id)
 	} else {
-		model.AddToListOfSupportedTags(missing_authentication_second_factor.SupportedTags())
-		risks := missing_authentication_second_factor.GenerateRisks()
+		model.AddToListOfSupportedTags(missingauthenticationsecondfactor.SupportedTags())
+		risks := missingauthenticationsecondfactor.GenerateRisks()
 		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[missing_authentication_second_factor.Category()] = risks
+			model.GeneratedRisksByCategory[missingauthenticationsecondfactor.Category()] = risks
 		}
 	}
 
-	if _, ok := skippedRules[unnecessary_data_transfer.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", unnecessary_data_transfer.Category().Id)
-		delete(skippedRules, unnecessary_data_transfer.Category().Id)
+	if _, ok := skippedRules[unnecessarydatatransfer.Category().Id]; ok {
+		fmt.Println("Skipping risk rule:", unnecessarydatatransfer.Category().Id)
+		delete(skippedRules, unnecessarydatatransfer.Category().Id)
 	} else {
-		model.AddToListOfSupportedTags(unnecessary_data_transfer.SupportedTags())
-		risks := unnecessary_data_transfer.GenerateRisks()
+		model.AddToListOfSupportedTags(unnecessarydatatransfer.SupportedTags())
+		risks := unnecessarydatatransfer.GenerateRisks()
 		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[unnecessary_data_transfer.Category()] = risks
+			model.GeneratedRisksByCategory[unnecessarydatatransfer.Category()] = risks
 		}
 	}
 
-	if _, ok := skippedRules[unnecessary_communication_link.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", unnecessary_communication_link.Category().Id)
-		delete(skippedRules, unnecessary_communication_link.Category().Id)
+	if _, ok := skippedRules[unnecessarycommunicationlink.Category().Id]; ok {
+		fmt.Println("Skipping risk rule:", unnecessarycommunicationlink.Category().Id)
+		delete(skippedRules, unnecessarycommunicationlink.Category().Id)
 	} else {
-		model.AddToListOfSupportedTags(unnecessary_communication_link.SupportedTags())
-		risks := unnecessary_communication_link.GenerateRisks()
+		model.AddToListOfSupportedTags(unnecessarycommunicationlink.SupportedTags())
+		risks := unnecessarycommunicationlink.GenerateRisks()
 		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[unnecessary_communication_link.Category()] = risks
+			model.GeneratedRisksByCategory[unnecessarycommunicationlink.Category()] = risks
 		}
 	}
 
-	if _, ok := skippedRules[unnecessary_technical_asset.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", unnecessary_technical_asset.Category().Id)
-		delete(skippedRules, unnecessary_technical_asset.Category().Id)
+	if _, ok := skippedRules[unnecessarytechnicalasset.Category().Id]; ok {
+		fmt.Println("Skipping risk rule:", unnecessarytechnicalasset.Category().Id)
+		delete(skippedRules, unnecessarytechnicalasset.Category().Id)
 	} else {
-		model.AddToListOfSupportedTags(unnecessary_technical_asset.SupportedTags())
-		risks := unnecessary_technical_asset.GenerateRisks()
+		model.AddToListOfSupportedTags(unnecessarytechnicalasset.SupportedTags())
+		risks := unnecessarytechnicalasset.GenerateRisks()
 		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[unnecessary_technical_asset.Category()] = risks
+			model.GeneratedRisksByCategory[unnecessarytechnicalasset.Category()] = risks
 		}
 	}
 
-	if _, ok := skippedRules[unnecessary_data_asset.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", unnecessary_data_asset.Category().Id)
-		delete(skippedRules, unnecessary_data_asset.Category().Id)
+	if _, ok := skippedRules[unnecessarydataasset.Category().Id]; ok {
+		fmt.Println("Skipping risk rule:", unnecessarydataasset.Category().Id)
+		delete(skippedRules, unnecessarydataasset.Category().Id)
 	} else {
-		model.AddToListOfSupportedTags(unnecessary_data_asset.SupportedTags())
-		risks := unnecessary_data_asset.GenerateRisks()
+		model.AddToListOfSupportedTags(unnecessarydataasset.SupportedTags())
+		risks := unnecessarydataasset.GenerateRisks()
 		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[unnecessary_data_asset.Category()] = risks
+			model.GeneratedRisksByCategory[unnecessarydataasset.Category()] = risks
 		}
 	}
 
-	if _, ok := skippedRules[sql_nosql_injection.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", sql_nosql_injection.Category().Id)
-		delete(skippedRules, sql_nosql_injection.Category().Id)
+	if _, ok := skippedRules[sqlnosqlinjection.Category().Id]; ok {
+		fmt.Println("Skipping risk rule:", sqlnosqlinjection.Category().Id)
+		delete(skippedRules, sqlnosqlinjection.Category().Id)
 	} else {
-		model.AddToListOfSupportedTags(sql_nosql_injection.SupportedTags())
-		risks := sql_nosql_injection.GenerateRisks()
+		model.AddToListOfSupportedTags(sqlnosqlinjection.SupportedTags())
+		risks := sqlnosqlinjection.GenerateRisks()
 		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[sql_nosql_injection.Category()] = risks
+			model.GeneratedRisksByCategory[sqlnosqlinjection.Category()] = risks
 		}
 	}
 
-	if _, ok := skippedRules[ldap_injection.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", ldap_injection.Category().Id)
-		delete(skippedRules, ldap_injection.Category().Id)
+	if _, ok := skippedRules[ldapinjection.Category().Id]; ok {
+		fmt.Println("Skipping risk rule:", ldapinjection.Category().Id)
+		delete(skippedRules, ldapinjection.Category().Id)
 	} else {
-		model.AddToListOfSupportedTags(ldap_injection.SupportedTags())
-		risks := ldap_injection.GenerateRisks()
+		model.AddToListOfSupportedTags(ldapinjection.SupportedTags())
+		risks := ldapinjection.GenerateRisks()
 		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[ldap_injection.Category()] = risks
+			model.GeneratedRisksByCategory[ldapinjection.Category()] = risks
 		}
 	}
 
-	if _, ok := skippedRules[cross_site_scripting.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", cross_site_scripting.Category().Id)
-		delete(skippedRules, cross_site_scripting.Category().Id)
+	if _, ok := skippedRules[crosssitescripting.Category().Id]; ok {
+		fmt.Println("Skipping risk rule:", crosssitescripting.Category().Id)
+		delete(skippedRules, crosssitescripting.Category().Id)
 	} else {
-		model.AddToListOfSupportedTags(cross_site_scripting.SupportedTags())
-		risks := cross_site_scripting.GenerateRisks()
+		model.AddToListOfSupportedTags(crosssitescripting.SupportedTags())
+		risks := crosssitescripting.GenerateRisks()
 		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[cross_site_scripting.Category()] = risks
+			model.GeneratedRisksByCategory[crosssitescripting.Category()] = risks
 		}
 	}
 
-	if _, ok := skippedRules[cross_site_request_forgery.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", cross_site_request_forgery.Category().Id)
-		delete(skippedRules, cross_site_request_forgery.Category().Id)
+	if _, ok := skippedRules[crosssiterequestforgery.Category().Id]; ok {
+		fmt.Println("Skipping risk rule:", crosssiterequestforgery.Category().Id)
+		delete(skippedRules, crosssiterequestforgery.Category().Id)
 	} else {
-		model.AddToListOfSupportedTags(cross_site_request_forgery.SupportedTags())
-		risks := cross_site_request_forgery.GenerateRisks()
+		model.AddToListOfSupportedTags(crosssiterequestforgery.SupportedTags())
+		risks := crosssiterequestforgery.GenerateRisks()
 		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[cross_site_request_forgery.Category()] = risks
+			model.GeneratedRisksByCategory[crosssiterequestforgery.Category()] = risks
 		}
 	}
 
-	if _, ok := skippedRules[server_side_request_forgery.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", server_side_request_forgery.Category().Id)
-		delete(skippedRules, server_side_request_forgery.Category().Id)
+	if _, ok := skippedRules[serversiderequestforgery.Category().Id]; ok {
+		fmt.Println("Skipping risk rule:", serversiderequestforgery.Category().Id)
+		delete(skippedRules, serversiderequestforgery.Category().Id)
 	} else {
-		model.AddToListOfSupportedTags(server_side_request_forgery.SupportedTags())
-		risks := server_side_request_forgery.GenerateRisks()
+		model.AddToListOfSupportedTags(serversiderequestforgery.SupportedTags())
+		risks := serversiderequestforgery.GenerateRisks()
 		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[server_side_request_forgery.Category()] = risks
+			model.GeneratedRisksByCategory[serversiderequestforgery.Category()] = risks
 		}
 	}
 
-	if _, ok := skippedRules[path_traversal.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", path_traversal.Category().Id)
-		delete(skippedRules, path_traversal.Category().Id)
+	if _, ok := skippedRules[pathtraversal.Category().Id]; ok {
+		fmt.Println("Skipping risk rule:", pathtraversal.Category().Id)
+		delete(skippedRules, pathtraversal.Category().Id)
 	} else {
-		model.AddToListOfSupportedTags(path_traversal.SupportedTags())
-		risks := path_traversal.GenerateRisks()
+		model.AddToListOfSupportedTags(pathtraversal.SupportedTags())
+		risks := pathtraversal.GenerateRisks()
 		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[path_traversal.Category()] = risks
+			model.GeneratedRisksByCategory[pathtraversal.Category()] = risks
 		}
 	}
 
-	if _, ok := skippedRules[push_instead_of_pull_deployment.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", push_instead_of_pull_deployment.Category().Id)
-		delete(skippedRules, push_instead_of_pull_deployment.Category().Id)
+	if _, ok := skippedRules[pushinsteadofpulldeployment.Category().Id]; ok {
+		fmt.Println("Skipping risk rule:", pushinsteadofpulldeployment.Category().Id)
+		delete(skippedRules, pushinsteadofpulldeployment.Category().Id)
 	} else {
-		model.AddToListOfSupportedTags(push_instead_of_pull_deployment.SupportedTags())
-		risks := push_instead_of_pull_deployment.GenerateRisks()
+		model.AddToListOfSupportedTags(pushinsteadofpulldeployment.SupportedTags())
+		risks := pushinsteadofpulldeployment.GenerateRisks()
 		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[push_instead_of_pull_deployment.Category()] = risks
+			model.GeneratedRisksByCategory[pushinsteadofpulldeployment.Category()] = risks
 		}
 	}
 
-	if _, ok := skippedRules[search_query_injection.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", search_query_injection.Category().Id)
-		delete(skippedRules, search_query_injection.Category().Id)
+	if _, ok := skippedRules[searchqueryinjection.Category().Id]; ok {
+		fmt.Println("Skipping risk rule:", searchqueryinjection.Category().Id)
+		delete(skippedRules, searchqueryinjection.Category().Id)
 	} else {
-		model.AddToListOfSupportedTags(search_query_injection.SupportedTags())
-		risks := search_query_injection.GenerateRisks()
+		model.AddToListOfSupportedTags(searchqueryinjection.SupportedTags())
+		risks := searchqueryinjection.GenerateRisks()
 		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[search_query_injection.Category()] = risks
+			model.GeneratedRisksByCategory[searchqueryinjection.Category()] = risks
 		}
 	}
 
-	if _, ok := skippedRules[service_registry_poisoning.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", service_registry_poisoning.Category().Id)
-		delete(skippedRules, service_registry_poisoning.Category().Id)
+	if _, ok := skippedRules[serviceregistrypoisoning.Category().Id]; ok {
+		fmt.Println("Skipping risk rule:", serviceregistrypoisoning.Category().Id)
+		delete(skippedRules, serviceregistrypoisoning.Category().Id)
 	} else {
-		model.AddToListOfSupportedTags(service_registry_poisoning.SupportedTags())
-		risks := service_registry_poisoning.GenerateRisks()
+		model.AddToListOfSupportedTags(serviceregistrypoisoning.SupportedTags())
+		risks := serviceregistrypoisoning.GenerateRisks()
 		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[service_registry_poisoning.Category()] = risks
+			model.GeneratedRisksByCategory[serviceregistrypoisoning.Category()] = risks
 		}
 	}
 
-	if _, ok := skippedRules[untrusted_deserialization.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", untrusted_deserialization.Category().Id)
-		delete(skippedRules, untrusted_deserialization.Category().Id)
+	if _, ok := skippedRules[untrusteddeserialization.Category().Id]; ok {
+		fmt.Println("Skipping risk rule:", untrusteddeserialization.Category().Id)
+		delete(skippedRules, untrusteddeserialization.Category().Id)
 	} else {
-		model.AddToListOfSupportedTags(untrusted_deserialization.SupportedTags())
-		risks := untrusted_deserialization.GenerateRisks()
+		model.AddToListOfSupportedTags(untrusteddeserialization.SupportedTags())
+		risks := untrusteddeserialization.GenerateRisks()
 		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[untrusted_deserialization.Category()] = risks
+			model.GeneratedRisksByCategory[untrusteddeserialization.Category()] = risks
 		}
 	}
 
-	if _, ok := skippedRules[xml_external_entity.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", xml_external_entity.Category().Id)
-		delete(skippedRules, xml_external_entity.Category().Id)
+	if _, ok := skippedRules[xmlexternalentity.Category().Id]; ok {
+		fmt.Println("Skipping risk rule:", xmlexternalentity.Category().Id)
+		delete(skippedRules, xmlexternalentity.Category().Id)
 	} else {
-		model.AddToListOfSupportedTags(xml_external_entity.SupportedTags())
-		risks := xml_external_entity.GenerateRisks()
+		model.AddToListOfSupportedTags(xmlexternalentity.SupportedTags())
+		risks := xmlexternalentity.GenerateRisks()
 		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[xml_external_entity.Category()] = risks
+			model.GeneratedRisksByCategory[xmlexternalentity.Category()] = risks
 		}
 	}
 
-	if _, ok := skippedRules[missing_cloud_hardening.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", missing_cloud_hardening.Category().Id)
-		delete(skippedRules, missing_cloud_hardening.Category().Id)
+	if _, ok := skippedRules[missingcloudhardening.Category().Id]; ok {
+		fmt.Println("Skipping risk rule:", missingcloudhardening.Category().Id)
+		delete(skippedRules, missingcloudhardening.Category().Id)
 	} else {
-		model.AddToListOfSupportedTags(missing_cloud_hardening.SupportedTags())
-		risks := missing_cloud_hardening.GenerateRisks()
+		model.AddToListOfSupportedTags(missingcloudhardening.SupportedTags())
+		risks := missingcloudhardening.GenerateRisks()
 		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[missing_cloud_hardening.Category()] = risks
+			model.GeneratedRisksByCategory[missingcloudhardening.Category()] = risks
 		}
 	}
 
-	if _, ok := skippedRules[missing_file_validation.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", missing_file_validation.Category().Id)
-		delete(skippedRules, missing_file_validation.Category().Id)
+	if _, ok := skippedRules[missingfilevalidation.Category().Id]; ok {
+		fmt.Println("Skipping risk rule:", missingfilevalidation.Category().Id)
+		delete(skippedRules, missingfilevalidation.Category().Id)
 	} else {
-		model.AddToListOfSupportedTags(missing_file_validation.SupportedTags())
-		risks := missing_file_validation.GenerateRisks()
+		model.AddToListOfSupportedTags(missingfilevalidation.SupportedTags())
+		risks := missingfilevalidation.GenerateRisks()
 		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[missing_file_validation.Category()] = risks
+			model.GeneratedRisksByCategory[missingfilevalidation.Category()] = risks
 		}
 	}
 
-	if _, ok := skippedRules[missing_hardening.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", missing_hardening.Category().Id)
-		delete(skippedRules, missing_hardening.Category().Id)
+	if _, ok := skippedRules[missinghardening.Category().Id]; ok {
+		fmt.Println("Skipping risk rule:", missinghardening.Category().Id)
+		delete(skippedRules, missinghardening.Category().Id)
 	} else {
-		model.AddToListOfSupportedTags(missing_hardening.SupportedTags())
-		risks := missing_hardening.GenerateRisks()
+		model.AddToListOfSupportedTags(missinghardening.SupportedTags())
+		risks := missinghardening.GenerateRisks()
 		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[missing_hardening.Category()] = risks
+			model.GeneratedRisksByCategory[missinghardening.Category()] = risks
 		}
 	}
 
-	if _, ok := skippedRules[accidental_secret_leak.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", accidental_secret_leak.Category().Id)
-		delete(skippedRules, accidental_secret_leak.Category().Id)
+	if _, ok := skippedRules[accidentalsecretleak.Category().Id]; ok {
+		fmt.Println("Skipping risk rule:", accidentalsecretleak.Category().Id)
+		delete(skippedRules, accidentalsecretleak.Category().Id)
 	} else {
-		model.AddToListOfSupportedTags(accidental_secret_leak.SupportedTags())
-		risks := accidental_secret_leak.GenerateRisks()
+		model.AddToListOfSupportedTags(accidentalsecretleak.SupportedTags())
+		risks := accidentalsecretleak.GenerateRisks()
 		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[accidental_secret_leak.Category()] = risks
+			model.GeneratedRisksByCategory[accidentalsecretleak.Category()] = risks
 		}
 	}
 
-	if _, ok := skippedRules[code_backdooring.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", code_backdooring.Category().Id)
-		delete(skippedRules, code_backdooring.Category().Id)
+	if _, ok := skippedRules[codebackdooring.Category().Id]; ok {
+		fmt.Println("Skipping risk rule:", codebackdooring.Category().Id)
+		delete(skippedRules, codebackdooring.Category().Id)
 	} else {
-		model.AddToListOfSupportedTags(code_backdooring.SupportedTags())
-		risks := code_backdooring.GenerateRisks()
+		model.AddToListOfSupportedTags(codebackdooring.SupportedTags())
+		risks := codebackdooring.GenerateRisks()
 		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[code_backdooring.Category()] = risks
+			model.GeneratedRisksByCategory[codebackdooring.Category()] = risks
 		}
 	}
 
-	if _, ok := skippedRules[container_baseimage_backdooring.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", container_baseimage_backdooring.Category().Id)
-		delete(skippedRules, container_baseimage_backdooring.Category().Id)
+	if _, ok := skippedRules[containerbaseimagebackdooring.Category().Id]; ok {
+		fmt.Println("Skipping risk rule:", containerbaseimagebackdooring.Category().Id)
+		delete(skippedRules, containerbaseimagebackdooring.Category().Id)
 	} else {
-		model.AddToListOfSupportedTags(container_baseimage_backdooring.SupportedTags())
-		risks := container_baseimage_backdooring.GenerateRisks()
+		model.AddToListOfSupportedTags(containerbaseimagebackdooring.SupportedTags())
+		risks := containerbaseimagebackdooring.GenerateRisks()
 		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[container_baseimage_backdooring.Category()] = risks
+			model.GeneratedRisksByCategory[containerbaseimagebackdooring.Category()] = risks
 		}
 	}
 
-	if _, ok := skippedRules[container_platform_escape.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", container_platform_escape.Category().Id)
-		delete(skippedRules, container_platform_escape.Category().Id)
+	if _, ok := skippedRules[containerplatformescape.Category().Id]; ok {
+		fmt.Println("Skipping risk rule:", containerplatformescape.Category().Id)
+		delete(skippedRules, containerplatformescape.Category().Id)
 	} else {
-		model.AddToListOfSupportedTags(container_platform_escape.SupportedTags())
-		risks := container_platform_escape.GenerateRisks()
+		model.AddToListOfSupportedTags(containerplatformescape.SupportedTags())
+		risks := containerplatformescape.GenerateRisks()
 		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[container_platform_escape.Category()] = risks
+			model.GeneratedRisksByCategory[containerplatformescape.Category()] = risks
 		}
 	}
 
-	if _, ok := skippedRules[incomplete_model.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", incomplete_model.Category().Id)
-		delete(skippedRules, incomplete_model.Category().Id)
+	if _, ok := skippedRules[incompletemodel.Category().Id]; ok {
+		fmt.Println("Skipping risk rule:", incompletemodel.Category().Id)
+		delete(skippedRules, incompletemodel.Category().Id)
 	} else {
-		model.AddToListOfSupportedTags(incomplete_model.SupportedTags())
-		risks := incomplete_model.GenerateRisks()
+		model.AddToListOfSupportedTags(incompletemodel.SupportedTags())
+		risks := incompletemodel.GenerateRisks()
 		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[incomplete_model.Category()] = risks
+			model.GeneratedRisksByCategory[incompletemodel.Category()] = risks
 		}
 	}
 
-	if _, ok := skippedRules[unchecked_deployment.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", unchecked_deployment.Category().Id)
-		delete(skippedRules, unchecked_deployment.Category().Id)
+	if _, ok := skippedRules[uncheckeddeployment.Category().Id]; ok {
+		fmt.Println("Skipping risk rule:", uncheckeddeployment.Category().Id)
+		delete(skippedRules, uncheckeddeployment.Category().Id)
 	} else {
-		model.AddToListOfSupportedTags(unchecked_deployment.SupportedTags())
-		risks := unchecked_deployment.GenerateRisks()
+		model.AddToListOfSupportedTags(uncheckeddeployment.SupportedTags())
+		risks := uncheckeddeployment.GenerateRisks()
 		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[unchecked_deployment.Category()] = risks
+			model.GeneratedRisksByCategory[uncheckeddeployment.Category()] = risks
 		}
 	}
 
-	if _, ok := skippedRules[missing_build_infrastructure.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", missing_build_infrastructure.Category().Id)
-		delete(skippedRules, missing_build_infrastructure.Category().Id)
+	if _, ok := skippedRules[missingbuildinfrastructure.Category().Id]; ok {
+		fmt.Println("Skipping risk rule:", missingbuildinfrastructure.Category().Id)
+		delete(skippedRules, missingbuildinfrastructure.Category().Id)
 	} else {
-		model.AddToListOfSupportedTags(missing_build_infrastructure.SupportedTags())
-		risks := missing_build_infrastructure.GenerateRisks()
+		model.AddToListOfSupportedTags(missingbuildinfrastructure.SupportedTags())
+		risks := missingbuildinfrastructure.GenerateRisks()
 		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[missing_build_infrastructure.Category()] = risks
+			model.GeneratedRisksByCategory[missingbuildinfrastructure.Category()] = risks
 		}
 	}
 
-	if _, ok := skippedRules[missing_identity_provider_isolation.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", missing_identity_provider_isolation.Category().Id)
-		delete(skippedRules, missing_identity_provider_isolation.Category().Id)
+	if _, ok := skippedRules[missingidentityproviderisolation.Category().Id]; ok {
+		fmt.Println("Skipping risk rule:", missingidentityproviderisolation.Category().Id)
+		delete(skippedRules, missingidentityproviderisolation.Category().Id)
 	} else {
-		model.AddToListOfSupportedTags(missing_identity_provider_isolation.SupportedTags())
-		risks := missing_identity_provider_isolation.GenerateRisks()
+		model.AddToListOfSupportedTags(missingidentityproviderisolation.SupportedTags())
+		risks := missingidentityproviderisolation.GenerateRisks()
 		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[missing_identity_provider_isolation.Category()] = risks
+			model.GeneratedRisksByCategory[missingidentityproviderisolation.Category()] = risks
 		}
 	}
 
-	if _, ok := skippedRules[missing_vault.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", missing_vault.Category().Id)
-		delete(skippedRules, missing_vault.Category().Id)
+	if _, ok := skippedRules[missingvault.Category().Id]; ok {
+		fmt.Println("Skipping risk rule:", missingvault.Category().Id)
+		delete(skippedRules, missingvault.Category().Id)
 	} else {
-		model.AddToListOfSupportedTags(missing_vault.SupportedTags())
-		risks := missing_vault.GenerateRisks()
+		model.AddToListOfSupportedTags(missingvault.SupportedTags())
+		risks := missingvault.GenerateRisks()
 		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[missing_vault.Category()] = risks
+			model.GeneratedRisksByCategory[missingvault.Category()] = risks
 		}
 	}
 
-	if _, ok := skippedRules[missing_vault_isolation.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", missing_vault_isolation.Category().Id)
-		delete(skippedRules, missing_vault_isolation.Category().Id)
+	if _, ok := skippedRules[missingvaultisolation.Category().Id]; ok {
+		fmt.Println("Skipping risk rule:", missingvaultisolation.Category().Id)
+		delete(skippedRules, missingvaultisolation.Category().Id)
 	} else {
-		model.AddToListOfSupportedTags(missing_vault_isolation.SupportedTags())
-		risks := missing_vault_isolation.GenerateRisks()
+		model.AddToListOfSupportedTags(missingvaultisolation.SupportedTags())
+		risks := missingvaultisolation.GenerateRisks()
 		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[missing_vault_isolation.Category()] = risks
+			model.GeneratedRisksByCategory[missingvaultisolation.Category()] = risks
 		}
 	}
 
-	if _, ok := skippedRules[missing_waf.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", missing_waf.Category().Id)
-		delete(skippedRules, missing_waf.Category().Id)
+	if _, ok := skippedRules[missingwaf.Category().Id]; ok {
+		fmt.Println("Skipping risk rule:", missingwaf.Category().Id)
+		delete(skippedRules, missingwaf.Category().Id)
 	} else {
-		model.AddToListOfSupportedTags(missing_waf.SupportedTags())
-		risks := missing_waf.GenerateRisks()
+		model.AddToListOfSupportedTags(missingwaf.SupportedTags())
+		risks := missingwaf.GenerateRisks()
 		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[missing_waf.Category()] = risks
+			model.GeneratedRisksByCategory[missingwaf.Category()] = risks
 		}
 	}
 
-	if _, ok := skippedRules[wrong_communication_link_content.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", wrong_communication_link_content.Category().Id)
-		delete(skippedRules, wrong_communication_link_content.Category().Id)
+	if _, ok := skippedRules[wrongcommunicationlinkcontent.Category().Id]; ok {
+		fmt.Println("Skipping risk rule:", wrongcommunicationlinkcontent.Category().Id)
+		delete(skippedRules, wrongcommunicationlinkcontent.Category().Id)
 	} else {
-		model.AddToListOfSupportedTags(wrong_communication_link_content.SupportedTags())
-		risks := wrong_communication_link_content.GenerateRisks()
+		model.AddToListOfSupportedTags(wrongcommunicationlinkcontent.SupportedTags())
+		risks := wrongcommunicationlinkcontent.GenerateRisks()
 		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[wrong_communication_link_content.Category()] = risks
+			model.GeneratedRisksByCategory[wrongcommunicationlinkcontent.Category()] = risks
 		}
 	}
 
-	if _, ok := skippedRules[wrong_trust_boundary_content.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", wrong_trust_boundary_content.Category().Id)
-		delete(skippedRules, wrong_trust_boundary_content.Category().Id)
+	if _, ok := skippedRules[wrongtrustboundarycontent.Category().Id]; ok {
+		fmt.Println("Skipping risk rule:", wrongtrustboundarycontent.Category().Id)
+		delete(skippedRules, wrongtrustboundarycontent.Category().Id)
 	} else {
-		model.AddToListOfSupportedTags(wrong_trust_boundary_content.SupportedTags())
-		risks := wrong_trust_boundary_content.GenerateRisks()
+		model.AddToListOfSupportedTags(wrongtrustboundarycontent.SupportedTags())
+		risks := wrongtrustboundarycontent.GenerateRisks()
 		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[wrong_trust_boundary_content.Category()] = risks
+			model.GeneratedRisksByCategory[wrongtrustboundarycontent.Category()] = risks
 		}
 	}
 
@@ -649,8 +648,8 @@ func checkRiskTracking() {
 	}
 
 	// save also the risk-category-id and risk-status directly in the risk for better JSON marshalling
-	for category, _ := range model.GeneratedRisksByCategory {
-		for i, _ := range model.GeneratedRisksByCategory[category] {
+	for category := range model.GeneratedRisksByCategory {
+		for i := range model.GeneratedRisksByCategory[category] {
 			model.GeneratedRisksByCategory[category][i].CategoryId = category.Id
 			model.GeneratedRisksByCategory[category][i].RiskStatus = model.GeneratedRisksByCategory[category][i].GetRiskTrackingStatusDefaultingUnchecked()
 		}
@@ -683,26 +682,26 @@ func unzip(src string, dest string) ([]string, error) {
 	if err != nil {
 		return filenames, err
 	}
-	defer r.Close()
+	defer func() { _ = r.Close() }()
 
 	for _, f := range r.File {
 		// Store filename/path for returning and using later on
-		fpath := filepath.Join(dest, f.Name)
+		path := filepath.Join(dest, f.Name)
 		// Check for ZipSlip. More Info: http://bit.ly/2MsjAWE
-		if !strings.HasPrefix(fpath, filepath.Clean(dest)+string(os.PathSeparator)) {
-			return filenames, fmt.Errorf("%s: illegal file path", fpath)
+		if !strings.HasPrefix(path, filepath.Clean(dest)+string(os.PathSeparator)) {
+			return filenames, fmt.Errorf("%s: illegal file path", path)
 		}
-		filenames = append(filenames, fpath)
+		filenames = append(filenames, path)
 		if f.FileInfo().IsDir() {
 			// Make Folder
-			os.MkdirAll(fpath, os.ModePerm)
+			_ = os.MkdirAll(path, os.ModePerm)
 			continue
 		}
 		// Make File
-		if err = os.MkdirAll(filepath.Dir(fpath), os.ModePerm); err != nil {
+		if err = os.MkdirAll(filepath.Dir(path), os.ModePerm); err != nil {
 			return filenames, err
 		}
-		outFile, err := os.OpenFile(fpath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
+		outFile, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
 		if err != nil {
 			return filenames, err
 		}
@@ -712,8 +711,8 @@ func unzip(src string, dest string) ([]string, error) {
 		}
 		_, err = io.Copy(outFile, rc)
 		// Close the file without defer to close before next iteration of loop
-		outFile.Close()
-		rc.Close()
+		_ = outFile.Close()
+		_ = rc.Close()
 		if err != nil {
 			return filenames, err
 		}
@@ -729,10 +728,10 @@ func zipFiles(filename string, files []string) error {
 	if err != nil {
 		return err
 	}
-	defer newZipFile.Close()
+	defer func() { _ = newZipFile.Close() }()
 
 	zipWriter := zip.NewWriter(newZipFile)
-	defer zipWriter.Close()
+	defer func() { _ = zipWriter.Close() }()
 
 	// Add files to zip
 	for _, file := range files {
@@ -748,7 +747,7 @@ func addFileToZip(zipWriter *zip.Writer, filename string) error {
 	if err != nil {
 		return err
 	}
-	defer fileToZip.Close()
+	defer func() { _ = fileToZip.Close() }()
 
 	// Get the file information
 	info, err := fileToZip.Stat()
@@ -785,7 +784,7 @@ func doIt(inputFilename string, outputDirectory string) {
 			if *verbose {
 				log.Println(err)
 			}
-			os.Stderr.WriteString(err.Error() + "\n")
+			_, _ = os.Stderr.WriteString(err.Error() + "\n")
 			os.Exit(2)
 		}
 	}()
@@ -808,18 +807,18 @@ func doIt(inputFilename string, outputDirectory string) {
 	if len(*executeModelMacro) > 0 {
 		var macroDetails model.MacroDetails
 		switch *executeModelMacro {
-		case add_build_pipeline.GetMacroDetails().ID:
-			macroDetails = add_build_pipeline.GetMacroDetails()
-		case add_vault.GetMacroDetails().ID:
-			macroDetails = add_vault.GetMacroDetails()
-		case pretty_print.GetMacroDetails().ID:
-			macroDetails = pretty_print.GetMacroDetails()
-		case remove_unused_tags.GetMacroDetails().ID:
-			macroDetails = remove_unused_tags.GetMacroDetails()
-		case seed_risk_tracking.GetMacroDetails().ID:
-			macroDetails = seed_risk_tracking.GetMacroDetails()
-		case seed_tags.GetMacroDetails().ID:
-			macroDetails = seed_tags.GetMacroDetails()
+		case addbuildpipeline.GetMacroDetails().ID:
+			macroDetails = addbuildpipeline.GetMacroDetails()
+		case addvault.GetMacroDetails().ID:
+			macroDetails = addvault.GetMacroDetails()
+		case prettyprint.GetMacroDetails().ID:
+			macroDetails = prettyprint.GetMacroDetails()
+		case removeunusedtags.GetMacroDetails().ID:
+			macroDetails = removeunusedtags.GetMacroDetails()
+		case seedrisktracking.GetMacroDetails().ID:
+			macroDetails = seedrisktracking.GetMacroDetails()
+		case seedtags.GetMacroDetails().ID:
+			macroDetails = seedtags.GetMacroDetails()
 		default:
 			log.Fatal("Unknown model macro: ", *executeModelMacro)
 		}
@@ -838,18 +837,18 @@ func doIt(inputFilename string, outputDirectory string) {
 		var nextQuestion model.MacroQuestion
 		for {
 			switch macroDetails.ID {
-			case add_build_pipeline.GetMacroDetails().ID:
-				nextQuestion, err = add_build_pipeline.GetNextQuestion()
-			case add_vault.GetMacroDetails().ID:
-				nextQuestion, err = add_vault.GetNextQuestion()
-			case pretty_print.GetMacroDetails().ID:
-				nextQuestion, err = pretty_print.GetNextQuestion()
-			case remove_unused_tags.GetMacroDetails().ID:
-				nextQuestion, err = remove_unused_tags.GetNextQuestion()
-			case seed_risk_tracking.GetMacroDetails().ID:
-				nextQuestion, err = seed_risk_tracking.GetNextQuestion()
-			case seed_tags.GetMacroDetails().ID:
-				nextQuestion, err = seed_tags.GetNextQuestion()
+			case addbuildpipeline.GetMacroDetails().ID:
+				nextQuestion, err = addbuildpipeline.GetNextQuestion()
+			case addvault.GetMacroDetails().ID:
+				nextQuestion, err = addvault.GetNextQuestion()
+			case prettyprint.GetMacroDetails().ID:
+				nextQuestion, err = prettyprint.GetNextQuestion()
+			case removeunusedtags.GetMacroDetails().ID:
+				nextQuestion, err = removeunusedtags.GetNextQuestion()
+			case seedrisktracking.GetMacroDetails().ID:
+				nextQuestion, err = seedrisktracking.GetNextQuestion()
+			case seedtags.GetMacroDetails().ID:
+				nextQuestion, err = seedtags.GetNextQuestion()
 			}
 			checkErr(err)
 			if nextQuestion.NoMoreQuestions() {
@@ -865,7 +864,7 @@ func doIt(inputFilename string, outputDirectory string) {
 			resultingMultiValueSelection := make([]string, 0)
 			if nextQuestion.IsValueConstrained() {
 				if nextQuestion.MultiSelect {
-					selectedValues := make(map[string]bool, 0)
+					selectedValues := make(map[string]bool)
 					for {
 						fmt.Println("Please select (multiple executions possible) from the following values (use number to select/deselect):")
 						fmt.Println("    0:", "SELECTION PROCESS FINISHED: CONTINUE TO NEXT QUESTION")
@@ -939,18 +938,18 @@ func doIt(inputFilename string, outputDirectory string) {
 					return
 				} else if strings.ToLower(answer) == "back" {
 					switch macroDetails.ID {
-					case add_build_pipeline.GetMacroDetails().ID:
-						message, validResult, err = add_build_pipeline.GoBack()
-					case add_vault.GetMacroDetails().ID:
-						message, validResult, err = add_vault.GoBack()
-					case pretty_print.GetMacroDetails().ID:
-						message, validResult, err = pretty_print.GoBack()
-					case remove_unused_tags.GetMacroDetails().ID:
-						message, validResult, err = remove_unused_tags.GoBack()
-					case seed_risk_tracking.GetMacroDetails().ID:
-						message, validResult, err = seed_risk_tracking.GoBack()
-					case seed_tags.GetMacroDetails().ID:
-						message, validResult, err = seed_tags.GoBack()
+					case addbuildpipeline.GetMacroDetails().ID:
+						message, validResult, err = addbuildpipeline.GoBack()
+					case addvault.GetMacroDetails().ID:
+						message, validResult, err = addvault.GoBack()
+					case prettyprint.GetMacroDetails().ID:
+						message, validResult, err = prettyprint.GoBack()
+					case removeunusedtags.GetMacroDetails().ID:
+						message, validResult, err = removeunusedtags.GoBack()
+					case seedrisktracking.GetMacroDetails().ID:
+						message, validResult, err = seedrisktracking.GoBack()
+					case seedtags.GetMacroDetails().ID:
+						message, validResult, err = seedtags.GoBack()
 					}
 				} else if len(answer) > 0 { // individual answer
 					if nextQuestion.IsValueConstrained() {
@@ -962,34 +961,34 @@ func doIt(inputFilename string, outputDirectory string) {
 						}
 					}
 					switch macroDetails.ID {
-					case add_build_pipeline.GetMacroDetails().ID:
-						message, validResult, err = add_build_pipeline.ApplyAnswer(nextQuestion.ID, answer)
-					case add_vault.GetMacroDetails().ID:
-						message, validResult, err = add_vault.ApplyAnswer(nextQuestion.ID, answer)
-					case pretty_print.GetMacroDetails().ID:
-						message, validResult, err = pretty_print.ApplyAnswer(nextQuestion.ID, answer)
-					case remove_unused_tags.GetMacroDetails().ID:
-						message, validResult, err = remove_unused_tags.ApplyAnswer(nextQuestion.ID, answer)
-					case seed_risk_tracking.GetMacroDetails().ID:
-						message, validResult, err = seed_risk_tracking.ApplyAnswer(nextQuestion.ID, answer)
-					case seed_tags.GetMacroDetails().ID:
-						message, validResult, err = seed_tags.ApplyAnswer(nextQuestion.ID, answer)
+					case addbuildpipeline.GetMacroDetails().ID:
+						message, validResult, err = addbuildpipeline.ApplyAnswer(nextQuestion.ID, answer)
+					case addvault.GetMacroDetails().ID:
+						message, validResult, err = addvault.ApplyAnswer(nextQuestion.ID, answer)
+					case prettyprint.GetMacroDetails().ID:
+						message, validResult, err = prettyprint.ApplyAnswer(nextQuestion.ID, answer)
+					case removeunusedtags.GetMacroDetails().ID:
+						message, validResult, err = removeunusedtags.ApplyAnswer(nextQuestion.ID, answer)
+					case seedrisktracking.GetMacroDetails().ID:
+						message, validResult, err = seedrisktracking.ApplyAnswer(nextQuestion.ID, answer)
+					case seedtags.GetMacroDetails().ID:
+						message, validResult, err = seedtags.ApplyAnswer(nextQuestion.ID, answer)
 					}
 				}
 			} else {
 				switch macroDetails.ID {
-				case add_build_pipeline.GetMacroDetails().ID:
-					message, validResult, err = add_build_pipeline.ApplyAnswer(nextQuestion.ID, resultingMultiValueSelection...)
-				case add_vault.GetMacroDetails().ID:
-					message, validResult, err = add_vault.ApplyAnswer(nextQuestion.ID, resultingMultiValueSelection...)
-				case pretty_print.GetMacroDetails().ID:
-					message, validResult, err = pretty_print.ApplyAnswer(nextQuestion.ID, resultingMultiValueSelection...)
-				case remove_unused_tags.GetMacroDetails().ID:
-					message, validResult, err = remove_unused_tags.ApplyAnswer(nextQuestion.ID, resultingMultiValueSelection...)
-				case seed_risk_tracking.GetMacroDetails().ID:
-					message, validResult, err = seed_risk_tracking.ApplyAnswer(nextQuestion.ID, resultingMultiValueSelection...)
-				case seed_tags.GetMacroDetails().ID:
-					message, validResult, err = seed_tags.ApplyAnswer(nextQuestion.ID, resultingMultiValueSelection...)
+				case addbuildpipeline.GetMacroDetails().ID:
+					message, validResult, err = addbuildpipeline.ApplyAnswer(nextQuestion.ID, resultingMultiValueSelection...)
+				case addvault.GetMacroDetails().ID:
+					message, validResult, err = addvault.ApplyAnswer(nextQuestion.ID, resultingMultiValueSelection...)
+				case prettyprint.GetMacroDetails().ID:
+					message, validResult, err = prettyprint.ApplyAnswer(nextQuestion.ID, resultingMultiValueSelection...)
+				case removeunusedtags.GetMacroDetails().ID:
+					message, validResult, err = removeunusedtags.ApplyAnswer(nextQuestion.ID, resultingMultiValueSelection...)
+				case seedrisktracking.GetMacroDetails().ID:
+					message, validResult, err = seedrisktracking.ApplyAnswer(nextQuestion.ID, resultingMultiValueSelection...)
+				case seedtags.GetMacroDetails().ID:
+					message, validResult, err = seedtags.ApplyAnswer(nextQuestion.ID, resultingMultiValueSelection...)
 				}
 			}
 			checkErr(err)
@@ -1013,18 +1012,18 @@ func doIt(inputFilename string, outputDirectory string) {
 			validResult := true
 			var err error
 			switch macroDetails.ID {
-			case add_build_pipeline.GetMacroDetails().ID:
-				changes, message, validResult, err = add_build_pipeline.GetFinalChangeImpact(&modelInput)
-			case add_vault.GetMacroDetails().ID:
-				changes, message, validResult, err = add_vault.GetFinalChangeImpact(&modelInput)
-			case pretty_print.GetMacroDetails().ID:
-				changes, message, validResult, err = pretty_print.GetFinalChangeImpact(&modelInput)
-			case remove_unused_tags.GetMacroDetails().ID:
-				changes, message, validResult, err = remove_unused_tags.GetFinalChangeImpact(&modelInput)
-			case seed_risk_tracking.GetMacroDetails().ID:
-				changes, message, validResult, err = seed_risk_tracking.GetFinalChangeImpact(&modelInput)
-			case seed_tags.GetMacroDetails().ID:
-				changes, message, validResult, err = seed_tags.GetFinalChangeImpact(&modelInput)
+			case addbuildpipeline.GetMacroDetails().ID:
+				changes, message, validResult, err = addbuildpipeline.GetFinalChangeImpact(&modelInput)
+			case addvault.GetMacroDetails().ID:
+				changes, message, validResult, err = addvault.GetFinalChangeImpact(&modelInput)
+			case prettyprint.GetMacroDetails().ID:
+				changes, message, validResult, err = prettyprint.GetFinalChangeImpact(&modelInput)
+			case removeunusedtags.GetMacroDetails().ID:
+				changes, message, validResult, err = removeunusedtags.GetFinalChangeImpact(&modelInput)
+			case seedrisktracking.GetMacroDetails().ID:
+				changes, message, validResult, err = seedrisktracking.GetFinalChangeImpact(&modelInput)
+			case seedtags.GetMacroDetails().ID:
+				changes, message, validResult, err = seedtags.GetFinalChangeImpact(&modelInput)
 			}
 			checkErr(err)
 			for _, change := range changes {
@@ -1049,18 +1048,18 @@ func doIt(inputFilename string, outputDirectory string) {
 				validResult := true
 				var err error
 				switch macroDetails.ID {
-				case add_build_pipeline.GetMacroDetails().ID:
-					message, validResult, err = add_build_pipeline.Execute(&modelInput)
-				case add_vault.GetMacroDetails().ID:
-					message, validResult, err = add_vault.Execute(&modelInput)
-				case pretty_print.GetMacroDetails().ID:
-					message, validResult, err = pretty_print.Execute(&modelInput)
-				case remove_unused_tags.GetMacroDetails().ID:
-					message, validResult, err = remove_unused_tags.Execute(&modelInput)
-				case seed_risk_tracking.GetMacroDetails().ID:
-					message, validResult, err = seed_risk_tracking.Execute(&modelInput)
-				case seed_tags.GetMacroDetails().ID:
-					message, validResult, err = seed_tags.Execute(&modelInput)
+				case addbuildpipeline.GetMacroDetails().ID:
+					message, validResult, err = addbuildpipeline.Execute(&modelInput)
+				case addvault.GetMacroDetails().ID:
+					message, validResult, err = addvault.Execute(&modelInput)
+				case prettyprint.GetMacroDetails().ID:
+					message, validResult, err = prettyprint.Execute(&modelInput)
+				case removeunusedtags.GetMacroDetails().ID:
+					message, validResult, err = removeunusedtags.Execute(&modelInput)
+				case seedrisktracking.GetMacroDetails().ID:
+					message, validResult, err = seedrisktracking.Execute(&modelInput)
+				case seedtags.GetMacroDetails().ID:
+					message, validResult, err = seedtags.Execute(&modelInput)
 				}
 				checkErr(err)
 				if !validResult {
@@ -1080,7 +1079,7 @@ func doIt(inputFilename string, outputDirectory string) {
 					yamlBytes = model.ReformatYAML(yamlBytes)
 				*/
 				fmt.Println("Writing model file:", inputFilename)
-				err = ioutil.WriteFile(inputFilename, yamlBytes, 0400)
+				err = os.WriteFile(inputFilename, yamlBytes, 0400)
 				checkErr(err)
 				fmt.Println("Model file successfully updated")
 				return
@@ -1089,7 +1088,6 @@ func doIt(inputFilename string, outputDirectory string) {
 				return
 			}
 		}
-		fmt.Println()
 		return
 	}
 
@@ -1102,10 +1100,10 @@ func doIt(inputFilename string, outputDirectory string) {
 	if renderDataFlowDiagram {
 		gvFile := outputDirectory + "/" + dataFlowDiagramFilenameDOT
 		if !keepDiagramSourceFiles {
-			tmpFileGV, err := ioutil.TempFile(model.TempFolder, dataFlowDiagramFilenameDOT)
+			tmpFileGV, err := os.CreateTemp(model.TempFolder, dataFlowDiagramFilenameDOT)
 			checkErr(err)
 			gvFile = tmpFileGV.Name()
-			defer os.Remove(gvFile)
+			defer func() { _ = os.Remove(gvFile) }()
 		}
 		dotFile := writeDataFlowDiagramGraphvizDOT(gvFile, *diagramDPI)
 		renderDataFlowDiagramGraphvizImage(dotFile, outputDirectory)
@@ -1114,10 +1112,10 @@ func doIt(inputFilename string, outputDirectory string) {
 	if renderDataAssetDiagram {
 		gvFile := outputDirectory + "/" + dataAssetDiagramFilenameDOT
 		if !keepDiagramSourceFiles {
-			tmpFile, err := ioutil.TempFile(model.TempFolder, dataAssetDiagramFilenameDOT)
+			tmpFile, err := os.CreateTemp(model.TempFolder, dataAssetDiagramFilenameDOT)
 			checkErr(err)
 			gvFile = tmpFile.Name()
-			defer os.Remove(gvFile)
+			defer func() { _ = os.Remove(gvFile) }()
 		}
 		dotFile := writeDataAssetDiagramGraphvizDOT(gvFile, *diagramDPI)
 		renderDataAssetDiagramGraphvizImage(dotFile, outputDirectory)
@@ -1167,7 +1165,7 @@ func doIt(inputFilename string, outputDirectory string) {
 		// hash the YAML input file
 		f, err := os.Open(inputFilename)
 		checkErr(err)
-		defer f.Close()
+		defer func() { _ = f.Close() }()
 		hasher := sha256.New()
 		if _, err := io.Copy(hasher, f); err != nil {
 			panic(err)
@@ -1205,7 +1203,7 @@ func applyRAA() string {
 	if *verbose {
 		fmt.Println("Applying RAA calculation:", *raaPlugin)
 	}
-	// determine plugin to load
+	// determine plugin to load.
 	// load plugin: open the ".so" file to load the symbols
 	plug, err := plugin.Open(*raaPlugin)
 	checkErr(err)
@@ -1222,7 +1220,7 @@ func applyRAA() string {
 }
 
 func loadCustomRiskRules() {
-	customRiskRules = make(map[string]model.CustomRiskRule, 0)
+	customRiskRules = make(map[string]model.CustomRiskRule)
 	if len(*riskRulesPlugins) > 0 {
 		if *verbose {
 			fmt.Println("Loading custom risk rules:", *riskRulesPlugins)
@@ -1310,13 +1308,13 @@ func execute(context *gin.Context, dryRun bool) (yamlContent []byte, ok bool) {
 
 	filenameUploaded := strings.TrimSpace(header.Filename)
 
-	tmpInputDir, err := ioutil.TempDir(model.TempFolder, "threagile-input-")
+	tmpInputDir, err := os.MkdirTemp(model.TempFolder, "threagile-input-")
 	checkErr(err)
-	defer os.RemoveAll(tmpInputDir)
+	defer func() { _ = os.RemoveAll(tmpInputDir) }()
 
-	tmpModelFile, err := ioutil.TempFile(tmpInputDir, "threagile-model-*")
+	tmpModelFile, err := os.CreateTemp(tmpInputDir, "threagile-model-*")
 	checkErr(err)
-	defer os.Remove(tmpModelFile.Name())
+	defer func() { _ = os.Remove(tmpModelFile.Name()) }()
 	_, err = io.Copy(tmpModelFile, fileUploaded)
 	checkErr(err)
 
@@ -1342,13 +1340,13 @@ func execute(context *gin.Context, dryRun bool) (yamlContent []byte, ok bool) {
 		}
 	}
 
-	tmpOutputDir, err := ioutil.TempDir(model.TempFolder, "threagile-output-")
+	tmpOutputDir, err := os.MkdirTemp(model.TempFolder, "threagile-output-")
 	checkErr(err)
-	defer os.RemoveAll(tmpOutputDir)
+	defer func() { _ = os.RemoveAll(tmpOutputDir) }()
 
-	tmpResultFile, err := ioutil.TempFile(model.TempFolder, "threagile-result-*.zip")
+	tmpResultFile, err := os.CreateTemp(model.TempFolder, "threagile-result-*.zip")
 	checkErr(err)
-	defer os.Remove(tmpResultFile.Name())
+	defer func() { _ = os.Remove(tmpResultFile.Name()) }()
 
 	if dryRun {
 		doItViaRuntimeCall(yamlFile, tmpOutputDir, *executeModelMacro, *raaPlugin, *riskRulesPlugins, *skipRiskRules, *ignoreOrphanedRiskTracking, false, false, false, false, false, true, true, true, 40)
@@ -1357,9 +1355,9 @@ func execute(context *gin.Context, dryRun bool) (yamlContent []byte, ok bool) {
 	}
 	checkErr(err)
 
-	yamlContent, err = ioutil.ReadFile(yamlFile)
+	yamlContent, err = os.ReadFile(yamlFile)
 	checkErr(err)
-	err = ioutil.WriteFile(tmpOutputDir+"/threagile.yaml", yamlContent, 0400)
+	err = os.WriteFile(tmpOutputDir+"/threagile.yaml", yamlContent, 0400)
 	checkErr(err)
 
 	if !dryRun {
@@ -1570,153 +1568,153 @@ func startServer() {
 	router.DELETE("/models/:model-id/shared-runtimes/:shared-runtime-id", deleteSharedRuntime)
 
 	fmt.Println("Threagile server running...")
-	router.Run(":" + strconv.Itoa(*serverPort)) // listen and serve on 0.0.0.0:8080 or whatever port was specified
+	_ = router.Run(":" + strconv.Itoa(*serverPort)) // listen and serve on 0.0.0.0:8080 or whatever port was specified
 }
 
 func exampleFile(context *gin.Context) {
-	example, err := ioutil.ReadFile("/app/threagile-example-model.yaml")
+	example, err := os.ReadFile("/app/threagile-example-model.yaml")
 	checkErr(err)
 	context.Data(http.StatusOK, gin.MIMEYAML, example)
 }
 
 func stubFile(context *gin.Context) {
-	stub, err := ioutil.ReadFile("/app/threagile-stub-model.yaml")
+	stub, err := os.ReadFile("/app/threagile-stub-model.yaml")
 	checkErr(err)
 	context.Data(http.StatusOK, gin.MIMEYAML, addSupportedTags(stub)) // TODO use also the MIMEYAML way of serving YAML in model export?
 }
 
 func addSupportedTags(input []byte) []byte {
 	// add distinct tags as "tags_available"
-	supportedTags := make(map[string]bool, 0)
+	supportedTags := make(map[string]bool)
 	for _, customRule := range customRiskRules {
 		for _, tag := range customRule.SupportedTags() {
 			supportedTags[strings.ToLower(tag)] = true
 		}
 	}
-	for _, tag := range accidental_secret_leak.SupportedTags() {
+	for _, tag := range accidentalsecretleak.SupportedTags() {
 		supportedTags[strings.ToLower(tag)] = true
 	}
-	for _, tag := range code_backdooring.SupportedTags() {
+	for _, tag := range codebackdooring.SupportedTags() {
 		supportedTags[strings.ToLower(tag)] = true
 	}
-	for _, tag := range container_baseimage_backdooring.SupportedTags() {
+	for _, tag := range containerbaseimagebackdooring.SupportedTags() {
 		supportedTags[strings.ToLower(tag)] = true
 	}
-	for _, tag := range container_platform_escape.SupportedTags() {
+	for _, tag := range containerplatformescape.SupportedTags() {
 		supportedTags[strings.ToLower(tag)] = true
 	}
-	for _, tag := range cross_site_request_forgery.SupportedTags() {
+	for _, tag := range crosssiterequestforgery.SupportedTags() {
 		supportedTags[strings.ToLower(tag)] = true
 	}
-	for _, tag := range cross_site_scripting.SupportedTags() {
+	for _, tag := range crosssitescripting.SupportedTags() {
 		supportedTags[strings.ToLower(tag)] = true
 	}
-	for _, tag := range dos_risky_access_across_trust_boundary.SupportedTags() {
+	for _, tag := range dosriskyaccessacrosstrustboundary.SupportedTags() {
 		supportedTags[strings.ToLower(tag)] = true
 	}
-	for _, tag := range incomplete_model.SupportedTags() {
+	for _, tag := range incompletemodel.SupportedTags() {
 		supportedTags[strings.ToLower(tag)] = true
 	}
-	for _, tag := range ldap_injection.SupportedTags() {
+	for _, tag := range ldapinjection.SupportedTags() {
 		supportedTags[strings.ToLower(tag)] = true
 	}
-	for _, tag := range missing_authentication.SupportedTags() {
+	for _, tag := range missingauthentication.SupportedTags() {
 		supportedTags[strings.ToLower(tag)] = true
 	}
-	for _, tag := range missing_authentication_second_factor.SupportedTags() {
+	for _, tag := range missingauthenticationsecondfactor.SupportedTags() {
 		supportedTags[strings.ToLower(tag)] = true
 	}
-	for _, tag := range missing_build_infrastructure.SupportedTags() {
+	for _, tag := range missingbuildinfrastructure.SupportedTags() {
 		supportedTags[strings.ToLower(tag)] = true
 	}
-	for _, tag := range missing_cloud_hardening.SupportedTags() {
+	for _, tag := range missingcloudhardening.SupportedTags() {
 		supportedTags[strings.ToLower(tag)] = true
 	}
-	for _, tag := range missing_file_validation.SupportedTags() {
+	for _, tag := range missingfilevalidation.SupportedTags() {
 		supportedTags[strings.ToLower(tag)] = true
 	}
-	for _, tag := range missing_hardening.SupportedTags() {
+	for _, tag := range missinghardening.SupportedTags() {
 		supportedTags[strings.ToLower(tag)] = true
 	}
-	for _, tag := range missing_identity_propagation.SupportedTags() {
+	for _, tag := range missingidentitypropagation.SupportedTags() {
 		supportedTags[strings.ToLower(tag)] = true
 	}
-	for _, tag := range missing_identity_provider_isolation.SupportedTags() {
+	for _, tag := range missingidentityproviderisolation.SupportedTags() {
 		supportedTags[strings.ToLower(tag)] = true
 	}
-	for _, tag := range missing_identity_store.SupportedTags() {
+	for _, tag := range missingidentitystore.SupportedTags() {
 		supportedTags[strings.ToLower(tag)] = true
 	}
-	for _, tag := range missing_network_segmentation.SupportedTags() {
+	for _, tag := range missingnetworksegmentation.SupportedTags() {
 		supportedTags[strings.ToLower(tag)] = true
 	}
-	for _, tag := range missing_vault.SupportedTags() {
+	for _, tag := range missingvault.SupportedTags() {
 		supportedTags[strings.ToLower(tag)] = true
 	}
-	for _, tag := range missing_vault_isolation.SupportedTags() {
+	for _, tag := range missingvaultisolation.SupportedTags() {
 		supportedTags[strings.ToLower(tag)] = true
 	}
-	for _, tag := range missing_waf.SupportedTags() {
+	for _, tag := range missingwaf.SupportedTags() {
 		supportedTags[strings.ToLower(tag)] = true
 	}
-	for _, tag := range mixed_targets_on_shared_runtime.SupportedTags() {
+	for _, tag := range mixedtargetsonsharedruntime.SupportedTags() {
 		supportedTags[strings.ToLower(tag)] = true
 	}
-	for _, tag := range path_traversal.SupportedTags() {
+	for _, tag := range pathtraversal.SupportedTags() {
 		supportedTags[strings.ToLower(tag)] = true
 	}
-	for _, tag := range push_instead_of_pull_deployment.SupportedTags() {
+	for _, tag := range pushinsteadofpulldeployment.SupportedTags() {
 		supportedTags[strings.ToLower(tag)] = true
 	}
-	for _, tag := range search_query_injection.SupportedTags() {
+	for _, tag := range searchqueryinjection.SupportedTags() {
 		supportedTags[strings.ToLower(tag)] = true
 	}
-	for _, tag := range server_side_request_forgery.SupportedTags() {
+	for _, tag := range serversiderequestforgery.SupportedTags() {
 		supportedTags[strings.ToLower(tag)] = true
 	}
-	for _, tag := range service_registry_poisoning.SupportedTags() {
+	for _, tag := range serviceregistrypoisoning.SupportedTags() {
 		supportedTags[strings.ToLower(tag)] = true
 	}
-	for _, tag := range sql_nosql_injection.SupportedTags() {
+	for _, tag := range sqlnosqlinjection.SupportedTags() {
 		supportedTags[strings.ToLower(tag)] = true
 	}
-	for _, tag := range unchecked_deployment.SupportedTags() {
+	for _, tag := range uncheckeddeployment.SupportedTags() {
 		supportedTags[strings.ToLower(tag)] = true
 	}
-	for _, tag := range unencrypted_asset.SupportedTags() {
+	for _, tag := range unencryptedasset.SupportedTags() {
 		supportedTags[strings.ToLower(tag)] = true
 	}
-	for _, tag := range unencrypted_communication.SupportedTags() {
+	for _, tag := range unencryptedcommunication.SupportedTags() {
 		supportedTags[strings.ToLower(tag)] = true
 	}
-	for _, tag := range unguarded_access_from_internet.SupportedTags() {
+	for _, tag := range unguardedaccessfrominternet.SupportedTags() {
 		supportedTags[strings.ToLower(tag)] = true
 	}
-	for _, tag := range unguarded_direct_datastore_access.SupportedTags() {
+	for _, tag := range unguardeddirectdatastoreaccess.SupportedTags() {
 		supportedTags[strings.ToLower(tag)] = true
 	}
-	for _, tag := range unnecessary_communication_link.SupportedTags() {
+	for _, tag := range unnecessarycommunicationlink.SupportedTags() {
 		supportedTags[strings.ToLower(tag)] = true
 	}
-	for _, tag := range unnecessary_data_asset.SupportedTags() {
+	for _, tag := range unnecessarydataasset.SupportedTags() {
 		supportedTags[strings.ToLower(tag)] = true
 	}
-	for _, tag := range unnecessary_data_transfer.SupportedTags() {
+	for _, tag := range unnecessarydatatransfer.SupportedTags() {
 		supportedTags[strings.ToLower(tag)] = true
 	}
-	for _, tag := range unnecessary_technical_asset.SupportedTags() {
+	for _, tag := range unnecessarytechnicalasset.SupportedTags() {
 		supportedTags[strings.ToLower(tag)] = true
 	}
-	for _, tag := range untrusted_deserialization.SupportedTags() {
+	for _, tag := range untrusteddeserialization.SupportedTags() {
 		supportedTags[strings.ToLower(tag)] = true
 	}
-	for _, tag := range wrong_communication_link_content.SupportedTags() {
+	for _, tag := range wrongcommunicationlinkcontent.SupportedTags() {
 		supportedTags[strings.ToLower(tag)] = true
 	}
-	for _, tag := range wrong_trust_boundary_content.SupportedTags() {
+	for _, tag := range wrongtrustboundarycontent.SupportedTags() {
 		supportedTags[strings.ToLower(tag)] = true
 	}
-	for _, tag := range xml_external_entity.SupportedTags() {
+	for _, tag := range xmlexternalentity.SupportedTags() {
 		supportedTags[strings.ToLower(tag)] = true
 	}
 	tags := make([]string, 0, len(supportedTags))
@@ -1747,8 +1745,8 @@ func addSupportedTags(input []byte) []byte {
 const keySize = 32
 
 type timeoutStruct struct {
-	xorRand                              []byte
-	createdNanotime, lastAcessedNanotime int64
+	xorRand                               []byte
+	createdNanoTime, lastAccessedNanoTime int64
 }
 
 var mapTokenHashToTimeoutStruct = make(map[string]timeoutStruct)
@@ -1780,9 +1778,9 @@ func createToken(context *gin.Context) {
 	tokenHash := hashSHA256(token)
 	housekeepingTokenMaps()
 	mapTokenHashToTimeoutStruct[tokenHash] = timeoutStruct{
-		xorRand:             xorBytesArr,
-		createdNanotime:     now,
-		lastAcessedNanotime: now,
+		xorRand:              xorBytesArr,
+		createdNanoTime:      now,
+		lastAccessedNanoTime: now,
 	}
 	mapFolderNameToTokenHash[folderName] = tokenHash
 	context.JSON(http.StatusCreated, gin.H{
@@ -1824,14 +1822,14 @@ func housekeepingTokenMaps() {
 		if extremeShortTimeoutsForTesting {
 			// remove all elements older than 1 minute (= 60000000000 ns) soft
 			// and all elements older than 3 minutes (= 180000000000 ns) hard
-			if now-val.lastAcessedNanotime > 60000000000 || now-val.createdNanotime > 180000000000 {
+			if now-val.lastAccessedNanoTime > 60000000000 || now-val.createdNanoTime > 180000000000 {
 				fmt.Println("About to remove a token hash from maps")
 				deleteTokenHashFromMaps(tokenHash)
 			}
 		} else {
 			// remove all elements older than 30 minutes (= 1800000000000 ns) soft
 			// and all elements older than 10 hours (= 36000000000000 ns) hard
-			if now-val.lastAcessedNanotime > 1800000000000 || now-val.createdNanotime > 36000000000000 {
+			if now-val.lastAccessedNanoTime > 1800000000000 || now-val.createdNanoTime > 36000000000000 {
 				deleteTokenHashFromMaps(tokenHash)
 			}
 		}
@@ -1891,30 +1889,30 @@ func analyzeModelOnServerDirectly(context *gin.Context) {
 	if !ok {
 		return
 	}
-	tmpModelFile, err := ioutil.TempFile(model.TempFolder, "threagile-direct-analyze-*")
+	tmpModelFile, err := os.CreateTemp(model.TempFolder, "threagile-direct-analyze-*")
 	if err != nil {
 		handleErrorInServiceCall(err, context)
 		return
 	}
-	defer os.Remove(tmpModelFile.Name())
-	tmpOutputDir, err := ioutil.TempDir(model.TempFolder, "threagile-direct-analyze-")
+	defer func() { _ = os.Remove(tmpModelFile.Name()) }()
+	tmpOutputDir, err := os.MkdirTemp(model.TempFolder, "threagile-direct-analyze-")
 	if err != nil {
 		handleErrorInServiceCall(err, context)
 		return
 	}
-	defer os.RemoveAll(tmpOutputDir)
-	tmpResultFile, err := ioutil.TempFile(model.TempFolder, "threagile-result-*.zip")
+	defer func() { _ = os.RemoveAll(tmpOutputDir) }()
+	tmpResultFile, err := os.CreateTemp(model.TempFolder, "threagile-result-*.zip")
 	checkErr(err)
-	defer os.Remove(tmpResultFile.Name())
+	defer func() { _ = os.Remove(tmpResultFile.Name()) }()
 
-	err = ioutil.WriteFile(tmpModelFile.Name(), []byte(yamlText), 0400)
+	err = os.WriteFile(tmpModelFile.Name(), []byte(yamlText), 0400)
 
 	doItViaRuntimeCall(tmpModelFile.Name(), tmpOutputDir, *executeModelMacro, *raaPlugin, *riskRulesPlugins, *skipRiskRules, *ignoreOrphanedRiskTracking, true, true, true, true, true, true, true, true, dpi)
 	if err != nil {
 		handleErrorInServiceCall(err, context)
 		return
 	}
-	err = ioutil.WriteFile(tmpOutputDir+"/threagile.yaml", []byte(yamlText), 0400)
+	err = os.WriteFile(tmpOutputDir+"/threagile.yaml", []byte(yamlText), 0400)
 	if err != nil {
 		handleErrorInServiceCall(err, context)
 		return
@@ -2010,19 +2008,19 @@ func streamResponse(context *gin.Context, responseType responseType) {
 	if !ok {
 		return
 	}
-	tmpModelFile, err := ioutil.TempFile(model.TempFolder, "threagile-render-*")
+	tmpModelFile, err := os.CreateTemp(model.TempFolder, "threagile-render-*")
 	if err != nil {
 		handleErrorInServiceCall(err, context)
 		return
 	}
-	defer os.Remove(tmpModelFile.Name())
-	tmpOutputDir, err := ioutil.TempDir(model.TempFolder, "threagile-render-")
+	defer func() { _ = os.Remove(tmpModelFile.Name()) }()
+	tmpOutputDir, err := os.MkdirTemp(model.TempFolder, "threagile-render-")
 	if err != nil {
 		handleErrorInServiceCall(err, context)
 		return
 	}
-	defer os.RemoveAll(tmpOutputDir)
-	err = ioutil.WriteFile(tmpModelFile.Name(), []byte(yamlText), 0400)
+	defer func() { _ = os.RemoveAll(tmpOutputDir) }()
+	err = os.WriteFile(tmpModelFile.Name(), []byte(yamlText), 0400)
 	if responseType == dataFlowDiagram {
 		doItViaRuntimeCall(tmpModelFile.Name(), tmpOutputDir, *executeModelMacro, *raaPlugin, *riskRulesPlugins, *skipRiskRules, *ignoreOrphanedRiskTracking, true, false, false, false, false, false, false, false, dpi)
 		if err != nil {
@@ -2064,7 +2062,7 @@ func streamResponse(context *gin.Context, responseType responseType) {
 			handleErrorInServiceCall(err, context)
 			return
 		}
-		json, err := ioutil.ReadFile(tmpOutputDir + "/" + jsonRisksFilename)
+		json, err := os.ReadFile(tmpOutputDir + "/" + jsonRisksFilename)
 		if err != nil {
 			handleErrorInServiceCall(err, context)
 			return
@@ -2076,7 +2074,7 @@ func streamResponse(context *gin.Context, responseType responseType) {
 			handleErrorInServiceCall(err, context)
 			return
 		}
-		json, err := ioutil.ReadFile(tmpOutputDir + "/" + jsonTechnicalAssetsFilename)
+		json, err := os.ReadFile(tmpOutputDir + "/" + jsonTechnicalAssetsFilename)
 		if err != nil {
 			handleErrorInServiceCall(err, context)
 			return
@@ -2088,7 +2086,7 @@ func streamResponse(context *gin.Context, responseType responseType) {
 			handleErrorInServiceCall(err, context)
 			return
 		}
-		json, err := ioutil.ReadFile(tmpOutputDir + "/" + jsonStatsFilename)
+		json, err := os.ReadFile(tmpOutputDir + "/" + jsonStatsFilename)
 		if err != nil {
 			handleErrorInServiceCall(err, context)
 			return
@@ -2106,14 +2104,14 @@ func importModel(context *gin.Context) {
 	lockFolder(folderNameOfKey)
 	defer unlockFolder(folderNameOfKey)
 
-	uuid := context.Param("model-id") // UUID is syntactically validated in readModel+checkModelFolder (next line) via uuid.Parse(modelUUID)
-	_, _, ok = readModel(context, uuid, key, folderNameOfKey)
+	aUuid := context.Param("model-id") // UUID is syntactically validated in readModel+checkModelFolder (next line) via uuid.Parse(modelUUID)
+	_, _, ok = readModel(context, aUuid, key, folderNameOfKey)
 	if ok {
 		// first analyze it simply by executing the full risk process (just discard the result) to ensure that everything would work
 		yamlContent, ok := execute(context, true)
 		if ok {
 			// if we're here, then no problem was raised, so ok to proceed
-			ok = writeModelYAML(context, string(yamlContent), key, folderNameForModel(folderNameOfKey, uuid), "Model Import", false)
+			ok = writeModelYAML(context, string(yamlContent), key, folderNameForModel(folderNameOfKey, aUuid), "Model Import", false)
 			if ok {
 				context.JSON(http.StatusCreated, gin.H{
 					"message": "model imported",
@@ -2125,7 +2123,7 @@ func importModel(context *gin.Context) {
 
 func stats(context *gin.Context) {
 	keyCount, modelCount := 0, 0
-	keyFolders, err := ioutil.ReadDir(baseFolder)
+	keyFolders, err := os.ReadDir(baseFolder)
 	if err != nil {
 		log.Println(err)
 		context.JSON(http.StatusInternalServerError, gin.H{
@@ -2136,7 +2134,7 @@ func stats(context *gin.Context) {
 	for _, keyFolder := range keyFolders {
 		if len(keyFolder.Name()) == 128 { // it's a sha512 token hash probably, so count it as token folder for the stats
 			keyCount++
-			modelFolders, err := ioutil.ReadDir(baseFolder + "/" + keyFolder.Name())
+			modelFolders, err := os.ReadDir(baseFolder + "/" + keyFolder.Name())
 			if err != nil {
 				log.Println(err)
 				context.JSON(http.StatusInternalServerError, gin.H{
@@ -2170,7 +2168,7 @@ func getDataAsset(context *gin.Context) {
 	modelInput, _, ok := readModel(context, context.Param("model-id"), key, folderNameOfKey)
 	if ok {
 		// yes, here keyed by title in YAML for better readability in the YAML file itself
-		for title, dataAsset := range modelInput.Data_assets {
+		for title, dataAsset := range modelInput.DataAssets {
 			if dataAsset.ID == context.Param("data-asset-id") {
 				context.JSON(http.StatusOK, gin.H{
 					title: dataAsset,
@@ -2195,81 +2193,81 @@ func deleteDataAsset(context *gin.Context) {
 	if ok {
 		referencesDeleted := false
 		// yes, here keyed by title in YAML for better readability in the YAML file itself
-		for title, dataAsset := range modelInput.Data_assets {
+		for title, dataAsset := range modelInput.DataAssets {
 			if dataAsset.ID == context.Param("data-asset-id") {
 				// also remove all usages of this data asset !!
-				for _, techAsset := range modelInput.Technical_assets {
-					if techAsset.Data_assets_processed != nil {
-						for i, parsedChangeCandidateAsset := range techAsset.Data_assets_processed {
+				for _, techAsset := range modelInput.TechnicalAssets {
+					if techAsset.DataAssetsProcessed != nil {
+						for i, parsedChangeCandidateAsset := range techAsset.DataAssetsProcessed {
 							referencedAsset := fmt.Sprintf("%v", parsedChangeCandidateAsset)
 							if referencedAsset == dataAsset.ID { // apply the removal
 								referencesDeleted = true
 								// Remove the element at index i
 								// TODO needs more testing
-								copy(techAsset.Data_assets_processed[i:], techAsset.Data_assets_processed[i+1:])                           // Shift a[i+1:] left one index.
-								techAsset.Data_assets_processed[len(techAsset.Data_assets_processed)-1] = ""                               // Erase last element (write zero value).
-								techAsset.Data_assets_processed = techAsset.Data_assets_processed[:len(techAsset.Data_assets_processed)-1] // Truncate slice.
+								copy(techAsset.DataAssetsProcessed[i:], techAsset.DataAssetsProcessed[i+1:])                         // Shift a[i+1:] left one index.
+								techAsset.DataAssetsProcessed[len(techAsset.DataAssetsProcessed)-1] = ""                             // Erase last element (write zero value).
+								techAsset.DataAssetsProcessed = techAsset.DataAssetsProcessed[:len(techAsset.DataAssetsProcessed)-1] // Truncate slice.
 							}
 						}
 					}
-					if techAsset.Data_assets_stored != nil {
-						for i, parsedChangeCandidateAsset := range techAsset.Data_assets_stored {
+					if techAsset.DataAssetsStored != nil {
+						for i, parsedChangeCandidateAsset := range techAsset.DataAssetsStored {
 							referencedAsset := fmt.Sprintf("%v", parsedChangeCandidateAsset)
 							if referencedAsset == dataAsset.ID { // apply the removal
 								referencesDeleted = true
 								// Remove the element at index i
 								// TODO needs more testing
-								copy(techAsset.Data_assets_stored[i:], techAsset.Data_assets_stored[i+1:])                        // Shift a[i+1:] left one index.
-								techAsset.Data_assets_stored[len(techAsset.Data_assets_stored)-1] = ""                            // Erase last element (write zero value).
-								techAsset.Data_assets_stored = techAsset.Data_assets_stored[:len(techAsset.Data_assets_stored)-1] // Truncate slice.
+								copy(techAsset.DataAssetsStored[i:], techAsset.DataAssetsStored[i+1:])                      // Shift a[i+1:] left one index.
+								techAsset.DataAssetsStored[len(techAsset.DataAssetsStored)-1] = ""                          // Erase last element (write zero value).
+								techAsset.DataAssetsStored = techAsset.DataAssetsStored[:len(techAsset.DataAssetsStored)-1] // Truncate slice.
 							}
 						}
 					}
-					if techAsset.Communication_links != nil {
-						for title, commLink := range techAsset.Communication_links {
-							for i, dataAssetSent := range commLink.Data_assets_sent {
+					if techAsset.CommunicationLinks != nil {
+						for title, commLink := range techAsset.CommunicationLinks {
+							for i, dataAssetSent := range commLink.DataAssetsSent {
 								referencedAsset := fmt.Sprintf("%v", dataAssetSent)
 								if referencedAsset == dataAsset.ID { // apply the removal
 									referencesDeleted = true
 									// Remove the element at index i
 									// TODO needs more testing
-									copy(techAsset.Communication_links[title].Data_assets_sent[i:], techAsset.Communication_links[title].Data_assets_sent[i+1:]) // Shift a[i+1:] left one index.
-									techAsset.Communication_links[title].Data_assets_sent[len(techAsset.Communication_links[title].Data_assets_sent)-1] = ""     // Erase last element (write zero value).
-									x := techAsset.Communication_links[title]
-									x.Data_assets_sent = techAsset.Communication_links[title].Data_assets_sent[:len(techAsset.Communication_links[title].Data_assets_sent)-1] // Truncate slice.
-									techAsset.Communication_links[title] = x
+									copy(techAsset.CommunicationLinks[title].DataAssetsSent[i:], techAsset.CommunicationLinks[title].DataAssetsSent[i+1:]) // Shift a[i+1:] left one index.
+									techAsset.CommunicationLinks[title].DataAssetsSent[len(techAsset.CommunicationLinks[title].DataAssetsSent)-1] = ""     // Erase last element (write zero value).
+									x := techAsset.CommunicationLinks[title]
+									x.DataAssetsSent = techAsset.CommunicationLinks[title].DataAssetsSent[:len(techAsset.CommunicationLinks[title].DataAssetsSent)-1] // Truncate slice.
+									techAsset.CommunicationLinks[title] = x
 								}
 							}
-							for i, dataAssetReceived := range commLink.Data_assets_received {
+							for i, dataAssetReceived := range commLink.DataAssetsReceived {
 								referencedAsset := fmt.Sprintf("%v", dataAssetReceived)
 								if referencedAsset == dataAsset.ID { // apply the removal
 									referencesDeleted = true
 									// Remove the element at index i
 									// TODO needs more testing
-									copy(techAsset.Communication_links[title].Data_assets_received[i:], techAsset.Communication_links[title].Data_assets_received[i+1:]) // Shift a[i+1:] left one index.
-									techAsset.Communication_links[title].Data_assets_received[len(techAsset.Communication_links[title].Data_assets_received)-1] = ""     // Erase last element (write zero value).
-									x := techAsset.Communication_links[title]
-									x.Data_assets_received = techAsset.Communication_links[title].Data_assets_received[:len(techAsset.Communication_links[title].Data_assets_received)-1] // Truncate slice.
-									techAsset.Communication_links[title] = x
+									copy(techAsset.CommunicationLinks[title].DataAssetsReceived[i:], techAsset.CommunicationLinks[title].DataAssetsReceived[i+1:]) // Shift a[i+1:] left one index.
+									techAsset.CommunicationLinks[title].DataAssetsReceived[len(techAsset.CommunicationLinks[title].DataAssetsReceived)-1] = ""     // Erase last element (write zero value).
+									x := techAsset.CommunicationLinks[title]
+									x.DataAssetsReceived = techAsset.CommunicationLinks[title].DataAssetsReceived[:len(techAsset.CommunicationLinks[title].DataAssetsReceived)-1] // Truncate slice.
+									techAsset.CommunicationLinks[title] = x
 								}
 							}
 						}
 					}
 				}
-				for indivRiskCatTitle, indivRiskCat := range modelInput.Individual_risk_categories {
-					if indivRiskCat.Risks_identified != nil {
-						for indivRiskInstanceTitle, indivRiskInstance := range indivRiskCat.Risks_identified {
-							if indivRiskInstance.Most_relevant_data_asset == dataAsset.ID { // apply the removal
+				for individualRiskCatTitle, individualRiskCat := range modelInput.IndividualRiskCategories {
+					if individualRiskCat.RisksIdentified != nil {
+						for individualRiskInstanceTitle, individualRiskInstance := range individualRiskCat.RisksIdentified {
+							if individualRiskInstance.MostRelevantDataAsset == dataAsset.ID { // apply the removal
 								referencesDeleted = true
-								x := modelInput.Individual_risk_categories[indivRiskCatTitle].Risks_identified[indivRiskInstanceTitle]
-								x.Most_relevant_data_asset = "" // TODO needs more testing
-								modelInput.Individual_risk_categories[indivRiskCatTitle].Risks_identified[indivRiskInstanceTitle] = x
+								x := modelInput.IndividualRiskCategories[individualRiskCatTitle].RisksIdentified[individualRiskInstanceTitle]
+								x.MostRelevantDataAsset = "" // TODO needs more testing
+								modelInput.IndividualRiskCategories[individualRiskCatTitle].RisksIdentified[individualRiskInstanceTitle] = x
 							}
 						}
 					}
 				}
 				// remove it itself
-				delete(modelInput.Data_assets, title)
+				delete(modelInput.DataAssets, title)
 				ok = writeModel(context, key, folderNameOfKey, &modelInput, "Data Asset Deletion")
 				if ok {
 					context.JSON(http.StatusOK, gin.H{
@@ -2297,7 +2295,7 @@ func setSharedRuntime(context *gin.Context) {
 	modelInput, _, ok := readModel(context, context.Param("model-id"), key, folderNameOfKey)
 	if ok {
 		// yes, here keyed by title in YAML for better readability in the YAML file itself
-		for title, sharedRuntime := range modelInput.Shared_runtimes {
+		for title, sharedRuntime := range modelInput.SharedRuntimes {
 			if sharedRuntime.ID == context.Param("shared-runtime-id") {
 				payload := payloadSharedRuntime{}
 				err := context.BindJSON(&payload)
@@ -2313,17 +2311,17 @@ func setSharedRuntime(context *gin.Context) {
 					return
 				}
 				// in order to also update the title, remove the shared runtime from the map and re-insert it (with new key)
-				delete(modelInput.Shared_runtimes, title)
-				modelInput.Shared_runtimes[payload.Title] = sharedRuntimeInput
+				delete(modelInput.SharedRuntimes, title)
+				modelInput.SharedRuntimes[payload.Title] = sharedRuntimeInput
 				idChanged := sharedRuntimeInput.ID != sharedRuntime.ID
 				if idChanged { // ID-CHANGE-PROPAGATION
-					for indivRiskCatTitle, indivRiskCat := range modelInput.Individual_risk_categories {
-						if indivRiskCat.Risks_identified != nil {
-							for indivRiskInstanceTitle, indivRiskInstance := range indivRiskCat.Risks_identified {
-								if indivRiskInstance.Most_relevant_shared_runtime == sharedRuntime.ID { // apply the ID change
-									x := modelInput.Individual_risk_categories[indivRiskCatTitle].Risks_identified[indivRiskInstanceTitle]
-									x.Most_relevant_shared_runtime = sharedRuntimeInput.ID // TODO needs more testing
-									modelInput.Individual_risk_categories[indivRiskCatTitle].Risks_identified[indivRiskInstanceTitle] = x
+					for individualRiskCatTitle, individualRiskCat := range modelInput.IndividualRiskCategories {
+						if individualRiskCat.RisksIdentified != nil {
+							for individualRiskInstanceTitle, individualRiskInstance := range individualRiskCat.RisksIdentified {
+								if individualRiskInstance.MostRelevantSharedRuntime == sharedRuntime.ID { // apply the ID change
+									x := modelInput.IndividualRiskCategories[individualRiskCatTitle].RisksIdentified[individualRiskInstanceTitle]
+									x.MostRelevantSharedRuntime = sharedRuntimeInput.ID // TODO needs more testing
+									modelInput.IndividualRiskCategories[individualRiskCatTitle].RisksIdentified[individualRiskInstanceTitle] = x
 								}
 							}
 						}
@@ -2356,7 +2354,7 @@ func setDataAsset(context *gin.Context) {
 	modelInput, _, ok := readModel(context, context.Param("model-id"), key, folderNameOfKey)
 	if ok {
 		// yes, here keyed by title in YAML for better readability in the YAML file itself
-		for title, dataAsset := range modelInput.Data_assets {
+		for title, dataAsset := range modelInput.DataAssets {
 			if dataAsset.ID == context.Param("data-asset-id") {
 				payload := payloadDataAsset{}
 				err := context.BindJSON(&payload)
@@ -2372,52 +2370,52 @@ func setDataAsset(context *gin.Context) {
 					return
 				}
 				// in order to also update the title, remove the asset from the map and re-insert it (with new key)
-				delete(modelInput.Data_assets, title)
-				modelInput.Data_assets[payload.Title] = dataAssetInput
+				delete(modelInput.DataAssets, title)
+				modelInput.DataAssets[payload.Title] = dataAssetInput
 				idChanged := dataAssetInput.ID != dataAsset.ID
 				if idChanged { // ID-CHANGE-PROPAGATION
 					// also update all usages to point to the new (changed) ID !!
-					for techAssetTitle, techAsset := range modelInput.Technical_assets {
-						if techAsset.Data_assets_processed != nil {
-							for i, parsedChangeCandidateAsset := range techAsset.Data_assets_processed {
+					for techAssetTitle, techAsset := range modelInput.TechnicalAssets {
+						if techAsset.DataAssetsProcessed != nil {
+							for i, parsedChangeCandidateAsset := range techAsset.DataAssetsProcessed {
 								referencedAsset := fmt.Sprintf("%v", parsedChangeCandidateAsset)
 								if referencedAsset == dataAsset.ID { // apply the ID change
-									modelInput.Technical_assets[techAssetTitle].Data_assets_processed[i] = dataAssetInput.ID
+									modelInput.TechnicalAssets[techAssetTitle].DataAssetsProcessed[i] = dataAssetInput.ID
 								}
 							}
 						}
-						if techAsset.Data_assets_stored != nil {
-							for i, parsedChangeCandidateAsset := range techAsset.Data_assets_stored {
+						if techAsset.DataAssetsStored != nil {
+							for i, parsedChangeCandidateAsset := range techAsset.DataAssetsStored {
 								referencedAsset := fmt.Sprintf("%v", parsedChangeCandidateAsset)
 								if referencedAsset == dataAsset.ID { // apply the ID change
-									modelInput.Technical_assets[techAssetTitle].Data_assets_stored[i] = dataAssetInput.ID
+									modelInput.TechnicalAssets[techAssetTitle].DataAssetsStored[i] = dataAssetInput.ID
 								}
 							}
 						}
-						if techAsset.Communication_links != nil {
-							for title, commLink := range techAsset.Communication_links {
-								for i, dataAssetSent := range commLink.Data_assets_sent {
+						if techAsset.CommunicationLinks != nil {
+							for title, commLink := range techAsset.CommunicationLinks {
+								for i, dataAssetSent := range commLink.DataAssetsSent {
 									referencedAsset := fmt.Sprintf("%v", dataAssetSent)
 									if referencedAsset == dataAsset.ID { // apply the ID change
-										modelInput.Technical_assets[techAssetTitle].Communication_links[title].Data_assets_sent[i] = dataAssetInput.ID
+										modelInput.TechnicalAssets[techAssetTitle].CommunicationLinks[title].DataAssetsSent[i] = dataAssetInput.ID
 									}
 								}
-								for i, dataAssetReceived := range commLink.Data_assets_received {
+								for i, dataAssetReceived := range commLink.DataAssetsReceived {
 									referencedAsset := fmt.Sprintf("%v", dataAssetReceived)
 									if referencedAsset == dataAsset.ID { // apply the ID change
-										modelInput.Technical_assets[techAssetTitle].Communication_links[title].Data_assets_received[i] = dataAssetInput.ID
+										modelInput.TechnicalAssets[techAssetTitle].CommunicationLinks[title].DataAssetsReceived[i] = dataAssetInput.ID
 									}
 								}
 							}
 						}
 					}
-					for indivRiskCatTitle, indivRiskCat := range modelInput.Individual_risk_categories {
-						if indivRiskCat.Risks_identified != nil {
-							for indivRiskInstanceTitle, indivRiskInstance := range indivRiskCat.Risks_identified {
-								if indivRiskInstance.Most_relevant_data_asset == dataAsset.ID { // apply the ID change
-									x := modelInput.Individual_risk_categories[indivRiskCatTitle].Risks_identified[indivRiskInstanceTitle]
-									x.Most_relevant_data_asset = dataAssetInput.ID // TODO needs more testing
-									modelInput.Individual_risk_categories[indivRiskCatTitle].Risks_identified[indivRiskInstanceTitle] = x
+					for individualRiskCatTitle, individualRiskCat := range modelInput.IndividualRiskCategories {
+						if individualRiskCat.RisksIdentified != nil {
+							for individualRiskInstanceTitle, individualRiskInstance := range individualRiskCat.RisksIdentified {
+								if individualRiskInstance.MostRelevantDataAsset == dataAsset.ID { // apply the ID change
+									x := modelInput.IndividualRiskCategories[individualRiskCatTitle].RisksIdentified[individualRiskInstanceTitle]
+									x.MostRelevantDataAsset = dataAssetInput.ID // TODO needs more testing
+									modelInput.IndividualRiskCategories[individualRiskCatTitle].RisksIdentified[individualRiskInstanceTitle] = x
 								}
 							}
 						}
@@ -2450,7 +2448,7 @@ func getSharedRuntime(context *gin.Context) {
 	modelInput, _, ok := readModel(context, context.Param("model-id"), key, folderNameOfKey)
 	if ok {
 		// yes, here keyed by title in YAML for better readability in the YAML file itself
-		for title, sharedRuntime := range modelInput.Shared_runtimes {
+		for title, sharedRuntime := range modelInput.SharedRuntimes {
 			if sharedRuntime.ID == context.Param("shared-runtime-id") {
 				context.JSON(http.StatusOK, gin.H{
 					title: sharedRuntime,
@@ -2483,14 +2481,14 @@ func createNewSharedRuntime(context *gin.Context) {
 			return
 		}
 		// yes, here keyed by title in YAML for better readability in the YAML file itself
-		if _, exists := modelInput.Shared_runtimes[payload.Title]; exists {
+		if _, exists := modelInput.SharedRuntimes[payload.Title]; exists {
 			context.JSON(http.StatusConflict, gin.H{
 				"error": "shared runtime with this title already exists",
 			})
 			return
 		}
-		// but later it will in memory keyed by it's "id", so do this uniqueness check also
-		for _, runtime := range modelInput.Shared_runtimes {
+		// but later it will in memory keyed by its "id", so do this uniqueness check also
+		for _, runtime := range modelInput.SharedRuntimes {
 			if runtime.ID == payload.Id {
 				context.JSON(http.StatusConflict, gin.H{
 					"error": "shared runtime with this id already exists",
@@ -2498,7 +2496,7 @@ func createNewSharedRuntime(context *gin.Context) {
 				return
 			}
 		}
-		if !checkTechnicalAssetsExisting(modelInput, payload.Technical_assets_running) {
+		if !checkTechnicalAssetsExisting(modelInput, payload.TechnicalAssetsRunning) {
 			context.JSON(http.StatusBadRequest, gin.H{
 				"error": "referenced technical asset does not exist",
 			})
@@ -2508,10 +2506,10 @@ func createNewSharedRuntime(context *gin.Context) {
 		if !ok {
 			return
 		}
-		if modelInput.Shared_runtimes == nil {
-			modelInput.Shared_runtimes = make(map[string]model.InputSharedRuntime)
+		if modelInput.SharedRuntimes == nil {
+			modelInput.SharedRuntimes = make(map[string]model.InputSharedRuntime)
 		}
-		modelInput.Shared_runtimes[payload.Title] = sharedRuntimeInput
+		modelInput.SharedRuntimes[payload.Title] = sharedRuntimeInput
 		ok = writeModel(context, key, folderNameOfKey, &modelInput, "Shared Runtime Creation")
 		if ok {
 			context.JSON(http.StatusOK, gin.H{
@@ -2525,7 +2523,7 @@ func createNewSharedRuntime(context *gin.Context) {
 func checkTechnicalAssetsExisting(modelInput model.ModelInput, techAssetIDs []string) (ok bool) {
 	for _, techAssetID := range techAssetIDs {
 		exists := false
-		for _, val := range modelInput.Technical_assets {
+		for _, val := range modelInput.TechnicalAssets {
 			if val.ID == techAssetID {
 				exists = true
 				break
@@ -2538,12 +2536,12 @@ func checkTechnicalAssetsExisting(modelInput model.ModelInput, techAssetIDs []st
 	return true
 }
 
-func populateSharedRuntime(context *gin.Context, payload payloadSharedRuntime) (sharedRuntimeInput model.InputSharedRuntime, ok bool) {
+func populateSharedRuntime(_ *gin.Context, payload payloadSharedRuntime) (sharedRuntimeInput model.InputSharedRuntime, ok bool) {
 	sharedRuntimeInput = model.InputSharedRuntime{
-		ID:                       payload.Id,
-		Description:              payload.Description,
-		Tags:                     lowerCaseAndTrim(payload.Tags),
-		Technical_assets_running: payload.Technical_assets_running,
+		ID:                     payload.Id,
+		Description:            payload.Description,
+		Tags:                   lowerCaseAndTrim(payload.Tags),
+		TechnicalAssetsRunning: payload.TechnicalAssetsRunning,
 	}
 	return sharedRuntimeInput, true
 }
@@ -2559,23 +2557,23 @@ func deleteSharedRuntime(context *gin.Context) {
 	if ok {
 		referencesDeleted := false
 		// yes, here keyed by title in YAML for better readability in the YAML file itself
-		for title, sharedRuntime := range modelInput.Shared_runtimes {
+		for title, sharedRuntime := range modelInput.SharedRuntimes {
 			if sharedRuntime.ID == context.Param("shared-runtime-id") {
 				// also remove all usages of this shared runtime !!
-				for indivRiskCatTitle, indivRiskCat := range modelInput.Individual_risk_categories {
-					if indivRiskCat.Risks_identified != nil {
-						for indivRiskInstanceTitle, indivRiskInstance := range indivRiskCat.Risks_identified {
-							if indivRiskInstance.Most_relevant_shared_runtime == sharedRuntime.ID { // apply the removal
+				for individualRiskCatTitle, individualRiskCat := range modelInput.IndividualRiskCategories {
+					if individualRiskCat.RisksIdentified != nil {
+						for individualRiskInstanceTitle, individualRiskInstance := range individualRiskCat.RisksIdentified {
+							if individualRiskInstance.MostRelevantSharedRuntime == sharedRuntime.ID { // apply the removal
 								referencesDeleted = true
-								x := modelInput.Individual_risk_categories[indivRiskCatTitle].Risks_identified[indivRiskInstanceTitle]
-								x.Most_relevant_shared_runtime = "" // TODO needs more testing
-								modelInput.Individual_risk_categories[indivRiskCatTitle].Risks_identified[indivRiskInstanceTitle] = x
+								x := modelInput.IndividualRiskCategories[individualRiskCatTitle].RisksIdentified[individualRiskInstanceTitle]
+								x.MostRelevantSharedRuntime = "" // TODO needs more testing
+								modelInput.IndividualRiskCategories[individualRiskCatTitle].RisksIdentified[individualRiskInstanceTitle] = x
 							}
 						}
 					}
 				}
 				// remove it itself
-				delete(modelInput.Shared_runtimes, title)
+				delete(modelInput.SharedRuntimes, title)
 				ok = writeModel(context, key, folderNameOfKey, &modelInput, "Shared Runtime Deletion")
 				if ok {
 					context.JSON(http.StatusOK, gin.H{
@@ -2612,14 +2610,14 @@ func createNewDataAsset(context *gin.Context) {
 			return
 		}
 		// yes, here keyed by title in YAML for better readability in the YAML file itself
-		if _, exists := modelInput.Data_assets[payload.Title]; exists {
+		if _, exists := modelInput.DataAssets[payload.Title]; exists {
 			context.JSON(http.StatusConflict, gin.H{
 				"error": "data asset with this title already exists",
 			})
 			return
 		}
-		// but later it will in memory keyed by it's "id", so do this uniqueness check also
-		for _, asset := range modelInput.Data_assets {
+		// but later it will in memory keyed by its "id", so do this uniqueness check also
+		for _, asset := range modelInput.DataAssets {
 			if asset.ID == payload.Id {
 				context.JSON(http.StatusConflict, gin.H{
 					"error": "data asset with this id already exists",
@@ -2631,10 +2629,10 @@ func createNewDataAsset(context *gin.Context) {
 		if !ok {
 			return
 		}
-		if modelInput.Data_assets == nil {
-			modelInput.Data_assets = make(map[string]model.InputDataAsset)
+		if modelInput.DataAssets == nil {
+			modelInput.DataAssets = make(map[string]model.InputDataAsset)
 		}
-		modelInput.Data_assets[payload.Title] = dataAssetInput
+		modelInput.DataAssets[payload.Title] = dataAssetInput
 		ok = writeModel(context, key, folderNameOfKey, &modelInput, "Data Asset Creation")
 		if ok {
 			context.JSON(http.StatusOK, gin.H{
@@ -2672,17 +2670,17 @@ func populateDataAsset(context *gin.Context, payload payloadDataAsset) (dataAsse
 		return dataAssetInput, false
 	}
 	dataAssetInput = model.InputDataAsset{
-		ID:                       payload.Id,
-		Description:              payload.Description,
-		Usage:                    usage.String(),
-		Tags:                     lowerCaseAndTrim(payload.Tags),
-		Origin:                   payload.Origin,
-		Owner:                    payload.Owner,
-		Quantity:                 quantity.String(),
-		Confidentiality:          confidentiality.String(),
-		Integrity:                integrity.String(),
-		Availability:             availability.String(),
-		Justification_cia_rating: payload.Justification_cia_rating,
+		ID:                     payload.Id,
+		Description:            payload.Description,
+		Usage:                  usage.String(),
+		Tags:                   lowerCaseAndTrim(payload.Tags),
+		Origin:                 payload.Origin,
+		Owner:                  payload.Owner,
+		Quantity:               quantity.String(),
+		Confidentiality:        confidentiality.String(),
+		Integrity:              integrity.String(),
+		Availability:           availability.String(),
+		JustificationCiaRating: payload.JustificationCiaRating,
 	}
 	return dataAssetInput, true
 }
@@ -2694,9 +2692,9 @@ func getDataAssets(context *gin.Context) {
 	}
 	lockFolder(folderNameOfKey)
 	defer unlockFolder(folderNameOfKey)
-	model, _, ok := readModel(context, context.Param("model-id"), key, folderNameOfKey)
+	aModel, _, ok := readModel(context, context.Param("model-id"), key, folderNameOfKey)
 	if ok {
-		context.JSON(http.StatusOK, model.Data_assets)
+		context.JSON(http.StatusOK, aModel.DataAssets)
 	}
 }
 
@@ -2707,9 +2705,9 @@ func getTrustBoundaries(context *gin.Context) {
 	}
 	lockFolder(folderNameOfKey)
 	defer unlockFolder(folderNameOfKey)
-	model, _, ok := readModel(context, context.Param("model-id"), key, folderNameOfKey)
+	aModel, _, ok := readModel(context, context.Param("model-id"), key, folderNameOfKey)
 	if ok {
-		context.JSON(http.StatusOK, model.Trust_boundaries)
+		context.JSON(http.StatusOK, aModel.TrustBoundaries)
 	}
 }
 
@@ -2720,9 +2718,9 @@ func getSharedRuntimes(context *gin.Context) {
 	}
 	lockFolder(folderNameOfKey)
 	defer unlockFolder(folderNameOfKey)
-	model, _, ok := readModel(context, context.Param("model-id"), key, folderNameOfKey)
+	aModel, _, ok := readModel(context, context.Param("model-id"), key, folderNameOfKey)
 	if ok {
-		context.JSON(http.StatusOK, model.Shared_runtimes)
+		context.JSON(http.StatusOK, aModel.SharedRuntimes)
 	}
 }
 
@@ -2743,9 +2741,9 @@ func getModel(context *gin.Context) {
 	defer unlockFolder(folderNameOfKey)
 	_, yamlText, ok := readModel(context, context.Param("model-id"), key, folderNameOfKey)
 	if ok {
-		tmpResultFile, err := ioutil.TempFile(model.TempFolder, "threagile-*.yaml")
+		tmpResultFile, err := os.CreateTemp(model.TempFolder, "threagile-*.yaml")
 		checkErr(err)
-		err = ioutil.WriteFile(tmpResultFile.Name(), []byte(yamlText), 0400)
+		err = os.WriteFile(tmpResultFile.Name(), []byte(yamlText), 0400)
 		if err != nil {
 			log.Println(err)
 			context.JSON(http.StatusInternalServerError, gin.H{
@@ -2753,16 +2751,16 @@ func getModel(context *gin.Context) {
 			})
 			return
 		}
-		defer os.Remove(tmpResultFile.Name())
+		defer func() { _ = os.Remove(tmpResultFile.Name()) }()
 		context.FileAttachment(tmpResultFile.Name(), "threagile.yaml")
 	}
 }
 
 type payloadModels struct {
-	ID                 string    `json:"id"`
-	Title              string    `json:"title"`
-	Timestamp_created  time.Time `json:"timestamp_created"`
-	Timestamp_modified time.Time `json:"timestamp_modified"`
+	ID                string    `json:"id"`
+	Title             string    `json:"title"`
+	TimestampCreated  time.Time `json:"timestamp_created"`
+	TimestampModified time.Time `json:"timestamp_modified"`
 }
 
 type payloadCover struct {
@@ -2772,10 +2770,10 @@ type payloadCover struct {
 }
 
 type payloadOverview struct {
-	Management_summary_comment string         `json:"management_summary_comment"`
-	Business_criticality       string         `json:"business_criticality"`
-	Business_overview          model.Overview `json:"business_overview"`
-	Technical_overview         model.Overview `json:"technical_overview"`
+	ManagementSummaryComment string         `json:"management_summary_comment"`
+	BusinessCriticality      string         `json:"business_criticality"`
+	BusinessOverview         model.Overview `json:"business_overview"`
+	TechnicalOverview        model.Overview `json:"technical_overview"`
 }
 
 type payloadAbuseCases map[string]string
@@ -2783,26 +2781,26 @@ type payloadAbuseCases map[string]string
 type payloadSecurityRequirements map[string]string
 
 type payloadDataAsset struct {
-	Title                    string   `json:"title"`
-	Id                       string   `json:"id"`
-	Description              string   `json:"description"`
-	Usage                    string   `json:"usage"`
-	Tags                     []string `json:"tags"`
-	Origin                   string   `json:"origin"`
-	Owner                    string   `json:"owner"`
-	Quantity                 string   `json:"quantity"`
-	Confidentiality          string   `json:"confidentiality"`
-	Integrity                string   `json:"integrity"`
-	Availability             string   `json:"availability"`
-	Justification_cia_rating string   `json:"justification_cia_rating"`
+	Title                  string   `json:"title"`
+	Id                     string   `json:"id"`
+	Description            string   `json:"description"`
+	Usage                  string   `json:"usage"`
+	Tags                   []string `json:"tags"`
+	Origin                 string   `json:"origin"`
+	Owner                  string   `json:"owner"`
+	Quantity               string   `json:"quantity"`
+	Confidentiality        string   `json:"confidentiality"`
+	Integrity              string   `json:"integrity"`
+	Availability           string   `json:"availability"`
+	JustificationCiaRating string   `json:"justification_cia_rating"`
 }
 
 type payloadSharedRuntime struct {
-	Title                    string   `json:"title"`
-	Id                       string   `json:"id"`
-	Description              string   `json:"description"`
-	Tags                     []string `json:"tags"`
-	Technical_assets_running []string `json:"technical_assets_running"`
+	Title                  string   `json:"title"`
+	Id                     string   `json:"id"`
+	Description            string   `json:"description"`
+	Tags                   []string `json:"tags"`
+	TechnicalAssetsRunning []string `json:"technical_assets_running"`
 }
 
 func setSecurityRequirements(context *gin.Context) {
@@ -2823,7 +2821,7 @@ func setSecurityRequirements(context *gin.Context) {
 			})
 			return
 		}
-		modelInput.Security_requirements = payload
+		modelInput.SecurityRequirements = payload
 		ok = writeModel(context, key, folderNameOfKey, &modelInput, "Security Requirements Update")
 		if ok {
 			context.JSON(http.StatusOK, gin.H{
@@ -2840,9 +2838,9 @@ func getSecurityRequirements(context *gin.Context) {
 	}
 	lockFolder(folderNameOfKey)
 	defer unlockFolder(folderNameOfKey)
-	model, _, ok := readModel(context, context.Param("model-id"), key, folderNameOfKey)
+	aModel, _, ok := readModel(context, context.Param("model-id"), key, folderNameOfKey)
 	if ok {
-		context.JSON(http.StatusOK, model.Security_requirements)
+		context.JSON(http.StatusOK, aModel.SecurityRequirements)
 	}
 }
 
@@ -2864,7 +2862,7 @@ func setAbuseCases(context *gin.Context) {
 			})
 			return
 		}
-		modelInput.Abuse_cases = payload
+		modelInput.AbuseCases = payload
 		ok = writeModel(context, key, folderNameOfKey, &modelInput, "Abuse Cases Update")
 		if ok {
 			context.JSON(http.StatusOK, gin.H{
@@ -2881,9 +2879,9 @@ func getAbuseCases(context *gin.Context) {
 	}
 	lockFolder(folderNameOfKey)
 	defer unlockFolder(folderNameOfKey)
-	model, _, ok := readModel(context, context.Param("model-id"), key, folderNameOfKey)
+	aModel, _, ok := readModel(context, context.Param("model-id"), key, folderNameOfKey)
 	if ok {
-		context.JSON(http.StatusOK, model.Abuse_cases)
+		context.JSON(http.StatusOK, aModel.AbuseCases)
 	}
 }
 
@@ -2905,17 +2903,17 @@ func setOverview(context *gin.Context) {
 			})
 			return
 		}
-		criticality, err := model.ParseCriticality(payload.Business_criticality)
+		criticality, err := model.ParseCriticality(payload.BusinessCriticality)
 		if err != nil {
 			handleErrorInServiceCall(err, context)
 			return
 		}
-		modelInput.Management_summary_comment = payload.Management_summary_comment
-		modelInput.Business_criticality = criticality.String()
-		modelInput.Business_overview.Description = payload.Business_overview.Description
-		modelInput.Business_overview.Images = payload.Business_overview.Images
-		modelInput.Technical_overview.Description = payload.Technical_overview.Description
-		modelInput.Technical_overview.Images = payload.Technical_overview.Images
+		modelInput.ManagementSummaryComment = payload.ManagementSummaryComment
+		modelInput.BusinessCriticality = criticality.String()
+		modelInput.BusinessOverview.Description = payload.BusinessOverview.Description
+		modelInput.BusinessOverview.Images = payload.BusinessOverview.Images
+		modelInput.TechnicalOverview.Description = payload.TechnicalOverview.Description
+		modelInput.TechnicalOverview.Images = payload.TechnicalOverview.Images
 		ok = writeModel(context, key, folderNameOfKey, &modelInput, "Overview Update")
 		if ok {
 			context.JSON(http.StatusOK, gin.H{
@@ -2939,13 +2937,13 @@ func getOverview(context *gin.Context) {
 	}
 	lockFolder(folderNameOfKey)
 	defer unlockFolder(folderNameOfKey)
-	model, _, ok := readModel(context, context.Param("model-id"), key, folderNameOfKey)
+	aModel, _, ok := readModel(context, context.Param("model-id"), key, folderNameOfKey)
 	if ok {
 		context.JSON(http.StatusOK, gin.H{
-			"management_summary_comment": model.Management_summary_comment,
-			"business_criticality":       model.Business_criticality,
-			"business_overview":          model.Business_overview,
-			"technical_overview":         model.Technical_overview,
+			"management_summary_comment": aModel.ManagementSummaryComment,
+			"business_criticality":       aModel.BusinessCriticality,
+			"business_overview":          aModel.BusinessOverview,
+			"technical_overview":         aModel.TechnicalOverview,
 		})
 	}
 }
@@ -2989,12 +2987,12 @@ func getCover(context *gin.Context) {
 	}
 	lockFolder(folderNameOfKey)
 	defer unlockFolder(folderNameOfKey)
-	model, _, ok := readModel(context, context.Param("model-id"), key, folderNameOfKey)
+	aModel, _, ok := readModel(context, context.Param("model-id"), key, folderNameOfKey)
 	if ok {
 		context.JSON(http.StatusOK, gin.H{
-			"title":  model.Title,
-			"date":   model.Date,
-			"author": model.Author,
+			"title":  aModel.Title,
+			"date":   aModel.Date,
+			"author": aModel.Author,
 		})
 	}
 }
@@ -3012,8 +3010,8 @@ func createNewModel(context *gin.Context) {
 	lockFolder(folderNameOfKey)
 	defer unlockFolder(folderNameOfKey)
 
-	uuid := uuid.New().String()
-	err := os.Mkdir(folderNameForModel(folderNameOfKey, uuid), 0700)
+	aUuid := uuid.New().String()
+	err := os.Mkdir(folderNameForModel(folderNameOfKey, aUuid), 0700)
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{
 			"error": "unable to create model",
@@ -3021,7 +3019,7 @@ func createNewModel(context *gin.Context) {
 		return
 	}
 
-	yaml := `title: New Threat Model
+	aYaml := `title: New Threat Model
 threagile_version: ` + model.ThreagileVersion + `
 author:
   name: ""
@@ -3052,11 +3050,11 @@ diagram_tweak_suppress_edge_labels: false
 diagram_tweak_invisible_connections_between_assets: []
 diagram_tweak_same_rank_assets: []`
 
-	ok = writeModelYAML(context, yaml, key, folderNameForModel(folderNameOfKey, uuid), "New Model Creation", true)
+	ok = writeModelYAML(context, aYaml, key, folderNameForModel(folderNameOfKey, aUuid), "New Model Creation", true)
 	if ok {
 		context.JSON(http.StatusCreated, gin.H{
 			"message": "model created",
-			"id":      uuid,
+			"id":      aUuid,
 		})
 	}
 }
@@ -3070,7 +3068,7 @@ func listModels(context *gin.Context) { // TODO currently returns error when any
 	defer unlockFolder(folderNameOfKey)
 
 	result := make([]payloadModels, 0)
-	modelFolders, err := ioutil.ReadDir(folderNameOfKey)
+	modelFolders, err := os.ReadDir(folderNameOfKey)
 	if err != nil {
 		log.Println(err)
 		context.JSON(http.StatusNotFound, gin.H{
@@ -3078,9 +3076,9 @@ func listModels(context *gin.Context) { // TODO currently returns error when any
 		})
 		return
 	}
-	for _, fileInfo := range modelFolders {
-		if fileInfo.IsDir() {
-			modelStat, err := os.Stat(folderNameOfKey + "/" + fileInfo.Name() + "/threagile.yaml")
+	for _, dirEntry := range modelFolders {
+		if dirEntry.IsDir() {
+			modelStat, err := os.Stat(folderNameOfKey + "/" + dirEntry.Name() + "/threagile.yaml")
 			if err != nil {
 				log.Println(err)
 				context.JSON(http.StatusNotFound, gin.H{
@@ -3088,15 +3086,23 @@ func listModels(context *gin.Context) { // TODO currently returns error when any
 				})
 				return
 			}
-			model, _, ok := readModel(context, fileInfo.Name(), key, folderNameOfKey)
+			aModel, _, ok := readModel(context, dirEntry.Name(), key, folderNameOfKey)
 			if !ok {
 				return
 			}
+			fileInfo, err := dirEntry.Info()
+			if err != nil {
+				log.Println(err)
+				context.JSON(http.StatusNotFound, gin.H{
+					"error": "unable to get file info",
+				})
+				return
+			}
 			result = append(result, payloadModels{
-				ID:                 fileInfo.Name(),
-				Title:              model.Title,
-				Timestamp_created:  fileInfo.ModTime(),
-				Timestamp_modified: modelStat.ModTime(),
+				ID:                dirEntry.Name(),
+				Title:             aModel.Title,
+				TimestampCreated:  fileInfo.ModTime(),
+				TimestampModified: modelStat.ModTime(),
 			})
 		}
 	}
@@ -3156,7 +3162,7 @@ func readModel(context *gin.Context, modelUUID string, key []byte, folderNameOfK
 		})
 		return modelInputResult, yamlText, false
 	}
-	aesgcm, err := cipher.NewGCM(block)
+	aesGcm, err := cipher.NewGCM(block)
 	if err != nil {
 		log.Println(err)
 		context.JSON(http.StatusInternalServerError, gin.H{
@@ -3165,7 +3171,7 @@ func readModel(context *gin.Context, modelUUID string, key []byte, folderNameOfK
 		return modelInputResult, yamlText, false
 	}
 
-	fileBytes, err := ioutil.ReadFile(modelFolder + "/threagile.yaml")
+	fileBytes, err := os.ReadFile(modelFolder + "/threagile.yaml")
 	if err != nil {
 		log.Println(err)
 		context.JSON(http.StatusInternalServerError, gin.H{
@@ -3176,7 +3182,7 @@ func readModel(context *gin.Context, modelUUID string, key []byte, folderNameOfK
 
 	nonce := fileBytes[0:12]
 	ciphertext := fileBytes[12:]
-	plaintext, err := aesgcm.Open(nil, nonce, ciphertext, nil)
+	plaintext, err := aesGcm.Open(nil, nonce, ciphertext, nil)
 	if err != nil {
 		log.Println(err)
 		context.JSON(http.StatusInternalServerError, gin.H{
@@ -3194,7 +3200,7 @@ func readModel(context *gin.Context, modelUUID string, key []byte, folderNameOfK
 		return modelInputResult, yamlText, false
 	}
 	buf := new(bytes.Buffer)
-	buf.ReadFrom(r)
+	_, _ = buf.ReadFrom(r)
 	modelInput := model.ModelInput{}
 	yamlBytes := buf.Bytes()
 	err = yaml.Unmarshal(yamlBytes, &modelInput)
@@ -3211,7 +3217,7 @@ func readModel(context *gin.Context, modelUUID string, key []byte, folderNameOfK
 func writeModel(context *gin.Context, key []byte, folderNameOfKey string, modelInput *model.ModelInput, changeReasonForHistory string) (ok bool) {
 	modelFolder, ok := checkModelFolder(context, context.Param("model-id"), folderNameOfKey)
 	if ok {
-		modelInput.Threagile_version = model.ThreagileVersion
+		modelInput.ThreagileVersion = model.ThreagileVersion
 		yamlBytes, err := yaml.Marshal(modelInput)
 		if err != nil {
 			log.Println(err)
@@ -3234,8 +3240,8 @@ func writeModelYAML(context *gin.Context, yaml string, key []byte, modelFolder s
 	}
 	var b bytes.Buffer
 	w := gzip.NewWriter(&b)
-	w.Write([]byte(yaml))
-	w.Close()
+	_, _ = w.Write([]byte(yaml))
+	_ = w.Close()
 	plaintext := b.Bytes()
 	cryptoKey := generateKeyFromAlreadyStrongRandomInput(key)
 	block, err := aes.NewCipher(cryptoKey)
@@ -3255,7 +3261,7 @@ func writeModelYAML(context *gin.Context, yaml string, key []byte, modelFolder s
 		})
 		return false
 	}
-	aesgcm, err := cipher.NewGCM(block)
+	aesGcm, err := cipher.NewGCM(block)
 	if err != nil {
 		log.Println(err)
 		context.JSON(http.StatusInternalServerError, gin.H{
@@ -3263,7 +3269,7 @@ func writeModelYAML(context *gin.Context, yaml string, key []byte, modelFolder s
 		})
 		return false
 	}
-	ciphertext := aesgcm.Seal(nil, nonce, plaintext, nil)
+	ciphertext := aesGcm.Seal(nil, nonce, plaintext, nil)
 	if !skipBackup {
 		err = backupModelToHistory(modelFolder, changeReasonForHistory)
 		if err != nil {
@@ -3282,9 +3288,9 @@ func writeModelYAML(context *gin.Context, yaml string, key []byte, modelFolder s
 		})
 		return false
 	}
-	f.Write(nonce)
-	f.Write(ciphertext)
-	f.Close()
+	_, _ = f.Write(nonce)
+	_, _ = f.Write(ciphertext)
+	_ = f.Close()
 	return true
 }
 
@@ -3296,17 +3302,17 @@ func backupModelToHistory(modelFolder string, changeReasonForHistory string) (er
 			return err
 		}
 	}
-	input, err := ioutil.ReadFile(modelFolder + "/threagile.yaml")
+	input, err := os.ReadFile(modelFolder + "/threagile.yaml")
 	if err != nil {
 		return err
 	}
 	historyFile := historyFolder + "/" + time.Now().Format("2006-01-02 15:04:05") + " " + changeReasonForHistory + ".backup"
-	err = ioutil.WriteFile(historyFile, input, 0400)
+	err = os.WriteFile(historyFile, input, 0400)
 	if err != nil {
 		return err
 	}
 	// now delete any old files if over limit to keep
-	files, err := ioutil.ReadDir(historyFolder)
+	files, err := os.ReadDir(historyFolder)
 	if err != nil {
 		return err
 	}
@@ -3366,7 +3372,7 @@ func checkObjectCreationThrottler(context *gin.Context, typeName string) bool {
 	// remove all elements older than 3 minutes (= 180000000000 ns)
 	now := time.Now().UnixNano()
 	cutoff := now - 180000000000
-	for keyCheck, _ := range createdObjectsThrottler {
+	for keyCheck := range createdObjectsThrottler {
 		for i := 0; i < len(createdObjectsThrottler[keyCheck]); i++ {
 			if createdObjectsThrottler[keyCheck][i] < cutoff {
 				// Remove the element at index i from slice (safe while looping using i as iterator)
@@ -3503,7 +3509,7 @@ func checkTokenToFolderName(context *gin.Context) (folderNameOfKey string, key [
 			})
 			return folderNameOfKey, key, false
 		}
-		timeoutStruct.lastAcessedNanotime = time.Now().UnixNano()
+		timeoutStruct.lastAccessedNanoTime = time.Now().UnixNano()
 		return folderNameOfKey, key, true
 	} else {
 		context.JSON(http.StatusNotFound, gin.H{
@@ -3597,7 +3603,7 @@ func parseCommandlineArgs() {
 	license := flag.Bool("print-license", false, "print license information")
 	flag.Usage = func() {
 		printLogo()
-		fmt.Fprintf(os.Stderr, "Usage: threagile [options]")
+		_, _ = fmt.Fprintf(os.Stderr, "Usage: threagile [options]")
 		fmt.Println()
 		fmt.Println()
 		fmt.Println()
@@ -3697,12 +3703,12 @@ func parseCommandlineArgs() {
 		fmt.Println("----------------------")
 		fmt.Println("Built-in model macros:")
 		fmt.Println("----------------------")
-		fmt.Println(add_build_pipeline.GetMacroDetails().ID, "-->", add_build_pipeline.GetMacroDetails().Title)
-		fmt.Println(add_vault.GetMacroDetails().ID, "-->", add_vault.GetMacroDetails().Title)
-		fmt.Println(pretty_print.GetMacroDetails().ID, "-->", pretty_print.GetMacroDetails().Title)
-		fmt.Println(remove_unused_tags.GetMacroDetails().ID, "-->", remove_unused_tags.GetMacroDetails().Title)
-		fmt.Println(seed_risk_tracking.GetMacroDetails().ID, "-->", seed_risk_tracking.GetMacroDetails().Title)
-		fmt.Println(seed_tags.GetMacroDetails().ID, "-->", seed_tags.GetMacroDetails().Title)
+		fmt.Println(addbuildpipeline.GetMacroDetails().ID, "-->", addbuildpipeline.GetMacroDetails().Title)
+		fmt.Println(addvault.GetMacroDetails().ID, "-->", addvault.GetMacroDetails().Title)
+		fmt.Println(prettyprint.GetMacroDetails().ID, "-->", prettyprint.GetMacroDetails().Title)
+		fmt.Println(removeunusedtags.GetMacroDetails().ID, "-->", removeunusedtags.GetMacroDetails().Title)
+		fmt.Println(seedrisktracking.GetMacroDetails().ID, "-->", seedrisktracking.GetMacroDetails().Title)
+		fmt.Println(seedtags.GetMacroDetails().ID, "-->", seedtags.GetMacroDetails().Title)
 		fmt.Println()
 		os.Exit(0)
 	}
@@ -3721,48 +3727,48 @@ func parseCommandlineArgs() {
 		fmt.Println("--------------------")
 		fmt.Println("Built-in risk rules:")
 		fmt.Println("--------------------")
-		fmt.Println(accidental_secret_leak.Category().Id, "-->", accidental_secret_leak.Category().Title, "--> with tags:", accidental_secret_leak.SupportedTags())
-		fmt.Println(code_backdooring.Category().Id, "-->", code_backdooring.Category().Title, "--> with tags:", code_backdooring.SupportedTags())
-		fmt.Println(container_baseimage_backdooring.Category().Id, "-->", container_baseimage_backdooring.Category().Title, "--> with tags:", container_baseimage_backdooring.SupportedTags())
-		fmt.Println(container_platform_escape.Category().Id, "-->", container_platform_escape.Category().Title, "--> with tags:", container_platform_escape.SupportedTags())
-		fmt.Println(cross_site_request_forgery.Category().Id, "-->", cross_site_request_forgery.Category().Title, "--> with tags:", cross_site_request_forgery.SupportedTags())
-		fmt.Println(cross_site_scripting.Category().Id, "-->", cross_site_scripting.Category().Title, "--> with tags:", cross_site_scripting.SupportedTags())
-		fmt.Println(dos_risky_access_across_trust_boundary.Category().Id, "-->", dos_risky_access_across_trust_boundary.Category().Title, "--> with tags:", dos_risky_access_across_trust_boundary.SupportedTags())
-		fmt.Println(incomplete_model.Category().Id, "-->", incomplete_model.Category().Title, "--> with tags:", incomplete_model.SupportedTags())
-		fmt.Println(ldap_injection.Category().Id, "-->", ldap_injection.Category().Title, "--> with tags:", ldap_injection.SupportedTags())
-		fmt.Println(missing_authentication.Category().Id, "-->", missing_authentication.Category().Title, "--> with tags:", missing_authentication.SupportedTags())
-		fmt.Println(missing_authentication_second_factor.Category().Id, "-->", missing_authentication_second_factor.Category().Title, "--> with tags:", missing_authentication_second_factor.SupportedTags())
-		fmt.Println(missing_build_infrastructure.Category().Id, "-->", missing_build_infrastructure.Category().Title, "--> with tags:", missing_build_infrastructure.SupportedTags())
-		fmt.Println(missing_cloud_hardening.Category().Id, "-->", missing_cloud_hardening.Category().Title, "--> with tags:", missing_cloud_hardening.SupportedTags())
-		fmt.Println(missing_file_validation.Category().Id, "-->", missing_file_validation.Category().Title, "--> with tags:", missing_file_validation.SupportedTags())
-		fmt.Println(missing_hardening.Category().Id, "-->", missing_hardening.Category().Title, "--> with tags:", missing_hardening.SupportedTags())
-		fmt.Println(missing_identity_propagation.Category().Id, "-->", missing_identity_propagation.Category().Title, "--> with tags:", missing_identity_propagation.SupportedTags())
-		fmt.Println(missing_identity_provider_isolation.Category().Id, "-->", missing_identity_provider_isolation.Category().Title, "--> with tags:", missing_identity_provider_isolation.SupportedTags())
-		fmt.Println(missing_identity_store.Category().Id, "-->", missing_identity_store.Category().Title, "--> with tags:", missing_identity_store.SupportedTags())
-		fmt.Println(missing_network_segmentation.Category().Id, "-->", missing_network_segmentation.Category().Title, "--> with tags:", missing_network_segmentation.SupportedTags())
-		fmt.Println(missing_vault.Category().Id, "-->", missing_vault.Category().Title, "--> with tags:", missing_vault.SupportedTags())
-		fmt.Println(missing_vault_isolation.Category().Id, "-->", missing_vault_isolation.Category().Title, "--> with tags:", missing_vault_isolation.SupportedTags())
-		fmt.Println(missing_waf.Category().Id, "-->", missing_waf.Category().Title, "--> with tags:", missing_waf.SupportedTags())
-		fmt.Println(mixed_targets_on_shared_runtime.Category().Id, "-->", mixed_targets_on_shared_runtime.Category().Title, "--> with tags:", mixed_targets_on_shared_runtime.SupportedTags())
-		fmt.Println(path_traversal.Category().Id, "-->", path_traversal.Category().Title, "--> with tags:", path_traversal.SupportedTags())
-		fmt.Println(push_instead_of_pull_deployment.Category().Id, "-->", push_instead_of_pull_deployment.Category().Title, "--> with tags:", push_instead_of_pull_deployment.SupportedTags())
-		fmt.Println(search_query_injection.Category().Id, "-->", search_query_injection.Category().Title, "--> with tags:", search_query_injection.SupportedTags())
-		fmt.Println(server_side_request_forgery.Category().Id, "-->", server_side_request_forgery.Category().Title, "--> with tags:", server_side_request_forgery.SupportedTags())
-		fmt.Println(service_registry_poisoning.Category().Id, "-->", service_registry_poisoning.Category().Title, "--> with tags:", service_registry_poisoning.SupportedTags())
-		fmt.Println(sql_nosql_injection.Category().Id, "-->", sql_nosql_injection.Category().Title, "--> with tags:", sql_nosql_injection.SupportedTags())
-		fmt.Println(unchecked_deployment.Category().Id, "-->", unchecked_deployment.Category().Title, "--> with tags:", unchecked_deployment.SupportedTags())
-		fmt.Println(unencrypted_asset.Category().Id, "-->", unencrypted_asset.Category().Title, "--> with tags:", unencrypted_asset.SupportedTags())
-		fmt.Println(unencrypted_communication.Category().Id, "-->", unencrypted_communication.Category().Title, "--> with tags:", unencrypted_communication.SupportedTags())
-		fmt.Println(unguarded_access_from_internet.Category().Id, "-->", unguarded_access_from_internet.Category().Title, "--> with tags:", unguarded_access_from_internet.SupportedTags())
-		fmt.Println(unguarded_direct_datastore_access.Category().Id, "-->", unguarded_direct_datastore_access.Category().Title, "--> with tags:", unguarded_direct_datastore_access.SupportedTags())
-		fmt.Println(unnecessary_communication_link.Category().Id, "-->", unnecessary_communication_link.Category().Title, "--> with tags:", unnecessary_communication_link.SupportedTags())
-		fmt.Println(unnecessary_data_asset.Category().Id, "-->", unnecessary_data_asset.Category().Title, "--> with tags:", unnecessary_data_asset.SupportedTags())
-		fmt.Println(unnecessary_data_transfer.Category().Id, "-->", unnecessary_data_transfer.Category().Title, "--> with tags:", unnecessary_data_transfer.SupportedTags())
-		fmt.Println(unnecessary_technical_asset.Category().Id, "-->", unnecessary_technical_asset.Category().Title, "--> with tags:", unnecessary_technical_asset.SupportedTags())
-		fmt.Println(untrusted_deserialization.Category().Id, "-->", untrusted_deserialization.Category().Title, "--> with tags:", untrusted_deserialization.SupportedTags())
-		fmt.Println(wrong_communication_link_content.Category().Id, "-->", wrong_communication_link_content.Category().Title, "--> with tags:", wrong_communication_link_content.SupportedTags())
-		fmt.Println(wrong_trust_boundary_content.Category().Id, "-->", wrong_trust_boundary_content.Category().Title, "--> with tags:", wrong_trust_boundary_content.SupportedTags())
-		fmt.Println(xml_external_entity.Category().Id, "-->", xml_external_entity.Category().Title, "--> with tags:", xml_external_entity.SupportedTags())
+		fmt.Println(accidentalsecretleak.Category().Id, "-->", accidentalsecretleak.Category().Title, "--> with tags:", accidentalsecretleak.SupportedTags())
+		fmt.Println(codebackdooring.Category().Id, "-->", codebackdooring.Category().Title, "--> with tags:", codebackdooring.SupportedTags())
+		fmt.Println(containerbaseimagebackdooring.Category().Id, "-->", containerbaseimagebackdooring.Category().Title, "--> with tags:", containerbaseimagebackdooring.SupportedTags())
+		fmt.Println(containerplatformescape.Category().Id, "-->", containerplatformescape.Category().Title, "--> with tags:", containerplatformescape.SupportedTags())
+		fmt.Println(crosssiterequestforgery.Category().Id, "-->", crosssiterequestforgery.Category().Title, "--> with tags:", crosssiterequestforgery.SupportedTags())
+		fmt.Println(crosssitescripting.Category().Id, "-->", crosssitescripting.Category().Title, "--> with tags:", crosssitescripting.SupportedTags())
+		fmt.Println(dosriskyaccessacrosstrustboundary.Category().Id, "-->", dosriskyaccessacrosstrustboundary.Category().Title, "--> with tags:", dosriskyaccessacrosstrustboundary.SupportedTags())
+		fmt.Println(incompletemodel.Category().Id, "-->", incompletemodel.Category().Title, "--> with tags:", incompletemodel.SupportedTags())
+		fmt.Println(ldapinjection.Category().Id, "-->", ldapinjection.Category().Title, "--> with tags:", ldapinjection.SupportedTags())
+		fmt.Println(missingauthentication.Category().Id, "-->", missingauthentication.Category().Title, "--> with tags:", missingauthentication.SupportedTags())
+		fmt.Println(missingauthenticationsecondfactor.Category().Id, "-->", missingauthenticationsecondfactor.Category().Title, "--> with tags:", missingauthenticationsecondfactor.SupportedTags())
+		fmt.Println(missingbuildinfrastructure.Category().Id, "-->", missingbuildinfrastructure.Category().Title, "--> with tags:", missingbuildinfrastructure.SupportedTags())
+		fmt.Println(missingcloudhardening.Category().Id, "-->", missingcloudhardening.Category().Title, "--> with tags:", missingcloudhardening.SupportedTags())
+		fmt.Println(missingfilevalidation.Category().Id, "-->", missingfilevalidation.Category().Title, "--> with tags:", missingfilevalidation.SupportedTags())
+		fmt.Println(missinghardening.Category().Id, "-->", missinghardening.Category().Title, "--> with tags:", missinghardening.SupportedTags())
+		fmt.Println(missingidentitypropagation.Category().Id, "-->", missingidentitypropagation.Category().Title, "--> with tags:", missingidentitypropagation.SupportedTags())
+		fmt.Println(missingidentityproviderisolation.Category().Id, "-->", missingidentityproviderisolation.Category().Title, "--> with tags:", missingidentityproviderisolation.SupportedTags())
+		fmt.Println(missingidentitystore.Category().Id, "-->", missingidentitystore.Category().Title, "--> with tags:", missingidentitystore.SupportedTags())
+		fmt.Println(missingnetworksegmentation.Category().Id, "-->", missingnetworksegmentation.Category().Title, "--> with tags:", missingnetworksegmentation.SupportedTags())
+		fmt.Println(missingvault.Category().Id, "-->", missingvault.Category().Title, "--> with tags:", missingvault.SupportedTags())
+		fmt.Println(missingvaultisolation.Category().Id, "-->", missingvaultisolation.Category().Title, "--> with tags:", missingvaultisolation.SupportedTags())
+		fmt.Println(missingwaf.Category().Id, "-->", missingwaf.Category().Title, "--> with tags:", missingwaf.SupportedTags())
+		fmt.Println(mixedtargetsonsharedruntime.Category().Id, "-->", mixedtargetsonsharedruntime.Category().Title, "--> with tags:", mixedtargetsonsharedruntime.SupportedTags())
+		fmt.Println(pathtraversal.Category().Id, "-->", pathtraversal.Category().Title, "--> with tags:", pathtraversal.SupportedTags())
+		fmt.Println(pushinsteadofpulldeployment.Category().Id, "-->", pushinsteadofpulldeployment.Category().Title, "--> with tags:", pushinsteadofpulldeployment.SupportedTags())
+		fmt.Println(searchqueryinjection.Category().Id, "-->", searchqueryinjection.Category().Title, "--> with tags:", searchqueryinjection.SupportedTags())
+		fmt.Println(serversiderequestforgery.Category().Id, "-->", serversiderequestforgery.Category().Title, "--> with tags:", serversiderequestforgery.SupportedTags())
+		fmt.Println(serviceregistrypoisoning.Category().Id, "-->", serviceregistrypoisoning.Category().Title, "--> with tags:", serviceregistrypoisoning.SupportedTags())
+		fmt.Println(sqlnosqlinjection.Category().Id, "-->", sqlnosqlinjection.Category().Title, "--> with tags:", sqlnosqlinjection.SupportedTags())
+		fmt.Println(uncheckeddeployment.Category().Id, "-->", uncheckeddeployment.Category().Title, "--> with tags:", uncheckeddeployment.SupportedTags())
+		fmt.Println(unencryptedasset.Category().Id, "-->", unencryptedasset.Category().Title, "--> with tags:", unencryptedasset.SupportedTags())
+		fmt.Println(unencryptedcommunication.Category().Id, "-->", unencryptedcommunication.Category().Title, "--> with tags:", unencryptedcommunication.SupportedTags())
+		fmt.Println(unguardedaccessfrominternet.Category().Id, "-->", unguardedaccessfrominternet.Category().Title, "--> with tags:", unguardedaccessfrominternet.SupportedTags())
+		fmt.Println(unguardeddirectdatastoreaccess.Category().Id, "-->", unguardeddirectdatastoreaccess.Category().Title, "--> with tags:", unguardeddirectdatastoreaccess.SupportedTags())
+		fmt.Println(unnecessarycommunicationlink.Category().Id, "-->", unnecessarycommunicationlink.Category().Title, "--> with tags:", unnecessarycommunicationlink.SupportedTags())
+		fmt.Println(unnecessarydataasset.Category().Id, "-->", unnecessarydataasset.Category().Title, "--> with tags:", unnecessarydataasset.SupportedTags())
+		fmt.Println(unnecessarydatatransfer.Category().Id, "-->", unnecessarydatatransfer.Category().Title, "--> with tags:", unnecessarydatatransfer.SupportedTags())
+		fmt.Println(unnecessarytechnicalasset.Category().Id, "-->", unnecessarytechnicalasset.Category().Title, "--> with tags:", unnecessarytechnicalasset.SupportedTags())
+		fmt.Println(untrusteddeserialization.Category().Id, "-->", untrusteddeserialization.Category().Title, "--> with tags:", untrusteddeserialization.SupportedTags())
+		fmt.Println(wrongcommunicationlinkcontent.Category().Id, "-->", wrongcommunicationlinkcontent.Category().Title, "--> with tags:", wrongcommunicationlinkcontent.SupportedTags())
+		fmt.Println(wrongtrustboundarycontent.Category().Id, "-->", wrongtrustboundarycontent.Category().Title, "--> with tags:", wrongtrustboundarycontent.SupportedTags())
+		fmt.Println(xmlexternalentity.Category().Id, "-->", xmlexternalentity.Category().Title, "--> with tags:", xmlexternalentity.SupportedTags())
 		fmt.Println()
 		os.Exit(0)
 	}
@@ -3798,12 +3804,12 @@ func parseCommandlineArgs() {
 		printLogo()
 		fmt.Println("Explanation for the model macros:")
 		fmt.Println()
-		fmt.Printf("%v: %v\n", add_build_pipeline.GetMacroDetails().ID, add_build_pipeline.GetMacroDetails().Description)
-		fmt.Printf("%v: %v\n", add_vault.GetMacroDetails().ID, add_vault.GetMacroDetails().Description)
-		fmt.Printf("%v: %v\n", pretty_print.GetMacroDetails().ID, pretty_print.GetMacroDetails().Description)
-		fmt.Printf("%v: %v\n", remove_unused_tags.GetMacroDetails().ID, remove_unused_tags.GetMacroDetails().Description)
-		fmt.Printf("%v: %v\n", seed_risk_tracking.GetMacroDetails().ID, seed_risk_tracking.GetMacroDetails().Description)
-		fmt.Printf("%v: %v\n", seed_tags.GetMacroDetails().ID, seed_tags.GetMacroDetails().Description)
+		fmt.Printf("%v: %v\n", addbuildpipeline.GetMacroDetails().ID, addbuildpipeline.GetMacroDetails().Description)
+		fmt.Printf("%v: %v\n", addvault.GetMacroDetails().ID, addvault.GetMacroDetails().Description)
+		fmt.Printf("%v: %v\n", prettyprint.GetMacroDetails().ID, prettyprint.GetMacroDetails().Description)
+		fmt.Printf("%v: %v\n", removeunusedtags.GetMacroDetails().ID, removeunusedtags.GetMacroDetails().Description)
+		fmt.Printf("%v: %v\n", seedrisktracking.GetMacroDetails().ID, seedrisktracking.GetMacroDetails().Description)
+		fmt.Printf("%v: %v\n", seedtags.GetMacroDetails().ID, seedtags.GetMacroDetails().Description)
 		fmt.Println()
 		os.Exit(0)
 
@@ -3812,48 +3818,48 @@ func parseCommandlineArgs() {
 		printLogo()
 		fmt.Println("Explanation for risk rules:")
 		fmt.Println()
-		fmt.Printf("%v: %v\n", accidental_secret_leak.Category().Id, accidental_secret_leak.Category().Description)
-		fmt.Printf("%v: %v\n", code_backdooring.Category().Id, code_backdooring.Category().Description)
-		fmt.Printf("%v: %v\n", container_baseimage_backdooring.Category().Id, container_baseimage_backdooring.Category().Description)
-		fmt.Printf("%v: %v\n", container_platform_escape.Category().Id, container_platform_escape.Category().Description)
-		fmt.Printf("%v: %v\n", cross_site_request_forgery.Category().Id, cross_site_request_forgery.Category().Description)
-		fmt.Printf("%v: %v\n", cross_site_scripting.Category().Id, cross_site_scripting.Category().Description)
-		fmt.Printf("%v: %v\n", dos_risky_access_across_trust_boundary.Category().Id, dos_risky_access_across_trust_boundary.Category().Description)
-		fmt.Printf("%v: %v\n", incomplete_model.Category().Id, incomplete_model.Category().Description)
-		fmt.Printf("%v: %v\n", ldap_injection.Category().Id, ldap_injection.Category().Description)
-		fmt.Printf("%v: %v\n", missing_authentication.Category().Id, missing_authentication.Category().Description)
-		fmt.Printf("%v: %v\n", missing_authentication_second_factor.Category().Id, missing_authentication_second_factor.Category().Description)
-		fmt.Printf("%v: %v\n", missing_build_infrastructure.Category().Id, missing_build_infrastructure.Category().Description)
-		fmt.Printf("%v: %v\n", missing_cloud_hardening.Category().Id, missing_cloud_hardening.Category().Description)
-		fmt.Printf("%v: %v\n", missing_file_validation.Category().Id, missing_file_validation.Category().Description)
-		fmt.Printf("%v: %v\n", missing_hardening.Category().Id, missing_hardening.Category().Description)
-		fmt.Printf("%v: %v\n", missing_identity_propagation.Category().Id, missing_identity_propagation.Category().Description)
-		fmt.Printf("%v: %v\n", missing_identity_provider_isolation.Category().Id, missing_identity_provider_isolation.Category().Description)
-		fmt.Printf("%v: %v\n", missing_identity_store.Category().Id, missing_identity_store.Category().Description)
-		fmt.Printf("%v: %v\n", missing_network_segmentation.Category().Id, missing_network_segmentation.Category().Description)
-		fmt.Printf("%v: %v\n", missing_vault.Category().Id, missing_vault.Category().Description)
-		fmt.Printf("%v: %v\n", missing_vault_isolation.Category().Id, missing_vault_isolation.Category().Description)
-		fmt.Printf("%v: %v\n", missing_waf.Category().Id, missing_waf.Category().Description)
-		fmt.Printf("%v: %v\n", mixed_targets_on_shared_runtime.Category().Id, mixed_targets_on_shared_runtime.Category().Description)
-		fmt.Printf("%v: %v\n", path_traversal.Category().Id, path_traversal.Category().Description)
-		fmt.Printf("%v: %v\n", push_instead_of_pull_deployment.Category().Id, push_instead_of_pull_deployment.Category().Description)
-		fmt.Printf("%v: %v\n", search_query_injection.Category().Id, search_query_injection.Category().Description)
-		fmt.Printf("%v: %v\n", server_side_request_forgery.Category().Id, server_side_request_forgery.Category().Description)
-		fmt.Printf("%v: %v\n", service_registry_poisoning.Category().Id, service_registry_poisoning.Category().Description)
-		fmt.Printf("%v: %v\n", sql_nosql_injection.Category().Id, sql_nosql_injection.Category().Description)
-		fmt.Printf("%v: %v\n", unchecked_deployment.Category().Id, unchecked_deployment.Category().Description)
-		fmt.Printf("%v: %v\n", unencrypted_asset.Category().Id, unencrypted_asset.Category().Description)
-		fmt.Printf("%v: %v\n", unencrypted_communication.Category().Id, unencrypted_communication.Category().Description)
-		fmt.Printf("%v: %v\n", unguarded_access_from_internet.Category().Id, unguarded_access_from_internet.Category().Description)
-		fmt.Printf("%v: %v\n", unguarded_direct_datastore_access.Category().Id, unguarded_direct_datastore_access.Category().Description)
-		fmt.Printf("%v: %v\n", unnecessary_communication_link.Category().Id, unnecessary_communication_link.Category().Description)
-		fmt.Printf("%v: %v\n", unnecessary_data_asset.Category().Id, unnecessary_data_asset.Category().Description)
-		fmt.Printf("%v: %v\n", unnecessary_data_transfer.Category().Id, unnecessary_data_transfer.Category().Description)
-		fmt.Printf("%v: %v\n", unnecessary_technical_asset.Category().Id, unnecessary_technical_asset.Category().Description)
-		fmt.Printf("%v: %v\n", untrusted_deserialization.Category().Id, untrusted_deserialization.Category().Description)
-		fmt.Printf("%v: %v\n", wrong_communication_link_content.Category().Id, wrong_communication_link_content.Category().Description)
-		fmt.Printf("%v: %v\n", wrong_trust_boundary_content.Category().Id, wrong_trust_boundary_content.Category().Description)
-		fmt.Printf("%v: %v\n", xml_external_entity.Category().Id, xml_external_entity.Category().Description)
+		fmt.Printf("%v: %v\n", accidentalsecretleak.Category().Id, accidentalsecretleak.Category().Description)
+		fmt.Printf("%v: %v\n", codebackdooring.Category().Id, codebackdooring.Category().Description)
+		fmt.Printf("%v: %v\n", containerbaseimagebackdooring.Category().Id, containerbaseimagebackdooring.Category().Description)
+		fmt.Printf("%v: %v\n", containerplatformescape.Category().Id, containerplatformescape.Category().Description)
+		fmt.Printf("%v: %v\n", crosssiterequestforgery.Category().Id, crosssiterequestforgery.Category().Description)
+		fmt.Printf("%v: %v\n", crosssitescripting.Category().Id, crosssitescripting.Category().Description)
+		fmt.Printf("%v: %v\n", dosriskyaccessacrosstrustboundary.Category().Id, dosriskyaccessacrosstrustboundary.Category().Description)
+		fmt.Printf("%v: %v\n", incompletemodel.Category().Id, incompletemodel.Category().Description)
+		fmt.Printf("%v: %v\n", ldapinjection.Category().Id, ldapinjection.Category().Description)
+		fmt.Printf("%v: %v\n", missingauthentication.Category().Id, missingauthentication.Category().Description)
+		fmt.Printf("%v: %v\n", missingauthenticationsecondfactor.Category().Id, missingauthenticationsecondfactor.Category().Description)
+		fmt.Printf("%v: %v\n", missingbuildinfrastructure.Category().Id, missingbuildinfrastructure.Category().Description)
+		fmt.Printf("%v: %v\n", missingcloudhardening.Category().Id, missingcloudhardening.Category().Description)
+		fmt.Printf("%v: %v\n", missingfilevalidation.Category().Id, missingfilevalidation.Category().Description)
+		fmt.Printf("%v: %v\n", missinghardening.Category().Id, missinghardening.Category().Description)
+		fmt.Printf("%v: %v\n", missingidentitypropagation.Category().Id, missingidentitypropagation.Category().Description)
+		fmt.Printf("%v: %v\n", missingidentityproviderisolation.Category().Id, missingidentityproviderisolation.Category().Description)
+		fmt.Printf("%v: %v\n", missingidentitystore.Category().Id, missingidentitystore.Category().Description)
+		fmt.Printf("%v: %v\n", missingnetworksegmentation.Category().Id, missingnetworksegmentation.Category().Description)
+		fmt.Printf("%v: %v\n", missingvault.Category().Id, missingvault.Category().Description)
+		fmt.Printf("%v: %v\n", missingvaultisolation.Category().Id, missingvaultisolation.Category().Description)
+		fmt.Printf("%v: %v\n", missingwaf.Category().Id, missingwaf.Category().Description)
+		fmt.Printf("%v: %v\n", mixedtargetsonsharedruntime.Category().Id, mixedtargetsonsharedruntime.Category().Description)
+		fmt.Printf("%v: %v\n", pathtraversal.Category().Id, pathtraversal.Category().Description)
+		fmt.Printf("%v: %v\n", pushinsteadofpulldeployment.Category().Id, pushinsteadofpulldeployment.Category().Description)
+		fmt.Printf("%v: %v\n", searchqueryinjection.Category().Id, searchqueryinjection.Category().Description)
+		fmt.Printf("%v: %v\n", serversiderequestforgery.Category().Id, serversiderequestforgery.Category().Description)
+		fmt.Printf("%v: %v\n", serviceregistrypoisoning.Category().Id, serviceregistrypoisoning.Category().Description)
+		fmt.Printf("%v: %v\n", sqlnosqlinjection.Category().Id, sqlnosqlinjection.Category().Description)
+		fmt.Printf("%v: %v\n", uncheckeddeployment.Category().Id, uncheckeddeployment.Category().Description)
+		fmt.Printf("%v: %v\n", unencryptedasset.Category().Id, unencryptedasset.Category().Description)
+		fmt.Printf("%v: %v\n", unencryptedcommunication.Category().Id, unencryptedcommunication.Category().Description)
+		fmt.Printf("%v: %v\n", unguardedaccessfrominternet.Category().Id, unguardedaccessfrominternet.Category().Description)
+		fmt.Printf("%v: %v\n", unguardeddirectdatastoreaccess.Category().Id, unguardeddirectdatastoreaccess.Category().Description)
+		fmt.Printf("%v: %v\n", unnecessarycommunicationlink.Category().Id, unnecessarycommunicationlink.Category().Description)
+		fmt.Printf("%v: %v\n", unnecessarydataasset.Category().Id, unnecessarydataasset.Category().Description)
+		fmt.Printf("%v: %v\n", unnecessarydatatransfer.Category().Id, unnecessarydatatransfer.Category().Description)
+		fmt.Printf("%v: %v\n", unnecessarytechnicalasset.Category().Id, unnecessarytechnicalasset.Category().Description)
+		fmt.Printf("%v: %v\n", untrusteddeserialization.Category().Id, untrusteddeserialization.Category().Description)
+		fmt.Printf("%v: %v\n", wrongcommunicationlinkcontent.Category().Id, wrongcommunicationlinkcontent.Category().Description)
+		fmt.Printf("%v: %v\n", wrongtrustboundarycontent.Category().Id, wrongtrustboundarycontent.Category().Description)
+		fmt.Printf("%v: %v\n", xmlexternalentity.Category().Id, xmlexternalentity.Category().Description)
 		fmt.Println()
 		os.Exit(0)
 	}
@@ -3875,7 +3881,7 @@ func parseCommandlineArgs() {
 	}
 	if *license {
 		printLogo()
-		content, err := ioutil.ReadFile("/app/LICENSE.txt")
+		content, err := os.ReadFile("/app/LICENSE.txt")
 		checkErr(err)
 		fmt.Print(string(content))
 		fmt.Println()
@@ -3935,20 +3941,20 @@ func printVersion() {
 }
 
 func createExampleModelFile() {
-	copyFile("/app/threagile-example-model.yaml", *outputDir+"/threagile-example-model.yaml")
+	_, _ = copyFile("/app/threagile-example-model.yaml", *outputDir+"/threagile-example-model.yaml")
 }
 
 func createStubModelFile() {
 	loadCustomRiskRules()
-	stub, err := ioutil.ReadFile("/app/threagile-stub-model.yaml")
+	stub, err := os.ReadFile("/app/threagile-stub-model.yaml")
 	checkErr(err)
-	err = ioutil.WriteFile(*outputDir+"/threagile-stub-model.yaml", addSupportedTags(stub), 0644)
+	err = os.WriteFile(*outputDir+"/threagile-stub-model.yaml", addSupportedTags(stub), 0644)
 	checkErr(err)
 }
 
 func createEditingSupportFiles() {
-	copyFile("/app/schema.json", *outputDir+"/schema.json")
-	copyFile("/app/live-templates.txt", *outputDir+"/live-templates.txt")
+	_, _ = copyFile("/app/schema.json", *outputDir+"/schema.json")
+	_, _ = copyFile("/app/live-templates.txt", *outputDir+"/live-templates.txt")
 }
 
 func printExamples() {
@@ -4007,13 +4013,13 @@ func copyFile(src, dst string) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	defer source.Close()
+	defer func() { _ = source.Close() }()
 
 	destination, err := os.Create(dst)
 	if err != nil {
 		return 0, err
 	}
-	defer destination.Close()
+	defer func() { _ = destination.Close() }()
 	nBytes, err := io.Copy(destination, source)
 	return nBytes, err
 }
@@ -4022,7 +4028,7 @@ func parseModel(inputFilename string) {
 	if *verbose {
 		fmt.Println("Parsing model:", inputFilename)
 	}
-	modelYaml, err := ioutil.ReadFile(inputFilename)
+	modelYaml, err := os.ReadFile(inputFilename)
 	if err == nil {
 		modelInput = model.ModelInput{}
 		err = yaml.Unmarshal(modelYaml, &modelInput)
@@ -4030,7 +4036,7 @@ func parseModel(inputFilename string) {
 		//fmt.Println(modelInput)
 
 		var businessCriticality model.Criticality
-		switch modelInput.Business_criticality {
+		switch modelInput.BusinessCriticality {
 		case model.Archive.String():
 			businessCriticality = model.Archive
 		case model.Operational.String():
@@ -4042,7 +4048,7 @@ func parseModel(inputFilename string) {
 		case model.MissionCritical.String():
 			businessCriticality = model.MissionCritical
 		default:
-			panic(errors.New("unknown 'business_criticality' value of application: " + modelInput.Business_criticality))
+			panic(errors.New("unknown 'business_criticality' value of application: " + modelInput.BusinessCriticality))
 		}
 
 		reportDate := time.Now()
@@ -4057,21 +4063,21 @@ func parseModel(inputFilename string) {
 			Author:                         modelInput.Author,
 			Title:                          modelInput.Title,
 			Date:                           reportDate,
-			ManagementSummaryComment:       modelInput.Management_summary_comment,
+			ManagementSummaryComment:       modelInput.ManagementSummaryComment,
 			BusinessCriticality:            businessCriticality,
-			BusinessOverview:               removePathElementsFromImageFiles(modelInput.Business_overview),
-			TechnicalOverview:              removePathElementsFromImageFiles(modelInput.Technical_overview),
+			BusinessOverview:               removePathElementsFromImageFiles(modelInput.BusinessOverview),
+			TechnicalOverview:              removePathElementsFromImageFiles(modelInput.TechnicalOverview),
 			Questions:                      modelInput.Questions,
-			AbuseCases:                     modelInput.Abuse_cases,
-			SecurityRequirements:           modelInput.Security_requirements,
-			TagsAvailable:                  lowerCaseAndTrim(modelInput.Tags_available),
-			DiagramTweakNodesep:            modelInput.Diagram_tweak_nodesep,
-			DiagramTweakRanksep:            modelInput.Diagram_tweak_ranksep,
-			DiagramTweakEdgeLayout:         modelInput.Diagram_tweak_edge_layout,
-			DiagramTweakSuppressEdgeLabels: modelInput.Diagram_tweak_suppress_edge_labels,
-			DiagramTweakLayoutLeftToRight:  modelInput.Diagram_tweak_layout_left_to_right,
-			DiagramTweakInvisibleConnectionsBetweenAssets: modelInput.Diagram_tweak_invisible_connections_between_assets,
-			DiagramTweakSameRankAssets:                    modelInput.Diagram_tweak_same_rank_assets,
+			AbuseCases:                     modelInput.AbuseCases,
+			SecurityRequirements:           modelInput.SecurityRequirements,
+			TagsAvailable:                  lowerCaseAndTrim(modelInput.TagsAvailable),
+			DiagramTweakNodesep:            modelInput.DiagramTweakNodesep,
+			DiagramTweakRanksep:            modelInput.DiagramTweakRanksep,
+			DiagramTweakEdgeLayout:         modelInput.DiagramTweakEdgeLayout,
+			DiagramTweakSuppressEdgeLabels: modelInput.DiagramTweakSuppressEdgeLabels,
+			DiagramTweakLayoutLeftToRight:  modelInput.DiagramTweakLayoutLeftToRight,
+			DiagramTweakInvisibleConnectionsBetweenAssets: modelInput.DiagramTweakInvisibleConnectionsBetweenAssets,
+			DiagramTweakSameRankAssets:                    modelInput.DiagramTweakSameRankAssets,
 		}
 		if model.ParsedModelRoot.DiagramTweakNodesep == 0 {
 			model.ParsedModelRoot.DiagramTweakNodesep = 2
@@ -4082,7 +4088,7 @@ func parseModel(inputFilename string) {
 
 		// Data Assets ===============================================================================
 		model.ParsedModelRoot.DataAssets = make(map[string]model.DataAsset)
-		for title, asset := range modelInput.Data_assets {
+		for title, asset := range modelInput.DataAssets {
 			id := fmt.Sprintf("%v", asset.ID)
 
 			var usage model.Usage
@@ -4173,13 +4179,13 @@ func parseModel(inputFilename string) {
 				Confidentiality:        confidentiality,
 				Integrity:              integrity,
 				Availability:           availability,
-				JustificationCiaRating: fmt.Sprintf("%v", asset.Justification_cia_rating),
+				JustificationCiaRating: fmt.Sprintf("%v", asset.JustificationCiaRating),
 			}
 		}
 
 		// Technical Assets ===============================================================================
 		model.ParsedModelRoot.TechnicalAssets = make(map[string]model.TechnicalAsset)
-		for title, asset := range modelInput.Technical_assets {
+		for title, asset := range modelInput.TechnicalAssets {
 			id := fmt.Sprintf("%v", asset.ID)
 
 			var usage model.Usage
@@ -4193,9 +4199,9 @@ func parseModel(inputFilename string) {
 			}
 
 			var dataAssetsProcessed = make([]string, 0)
-			if asset.Data_assets_processed != nil {
-				dataAssetsProcessed = make([]string, len(asset.Data_assets_processed))
-				for i, parsedProcessedAsset := range asset.Data_assets_processed {
+			if asset.DataAssetsProcessed != nil {
+				dataAssetsProcessed = make([]string, len(asset.DataAssetsProcessed))
+				for i, parsedProcessedAsset := range asset.DataAssetsProcessed {
 					referencedAsset := fmt.Sprintf("%v", parsedProcessedAsset)
 					checkDataAssetTargetExists(referencedAsset, "technical asset '"+title+"'")
 					dataAssetsProcessed[i] = referencedAsset
@@ -4203,9 +4209,9 @@ func parseModel(inputFilename string) {
 			}
 
 			var dataAssetsStored = make([]string, 0)
-			if asset.Data_assets_stored != nil {
-				dataAssetsStored = make([]string, len(asset.Data_assets_stored))
-				for i, parsedStoredAssets := range asset.Data_assets_stored {
+			if asset.DataAssetsStored != nil {
+				dataAssetsStored = make([]string, len(asset.DataAssetsStored))
+				for i, parsedStoredAssets := range asset.DataAssetsStored {
 					referencedAsset := fmt.Sprintf("%v", parsedStoredAssets)
 					checkDataAssetTargetExists(referencedAsset, "technical asset '"+title+"'")
 					dataAssetsStored[i] = referencedAsset
@@ -4368,8 +4374,8 @@ func parseModel(inputFilename string) {
 				encryption = model.DataWithSymmetricSharedKey
 			case model.DataWithAsymmetricSharedKey.String():
 				encryption = model.DataWithAsymmetricSharedKey
-			case model.DataWithEnduserIndividualKey.String():
-				encryption = model.DataWithEnduserIndividualKey
+			case model.DataWithEndUserIndividualKey.String():
+				encryption = model.DataWithEndUserIndividualKey
 			default:
 				panic(errors.New("unknown 'encryption' value of technical asset '" + title + "': " + fmt.Sprintf("%v", asset.Encryption)))
 			}
@@ -4437,8 +4443,8 @@ func parseModel(inputFilename string) {
 			}
 
 			dataFormatsAccepted := make([]model.DataFormat, 0)
-			if asset.Data_formats_accepted != nil {
-				for _, dataFormatName := range asset.Data_formats_accepted {
+			if asset.DataFormatsAccepted != nil {
+				for _, dataFormatName := range asset.DataFormatsAccepted {
 					switch dataFormatName {
 					case model.JSON.String():
 						dataFormatsAccepted = append(dataFormatsAccepted, model.JSON)
@@ -4457,8 +4463,8 @@ func parseModel(inputFilename string) {
 			}
 
 			communicationLinks := make([]model.CommunicationLink, 0)
-			if asset.Communication_links != nil {
-				for commLinkTitle, commLink := range asset.Communication_links {
+			if asset.CommunicationLinks != nil {
+				for commLinkTitle, commLink := range asset.CommunicationLinks {
 					constraint := true
 					weight := 1
 					var protocol model.Protocol
@@ -4492,8 +4498,8 @@ func parseModel(inputFilename string) {
 						authorization = model.NoneAuthorization
 					case model.TechnicalUser.String():
 						authorization = model.TechnicalUser
-					case model.EnduserIdentityPropagation.String():
-						authorization = model.EnduserIdentityPropagation
+					case model.EndUserIdentityPropagation.String():
+						authorization = model.EndUserIdentityPropagation
 					default:
 						panic(errors.New("unknown 'authorization' value of technical asset '" + title + "' communication link '" + commLinkTitle + "': " + fmt.Sprintf("%v", commLink.Authorization)))
 					}
@@ -4522,44 +4528,44 @@ func parseModel(inputFilename string) {
 						protocol = model.MQTT
 					case model.JDBC.String():
 						protocol = model.JDBC
-					case model.JDBC_encrypted.String():
-						protocol = model.JDBC_encrypted
+					case model.JdbcEncrypted.String():
+						protocol = model.JdbcEncrypted
 					case model.ODBC.String():
 						protocol = model.ODBC
-					case model.ODBC_encrypted.String():
-						protocol = model.ODBC_encrypted
-					case model.SQL_access_protocol.String():
-						protocol = model.SQL_access_protocol
-					case model.SQL_access_protocol_encrypted.String():
-						protocol = model.SQL_access_protocol_encrypted
-					case model.NoSQL_access_protocol.String():
-						protocol = model.NoSQL_access_protocol
-					case model.NoSQL_access_protocol_encrypted.String():
-						protocol = model.NoSQL_access_protocol_encrypted
+					case model.OdbcEncrypted.String():
+						protocol = model.OdbcEncrypted
+					case model.SqlAccessProtocol.String():
+						protocol = model.SqlAccessProtocol
+					case model.SqlAccessProtocolEncrypted.String():
+						protocol = model.SqlAccessProtocolEncrypted
+					case model.NosqlAccessProtocol.String():
+						protocol = model.NosqlAccessProtocol
+					case model.NosqlAccessProtocolEncrypted.String():
+						protocol = model.NosqlAccessProtocolEncrypted
 					case model.TEXT.String():
 						protocol = model.TEXT
-					case model.TEXT_encrypted.String():
-						protocol = model.TEXT_encrypted
+					case model.TextEncrypted.String():
+						protocol = model.TextEncrypted
 					case model.BINARY.String():
 						protocol = model.BINARY
-					case model.BINARY_encrypted.String():
-						protocol = model.BINARY_encrypted
+					case model.BinaryEncrypted.String():
+						protocol = model.BinaryEncrypted
 					case model.SSH.String():
 						protocol = model.SSH
-					case model.SSH_tunnel.String():
-						protocol = model.SSH_tunnel
+					case model.SshTunnel.String():
+						protocol = model.SshTunnel
 					case model.SMTP.String():
 						protocol = model.SMTP
-					case model.SMTP_encrypted.String():
-						protocol = model.SMTP_encrypted
+					case model.SmtpEncrypted.String():
+						protocol = model.SmtpEncrypted
 					case model.POP3.String():
 						protocol = model.POP3
-					case model.POP3_encrypted.String():
-						protocol = model.POP3_encrypted
+					case model.Pop3Encrypted.String():
+						protocol = model.Pop3Encrypted
 					case model.IMAP.String():
 						protocol = model.IMAP
-					case model.IMAP_encrypted.String():
-						protocol = model.IMAP_encrypted
+					case model.ImapEncrypted.String():
+						protocol = model.ImapEncrypted
 					case model.FTP.String():
 						protocol = model.FTP
 					case model.FTPS.String():
@@ -4578,8 +4584,8 @@ func parseModel(inputFilename string) {
 						protocol = model.NFS
 					case model.SMB.String():
 						protocol = model.SMB
-					case model.SMB_encrypted.String():
-						protocol = model.SMB_encrypted
+					case model.SmbEncrypted.String():
+						protocol = model.SmbEncrypted
 					case model.LocalFileAccess.String():
 						protocol = model.LocalFileAccess
 					case model.NRPE.String():
@@ -4588,12 +4594,12 @@ func parseModel(inputFilename string) {
 						protocol = model.XMPP
 					case model.IIOP.String():
 						protocol = model.IIOP
-					case model.IIOP_encrypted.String():
-						protocol = model.IIOP_encrypted
+					case model.IiopEncrypted.String():
+						protocol = model.IiopEncrypted
 					case model.JRMP.String():
 						protocol = model.JRMP
-					case model.JRMP_encrypted.String():
-						protocol = model.JRMP_encrypted
+					case model.JrmpEncrypted.String():
+						protocol = model.JrmpEncrypted
 					case model.InProcessLibraryCall.String():
 						protocol = model.InProcessLibraryCall
 					case model.ContainerSpawning.String():
@@ -4602,27 +4608,27 @@ func parseModel(inputFilename string) {
 						panic(errors.New("unknown 'protocol' of technical asset '" + title + "' communication link '" + commLinkTitle + "': " + fmt.Sprintf("%v", commLink.Protocol)))
 					}
 
-					if commLink.Data_assets_sent != nil {
-						for _, dataAssetSent := range commLink.Data_assets_sent {
+					if commLink.DataAssetsSent != nil {
+						for _, dataAssetSent := range commLink.DataAssetsSent {
 							referencedAsset := fmt.Sprintf("%v", dataAssetSent)
 							checkDataAssetTargetExists(referencedAsset, "communication link '"+commLinkTitle+"' of technical asset '"+title+"'")
 							dataAssetsSent = append(dataAssetsSent, referencedAsset)
 						}
 					}
 
-					if commLink.Data_assets_received != nil {
-						for _, dataAssetReceived := range commLink.Data_assets_received {
+					if commLink.DataAssetsReceived != nil {
+						for _, dataAssetReceived := range commLink.DataAssetsReceived {
 							referencedAsset := fmt.Sprintf("%v", dataAssetReceived)
 							checkDataAssetTargetExists(referencedAsset, "communication link '"+commLinkTitle+"' of technical asset '"+title+"'")
 							dataAssetsReceived = append(dataAssetsReceived, referencedAsset)
 						}
 					}
 
-					if commLink.Diagram_tweak_weight > 0 {
-						weight = commLink.Diagram_tweak_weight
+					if commLink.DiagramTweakWeight > 0 {
+						weight = commLink.DiagramTweakWeight
 					}
 
-					constraint = !commLink.Diagram_tweak_constraint
+					constraint = !commLink.DiagramTweakConstraint
 
 					checkErr(err)
 
@@ -4639,7 +4645,7 @@ func parseModel(inputFilename string) {
 						Usage:                  usage,
 						Tags:                   checkTags(lowerCaseAndTrim(commLink.Tags), "communication link '"+commLinkTitle+"' of technical asset '"+title+"'"),
 						VPN:                    commLink.VPN,
-						IpFiltered:             commLink.IP_filtered,
+						IpFiltered:             commLink.IpFiltered,
 						Readonly:               commLink.Readonly,
 						DataAssetsSent:         dataAssetsSent,
 						DataAssetsReceived:     dataAssetsReceived,
@@ -4649,7 +4655,7 @@ func parseModel(inputFilename string) {
 					communicationLinks = append(communicationLinks, commLink)
 					// track all comm links
 					model.CommunicationLinks[commLink.Id] = commLink
-					// keep track of map of *all* comm links mapped by target-id (to be able to lookup "who is calling me" kind of things)
+					// keep track of map of *all* comm links mapped by target-id (to be able to look up "who is calling me" kind of things)
 					model.IncomingTechnicalCommunicationLinksMappedByTargetId[commLink.TargetId] = append(
 						model.IncomingTechnicalCommunicationLinksMappedByTargetId[commLink.TargetId], commLink)
 				}
@@ -4671,34 +4677,34 @@ func parseModel(inputFilename string) {
 				Machine:                 technicalAssetMachine,
 				Internet:                asset.Internet,
 				Encryption:              encryption,
-				MultiTenant:             asset.Multi_tenant,
+				MultiTenant:             asset.MultiTenant,
 				Redundant:               asset.Redundant,
-				CustomDevelopedParts:    asset.Custom_developed_parts,
-				UsedAsClientByHuman:     asset.Used_as_client_by_human,
-				OutOfScope:              asset.Out_of_scope,
-				JustificationOutOfScope: fmt.Sprintf("%v", asset.Justification_out_of_scope),
+				CustomDevelopedParts:    asset.CustomDevelopedParts,
+				UsedAsClientByHuman:     asset.UsedAsClientByHuman,
+				OutOfScope:              asset.OutOfScope,
+				JustificationOutOfScope: fmt.Sprintf("%v", asset.JustificationOutOfScope),
 				Owner:                   fmt.Sprintf("%v", asset.Owner),
 				Confidentiality:         confidentiality,
 				Integrity:               integrity,
 				Availability:            availability,
-				JustificationCiaRating:  fmt.Sprintf("%v", asset.Justification_cia_rating),
+				JustificationCiaRating:  fmt.Sprintf("%v", asset.JustificationCiaRating),
 				DataAssetsProcessed:     dataAssetsProcessed,
 				DataAssetsStored:        dataAssetsStored,
 				DataFormatsAccepted:     dataFormatsAccepted,
 				CommunicationLinks:      communicationLinks,
-				DiagramTweakOrder:       asset.Diagram_tweak_order,
+				DiagramTweakOrder:       asset.DiagramTweakOrder,
 			}
 		}
 
 		// Trust Boundaries ===============================================================================
 		checklistToAvoidAssetBeingModeledInMultipleTrustBoundaries := make(map[string]bool)
 		model.ParsedModelRoot.TrustBoundaries = make(map[string]model.TrustBoundary)
-		for title, boundary := range modelInput.Trust_boundaries {
+		for title, boundary := range modelInput.TrustBoundaries {
 			id := fmt.Sprintf("%v", boundary.ID)
 
 			var technicalAssetsInside = make([]string, 0)
-			if boundary.Technical_assets_inside != nil {
-				parsedInsideAssets := boundary.Technical_assets_inside
+			if boundary.TechnicalAssetsInside != nil {
+				parsedInsideAssets := boundary.TechnicalAssetsInside
 				technicalAssetsInside = make([]string, len(parsedInsideAssets))
 				for i, parsedInsideAsset := range parsedInsideAssets {
 					technicalAssetsInside[i] = fmt.Sprintf("%v", parsedInsideAsset)
@@ -4715,8 +4721,8 @@ func parseModel(inputFilename string) {
 			}
 
 			var trustBoundariesNested = make([]string, 0)
-			if boundary.Trust_boundaries_nested != nil {
-				parsedNestedBoundaries := boundary.Trust_boundaries_nested
+			if boundary.TrustBoundariesNested != nil {
+				parsedNestedBoundaries := boundary.TrustBoundariesNested
 				trustBoundariesNested = make([]string, len(parsedNestedBoundaries))
 				for i, parsedNestedBoundary := range parsedNestedBoundaries {
 					trustBoundariesNested[i] = fmt.Sprintf("%v", parsedNestedBoundary)
@@ -4766,12 +4772,12 @@ func parseModel(inputFilename string) {
 
 		// Shared Runtime ===============================================================================
 		model.ParsedModelRoot.SharedRuntimes = make(map[string]model.SharedRuntime)
-		for title, runtime := range modelInput.Shared_runtimes {
+		for title, runtime := range modelInput.SharedRuntimes {
 			id := fmt.Sprintf("%v", runtime.ID)
 
 			var technicalAssetsRunning = make([]string, 0)
-			if runtime.Technical_assets_running != nil {
-				parsedRunningAssets := runtime.Technical_assets_running
+			if runtime.TechnicalAssetsRunning != nil {
+				parsedRunningAssets := runtime.TechnicalAssetsRunning
 				technicalAssetsRunning = make([]string, len(parsedRunningAssets))
 				for i, parsedRunningAsset := range parsedRunningAssets {
 					assetId := fmt.Sprintf("%v", parsedRunningAsset)
@@ -4784,7 +4790,7 @@ func parseModel(inputFilename string) {
 				Id:                     id,
 				Title:                  title, //fmt.Sprintf("%v", boundary["title"]),
 				Description:            withDefault(fmt.Sprintf("%v", runtime.Description), title),
-				Tags:                   checkTags((runtime.Tags), "shared runtime '"+title+"'"),
+				Tags:                   checkTags(runtime.Tags, "shared runtime '"+title+"'"),
 				TechnicalAssetsRunning: technicalAssetsRunning,
 			}
 			checkIdSyntax(id)
@@ -4799,11 +4805,11 @@ func parseModel(inputFilename string) {
 
 		// Individual Risk Categories (just used as regular risk categories) ===============================================================================
 		model.ParsedModelRoot.IndividualRiskCategories = make(map[string]model.RiskCategory)
-		for title, indivCat := range modelInput.Individual_risk_categories {
-			id := fmt.Sprintf("%v", indivCat.ID)
+		for title, individualCategory := range modelInput.IndividualRiskCategories {
+			id := fmt.Sprintf("%v", individualCategory.ID)
 
 			var function model.RiskFunction
-			switch indivCat.Function {
+			switch individualCategory.Function {
 			case model.BusinessSide.String():
 				function = model.BusinessSide
 			case model.Architecture.String():
@@ -4813,11 +4819,11 @@ func parseModel(inputFilename string) {
 			case model.Operations.String():
 				function = model.Operations
 			default:
-				panic(errors.New("unknown 'function' value of individual risk category '" + title + "': " + fmt.Sprintf("%v", indivCat.Function)))
+				panic(errors.New("unknown 'function' value of individual risk category '" + title + "': " + fmt.Sprintf("%v", individualCategory.Function)))
 			}
 
 			var stride model.STRIDE
-			switch indivCat.STRIDE {
+			switch individualCategory.STRIDE {
 			case model.Spoofing.String():
 				stride = model.Spoofing
 			case model.Tampering.String():
@@ -4831,26 +4837,26 @@ func parseModel(inputFilename string) {
 			case model.ElevationOfPrivilege.String():
 				stride = model.ElevationOfPrivilege
 			default:
-				panic(errors.New("unknown 'stride' value of individual risk category '" + title + "': " + fmt.Sprintf("%v", indivCat.STRIDE)))
+				panic(errors.New("unknown 'stride' value of individual risk category '" + title + "': " + fmt.Sprintf("%v", individualCategory.STRIDE)))
 			}
 
 			cat := model.RiskCategory{
 				Id:                         id,
 				Title:                      title,
-				Description:                withDefault(fmt.Sprintf("%v", indivCat.Description), title),
-				Impact:                     fmt.Sprintf("%v", indivCat.Impact),
-				ASVS:                       fmt.Sprintf("%v", indivCat.ASVS),
-				CheatSheet:                 fmt.Sprintf("%v", indivCat.Cheat_sheet),
-				Action:                     fmt.Sprintf("%v", indivCat.Action),
-				Mitigation:                 fmt.Sprintf("%v", indivCat.Mitigation),
-				Check:                      fmt.Sprintf("%v", indivCat.Check),
-				DetectionLogic:             fmt.Sprintf("%v", indivCat.Detection_logic),
-				RiskAssessment:             fmt.Sprintf("%v", indivCat.Risk_assessment),
-				FalsePositives:             fmt.Sprintf("%v", indivCat.False_positives),
+				Description:                withDefault(fmt.Sprintf("%v", individualCategory.Description), title),
+				Impact:                     fmt.Sprintf("%v", individualCategory.Impact),
+				ASVS:                       fmt.Sprintf("%v", individualCategory.ASVS),
+				CheatSheet:                 fmt.Sprintf("%v", individualCategory.CheatSheet),
+				Action:                     fmt.Sprintf("%v", individualCategory.Action),
+				Mitigation:                 fmt.Sprintf("%v", individualCategory.Mitigation),
+				Check:                      fmt.Sprintf("%v", individualCategory.Check),
+				DetectionLogic:             fmt.Sprintf("%v", individualCategory.DetectionLogic),
+				RiskAssessment:             fmt.Sprintf("%v", individualCategory.RiskAssessment),
+				FalsePositives:             fmt.Sprintf("%v", individualCategory.FalsePositives),
 				Function:                   function,
 				STRIDE:                     stride,
-				ModelFailurePossibleReason: indivCat.Model_failure_possible_reason,
-				CWE:                        indivCat.CWE,
+				ModelFailurePossibleReason: individualCategory.ModelFailurePossibleReason,
+				CWE:                        individualCategory.CWE,
 			}
 			checkIdSyntax(id)
 			if _, exists := model.ParsedModelRoot.IndividualRiskCategories[id]; exists {
@@ -4860,8 +4866,8 @@ func parseModel(inputFilename string) {
 
 			// NOW THE INDIVIDUAL RISK INSTANCES:
 			//individualRiskInstances := make([]model.Risk, 0)
-			if indivCat.Risks_identified != nil { // TODO: also add syntax checks of input YAML when linked asset is not found or when syntehtic-id is already used...
-				for title, indivRiskInstance := range indivCat.Risks_identified {
+			if individualCategory.RisksIdentified != nil { // TODO: also add syntax checks of input YAML when linked asset is not found or when synthetic-id is already used...
+				for title, individualRiskInstance := range individualCategory.RisksIdentified {
 					var severity model.RiskSeverity
 					var exploitationLikelihood model.RiskExploitationLikelihood
 					var exploitationImpact model.RiskExploitationImpact
@@ -4869,7 +4875,7 @@ func parseModel(inputFilename string) {
 					var dataBreachProbability model.DataBreachProbability
 					var dataBreachTechnicalAssetIDs []string
 
-					switch indivRiskInstance.Severity {
+					switch individualRiskInstance.Severity {
 					case model.LowSeverity.String():
 						severity = model.LowSeverity
 					case model.MediumSeverity.String():
@@ -4883,10 +4889,10 @@ func parseModel(inputFilename string) {
 					case "": // added default
 						severity = model.MediumSeverity
 					default:
-						panic(errors.New("unknown 'severity' value of individual risk instance '" + title + "': " + fmt.Sprintf("%v", indivRiskInstance.Severity)))
+						panic(errors.New("unknown 'severity' value of individual risk instance '" + title + "': " + fmt.Sprintf("%v", individualRiskInstance.Severity)))
 					}
 
-					switch indivRiskInstance.Exploitation_likelihood {
+					switch individualRiskInstance.ExploitationLikelihood {
 					case model.Unlikely.String():
 						exploitationLikelihood = model.Unlikely
 					case model.Likely.String():
@@ -4898,10 +4904,10 @@ func parseModel(inputFilename string) {
 					case "": // added default
 						exploitationLikelihood = model.Likely
 					default:
-						panic(errors.New("unknown 'exploitation_likelihood' value of individual risk instance '" + title + "': " + fmt.Sprintf("%v", indivRiskInstance.Exploitation_likelihood)))
+						panic(errors.New("unknown 'exploitation_likelihood' value of individual risk instance '" + title + "': " + fmt.Sprintf("%v", individualRiskInstance.ExploitationLikelihood)))
 					}
 
-					switch indivRiskInstance.Exploitation_impact {
+					switch individualRiskInstance.ExploitationImpact {
 					case model.LowImpact.String():
 						exploitationImpact = model.LowImpact
 					case model.MediumImpact.String():
@@ -4913,35 +4919,35 @@ func parseModel(inputFilename string) {
 					case "": // added default
 						exploitationImpact = model.MediumImpact
 					default:
-						panic(errors.New("unknown 'exploitation_impact' value of individual risk instance '" + title + "': " + fmt.Sprintf("%v", indivRiskInstance.Exploitation_impact)))
+						panic(errors.New("unknown 'exploitation_impact' value of individual risk instance '" + title + "': " + fmt.Sprintf("%v", individualRiskInstance.ExploitationImpact)))
 					}
 
-					if len(indivRiskInstance.Most_relevant_data_asset) > 0 {
-						mostRelevantDataAssetId = fmt.Sprintf("%v", indivRiskInstance.Most_relevant_data_asset)
+					if len(individualRiskInstance.MostRelevantDataAsset) > 0 {
+						mostRelevantDataAssetId = fmt.Sprintf("%v", individualRiskInstance.MostRelevantDataAsset)
 						checkDataAssetTargetExists(mostRelevantDataAssetId, "individual risk '"+title+"'")
 					}
 
-					if len(indivRiskInstance.Most_relevant_technical_asset) > 0 {
-						mostRelevantTechnicalAssetId = fmt.Sprintf("%v", indivRiskInstance.Most_relevant_technical_asset)
+					if len(individualRiskInstance.MostRelevantTechnicalAsset) > 0 {
+						mostRelevantTechnicalAssetId = fmt.Sprintf("%v", individualRiskInstance.MostRelevantTechnicalAsset)
 						checkTechnicalAssetExists(mostRelevantTechnicalAssetId, "individual risk '"+title+"'", false)
 					}
 
-					if len(indivRiskInstance.Most_relevant_communication_link) > 0 {
-						mostRelevantCommunicationLinkId = fmt.Sprintf("%v", indivRiskInstance.Most_relevant_communication_link)
+					if len(individualRiskInstance.MostRelevantCommunicationLink) > 0 {
+						mostRelevantCommunicationLinkId = fmt.Sprintf("%v", individualRiskInstance.MostRelevantCommunicationLink)
 						checkCommunicationLinkExists(mostRelevantCommunicationLinkId, "individual risk '"+title+"'")
 					}
 
-					if len(indivRiskInstance.Most_relevant_trust_boundary) > 0 {
-						mostRelevantTrustBoundaryId = fmt.Sprintf("%v", indivRiskInstance.Most_relevant_trust_boundary)
+					if len(individualRiskInstance.MostRelevantTrustBoundary) > 0 {
+						mostRelevantTrustBoundaryId = fmt.Sprintf("%v", individualRiskInstance.MostRelevantTrustBoundary)
 						checkTrustBoundaryExists(mostRelevantTrustBoundaryId, "individual risk '"+title+"'")
 					}
 
-					if len(indivRiskInstance.Most_relevant_shared_runtime) > 0 {
-						mostRelevantSharedRuntimeId = fmt.Sprintf("%v", indivRiskInstance.Most_relevant_shared_runtime)
+					if len(individualRiskInstance.MostRelevantSharedRuntime) > 0 {
+						mostRelevantSharedRuntimeId = fmt.Sprintf("%v", individualRiskInstance.MostRelevantSharedRuntime)
 						checkSharedRuntimeExists(mostRelevantSharedRuntimeId, "individual risk '"+title+"'")
 					}
 
-					switch indivRiskInstance.Data_breach_probability {
+					switch individualRiskInstance.DataBreachProbability {
 					case model.Improbable.String():
 						dataBreachProbability = model.Improbable
 					case model.Possible.String():
@@ -4951,12 +4957,12 @@ func parseModel(inputFilename string) {
 					case "": // added default
 						dataBreachProbability = model.Possible
 					default:
-						panic(errors.New("unknown 'data_breach_probability' value of individual risk instance '" + title + "': " + fmt.Sprintf("%v", indivRiskInstance.Data_breach_probability)))
+						panic(errors.New("unknown 'data_breach_probability' value of individual risk instance '" + title + "': " + fmt.Sprintf("%v", individualRiskInstance.DataBreachProbability)))
 					}
 
-					if indivRiskInstance.Data_breach_technical_assets != nil {
-						dataBreachTechnicalAssetIDs = make([]string, len(indivRiskInstance.Data_breach_technical_assets))
-						for i, parsedReferencedAsset := range indivRiskInstance.Data_breach_technical_assets {
+					if individualRiskInstance.DataBreachTechnicalAssets != nil {
+						dataBreachTechnicalAssetIDs = make([]string, len(individualRiskInstance.DataBreachTechnicalAssets))
+						for i, parsedReferencedAsset := range individualRiskInstance.DataBreachTechnicalAssets {
 							assetId := fmt.Sprintf("%v", parsedReferencedAsset)
 							checkTechnicalAssetExists(assetId, "data breach technical assets of individual risk '"+title+"'", false)
 							dataBreachTechnicalAssetIDs[i] = assetId
@@ -4965,7 +4971,7 @@ func parseModel(inputFilename string) {
 
 					checkErr(err)
 
-					indivRiskInstance := model.Risk{
+					individualRiskInstance := model.Risk{
 						SyntheticId:                     createSyntheticId(cat.Id, mostRelevantDataAssetId, mostRelevantTechnicalAssetId, mostRelevantCommunicationLinkId, mostRelevantTrustBoundaryId, mostRelevantSharedRuntimeId),
 						Title:                           fmt.Sprintf("%v", title),
 						Category:                        cat,
@@ -4980,16 +4986,16 @@ func parseModel(inputFilename string) {
 						DataBreachProbability:           dataBreachProbability,
 						DataBreachTechnicalAssetIDs:     dataBreachTechnicalAssetIDs,
 					}
-					model.GeneratedRisksByCategory[cat] = append(model.GeneratedRisksByCategory[cat], indivRiskInstance)
+					model.GeneratedRisksByCategory[cat] = append(model.GeneratedRisksByCategory[cat], individualRiskInstance)
 				}
 			}
 		}
 
 		// Risk Tracking ===============================================================================
 		model.ParsedModelRoot.RiskTracking = make(map[string]model.RiskTracking)
-		for syntheticRiskId, riskTracking := range modelInput.Risk_tracking {
+		for syntheticRiskId, riskTracking := range modelInput.RiskTracking {
 			justification := fmt.Sprintf("%v", riskTracking.Justification)
-			checkedBy := fmt.Sprintf("%v", riskTracking.Checked_by)
+			checkedBy := fmt.Sprintf("%v", riskTracking.CheckedBy)
 			ticket := fmt.Sprintf("%v", riskTracking.Ticket)
 			var date time.Time
 			if len(riskTracking.Date) > 0 {
@@ -5065,7 +5071,7 @@ func checkTags(tags []string, where string) []string {
 
 // in order to prevent Path-Traversal like stuff...
 func removePathElementsFromImageFiles(overview model.Overview) model.Overview {
-	for i, _ := range overview.Images {
+	for i := range overview.Images {
 		newValue := make(map[string]string)
 		for file, desc := range overview.Images[i] {
 			newValue[filepath.Base(file)] = desc
@@ -5082,8 +5088,8 @@ func applyWildcardRiskTrackingEvaluation() {
 	for syntheticRiskIdPattern, riskTracking := range deferredRiskTrackingDueToWildcardMatching {
 		foundSome := false
 		var matchingRiskIdExpression = regexp.MustCompile(strings.ReplaceAll(regexp.QuoteMeta(syntheticRiskIdPattern), `\*`, `[^@]+`))
-		for syntheticRiskId, _ := range model.GeneratedRisksBySyntheticId {
-			if matchingRiskIdExpression.Match([]byte(syntheticRiskId)) && hasNotYetAnyDirectNonWildcardRiskTrackings(syntheticRiskId) {
+		for syntheticRiskId := range model.GeneratedRisksBySyntheticId {
+			if matchingRiskIdExpression.Match([]byte(syntheticRiskId)) && hasNotYetAnyDirectNonWildcardRiskTracking(syntheticRiskId) {
 				foundSome = true
 				model.ParsedModelRoot.RiskTracking[syntheticRiskId] = model.RiskTracking{
 					SyntheticRiskId: strings.TrimSpace(syntheticRiskId),
@@ -5105,7 +5111,7 @@ func applyWildcardRiskTrackingEvaluation() {
 	}
 }
 
-func hasNotYetAnyDirectNonWildcardRiskTrackings(syntheticRiskId string) bool {
+func hasNotYetAnyDirectNonWildcardRiskTracking(syntheticRiskId string) bool {
 	if _, ok := model.ParsedModelRoot.RiskTracking[syntheticRiskId]; ok {
 		return false
 	}
@@ -5199,7 +5205,7 @@ func checkNestedTrustBoundariesExisting() {
 
 func hash(s string) string {
 	h := fnv.New32a()
-	h.Write([]byte(s))
+	_, _ = h.Write([]byte(s))
 	return fmt.Sprintf("%v", h.Sum32())
 }
 
@@ -5283,7 +5289,7 @@ func writeDataAssetDiagramGraphvizDOT(diagramFilenameDOT string, dpi int) *os.Fi
 	// Write the DOT file
 	file, err := os.Create(diagramFilenameDOT)
 	checkErr(err)
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 	_, err = fmt.Fprintln(file, dotContent.String())
 	checkErr(err)
 	return file
@@ -5363,7 +5369,7 @@ func writeDataFlowDiagramGraphvizDOT(diagramFilenameDOT string, dpi int) *os.Fil
 	// first create them in memory (see the link replacement below for nested trust boundaries) - otherwise in Go ranging over map is random order
 	// range over them in sorted (hence re-producible) way:
 	keys := make([]string, 0)
-	for k, _ := range model.ParsedModelRoot.TrustBoundaries {
+	for k := range model.ParsedModelRoot.TrustBoundaries {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
@@ -5388,10 +5394,10 @@ func writeDataFlowDiagramGraphvizDOT(diagramFilenameDOT string, dpi int) *os.Fil
 			}
 			snippet.WriteString("\n subgraph cluster_" + hash(trustBoundary.Id) + " {\n")
 			color, fontColor, bgColor, style, fontname := colors.RgbHexColorTwilight(), colors.RgbHexColorTwilight() /*"#550E0C"*/, "#FAFAFA", "dashed", "Verdana"
-			penwidth := 4.5
+			penWidth := 4.5
 			if len(trustBoundary.TrustBoundariesNested) > 0 {
 				//color, fontColor, style, fontname = colors.Blue, colors.Blue, "dashed", "Verdana"
-				penwidth = 5.5
+				penWidth = 5.5
 			}
 			if len(trustBoundary.ParentTrustBoundaryID()) > 0 {
 				bgColor = "#F1F1F1"
@@ -5411,7 +5417,7 @@ func writeDataFlowDiagramGraphvizDOT(diagramFilenameDOT string, dpi int) *os.Fil
       bgcolor="` + bgColor + `"
       fontcolor="` + fontColor + `"
       fontname="` + fontname + `"
-      penwidth="` + fmt.Sprintf("%f", penwidth) + `"
+      penwidth="` + fmt.Sprintf("%f", penWidth) + `"
       forcelabels=true
       outputorder="nodesfirst"
 	  margin="50.0"
@@ -5441,7 +5447,7 @@ func writeDataFlowDiagramGraphvizDOT(diagramFilenameDOT string, dpi int) *os.Fil
 		subgraphSnippetsById[hash(trustBoundary.Id)] = snippet.String()
 	}
 	// here replace links and remove from map after replacement (i.e. move snippet into nested)
-	for i, _ := range subgraphSnippetsById {
+	for i := range subgraphSnippetsById {
 		re := regexp.MustCompile(`LINK-NEEDS-REPLACED-BY-cluster_([0-9]*);`)
 		for {
 			matches := re.FindStringSubmatch(subgraphSnippetsById[i])
@@ -5456,7 +5462,7 @@ func writeDataFlowDiagramGraphvizDOT(diagramFilenameDOT string, dpi int) *os.Fil
 	}
 	// now write them all
 	keys = make([]string, 0)
-	for k, _ := range subgraphSnippetsById {
+	for k := range subgraphSnippetsById {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
@@ -5469,7 +5475,7 @@ func writeDataFlowDiagramGraphvizDOT(diagramFilenameDOT string, dpi int) *os.Fil
 	// first create them in memory (see the link replacement below for nested trust boundaries) - otherwise in Go ranging over map is random order
 	// range over them in sorted (hence re-producible) way:
 	// Convert map to slice of values:
-	techAssets := []model.TechnicalAsset{}
+	var techAssets []model.TechnicalAsset
 	for _, techAsset := range model.ParsedModelRoot.TechnicalAssets {
 		techAssets = append(techAssets, techAsset)
 	}
@@ -5495,7 +5501,7 @@ func writeDataFlowDiagramGraphvizDOT(diagramFilenameDOT string, dpi int) *os.Fil
 			}
 			dir := "forward"
 			if dataFlow.IsBidirectional() {
-				if !suppressBidirectionalArrows { // as it does not work as bug in grahviz with ortho: https://gitlab.com/graphviz/graphviz/issues/144
+				if !suppressBidirectionalArrows { // as it does not work as bug in graphviz with ortho: https://gitlab.com/graphviz/graphviz/issues/144
 					dir = "both"
 				}
 			}
@@ -5526,7 +5532,7 @@ func writeDataFlowDiagramGraphvizDOT(diagramFilenameDOT string, dpi int) *os.Fil
 	// Write the DOT file
 	file, err := os.Create(diagramFilenameDOT)
 	checkErr(err)
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 	_, err = fmt.Fprintln(file, dotContent.String())
 	checkErr(err)
 	return file
@@ -5668,21 +5674,21 @@ func renderDataFlowDiagramGraphvizImage(dotFile *os.File, targetDir string) {
 		fmt.Println("Rendering data flow diagram input")
 	}
 	// tmp files
-	tmpFileDOT, err := ioutil.TempFile(model.TempFolder, "diagram-*-.gv")
+	tmpFileDOT, err := os.CreateTemp(model.TempFolder, "diagram-*-.gv")
 	checkErr(err)
-	defer os.Remove(tmpFileDOT.Name())
+	defer func() { _ = os.Remove(tmpFileDOT.Name()) }()
 
-	tmpFilePNG, err := ioutil.TempFile(model.TempFolder, "diagram-*-.png")
+	tmpFilePNG, err := os.CreateTemp(model.TempFolder, "diagram-*-.png")
 	checkErr(err)
-	defer os.Remove(tmpFilePNG.Name())
+	defer func() { _ = os.Remove(tmpFilePNG.Name()) }()
 
 	// copy into tmp file as input
-	input, err := ioutil.ReadFile(dotFile.Name())
+	input, err := os.ReadFile(dotFile.Name())
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	err = ioutil.WriteFile(tmpFileDOT.Name(), input, 0644)
+	err = os.WriteFile(tmpFileDOT.Name(), input, 0644)
 	if err != nil {
 		fmt.Println("Error creating", tmpFileDOT.Name())
 		fmt.Println(err)
@@ -5698,12 +5704,12 @@ func renderDataFlowDiagramGraphvizImage(dotFile *os.File, targetDir string) {
 		panic(errors.New("graph rendering call failed with error:" + err.Error()))
 	}
 	// copy into resulting file
-	input, err = ioutil.ReadFile(tmpFilePNG.Name())
+	input, err = os.ReadFile(tmpFilePNG.Name())
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	err = ioutil.WriteFile(targetDir+"/"+dataFlowDiagramFilenamePNG, input, 0644)
+	err = os.WriteFile(targetDir+"/"+dataFlowDiagramFilenamePNG, input, 0644)
 	if err != nil {
 		fmt.Println("Error creating", dataFlowDiagramFilenamePNG)
 		fmt.Println(err)
@@ -5716,21 +5722,21 @@ func renderDataAssetDiagramGraphvizImage(dotFile *os.File, targetDir string) { /
 		fmt.Println("Rendering data asset diagram input")
 	}
 	// tmp files
-	tmpFileDOT, err := ioutil.TempFile(model.TempFolder, "diagram-*-.gv")
+	tmpFileDOT, err := os.CreateTemp(model.TempFolder, "diagram-*-.gv")
 	checkErr(err)
-	defer os.Remove(tmpFileDOT.Name())
+	defer func() { _ = os.Remove(tmpFileDOT.Name()) }()
 
-	tmpFilePNG, err := ioutil.TempFile(model.TempFolder, "diagram-*-.png")
+	tmpFilePNG, err := os.CreateTemp(model.TempFolder, "diagram-*-.png")
 	checkErr(err)
-	defer os.Remove(tmpFilePNG.Name())
+	defer func() { _ = os.Remove(tmpFilePNG.Name()) }()
 
 	// copy into tmp file as input
-	input, err := ioutil.ReadFile(dotFile.Name())
+	input, err := os.ReadFile(dotFile.Name())
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	err = ioutil.WriteFile(tmpFileDOT.Name(), input, 0644)
+	err = os.WriteFile(tmpFileDOT.Name(), input, 0644)
 	if err != nil {
 		fmt.Println("Error creating", tmpFileDOT.Name())
 		fmt.Println(err)
@@ -5746,12 +5752,12 @@ func renderDataAssetDiagramGraphvizImage(dotFile *os.File, targetDir string) { /
 		panic(errors.New("graph rendering call failed with error: " + err.Error()))
 	}
 	// copy into resulting file
-	input, err = ioutil.ReadFile(tmpFilePNG.Name())
+	input, err = os.ReadFile(tmpFilePNG.Name())
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	err = ioutil.WriteFile(targetDir+"/"+dataAssetDiagramFilenamePNG, input, 0644)
+	err = os.WriteFile(targetDir+"/"+dataAssetDiagramFilenamePNG, input, 0644)
 	if err != nil {
 		fmt.Println("Error creating", dataAssetDiagramFilenamePNG)
 		fmt.Println(err)

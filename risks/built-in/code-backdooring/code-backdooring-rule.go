@@ -96,7 +96,7 @@ func createRisk(technicalAsset model.TechnicalAsset, elevatedRisk bool) model.Ri
 		}
 	}
 	dataBreachTechnicalAssetIDs := make([]string, 0)
-	for key, _ := range uniqueDataBreachTechnicalAssetIDs {
+	for key := range uniqueDataBreachTechnicalAssetIDs {
 		dataBreachTechnicalAssetIDs = append(dataBreachTechnicalAssetIDs, key)
 	}
 	// create risk

@@ -40,7 +40,7 @@ func GenerateRisks() []model.Risk {
 	hasCustomDevelopedParts, hasBuildPipeline, hasSourcecodeRepo, hasDevOpsClient := false, false, false, false
 	impact := model.LowImpact
 	var mostRelevantAsset model.TechnicalAsset
-	for _, id := range model.SortedTechnicalAssetIDs() { // use the sorted one to always get the same tech asset with highest sensitivity as example asset
+	for _, id := range model.SortedTechnicalAssetIDs() { // use the sorted one to always get the same tech asset with the highest sensitivity as example asset
 		technicalAsset := model.ParsedModelRoot.TechnicalAssets[id]
 		if technicalAsset.CustomDevelopedParts && !technicalAsset.OutOfScope {
 			hasCustomDevelopedParts = true

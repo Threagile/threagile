@@ -454,7 +454,7 @@ func WriteRisksExcelToFile(filename string) {
 	checkErr(err)
 }
 
-func WriteTagsExcelToFile(filename string) { // TODO: eventually when len(sortedTagsAvailable) == 0 is: write a hint in the execel that no tags are used
+func WriteTagsExcelToFile(filename string) { // TODO: eventually when len(sortedTagsAvailable) == 0 is: write a hint in the Excel that no tags are used
 	excelRow = 0
 	excel := excelize.NewFile()
 	sheetName := model.ParsedModelRoot.Title
@@ -492,7 +492,7 @@ func WriteTagsExcelToFile(filename string) { // TODO: eventually when len(sorted
 	})
 	checkErr(err)
 
-	err = excel.SetCellValue(sheetName, "A1", "Element") // TODO is "Element" the correct generic name when referencing assets, links, trust boudaries etc.? Eventually add separate column "type of element" like "technical asset" or "data asset"?
+	err = excel.SetCellValue(sheetName, "A1", "Element") // TODO is "Element" the correct generic name when referencing assets, links, trust boundaries etc.? Eventually add separate column "type of element" like "technical asset" or "data asset"?
 	sortedTagsAvailable := model.TagsActuallyUsed()
 	sort.Strings(sortedTagsAvailable)
 	axis := ""
@@ -615,7 +615,7 @@ func writeRow(excel *excelize.File, sheetName string, axis string, styleBlackLef
 var alphabet = []string{"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"}
 
 func determineColumnLetter(i int) string {
-	// can only have 700 columns in excel that way, but that should be more than usable anyway ;)... otherwise think about your model...
+	// can only have 700 columns in Excel that way, but that should be more than usable anyway ;)... otherwise think about your model...
 	i++
 	if i < 26 {
 		return alphabet[i]
