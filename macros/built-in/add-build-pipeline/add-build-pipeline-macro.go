@@ -145,7 +145,7 @@ func GetNextQuestion() (nextQuestion model.MacroQuestion, err error) {
 		}, nil
 	case 11:
 		possibleAnswers := make([]string, 0)
-		for id, _ := range model.ParsedModelRoot.TechnicalAssets {
+		for id := range model.ParsedModelRoot.TechnicalAssets {
 			possibleAnswers = append(possibleAnswers, id)
 		}
 		sort.Strings(possibleAnswers)
@@ -299,12 +299,12 @@ func applyChange(modelInput *model.ModelInput, changeLogCollector *[]string, dry
 			Confidentiality: model.Confidential.String(),
 			Integrity:       model.Critical.String(),
 			Availability:    model.Important.String(),
-			Justification_cia_rating: "Sourcecode is at least rated as 'critical' in terms of integrity, because any " +
+			JustificationCiaRating: "Sourcecode is at least rated as 'critical' in terms of integrity, because any " +
 				"malicious modification of it might lead to a backdoored production system.",
 		}
 		*changeLogCollector = append(*changeLogCollector, "adding data asset: sourcecode")
 		if !dryRun {
-			modelInput.Data_assets["Sourcecode"] = dataAsset
+			modelInput.DataAssets["Sourcecode"] = dataAsset
 		}
 	}
 
@@ -321,12 +321,12 @@ func applyChange(modelInput *model.ModelInput, changeLogCollector *[]string, dry
 			Confidentiality: model.Confidential.String(),
 			Integrity:       model.Critical.String(),
 			Availability:    model.Important.String(),
-			Justification_cia_rating: "Deployment units are at least rated as 'critical' in terms of integrity, because any " +
+			JustificationCiaRating: "Deployment units are at least rated as 'critical' in terms of integrity, because any " +
 				"malicious modification of it might lead to a backdoored production system.",
 		}
 		*changeLogCollector = append(*changeLogCollector, "adding data asset: deployment")
 		if !dryRun {
-			modelInput.Data_assets["Deployment"] = dataAsset
+			modelInput.DataAssets["Deployment"] = dataAsset
 		}
 	}
 
@@ -340,137 +340,137 @@ func applyChange(modelInput *model.ModelInput, changeLogCollector *[]string, dry
 
 		commLinks := make(map[string]model.InputCommunicationLink)
 		commLinks["Sourcecode Repository Traffic"] = model.InputCommunicationLink{
-			Target:                   sourceRepoID,
-			Description:              "Sourcecode Repository Traffic",
-			Protocol:                 model.HTTPS.String(),
-			Authentication:           model.Credentials.String(),
-			Authorization:            model.EnduserIdentityPropagation.String(),
-			Tags:                     []string{},
-			VPN:                      false,
-			IP_filtered:              false,
-			Readonly:                 false,
-			Usage:                    model.DevOps.String(),
-			Data_assets_sent:         []string{"sourcecode"},
-			Data_assets_received:     []string{"sourcecode"},
-			Diagram_tweak_weight:     0,
-			Diagram_tweak_constraint: false,
+			Target:                 sourceRepoID,
+			Description:            "Sourcecode Repository Traffic",
+			Protocol:               model.HTTPS.String(),
+			Authentication:         model.Credentials.String(),
+			Authorization:          model.EndUserIdentityPropagation.String(),
+			Tags:                   []string{},
+			VPN:                    false,
+			IpFiltered:             false,
+			Readonly:               false,
+			Usage:                  model.DevOps.String(),
+			DataAssetsSent:         []string{"sourcecode"},
+			DataAssetsReceived:     []string{"sourcecode"},
+			DiagramTweakWeight:     0,
+			DiagramTweakConstraint: false,
 		}
 		commLinks["Build Pipeline Traffic"] = model.InputCommunicationLink{
-			Target:                   buildPipelineID,
-			Description:              "Build Pipeline Traffic",
-			Protocol:                 model.HTTPS.String(),
-			Authentication:           model.Credentials.String(),
-			Authorization:            model.EnduserIdentityPropagation.String(),
-			Tags:                     []string{},
-			VPN:                      false,
-			IP_filtered:              false,
-			Readonly:                 true,
-			Usage:                    model.DevOps.String(),
-			Data_assets_sent:         nil,
-			Data_assets_received:     []string{"deployment"},
-			Diagram_tweak_weight:     0,
-			Diagram_tweak_constraint: false,
+			Target:                 buildPipelineID,
+			Description:            "Build Pipeline Traffic",
+			Protocol:               model.HTTPS.String(),
+			Authentication:         model.Credentials.String(),
+			Authorization:          model.EndUserIdentityPropagation.String(),
+			Tags:                   []string{},
+			VPN:                    false,
+			IpFiltered:             false,
+			Readonly:               true,
+			Usage:                  model.DevOps.String(),
+			DataAssetsSent:         nil,
+			DataAssetsReceived:     []string{"deployment"},
+			DiagramTweakWeight:     0,
+			DiagramTweakConstraint: false,
 		}
 		commLinks["Artifact Registry Traffic"] = model.InputCommunicationLink{
-			Target:                   artifactRegistryID,
-			Description:              "Artifact Registry Traffic",
-			Protocol:                 model.HTTPS.String(),
-			Authentication:           model.Credentials.String(),
-			Authorization:            model.EnduserIdentityPropagation.String(),
-			Tags:                     []string{},
-			VPN:                      false,
-			IP_filtered:              false,
-			Readonly:                 true,
-			Usage:                    model.DevOps.String(),
-			Data_assets_sent:         nil,
-			Data_assets_received:     []string{"deployment"},
-			Diagram_tweak_weight:     0,
-			Diagram_tweak_constraint: false,
+			Target:                 artifactRegistryID,
+			Description:            "Artifact Registry Traffic",
+			Protocol:               model.HTTPS.String(),
+			Authentication:         model.Credentials.String(),
+			Authorization:          model.EndUserIdentityPropagation.String(),
+			Tags:                   []string{},
+			VPN:                    false,
+			IpFiltered:             false,
+			Readonly:               true,
+			Usage:                  model.DevOps.String(),
+			DataAssetsSent:         nil,
+			DataAssetsReceived:     []string{"deployment"},
+			DiagramTweakWeight:     0,
+			DiagramTweakConstraint: false,
 		}
 		if containerTechUsed {
 			commLinks["Container Registry Traffic"] = model.InputCommunicationLink{
-				Target:                   containerRepoID,
-				Description:              "Container Registry Traffic",
-				Protocol:                 model.HTTPS.String(),
-				Authentication:           model.Credentials.String(),
-				Authorization:            model.EnduserIdentityPropagation.String(),
-				Tags:                     []string{},
-				VPN:                      false,
-				IP_filtered:              false,
-				Readonly:                 false,
-				Usage:                    model.DevOps.String(),
-				Data_assets_sent:         []string{"deployment"},
-				Data_assets_received:     []string{"deployment"},
-				Diagram_tweak_weight:     0,
-				Diagram_tweak_constraint: false,
+				Target:                 containerRepoID,
+				Description:            "Container Registry Traffic",
+				Protocol:               model.HTTPS.String(),
+				Authentication:         model.Credentials.String(),
+				Authorization:          model.EndUserIdentityPropagation.String(),
+				Tags:                   []string{},
+				VPN:                    false,
+				IpFiltered:             false,
+				Readonly:               false,
+				Usage:                  model.DevOps.String(),
+				DataAssetsSent:         []string{"deployment"},
+				DataAssetsReceived:     []string{"deployment"},
+				DiagramTweakWeight:     0,
+				DiagramTweakConstraint: false,
 			}
 			commLinks["Container Platform Traffic"] = model.InputCommunicationLink{
-				Target:                   containerPlatformID,
-				Description:              "Container Platform Traffic",
-				Protocol:                 model.HTTPS.String(),
-				Authentication:           model.Credentials.String(),
-				Authorization:            model.EnduserIdentityPropagation.String(),
-				Tags:                     []string{},
-				VPN:                      false,
-				IP_filtered:              false,
-				Readonly:                 false,
-				Usage:                    model.DevOps.String(),
-				Data_assets_sent:         []string{"deployment"},
-				Data_assets_received:     []string{"deployment"},
-				Diagram_tweak_weight:     0,
-				Diagram_tweak_constraint: false,
+				Target:                 containerPlatformID,
+				Description:            "Container Platform Traffic",
+				Protocol:               model.HTTPS.String(),
+				Authentication:         model.Credentials.String(),
+				Authorization:          model.EndUserIdentityPropagation.String(),
+				Tags:                   []string{},
+				VPN:                    false,
+				IpFiltered:             false,
+				Readonly:               false,
+				Usage:                  model.DevOps.String(),
+				DataAssetsSent:         []string{"deployment"},
+				DataAssetsReceived:     []string{"deployment"},
+				DiagramTweakWeight:     0,
+				DiagramTweakConstraint: false,
 			}
 		}
 		if codeInspectionUsed {
 			commLinks["Code Inspection Platform Traffic"] = model.InputCommunicationLink{
-				Target:                   codeInspectionPlatformID,
-				Description:              "Code Inspection Platform Traffic",
-				Protocol:                 model.HTTPS.String(),
-				Authentication:           model.Credentials.String(),
-				Authorization:            model.EnduserIdentityPropagation.String(),
-				Tags:                     []string{},
-				VPN:                      false,
-				IP_filtered:              false,
-				Readonly:                 true,
-				Usage:                    model.DevOps.String(),
-				Data_assets_sent:         nil,
-				Data_assets_received:     []string{"sourcecode"},
-				Diagram_tweak_weight:     0,
-				Diagram_tweak_constraint: false,
+				Target:                 codeInspectionPlatformID,
+				Description:            "Code Inspection Platform Traffic",
+				Protocol:               model.HTTPS.String(),
+				Authentication:         model.Credentials.String(),
+				Authorization:          model.EndUserIdentityPropagation.String(),
+				Tags:                   []string{},
+				VPN:                    false,
+				IpFiltered:             false,
+				Readonly:               true,
+				Usage:                  model.DevOps.String(),
+				DataAssetsSent:         nil,
+				DataAssetsReceived:     []string{"sourcecode"},
+				DiagramTweakWeight:     0,
+				DiagramTweakConstraint: false,
 			}
 		}
 
 		techAsset := model.InputTechnicalAsset{
-			ID:                         id,
-			Description:                "Development Client",
-			Type:                       model.ExternalEntity.String(),
-			Usage:                      model.DevOps.String(),
-			Used_as_client_by_human:    true,
-			Out_of_scope:               true,
-			Justification_out_of_scope: "Development client is not directly in-scope of the application.",
-			Size:                       model.System.String(),
-			Technology:                 model.DevOpsClient.String(),
-			Tags:                       []string{},
-			Internet:                   strings.ToLower(macroState["internet"][0]) == "yes",
-			Machine:                    model.Physical.String(),
-			Encryption:                 encryption,
-			Owner:                      owner,
-			Confidentiality:            model.Confidential.String(),
-			Integrity:                  model.Critical.String(),
-			Availability:               model.Important.String(),
-			Justification_cia_rating: "Sourcecode processing components are at least rated as 'critical' in terms of integrity, because any " +
+			ID:                      id,
+			Description:             "Development Client",
+			Type:                    model.ExternalEntity.String(),
+			Usage:                   model.DevOps.String(),
+			UsedAsClientByHuman:     true,
+			OutOfScope:              true,
+			JustificationOutOfScope: "Development client is not directly in-scope of the application.",
+			Size:                    model.System.String(),
+			Technology:              model.DevOpsClient.String(),
+			Tags:                    []string{},
+			Internet:                strings.ToLower(macroState["internet"][0]) == "yes",
+			Machine:                 model.Physical.String(),
+			Encryption:              encryption,
+			Owner:                   owner,
+			Confidentiality:         model.Confidential.String(),
+			Integrity:               model.Critical.String(),
+			Availability:            model.Important.String(),
+			JustificationCiaRating: "Sourcecode processing components are at least rated as 'critical' in terms of integrity, because any " +
 				"malicious modification of it might lead to a backdoored production system.",
-			Multi_tenant:           false,
-			Redundant:              false,
-			Custom_developed_parts: false,
-			Data_assets_processed:  []string{"sourcecode", "deployment"},
-			Data_assets_stored:     []string{"sourcecode", "deployment"},
-			Data_formats_accepted:  []string{"file"},
-			Communication_links:    commLinks,
+			MultiTenant:          false,
+			Redundant:            false,
+			CustomDevelopedParts: false,
+			DataAssetsProcessed:  []string{"sourcecode", "deployment"},
+			DataAssetsStored:     []string{"sourcecode", "deployment"},
+			DataFormatsAccepted:  []string{"file"},
+			CommunicationLinks:   commLinks,
 		}
 		*changeLogCollector = append(*changeLogCollector, "adding technical asset (including communication links): "+id)
 		if !dryRun {
-			modelInput.Technical_assets["Development Client"] = techAsset
+			modelInput.TechnicalAssets["Development Client"] = techAsset
 		}
 	}
 
@@ -483,36 +483,36 @@ func applyChange(modelInput *model.ModelInput, changeLogCollector *[]string, dry
 			encryption = model.Transparent.String()
 		}
 		techAsset := model.InputTechnicalAsset{
-			ID:                         id,
-			Description:                macroState["source-repository"][0] + " Sourcecode Repository",
-			Type:                       model.Process.String(),
-			Usage:                      model.DevOps.String(),
-			Used_as_client_by_human:    false,
-			Out_of_scope:               false,
-			Justification_out_of_scope: "",
-			Size:                       model.Service.String(),
-			Technology:                 model.SourcecodeRepository.String(),
-			Tags:                       []string{model.NormalizeTag(macroState["source-repository"][0])},
-			Internet:                   strings.ToLower(macroState["internet"][0]) == "yes",
-			Machine:                    model.Virtual.String(),
-			Encryption:                 encryption,
-			Owner:                      owner,
-			Confidentiality:            model.Confidential.String(),
-			Integrity:                  model.Critical.String(),
-			Availability:               model.Important.String(),
-			Justification_cia_rating: "Sourcecode processing components are at least rated as 'critical' in terms of integrity, because any " +
+			ID:                      id,
+			Description:             macroState["source-repository"][0] + " Sourcecode Repository",
+			Type:                    model.Process.String(),
+			Usage:                   model.DevOps.String(),
+			UsedAsClientByHuman:     false,
+			OutOfScope:              false,
+			JustificationOutOfScope: "",
+			Size:                    model.Service.String(),
+			Technology:              model.SourcecodeRepository.String(),
+			Tags:                    []string{model.NormalizeTag(macroState["source-repository"][0])},
+			Internet:                strings.ToLower(macroState["internet"][0]) == "yes",
+			Machine:                 model.Virtual.String(),
+			Encryption:              encryption,
+			Owner:                   owner,
+			Confidentiality:         model.Confidential.String(),
+			Integrity:               model.Critical.String(),
+			Availability:            model.Important.String(),
+			JustificationCiaRating: "Sourcecode processing components are at least rated as 'critical' in terms of integrity, because any " +
 				"malicious modification of it might lead to a backdoored production system.",
-			Multi_tenant:           strings.ToLower(macroState["multi-tenant"][0]) == "yes",
-			Redundant:              false,
-			Custom_developed_parts: false,
-			Data_assets_processed:  []string{"sourcecode"},
-			Data_assets_stored:     []string{"sourcecode"},
-			Data_formats_accepted:  []string{"file"},
-			Communication_links:    nil,
+			MultiTenant:          strings.ToLower(macroState["multi-tenant"][0]) == "yes",
+			Redundant:            false,
+			CustomDevelopedParts: false,
+			DataAssetsProcessed:  []string{"sourcecode"},
+			DataAssetsStored:     []string{"sourcecode"},
+			DataFormatsAccepted:  []string{"file"},
+			CommunicationLinks:   nil,
 		}
 		*changeLogCollector = append(*changeLogCollector, "adding technical asset (including communication links): "+id)
 		if !dryRun {
-			modelInput.Technical_assets[macroState["source-repository"][0]+" Sourcecode Repository"] = techAsset
+			modelInput.TechnicalAssets[macroState["source-repository"][0]+" Sourcecode Repository"] = techAsset
 		}
 	}
 
@@ -526,36 +526,36 @@ func applyChange(modelInput *model.ModelInput, changeLogCollector *[]string, dry
 				encryption = model.Transparent.String()
 			}
 			techAsset := model.InputTechnicalAsset{
-				ID:                         id,
-				Description:                macroState["container-registry"][0] + " Container Registry",
-				Type:                       model.Process.String(),
-				Usage:                      model.DevOps.String(),
-				Used_as_client_by_human:    false,
-				Out_of_scope:               false,
-				Justification_out_of_scope: "",
-				Size:                       model.Service.String(),
-				Technology:                 model.ArtifactRegistry.String(),
-				Tags:                       []string{model.NormalizeTag(macroState["container-registry"][0])},
-				Internet:                   strings.ToLower(macroState["internet"][0]) == "yes",
-				Machine:                    model.Virtual.String(),
-				Encryption:                 encryption,
-				Owner:                      owner,
-				Confidentiality:            model.Confidential.String(),
-				Integrity:                  model.Critical.String(),
-				Availability:               model.Important.String(),
-				Justification_cia_rating: "Container registry components are at least rated as 'critical' in terms of integrity, because any " +
+				ID:                      id,
+				Description:             macroState["container-registry"][0] + " Container Registry",
+				Type:                    model.Process.String(),
+				Usage:                   model.DevOps.String(),
+				UsedAsClientByHuman:     false,
+				OutOfScope:              false,
+				JustificationOutOfScope: "",
+				Size:                    model.Service.String(),
+				Technology:              model.ArtifactRegistry.String(),
+				Tags:                    []string{model.NormalizeTag(macroState["container-registry"][0])},
+				Internet:                strings.ToLower(macroState["internet"][0]) == "yes",
+				Machine:                 model.Virtual.String(),
+				Encryption:              encryption,
+				Owner:                   owner,
+				Confidentiality:         model.Confidential.String(),
+				Integrity:               model.Critical.String(),
+				Availability:            model.Important.String(),
+				JustificationCiaRating: "Container registry components are at least rated as 'critical' in terms of integrity, because any " +
 					"malicious modification of it might lead to a backdoored production system.",
-				Multi_tenant:           strings.ToLower(macroState["multi-tenant"][0]) == "yes",
-				Redundant:              false,
-				Custom_developed_parts: false,
-				Data_assets_processed:  []string{"deployment"},
-				Data_assets_stored:     []string{"deployment"},
-				Data_formats_accepted:  []string{"file"},
-				Communication_links:    nil,
+				MultiTenant:          strings.ToLower(macroState["multi-tenant"][0]) == "yes",
+				Redundant:            false,
+				CustomDevelopedParts: false,
+				DataAssetsProcessed:  []string{"deployment"},
+				DataAssetsStored:     []string{"deployment"},
+				DataFormatsAccepted:  []string{"file"},
+				CommunicationLinks:   nil,
 			}
 			*changeLogCollector = append(*changeLogCollector, "adding technical asset (including communication links): "+id)
 			if !dryRun {
-				modelInput.Technical_assets[macroState["container-registry"][0]+" Container Registry"] = techAsset
+				modelInput.TechnicalAssets[macroState["container-registry"][0]+" Container Registry"] = techAsset
 			}
 		}
 
@@ -568,36 +568,36 @@ func applyChange(modelInput *model.ModelInput, changeLogCollector *[]string, dry
 				encryption = model.Transparent.String()
 			}
 			techAsset := model.InputTechnicalAsset{
-				ID:                         id,
-				Description:                macroState["container-platform"][0] + " Container Platform",
-				Type:                       model.Process.String(),
-				Usage:                      model.DevOps.String(),
-				Used_as_client_by_human:    false,
-				Out_of_scope:               false,
-				Justification_out_of_scope: "",
-				Size:                       model.System.String(),
-				Technology:                 model.ContainerPlatform.String(),
-				Tags:                       []string{model.NormalizeTag(macroState["container-platform"][0])},
-				Internet:                   strings.ToLower(macroState["internet"][0]) == "yes",
-				Machine:                    model.Virtual.String(),
-				Encryption:                 encryption,
-				Owner:                      owner,
-				Confidentiality:            model.Confidential.String(),
-				Integrity:                  model.MissionCritical.String(),
-				Availability:               model.MissionCritical.String(),
-				Justification_cia_rating: "Container platform components are rated as 'mission-critical' in terms of integrity and availability, because any " +
+				ID:                      id,
+				Description:             macroState["container-platform"][0] + " Container Platform",
+				Type:                    model.Process.String(),
+				Usage:                   model.DevOps.String(),
+				UsedAsClientByHuman:     false,
+				OutOfScope:              false,
+				JustificationOutOfScope: "",
+				Size:                    model.System.String(),
+				Technology:              model.ContainerPlatform.String(),
+				Tags:                    []string{model.NormalizeTag(macroState["container-platform"][0])},
+				Internet:                strings.ToLower(macroState["internet"][0]) == "yes",
+				Machine:                 model.Virtual.String(),
+				Encryption:              encryption,
+				Owner:                   owner,
+				Confidentiality:         model.Confidential.String(),
+				Integrity:               model.MissionCritical.String(),
+				Availability:            model.MissionCritical.String(),
+				JustificationCiaRating: "Container platform components are rated as 'mission-critical' in terms of integrity and availability, because any " +
 					"malicious modification of it might lead to a backdoored production system.",
-				Multi_tenant:           strings.ToLower(macroState["multi-tenant"][0]) == "yes",
-				Redundant:              false,
-				Custom_developed_parts: false,
-				Data_assets_processed:  []string{"deployment"},
-				Data_assets_stored:     []string{"deployment"},
-				Data_formats_accepted:  []string{"file"},
-				Communication_links:    nil,
+				MultiTenant:          strings.ToLower(macroState["multi-tenant"][0]) == "yes",
+				Redundant:            false,
+				CustomDevelopedParts: false,
+				DataAssetsProcessed:  []string{"deployment"},
+				DataAssetsStored:     []string{"deployment"},
+				DataFormatsAccepted:  []string{"file"},
+				CommunicationLinks:   nil,
 			}
 			*changeLogCollector = append(*changeLogCollector, "adding technical asset (including communication links): "+id)
 			if !dryRun {
-				modelInput.Technical_assets[macroState["container-platform"][0]+" Container Platform"] = techAsset
+				modelInput.TechnicalAssets[macroState["container-platform"][0]+" Container Platform"] = techAsset
 			}
 		}
 	}
@@ -613,115 +613,115 @@ func applyChange(modelInput *model.ModelInput, changeLogCollector *[]string, dry
 
 		commLinks := make(map[string]model.InputCommunicationLink)
 		commLinks["Sourcecode Repository Traffic"] = model.InputCommunicationLink{
-			Target:                   sourceRepoID,
-			Description:              "Sourcecode Repository Traffic",
-			Protocol:                 model.HTTPS.String(),
-			Authentication:           model.Credentials.String(),
-			Authorization:            model.TechnicalUser.String(),
-			Tags:                     []string{},
-			VPN:                      false,
-			IP_filtered:              false,
-			Readonly:                 true,
-			Usage:                    model.DevOps.String(),
-			Data_assets_sent:         nil,
-			Data_assets_received:     []string{"sourcecode"},
-			Diagram_tweak_weight:     0,
-			Diagram_tweak_constraint: false,
+			Target:                 sourceRepoID,
+			Description:            "Sourcecode Repository Traffic",
+			Protocol:               model.HTTPS.String(),
+			Authentication:         model.Credentials.String(),
+			Authorization:          model.TechnicalUser.String(),
+			Tags:                   []string{},
+			VPN:                    false,
+			IpFiltered:             false,
+			Readonly:               true,
+			Usage:                  model.DevOps.String(),
+			DataAssetsSent:         nil,
+			DataAssetsReceived:     []string{"sourcecode"},
+			DiagramTweakWeight:     0,
+			DiagramTweakConstraint: false,
 		}
 		commLinks["Artifact Registry Traffic"] = model.InputCommunicationLink{
-			Target:                   artifactRegistryID,
-			Description:              "Artifact Registry Traffic",
-			Protocol:                 model.HTTPS.String(),
-			Authentication:           model.Credentials.String(),
-			Authorization:            model.TechnicalUser.String(),
-			Tags:                     []string{},
-			VPN:                      false,
-			IP_filtered:              false,
-			Readonly:                 false,
-			Usage:                    model.DevOps.String(),
-			Data_assets_sent:         []string{"deployment"},
-			Data_assets_received:     []string{"deployment"},
-			Diagram_tweak_weight:     0,
-			Diagram_tweak_constraint: false,
+			Target:                 artifactRegistryID,
+			Description:            "Artifact Registry Traffic",
+			Protocol:               model.HTTPS.String(),
+			Authentication:         model.Credentials.String(),
+			Authorization:          model.TechnicalUser.String(),
+			Tags:                   []string{},
+			VPN:                    false,
+			IpFiltered:             false,
+			Readonly:               false,
+			Usage:                  model.DevOps.String(),
+			DataAssetsSent:         []string{"deployment"},
+			DataAssetsReceived:     []string{"deployment"},
+			DiagramTweakWeight:     0,
+			DiagramTweakConstraint: false,
 		}
 		if containerTechUsed {
 			commLinks["Container Registry Traffic"] = model.InputCommunicationLink{
-				Target:                   containerRepoID,
-				Description:              "Container Registry Traffic",
-				Protocol:                 model.HTTPS.String(),
-				Authentication:           model.Credentials.String(),
-				Authorization:            model.TechnicalUser.String(),
-				Tags:                     []string{},
-				VPN:                      false,
-				IP_filtered:              false,
-				Readonly:                 false,
-				Usage:                    model.DevOps.String(),
-				Data_assets_sent:         []string{"deployment"},
-				Data_assets_received:     []string{"deployment"},
-				Diagram_tweak_weight:     0,
-				Diagram_tweak_constraint: false,
+				Target:                 containerRepoID,
+				Description:            "Container Registry Traffic",
+				Protocol:               model.HTTPS.String(),
+				Authentication:         model.Credentials.String(),
+				Authorization:          model.TechnicalUser.String(),
+				Tags:                   []string{},
+				VPN:                    false,
+				IpFiltered:             false,
+				Readonly:               false,
+				Usage:                  model.DevOps.String(),
+				DataAssetsSent:         []string{"deployment"},
+				DataAssetsReceived:     []string{"deployment"},
+				DiagramTweakWeight:     0,
+				DiagramTweakConstraint: false,
 			}
 			if macroState["push-or-pull"][0] == pushOrPull[0] { // Push
 				commLinks["Container Platform Push"] = model.InputCommunicationLink{
-					Target:                   containerPlatformID,
-					Description:              "Container Platform Push",
-					Protocol:                 model.HTTPS.String(),
-					Authentication:           model.Credentials.String(),
-					Authorization:            model.TechnicalUser.String(),
-					Tags:                     []string{},
-					VPN:                      false,
-					IP_filtered:              false,
-					Readonly:                 false,
-					Usage:                    model.DevOps.String(),
-					Data_assets_sent:         []string{"deployment"},
-					Data_assets_received:     []string{"deployment"},
-					Diagram_tweak_weight:     0,
-					Diagram_tweak_constraint: false,
+					Target:                 containerPlatformID,
+					Description:            "Container Platform Push",
+					Protocol:               model.HTTPS.String(),
+					Authentication:         model.Credentials.String(),
+					Authorization:          model.TechnicalUser.String(),
+					Tags:                   []string{},
+					VPN:                    false,
+					IpFiltered:             false,
+					Readonly:               false,
+					Usage:                  model.DevOps.String(),
+					DataAssetsSent:         []string{"deployment"},
+					DataAssetsReceived:     []string{"deployment"},
+					DiagramTweakWeight:     0,
+					DiagramTweakConstraint: false,
 				}
 			} else { // Pull
 				commLinkPull := model.InputCommunicationLink{
-					Target:                   containerRepoID,
-					Description:              "Container Platform Pull",
-					Protocol:                 model.HTTPS.String(),
-					Authentication:           model.Credentials.String(),
-					Authorization:            model.TechnicalUser.String(),
-					Tags:                     []string{},
-					VPN:                      false,
-					IP_filtered:              false,
-					Readonly:                 true,
-					Usage:                    model.DevOps.String(),
-					Data_assets_sent:         nil,
-					Data_assets_received:     []string{"deployment"},
-					Diagram_tweak_weight:     0,
-					Diagram_tweak_constraint: false,
+					Target:                 containerRepoID,
+					Description:            "Container Platform Pull",
+					Protocol:               model.HTTPS.String(),
+					Authentication:         model.Credentials.String(),
+					Authorization:          model.TechnicalUser.String(),
+					Tags:                   []string{},
+					VPN:                    false,
+					IpFiltered:             false,
+					Readonly:               true,
+					Usage:                  model.DevOps.String(),
+					DataAssetsSent:         nil,
+					DataAssetsReceived:     []string{"deployment"},
+					DiagramTweakWeight:     0,
+					DiagramTweakConstraint: false,
 				}
 				if !dryRun {
 					titleOfTargetAsset := macroState["container-platform"][0] + " Container Platform"
-					containerPlatform := modelInput.Technical_assets[titleOfTargetAsset]
-					if containerPlatform.Communication_links == nil {
-						containerPlatform.Communication_links = make(map[string]model.InputCommunicationLink, 0)
+					containerPlatform := modelInput.TechnicalAssets[titleOfTargetAsset]
+					if containerPlatform.CommunicationLinks == nil {
+						containerPlatform.CommunicationLinks = make(map[string]model.InputCommunicationLink)
 					}
-					containerPlatform.Communication_links["Container Platform Pull"] = commLinkPull
-					modelInput.Technical_assets[titleOfTargetAsset] = containerPlatform
+					containerPlatform.CommunicationLinks["Container Platform Pull"] = commLinkPull
+					modelInput.TechnicalAssets[titleOfTargetAsset] = containerPlatform
 				}
 			}
 		}
 		if codeInspectionUsed {
 			commLinks["Code Inspection Platform Traffic"] = model.InputCommunicationLink{
-				Target:                   codeInspectionPlatformID,
-				Description:              "Code Inspection Platform Traffic",
-				Protocol:                 model.HTTPS.String(),
-				Authentication:           model.Credentials.String(),
-				Authorization:            model.TechnicalUser.String(),
-				Tags:                     []string{},
-				VPN:                      false,
-				IP_filtered:              false,
-				Readonly:                 false,
-				Usage:                    model.DevOps.String(),
-				Data_assets_sent:         []string{"sourcecode"},
-				Data_assets_received:     []string{},
-				Diagram_tweak_weight:     0,
-				Diagram_tweak_constraint: false,
+				Target:                 codeInspectionPlatformID,
+				Description:            "Code Inspection Platform Traffic",
+				Protocol:               model.HTTPS.String(),
+				Authentication:         model.Credentials.String(),
+				Authorization:          model.TechnicalUser.String(),
+				Tags:                   []string{},
+				VPN:                    false,
+				IpFiltered:             false,
+				Readonly:               false,
+				Usage:                  model.DevOps.String(),
+				DataAssetsSent:         []string{"sourcecode"},
+				DataAssetsReceived:     []string{},
+				DiagramTweakWeight:     0,
+				DiagramTweakConstraint: false,
 			}
 		}
 		// The individual deployments
@@ -729,73 +729,73 @@ func applyChange(modelInput *model.ModelInput, changeLogCollector *[]string, dry
 			//fmt.Println("Adding deployment flow to:", deployTargetID)
 			if containerTechUsed {
 				if !dryRun {
-					containerPlatform := modelInput.Technical_assets[macroState["container-platform"][0]+" Container Platform"]
-					if containerPlatform.Communication_links == nil {
-						containerPlatform.Communication_links = make(map[string]model.InputCommunicationLink, 0)
+					containerPlatform := modelInput.TechnicalAssets[macroState["container-platform"][0]+" Container Platform"]
+					if containerPlatform.CommunicationLinks == nil {
+						containerPlatform.CommunicationLinks = make(map[string]model.InputCommunicationLink)
 					}
-					containerPlatform.Communication_links["Container Spawning ("+deployTargetID+")"] = model.InputCommunicationLink{
-						Target:                   deployTargetID,
-						Description:              "Container Spawning " + deployTargetID,
-						Protocol:                 model.ContainerSpawning.String(),
-						Authentication:           model.NoneAuthentication.String(),
-						Authorization:            model.NoneAuthorization.String(),
-						Tags:                     []string{},
-						VPN:                      false,
-						IP_filtered:              false,
-						Readonly:                 false,
-						Usage:                    model.DevOps.String(),
-						Data_assets_sent:         []string{"deployment"},
-						Data_assets_received:     nil,
-						Diagram_tweak_weight:     0,
-						Diagram_tweak_constraint: false,
+					containerPlatform.CommunicationLinks["Container Spawning ("+deployTargetID+")"] = model.InputCommunicationLink{
+						Target:                 deployTargetID,
+						Description:            "Container Spawning " + deployTargetID,
+						Protocol:               model.ContainerSpawning.String(),
+						Authentication:         model.NoneAuthentication.String(),
+						Authorization:          model.NoneAuthorization.String(),
+						Tags:                   []string{},
+						VPN:                    false,
+						IpFiltered:             false,
+						Readonly:               false,
+						Usage:                  model.DevOps.String(),
+						DataAssetsSent:         []string{"deployment"},
+						DataAssetsReceived:     nil,
+						DiagramTweakWeight:     0,
+						DiagramTweakConstraint: false,
 					}
-					modelInput.Technical_assets[macroState["container-platform"][0]+" Container Platform"] = containerPlatform
+					modelInput.TechnicalAssets[macroState["container-platform"][0]+" Container Platform"] = containerPlatform
 				}
 			} else { // No Containers used
 				if macroState["push-or-pull"][0] == pushOrPull[0] { // Push
 					commLinks["Deployment Push ("+deployTargetID+")"] = model.InputCommunicationLink{
-						Target:                   deployTargetID,
-						Description:              "Deployment Push to " + deployTargetID,
-						Protocol:                 model.SSH.String(),
-						Authentication:           model.ClientCertificate.String(),
-						Authorization:            model.TechnicalUser.String(),
-						Tags:                     []string{},
-						VPN:                      false,
-						IP_filtered:              false,
-						Readonly:                 false,
-						Usage:                    model.DevOps.String(),
-						Data_assets_sent:         []string{"deployment"},
-						Data_assets_received:     nil,
-						Diagram_tweak_weight:     0,
-						Diagram_tweak_constraint: false,
+						Target:                 deployTargetID,
+						Description:            "Deployment Push to " + deployTargetID,
+						Protocol:               model.SSH.String(),
+						Authentication:         model.ClientCertificate.String(),
+						Authorization:          model.TechnicalUser.String(),
+						Tags:                   []string{},
+						VPN:                    false,
+						IpFiltered:             false,
+						Readonly:               false,
+						Usage:                  model.DevOps.String(),
+						DataAssetsSent:         []string{"deployment"},
+						DataAssetsReceived:     nil,
+						DiagramTweakWeight:     0,
+						DiagramTweakConstraint: false,
 					}
 				} else { // Pull
 					pullFromWhere := artifactRegistryID
 					commLinkPull := model.InputCommunicationLink{
-						Target:                   pullFromWhere,
-						Description:              "Deployment Pull from " + deployTargetID,
-						Protocol:                 model.HTTPS.String(),
-						Authentication:           model.Credentials.String(),
-						Authorization:            model.TechnicalUser.String(),
-						Tags:                     []string{},
-						VPN:                      false,
-						IP_filtered:              false,
-						Readonly:                 true,
-						Usage:                    model.DevOps.String(),
-						Data_assets_sent:         nil,
-						Data_assets_received:     []string{"deployment"},
-						Diagram_tweak_weight:     0,
-						Diagram_tweak_constraint: false,
+						Target:                 pullFromWhere,
+						Description:            "Deployment Pull from " + deployTargetID,
+						Protocol:               model.HTTPS.String(),
+						Authentication:         model.Credentials.String(),
+						Authorization:          model.TechnicalUser.String(),
+						Tags:                   []string{},
+						VPN:                    false,
+						IpFiltered:             false,
+						Readonly:               true,
+						Usage:                  model.DevOps.String(),
+						DataAssetsSent:         nil,
+						DataAssetsReceived:     []string{"deployment"},
+						DiagramTweakWeight:     0,
+						DiagramTweakConstraint: false,
 					}
 					if !dryRun {
 						// take care to lookup by title (as keyed in input YAML by title and only in parsed model representation by ID)
 						titleOfTargetAsset := model.ParsedModelRoot.TechnicalAssets[deployTargetID].Title
-						x := modelInput.Technical_assets[titleOfTargetAsset]
-						if x.Communication_links == nil {
-							x.Communication_links = make(map[string]model.InputCommunicationLink, 0)
+						x := modelInput.TechnicalAssets[titleOfTargetAsset]
+						if x.CommunicationLinks == nil {
+							x.CommunicationLinks = make(map[string]model.InputCommunicationLink)
 						}
-						x.Communication_links["Deployment Pull ("+deployTargetID+")"] = commLinkPull
-						modelInput.Technical_assets[titleOfTargetAsset] = x
+						x.CommunicationLinks["Deployment Pull ("+deployTargetID+")"] = commLinkPull
+						modelInput.TechnicalAssets[titleOfTargetAsset] = x
 					}
 
 				}
@@ -804,8 +804,8 @@ func applyChange(modelInput *model.ModelInput, changeLogCollector *[]string, dry
 			// don't forget to also add the "deployment" data asset as stored on the target
 			targetAssetTitle := model.ParsedModelRoot.TechnicalAssets[deployTargetID].Title
 			assetsStored := make([]string, 0)
-			if modelInput.Technical_assets[targetAssetTitle].Data_assets_stored != nil {
-				for _, val := range modelInput.Technical_assets[targetAssetTitle].Data_assets_stored {
+			if modelInput.TechnicalAssets[targetAssetTitle].DataAssetsStored != nil {
+				for _, val := range modelInput.TechnicalAssets[targetAssetTitle].DataAssetsStored {
 					assetsStored = append(assetsStored, fmt.Sprintf("%v", val))
 				}
 			}
@@ -815,43 +815,43 @@ func applyChange(modelInput *model.ModelInput, changeLogCollector *[]string, dry
 			}
 			mergedArrays = append(mergedArrays, "deployment")
 			if !dryRun {
-				x := modelInput.Technical_assets[targetAssetTitle]
-				x.Data_assets_stored = mergedArrays
-				modelInput.Technical_assets[targetAssetTitle] = x
+				x := modelInput.TechnicalAssets[targetAssetTitle]
+				x.DataAssetsStored = mergedArrays
+				modelInput.TechnicalAssets[targetAssetTitle] = x
 			}
 		}
 
 		techAsset := model.InputTechnicalAsset{
-			ID:                         id,
-			Description:                macroState["build-pipeline"][0] + " Build Pipeline",
-			Type:                       model.Process.String(),
-			Usage:                      model.DevOps.String(),
-			Used_as_client_by_human:    false,
-			Out_of_scope:               false,
-			Justification_out_of_scope: "",
-			Size:                       model.Service.String(),
-			Technology:                 model.BuildPipeline.String(),
-			Tags:                       []string{model.NormalizeTag(macroState["build-pipeline"][0])},
-			Internet:                   strings.ToLower(macroState["internet"][0]) == "yes",
-			Machine:                    model.Virtual.String(),
-			Encryption:                 encryption,
-			Owner:                      owner,
-			Confidentiality:            model.Confidential.String(),
-			Integrity:                  model.Critical.String(),
-			Availability:               model.Important.String(),
-			Justification_cia_rating: "Build pipeline components are at least rated as 'critical' in terms of integrity, because any " +
+			ID:                      id,
+			Description:             macroState["build-pipeline"][0] + " Build Pipeline",
+			Type:                    model.Process.String(),
+			Usage:                   model.DevOps.String(),
+			UsedAsClientByHuman:     false,
+			OutOfScope:              false,
+			JustificationOutOfScope: "",
+			Size:                    model.Service.String(),
+			Technology:              model.BuildPipeline.String(),
+			Tags:                    []string{model.NormalizeTag(macroState["build-pipeline"][0])},
+			Internet:                strings.ToLower(macroState["internet"][0]) == "yes",
+			Machine:                 model.Virtual.String(),
+			Encryption:              encryption,
+			Owner:                   owner,
+			Confidentiality:         model.Confidential.String(),
+			Integrity:               model.Critical.String(),
+			Availability:            model.Important.String(),
+			JustificationCiaRating: "Build pipeline components are at least rated as 'critical' in terms of integrity, because any " +
 				"malicious modification of it might lead to a backdoored production system.",
-			Multi_tenant:           strings.ToLower(macroState["multi-tenant"][0]) == "yes",
-			Redundant:              false,
-			Custom_developed_parts: false,
-			Data_assets_processed:  []string{"sourcecode", "deployment"},
-			Data_assets_stored:     []string{"sourcecode", "deployment"},
-			Data_formats_accepted:  []string{"file"},
-			Communication_links:    commLinks,
+			MultiTenant:          strings.ToLower(macroState["multi-tenant"][0]) == "yes",
+			Redundant:            false,
+			CustomDevelopedParts: false,
+			DataAssetsProcessed:  []string{"sourcecode", "deployment"},
+			DataAssetsStored:     []string{"sourcecode", "deployment"},
+			DataFormatsAccepted:  []string{"file"},
+			CommunicationLinks:   commLinks,
 		}
 		*changeLogCollector = append(*changeLogCollector, "adding technical asset (including communication links): "+id)
 		if !dryRun {
-			modelInput.Technical_assets[macroState["build-pipeline"][0]+" Build Pipeline"] = techAsset
+			modelInput.TechnicalAssets[macroState["build-pipeline"][0]+" Build Pipeline"] = techAsset
 		}
 	}
 
@@ -864,36 +864,36 @@ func applyChange(modelInput *model.ModelInput, changeLogCollector *[]string, dry
 			encryption = model.Transparent.String()
 		}
 		techAsset := model.InputTechnicalAsset{
-			ID:                         id,
-			Description:                macroState["artifact-registry"][0] + " Artifact Registry",
-			Type:                       model.Process.String(),
-			Usage:                      model.DevOps.String(),
-			Used_as_client_by_human:    false,
-			Out_of_scope:               false,
-			Justification_out_of_scope: "",
-			Size:                       model.Service.String(),
-			Technology:                 model.ArtifactRegistry.String(),
-			Tags:                       []string{model.NormalizeTag(macroState["artifact-registry"][0])},
-			Internet:                   strings.ToLower(macroState["internet"][0]) == "yes",
-			Machine:                    model.Virtual.String(),
-			Encryption:                 encryption,
-			Owner:                      owner,
-			Confidentiality:            model.Confidential.String(),
-			Integrity:                  model.Critical.String(),
-			Availability:               model.Important.String(),
-			Justification_cia_rating: "Artifact registry components are at least rated as 'critical' in terms of integrity, because any " +
+			ID:                      id,
+			Description:             macroState["artifact-registry"][0] + " Artifact Registry",
+			Type:                    model.Process.String(),
+			Usage:                   model.DevOps.String(),
+			UsedAsClientByHuman:     false,
+			OutOfScope:              false,
+			JustificationOutOfScope: "",
+			Size:                    model.Service.String(),
+			Technology:              model.ArtifactRegistry.String(),
+			Tags:                    []string{model.NormalizeTag(macroState["artifact-registry"][0])},
+			Internet:                strings.ToLower(macroState["internet"][0]) == "yes",
+			Machine:                 model.Virtual.String(),
+			Encryption:              encryption,
+			Owner:                   owner,
+			Confidentiality:         model.Confidential.String(),
+			Integrity:               model.Critical.String(),
+			Availability:            model.Important.String(),
+			JustificationCiaRating: "Artifact registry components are at least rated as 'critical' in terms of integrity, because any " +
 				"malicious modification of it might lead to a backdoored production system.",
-			Multi_tenant:           strings.ToLower(macroState["multi-tenant"][0]) == "yes",
-			Redundant:              false,
-			Custom_developed_parts: false,
-			Data_assets_processed:  []string{"sourcecode", "deployment"},
-			Data_assets_stored:     []string{"sourcecode", "deployment"},
-			Data_formats_accepted:  []string{"file"},
-			Communication_links:    nil,
+			MultiTenant:          strings.ToLower(macroState["multi-tenant"][0]) == "yes",
+			Redundant:            false,
+			CustomDevelopedParts: false,
+			DataAssetsProcessed:  []string{"sourcecode", "deployment"},
+			DataAssetsStored:     []string{"sourcecode", "deployment"},
+			DataFormatsAccepted:  []string{"file"},
+			CommunicationLinks:   nil,
 		}
 		*changeLogCollector = append(*changeLogCollector, "adding technical asset (including communication links): "+id)
 		if !dryRun {
-			modelInput.Technical_assets[macroState["artifact-registry"][0]+" Artifact Registry"] = techAsset
+			modelInput.TechnicalAssets[macroState["artifact-registry"][0]+" Artifact Registry"] = techAsset
 		}
 	}
 
@@ -907,36 +907,36 @@ func applyChange(modelInput *model.ModelInput, changeLogCollector *[]string, dry
 				encryption = model.Transparent.String()
 			}
 			techAsset := model.InputTechnicalAsset{
-				ID:                         id,
-				Description:                macroState["code-inspection-platform"][0] + " Code Inspection Platform",
-				Type:                       model.Process.String(),
-				Usage:                      model.DevOps.String(),
-				Used_as_client_by_human:    false,
-				Out_of_scope:               false,
-				Justification_out_of_scope: "",
-				Size:                       model.Service.String(),
-				Technology:                 model.CodeInspectionPlatform.String(),
-				Tags:                       []string{model.NormalizeTag(macroState["code-inspection-platform"][0])},
-				Internet:                   strings.ToLower(macroState["internet"][0]) == "yes",
-				Machine:                    model.Virtual.String(),
-				Encryption:                 encryption,
-				Owner:                      owner,
-				Confidentiality:            model.Confidential.String(),
-				Integrity:                  model.Important.String(),
-				Availability:               model.Operational.String(),
-				Justification_cia_rating: "Sourcecode inspection platforms are rated at least 'important' in terms of integrity, because any " +
+				ID:                      id,
+				Description:             macroState["code-inspection-platform"][0] + " Code Inspection Platform",
+				Type:                    model.Process.String(),
+				Usage:                   model.DevOps.String(),
+				UsedAsClientByHuman:     false,
+				OutOfScope:              false,
+				JustificationOutOfScope: "",
+				Size:                    model.Service.String(),
+				Technology:              model.CodeInspectionPlatform.String(),
+				Tags:                    []string{model.NormalizeTag(macroState["code-inspection-platform"][0])},
+				Internet:                strings.ToLower(macroState["internet"][0]) == "yes",
+				Machine:                 model.Virtual.String(),
+				Encryption:              encryption,
+				Owner:                   owner,
+				Confidentiality:         model.Confidential.String(),
+				Integrity:               model.Important.String(),
+				Availability:            model.Operational.String(),
+				JustificationCiaRating: "Sourcecode inspection platforms are rated at least 'important' in terms of integrity, because any " +
 					"malicious modification of it might lead to vulnerabilities found by the scanner engine not being shown.",
-				Multi_tenant:           strings.ToLower(macroState["multi-tenant"][0]) == "yes",
-				Redundant:              false,
-				Custom_developed_parts: false,
-				Data_assets_processed:  []string{"sourcecode"},
-				Data_assets_stored:     []string{"sourcecode"},
-				Data_formats_accepted:  []string{"file"},
-				Communication_links:    nil,
+				MultiTenant:          strings.ToLower(macroState["multi-tenant"][0]) == "yes",
+				Redundant:            false,
+				CustomDevelopedParts: false,
+				DataAssetsProcessed:  []string{"sourcecode"},
+				DataAssetsStored:     []string{"sourcecode"},
+				DataFormatsAccepted:  []string{"file"},
+				CommunicationLinks:   nil,
 			}
 			*changeLogCollector = append(*changeLogCollector, "adding technical asset (including communication links): "+id)
 			if !dryRun {
-				modelInput.Technical_assets[macroState["code-inspection-platform"][0]+" Code Inspection Platform"] = techAsset
+				modelInput.TechnicalAssets[macroState["code-inspection-platform"][0]+" Code Inspection Platform"] = techAsset
 			}
 		}
 	}
@@ -947,25 +947,25 @@ func applyChange(modelInput *model.ModelInput, changeLogCollector *[]string, dry
 			//fmt.Println("Adding new trust boundary of type:", trustBoundaryType)
 			title := "DevOps Network"
 			trustBoundary := model.InputTrustBoundary{
-				ID:                      "devops-network",
-				Description:             "DevOps Network",
-				Type:                    trustBoundaryType,
-				Tags:                    []string{},
-				Technical_assets_inside: serverSideTechAssets,
-				Trust_boundaries_nested: nil,
+				ID:                    "devops-network",
+				Description:           "DevOps Network",
+				Type:                  trustBoundaryType,
+				Tags:                  []string{},
+				TechnicalAssetsInside: serverSideTechAssets,
+				TrustBoundariesNested: nil,
 			}
 			*changeLogCollector = append(*changeLogCollector, "adding trust boundary: devops-network")
 			if !dryRun {
-				modelInput.Trust_boundaries[title] = trustBoundary
+				modelInput.TrustBoundaries[title] = trustBoundary
 			}
 		} else {
 			existingTrustBoundaryToAddTo := macroState["selected-trust-boundary"][0]
 			//fmt.Println("Adding to existing trust boundary:", existingTrustBoundaryToAddTo)
 			title := model.ParsedModelRoot.TrustBoundaries[existingTrustBoundaryToAddTo].Title
 			assetsInside := make([]string, 0)
-			if modelInput.Trust_boundaries[title].Technical_assets_inside != nil {
-				vals := modelInput.Trust_boundaries[title].Technical_assets_inside
-				for _, val := range vals {
+			if modelInput.TrustBoundaries[title].TechnicalAssetsInside != nil {
+				values := modelInput.TrustBoundaries[title].TechnicalAssetsInside
+				for _, val := range values {
 					assetsInside = append(assetsInside, fmt.Sprintf("%v", val))
 				}
 			}
@@ -976,12 +976,12 @@ func applyChange(modelInput *model.ModelInput, changeLogCollector *[]string, dry
 			mergedArrays = append(mergedArrays, serverSideTechAssets...)
 			*changeLogCollector = append(*changeLogCollector, "filling existing trust boundary: "+existingTrustBoundaryToAddTo)
 			if !dryRun {
-				if modelInput.Trust_boundaries == nil {
-					modelInput.Trust_boundaries = make(map[string]model.InputTrustBoundary, 0)
+				if modelInput.TrustBoundaries == nil {
+					modelInput.TrustBoundaries = make(map[string]model.InputTrustBoundary)
 				}
-				tb := modelInput.Trust_boundaries[title]
-				tb.Technical_assets_inside = mergedArrays
-				modelInput.Trust_boundaries[title] = tb
+				tb := modelInput.TrustBoundaries[title]
+				tb.TechnicalAssetsInside = mergedArrays
+				modelInput.TrustBoundaries[title] = tb
 			}
 		}
 	}
@@ -994,17 +994,17 @@ func applyChange(modelInput *model.ModelInput, changeLogCollector *[]string, dry
 		}
 		title := macroState["container-platform"][0] + " Runtime"
 		sharedRuntime := model.InputSharedRuntime{
-			ID:                       containerSharedRuntimeID,
-			Description:              title,
-			Tags:                     []string{model.NormalizeTag(macroState["container-platform"][0])},
-			Technical_assets_running: assetsRunning,
+			ID:                     containerSharedRuntimeID,
+			Description:            title,
+			Tags:                   []string{model.NormalizeTag(macroState["container-platform"][0])},
+			TechnicalAssetsRunning: assetsRunning,
 		}
 		*changeLogCollector = append(*changeLogCollector, "adding shared runtime: "+containerSharedRuntimeID)
 		if !dryRun {
-			if modelInput.Shared_runtimes == nil {
-				modelInput.Shared_runtimes = make(map[string]model.InputSharedRuntime, 0)
+			if modelInput.SharedRuntimes == nil {
+				modelInput.SharedRuntimes = make(map[string]model.InputSharedRuntime)
 			}
-			modelInput.Shared_runtimes[title] = sharedRuntime
+			modelInput.SharedRuntimes[title] = sharedRuntime
 		}
 	}
 

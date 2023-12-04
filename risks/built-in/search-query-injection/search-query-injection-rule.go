@@ -43,7 +43,7 @@ func GenerateRisks() []model.Risk {
 					continue
 				}
 				if incomingFlow.Protocol == model.HTTP || incomingFlow.Protocol == model.HTTPS ||
-					incomingFlow.Protocol == model.BINARY || incomingFlow.Protocol == model.BINARY_encrypted {
+					incomingFlow.Protocol == model.BINARY || incomingFlow.Protocol == model.BinaryEncrypted {
 					likelihood := model.VeryLikely
 					if incomingFlow.Usage == model.DevOps {
 						likelihood = model.Likely

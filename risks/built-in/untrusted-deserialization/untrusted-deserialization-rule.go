@@ -55,8 +55,8 @@ func GenerateRisks() []model.Risk {
 		}
 		// check for any incoming IIOP and JRMP protocols
 		for _, commLink := range model.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id] {
-			if commLink.Protocol == model.IIOP || commLink.Protocol == model.IIOP_encrypted ||
-				commLink.Protocol == model.JRMP || commLink.Protocol == model.JRMP_encrypted {
+			if commLink.Protocol == model.IIOP || commLink.Protocol == model.IiopEncrypted ||
+				commLink.Protocol == model.JRMP || commLink.Protocol == model.JrmpEncrypted {
 				hasOne = true
 				if commLink.IsAcrossTrustBoundaryNetworkOnly() {
 					acrossTrustBoundary = true

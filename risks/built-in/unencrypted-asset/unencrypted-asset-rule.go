@@ -23,7 +23,7 @@ func Category() model.RiskCategory {
 			", " + model.IPS.String() + " and embedded components like " + model.Library.String() + ") " +
 			"storing data assets rated at least as " + model.Confidential.String() + " or " + model.Critical.String() + ". " +
 			"For technical assets storing data assets rated as " + model.StrictlyConfidential.String() + " or " + model.MissionCritical.String() + " the " +
-			"encryption must be of type " + model.DataWithEnduserIndividualKey.String() + ".",
+			"encryption must be of type " + model.DataWithEndUserIndividualKey.String() + ".",
 		RiskAssessment:             "Depending on the confidentiality rating of the stored data-assets either medium or high risk.",
 		FalsePositives:             "When all sensitive data stored within the asset is already fully encrypted on document or data level.",
 		ModelFailurePossibleReason: false,
@@ -36,6 +36,7 @@ func SupportedTags() []string {
 }
 
 // check for technical assets that should be encrypted due to their confidentiality
+
 func GenerateRisks() []model.Risk {
 	risks := make([]model.Risk, 0)
 	for _, id := range model.SortedTechnicalAssetIDs() {
@@ -45,16 +46,16 @@ func GenerateRisks() []model.Risk {
 				technicalAsset.HighestIntegrity() >= model.Critical) {
 			verySensitive := technicalAsset.HighestConfidentiality() == model.StrictlyConfidential ||
 				technicalAsset.HighestIntegrity() == model.MissionCritical
-			requiresEnduserKey := verySensitive && technicalAsset.Technology.IsUsuallyStoringEnduserData()
+			requiresEndUserKey := verySensitive && technicalAsset.Technology.IsUsuallyStoringEndUserData()
 			if technicalAsset.Encryption == model.NoneEncryption {
 				impact := model.MediumImpact
 				if verySensitive {
 					impact = model.HighImpact
 				}
-				risks = append(risks, createRisk(technicalAsset, impact, requiresEnduserKey))
-			} else if requiresEnduserKey &&
+				risks = append(risks, createRisk(technicalAsset, impact, requiresEndUserKey))
+			} else if requiresEndUserKey &&
 				(technicalAsset.Encryption == model.Transparent || technicalAsset.Encryption == model.DataWithSymmetricSharedKey || technicalAsset.Encryption == model.DataWithAsymmetricSharedKey) {
-				risks = append(risks, createRisk(technicalAsset, model.MediumImpact, requiresEnduserKey))
+				risks = append(risks, createRisk(technicalAsset, model.MediumImpact, requiresEndUserKey))
 			}
 		}
 	}
@@ -63,16 +64,17 @@ func GenerateRisks() []model.Risk {
 
 // Simple routing assets like 'Reverse Proxy' or 'Load Balancer' usually don't have their own storage and thus have no
 // encryption requirement for the asset itself (though for the communication, but that's a different rule)
+
 func IsEncryptionWaiver(asset model.TechnicalAsset) bool {
 	return asset.Technology == model.ReverseProxy || asset.Technology == model.LoadBalancer ||
 		asset.Technology == model.WAF || asset.Technology == model.IDS || asset.Technology == model.IPS ||
 		asset.Technology.IsEmbeddedComponent()
 }
 
-func createRisk(technicalAsset model.TechnicalAsset, impact model.RiskExploitationImpact, requiresEnduserKey bool) model.Risk {
+func createRisk(technicalAsset model.TechnicalAsset, impact model.RiskExploitationImpact, requiresEndUserKey bool) model.Risk {
 	title := "<b>Unencrypted Technical Asset</b> named <b>" + technicalAsset.Title + "</b>"
-	if requiresEnduserKey {
-		title += " missing enduser-individual encryption with " + model.DataWithEnduserIndividualKey.String()
+	if requiresEndUserKey {
+		title += " missing end user individual encryption with " + model.DataWithEndUserIndividualKey.String()
 	}
 	risk := model.Risk{
 		Category:                     Category(),
