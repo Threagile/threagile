@@ -5,12 +5,7 @@ import (
 	"sort"
 )
 
-var (
-	_ = CalculateRAA
-)
-
 // used from plugin caller:
-
 func CalculateRAA() string {
 	for techAssetID, techAsset := range model.ParsedModelRoot.TechnicalAssets {
 		aa := calculateAttackerAttractiveness(techAsset)
@@ -38,7 +33,7 @@ func calculateRelativeAttackerAttractiveness(attractiveness float64) float64 {
 		// first create them in memory (see the link replacement below for nested trust boundaries) - otherwise in Go ranging over map is random order
 		// range over them in sorted (hence re-producible) way:
 		keys := make([]string, 0)
-		for k := range model.ParsedModelRoot.TechnicalAssets {
+		for k, _ := range model.ParsedModelRoot.TechnicalAssets {
 			keys = append(keys, k)
 		}
 		sort.Strings(keys)
@@ -58,7 +53,7 @@ func calculateRelativeAttackerAttractiveness(attractiveness float64) float64 {
 	}
 	// calculate the percent value of the value within the defined min/max range
 	value := attractiveness - attackerAttractivenessMinimum
-	percent := value / spread * 100
+	percent := float64(value) / float64(spread) * 100
 	if percent <= 0 {
 		percent = 1 // since 0 suggests no attacks at all
 	}
@@ -77,7 +72,7 @@ func calculatePivotingNeighbourEffectAdjustment(techAsset model.TechnicalAsset) 
 		delta := calculateRelativeAttackerAttractiveness(calculateAttackerAttractiveness(outgoingNeighbour)) - calculateRelativeAttackerAttractiveness(calculateAttackerAttractiveness(techAsset))
 		if delta > 0 {
 			potentialIncrease := delta / 3
-			//fmt.Println("Positive delta from", techAsset.Id, "to", outgoingNeighbour.Id, "is", delta, "yields to pivoting neighbour effect of an increase of", potentialIncrease)
+			//fmt.Println("Positive delta from", techAsset.Id, "to", outgoingNeighbour.Id, "is", delta, "yields to pivoting eighbour effect of an incrase of", potentialIncrease)
 			if potentialIncrease > adjustment {
 				adjustment = potentialIncrease
 			}

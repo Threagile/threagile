@@ -39,7 +39,7 @@ func GenerateRisks() []model.Risk {
 	hasVault := false
 	var mostRelevantAsset model.TechnicalAsset
 	impact := model.LowImpact
-	for _, id := range model.SortedTechnicalAssetIDs() { // use the sorted one to always get the same tech asset with the highest sensitivity as example asset
+	for _, id := range model.SortedTechnicalAssetIDs() { // use the sorted one to always get the same tech asset with highest sensitivity as example asset
 		techAsset := model.ParsedModelRoot.TechnicalAssets[id]
 		if techAsset.Technology == model.Vault {
 			hasVault = true

@@ -3,7 +3,7 @@ package report
 import (
 	"encoding/json"
 	"github.com/threagile/threagile/model"
-	"os"
+	"io/ioutil"
 )
 
 func WriteRisksJSON(filename string) {
@@ -20,20 +20,19 @@ func WriteRisksJSON(filename string) {
 	if err != nil {
 		panic(err)
 	}
-	err = os.WriteFile(filename, jsonBytes, 0644)
+	err = ioutil.WriteFile(filename, jsonBytes, 0644)
 	if err != nil {
 		panic(err)
 	}
 }
 
 // TODO: also a "data assets" json?
-
 func WriteTechnicalAssetsJSON(filename string) {
 	jsonBytes, err := json.Marshal(model.ParsedModelRoot.TechnicalAssets)
 	if err != nil {
 		panic(err)
 	}
-	err = os.WriteFile(filename, jsonBytes, 0644)
+	err = ioutil.WriteFile(filename, jsonBytes, 0644)
 	if err != nil {
 		panic(err)
 	}
@@ -44,7 +43,7 @@ func WriteStatsJSON(filename string) {
 	if err != nil {
 		panic(err)
 	}
-	err = os.WriteFile(filename, jsonBytes, 0644)
+	err = ioutil.WriteFile(filename, jsonBytes, 0644)
 	if err != nil {
 		panic(err)
 	}

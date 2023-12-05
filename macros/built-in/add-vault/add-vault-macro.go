@@ -84,7 +84,7 @@ func GetNextQuestion() (nextQuestion model.MacroQuestion, err error) {
 		}, nil
 	case 4:
 		possibleAnswers := make([]string, 0)
-		for id := range model.ParsedModelRoot.TechnicalAssets {
+		for id, _ := range model.ParsedModelRoot.TechnicalAssets {
 			possibleAnswers = append(possibleAnswers, id)
 		}
 		sort.Strings(possibleAnswers)
@@ -181,21 +181,21 @@ func applyChange(modelInput *model.ModelInput, changeLogCollector *[]string, dry
 
 	if _, exists := model.ParsedModelRoot.DataAssets["Configuration Secrets"]; !exists {
 		dataAsset := model.InputDataAsset{
-			ID:                     "configuration-secrets",
-			Description:            "Configuration secrets (like credentials, keys, certificates, etc.) secured and managed by a vault",
-			Usage:                  model.DevOps.String(),
-			Tags:                   []string{},
-			Origin:                 "",
-			Owner:                  "",
-			Quantity:               model.VeryFew.String(),
-			Confidentiality:        model.StrictlyConfidential.String(),
-			Integrity:              model.Critical.String(),
-			Availability:           model.Critical.String(),
-			JustificationCiaRating: "Configuration secrets are rated as being 'strictly-confidential'.",
+			ID:                       "configuration-secrets",
+			Description:              "Configuration secrets (like credentials, keys, certificates, etc.) secured and managed by a vault",
+			Usage:                    model.DevOps.String(),
+			Tags:                     []string{},
+			Origin:                   "",
+			Owner:                    "",
+			Quantity:                 model.VeryFew.String(),
+			Confidentiality:          model.StrictlyConfidential.String(),
+			Integrity:                model.Critical.String(),
+			Availability:             model.Critical.String(),
+			Justification_cia_rating: "Configuration secrets are rated as being 'strictly-confidential'.",
 		}
 		*changeLogCollector = append(*changeLogCollector, "adding data asset: configuration-secrets")
 		if !dryRun {
-			modelInput.DataAssets["Configuration Secrets"] = dataAsset
+			modelInput.Data_assets["Configuration Secrets"] = dataAsset
 		}
 	}
 
@@ -213,35 +213,35 @@ func applyChange(modelInput *model.ModelInput, changeLogCollector *[]string, dry
 		if _, exists := model.ParsedModelRoot.TechnicalAssets[storageID]; !exists {
 			serverSideTechAssets = append(serverSideTechAssets, storageID)
 			techAsset := model.InputTechnicalAsset{
-				ID:                      storageID,
-				Description:             "Vault Storage",
-				Type:                    model.Datastore.String(),
-				Usage:                   model.DevOps.String(),
-				UsedAsClientByHuman:     false,
-				OutOfScope:              false,
-				JustificationOutOfScope: "",
-				Size:                    model.Component.String(),
-				Technology:              tech,
-				Tags:                    []string{}, // TODO: let user enter or too detailed for a wizard?
-				Internet:                false,
-				Machine:                 model.Virtual.String(),                    // TODO: let user enter or too detailed for a wizard?
-				Encryption:              model.DataWithSymmetricSharedKey.String(), // can be assumed for a vault product as at least having some good encryption
-				Owner:                   "",
-				Confidentiality:         model.Confidential.String(),
-				Integrity:               model.Critical.String(),
-				Availability:            model.Critical.String(),
-				JustificationCiaRating:  "Vault components are only rated as 'confidential' as vaults usually apply a trust barrier to encrypt all data-at-rest with a vault key.",
-				MultiTenant:             strings.ToLower(macroState["multi-tenant"][0]) == "yes",
-				Redundant:               false,
-				CustomDevelopedParts:    false,
-				DataAssetsProcessed:     nil,
-				DataAssetsStored:        []string{"configuration-secrets"},
-				DataFormatsAccepted:     nil,
-				CommunicationLinks:      nil,
+				ID:                         storageID,
+				Description:                "Vault Storage",
+				Type:                       model.Datastore.String(),
+				Usage:                      model.DevOps.String(),
+				Used_as_client_by_human:    false,
+				Out_of_scope:               false,
+				Justification_out_of_scope: "",
+				Size:                       model.Component.String(),
+				Technology:                 tech,
+				Tags:                       []string{}, // TODO: let user enter or too detailed for a wizard?
+				Internet:                   false,
+				Machine:                    model.Virtual.String(),                    // TODO: let user enter or too detailed for a wizard?
+				Encryption:                 model.DataWithSymmetricSharedKey.String(), // can be assumed for a vault product as at least having some good encryption
+				Owner:                      "",
+				Confidentiality:            model.Confidential.String(),
+				Integrity:                  model.Critical.String(),
+				Availability:               model.Critical.String(),
+				Justification_cia_rating:   "Vault components are only rated as 'confidential' as vaults usually apply a trust barrier to encrypt all data-at-rest with a vault key.",
+				Multi_tenant:               strings.ToLower(macroState["multi-tenant"][0]) == "yes",
+				Redundant:                  false,
+				Custom_developed_parts:     false,
+				Data_assets_processed:      nil,
+				Data_assets_stored:         []string{"configuration-secrets"},
+				Data_formats_accepted:      nil,
+				Communication_links:        nil,
 			}
 			*changeLogCollector = append(*changeLogCollector, "adding technical asset: "+storageID)
 			if !dryRun {
-				modelInput.TechnicalAssets["Vault Storage"] = techAsset
+				modelInput.Technical_assets["Vault Storage"] = techAsset
 			}
 		}
 	}
@@ -254,23 +254,23 @@ func applyChange(modelInput *model.ModelInput, changeLogCollector *[]string, dry
 
 		if databaseUsed || filesystemUsed {
 			accessLink := model.InputCommunicationLink{
-				Target:                 storageID,
-				Description:            "Vault Storage Access",
-				Protocol:               model.LocalFileAccess.String(),
-				Authentication:         model.Credentials.String(),
-				Authorization:          model.TechnicalUser.String(),
-				Tags:                   []string{},
-				VPN:                    false,
-				IpFiltered:             false,
-				Readonly:               false,
-				Usage:                  model.DevOps.String(),
-				DataAssetsSent:         []string{"configuration-secrets"},
-				DataAssetsReceived:     []string{"configuration-secrets"},
-				DiagramTweakWeight:     0,
-				DiagramTweakConstraint: false,
+				Target:                   storageID,
+				Description:              "Vault Storage Access",
+				Protocol:                 model.LocalFileAccess.String(),
+				Authentication:           model.Credentials.String(),
+				Authorization:            model.TechnicalUser.String(),
+				Tags:                     []string{},
+				VPN:                      false,
+				IP_filtered:              false,
+				Readonly:                 false,
+				Usage:                    model.DevOps.String(),
+				Data_assets_sent:         []string{"configuration-secrets"},
+				Data_assets_received:     []string{"configuration-secrets"},
+				Diagram_tweak_weight:     0,
+				Diagram_tweak_constraint: false,
 			}
 			if databaseUsed {
-				accessLink.Protocol = model.SqlAccessProtocol.String() // TODO ask if encrypted and ask if NoSQL? or to detailed for a wizard?
+				accessLink.Protocol = model.SQL_access_protocol.String() // TODO ask if encrypted and ask if NoSQL? or to detailed for a wizard?
 			}
 			commLinks["Vault Storage Access"] = accessLink
 		}
@@ -287,31 +287,31 @@ func applyChange(modelInput *model.ModelInput, changeLogCollector *[]string, dry
 		}
 		for _, clientID := range macroState["clients"] { // add a connection from each client
 			clientAccessCommLink := model.InputCommunicationLink{
-				Target:                 vaultID,
-				Description:            "Vault Access Traffic (by " + clientID + ")",
-				Protocol:               model.HTTPS.String(),
-				Authentication:         authentication,
-				Authorization:          model.TechnicalUser.String(),
-				Tags:                   []string{},
-				VPN:                    false,
-				IpFiltered:             false,
-				Readonly:               true,
-				Usage:                  model.DevOps.String(),
-				DataAssetsSent:         nil,
-				DataAssetsReceived:     []string{"configuration-secrets"},
-				DiagramTweakWeight:     0,
-				DiagramTweakConstraint: false,
+				Target:                   vaultID,
+				Description:              "Vault Access Traffic (by " + clientID + ")",
+				Protocol:                 model.HTTPS.String(),
+				Authentication:           authentication,
+				Authorization:            model.TechnicalUser.String(),
+				Tags:                     []string{},
+				VPN:                      false,
+				IP_filtered:              false,
+				Readonly:                 true,
+				Usage:                    model.DevOps.String(),
+				Data_assets_sent:         nil,
+				Data_assets_received:     []string{"configuration-secrets"},
+				Diagram_tweak_weight:     0,
+				Diagram_tweak_constraint: false,
 			}
 			clientAssetTitle := model.ParsedModelRoot.TechnicalAssets[clientID].Title
 			if !dryRun {
-				client := modelInput.TechnicalAssets[clientAssetTitle]
-				client.CommunicationLinks["Vault Access ("+clientID+")"] = clientAccessCommLink
-				modelInput.TechnicalAssets[clientAssetTitle] = client
+				client := modelInput.Technical_assets[clientAssetTitle]
+				client.Communication_links["Vault Access ("+clientID+")"] = clientAccessCommLink
+				modelInput.Technical_assets[clientAssetTitle] = client
 			}
 			// don't forget to also add the "configuration-secrets" data asset as processed on the client
 			assetsProcessed := make([]string, 0)
-			if modelInput.TechnicalAssets[clientAssetTitle].DataAssetsProcessed != nil {
-				for _, val := range modelInput.TechnicalAssets[clientAssetTitle].DataAssetsProcessed {
+			if modelInput.Technical_assets[clientAssetTitle].Data_assets_processed != nil {
+				for _, val := range modelInput.Technical_assets[clientAssetTitle].Data_assets_processed {
 					assetsProcessed = append(assetsProcessed, fmt.Sprintf("%v", val))
 				}
 			}
@@ -321,45 +321,45 @@ func applyChange(modelInput *model.ModelInput, changeLogCollector *[]string, dry
 			}
 			mergedArrays = append(mergedArrays, "configuration-secrets")
 			if !dryRun {
-				x := modelInput.TechnicalAssets[clientAssetTitle]
-				x.DataAssetsProcessed = mergedArrays
-				modelInput.TechnicalAssets[clientAssetTitle] = x
+				x := modelInput.Technical_assets[clientAssetTitle]
+				x.Data_assets_processed = mergedArrays
+				modelInput.Technical_assets[clientAssetTitle] = x
 			}
 		}
 
 		techAsset := model.InputTechnicalAsset{
-			ID:                      vaultID,
-			Description:             macroState["vault-name"][0] + " Vault",
-			Type:                    model.Process.String(),
-			Usage:                   model.DevOps.String(),
-			UsedAsClientByHuman:     false,
-			OutOfScope:              false,
-			JustificationOutOfScope: "",
-			Size:                    model.Service.String(),
-			Technology:              model.Vault.String(),
-			Tags:                    []string{model.NormalizeTag(macroState["vault-name"][0])},
-			Internet:                false,
-			Machine:                 model.Virtual.String(),
-			Encryption:              model.Transparent.String(),
-			Owner:                   "",
-			Confidentiality:         model.StrictlyConfidential.String(),
-			Integrity:               model.Critical.String(),
-			Availability:            model.Critical.String(),
-			JustificationCiaRating:  "Vault components are rated as 'strictly-confidential'.",
-			MultiTenant:             strings.ToLower(macroState["multi-tenant"][0]) == "yes",
-			Redundant:               false,
-			CustomDevelopedParts:    false,
-			DataAssetsProcessed:     []string{"configuration-secrets"},
-			DataAssetsStored:        nil,
-			DataFormatsAccepted:     nil,
-			CommunicationLinks:      commLinks,
+			ID:                         vaultID,
+			Description:                macroState["vault-name"][0] + " Vault",
+			Type:                       model.Process.String(),
+			Usage:                      model.DevOps.String(),
+			Used_as_client_by_human:    false,
+			Out_of_scope:               false,
+			Justification_out_of_scope: "",
+			Size:                       model.Service.String(),
+			Technology:                 model.Vault.String(),
+			Tags:                       []string{model.NormalizeTag(macroState["vault-name"][0])},
+			Internet:                   false,
+			Machine:                    model.Virtual.String(),
+			Encryption:                 model.Transparent.String(),
+			Owner:                      "",
+			Confidentiality:            model.StrictlyConfidential.String(),
+			Integrity:                  model.Critical.String(),
+			Availability:               model.Critical.String(),
+			Justification_cia_rating:   "Vault components are rated as 'strictly-confidential'.",
+			Multi_tenant:               strings.ToLower(macroState["multi-tenant"][0]) == "yes",
+			Redundant:                  false,
+			Custom_developed_parts:     false,
+			Data_assets_processed:      []string{"configuration-secrets"},
+			Data_assets_stored:         nil,
+			Data_formats_accepted:      nil,
+			Communication_links:        commLinks,
 		}
 		if inMemoryUsed {
-			techAsset.DataAssetsStored = []string{"configuration-secrets"}
+			techAsset.Data_assets_stored = []string{"configuration-secrets"}
 		}
 		*changeLogCollector = append(*changeLogCollector, "adding technical asset (including communication links): "+vaultID)
 		if !dryRun {
-			modelInput.TechnicalAssets[macroState["vault-name"][0]+" Vault"] = techAsset
+			modelInput.Technical_assets[macroState["vault-name"][0]+" Vault"] = techAsset
 		}
 	}
 
@@ -367,16 +367,16 @@ func applyChange(modelInput *model.ModelInput, changeLogCollector *[]string, dry
 	if filesystemUsed {
 		title := "Vault Environment"
 		trustBoundary := model.InputTrustBoundary{
-			ID:                    vaultEnvID,
-			Description:           "Vault Environment",
-			Type:                  model.ExecutionEnvironment.String(),
-			Tags:                  []string{},
-			TechnicalAssetsInside: []string{vaultID, storageID},
-			TrustBoundariesNested: nil,
+			ID:                      vaultEnvID,
+			Description:             "Vault Environment",
+			Type:                    model.ExecutionEnvironment.String(),
+			Tags:                    []string{},
+			Technical_assets_inside: []string{vaultID, storageID},
+			Trust_boundaries_nested: nil,
 		}
 		*changeLogCollector = append(*changeLogCollector, "adding trust boundary: "+vaultEnvID)
 		if !dryRun {
-			modelInput.TrustBoundaries[title] = trustBoundary
+			modelInput.Trust_boundaries[title] = trustBoundary
 		}
 	}
 
@@ -391,13 +391,13 @@ func applyChange(modelInput *model.ModelInput, changeLogCollector *[]string, dry
 				Tags:        []string{},
 			}
 			if filesystemUsed {
-				trustBoundary.TrustBoundariesNested = []string{vaultEnvID}
+				trustBoundary.Trust_boundaries_nested = []string{vaultEnvID}
 			} else {
-				trustBoundary.TechnicalAssetsInside = serverSideTechAssets
+				trustBoundary.Technical_assets_inside = serverSideTechAssets
 			}
 			*changeLogCollector = append(*changeLogCollector, "adding trust boundary: vault-network")
 			if !dryRun {
-				modelInput.TrustBoundaries[title] = trustBoundary
+				modelInput.Trust_boundaries[title] = trustBoundary
 			}
 		} else { // adding to existing trust boundary
 			existingTrustBoundaryToAddTo := macroState["selected-trust-boundary"][0]
@@ -405,9 +405,9 @@ func applyChange(modelInput *model.ModelInput, changeLogCollector *[]string, dry
 
 			if filesystemUsed { // ---------------------- nest as execution-environment trust boundary ----------------------
 				boundariesNested := make([]string, 0)
-				if modelInput.TrustBoundaries[title].TrustBoundariesNested != nil {
-					values := modelInput.TrustBoundaries[title].TrustBoundariesNested
-					for _, val := range values {
+				if modelInput.Trust_boundaries[title].Trust_boundaries_nested != nil {
+					vals := modelInput.Trust_boundaries[title].Trust_boundaries_nested
+					for _, val := range vals {
 						boundariesNested = append(boundariesNested, fmt.Sprintf("%v", val))
 					}
 				}
@@ -418,15 +418,15 @@ func applyChange(modelInput *model.ModelInput, changeLogCollector *[]string, dry
 				mergedArrays = append(mergedArrays, vaultEnvID)
 				*changeLogCollector = append(*changeLogCollector, "filling existing trust boundary: "+existingTrustBoundaryToAddTo)
 				if !dryRun {
-					tb := modelInput.TrustBoundaries[title]
-					tb.TrustBoundariesNested = mergedArrays
-					modelInput.TrustBoundaries[title] = tb
+					tb := modelInput.Trust_boundaries[title]
+					tb.Trust_boundaries_nested = mergedArrays
+					modelInput.Trust_boundaries[title] = tb
 				}
 			} else { // ---------------------- place assets inside directly ----------------------
 				assetsInside := make([]string, 0)
-				if modelInput.TrustBoundaries[title].TechnicalAssetsInside != nil {
-					values := modelInput.TrustBoundaries[title].TechnicalAssetsInside
-					for _, val := range values {
+				if modelInput.Trust_boundaries[title].Technical_assets_inside != nil {
+					vals := modelInput.Trust_boundaries[title].Technical_assets_inside
+					for _, val := range vals {
 						assetsInside = append(assetsInside, fmt.Sprintf("%v", val))
 					}
 				}
@@ -437,9 +437,9 @@ func applyChange(modelInput *model.ModelInput, changeLogCollector *[]string, dry
 				mergedArrays = append(mergedArrays, serverSideTechAssets...)
 				*changeLogCollector = append(*changeLogCollector, "filling existing trust boundary: "+existingTrustBoundaryToAddTo)
 				if !dryRun {
-					tb := modelInput.TrustBoundaries[title]
-					tb.TechnicalAssetsInside = mergedArrays
-					modelInput.TrustBoundaries[title] = tb
+					tb := modelInput.Trust_boundaries[title]
+					tb.Technical_assets_inside = mergedArrays
+					modelInput.Trust_boundaries[title] = tb
 				}
 			}
 		}
