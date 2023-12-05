@@ -19,8 +19,8 @@ func Category() model.RiskCategory {
 		Check:          "Are recommendations from the linked cheat sheet and referenced ASVS chapter applied?",
 		Function:       model.Architecture,
 		STRIDE:         model.Spoofing,
-		DetectionLogic: "Models with authenticated data-flows authorized via end user identity missing an in-scope identity store.",
-		RiskAssessment: "The risk rating depends on the sensitivity of the end user-identity authorized technical assets and " +
+		DetectionLogic: "Models with authenticated data-flows authorized via enduser-identity missing an in-scope identity store.",
+		RiskAssessment: "The risk rating depends on the sensitivity of the enduser-identity authorized technical assets and " +
 			"their data assets processed and stored.",
 		FalsePositives: "Models only offering data/services without any real authentication need " +
 			"can be considered as false positives after individual review.",
@@ -42,14 +42,14 @@ func GenerateRisks() []model.Risk {
 			return risks
 		}
 	}
-	// now check if we have end user identity authorized communication links, then it's a risk
+	// now check if we have enduser-identity authorized communication links, then it's a risk
 	riskIdentified := false
 	var mostRelevantAsset model.TechnicalAsset
 	impact := model.LowImpact
-	for _, id := range model.SortedTechnicalAssetIDs() { // use the sorted one to always get the same tech asset with the highest sensitivity as example asset
+	for _, id := range model.SortedTechnicalAssetIDs() { // use the sorted one to always get the same tech asset with highest sensitivity as example asset
 		technicalAsset := model.ParsedModelRoot.TechnicalAssets[id]
-		for _, commLink := range technicalAsset.CommunicationLinksSorted() { // use the sorted one to always get the same tech asset with the highest sensitivity as example asset
-			if commLink.Authorization == model.EndUserIdentityPropagation {
+		for _, commLink := range technicalAsset.CommunicationLinksSorted() { // use the sorted one to always get the same tech asset with highest sensitivity as example asset
+			if commLink.Authorization == model.EnduserIdentityPropagation {
 				riskIdentified = true
 				targetAsset := model.ParsedModelRoot.TechnicalAssets[commLink.TargetId]
 				if impact == model.LowImpact {

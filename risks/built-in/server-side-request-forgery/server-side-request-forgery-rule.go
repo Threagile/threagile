@@ -80,7 +80,7 @@ func createRisk(technicalAsset model.TechnicalAsset, outgoingFlow model.Communic
 		impact = model.MediumImpact
 	}
 	dataBreachTechnicalAssetIDs := make([]string, 0)
-	for key := range uniqueDataBreachTechnicalAssetIDs {
+	for key, _ := range uniqueDataBreachTechnicalAssetIDs {
 		dataBreachTechnicalAssetIDs = append(dataBreachTechnicalAssetIDs, key)
 	}
 	likelihood := model.Likely

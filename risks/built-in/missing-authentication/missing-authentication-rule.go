@@ -49,7 +49,7 @@ func GenerateRisks() []model.Risk {
 			commLinks := model.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id]
 			for _, commLink := range commLinks {
 				caller := model.ParsedModelRoot.TechnicalAssets[commLink.SourceId]
-				if caller.Technology.IsUnprotectedCommunicationsTolerated() || caller.Type == model.Datastore {
+				if caller.Technology.IsUnprotectedCommsTolerated() || caller.Type == model.Datastore {
 					continue
 				}
 				highRisk := commLink.HighestConfidentiality() == model.StrictlyConfidential ||

@@ -14,7 +14,7 @@ func GetNextQuestion() (nextQuestion model.MacroQuestion, err error) {
 	return model.NoMoreQuestions(), nil
 }
 
-func ApplyAnswer(_ string, _ ...string) (message string, validResult bool, err error) {
+func ApplyAnswer(questionID string, answer ...string) (message string, validResult bool, err error) {
 	return "Answer processed", true, nil
 }
 
@@ -22,10 +22,10 @@ func GoBack() (message string, validResult bool, err error) {
 	return "Cannot go back further", false, nil
 }
 
-func GetFinalChangeImpact(_ *model.ModelInput) (changes []string, message string, validResult bool, err error) {
+func GetFinalChangeImpact(modelInput *model.ModelInput) (changes []string, message string, validResult bool, err error) {
 	return []string{"pretty-printing the model file"}, "Changeset valid", true, err
 }
 
-func Execute(_ *model.ModelInput) (message string, validResult bool, err error) {
+func Execute(modelInput *model.ModelInput) (message string, validResult bool, err error) {
 	return "Model pretty printing successful", true, nil
 }

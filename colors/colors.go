@@ -5,33 +5,10 @@ import (
 	"github.com/jung-kurt/gofpdf"
 )
 
-const (
-	Amber                = "#AF780E"
-	Green                = "#008000"
-	Blue                 = "#000080"
-	DarkBlue             = "#000060"
-	Black                = "#000000"
-	Gray                 = "#444444"
-	LightGray            = "#666666"
-	MiddleLightGray      = "#999999"
-	MoreLightGray        = "#D2D2D2"
-	VeryLightGray        = "#E5E5E5"
-	ExtremeLightGray     = "#F6F6F6"
-	Pink                 = "#F987C5"
-	LightPink            = "#FFE7EF"
-	Red                  = "#CC0000"
-	OutOfScopeFancy      = "#D5D7FF"
-	CustomDevelopedParts = "#FFFC97"
-	ExtremeLightBlue     = "#DDFFFF"
-	LightBlue            = "#77FFFF"
-	Brown                = "#8C4C17"
-)
-
-var (
-	_ = Green + Blue + MoreLightGray + ExtremeLightGray + LightBlue
-	_ = ColorOutOfScope
-	_ = RgbHexColorModelFailure
-)
+const Red, Amber, Green, Blue, DarkBlue, Black, Gray, LightGray, MiddleLightGray, MoreLightGray, VeryLightGray, ExtremeLightGray, Pink, LightPink = "#CC0000", "#AF780E", "#008000", "#000080", "#000060", "#000000", "#444444", "#666666", "#999999", "#D2D2D2", "#E5E5E5", "#F6F6F6", "#F987C5", "#FFE7EF"
+const ExtremeLightBlue, OutOfScopeFancy, CustomDevelopedParts = "#DDFFFF", "#D5D7FF", "#FFFC97"
+const LightBlue = "#77FFFF"
+const Brown = "#8C4C17"
 
 func DarkenHexColor(hexString string) string {
 	colorBytes, _ := hex.DecodeString(hexString[1:])

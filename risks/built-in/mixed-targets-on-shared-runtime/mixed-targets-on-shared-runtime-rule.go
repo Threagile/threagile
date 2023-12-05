@@ -41,7 +41,7 @@ func GenerateRisks() []model.Risk {
 	risks := make([]model.Risk, 0)
 	// as in Go ranging over map is random order, range over them in sorted (hence reproducible) way:
 	keys := make([]string, 0)
-	for k := range model.ParsedModelRoot.SharedRuntimes {
+	for k, _ := range model.ParsedModelRoot.SharedRuntimes {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)

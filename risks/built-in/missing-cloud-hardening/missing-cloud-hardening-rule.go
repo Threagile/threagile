@@ -36,7 +36,7 @@ func Category() model.RiskCategory {
 	}
 }
 
-var specificSubTagsAWS = []string{"aws:vpc", "aws:ec2", "aws:s3", "aws:ebs", "aws:apigateway", "aws:lambda", "aws:dynamodb", "aws:rds", "aws:sqs", "aws:iam"}
+var specificSubtagsAWS = []string{"aws:vpc", "aws:ec2", "aws:s3", "aws:ebs", "aws:apigateway", "aws:lambda", "aws:dynamodb", "aws:rds", "aws:sqs", "aws:iam"}
 
 func SupportedTags() []string {
 	res := []string{
@@ -45,50 +45,50 @@ func SupportedTags() []string {
 		"gcp",   // Google Cloud Platform
 		"ocp",   // Oracle Cloud Platform
 	}
-	res = append(res, specificSubTagsAWS...)
+	res = append(res, specificSubtagsAWS...)
 	return res
 }
 
 func GenerateRisks() []model.Risk {
 	risks := make([]model.Risk, 0)
 
-	sharedRuntimesWithUnspecificCloudRisks := make(map[string]bool)
-	trustBoundariesWithUnspecificCloudRisks := make(map[string]bool)
-	techAssetsWithUnspecificCloudRisks := make(map[string]bool)
+	sharedRuntimesWithUnspecificCloudRisks := make(map[string]bool, 0)
+	trustBoundariesWithUnspecificCloudRisks := make(map[string]bool, 0)
+	techAssetsWithUnspecificCloudRisks := make(map[string]bool, 0)
 
-	sharedRuntimeIDsAWS := make(map[string]bool)
-	trustBoundaryIDsAWS := make(map[string]bool)
-	techAssetIDsAWS := make(map[string]bool)
+	sharedRuntimeIDsAWS := make(map[string]bool, 0)
+	trustBoundaryIDsAWS := make(map[string]bool, 0)
+	techAssetIDsAWS := make(map[string]bool, 0)
 
-	sharedRuntimeIDsAzure := make(map[string]bool)
-	trustBoundaryIDsAzure := make(map[string]bool)
-	techAssetIDsAzure := make(map[string]bool)
+	sharedRuntimeIDsAzure := make(map[string]bool, 0)
+	trustBoundaryIDsAzure := make(map[string]bool, 0)
+	techAssetIDsAzure := make(map[string]bool, 0)
 
-	sharedRuntimeIDsGCP := make(map[string]bool)
-	trustBoundaryIDsGCP := make(map[string]bool)
-	techAssetIDsGCP := make(map[string]bool)
+	sharedRuntimeIDsGCP := make(map[string]bool, 0)
+	trustBoundaryIDsGCP := make(map[string]bool, 0)
+	techAssetIDsGCP := make(map[string]bool, 0)
 
-	sharedRuntimeIDsOCP := make(map[string]bool)
-	trustBoundaryIDsOCP := make(map[string]bool)
-	techAssetIDsOCP := make(map[string]bool)
+	sharedRuntimeIDsOCP := make(map[string]bool, 0)
+	trustBoundaryIDsOCP := make(map[string]bool, 0)
+	techAssetIDsOCP := make(map[string]bool, 0)
 
-	techAssetIDsWithSubtagSpecificCloudRisks := make(map[string]bool)
+	techAssetIDsWithSubtagSpecificCloudRisks := make(map[string]bool, 0)
 
 	for _, trustBoundary := range model.ParsedModelRoot.TrustBoundaries {
 		taggedOuterTB := trustBoundary.IsTaggedWithAny(SupportedTags()...) // false = generic cloud risks only // true = cloud-individual risks
 		if taggedOuterTB || trustBoundary.Type.IsWithinCloud() {
-			addTrustBoundaryAccordingToBaseTag(trustBoundary, trustBoundariesWithUnspecificCloudRisks,
+			addTrustBoundaryAccordingToBasetag(trustBoundary, trustBoundariesWithUnspecificCloudRisks,
 				trustBoundaryIDsAWS, trustBoundaryIDsAzure, trustBoundaryIDsGCP, trustBoundaryIDsOCP)
 			for _, techAssetID := range trustBoundary.RecursivelyAllTechnicalAssetIDsInside() {
 				added := false
 				tA := model.ParsedModelRoot.TechnicalAssets[techAssetID]
 				if tA.IsTaggedWithAny(SupportedTags()...) {
-					addAccordingToBaseTag(tA, tA.Tags,
+					addAccordingToBasetag(tA, tA.Tags,
 						techAssetIDsWithSubtagSpecificCloudRisks,
 						techAssetIDsAWS, techAssetIDsAzure, techAssetIDsGCP, techAssetIDsOCP)
 					added = true
 				} else if taggedOuterTB {
-					addAccordingToBaseTag(tA, trustBoundary.Tags,
+					addAccordingToBasetag(tA, trustBoundary.Tags,
 						techAssetIDsWithSubtagSpecificCloudRisks,
 						techAssetIDsAWS, techAssetIDsAzure, techAssetIDsGCP, techAssetIDsOCP)
 					added = true
@@ -102,7 +102,7 @@ func GenerateRisks() []model.Risk {
 
 	// now loop over all technical assets, trust boundaries, and shared runtimes model-wide by tag
 	for _, tA := range model.TechnicalAssetsTaggedWithAny(SupportedTags()...) {
-		addAccordingToBaseTag(tA, tA.Tags,
+		addAccordingToBasetag(tA, tA.Tags,
 			techAssetIDsWithSubtagSpecificCloudRisks,
 			techAssetIDsAWS, techAssetIDsAzure, techAssetIDsGCP, techAssetIDsOCP)
 	}
@@ -110,22 +110,22 @@ func GenerateRisks() []model.Risk {
 		for _, candidateID := range tB.RecursivelyAllTechnicalAssetIDsInside() {
 			tA := model.ParsedModelRoot.TechnicalAssets[candidateID]
 			if tA.IsTaggedWithAny(SupportedTags()...) {
-				addAccordingToBaseTag(tA, tA.Tags,
+				addAccordingToBasetag(tA, tA.Tags,
 					techAssetIDsWithSubtagSpecificCloudRisks,
 					techAssetIDsAWS, techAssetIDsAzure, techAssetIDsGCP, techAssetIDsOCP)
 			} else {
-				addAccordingToBaseTag(tA, tB.Tags,
+				addAccordingToBasetag(tA, tB.Tags,
 					techAssetIDsWithSubtagSpecificCloudRisks,
 					techAssetIDsAWS, techAssetIDsAzure, techAssetIDsGCP, techAssetIDsOCP)
 			}
 		}
 	}
 	for _, sR := range model.SharedRuntimesTaggedWithAny(SupportedTags()...) {
-		addSharedRuntimeAccordingToBaseTag(sR, sharedRuntimesWithUnspecificCloudRisks,
+		addSharedRuntimeAccordingToBasetag(sR, sharedRuntimesWithUnspecificCloudRisks,
 			sharedRuntimeIDsAWS, sharedRuntimeIDsAzure, sharedRuntimeIDsGCP, sharedRuntimeIDsOCP)
 		for _, candidateID := range sR.TechnicalAssetsRunning {
 			tA := model.ParsedModelRoot.TechnicalAssets[candidateID]
-			addAccordingToBaseTag(tA, sR.Tags,
+			addAccordingToBasetag(tA, sR.Tags,
 				techAssetIDsWithSubtagSpecificCloudRisks,
 				techAssetIDsAWS, techAssetIDsAzure, techAssetIDsGCP, techAssetIDsOCP)
 		}
@@ -269,7 +269,7 @@ func GenerateRisks() []model.Risk {
 	return risks
 }
 
-func addTrustBoundaryAccordingToBaseTag(trustBoundary model.TrustBoundary,
+func addTrustBoundaryAccordingToBasetag(trustBoundary model.TrustBoundary,
 	trustBoundariesWithUnspecificCloudRisks map[string]bool,
 	trustBoundaryIDsAWS map[string]bool,
 	trustBoundaryIDsAzure map[string]bool,
@@ -293,7 +293,7 @@ func addTrustBoundaryAccordingToBaseTag(trustBoundary model.TrustBoundary,
 	}
 }
 
-func addSharedRuntimeAccordingToBaseTag(sharedRuntime model.SharedRuntime,
+func addSharedRuntimeAccordingToBasetag(sharedRuntime model.SharedRuntime,
 	sharedRuntimesWithUnspecificCloudRisks map[string]bool,
 	sharedRuntimeIDsAWS map[string]bool,
 	sharedRuntimeIDsAzure map[string]bool,
@@ -317,13 +317,13 @@ func addSharedRuntimeAccordingToBaseTag(sharedRuntime model.SharedRuntime,
 	}
 }
 
-func addAccordingToBaseTag(techAsset model.TechnicalAsset, tags []string,
+func addAccordingToBasetag(techAsset model.TechnicalAsset, tags []string,
 	techAssetIDsWithTagSpecificCloudRisks map[string]bool,
 	techAssetIDsAWS map[string]bool,
 	techAssetIDsAzure map[string]bool,
 	techAssetIDsGCP map[string]bool,
 	techAssetIDsOCP map[string]bool) {
-	if techAsset.IsTaggedWithAny(specificSubTagsAWS...) {
+	if techAsset.IsTaggedWithAny(specificSubtagsAWS...) {
 		techAssetIDsWithTagSpecificCloudRisks[techAsset.Id] = true
 	}
 	if model.IsTaggedWithBaseTag(tags, "aws") {

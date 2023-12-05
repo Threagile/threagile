@@ -52,6 +52,7 @@ import (
 	"github.com/wcharczuk/go-chart"
 	"github.com/wcharczuk/go-chart/drawing"
 	"image"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -69,8 +70,7 @@ const /*dataFlowDiagramFullscreen,*/ allowedPdfLandscapePages, embedDiagramLegen
 var isLandscapePage bool
 
 var pdf *gofpdf.Fpdf
-
-// var alreadyTemplateImported = false
+var alreadyTemplateImported = false
 var coverTemplateId, contentTemplateId, diagramLegendTemplateId int
 var pageNo int
 var linkCounter int
@@ -79,25 +79,6 @@ var homeLink int
 var currentChapterTitleBreadcrumb string
 
 var firstParagraphRegEx = regexp.MustCompile(`(.*?)((<br>)|(<p>))`)
-var (
-	_ = pdfColorDataAssets
-	_ = rgbHexColorDataAssets
-	_ = pdfColorTechnicalAssets
-	_ = rgbHexColorTechnicalAssets
-	_ = pdfColorTrustBoundaries
-	_ = pdfColorSharedRuntime
-	_ = rgbHexColorTrustBoundaries
-	_ = rgbHexColorSharedRuntime
-	_ = pdfColorRiskFindings
-	_ = rgbHexColorRiskFindings
-	_ = rgbHexColorDisclaimer
-	_ = rgbHexColorGray
-	_ = rgbHexColorLightGray
-	_ = rgbHexColorOutOfScope
-	_ = rgbHexColorBlack
-	_ = pdfColorRed
-	_ = rgbHexColorRed
-)
 
 func initReport() {
 	pdf = nil
@@ -206,11 +187,11 @@ func parseBackgroundTemplate(templateFilename string) {
 	/*
 		imageBox, err := rice.FindBox("template")
 		checkErr(err)
-		file, err := os.CreateTemp("", "background-*-.pdf")
+		file, err := ioutil.TempFile("", "background-*-.pdf")
 		checkErr(err)
 		defer os.Remove(file.Name())
 		backgroundBytes := imageBox.MustBytes("background.pdf")
-		err = os.WriteFile(file.Name(), backgroundBytes, 0644)
+		err = ioutil.WriteFile(file.Name(), backgroundBytes, 0644)
 		checkErr(err)
 	*/
 	coverTemplateId = gofpdi.ImportPage(pdf, templateFilename, 1, "/MediaBox")
@@ -732,7 +713,7 @@ func createDisclaimer() {
 		"is obligated to ensure the highly confidential contents are kept secret. The recipient assumes responsibility " +
 		"for further distribution of this document." +
 		"<br><br>" +
-		"In this particular project, a time box approach was used to define the analysis effort. This means that the " +
+		"In this particular project, a timebox approach was used to define the analysis effort. This means that the " +
 		"author allotted a prearranged amount of time to identify and document threats. Because of this, there " +
 		"is no guarantee that all possible threats and risks are discovered. Furthermore, the analysis " +
 		"applies to a snapshot of the current state of the modeled architecture (based on the architecture information provided " +
@@ -1243,11 +1224,11 @@ func createRiskMitigationStatus() {
 
 // CAUTION: Long labels might cause endless loop, then remove labels and render them manually later inside the PDF
 func embedStackedBarChart(sbcChart chart.StackedBarChart, x float64, y float64) {
-	tmpFilePNG, err := os.CreateTemp(model.TempFolder, "chart-*-.png")
+	tmpFilePNG, err := ioutil.TempFile(model.TempFolder, "chart-*-.png")
 	checkErr(err)
-	defer func() { _ = os.Remove(tmpFilePNG.Name()) }()
+	defer os.Remove(tmpFilePNG.Name())
 	file, _ := os.Create(tmpFilePNG.Name())
-	defer func() { _ = file.Close() }()
+	defer file.Close()
 	err = sbcChart.Render(chart.PNG, file)
 	checkErr(err)
 	var options gofpdf.ImageOptions
@@ -1257,12 +1238,12 @@ func embedStackedBarChart(sbcChart chart.StackedBarChart, x float64, y float64) 
 }
 
 func embedPieChart(pieChart chart.PieChart, x float64, y float64) {
-	tmpFilePNG, err := os.CreateTemp(model.TempFolder, "chart-*-.png")
+	tmpFilePNG, err := ioutil.TempFile(model.TempFolder, "chart-*-.png")
 	checkErr(err)
-	defer func() { _ = os.Remove(tmpFilePNG.Name()) }()
+	defer os.Remove(tmpFilePNG.Name())
 	file, err := os.Create(tmpFilePNG.Name())
 	checkErr(err)
-	defer func() { _ = file.Close() }()
+	defer file.Close()
 	err = pieChart.Render(chart.PNG, file)
 	checkErr(err)
 	var options gofpdf.ImageOptions
@@ -4012,13 +3993,13 @@ func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTim
 	}
 
 	for _, key := range model.SortedKeysOfIndividualRiskCategories() {
-		individualRiskCategory := model.ParsedModelRoot.IndividualRiskCategories[key]
+		indivRiskCat := model.ParsedModelRoot.IndividualRiskCategories[key]
 		pdf.Ln(-1)
 		pdf.SetFont("Helvetica", "B", fontSizeBody)
-		pdf.CellFormat(190, 3, individualRiskCategory.Title, "0", 0, "", false, 0, "")
+		pdf.CellFormat(190, 3, indivRiskCat.Title, "0", 0, "", false, 0, "")
 		pdf.Ln(-1)
 		pdf.SetFont("Helvetica", "", fontSizeSmall)
-		pdf.CellFormat(190, 6, individualRiskCategory.Id, "0", 0, "", false, 0, "")
+		pdf.CellFormat(190, 6, indivRiskCat.Id, "0", 0, "", false, 0, "")
 		pdf.Ln(-1)
 		pdf.SetFont("Helvetica", "I", fontSizeBody)
 		pdf.CellFormat(190, 6, "Individual Risk Category", "0", 0, "", false, 0, "")
@@ -4028,22 +4009,22 @@ func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTim
 		pdf.CellFormat(5, 6, "", "0", 0, "", false, 0, "")
 		pdf.CellFormat(25, 6, "STRIDE:", "0", 0, "", false, 0, "")
 		pdfColorBlack()
-		pdf.MultiCell(160, 6, individualRiskCategory.STRIDE.Title(), "0", "0", false)
+		pdf.MultiCell(160, 6, indivRiskCat.STRIDE.Title(), "0", "0", false)
 		pdfColorGray()
 		pdf.CellFormat(5, 6, "", "0", 0, "", false, 0, "")
 		pdf.CellFormat(25, 6, "Description:", "0", 0, "", false, 0, "")
 		pdfColorBlack()
-		pdf.MultiCell(160, 6, firstParagraph(individualRiskCategory.Description), "0", "0", false)
+		pdf.MultiCell(160, 6, firstParagraph(indivRiskCat.Description), "0", "0", false)
 		pdfColorGray()
 		pdf.CellFormat(5, 6, "", "0", 0, "", false, 0, "")
 		pdf.CellFormat(25, 6, "Detection:", "0", 0, "", false, 0, "")
 		pdfColorBlack()
-		pdf.MultiCell(160, 6, individualRiskCategory.DetectionLogic, "0", "0", false)
+		pdf.MultiCell(160, 6, indivRiskCat.DetectionLogic, "0", "0", false)
 		pdfColorGray()
 		pdf.CellFormat(5, 6, "", "0", 0, "", false, 0, "")
 		pdf.CellFormat(25, 6, "Rating:", "0", 0, "", false, 0, "")
 		pdfColorBlack()
-		pdf.MultiCell(160, 6, individualRiskCategory.RiskAssessment, "0", "0", false)
+		pdf.MultiCell(160, 6, indivRiskCat.RiskAssessment, "0", "0", false)
 	}
 
 	pdf.Ln(-1)
@@ -5616,11 +5597,11 @@ func getHeightWhenWidthIsFix(imageFullFilename string, width float64) float64 {
 	}
 	/* #nosec imageFullFilename is not tainted (see caller restricting it to image files of model folder only) */
 	file, err := os.Open(imageFullFilename)
-	defer func() { _ = file.Close() }()
+	defer file.Close()
 	checkErr(err)
-	img, _, err := image.DecodeConfig(file)
+	image, _, err := image.DecodeConfig(file)
 	checkErr(err)
-	return float64(img.Height) / (float64(img.Width) / width)
+	return float64(image.Height) / (float64(image.Width) / width)
 }
 
 func embedDataFlowDiagram(diagramFilenamePNG string) {
@@ -5642,7 +5623,7 @@ func embedDataFlowDiagram(diagramFilenamePNG string) {
 	// check to rotate the image if it is wider than high
 	/* #nosec diagramFilenamePNG is not tainted */
 	imagePath, _ := os.Open(diagramFilenamePNG)
-	defer func() { _ = imagePath.Close() }()
+	defer imagePath.Close()
 	srcImage, _, _ := image.Decode(imagePath)
 	srcDimensions := srcImage.Bounds()
 	// wider than high?
@@ -5662,7 +5643,7 @@ func embedDataFlowDiagram(diagramFilenamePNG string) {
 					// so rotate the image left by 90 degrees
 				// ok, use temp PNG then
 				// now rotate left by 90 degrees
-				rotatedFile, err := os.CreateTemp(model.TempFolder, "diagram-*-.png")
+				rotatedFile, err := ioutil.TempFile(model.TempFolder, "diagram-*-.png")
 				checkErr(err)
 				defer os.Remove(rotatedFile.Name())
 				dstImage := image.NewRGBA(image.Rect(0, 0, srcDimensions.Dy(), srcDimensions.Dx()))
@@ -5732,7 +5713,7 @@ func embedDataRiskMapping(diagramFilenamePNG string) {
 	// check to rotate the image if it is wider than high
 	/* #nosec diagramFilenamePNG is not tainted */
 	imagePath, _ := os.Open(diagramFilenamePNG)
-	defer func() { _ = imagePath.Close() }()
+	defer imagePath.Close()
 	srcImage, _, _ := image.Decode(imagePath)
 	srcDimensions := srcImage.Bounds()
 	// wider than high?
@@ -5752,7 +5733,7 @@ func embedDataRiskMapping(diagramFilenamePNG string) {
 					// so rotate the image left by 90 degrees
 					// ok, use temp PNG then
 				// now rotate left by 90 degrees
-				rotatedFile, err := os.CreateTemp(model.TempFolder, "diagram-*-.png")
+				rotatedFile, err := ioutil.TempFile(model.TempFolder, "diagram-*-.png")
 				checkErr(err)
 				defer os.Remove(rotatedFile.Name())
 				dstImage := image.NewRGBA(image.Rect(0, 0, srcDimensions.Dy(), srcDimensions.Dx()))
@@ -5850,7 +5831,6 @@ func rgbHexColorSharedRuntime() string {
 func pdfColorRiskFindings() {
 	pdf.SetTextColor(160, 40, 30)
 }
-
 func rgbHexColorRiskFindings() string {
 	return "#A0281E"
 }
