@@ -8,18 +8,18 @@ func Category() model.RiskCategory {
 	return model.RiskCategory{
 		Id:    "missing-identity-provider-isolation",
 		Title: "Missing Identity Provider Isolation",
-		Description: "Highly sensitive identity provider assets and their identity datastores should be isolated from other assets " +
+		Description: "Highly sensitive identity provider assets and their identity data stores should be isolated from other assets " +
 			"by their own network segmentation trust-boundary (" + model.ExecutionEnvironment.String() + " boundaries do not count as network isolation).",
 		Impact: "If this risk is unmitigated, attackers successfully attacking other components of the system might have an easy path towards " +
-			"highly sensitive identity provider assets and their identity datastores, as they are not separated by network segmentation.",
+			"highly sensitive identity provider assets and their identity data stores, as they are not separated by network segmentation.",
 		ASVS:       "V1 - Architecture, Design and Threat Modeling Requirements",
 		CheatSheet: "https://cheatsheetseries.owasp.org/cheatsheets/Attack_Surface_Analysis_Cheat_Sheet.html",
 		Action:     "Network Segmentation",
-		Mitigation: "Apply a network segmentation trust-boundary around the highly sensitive identity provider assets and their identity datastores.",
+		Mitigation: "Apply a network segmentation trust-boundary around the highly sensitive identity provider assets and their identity data stores.",
 		Check:      "Are recommendations from the linked cheat sheet and referenced ASVS chapter applied?",
 		Function:   model.Operations,
 		STRIDE:     model.ElevationOfPrivilege,
-		DetectionLogic: "In-scope identity provider assets and their identity datastores " +
+		DetectionLogic: "In-scope identity provider assets and their identity data stores " +
 			"when surrounded by other (not identity-related) assets (without a network trust-boundary in-between). " +
 			"This risk is especially prevalent when other non-identity related assets are within the same execution environment (i.e. same database or same application server).",
 		RiskAssessment: "Default is " + model.HighImpact.String() + " impact. The impact is increased to " + model.VeryHighImpact.String() + " when the asset missing the " +
@@ -45,7 +45,7 @@ func GenerateRisks() []model.Risk {
 			sameExecutionEnv := false
 			createRiskEntry := false
 			// now check for any other same-network assets of non-identity-related types
-			for sparringAssetCandidateId, _ := range model.ParsedModelRoot.TechnicalAssets { // so inner loop again over all assets
+			for sparringAssetCandidateId := range model.ParsedModelRoot.TechnicalAssets { // so inner loop again over all assets
 				if technicalAsset.Id != sparringAssetCandidateId {
 					sparringAssetCandidate := model.ParsedModelRoot.TechnicalAssets[sparringAssetCandidateId]
 					if !sparringAssetCandidate.Technology.IsIdentityRelated() && !sparringAssetCandidate.Technology.IsCloseToHighValueTargetsTolerated() {

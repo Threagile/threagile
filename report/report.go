@@ -52,7 +52,6 @@ import (
 	"github.com/wcharczuk/go-chart"
 	"github.com/wcharczuk/go-chart/drawing"
 	"image"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -70,7 +69,8 @@ const /*dataFlowDiagramFullscreen,*/ allowedPdfLandscapePages, embedDiagramLegen
 var isLandscapePage bool
 
 var pdf *gofpdf.Fpdf
-var alreadyTemplateImported = false
+
+// var alreadyTemplateImported = false
 var coverTemplateId, contentTemplateId, diagramLegendTemplateId int
 var pageNo int
 var linkCounter int
@@ -79,6 +79,25 @@ var homeLink int
 var currentChapterTitleBreadcrumb string
 
 var firstParagraphRegEx = regexp.MustCompile(`(.*?)((<br>)|(<p>))`)
+var (
+	_ = pdfColorDataAssets
+	_ = rgbHexColorDataAssets
+	_ = pdfColorTechnicalAssets
+	_ = rgbHexColorTechnicalAssets
+	_ = pdfColorTrustBoundaries
+	_ = pdfColorSharedRuntime
+	_ = rgbHexColorTrustBoundaries
+	_ = rgbHexColorSharedRuntime
+	_ = pdfColorRiskFindings
+	_ = rgbHexColorRiskFindings
+	_ = rgbHexColorDisclaimer
+	_ = rgbHexColorGray
+	_ = rgbHexColorLightGray
+	_ = rgbHexColorOutOfScope
+	_ = rgbHexColorBlack
+	_ = pdfColorRed
+	_ = rgbHexColorRed
+)
 
 func initReport() {
 	pdf = nil
@@ -98,25 +117,27 @@ func WriteReportPDF(reportFilename string,
 	skipRiskRules string,
 	buildTimestamp string,
 	modelHash string,
-	introTextRAA string, customRiskRules map[string]model.CustomRiskRule) {
+	introTextRAA string,
+	customRiskRules map[string]model.CustomRiskRule,
+	tempFolder string) {
 	initReport()
 	createPdfAndInitMetadata()
 	parseBackgroundTemplate(templateFilename)
 	createCover()
 	createTableOfContents()
-	createManagementSummary()
+	createManagementSummary(tempFolder)
 	createImpactInitialRisks()
-	createRiskMitigationStatus()
+	createRiskMitigationStatus(tempFolder)
 	createImpactRemainingRisks()
 	createTargetDescription(filepath.Dir(modelFilename))
-	embedDataFlowDiagram(dataFlowDiagramFilenamePNG)
+	embedDataFlowDiagram(dataFlowDiagramFilenamePNG, tempFolder)
 	createSecurityRequirements()
 	createAbuseCases()
 	createTagListing()
 	createSTRIDE()
 	createAssignmentByFunction()
 	createRAA(introTextRAA)
-	embedDataRiskMapping(dataAssetDiagramFilenamePNG)
+	embedDataRiskMapping(dataAssetDiagramFilenamePNG, tempFolder)
 	//createDataRiskQuickWins()
 	createOutOfScopeAssets()
 	createModelFailures()
@@ -187,11 +208,11 @@ func parseBackgroundTemplate(templateFilename string) {
 	/*
 		imageBox, err := rice.FindBox("template")
 		checkErr(err)
-		file, err := ioutil.TempFile("", "background-*-.pdf")
+		file, err := os.CreateTemp("", "background-*-.pdf")
 		checkErr(err)
 		defer os.Remove(file.Name())
 		backgroundBytes := imageBox.MustBytes("background.pdf")
-		err = ioutil.WriteFile(file.Name(), backgroundBytes, 0644)
+		err = os.WriteFile(file.Name(), backgroundBytes, 0644)
 		checkErr(err)
 	*/
 	coverTemplateId = gofpdi.ImportPage(pdf, templateFilename, 1, "/MediaBox")
@@ -713,7 +734,7 @@ func createDisclaimer() {
 		"is obligated to ensure the highly confidential contents are kept secret. The recipient assumes responsibility " +
 		"for further distribution of this document." +
 		"<br><br>" +
-		"In this particular project, a timebox approach was used to define the analysis effort. This means that the " +
+		"In this particular project, a time box approach was used to define the analysis effort. This means that the " +
 		"author allotted a prearranged amount of time to identify and document threats. Because of this, there " +
 		"is no guarantee that all possible threats and risks are discovered. Furthermore, the analysis " +
 		"applies to a snapshot of the current state of the modeled architecture (based on the architecture information provided " +
@@ -729,7 +750,7 @@ func createDisclaimer() {
 	pdfColorBlack()
 }
 
-func createManagementSummary() {
+func createManagementSummary(tempFolder string) {
 	uni := pdf.UnicodeTranslatorFromDescriptor("")
 	pdf.SetTextColor(0, 0, 0)
 	title := "Management Summary"
@@ -905,8 +926,8 @@ func createManagementSummary() {
 	}
 
 	y := pdf.GetY() + 5
-	embedPieChart(pieChartRiskSeverity, 15.0, y)
-	embedPieChart(pieChartRiskStatus, 110.0, y)
+	embedPieChart(pieChartRiskSeverity, 15.0, y, tempFolder)
+	embedPieChart(pieChartRiskStatus, 110.0, y, tempFolder)
 
 	// individual management summary comment
 	pdfColorBlack()
@@ -916,7 +937,7 @@ func createManagementSummary() {
 	}
 }
 
-func createRiskMitigationStatus() {
+func createRiskMitigationStatus(tempFolder string) {
 	pdf.SetTextColor(0, 0, 0)
 	stillAtRisk := model.FilteredByStillAtRisk()
 	count := len(stillAtRisk)
@@ -1041,7 +1062,7 @@ func createRiskMitigationStatus() {
 	}
 
 	y := pdf.GetY() + 12
-	embedStackedBarChart(stackedBarChartRiskTracking, 15.0, y)
+	embedStackedBarChart(stackedBarChartRiskTracking, 15.0, y, tempFolder)
 
 	// draw the X-Axis legend on my own
 	pdf.SetFont("Helvetica", "", fontSizeSmall)
@@ -1168,8 +1189,8 @@ func createRiskMitigationStatus() {
 			},
 		}
 
-		embedPieChart(pieChartRemainingRiskSeverity, 15.0, 216)
-		embedPieChart(pieChartRemainingRisksByFunction, 110.0, 216)
+		embedPieChart(pieChartRemainingRiskSeverity, 15.0, 216, tempFolder)
+		embedPieChart(pieChartRemainingRisksByFunction, 110.0, 216, tempFolder)
 
 		pdf.SetFont("Helvetica", "B", fontSizeBody)
 		pdf.Ln(8)
@@ -1223,12 +1244,12 @@ func createRiskMitigationStatus() {
 }
 
 // CAUTION: Long labels might cause endless loop, then remove labels and render them manually later inside the PDF
-func embedStackedBarChart(sbcChart chart.StackedBarChart, x float64, y float64) {
-	tmpFilePNG, err := ioutil.TempFile(model.TempFolder, "chart-*-.png")
+func embedStackedBarChart(sbcChart chart.StackedBarChart, x float64, y float64, tempFolder string) {
+	tmpFilePNG, err := os.CreateTemp(tempFolder, "chart-*-.png")
 	checkErr(err)
-	defer os.Remove(tmpFilePNG.Name())
+	defer func() { _ = os.Remove(tmpFilePNG.Name()) }()
 	file, _ := os.Create(tmpFilePNG.Name())
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 	err = sbcChart.Render(chart.PNG, file)
 	checkErr(err)
 	var options gofpdf.ImageOptions
@@ -1237,13 +1258,13 @@ func embedStackedBarChart(sbcChart chart.StackedBarChart, x float64, y float64) 
 	pdf.ImageOptions(tmpFilePNG.Name(), x, y, 0, 110, false, options, 0, "")
 }
 
-func embedPieChart(pieChart chart.PieChart, x float64, y float64) {
-	tmpFilePNG, err := ioutil.TempFile(model.TempFolder, "chart-*-.png")
+func embedPieChart(pieChart chart.PieChart, x float64, y float64, tempFolder string) {
+	tmpFilePNG, err := os.CreateTemp(tempFolder, "chart-*-.png")
 	checkErr(err)
-	defer os.Remove(tmpFilePNG.Name())
+	defer func() { _ = os.Remove(tmpFilePNG.Name()) }()
 	file, err := os.Create(tmpFilePNG.Name())
 	checkErr(err)
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 	err = pieChart.Render(chart.PNG, file)
 	checkErr(err)
 	var options gofpdf.ImageOptions
@@ -3993,13 +4014,13 @@ func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTim
 	}
 
 	for _, key := range model.SortedKeysOfIndividualRiskCategories() {
-		indivRiskCat := model.ParsedModelRoot.IndividualRiskCategories[key]
+		individualRiskCategory := model.ParsedModelRoot.IndividualRiskCategories[key]
 		pdf.Ln(-1)
 		pdf.SetFont("Helvetica", "B", fontSizeBody)
-		pdf.CellFormat(190, 3, indivRiskCat.Title, "0", 0, "", false, 0, "")
+		pdf.CellFormat(190, 3, individualRiskCategory.Title, "0", 0, "", false, 0, "")
 		pdf.Ln(-1)
 		pdf.SetFont("Helvetica", "", fontSizeSmall)
-		pdf.CellFormat(190, 6, indivRiskCat.Id, "0", 0, "", false, 0, "")
+		pdf.CellFormat(190, 6, individualRiskCategory.Id, "0", 0, "", false, 0, "")
 		pdf.Ln(-1)
 		pdf.SetFont("Helvetica", "I", fontSizeBody)
 		pdf.CellFormat(190, 6, "Individual Risk Category", "0", 0, "", false, 0, "")
@@ -4009,22 +4030,22 @@ func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTim
 		pdf.CellFormat(5, 6, "", "0", 0, "", false, 0, "")
 		pdf.CellFormat(25, 6, "STRIDE:", "0", 0, "", false, 0, "")
 		pdfColorBlack()
-		pdf.MultiCell(160, 6, indivRiskCat.STRIDE.Title(), "0", "0", false)
+		pdf.MultiCell(160, 6, individualRiskCategory.STRIDE.Title(), "0", "0", false)
 		pdfColorGray()
 		pdf.CellFormat(5, 6, "", "0", 0, "", false, 0, "")
 		pdf.CellFormat(25, 6, "Description:", "0", 0, "", false, 0, "")
 		pdfColorBlack()
-		pdf.MultiCell(160, 6, firstParagraph(indivRiskCat.Description), "0", "0", false)
+		pdf.MultiCell(160, 6, firstParagraph(individualRiskCategory.Description), "0", "0", false)
 		pdfColorGray()
 		pdf.CellFormat(5, 6, "", "0", 0, "", false, 0, "")
 		pdf.CellFormat(25, 6, "Detection:", "0", 0, "", false, 0, "")
 		pdfColorBlack()
-		pdf.MultiCell(160, 6, indivRiskCat.DetectionLogic, "0", "0", false)
+		pdf.MultiCell(160, 6, individualRiskCategory.DetectionLogic, "0", "0", false)
 		pdfColorGray()
 		pdf.CellFormat(5, 6, "", "0", 0, "", false, 0, "")
 		pdf.CellFormat(25, 6, "Rating:", "0", 0, "", false, 0, "")
 		pdfColorBlack()
-		pdf.MultiCell(160, 6, indivRiskCat.RiskAssessment, "0", "0", false)
+		pdf.MultiCell(160, 6, individualRiskCategory.RiskAssessment, "0", "0", false)
 	}
 
 	pdf.Ln(-1)
@@ -5559,7 +5580,7 @@ func addCustomImages(customImages []map[string]string, baseFolder string, html g
 			// check JPEG, PNG or GIF
 			extension := strings.ToLower(filepath.Ext(imageFilenameWithoutPath))
 			if extension == ".jpeg" || extension == ".jpg" || extension == ".png" || extension == ".gif" {
-				imageFullFilename := baseFolder + "/" + imageFilenameWithoutPath
+				imageFullFilename := filepath.Join(baseFolder, imageFilenameWithoutPath)
 				if pdf.GetY()+getHeightWhenWidthIsFix(imageFullFilename, 180) > 250 {
 					pageBreak()
 					pdf.SetY(36)
@@ -5597,14 +5618,14 @@ func getHeightWhenWidthIsFix(imageFullFilename string, width float64) float64 {
 	}
 	/* #nosec imageFullFilename is not tainted (see caller restricting it to image files of model folder only) */
 	file, err := os.Open(imageFullFilename)
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 	checkErr(err)
-	image, _, err := image.DecodeConfig(file)
+	img, _, err := image.DecodeConfig(file)
 	checkErr(err)
-	return float64(image.Height) / (float64(image.Width) / width)
+	return float64(img.Height) / (float64(img.Width) / width)
 }
 
-func embedDataFlowDiagram(diagramFilenamePNG string) {
+func embedDataFlowDiagram(diagramFilenamePNG string, tempFolder string) {
 	pdf.SetTextColor(0, 0, 0)
 	title := "Data-Flow Diagram"
 	addHeadline(title, false)
@@ -5623,13 +5644,14 @@ func embedDataFlowDiagram(diagramFilenamePNG string) {
 	// check to rotate the image if it is wider than high
 	/* #nosec diagramFilenamePNG is not tainted */
 	imagePath, _ := os.Open(diagramFilenamePNG)
-	defer imagePath.Close()
+	defer func() { _ = imagePath.Close() }()
 	srcImage, _, _ := image.Decode(imagePath)
 	srcDimensions := srcImage.Bounds()
 	// wider than high?
 	muchWiderThanHigh := srcDimensions.Dx() > int(float64(srcDimensions.Dy())*1.25)
 	// fresh page (eventually landscape)?
 	isLandscapePage = false
+	_ = tempFolder
 	/*
 		pinnedWidth, pinnedHeight := 190.0, 210.0
 		if dataFlowDiagramFullscreen {
@@ -5643,7 +5665,7 @@ func embedDataFlowDiagram(diagramFilenamePNG string) {
 					// so rotate the image left by 90 degrees
 				// ok, use temp PNG then
 				// now rotate left by 90 degrees
-				rotatedFile, err := ioutil.TempFile(model.TempFolder, "diagram-*-.png")
+				rotatedFile, err := os.CreateTemp(tempFolder, "diagram-*-.png")
 				checkErr(err)
 				defer os.Remove(rotatedFile.Name())
 				dstImage := image.NewRGBA(image.Rect(0, 0, srcDimensions.Dy(), srcDimensions.Dx()))
@@ -5691,7 +5713,7 @@ func embedDataFlowDiagram(diagramFilenamePNG string) {
 	}
 }
 
-func embedDataRiskMapping(diagramFilenamePNG string) {
+func embedDataRiskMapping(diagramFilenamePNG string, tempFolder string) {
 	pdf.SetTextColor(0, 0, 0)
 	title := "Data Mapping"
 	addHeadline(title, false)
@@ -5713,7 +5735,7 @@ func embedDataRiskMapping(diagramFilenamePNG string) {
 	// check to rotate the image if it is wider than high
 	/* #nosec diagramFilenamePNG is not tainted */
 	imagePath, _ := os.Open(diagramFilenamePNG)
-	defer imagePath.Close()
+	defer func() { _ = imagePath.Close() }()
 	srcImage, _, _ := image.Decode(imagePath)
 	srcDimensions := srcImage.Bounds()
 	// wider than high?
@@ -5721,6 +5743,7 @@ func embedDataRiskMapping(diagramFilenamePNG string) {
 	pinnedWidth, pinnedHeight := 190.0, 195.0
 	// fresh page (eventually landscape)?
 	isLandscapePage = false
+	_ = tempFolder
 	/*
 		if dataFlowDiagramFullscreen {
 			pinnedHeight = 235.0
@@ -5733,7 +5756,7 @@ func embedDataRiskMapping(diagramFilenamePNG string) {
 					// so rotate the image left by 90 degrees
 					// ok, use temp PNG then
 				// now rotate left by 90 degrees
-				rotatedFile, err := ioutil.TempFile(model.TempFolder, "diagram-*-.png")
+				rotatedFile, err := os.CreateTemp(tempFolder, "diagram-*-.png")
 				checkErr(err)
 				defer os.Remove(rotatedFile.Name())
 				dstImage := image.NewRGBA(image.Rect(0, 0, srcDimensions.Dy(), srcDimensions.Dx()))
@@ -5831,6 +5854,7 @@ func rgbHexColorSharedRuntime() string {
 func pdfColorRiskFindings() {
 	pdf.SetTextColor(160, 40, 30)
 }
+
 func rgbHexColorRiskFindings() string {
 	return "#A0281E"
 }

@@ -40,7 +40,7 @@ func GenerateRisks() []model.Risk {
 		technicalAsset := model.ParsedModelRoot.TechnicalAssets[id]
 		if technicalAsset.OutOfScope ||
 			technicalAsset.Technology.IsTrafficForwarding() ||
-			technicalAsset.Technology.IsUnprotectedCommsTolerated() {
+			technicalAsset.Technology.IsUnprotectedCommunicationsTolerated() {
 			continue
 		}
 		if technicalAsset.HighestConfidentiality() >= model.Confidential ||
@@ -51,7 +51,7 @@ func GenerateRisks() []model.Risk {
 			commLinks := model.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id]
 			for _, commLink := range commLinks {
 				caller := model.ParsedModelRoot.TechnicalAssets[commLink.SourceId]
-				if caller.Technology.IsUnprotectedCommsTolerated() || caller.Type == model.Datastore {
+				if caller.Technology.IsUnprotectedCommunicationsTolerated() || caller.Type == model.Datastore {
 					continue
 				}
 				if caller.UsedAsClientByHuman {
@@ -65,7 +65,7 @@ func GenerateRisks() []model.Risk {
 					callersCommLinks := model.IncomingTechnicalCommunicationLinksMappedByTargetId[caller.Id]
 					for _, callersCommLink := range callersCommLinks {
 						callersCaller := model.ParsedModelRoot.TechnicalAssets[callersCommLink.SourceId]
-						if callersCaller.Technology.IsUnprotectedCommsTolerated() || callersCaller.Type == model.Datastore {
+						if callersCaller.Technology.IsUnprotectedCommunicationsTolerated() || callersCaller.Type == model.Datastore {
 							continue
 						}
 						if callersCaller.UsedAsClientByHuman {

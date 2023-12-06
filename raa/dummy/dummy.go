@@ -8,7 +8,12 @@ import (
 
 // JUST A DUMMY TO HAVE AN ALTERNATIVE PLUGIN TO USE/TEST
 
+var (
+	_ = CalculateRAA
+)
+
 // used from plugin caller:
+
 func CalculateRAA() string {
 	for techAssetID, techAsset := range model.ParsedModelRoot.TechnicalAssets {
 		techAsset.RAA = float64(rand.Intn(100))

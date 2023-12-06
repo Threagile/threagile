@@ -7,6 +7,7 @@ import (
 type customRiskRule string
 
 // exported as symbol (here simply as variable to interface to bundle many functions under one symbol) named "CustomRiskRule"
+
 var CustomRiskRule customRiskRule
 
 func (r customRiskRule) Category() model.RiskCategory {

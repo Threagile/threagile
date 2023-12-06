@@ -8,22 +8,22 @@ func Category() model.RiskCategory {
 	return model.RiskCategory{
 		Id:    "missing-identity-propagation",
 		Title: "Missing Identity Propagation",
-		Description: "Technical assets (especially multi-tenant systems), which usually process data for endusers should " +
-			"authorize every request based on the identity of the enduser when the data flow is authenticated (i.e. non-public). " +
+		Description: "Technical assets (especially multi-tenant systems), which usually process data for end users should " +
+			"authorize every request based on the identity of the end user when the data flow is authenticated (i.e. non-public). " +
 			"For DevOps usages at least a technical-user authorization is required.",
 		Impact: "If this risk is unmitigated, attackers might be able to access or modify foreign data after a successful compromise of a component within " +
 			"the system due to missing resource-based authorization checks.",
 		ASVS:       "V4 - Access Control Verification Requirements",
 		CheatSheet: "https://cheatsheetseries.owasp.org/cheatsheets/Access_Control_Cheat_Sheet.html",
 		Action:     "Identity Propagation and Resource-based Authorization",
-		Mitigation: "When processing requests for endusers if possible authorize in the backend against the propagated " +
-			"identity of the enduser. This can be achieved in passing JWTs or similar tokens and checking them in the backend " +
+		Mitigation: "When processing requests for end users if possible authorize in the backend against the propagated " +
+			"identity of the end user. This can be achieved in passing JWTs or similar tokens and checking them in the backend " +
 			"services. For DevOps usages apply at least a technical-user authorization.",
 		Check:    "Are recommendations from the linked cheat sheet and referenced ASVS chapter applied?",
 		Function: model.Architecture,
 		STRIDE:   model.ElevationOfPrivilege,
-		DetectionLogic: "In-scope service-like technical assets which usually process data based on enduser requests, if authenticated " +
-			"(i.e. non-public), should authorize incoming requests based on the propagated enduser identity when their rating is sensitive. " +
+		DetectionLogic: "In-scope service-like technical assets which usually process data based on end user requests, if authenticated " +
+			"(i.e. non-public), should authorize incoming requests based on the propagated end user identity when their rating is sensitive. " +
 			"This is especially the case for all multi-tenant assets (there even less-sensitive rated ones). " +
 			"DevOps usages are exempted from this risk.",
 		RiskAssessment: "The risk rating (medium or high) " +
@@ -46,7 +46,7 @@ func GenerateRisks() []model.Risk {
 		if technicalAsset.OutOfScope {
 			continue
 		}
-		if technicalAsset.Technology.IsUsuallyProcessingEnduserRequests() &&
+		if technicalAsset.Technology.IsUsuallyProcessingEndUserRequests() &&
 			(technicalAsset.Confidentiality >= model.Confidential ||
 				technicalAsset.Integrity >= model.Critical ||
 				technicalAsset.Availability >= model.Critical ||
@@ -62,7 +62,7 @@ func GenerateRisks() []model.Risk {
 					continue
 				}
 				if commLink.Authentication != model.NoneAuthentication &&
-					commLink.Authorization != model.EnduserIdentityPropagation {
+					commLink.Authorization != model.EndUserIdentityPropagation {
 					if commLink.Usage == model.DevOps && commLink.Authorization != model.NoneAuthorization {
 						continue
 					}
@@ -87,7 +87,7 @@ func createRisk(technicalAsset model.TechnicalAsset, incomingAccess model.Commun
 		Severity:               model.CalculateSeverity(model.Unlikely, impact),
 		ExploitationLikelihood: model.Unlikely,
 		ExploitationImpact:     impact,
-		Title: "<b>Missing Enduser Identity Propagation</b> over communication link <b>" + incomingAccess.Title + "</b> " +
+		Title: "<b>Missing End User Identity Propagation</b> over communication link <b>" + incomingAccess.Title + "</b> " +
 			"from <b>" + model.ParsedModelRoot.TechnicalAssets[incomingAccess.SourceId].Title + "</b> " +
 			"to <b>" + technicalAsset.Title + "</b>",
 		MostRelevantTechnicalAssetId:    technicalAsset.Id,
