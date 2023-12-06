@@ -33,6 +33,7 @@ func SupportedTags() []string {
 }
 
 // check for communication links that should be encrypted due to their confidentiality and/or integrity
+
 func GenerateRisks() []model.Risk {
 	risks := make([]model.Risk, 0)
 	for _, technicalAsset := range model.ParsedModelRoot.TechnicalAssets {
@@ -42,8 +43,8 @@ func GenerateRisks() []model.Risk {
 			targetAsset := model.ParsedModelRoot.TechnicalAssets[dataFlow.TargetId]
 			if !technicalAsset.OutOfScope || !sourceAsset.OutOfScope {
 				if !dataFlow.Protocol.IsEncrypted() && !dataFlow.Protocol.IsProcessLocal() &&
-					!sourceAsset.Technology.IsUnprotectedCommsTolerated() &&
-					!targetAsset.Technology.IsUnprotectedCommsTolerated() {
+					!sourceAsset.Technology.IsUnprotectedCommunicationsTolerated() &&
+					!targetAsset.Technology.IsUnprotectedCommunicationsTolerated() {
 					addedOne := false
 					for _, sentDataAsset := range dataFlow.DataAssetsSent {
 						dataAsset := model.ParsedModelRoot.DataAssets[sentDataAsset]

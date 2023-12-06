@@ -12,7 +12,6 @@ import (
 )
 
 const ThreagileVersion = "1.0.0" // Also update into example and stub model files and openapi.yaml
-const TempFolder = "/dev/shm"    // TODO: make configurable via cmdline arg?
 
 var ParsedModelRoot ParsedModel
 
@@ -26,14 +25,24 @@ var GeneratedRisksBySyntheticId map[string]Risk
 
 var AllSupportedTags map[string]bool
 
+var (
+	_ = ParseEncryptionStyle
+	_ = SortedKeysOfDataAssets
+	_ = SortedKeysOfTechnicalAssets
+	_ = SortedDataAssetsByDataBreachProbabilityAndTitleStillAtRisk
+	_ = ReduceToOnlyHighRisk
+	_ = ReduceToOnlyMediumRisk
+	_ = ReduceToOnlyLowRisk
+)
+
 func Init() {
-	CommunicationLinks = make(map[string]CommunicationLink, 0)
-	IncomingTechnicalCommunicationLinksMappedByTargetId = make(map[string][]CommunicationLink, 0)
-	DirectContainingTrustBoundaryMappedByTechnicalAssetId = make(map[string]TrustBoundary, 0)
-	DirectContainingSharedRuntimeMappedByTechnicalAssetId = make(map[string]SharedRuntime, 0)
-	GeneratedRisksByCategory = make(map[RiskCategory][]Risk, 0)
-	GeneratedRisksBySyntheticId = make(map[string]Risk, 0)
-	AllSupportedTags = make(map[string]bool, 0)
+	CommunicationLinks = make(map[string]CommunicationLink)
+	IncomingTechnicalCommunicationLinksMappedByTargetId = make(map[string][]CommunicationLink)
+	DirectContainingTrustBoundaryMappedByTechnicalAssetId = make(map[string]TrustBoundary)
+	DirectContainingSharedRuntimeMappedByTechnicalAssetId = make(map[string]SharedRuntime)
+	GeneratedRisksByCategory = make(map[RiskCategory][]Risk)
+	GeneratedRisksBySyntheticId = make(map[string]Risk)
+	AllSupportedTags = make(map[string]bool)
 }
 
 func AddToListOfSupportedTags(tags []string) {
@@ -52,10 +61,10 @@ type CustomRiskRule interface {
 
 func AddTagToModelInput(modelInput *ModelInput, tag string, dryRun bool, changes *[]string) {
 	tag = NormalizeTag(tag)
-	if !Contains(modelInput.Tags_available, tag) {
+	if !Contains(modelInput.TagsAvailable, tag) {
 		*changes = append(*changes, "adding tag: "+tag)
 		if !dryRun {
-			modelInput.Tags_available = append(modelInput.Tags_available, tag)
+			modelInput.TagsAvailable = append(modelInput.TagsAvailable, tag)
 		}
 	}
 }
@@ -72,138 +81,138 @@ func MakeID(val string) string {
 // === Model Type Stuff ======================================
 
 type ModelInput struct { // TODO: Eventually remove this and directly use ParsedModelRoot? But then the error messages for model errors are not quite as good anymore...
-	Threagile_version                                  string
-	Title                                              string
-	Author                                             Author
-	Date                                               string
-	Business_overview                                  Overview
-	Technical_overview                                 Overview
-	Business_criticality                               string
-	Management_summary_comment                         string
-	Questions                                          map[string]string
-	Abuse_cases                                        map[string]string
-	Security_requirements                              map[string]string
-	Tags_available                                     []string
-	Data_assets                                        map[string]InputDataAsset
-	Technical_assets                                   map[string]InputTechnicalAsset
-	Trust_boundaries                                   map[string]InputTrustBoundary
-	Shared_runtimes                                    map[string]InputSharedRuntime
-	Individual_risk_categories                         map[string]InputIndividualRiskCategory
-	Risk_tracking                                      map[string]InputRiskTracking
-	Diagram_tweak_nodesep, Diagram_tweak_ranksep       int
-	Diagram_tweak_edge_layout                          string
-	Diagram_tweak_suppress_edge_labels                 bool
-	Diagram_tweak_layout_left_to_right                 bool
-	Diagram_tweak_invisible_connections_between_assets []string
-	Diagram_tweak_same_rank_assets                     []string
+	ThreagileVersion                              string
+	Title                                         string
+	Author                                        Author
+	Date                                          string
+	BusinessOverview                              Overview
+	TechnicalOverview                             Overview
+	BusinessCriticality                           string
+	ManagementSummaryComment                      string
+	Questions                                     map[string]string
+	AbuseCases                                    map[string]string
+	SecurityRequirements                          map[string]string
+	TagsAvailable                                 []string
+	DataAssets                                    map[string]InputDataAsset
+	TechnicalAssets                               map[string]InputTechnicalAsset
+	TrustBoundaries                               map[string]InputTrustBoundary
+	SharedRuntimes                                map[string]InputSharedRuntime
+	IndividualRiskCategories                      map[string]InputIndividualRiskCategory
+	RiskTracking                                  map[string]InputRiskTracking
+	DiagramTweakNodesep, DiagramTweakRanksep      int
+	DiagramTweakEdgeLayout                        string
+	DiagramTweakSuppressEdgeLabels                bool
+	DiagramTweakLayoutLeftToRight                 bool
+	DiagramTweakInvisibleConnectionsBetweenAssets []string
+	DiagramTweakSameRankAssets                    []string
 }
 
 type InputDataAsset struct {
-	ID                       string   `json:"id"`
-	Description              string   `json:"description"`
-	Usage                    string   `json:"usage"`
-	Tags                     []string `json:"tags"`
-	Origin                   string   `json:"origin"`
-	Owner                    string   `json:"owner"`
-	Quantity                 string   `json:"quantity"`
-	Confidentiality          string   `json:"confidentiality"`
-	Integrity                string   `json:"integrity"`
-	Availability             string   `json:"availability"`
-	Justification_cia_rating string   `json:"justification_cia_rating"`
+	ID                     string   `json:"id"`
+	Description            string   `json:"description"`
+	Usage                  string   `json:"usage"`
+	Tags                   []string `json:"tags"`
+	Origin                 string   `json:"origin"`
+	Owner                  string   `json:"owner"`
+	Quantity               string   `json:"quantity"`
+	Confidentiality        string   `json:"confidentiality"`
+	Integrity              string   `json:"integrity"`
+	Availability           string   `json:"availability"`
+	JustificationCiaRating string   `json:"justification_cia_rating"`
 }
 
 type InputTechnicalAsset struct {
-	ID                         string                            `json:"id"`
-	Description                string                            `json:"description"`
-	Type                       string                            `json:"type"`
-	Usage                      string                            `json:"usage"`
-	Used_as_client_by_human    bool                              `json:"used_as_client_by_human"`
-	Out_of_scope               bool                              `json:"out_of_scope"`
-	Justification_out_of_scope string                            `json:"justification_out_of_scope"`
-	Size                       string                            `json:"size"`
-	Technology                 string                            `json:"technology"`
-	Tags                       []string                          `json:"tags"`
-	Internet                   bool                              `json:"internet"`
-	Machine                    string                            `json:"machine"`
-	Encryption                 string                            `json:"encryption"`
-	Owner                      string                            `json:"owner"`
-	Confidentiality            string                            `json:"confidentiality"`
-	Integrity                  string                            `json:"integrity"`
-	Availability               string                            `json:"availability"`
-	Justification_cia_rating   string                            `json:"justification_cia_rating"`
-	Multi_tenant               bool                              `json:"multi_tenant"`
-	Redundant                  bool                              `json:"redundant"`
-	Custom_developed_parts     bool                              `json:"custom_developed_parts"`
-	Data_assets_processed      []string                          `json:"data_assets_processed"`
-	Data_assets_stored         []string                          `json:"data_assets_stored"`
-	Data_formats_accepted      []string                          `json:"data_formats_accepted"`
-	Diagram_tweak_order        int                               `json:"diagram_tweak_order"`
-	Communication_links        map[string]InputCommunicationLink `json:"communication_links"`
+	ID                      string                            `json:"id"`
+	Description             string                            `json:"description"`
+	Type                    string                            `json:"type"`
+	Usage                   string                            `json:"usage"`
+	UsedAsClientByHuman     bool                              `json:"used_as_client_by_human"`
+	OutOfScope              bool                              `json:"out_of_scope"`
+	JustificationOutOfScope string                            `json:"justification_out_of_scope"`
+	Size                    string                            `json:"size"`
+	Technology              string                            `json:"technology"`
+	Tags                    []string                          `json:"tags"`
+	Internet                bool                              `json:"internet"`
+	Machine                 string                            `json:"machine"`
+	Encryption              string                            `json:"encryption"`
+	Owner                   string                            `json:"owner"`
+	Confidentiality         string                            `json:"confidentiality"`
+	Integrity               string                            `json:"integrity"`
+	Availability            string                            `json:"availability"`
+	JustificationCiaRating  string                            `json:"justification_cia_rating"`
+	MultiTenant             bool                              `json:"multi_tenant"`
+	Redundant               bool                              `json:"redundant"`
+	CustomDevelopedParts    bool                              `json:"custom_developed_parts"`
+	DataAssetsProcessed     []string                          `json:"data_assets_processed"`
+	DataAssetsStored        []string                          `json:"data_assets_stored"`
+	DataFormatsAccepted     []string                          `json:"data_formats_accepted"`
+	DiagramTweakOrder       int                               `json:"diagram_tweak_order"`
+	CommunicationLinks      map[string]InputCommunicationLink `json:"communication_links"`
 }
 
 type InputCommunicationLink struct {
-	Target                   string   `json:"target"`
-	Description              string   `json:"description"`
-	Protocol                 string   `json:"protocol"`
-	Authentication           string   `json:"authentication"`
-	Authorization            string   `json:"authorization"`
-	Tags                     []string `json:"tags"`
-	VPN                      bool     `json:"vpn"`
-	IP_filtered              bool     `json:"ip_filtered"`
-	Readonly                 bool     `json:"readonly"`
-	Usage                    string   `json:"usage"`
-	Data_assets_sent         []string `json:"data_assets_sent"`
-	Data_assets_received     []string `json:"data_assets_received"`
-	Diagram_tweak_weight     int      `json:"diagram_tweak_weight"`
-	Diagram_tweak_constraint bool     `json:"diagram_tweak_constraint"`
+	Target                 string   `json:"target"`
+	Description            string   `json:"description"`
+	Protocol               string   `json:"protocol"`
+	Authentication         string   `json:"authentication"`
+	Authorization          string   `json:"authorization"`
+	Tags                   []string `json:"tags"`
+	VPN                    bool     `json:"vpn"`
+	IpFiltered             bool     `json:"ip_filtered"`
+	Readonly               bool     `json:"readonly"`
+	Usage                  string   `json:"usage"`
+	DataAssetsSent         []string `json:"data_assets_sent"`
+	DataAssetsReceived     []string `json:"data_assets_received"`
+	DiagramTweakWeight     int      `json:"diagram_tweak_weight"`
+	DiagramTweakConstraint bool     `json:"diagram_tweak_constraint"`
 }
 
 type InputSharedRuntime struct {
-	ID                       string   `json:"id"`
-	Description              string   `json:"description"`
-	Tags                     []string `json:"tags"`
-	Technical_assets_running []string `json:"technical_assets_running"`
+	ID                     string   `json:"id"`
+	Description            string   `json:"description"`
+	Tags                   []string `json:"tags"`
+	TechnicalAssetsRunning []string `json:"technical_assets_running"`
 }
 
 type InputTrustBoundary struct {
-	ID                      string   `json:"id"`
-	Description             string   `json:"description"`
-	Type                    string   `json:"type"`
-	Tags                    []string `json:"tags"`
-	Technical_assets_inside []string `json:"technical_assets_inside"`
-	Trust_boundaries_nested []string `json:"trust_boundaries_nested"`
+	ID                    string   `json:"id"`
+	Description           string   `json:"description"`
+	Type                  string   `json:"type"`
+	Tags                  []string `json:"tags"`
+	TechnicalAssetsInside []string `json:"technical_assets_inside"`
+	TrustBoundariesNested []string `json:"trust_boundaries_nested"`
 }
 
 type InputIndividualRiskCategory struct {
-	ID                            string                         `json:"id"`
-	Description                   string                         `json:"description"`
-	Impact                        string                         `json:"impact"`
-	ASVS                          string                         `json:"asvs"`
-	Cheat_sheet                   string                         `json:"cheat_sheet"`
-	Action                        string                         `json:"action"`
-	Mitigation                    string                         `json:"mitigation"`
-	Check                         string                         `json:"check"`
-	Function                      string                         `json:"function"`
-	STRIDE                        string                         `json:"stride"`
-	Detection_logic               string                         `json:"detection_logic"`
-	Risk_assessment               string                         `json:"risk_assessment"`
-	False_positives               string                         `json:"false_positives"`
-	Model_failure_possible_reason bool                           `json:"model_failure_possible_reason"`
-	CWE                           int                            `json:"cwe"`
-	Risks_identified              map[string]InputRiskIdentified `json:"risks_identified"`
+	ID                         string                         `json:"id"`
+	Description                string                         `json:"description"`
+	Impact                     string                         `json:"impact"`
+	ASVS                       string                         `json:"asvs"`
+	CheatSheet                 string                         `json:"cheat_sheet"`
+	Action                     string                         `json:"action"`
+	Mitigation                 string                         `json:"mitigation"`
+	Check                      string                         `json:"check"`
+	Function                   string                         `json:"function"`
+	STRIDE                     string                         `json:"stride"`
+	DetectionLogic             string                         `json:"detection_logic"`
+	RiskAssessment             string                         `json:"risk_assessment"`
+	FalsePositives             string                         `json:"false_positives"`
+	ModelFailurePossibleReason bool                           `json:"model_failure_possible_reason"`
+	CWE                        int                            `json:"cwe"`
+	RisksIdentified            map[string]InputRiskIdentified `json:"risks_identified"`
 }
 
 type InputRiskIdentified struct {
-	Severity                         string   `json:"severity"`
-	Exploitation_likelihood          string   `json:"exploitation_likelihood"`
-	Exploitation_impact              string   `json:"exploitation_impact"`
-	Data_breach_probability          string   `json:"data_breach_probability"`
-	Data_breach_technical_assets     []string `json:"data_breach_technical_assets"`
-	Most_relevant_data_asset         string   `json:"most_relevant_data_asset"`
-	Most_relevant_technical_asset    string   `json:"most_relevant_technical_asset"`
-	Most_relevant_communication_link string   `json:"most_relevant_communication_link"`
-	Most_relevant_trust_boundary     string   `json:"most_relevant_trust_boundary"`
-	Most_relevant_shared_runtime     string   `json:"most_relevant_shared_runtime"`
+	Severity                      string   `json:"severity"`
+	ExploitationLikelihood        string   `json:"exploitation_likelihood"`
+	ExploitationImpact            string   `json:"exploitation_impact"`
+	DataBreachProbability         string   `json:"data_breach_probability"`
+	DataBreachTechnicalAssets     []string `json:"data_breach_technical_assets"`
+	MostRelevantDataAsset         string   `json:"most_relevant_data_asset"`
+	MostRelevantTechnicalAsset    string   `json:"most_relevant_technical_asset"`
+	MostRelevantCommunicationLink string   `json:"most_relevant_communication_link"`
+	MostRelevantTrustBoundary     string   `json:"most_relevant_trust_boundary"`
+	MostRelevantSharedRuntime     string   `json:"most_relevant_shared_runtime"`
 }
 
 type InputRiskTracking struct {
@@ -211,7 +220,7 @@ type InputRiskTracking struct {
 	Justification string `json:"justification"`
 	Ticket        string `json:"ticket"`
 	Date          string `json:"date"`
-	Checked_by    string `json:"checked_by"`
+	CheckedBy     string `json:"checked_by"`
 }
 
 // TypeDescription contains a name for a type and its description
@@ -510,14 +519,14 @@ type Authorization int
 const (
 	NoneAuthorization Authorization = iota
 	TechnicalUser
-	EnduserIdentityPropagation
+	EndUserIdentityPropagation
 )
 
 func AuthorizationValues() []TypeEnum {
 	return []TypeEnum{
 		NoneAuthorization,
 		TechnicalUser,
-		EnduserIdentityPropagation,
+		EndUserIdentityPropagation,
 	}
 }
 
@@ -630,7 +639,7 @@ const (
 	Transparent
 	DataWithSymmetricSharedKey
 	DataWithAsymmetricSharedKey
-	DataWithEnduserIndividualKey
+	DataWithEndUserIndividualKey
 )
 
 func EncryptionStyleValues() []TypeEnum {
@@ -639,7 +648,7 @@ func EncryptionStyleValues() []TypeEnum {
 		Transparent,
 		DataWithSymmetricSharedKey,
 		DataWithAsymmetricSharedKey,
-		DataWithEnduserIndividualKey,
+		DataWithEndUserIndividualKey,
 	}
 }
 
@@ -671,7 +680,7 @@ func (what EncryptionStyle) Explain() string {
 }
 
 func (what EncryptionStyle) Title() string {
-	return [...]string{"None", "Transparent", "Data with Symmetric Shared Key", "Data with Asymmetric Shared Key", "Data with Enduser Individual Key"}[what]
+	return [...]string{"None", "Transparent", "Data with Symmetric Shared Key", "Data with Asymmetric Shared Key", "Data with End-User Individual Key"}[what]
 }
 
 type DataFormat int
@@ -728,29 +737,29 @@ const (
 	HTTPS
 	WS
 	WSS
-	Reverse_proxy_web_protocol
-	Reverse_proxy_web_protocol_encrypted
+	ReverseProxyWebProtocol
+	ReverseProxyWebProtocolEncrypted
 	MQTT
 	JDBC
-	JDBC_encrypted
+	JdbcEncrypted
 	ODBC
-	ODBC_encrypted
-	SQL_access_protocol
-	SQL_access_protocol_encrypted
-	NoSQL_access_protocol
-	NoSQL_access_protocol_encrypted
+	OdbcEncrypted
+	SqlAccessProtocol
+	SqlAccessProtocolEncrypted
+	NosqlAccessProtocol
+	NosqlAccessProtocolEncrypted
 	BINARY
-	BINARY_encrypted
+	BinaryEncrypted
 	TEXT
-	TEXT_encrypted
+	TextEncrypted
 	SSH
-	SSH_tunnel
+	SshTunnel
 	SMTP
-	SMTP_encrypted
+	SmtpEncrypted
 	POP3
-	POP3_encrypted
+	Pop3Encrypted
 	IMAP
-	IMAP_encrypted
+	ImapEncrypted
 	FTP
 	FTPS
 	SFTP
@@ -760,14 +769,14 @@ const (
 	JMS
 	NFS
 	SMB
-	SMB_encrypted
+	SmbEncrypted
 	LocalFileAccess
 	NRPE
 	XMPP
 	IIOP
-	IIOP_encrypted
+	IiopEncrypted
 	JRMP
-	JRMP_encrypted
+	JrmpEncrypted
 	InProcessLibraryCall
 	ContainerSpawning
 )
@@ -779,29 +788,29 @@ func ProtocolValues() []TypeEnum {
 		HTTPS,
 		WS,
 		WSS,
-		Reverse_proxy_web_protocol,
-		Reverse_proxy_web_protocol_encrypted,
+		ReverseProxyWebProtocol,
+		ReverseProxyWebProtocolEncrypted,
 		MQTT,
 		JDBC,
-		JDBC_encrypted,
+		JdbcEncrypted,
 		ODBC,
-		ODBC_encrypted,
-		SQL_access_protocol,
-		SQL_access_protocol_encrypted,
-		NoSQL_access_protocol,
-		NoSQL_access_protocol_encrypted,
+		OdbcEncrypted,
+		SqlAccessProtocol,
+		SqlAccessProtocolEncrypted,
+		NosqlAccessProtocol,
+		NosqlAccessProtocolEncrypted,
 		BINARY,
-		BINARY_encrypted,
+		BinaryEncrypted,
 		TEXT,
-		TEXT_encrypted,
+		TextEncrypted,
 		SSH,
-		SSH_tunnel,
+		SshTunnel,
 		SMTP,
-		SMTP_encrypted,
+		SmtpEncrypted,
 		POP3,
-		POP3_encrypted,
+		Pop3Encrypted,
 		IMAP,
-		IMAP_encrypted,
+		ImapEncrypted,
 		FTP,
 		FTPS,
 		SFTP,
@@ -811,14 +820,14 @@ func ProtocolValues() []TypeEnum {
 		JMS,
 		NFS,
 		SMB,
-		SMB_encrypted,
+		SmbEncrypted,
 		LocalFileAccess,
 		NRPE,
 		XMPP,
 		IIOP,
-		IIOP_encrypted,
+		IiopEncrypted,
 		JRMP,
-		JRMP_encrypted,
+		JrmpEncrypted,
 		InProcessLibraryCall,
 		ContainerSpawning,
 	}
@@ -888,24 +897,24 @@ func (what Protocol) IsProcessLocal() bool {
 }
 
 func (what Protocol) IsEncrypted() bool {
-	return what == HTTPS || what == WSS || what == JDBC_encrypted || what == ODBC_encrypted ||
-		what == NoSQL_access_protocol_encrypted || what == SQL_access_protocol_encrypted || what == BINARY_encrypted || what == TEXT_encrypted || what == SSH || what == SSH_tunnel ||
-		what == FTPS || what == SFTP || what == SCP || what == LDAPS || what == Reverse_proxy_web_protocol_encrypted ||
-		what == IIOP_encrypted || what == JRMP_encrypted || what == SMB_encrypted || what == SMTP_encrypted || what == POP3_encrypted || what == IMAP_encrypted
+	return what == HTTPS || what == WSS || what == JdbcEncrypted || what == OdbcEncrypted ||
+		what == NosqlAccessProtocolEncrypted || what == SqlAccessProtocolEncrypted || what == BinaryEncrypted || what == TextEncrypted || what == SSH || what == SshTunnel ||
+		what == FTPS || what == SFTP || what == SCP || what == LDAPS || what == ReverseProxyWebProtocolEncrypted ||
+		what == IiopEncrypted || what == JrmpEncrypted || what == SmbEncrypted || what == SmtpEncrypted || what == Pop3Encrypted || what == ImapEncrypted
 }
 
 func (what Protocol) IsPotentialDatabaseAccessProtocol(includingLaxDatabaseProtocols bool) bool {
-	strictlyDatabaseOnlyProtocol := what == JDBC_encrypted || what == ODBC_encrypted ||
-		what == NoSQL_access_protocol_encrypted || what == SQL_access_protocol_encrypted || what == JDBC || what == ODBC || what == NoSQL_access_protocol || what == SQL_access_protocol
+	strictlyDatabaseOnlyProtocol := what == JdbcEncrypted || what == OdbcEncrypted ||
+		what == NosqlAccessProtocolEncrypted || what == SqlAccessProtocolEncrypted || what == JDBC || what == ODBC || what == NosqlAccessProtocol || what == SqlAccessProtocol
 	if includingLaxDatabaseProtocols {
 		// include HTTP for REST-based NoSQL-DBs as well as unknown binary
-		return strictlyDatabaseOnlyProtocol || what == HTTPS || what == HTTP || what == BINARY || what == BINARY_encrypted
+		return strictlyDatabaseOnlyProtocol || what == HTTPS || what == HTTP || what == BINARY || what == BinaryEncrypted
 	}
 	return strictlyDatabaseOnlyProtocol
 }
 
 func (what Protocol) IsPotentialWebAccessProtocol() bool {
-	return what == HTTP || what == HTTPS || what == WS || what == WSS || what == Reverse_proxy_web_protocol || what == Reverse_proxy_web_protocol_encrypted
+	return what == HTTP || what == HTTPS || what == WS || what == WSS || what == ReverseProxyWebProtocol || what == ReverseProxyWebProtocolEncrypted
 }
 
 type TechnicalAssetTechnology int
@@ -1117,7 +1126,7 @@ func (what TechnicalAssetTechnology) IsSecurityControlRelated() bool {
 	return what == Vault || what == HSM || what == WAF || what == IDS || what == IPS
 }
 
-func (what TechnicalAssetTechnology) IsUnprotectedCommsTolerated() bool {
+func (what TechnicalAssetTechnology) IsUnprotectedCommunicationsTolerated() bool {
 	return what == Monitoring || what == IDS || what == IPS
 }
 
@@ -1150,11 +1159,11 @@ func (what TechnicalAssetTechnology) IsLessProtectedType() bool {
 		what == Mainframe
 }
 
-func (what TechnicalAssetTechnology) IsUsuallyProcessingEnduserRequests() bool {
+func (what TechnicalAssetTechnology) IsUsuallyProcessingEndUserRequests() bool {
 	return what == WebServer || what == WebApplication || what == ApplicationServer || what == ERP || what == WebServiceREST || what == WebServiceSOAP || what == EJB || what == ReportEngine
 }
 
-func (what TechnicalAssetTechnology) IsUsuallyStoringEnduserData() bool {
+func (what TechnicalAssetTechnology) IsUsuallyStoringEndUserData() bool {
 	return what == Database || what == ERP || what == FileServer || what == LocalFileSystem || what == BlockStorage || what == MailServer || what == StreamProcessing || what == MessageQueue
 }
 
@@ -1335,8 +1344,8 @@ func (what DataAsset) IsTaggedWithAny(tags ...string) bool {
 	return ContainsCaseInsensitiveAny(what.Tags, tags...)
 }
 
-func (what DataAsset) IsTaggedWithBaseTag(basetag string) bool {
-	return IsTaggedWithBaseTag(what.Tags, basetag)
+func (what DataAsset) IsTaggedWithBaseTag(baseTag string) bool {
+	return IsTaggedWithBaseTag(what.Tags, baseTag)
 }
 
 /*
@@ -1354,6 +1363,7 @@ func (what DataAsset) IsAtRisk() bool {
 	return false
 }
 */
+
 /*
 func (what DataAsset) IdentifiedRiskSeverityStillAtRisk() RiskSeverity {
 	highestRiskSeverity := Low
@@ -1372,6 +1382,7 @@ func (what DataAsset) IdentifiedRiskSeverityStillAtRisk() RiskSeverity {
 	return highestRiskSeverity
 }
 */
+
 func (what DataAsset) IdentifiedRisksByResponsibleTechnicalAssetId() map[string][]Risk {
 	uniqueTechAssetIDsResponsibleForThisDataAsset := make(map[string]interface{})
 	for _, techAsset := range what.ProcessedByTechnicalAssetsSorted() {
@@ -1386,7 +1397,7 @@ func (what DataAsset) IdentifiedRisksByResponsibleTechnicalAssetId() map[string]
 	}
 
 	result := make(map[string][]Risk)
-	for techAssetId, _ := range uniqueTechAssetIDsResponsibleForThisDataAsset {
+	for techAssetId := range uniqueTechAssetIDsResponsibleForThisDataAsset {
 		result[techAssetId] = append(result[techAssetId], ParsedModelRoot.TechnicalAssets[techAssetId].GeneratedRisks()...)
 	}
 	return result
@@ -1538,11 +1549,11 @@ func (what DataAsset) ReceivedViaCommLinksSorted() []CommunicationLink {
 	return result
 }
 
-func IsTaggedWithBaseTag(tags []string, basetag string) bool { // basetags are before the colon ":" like in "aws:ec2" it's "aws". The subtag is after the colon. Also a pure "aws" tag matches the basetag "aws"
-	basetag = strings.ToLower(strings.TrimSpace(basetag))
+func IsTaggedWithBaseTag(tags []string, baseTag string) bool { // base tags are before the colon ":" like in "aws:ec2" it's "aws". The subtag is after the colon. Also, a pure "aws" tag matches the base tag "aws"
+	baseTag = strings.ToLower(strings.TrimSpace(baseTag))
 	for _, tag := range tags {
 		tag = strings.ToLower(strings.TrimSpace(tag))
-		if tag == basetag || strings.HasPrefix(tag, basetag+":") {
+		if tag == baseTag || strings.HasPrefix(tag, baseTag+":") {
 			return true
 		}
 	}
@@ -1575,11 +1586,12 @@ func (what TechnicalAsset) IsTaggedWithAny(tags ...string) bool {
 	return ContainsCaseInsensitiveAny(what.Tags, tags...)
 }
 
-func (what TechnicalAsset) IsTaggedWithBaseTag(basetag string) bool {
-	return IsTaggedWithBaseTag(what.Tags, basetag)
+func (what TechnicalAsset) IsTaggedWithBaseTag(baseTag string) bool {
+	return IsTaggedWithBaseTag(what.Tags, baseTag)
 }
 
 // first use the tag(s) of the asset itself, then their trust boundaries (recursively up) and then their shared runtime
+
 func (what TechnicalAsset) IsTaggedWithAnyTraversingUp(tags ...string) bool {
 	if ContainsCaseInsensitiveAny(what.Tags, tags...) {
 		return true
@@ -1929,8 +1941,8 @@ func (what CommunicationLink) IsTaggedWithAny(tags ...string) bool {
 	return ContainsCaseInsensitiveAny(what.Tags, tags...)
 }
 
-func (what CommunicationLink) IsTaggedWithBaseTag(basetag string) bool {
-	return IsTaggedWithBaseTag(what.Tags, basetag)
+func (what CommunicationLink) IsTaggedWithBaseTag(baseTag string) bool {
+	return IsTaggedWithBaseTag(what.Tags, baseTag)
 }
 
 type ByTechnicalCommunicationLinkIdSort []CommunicationLink
@@ -1961,8 +1973,8 @@ func (what TrustBoundary) IsTaggedWithAny(tags ...string) bool {
 	return ContainsCaseInsensitiveAny(what.Tags, tags...)
 }
 
-func (what TrustBoundary) IsTaggedWithBaseTag(basetag string) bool {
-	return IsTaggedWithBaseTag(what.Tags, basetag)
+func (what TrustBoundary) IsTaggedWithBaseTag(baseTag string) bool {
+	return IsTaggedWithBaseTag(what.Tags, baseTag)
 }
 
 func (what TrustBoundary) IsTaggedWithAnyTraversingUp(tags ...string) bool {
@@ -2030,8 +2042,8 @@ func (what SharedRuntime) IsTaggedWithAny(tags ...string) bool {
 	return ContainsCaseInsensitiveAny(what.Tags, tags...)
 }
 
-func (what SharedRuntime) IsTaggedWithBaseTag(basetag string) bool {
-	return IsTaggedWithBaseTag(what.Tags, basetag)
+func (what SharedRuntime) IsTaggedWithBaseTag(baseTag string) bool {
+	return IsTaggedWithBaseTag(what.Tags, baseTag)
 }
 
 func (what SharedRuntime) HighestConfidentiality() Confidentiality {
@@ -2203,7 +2215,7 @@ type ParsedModel struct {
 
 func SortedTechnicalAssetIDs() []string {
 	res := make([]string, 0)
-	for id, _ := range ParsedModelRoot.TechnicalAssets {
+	for id := range ParsedModelRoot.TechnicalAssets {
 		res = append(res, id)
 	}
 	sort.Strings(res)
@@ -2227,9 +2239,10 @@ func TagsActuallyUsed() []string {
 // === Sorting stuff =====================================
 
 // as in Go ranging over map is random order, range over them in sorted (hence reproducible) way:
+
 func SortedKeysOfIndividualRiskCategories() []string {
 	keys := make([]string, 0)
-	for k, _ := range ParsedModelRoot.IndividualRiskCategories {
+	for k := range ParsedModelRoot.IndividualRiskCategories {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
@@ -2237,9 +2250,10 @@ func SortedKeysOfIndividualRiskCategories() []string {
 }
 
 // as in Go ranging over map is random order, range over them in sorted (hence reproducible) way:
+
 func SortedKeysOfSecurityRequirements() []string {
 	keys := make([]string, 0)
-	for k, _ := range ParsedModelRoot.SecurityRequirements {
+	for k := range ParsedModelRoot.SecurityRequirements {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
@@ -2247,9 +2261,10 @@ func SortedKeysOfSecurityRequirements() []string {
 }
 
 // as in Go ranging over map is random order, range over them in sorted (hence reproducible) way:
+
 func SortedKeysOfAbuseCases() []string {
 	keys := make([]string, 0)
-	for k, _ := range ParsedModelRoot.AbuseCases {
+	for k := range ParsedModelRoot.AbuseCases {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
@@ -2257,9 +2272,10 @@ func SortedKeysOfAbuseCases() []string {
 }
 
 // as in Go ranging over map is random order, range over them in sorted (hence reproducible) way:
+
 func SortedKeysOfQuestions() []string {
 	keys := make([]string, 0)
-	for k, _ := range ParsedModelRoot.Questions {
+	for k := range ParsedModelRoot.Questions {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
@@ -2267,9 +2283,10 @@ func SortedKeysOfQuestions() []string {
 }
 
 // as in Go ranging over map is random order, range over them in sorted (hence reproducible) way:
+
 func SortedKeysOfDataAssets() []string {
 	keys := make([]string, 0)
-	for k, _ := range ParsedModelRoot.DataAssets {
+	for k := range ParsedModelRoot.DataAssets {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
@@ -2277,9 +2294,10 @@ func SortedKeysOfDataAssets() []string {
 }
 
 // as in Go ranging over map is random order, range over them in sorted (hence reproducible) way:
+
 func SortedKeysOfTechnicalAssets() []string {
 	keys := make([]string, 0)
-	for k, _ := range ParsedModelRoot.TechnicalAssets {
+	for k := range ParsedModelRoot.TechnicalAssets {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
@@ -2339,6 +2357,7 @@ func SharedRuntimesTaggedWithAny(tags ...string) []SharedRuntime {
 }
 
 // as in Go ranging over map is random order, range over them in sorted (hence reproducible) way:
+
 func SortedTechnicalAssetsByTitle() []TechnicalAsset {
 	assets := make([]TechnicalAsset, 0)
 	for _, asset := range ParsedModelRoot.TechnicalAssets {
@@ -2349,6 +2368,7 @@ func SortedTechnicalAssetsByTitle() []TechnicalAsset {
 }
 
 // as in Go ranging over map is random order, range over them in sorted (hence reproducible) way:
+
 func SortedDataAssetsByTitle() []DataAsset {
 	assets := make([]DataAsset, 0)
 	for _, asset := range ParsedModelRoot.DataAssets {
@@ -2359,6 +2379,7 @@ func SortedDataAssetsByTitle() []DataAsset {
 }
 
 // as in Go ranging over map is random order, range over them in sorted (hence reproducible) way:
+
 func SortedDataAssetsByDataBreachProbabilityAndTitleStillAtRisk() []DataAsset {
 	assets := make([]DataAsset, 0)
 	for _, asset := range ParsedModelRoot.DataAssets {
@@ -2369,6 +2390,7 @@ func SortedDataAssetsByDataBreachProbabilityAndTitleStillAtRisk() []DataAsset {
 }
 
 // as in Go ranging over map is random order, range over them in sorted (hence reproducible) way:
+
 func SortedDataAssetsByDataBreachProbabilityAndTitle() []DataAsset {
 	assets := make([]DataAsset, 0)
 	for _, asset := range ParsedModelRoot.DataAssets {
@@ -2379,6 +2401,7 @@ func SortedDataAssetsByDataBreachProbabilityAndTitle() []DataAsset {
 }
 
 // as in Go ranging over map is random order, range over them in sorted (hence reproducible) way:
+
 func SortedTechnicalAssetsByRiskSeverityAndTitle() []TechnicalAsset {
 	assets := make([]TechnicalAsset, 0)
 	for _, asset := range ParsedModelRoot.TechnicalAssets {
@@ -2389,6 +2412,7 @@ func SortedTechnicalAssetsByRiskSeverityAndTitle() []TechnicalAsset {
 }
 
 // as in Go ranging over map is random order, range over them in sorted (hence reproducible) way:
+
 func SortedTechnicalAssetsByRAAAndTitle() []TechnicalAsset {
 	assets := make([]TechnicalAsset, 0)
 	for _, asset := range ParsedModelRoot.TechnicalAssets {
@@ -2424,9 +2448,10 @@ func OutOfScopeTechnicalAssets() []TechnicalAsset {
 }
 
 // as in Go ranging over map is random order, range over them in sorted (hence reproducible) way:
+
 func SortedKeysOfTrustBoundaries() []string {
 	keys := make([]string, 0)
-	for k, _ := range ParsedModelRoot.TrustBoundaries {
+	for k := range ParsedModelRoot.TrustBoundaries {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
@@ -2443,9 +2468,10 @@ func SortedTrustBoundariesByTitle() []TrustBoundary {
 }
 
 // as in Go ranging over map is random order, range over them in sorted (hence reproducible) way:
+
 func SortedKeysOfSharedRuntime() []string {
 	keys := make([]string, 0)
-	for k, _ := range ParsedModelRoot.SharedRuntimes {
+	for k := range ParsedModelRoot.SharedRuntimes {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
@@ -2476,6 +2502,7 @@ func QuestionsUnanswered() int {
 // Line Styles:
 
 // dotted when model forgery attempt (i.e. nothing being sent and received)
+
 func (what CommunicationLink) DetermineArrowLineStyle() string {
 	if len(what.DataAssetsSent) == 0 && len(what.DataAssetsReceived) == 0 {
 		return "dotted" // dotted, because it's strange when too many technical communication links transfer no data... some ok, but many in a diagram ist a sign of model forgery...
@@ -2487,6 +2514,7 @@ func (what CommunicationLink) DetermineArrowLineStyle() string {
 }
 
 // dotted when model forgery attempt (i.e. nothing being processed or stored)
+
 func (what TechnicalAsset) DetermineShapeBorderLineStyle() string {
 	if len(what.DataAssetsProcessed) == 0 && len(what.DataAssetsStored) == 0 || what.OutOfScope {
 		return "dotted" // dotted, because it's strange when too many technical communication links transfer no data... some ok, but many in a diagram ist a sign of model forgery...
@@ -2495,6 +2523,7 @@ func (what TechnicalAsset) DetermineShapeBorderLineStyle() string {
 }
 
 // 3 when redundant
+
 func (what TechnicalAsset) DetermineShapePeripheries() int {
 	if what.Redundant {
 		return 2
@@ -2620,6 +2649,7 @@ func (what TechnicalAsset) ProcessesOrStoresDataAsset(dataAssetId string) bool {
 }
 
 // red when >= confidential data stored in unencrypted technical asset
+
 func (what TechnicalAsset) DetermineLabelColor() string {
 	// TODO: Just move into main.go and let the generated risk determine the color, don't duplicate the logic here
 	// Check for red
@@ -2679,6 +2709,7 @@ func (what TechnicalAsset) DetermineLabelColor() string {
 // red when mission-critical integrity, but still unauthenticated (non-readonly) channels access it
 // amber when critical integrity, but still unauthenticated (non-readonly) channels access it
 // pink when model forgery attempt (i.e. nothing being processed or stored)
+
 func (what TechnicalAsset) DetermineShapeBorderColor() string {
 	// TODO: Just move into main.go and let the generated risk determine the color, don't duplicate the logic here
 	// Check for red
@@ -2728,7 +2759,7 @@ func (what TechnicalAsset) DetermineShapeBorderColor() string {
 		}
 
 		if len(what.DataAssetsProcessed) == 0 && len(what.DataAssetsStored) == 0 {
-			return colors.Pink // pink, because it's strange when too many technical assets process no data... some ok, but many in a diagram ist a sign of model forgery...
+			return colors.Pink // pink, because it's strange when too many technical assets process no data... some are ok, but many in a diagram is a sign of model forgery...
 		}
 
 		return colors.Black
@@ -2769,6 +2800,7 @@ func (what CommunicationLink) DetermineLabelColor() string {
 }
 
 // pink when model forgery attempt (i.e. nothing being sent and received)
+
 func (what CommunicationLink) DetermineArrowColor() string {
 	// TODO: Just move into main.go and let the generated risk determine the color, don't duplicate the logic here
 	if len(what.DataAssetsSent) == 0 && len(what.DataAssetsReceived) == 0 ||
@@ -2858,6 +2890,7 @@ func (what TechnicalAsset) DetermineShapeFillColor() string {
 		fillColor = colors.BrightenHexColor(fillColor)
 	case Serverless:
 		fillColor = colors.BrightenHexColor(colors.BrightenHexColor(fillColor))
+	case Virtual:
 	}
 	return fillColor
 }
@@ -3268,7 +3301,7 @@ type Risk struct {
 	// TODO: refactor all "Id" here to "ID"?
 }
 
-func (what Risk) GetRiskTracking() RiskTracking { // TODO: Unify function naming reagrding Get etc.
+func (what Risk) GetRiskTracking() RiskTracking { // TODO: Unify function naming regarding Get etc.
 	var result RiskTracking
 	if riskTracking, ok := ParsedModelRoot.RiskTracking[what.SyntheticId]; ok {
 		result = riskTracking
@@ -3404,9 +3437,10 @@ type RiskRule interface {
 }
 
 // as in Go ranging over map is random order, range over them in sorted (hence reproducible) way:
+
 func SortedRiskCategories() []RiskCategory {
 	categories := make([]RiskCategory, 0)
-	for k, _ := range GeneratedRisksByCategory {
+	for k := range GeneratedRisksByCategory {
 		categories = append(categories, k)
 	}
 	sort.Sort(ByRiskCategoryHighestContainingRiskSeveritySortStillAtRisk(categories))
@@ -3793,7 +3827,7 @@ func FilteredByOnlyLowRisks() []Risk {
 }
 
 func FilterByModelFailures(risksByCat map[RiskCategory][]Risk) map[RiskCategory][]Risk {
-	result := make(map[RiskCategory][]Risk, 0)
+	result := make(map[RiskCategory][]Risk)
 	for riskCat, risks := range risksByCat {
 		if riskCat.ModelFailurePossibleReason {
 			result[riskCat] = risks
