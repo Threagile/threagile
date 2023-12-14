@@ -3,30 +3,34 @@
 ######
 ## Stage 1: Build application with Go's build tools
 ######
-FROM docker.io/library/golang:alpine as builder
+FROM docker.io/library/golang:alpine as build
 
+# Add build dependencies (gcc, c stdlib)
 RUN apk add --no-cache build-base
 
 WORKDIR /app
 
+# Cache build dependencies
 COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
 
+# Set build-time variables
 ARG GOOS=linux
 
 RUN : \
     && go version \
     && go test ./...
 
+# Build plugins and threagile
 RUN : \
     && go build -a -trimpath -ldflags="-s -w -X main.buildTimestamp=$(date '+%Y%m%d%H%M%S')" -buildmode=plugin -o raa.so raa/raa/raa.go \
     && go build -a -trimpath -ldflags="-s -w -X main.buildTimestamp=$(date '+%Y%m%d%H%M%S')" -buildmode=plugin -o dummy.so raa/dummy/dummy.go \
     && go build -a -trimpath -ldflags="-s -w -X main.buildTimestamp=$(date '+%Y%m%d%H%M%S')" -buildmode=plugin -o demo-rule.so risks/custom/demo/demo-rule.go \
     && go build -a -trimpath -ldflags="-s -w -X main.buildTimestamp=$(date '+%Y%m%d%H%M%S')" -o threagile
 
-# NOTE: copy files with final name to send to final image
+# Copy files in build image to simplify copy instruction
 RUN : \
     && cp /app/demo/example/threagile.yaml /app/demo/example/threagile-example-model.yaml \
     && cp /app/demo/stub/threagile.yaml /app/demo/stub/threagile-stub-model.yaml
@@ -37,6 +41,8 @@ RUN : \
 ######
 
 FROM docker.io/library/alpine:latest
+
+# Label used in other scripts to filter
 LABEL type="threagile"
 
 RUN apk add --no-cache \
@@ -46,7 +52,8 @@ RUN apk add --no-cache \
 
 WORKDIR /app
 
-COPY --from=builder \
+# Copy necessary files from build image
+COPY --from=build \
     /app/*.so \
     /app/demo/example/threagile-example-model.yaml \
     /app/demo/stub/threagile-stub-model.yaml \
@@ -56,7 +63,7 @@ COPY --from=builder \
     /app/threagile \
     /app/
 
-COPY --from=builder \
+COPY --from=build \
     /app/server \
     /app/server
 
