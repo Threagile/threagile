@@ -39,7 +39,6 @@ RUN : \
 ######
 ## Stage 2: Make final small image
 ######
-
 FROM docker.io/library/alpine:latest
 
 # Label used in other scripts to filter
@@ -51,6 +50,14 @@ RUN apk add --no-cache \
     ttf-freefont
 
 WORKDIR /app
+
+# Add non-privileged user for running threagile
+RUN adduser \
+    --disabled-password \
+    --gecos "" \
+    --home "$(pwd)" \
+    --no-create-home \
+    threagile
 
 # Copy necessary files from build image
 COPY --from=build \
@@ -69,11 +76,11 @@ COPY --from=build \
 
 RUN : \
     && mkdir /data \
-    && chown -R 1000:1000 /app /data
+    && chown -R threagile:threagile /app /data
 
-USER 1000:1000
+USER threagile
 
-ENV PATH=/app:"{$PATH}" \
+ENV PATH="${PATH}:/app" \
     GIN_MODE=release
 
 ENTRYPOINT ["/app/threagile"]
