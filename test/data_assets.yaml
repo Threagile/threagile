@@ -1,0 +1,164 @@
+
+data_assets:
+
+
+  Customer Contracts: &customer-contracts # this example shows the inheritance-like features of YAML
+    id: customer-contracts
+    description: Customer Contracts (PDF)
+    usage: business # values: business, devops
+    tags:
+    origin: Customer
+    owner: Company XYZ
+    quantity: many # values: very-few, few, many, very-many
+    confidentiality: confidential # values: public, internal, restricted, confidential, strictly-confidential
+    integrity: critical # values: archive, operational, important, critical, mission-critical
+    availability: operational # values: archive, operational, important, critical, mission-critical
+    justification_cia_rating: >
+      Contract data might contain financial data as well as personally identifiable information (PII). The integrity and
+      availability of contract data is required for clearing payment disputes.
+
+
+  Customer Contract Summaries:
+    <<: *customer-contracts # here we're referencing the above created asset as base and just overwrite few values
+    id: contract-summaries
+    description: Customer Contract Summaries
+    quantity: very-few # values: very-few, few, many, very-many
+    confidentiality: restricted # values: public, internal, restricted, confidential, strictly-confidential
+    integrity: operational # values: archive, operational, important, critical, mission-critical
+    availability: operational # values: archive, operational, important, critical, mission-critical
+    justification_cia_rating: >
+      Just some summaries.
+
+
+  Customer Operational Data:
+    <<: *customer-contracts # here we're referencing the above created asset as base and just overwrite few values
+    id: customer-operational-data
+    description: Customer Operational Data
+    availability: critical # values: archive, operational, important, critical, mission-critical
+    justification_cia_rating: >
+      Customer operational data for using the portal are required to be available to offer the portal functionality
+      and are used in the backend transactions.
+
+
+  Customer Accounts:
+    <<: *customer-contracts # here we're referencing the above created asset as base and just overwrite few values
+    id: customer-accounts
+    description: Customer Accounts (including transient credentials when entered for checking them)
+    confidentiality: strictly-confidential # values: public, internal, restricted, confidential, strictly-confidential
+    availability: critical # values: archive, operational, important, critical, mission-critical
+    justification_cia_rating: >
+      Customer account data for using the portal are required to be available to offer the portal functionality.
+
+
+  Some Internal Business Data:
+    id: internal-business-data
+    description: Internal business data of the ERP system used unrelated to the customer-facing processes.
+    usage: business # values: business, devops
+    tags:
+    origin: Company XYZ
+    owner: Company XYZ
+    quantity: few # values: very-few, few, many, very-many
+    confidentiality: strictly-confidential # values: public, internal, restricted, confidential, strictly-confidential
+    integrity: critical # values: archive, operational, important, critical, mission-critical
+    availability: critical # values: archive, operational, important, critical, mission-critical
+    justification_cia_rating: >
+      Data used and/or generated during unrelated other usecases of the ERP-system (when used also by Company XYZ for
+      internal non-customer-portal-related stuff).
+
+
+  Client Application Code: &client-application-code # this example shows the inheritance-like features of YAML
+    id: client-application-code
+    description: Angular and other client-side code delivered by the application.
+    usage: devops # values: business, devops
+    tags:
+    origin: Company ABC
+    owner: Company ABC
+    quantity: very-few # values: very-few, few, many, very-many
+    confidentiality: public # values: public, internal, restricted, confidential, strictly-confidential
+    integrity: critical # values: archive, operational, important, critical, mission-critical
+    availability: important # values: archive, operational, important, critical, mission-critical
+    justification_cia_rating: >
+      The integrity of the public data is critical to avoid reputational damage and the availability is important on the
+      long-term scale (but not critical) to keep the growth rate of the customer base steady.
+
+
+  Server Application Code:
+    <<: *client-application-code # here we're referencing the above created asset as base and just overwrite few values
+    id: server-application-code
+    description: API and other server-side code of the application.
+    confidentiality: internal # values: public, internal, restricted, confidential, strictly-confidential
+    integrity: mission-critical # values: archive, operational, important, critical, mission-critical
+    availability: important # values: archive, operational, important, critical, mission-critical
+    justification_cia_rating: >
+      The integrity of the API code is critical to avoid reputational damage and the availability is important on the
+      long-term scale (but not critical) to keep the growth rate of the customer base steady.
+
+
+  Build Job Config:
+    id: build-job-config
+    description: Data for customizing of the build job system.
+    usage: devops # values: business, devops
+    tags:
+    origin: Company XYZ
+    owner: Company XYZ
+    quantity: very-few # values: very-few, few, many, very-many
+    confidentiality: restricted # values: public, internal, restricted, confidential, strictly-confidential
+    integrity: critical # values: archive, operational, important, critical, mission-critical
+    availability: operational # values: archive, operational, important, critical, mission-critical
+    justification_cia_rating: >
+      Data for customizing of the build job system.
+
+
+  Marketing Material:
+    <<: *client-application-code # here we're referencing the above created asset as base and just overwrite few values
+    id: marketing-material
+    description: Website and marketing data to inform potential customers and generate new leads.
+    integrity: important # values: archive, operational, important, critical, mission-critical
+
+
+  ERP Logs:
+    id: erp-logs
+    description: Logs generated by the ERP system.
+    usage: devops # values: business, devops
+    tags:
+    origin: Company XYZ
+    owner: Company XYZ
+    quantity: many # values: very-few, few, many, very-many
+    confidentiality: restricted # values: public, internal, restricted, confidential, strictly-confidential
+    integrity: archive # values: archive, operational, important, critical, mission-critical
+    availability: archive # values: archive, operational, important, critical, mission-critical
+    justification_cia_rating: >
+      Logs should not contain PII data and are only required for failure analysis, i.e. they are not considered as hard
+      transactional logs.
+
+
+  ERP Customizing Data:
+    id: erp-customizing
+    description: Data for customizing of the ERP system.
+    usage: devops # values: business, devops
+    tags:
+    origin: Company XYZ
+    owner: Company XYZ
+    quantity: very-few # values: very-few, few, many, very-many
+    confidentiality: confidential # values: public, internal, restricted, confidential, strictly-confidential
+    integrity: critical # values: archive, operational, important, critical, mission-critical
+    availability: critical # values: archive, operational, important, critical, mission-critical
+    justification_cia_rating: >
+      Data for customizing of the ERP system.
+
+
+  Database Customizing and Dumps:
+    id: db-dumps
+    description: Data for customizing of the DB system, which might include full database dumps.
+    usage: devops # values: business, devops
+    tags:
+      - oracle
+    origin: Company XYZ
+    owner: Company XYZ
+    quantity: very-few # values: very-few, few, many, very-many
+    confidentiality: strictly-confidential # values: public, internal, restricted, confidential, strictly-confidential
+    integrity: critical # values: archive, operational, important, critical, mission-critical
+    availability: critical # values: archive, operational, important, critical, mission-critical
+    justification_cia_rating: >
+      Data for customizing of the DB system, which might include full database dumps.
+

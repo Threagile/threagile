@@ -12,9 +12,11 @@ import (
 	"crypto/sha512"
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
+	"github.com/akedrou/textdiff"
 	"hash/fnv"
 	"io"
 	"log"
@@ -87,7 +89,10 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-const keepDiagramSourceFiles = false
+const (
+	keepDiagramSourceFiles = false
+	addModelTitle          = false
+)
 
 const (
 	defaultGraphvizDPI, maxGraphvizDPI = 120, 240
@@ -95,6 +100,7 @@ const (
 )
 
 const (
+	buildTimestamp                         = ""
 	tmpFolder                              = "/dev/shm" // TODO: make configurable via cmdline arg?
 	appFolder                              = "/app"
 	baseFolder                             = "/data"
@@ -113,32 +119,51 @@ const (
 	outputFile                             = "threagile.yaml"
 )
 
-var (
-	successCount, errorCount                                     = 0, 0
-	drawSpaceLinesForLayoutUnfortunatelyFurtherSeparatesAllRanks = true
-	buildTimestamp                                               = ""
-	tempFolder                                                   = tmpFolder
+type Context struct {
+	successCount                                                 int
+	errorCount                                                   int
+	drawSpaceLinesForLayoutUnfortunatelyFurtherSeparatesAllRanks bool
+	buildTimestamp                                               string
 
 	globalLock sync.Mutex
 	modelInput model.ModelInput
 
-	modelFilename, templateFilename/* diagramFilename, reportFilename, graphvizConversion*/ *string
+	tempFolder                                                                                        *string
+	modelFilename, templateFilename                                                                   *string
+	testParseModel                                                                                    *bool
 	createExampleModel, createStubModel, createEditingSupport, verbose, ignoreOrphanedRiskTracking    *bool
 	generateDataFlowDiagram, generateDataAssetDiagram, generateRisksJSON, generateTechnicalAssetsJSON *bool
 	generateStatsJSON, generateRisksExcel, generateTagsExcel, generateReportPDF                       *bool
 	outputDir, raaPlugin, skipRiskRules, riskRulesPlugins, executeModelMacro                          *string
 	customRiskRules                                                                                   map[string]model.CustomRiskRule
 	diagramDPI, serverPort                                                                            *int
-	deferredRiskTrackingDueToWildcardMatching                                                         = make(map[string]model.RiskTracking)
-)
+	deferredRiskTrackingDueToWildcardMatching                                                         map[string]model.RiskTracking
+	addModelTitle                                                                                     bool
+	keepDiagramSourceFiles                                                                            bool
+	appFolder                                                                                         *string
+	baseFolder                                                                                        *string
+}
 
-func applyRiskGeneration() {
-	if *verbose {
+func (context *Context) Defaults() *Context {
+	*context = Context{
+		keepDiagramSourceFiles: keepDiagramSourceFiles,
+		addModelTitle:          addModelTitle,
+		buildTimestamp:         buildTimestamp,
+		customRiskRules:        make(map[string]model.CustomRiskRule),
+		deferredRiskTrackingDueToWildcardMatching:                    make(map[string]model.RiskTracking),
+		drawSpaceLinesForLayoutUnfortunatelyFurtherSeparatesAllRanks: true,
+	}
+
+	return context
+}
+
+func (context *Context) applyRiskGeneration() {
+	if *context.verbose {
 		fmt.Println("Applying risk generation")
 	}
 	skippedRules := make(map[string]interface{})
-	if len(*skipRiskRules) > 0 {
-		for _, id := range strings.Split(*skipRiskRules, ",") {
+	if len(*context.skipRiskRules) > 0 {
+		for _, id := range strings.Split(*context.skipRiskRules, ",") {
 			skippedRules[id] = true
 		}
 	}
@@ -606,14 +631,14 @@ func applyRiskGeneration() {
 	}
 
 	// NOW THE CUSTOM RISK RULES (if any)
-	for id, customRule := range customRiskRules {
+	for id, customRule := range context.customRiskRules {
 		if _, ok := skippedRules[customRule.Category().Id]; ok {
-			if *verbose {
+			if *context.verbose {
 				fmt.Println("Skipping custom risk rule:", id)
 			}
 			delete(skippedRules, id)
 		} else {
-			if *verbose {
+			if *context.verbose {
 				fmt.Println("Executing custom risk rule:", id)
 			}
 			model.AddToListOfSupportedTags(customRule.SupportedTags())
@@ -621,7 +646,7 @@ func applyRiskGeneration() {
 			if len(risks) > 0 {
 				model.GeneratedRisksByCategory[customRule.Category()] = risks
 			}
-			if *verbose {
+			if *context.verbose {
 				fmt.Println("Added custom risks:", len(risks))
 			}
 		}
@@ -646,13 +671,13 @@ func applyRiskGeneration() {
 	}
 }
 
-func checkRiskTracking() {
-	if *verbose {
+func (context *Context) checkRiskTracking() {
+	if *context.verbose {
 		fmt.Println("Checking risk tracking")
 	}
 	for _, tracking := range model.ParsedModelRoot.RiskTracking {
 		if _, ok := model.GeneratedRisksBySyntheticId[tracking.SyntheticRiskId]; !ok {
-			if *ignoreOrphanedRiskTracking {
+			if *context.ignoreOrphanedRiskTracking {
 				fmt.Println("Risk tracking references unknown risk (risk id not found): " + tracking.SyntheticRiskId)
 			} else {
 				panic(errors.New("Risk tracking references unknown risk (risk id not found) - you might want to use the option -ignore-orphaned-risk-tracking: " + tracking.SyntheticRiskId +
@@ -686,17 +711,18 @@ func checkErr(err error) {
 }
 
 func main() {
-	parseCommandlineArgs()
-	if *serverPort > 0 {
-		startServer()
+	context := new(Context).Defaults()
+	context.parseCommandlineArgs()
+	if *context.serverPort > 0 {
+		context.startServer()
 	} else {
-		doIt(*modelFilename, *outputDir)
+		context.doIt()
 	}
 }
 
 // Unzip will decompress a zip archive, moving all files and folders
 // within the zip file (parameter 1) to an output directory (parameter 2).
-func unzip(src string, dest string) ([]string, error) {
+func (context *Context) unzip(src string, dest string) ([]string, error) {
 	var filenames []string
 
 	r, err := zip.OpenReader(src)
@@ -744,7 +770,7 @@ func unzip(src string, dest string) ([]string, error) {
 // ZipFiles compresses one or many files into a single zip archive file.
 // Param 1: filename is the output zip file's name.
 // Param 2: files is a list of files to add to the zip.
-func zipFiles(filename string, files []string) error {
+func (context *Context) zipFiles(filename string, files []string) error {
 	newZipFile, err := os.Create(filename)
 	if err != nil {
 		return err
@@ -756,14 +782,14 @@ func zipFiles(filename string, files []string) error {
 
 	// Add files to zip
 	for _, file := range files {
-		if err = addFileToZip(zipWriter, file); err != nil {
+		if err = context.addFileToZip(zipWriter, file); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func addFileToZip(zipWriter *zip.Writer, filename string) error {
+func (context *Context) addFileToZip(zipWriter *zip.Writer, filename string) error {
 	fileToZip, err := os.Open(filename)
 	if err != nil {
 		return err
@@ -797,37 +823,37 @@ func addFileToZip(zipWriter *zip.Writer, filename string) error {
 	return err
 }
 
-func doIt(inputFilename string, outputDirectory string) {
+func (context *Context) doIt() {
 	defer func() {
 		var err error
 		if r := recover(); r != nil {
 			err = r.(error)
-			if *verbose {
+			if *context.verbose {
 				log.Println(err)
 			}
 			_, _ = os.Stderr.WriteString(err.Error() + "\n")
 			os.Exit(2)
 		}
 	}()
-	if len(*executeModelMacro) > 0 {
-		printLogo()
+	if len(*context.executeModelMacro) > 0 {
+		context.printLogo()
 	} else {
-		if *verbose {
-			fmt.Println("Writing into output directory:", outputDirectory)
+		if *context.verbose {
+			fmt.Println("Writing into output directory:", *context.outputDir)
 		}
 	}
 
 	model.Init()
-	parseModel(inputFilename)
-	introTextRAA := applyRAA()
-	loadCustomRiskRules()
-	applyRiskGeneration()
-	applyWildcardRiskTrackingEvaluation()
-	checkRiskTracking()
+	context.parseModel()
+	introTextRAA := context.applyRAA()
+	context.loadCustomRiskRules()
+	context.applyRiskGeneration()
+	context.applyWildcardRiskTrackingEvaluation()
+	context.checkRiskTracking()
 
-	if len(*executeModelMacro) > 0 {
+	if len(*context.executeModelMacro) > 0 {
 		var macroDetails model.MacroDetails
-		switch *executeModelMacro {
+		switch *context.executeModelMacro {
 		case addbuildpipeline.GetMacroDetails().ID:
 			macroDetails = addbuildpipeline.GetMacroDetails()
 		case addvault.GetMacroDetails().ID:
@@ -841,14 +867,14 @@ func doIt(inputFilename string, outputDirectory string) {
 		case seedtags.GetMacroDetails().ID:
 			macroDetails = seedtags.GetMacroDetails()
 		default:
-			log.Fatal("Unknown model macro: ", *executeModelMacro)
+			log.Fatal("Unknown model macro: ", *context.executeModelMacro)
 		}
 		fmt.Println("Executing model macro:", macroDetails.ID)
 		fmt.Println()
 		fmt.Println()
-		printBorder(len(macroDetails.Title), true)
+		context.printBorder(len(macroDetails.Title), true)
 		fmt.Println(macroDetails.Title)
-		printBorder(len(macroDetails.Title), true)
+		context.printBorder(len(macroDetails.Title), true)
 		if len(macroDetails.Description) > 0 {
 			fmt.Println(macroDetails.Description)
 		}
@@ -876,9 +902,9 @@ func doIt(inputFilename string, outputDirectory string) {
 				break
 			}
 			fmt.Println()
-			printBorder(len(nextQuestion.Title), false)
+			context.printBorder(len(nextQuestion.Title), false)
 			fmt.Println(nextQuestion.Title)
-			printBorder(len(nextQuestion.Title), false)
+			context.printBorder(len(nextQuestion.Title), false)
 			if len(nextQuestion.Description) > 0 {
 				fmt.Println(nextQuestion.Description)
 			}
@@ -1034,17 +1060,17 @@ func doIt(inputFilename string, outputDirectory string) {
 			var err error
 			switch macroDetails.ID {
 			case addbuildpipeline.GetMacroDetails().ID:
-				changes, message, validResult, err = addbuildpipeline.GetFinalChangeImpact(&modelInput)
+				changes, message, validResult, err = addbuildpipeline.GetFinalChangeImpact(&context.modelInput)
 			case addvault.GetMacroDetails().ID:
-				changes, message, validResult, err = addvault.GetFinalChangeImpact(&modelInput)
+				changes, message, validResult, err = addvault.GetFinalChangeImpact(&context.modelInput)
 			case prettyprint.GetMacroDetails().ID:
-				changes, message, validResult, err = prettyprint.GetFinalChangeImpact(&modelInput)
+				changes, message, validResult, err = prettyprint.GetFinalChangeImpact(&context.modelInput)
 			case removeunusedtags.GetMacroDetails().ID:
-				changes, message, validResult, err = removeunusedtags.GetFinalChangeImpact(&modelInput)
+				changes, message, validResult, err = removeunusedtags.GetFinalChangeImpact(&context.modelInput)
 			case seedrisktracking.GetMacroDetails().ID:
-				changes, message, validResult, err = seedrisktracking.GetFinalChangeImpact(&modelInput)
+				changes, message, validResult, err = seedrisktracking.GetFinalChangeImpact(&context.modelInput)
 			case seedtags.GetMacroDetails().ID:
-				changes, message, validResult, err = seedtags.GetFinalChangeImpact(&modelInput)
+				changes, message, validResult, err = seedtags.GetFinalChangeImpact(&context.modelInput)
 			}
 			checkErr(err)
 			for _, change := range changes {
@@ -1070,17 +1096,17 @@ func doIt(inputFilename string, outputDirectory string) {
 				var err error
 				switch macroDetails.ID {
 				case addbuildpipeline.GetMacroDetails().ID:
-					message, validResult, err = addbuildpipeline.Execute(&modelInput)
+					message, validResult, err = addbuildpipeline.Execute(&context.modelInput)
 				case addvault.GetMacroDetails().ID:
-					message, validResult, err = addvault.Execute(&modelInput)
+					message, validResult, err = addvault.Execute(&context.modelInput)
 				case prettyprint.GetMacroDetails().ID:
-					message, validResult, err = prettyprint.Execute(&modelInput)
+					message, validResult, err = prettyprint.Execute(&context.modelInput)
 				case removeunusedtags.GetMacroDetails().ID:
-					message, validResult, err = removeunusedtags.Execute(&modelInput)
+					message, validResult, err = removeunusedtags.Execute(&context.modelInput)
 				case seedrisktracking.GetMacroDetails().ID:
-					message, validResult, err = seedrisktracking.Execute(&modelInput)
+					message, validResult, err = seedrisktracking.Execute(&context.modelInput)
 				case seedtags.GetMacroDetails().ID:
-					message, validResult, err = seedtags.Execute(&modelInput)
+					message, validResult, err = seedtags.Execute(&context.modelInput)
 				}
 				checkErr(err)
 				if !validResult {
@@ -1089,18 +1115,18 @@ func doIt(inputFilename string, outputDirectory string) {
 				}
 				fmt.Println(message)
 				fmt.Println()
-				backupFilename := inputFilename + ".backup"
+				backupFilename := *context.modelFilename + ".backup"
 				fmt.Println("Creating backup model file:", backupFilename) // TODO add random files in /dev/shm space?
-				_, err = copyFile(inputFilename, backupFilename)
+				_, err = copyFile(*context.modelFilename, backupFilename)
 				checkErr(err)
 				fmt.Println("Updating model")
-				yamlBytes, err := yaml.Marshal(modelInput)
+				yamlBytes, err := yaml.Marshal(context.modelInput)
 				checkErr(err)
 				/*
 					yamlBytes = model.ReformatYAML(yamlBytes)
 				*/
-				fmt.Println("Writing model file:", inputFilename)
-				err = os.WriteFile(inputFilename, yamlBytes, 0400)
+				fmt.Println("Writing model file:", *context.modelFilename)
+				err = os.WriteFile(*context.modelFilename, yamlBytes, 0400)
 				checkErr(err)
 				fmt.Println("Model file successfully updated")
 				return
@@ -1112,79 +1138,86 @@ func doIt(inputFilename string, outputDirectory string) {
 		return
 	}
 
-	renderDataFlowDiagram, renderDataAssetDiagram, renderRisksJSON, renderTechnicalAssetsJSON, renderStatsJSON, renderRisksExcel, renderTagsExcel, renderPDF := *generateDataFlowDiagram, *generateDataAssetDiagram, *generateRisksJSON, *generateTechnicalAssetsJSON, *generateStatsJSON, *generateRisksExcel, *generateTagsExcel, *generateReportPDF
+	renderDataFlowDiagram := *context.generateDataFlowDiagram
+	renderDataAssetDiagram := *context.generateDataAssetDiagram
+	renderRisksJSON := *context.generateRisksJSON
+	renderTechnicalAssetsJSON := *context.generateTechnicalAssetsJSON
+	renderStatsJSON := *context.generateStatsJSON
+	renderRisksExcel := *context.generateRisksExcel
+	renderTagsExcel := *context.generateTagsExcel
+	renderPDF := *context.generateReportPDF
 	if renderPDF { // as the PDF report includes both diagrams
 		renderDataFlowDiagram, renderDataAssetDiagram = true, true
 	}
 
 	// Data-flow Diagram rendering
 	if renderDataFlowDiagram {
-		gvFile := filepath.Join(outputDirectory, dataFlowDiagramFilenameDOT)
-		if !keepDiagramSourceFiles {
-			tmpFileGV, err := os.CreateTemp(tempFolder, dataFlowDiagramFilenameDOT)
+		gvFile := filepath.Join(*context.outputDir, dataFlowDiagramFilenameDOT)
+		if !context.keepDiagramSourceFiles {
+			tmpFileGV, err := os.CreateTemp(*context.tempFolder, dataFlowDiagramFilenameDOT)
 			checkErr(err)
 			gvFile = tmpFileGV.Name()
 			defer func() { _ = os.Remove(gvFile) }()
 		}
-		dotFile := writeDataFlowDiagramGraphvizDOT(gvFile, *diagramDPI)
-		renderDataFlowDiagramGraphvizImage(dotFile, outputDirectory)
+		dotFile := context.writeDataFlowDiagramGraphvizDOT(gvFile, *context.diagramDPI)
+		context.renderDataFlowDiagramGraphvizImage(dotFile, *context.outputDir)
 	}
 	// Data Asset Diagram rendering
 	if renderDataAssetDiagram {
-		gvFile := filepath.Join(outputDirectory, dataAssetDiagramFilenameDOT)
-		if !keepDiagramSourceFiles {
-			tmpFile, err := os.CreateTemp(tempFolder, dataAssetDiagramFilenameDOT)
+		gvFile := filepath.Join(*context.outputDir, dataAssetDiagramFilenameDOT)
+		if !context.keepDiagramSourceFiles {
+			tmpFile, err := os.CreateTemp(*context.tempFolder, dataAssetDiagramFilenameDOT)
 			checkErr(err)
 			gvFile = tmpFile.Name()
 			defer func() { _ = os.Remove(gvFile) }()
 		}
-		dotFile := writeDataAssetDiagramGraphvizDOT(gvFile, *diagramDPI)
-		renderDataAssetDiagramGraphvizImage(dotFile, outputDirectory)
+		dotFile := context.writeDataAssetDiagramGraphvizDOT(gvFile, *context.diagramDPI)
+		context.renderDataAssetDiagramGraphvizImage(dotFile, *context.outputDir)
 	}
 
 	// risks as risks json
 	if renderRisksJSON {
-		if *verbose {
+		if *context.verbose {
 			fmt.Println("Writing risks json")
 		}
-		report.WriteRisksJSON(filepath.Join(outputDirectory, jsonRisksFilename))
+		report.WriteRisksJSON(filepath.Join(*context.outputDir, jsonRisksFilename))
 	}
 
 	// technical assets json
 	if renderTechnicalAssetsJSON {
-		if *verbose {
+		if *context.verbose {
 			fmt.Println("Writing technical assets json")
 		}
-		report.WriteTechnicalAssetsJSON(filepath.Join(outputDirectory, jsonTechnicalAssetsFilename))
+		report.WriteTechnicalAssetsJSON(filepath.Join(*context.outputDir, jsonTechnicalAssetsFilename))
 	}
 
 	// risks as risks json
 	if renderStatsJSON {
-		if *verbose {
+		if *context.verbose {
 			fmt.Println("Writing stats json")
 		}
-		report.WriteStatsJSON(filepath.Join(outputDirectory, jsonStatsFilename))
+		report.WriteStatsJSON(filepath.Join(*context.outputDir, jsonStatsFilename))
 	}
 
 	// risks Excel
 	if renderRisksExcel {
-		if *verbose {
+		if *context.verbose {
 			fmt.Println("Writing risks excel")
 		}
-		report.WriteRisksExcelToFile(filepath.Join(outputDirectory, excelRisksFilename))
+		report.WriteRisksExcelToFile(filepath.Join(*context.outputDir, excelRisksFilename))
 	}
 
 	// tags Excel
 	if renderTagsExcel {
-		if *verbose {
+		if *context.verbose {
 			fmt.Println("Writing tags excel")
 		}
-		report.WriteTagsExcelToFile(filepath.Join(outputDirectory, excelTagsFilename))
+		report.WriteTagsExcelToFile(filepath.Join(*context.outputDir, excelTagsFilename))
 	}
 
 	if renderPDF {
 		// hash the YAML input file
-		f, err := os.Open(inputFilename)
+		f, err := os.Open(*context.modelFilename)
 		checkErr(err)
 		defer func() { _ = f.Close() }()
 		hasher := sha256.New()
@@ -1193,24 +1226,24 @@ func doIt(inputFilename string, outputDirectory string) {
 		}
 		modelHash := hex.EncodeToString(hasher.Sum(nil))
 		// report PDF
-		if *verbose {
+		if *context.verbose {
 			fmt.Println("Writing report pdf")
 		}
-		report.WriteReportPDF(filepath.Join(outputDirectory, reportFilename),
-			*templateFilename,
-			filepath.Join(outputDirectory, dataFlowDiagramFilenamePNG),
-			filepath.Join(outputDirectory, dataAssetDiagramFilenamePNG),
-			inputFilename,
-			*skipRiskRules,
-			buildTimestamp,
+		report.WriteReportPDF(filepath.Join(*context.outputDir, reportFilename),
+			*context.templateFilename,
+			filepath.Join(*context.outputDir, dataFlowDiagramFilenamePNG),
+			filepath.Join(*context.outputDir, dataAssetDiagramFilenamePNG),
+			*context.modelFilename,
+			*context.skipRiskRules,
+			context.buildTimestamp,
 			modelHash,
 			introTextRAA,
-			customRiskRules,
-			tempFolder)
+			context.customRiskRules,
+			*context.tempFolder)
 	}
 }
 
-func printBorder(length int, bold bool) {
+func (context *Context) printBorder(length int, bold bool) {
 	char := "-"
 	if bold {
 		char = "="
@@ -1221,33 +1254,46 @@ func printBorder(length int, bold bool) {
 	fmt.Println()
 }
 
-func applyRAA() string {
-	if *verbose {
-		fmt.Println("Applying RAA calculation:", *raaPlugin)
+func (context *Context) applyRAA() string {
+	if *context.verbose {
+		fmt.Println("Applying RAA calculation:", *context.raaPlugin)
 	}
 	// determine plugin to load.
 	// load plugin: open the ".so" file to load the symbols
-	plug, err := plugin.Open(*raaPlugin)
-	checkErr(err)
+	plug, err := plugin.Open(*context.raaPlugin)
+	if err != nil {
+		fmt.Printf("WARNING: plugin %q not applied: %v\n", *context.raaPlugin, err)
+		return ""
+	}
+	//	checkErr(err)
 	// look up a symbol (an exported function or variable): in this case, function CalculateRAA
 	symCalculateRAA, err := plug.Lookup("CalculateRAA")
-	checkErr(err)
+	if err != nil {
+		fmt.Printf("WARNING: plugin %q not applied: %v\n", *context.raaPlugin, err)
+		return ""
+	}
+	//	checkErr(err)
 	// use the plugin
 	raaCalcFunc, ok := symCalculateRAA.(func() string) // symCalculateRAA.(func(model.ParsedModel) string)
 	if !ok {
-		panic(errors.New("RAA plugin has no 'CalculateRAA() string' function"))
+		fmt.Printf("WARNING: invalid plugin %q\n", *context.raaPlugin)
+		return ""
 	}
+	/*	if !ok {
+			panic(errors.New("RAA plugin has no 'CalculateRAA() string' function"))
+		}
+	*/
 	// call it
 	return raaCalcFunc()
 }
 
-func loadCustomRiskRules() {
-	customRiskRules = make(map[string]model.CustomRiskRule)
-	if len(*riskRulesPlugins) > 0 {
-		if *verbose {
-			fmt.Println("Loading custom risk rules:", *riskRulesPlugins)
+func (context *Context) loadCustomRiskRules() {
+	context.customRiskRules = make(map[string]model.CustomRiskRule)
+	if len(*context.riskRulesPlugins) > 0 {
+		if *context.verbose {
+			fmt.Println("Loading custom risk rules:", *context.riskRulesPlugins)
 		}
-		for _, pluginFile := range strings.Split(*riskRulesPlugins, ",") {
+		for _, pluginFile := range strings.Split(*context.riskRulesPlugins, ",") {
 			if len(pluginFile) > 0 {
 				// check that the plugin file to load exists
 				_, err := os.Stat(pluginFile)
@@ -1267,62 +1313,63 @@ func loadCustomRiskRules() {
 				}
 				// simply add to a map (just convenience) where key is the category id and value the rule's execution function
 				ruleID := symCustomRiskRuleVar.Category().Id
-				customRiskRules[ruleID] = symCustomRiskRuleVar
-				if *verbose {
+				context.customRiskRules[ruleID] = symCustomRiskRuleVar
+				if *context.verbose {
 					fmt.Println("Custom risk rule loaded:", ruleID)
 				}
 			}
 		}
-		if *verbose {
-			fmt.Println("Loaded custom risk rules:", len(customRiskRules))
+		if *context.verbose {
+			fmt.Println("Loaded custom risk rules:", len(context.customRiskRules))
 		}
 	}
 }
 
 var validIdSyntax = regexp.MustCompile(`^[a-zA-Z0-9\-]+$`)
 
-func checkIdSyntax(id string) {
+func (context *Context) checkIdSyntax(id string) {
 	if !validIdSyntax.MatchString(id) {
 		panic(errors.New("invalid id syntax used (only letters, numbers, and hyphen allowed): " + id))
 	}
 }
 
-func analyze(context *gin.Context) {
-	execute(context, false)
+func (context *Context) analyze(ginContext *gin.Context) {
+	context.execute(ginContext, false)
 }
-func check(context *gin.Context) {
-	_, ok := execute(context, true)
+
+func (context *Context) check(ginContext *gin.Context) {
+	_, ok := context.execute(ginContext, true)
 	if ok {
-		context.JSON(http.StatusOK, gin.H{
+		ginContext.JSON(http.StatusOK, gin.H{
 			"message": "model is ok",
 		})
 	}
 }
 
-func execute(context *gin.Context, dryRun bool) (yamlContent []byte, ok bool) {
+func (context *Context) execute(ginContext *gin.Context, dryRun bool) (yamlContent []byte, ok bool) {
 	defer func() {
 		var err error
 		if r := recover(); r != nil {
-			errorCount++
+			context.errorCount++
 			err = r.(error)
 			log.Println(err)
-			context.JSON(http.StatusBadRequest, gin.H{
+			ginContext.JSON(http.StatusBadRequest, gin.H{
 				"error": strings.TrimSpace(err.Error()),
 			})
 			ok = false
 		}
 	}()
 
-	dpi, err := strconv.Atoi(context.DefaultQuery("dpi", strconv.Itoa(defaultGraphvizDPI)))
+	dpi, err := strconv.Atoi(ginContext.DefaultQuery("dpi", strconv.Itoa(defaultGraphvizDPI)))
 	checkErr(err)
 
-	fileUploaded, header, err := context.Request.FormFile("file")
+	fileUploaded, header, err := ginContext.Request.FormFile("file")
 	checkErr(err)
 
 	if header.Size > 50000000 {
 		msg := "maximum model upload file size exceeded (denial-of-service protection)"
 		log.Println(msg)
-		context.JSON(http.StatusRequestEntityTooLarge, gin.H{
+		ginContext.JSON(http.StatusRequestEntityTooLarge, gin.H{
 			"error": msg,
 		})
 		return yamlContent, false
@@ -1330,7 +1377,7 @@ func execute(context *gin.Context, dryRun bool) (yamlContent []byte, ok bool) {
 
 	filenameUploaded := strings.TrimSpace(header.Filename)
 
-	tmpInputDir, err := os.MkdirTemp(tempFolder, "threagile-input-")
+	tmpInputDir, err := os.MkdirTemp(*context.tempFolder, "threagile-input-")
 	checkErr(err)
 	defer func() { _ = os.RemoveAll(tmpInputDir) }()
 
@@ -1344,10 +1391,10 @@ func execute(context *gin.Context, dryRun bool) (yamlContent []byte, ok bool) {
 
 	if strings.ToLower(filepath.Ext(filenameUploaded)) == ".zip" {
 		// unzip first (including the resources like images etc.)
-		if *verbose {
+		if *context.verbose {
 			fmt.Println("Decompressing uploaded archive")
 		}
-		filenamesUnzipped, err := unzip(tmpModelFile.Name(), tmpInputDir)
+		filenamesUnzipped, err := context.unzip(tmpModelFile.Name(), tmpInputDir)
 		checkErr(err)
 		found := false
 		for _, name := range filenamesUnzipped {
@@ -1362,18 +1409,18 @@ func execute(context *gin.Context, dryRun bool) (yamlContent []byte, ok bool) {
 		}
 	}
 
-	tmpOutputDir, err := os.MkdirTemp(tempFolder, "threagile-output-")
+	tmpOutputDir, err := os.MkdirTemp(*context.tempFolder, "threagile-output-")
 	checkErr(err)
 	defer func() { _ = os.RemoveAll(tmpOutputDir) }()
 
-	tmpResultFile, err := os.CreateTemp(tempFolder, "threagile-result-*.zip")
+	tmpResultFile, err := os.CreateTemp(*context.tempFolder, "threagile-result-*.zip")
 	checkErr(err)
 	defer func() { _ = os.Remove(tmpResultFile.Name()) }()
 
 	if dryRun {
-		doItViaRuntimeCall(yamlFile, tmpOutputDir, *executeModelMacro, *raaPlugin, *riskRulesPlugins, *skipRiskRules, *ignoreOrphanedRiskTracking, false, false, false, false, false, true, true, true, 40)
+		context.doItViaRuntimeCall(yamlFile, tmpOutputDir, false, false, false, false, false, true, true, true, 40)
 	} else {
-		doItViaRuntimeCall(yamlFile, tmpOutputDir, *executeModelMacro, *raaPlugin, *riskRulesPlugins, *skipRiskRules, *ignoreOrphanedRiskTracking, true, true, true, true, true, true, true, true, dpi)
+		context.doItViaRuntimeCall(yamlFile, tmpOutputDir, true, true, true, true, true, true, true, true, dpi)
 	}
 	checkErr(err)
 
@@ -1398,28 +1445,28 @@ func execute(context *gin.Context, dryRun bool) (yamlContent []byte, ok bool) {
 			files = append(files, filepath.Join(tmpOutputDir, dataFlowDiagramFilenameDOT))
 			files = append(files, filepath.Join(tmpOutputDir, dataAssetDiagramFilenameDOT))
 		}
-		err = zipFiles(tmpResultFile.Name(), files)
+		err = context.zipFiles(tmpResultFile.Name(), files)
 		checkErr(err)
-		if *verbose {
+		if *context.verbose {
 			log.Println("Streaming back result file: " + tmpResultFile.Name())
 		}
-		context.FileAttachment(tmpResultFile.Name(), "threagile-result.zip")
+		ginContext.FileAttachment(tmpResultFile.Name(), "threagile-result.zip")
 	}
-	successCount++
+	context.successCount++
 	return yamlContent, true
 }
 
 // ultimately to avoid any in-process memory and/or data leaks by the used third party libs like PDF generation: exec and quit
-func doItViaRuntimeCall(modelFile string, outputDir string, executeModelMacro string, raaPlugin string, customRiskRulesPlugins string, skipRiskRules string, ignoreOrphanedRiskTracking bool,
+func (context *Context) doItViaRuntimeCall(modelFile string, outputDir string,
 	generateDataFlowDiagram, generateDataAssetDiagram, generateReportPdf, generateRisksExcel, generateTagsExcel, generateRisksJSON, generateTechnicalAssetsJSON, generateStatsJSON bool,
 	dpi int) {
 	// Remember to also add the same args to the exec based sub-process calls!
 	var cmd *exec.Cmd
-	args := []string{"-model", modelFile, "-output", outputDir, "-execute-model-macro", executeModelMacro, "-raa-plugin", raaPlugin, "-custom-risk-rules-plugins", customRiskRulesPlugins, "-skip-risk-rules", skipRiskRules, "-diagram-dpi", strconv.Itoa(dpi)}
-	if *verbose {
+	args := []string{"-model", modelFile, "-output", outputDir, "-execute-model-macro", *context.executeModelMacro, "-raa-plugin", *context.raaPlugin, "-custom-risk-rules-plugins", *context.riskRulesPlugins, "-skip-risk-rules", *context.skipRiskRules, "-diagram-dpi", strconv.Itoa(dpi)}
+	if *context.verbose {
 		args = append(args, "-verbose")
 	}
-	if ignoreOrphanedRiskTracking { // TODO why add all them as arguments, when they are also variables on outer level?
+	if *context.ignoreOrphanedRiskTracking { // TODO why add all them as arguments, when they are also variables on outer level?
 		args = append(args, "-ignore-orphaned-risk-tracking")
 	}
 	if generateDataFlowDiagram {
@@ -1452,7 +1499,7 @@ func doItViaRuntimeCall(modelFile string, outputDir string, executeModelMacro st
 	if err != nil {
 		panic(errors.New(string(out)))
 	} else {
-		if *verbose && len(out) > 0 {
+		if *context.verbose && len(out) > 0 {
 			fmt.Println("---")
 			fmt.Print(string(out))
 			fmt.Println("---")
@@ -1460,7 +1507,7 @@ func doItViaRuntimeCall(modelFile string, outputDir string, executeModelMacro st
 	}
 }
 
-func startServer() {
+func (context *Context) startServer() {
 	router := gin.Default()
 	router.LoadHTMLGlob("server/static/*.html") // <==
 	router.GET("/", func(c *gin.Context) {
@@ -1489,8 +1536,8 @@ func startServer() {
 	router.StaticFile("/swagger-ui/swagger-ui-bundle.js", "server/static/swagger-ui/swagger-ui-bundle.js")
 	router.StaticFile("/swagger-ui/swagger-ui-standalone-preset.js", "server/static/swagger-ui/swagger-ui-standalone-preset.js") // <==
 
-	router.GET("/threagile-example-model.yaml", exampleFile)
-	router.GET("/threagile-stub-model.yaml", stubFile)
+	router.GET("/threagile-example-model.yaml", context.exampleFile)
+	router.GET("/threagile-stub-model.yaml", context.stubFile)
 
 	router.GET("/meta/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{
@@ -1500,115 +1547,115 @@ func startServer() {
 	router.GET("/meta/version", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"version":         model.ThreagileVersion,
-			"build_timestamp": buildTimestamp,
+			"build_timestamp": context.buildTimestamp,
 		})
 	})
 	router.GET("/meta/types", func(c *gin.Context) {
 		c.JSON(200, gin.H{
-			"quantity":                     arrayOfStringValues(model.QuantityValues()),
-			"confidentiality":              arrayOfStringValues(model.ConfidentialityValues()),
-			"criticality":                  arrayOfStringValues(model.CriticalityValues()),
-			"technical_asset_type":         arrayOfStringValues(model.TechnicalAssetTypeValues()),
-			"technical_asset_size":         arrayOfStringValues(model.TechnicalAssetSizeValues()),
-			"authorization":                arrayOfStringValues(model.AuthorizationValues()),
-			"authentication":               arrayOfStringValues(model.AuthenticationValues()),
-			"usage":                        arrayOfStringValues(model.UsageValues()),
-			"encryption":                   arrayOfStringValues(model.EncryptionStyleValues()),
-			"data_format":                  arrayOfStringValues(model.DataFormatValues()),
-			"protocol":                     arrayOfStringValues(model.ProtocolValues()),
-			"technical_asset_technology":   arrayOfStringValues(model.TechnicalAssetTechnologyValues()),
-			"technical_asset_machine":      arrayOfStringValues(model.TechnicalAssetMachineValues()),
-			"trust_boundary_type":          arrayOfStringValues(model.TrustBoundaryTypeValues()),
-			"data_breach_probability":      arrayOfStringValues(model.DataBreachProbabilityValues()),
-			"risk_severity":                arrayOfStringValues(model.RiskSeverityValues()),
-			"risk_exploitation_likelihood": arrayOfStringValues(model.RiskExploitationLikelihoodValues()),
-			"risk_exploitation_impact":     arrayOfStringValues(model.RiskExploitationImpactValues()),
-			"risk_function":                arrayOfStringValues(model.RiskFunctionValues()),
-			"risk_status":                  arrayOfStringValues(model.RiskStatusValues()),
-			"stride":                       arrayOfStringValues(model.STRIDEValues()),
+			"quantity":                     context.arrayOfStringValues(model.QuantityValues()),
+			"confidentiality":              context.arrayOfStringValues(model.ConfidentialityValues()),
+			"criticality":                  context.arrayOfStringValues(model.CriticalityValues()),
+			"technical_asset_type":         context.arrayOfStringValues(model.TechnicalAssetTypeValues()),
+			"technical_asset_size":         context.arrayOfStringValues(model.TechnicalAssetSizeValues()),
+			"authorization":                context.arrayOfStringValues(model.AuthorizationValues()),
+			"authentication":               context.arrayOfStringValues(model.AuthenticationValues()),
+			"usage":                        context.arrayOfStringValues(model.UsageValues()),
+			"encryption":                   context.arrayOfStringValues(model.EncryptionStyleValues()),
+			"data_format":                  context.arrayOfStringValues(model.DataFormatValues()),
+			"protocol":                     context.arrayOfStringValues(model.ProtocolValues()),
+			"technical_asset_technology":   context.arrayOfStringValues(model.TechnicalAssetTechnologyValues()),
+			"technical_asset_machine":      context.arrayOfStringValues(model.TechnicalAssetMachineValues()),
+			"trust_boundary_type":          context.arrayOfStringValues(model.TrustBoundaryTypeValues()),
+			"data_breach_probability":      context.arrayOfStringValues(model.DataBreachProbabilityValues()),
+			"risk_severity":                context.arrayOfStringValues(model.RiskSeverityValues()),
+			"risk_exploitation_likelihood": context.arrayOfStringValues(model.RiskExploitationLikelihoodValues()),
+			"risk_exploitation_impact":     context.arrayOfStringValues(model.RiskExploitationImpactValues()),
+			"risk_function":                context.arrayOfStringValues(model.RiskFunctionValues()),
+			"risk_status":                  context.arrayOfStringValues(model.RiskStatusValues()),
+			"stride":                       context.arrayOfStringValues(model.STRIDEValues()),
 		})
 	})
 
 	// TODO router.GET("/meta/risk-rules", listRiskRules)
 	// TODO router.GET("/meta/model-macros", listModelMacros)
 
-	router.GET("/meta/stats", stats)
+	router.GET("/meta/stats", context.stats)
 
-	router.POST("/direct/analyze", analyze)
-	router.POST("/direct/check", check)
-	router.GET("/direct/stub", stubFile)
+	router.POST("/direct/analyze", context.analyze)
+	router.POST("/direct/check", context.check)
+	router.GET("/direct/stub", context.stubFile)
 
-	router.POST("/auth/keys", createKey)
-	router.DELETE("/auth/keys", deleteKey)
-	router.POST("/auth/tokens", createToken)
-	router.DELETE("/auth/tokens", deleteToken)
+	router.POST("/auth/keys", context.createKey)
+	router.DELETE("/auth/keys", context.deleteKey)
+	router.POST("/auth/tokens", context.createToken)
+	router.DELETE("/auth/tokens", context.deleteToken)
 
-	router.POST("/models", createNewModel)
-	router.GET("/models", listModels)
-	router.DELETE("/models/:model-id", deleteModel)
-	router.GET("/models/:model-id", getModel)
-	router.PUT("/models/:model-id", importModel)
-	router.GET("/models/:model-id/data-flow-diagram", streamDataFlowDiagram)
-	router.GET("/models/:model-id/data-asset-diagram", streamDataAssetDiagram)
-	router.GET("/models/:model-id/report-pdf", streamReportPDF)
-	router.GET("/models/:model-id/risks-excel", streamRisksExcel)
-	router.GET("/models/:model-id/tags-excel", streamTagsExcel)
-	router.GET("/models/:model-id/risks", streamRisksJSON)
-	router.GET("/models/:model-id/technical-assets", streamTechnicalAssetsJSON)
-	router.GET("/models/:model-id/stats", streamStatsJSON)
-	router.GET("/models/:model-id/analysis", analyzeModelOnServerDirectly)
+	router.POST("/models", context.createNewModel)
+	router.GET("/models", context.listModels)
+	router.DELETE("/models/:model-id", context.deleteModel)
+	router.GET("/models/:model-id", context.getModel)
+	router.PUT("/models/:model-id", context.importModel)
+	router.GET("/models/:model-id/data-flow-diagram", context.streamDataFlowDiagram)
+	router.GET("/models/:model-id/data-asset-diagram", context.streamDataAssetDiagram)
+	router.GET("/models/:model-id/report-pdf", context.streamReportPDF)
+	router.GET("/models/:model-id/risks-excel", context.streamRisksExcel)
+	router.GET("/models/:model-id/tags-excel", context.streamTagsExcel)
+	router.GET("/models/:model-id/risks", context.streamRisksJSON)
+	router.GET("/models/:model-id/technical-assets", context.streamTechnicalAssetsJSON)
+	router.GET("/models/:model-id/stats", context.streamStatsJSON)
+	router.GET("/models/:model-id/analysis", context.analyzeModelOnServerDirectly)
 
-	router.GET("/models/:model-id/cover", getCover)
-	router.PUT("/models/:model-id/cover", setCover)
-	router.GET("/models/:model-id/overview", getOverview)
-	router.PUT("/models/:model-id/overview", setOverview)
+	router.GET("/models/:model-id/cover", context.getCover)
+	router.PUT("/models/:model-id/cover", context.setCover)
+	router.GET("/models/:model-id/overview", context.getOverview)
+	router.PUT("/models/:model-id/overview", context.setOverview)
 	//router.GET("/models/:model-id/questions", getQuestions)
 	//router.PUT("/models/:model-id/questions", setQuestions)
-	router.GET("/models/:model-id/abuse-cases", getAbuseCases)
-	router.PUT("/models/:model-id/abuse-cases", setAbuseCases)
-	router.GET("/models/:model-id/security-requirements", getSecurityRequirements)
-	router.PUT("/models/:model-id/security-requirements", setSecurityRequirements)
+	router.GET("/models/:model-id/abuse-cases", context.getAbuseCases)
+	router.PUT("/models/:model-id/abuse-cases", context.setAbuseCases)
+	router.GET("/models/:model-id/security-requirements", context.getSecurityRequirements)
+	router.PUT("/models/:model-id/security-requirements", context.setSecurityRequirements)
 	//router.GET("/models/:model-id/tags", getTags)
 	//router.PUT("/models/:model-id/tags", setTags)
 
-	router.GET("/models/:model-id/data-assets", getDataAssets)
-	router.POST("/models/:model-id/data-assets", createNewDataAsset)
-	router.GET("/models/:model-id/data-assets/:data-asset-id", getDataAsset)
-	router.PUT("/models/:model-id/data-assets/:data-asset-id", setDataAsset)
-	router.DELETE("/models/:model-id/data-assets/:data-asset-id", deleteDataAsset)
+	router.GET("/models/:model-id/data-assets", context.getDataAssets)
+	router.POST("/models/:model-id/data-assets", context.createNewDataAsset)
+	router.GET("/models/:model-id/data-assets/:data-asset-id", context.getDataAsset)
+	router.PUT("/models/:model-id/data-assets/:data-asset-id", context.setDataAsset)
+	router.DELETE("/models/:model-id/data-assets/:data-asset-id", context.deleteDataAsset)
 
-	router.GET("/models/:model-id/trust-boundaries", getTrustBoundaries)
+	router.GET("/models/:model-id/trust-boundaries", context.getTrustBoundaries)
 	//	router.POST("/models/:model-id/trust-boundaries", createNewTrustBoundary)
 	//	router.GET("/models/:model-id/trust-boundaries/:trust-boundary-id", getTrustBoundary)
 	//	router.PUT("/models/:model-id/trust-boundaries/:trust-boundary-id", setTrustBoundary)
 	//	router.DELETE("/models/:model-id/trust-boundaries/:trust-boundary-id", deleteTrustBoundary)
 
-	router.GET("/models/:model-id/shared-runtimes", getSharedRuntimes)
-	router.POST("/models/:model-id/shared-runtimes", createNewSharedRuntime)
-	router.GET("/models/:model-id/shared-runtimes/:shared-runtime-id", getSharedRuntime)
-	router.PUT("/models/:model-id/shared-runtimes/:shared-runtime-id", setSharedRuntime)
-	router.DELETE("/models/:model-id/shared-runtimes/:shared-runtime-id", deleteSharedRuntime)
+	router.GET("/models/:model-id/shared-runtimes", context.getSharedRuntimes)
+	router.POST("/models/:model-id/shared-runtimes", context.createNewSharedRuntime)
+	router.GET("/models/:model-id/shared-runtimes/:shared-runtime-id", context.getSharedRuntime)
+	router.PUT("/models/:model-id/shared-runtimes/:shared-runtime-id", context.setSharedRuntime)
+	router.DELETE("/models/:model-id/shared-runtimes/:shared-runtime-id", context.deleteSharedRuntime)
 
 	fmt.Println("Threagile server running...")
-	_ = router.Run(":" + strconv.Itoa(*serverPort)) // listen and serve on 0.0.0.0:8080 or whatever port was specified
+	_ = router.Run(":" + strconv.Itoa(*context.serverPort)) // listen and serve on 0.0.0.0:8080 or whatever port was specified
 }
 
-func exampleFile(context *gin.Context) {
-	example, err := os.ReadFile(filepath.Join(appFolder, "threagile-example-model.yaml"))
+func (context *Context) exampleFile(ginContext *gin.Context) {
+	example, err := os.ReadFile(filepath.Join(*context.appFolder, "threagile-example-model.yaml"))
 	checkErr(err)
-	context.Data(http.StatusOK, gin.MIMEYAML, example)
+	ginContext.Data(http.StatusOK, gin.MIMEYAML, example)
 }
 
-func stubFile(context *gin.Context) {
-	stub, err := os.ReadFile(filepath.Join(appFolder, "threagile-stub-model.yaml"))
+func (context *Context) stubFile(ginContext *gin.Context) {
+	stub, err := os.ReadFile(filepath.Join(*context.appFolder, "threagile-stub-model.yaml"))
 	checkErr(err)
-	context.Data(http.StatusOK, gin.MIMEYAML, addSupportedTags(stub)) // TODO use also the MIMEYAML way of serving YAML in model export?
+	ginContext.Data(http.StatusOK, gin.MIMEYAML, context.addSupportedTags(stub)) // TODO use also the MIMEYAML way of serving YAML in model export?
 }
 
-func addSupportedTags(input []byte) []byte {
+func (context *Context) addSupportedTags(input []byte) []byte {
 	// add distinct tags as "tags_available"
 	supportedTags := make(map[string]bool)
-	for _, customRule := range customRiskRules {
+	for _, customRule := range context.customRiskRules {
 		for _, tag := range customRule.SupportedTags() {
 			supportedTags[strings.ToLower(tag)] = true
 		}
@@ -1747,7 +1794,7 @@ func addSupportedTags(input []byte) []byte {
 		return input
 	}
 	sort.Strings(tags)
-	if *verbose {
+	if *context.verbose {
 		fmt.Print("Supported tags of all risk rules: ")
 		for i, tag := range tags {
 			if i > 0 {
@@ -1774,13 +1821,13 @@ type timeoutStruct struct {
 var mapTokenHashToTimeoutStruct = make(map[string]timeoutStruct)
 var mapFolderNameToTokenHash = make(map[string]string)
 
-func createToken(context *gin.Context) {
-	folderName, key, ok := checkKeyToFolderName(context)
+func (context *Context) createToken(ginContext *gin.Context) {
+	folderName, key, ok := context.checkKeyToFolderName(ginContext)
 	if !ok {
 		return
 	}
-	globalLock.Lock()
-	defer globalLock.Unlock()
+	context.globalLock.Lock()
+	defer context.globalLock.Unlock()
 	if tokenHash, exists := mapFolderNameToTokenHash[folderName]; exists {
 		// invalidate previous token
 		delete(mapTokenHashToTimeoutStruct, tokenHash)
@@ -1790,7 +1837,7 @@ func createToken(context *gin.Context) {
 	n, err := rand.Read(xorBytesArr[:])
 	if n != keySize || err != nil {
 		log.Println(err)
-		context.JSON(http.StatusInternalServerError, gin.H{
+		ginContext.JSON(http.StatusInternalServerError, gin.H{
 			"error": "unable to create token",
 		})
 		return
@@ -1805,15 +1852,15 @@ func createToken(context *gin.Context) {
 		lastAccessedNanoTime: now,
 	}
 	mapFolderNameToTokenHash[folderName] = tokenHash
-	context.JSON(http.StatusCreated, gin.H{
+	ginContext.JSON(http.StatusCreated, gin.H{
 		"token": base64.RawURLEncoding.EncodeToString(token[:]),
 	})
 }
 
-func deleteToken(context *gin.Context) {
+func (context *Context) deleteToken(ginContext *gin.Context) {
 	header := tokenHeader{}
-	if err := context.ShouldBindHeader(&header); err != nil {
-		context.JSON(http.StatusNotFound, gin.H{
+	if err := ginContext.ShouldBindHeader(&header); err != nil {
+		ginContext.JSON(http.StatusNotFound, gin.H{
 			"error": "token not found",
 		})
 		return
@@ -1823,15 +1870,15 @@ func deleteToken(context *gin.Context) {
 		if err != nil {
 			log.Println(err)
 		}
-		context.JSON(http.StatusNotFound, gin.H{
+		ginContext.JSON(http.StatusNotFound, gin.H{
 			"error": "token not found",
 		})
 		return
 	}
-	globalLock.Lock()
-	defer globalLock.Unlock()
+	context.globalLock.Lock()
+	defer context.globalLock.Unlock()
 	deleteTokenHashFromMaps(hashSHA256(token))
-	context.JSON(http.StatusOK, gin.H{
+	ginContext.JSON(http.StatusOK, gin.H{
 		"message": "token deleted",
 	})
 }
@@ -1879,64 +1926,64 @@ func xor(key []byte, xor []byte) []byte {
 	return result
 }
 
-func analyzeModelOnServerDirectly(context *gin.Context) {
-	folderNameOfKey, key, ok := checkTokenToFolderName(context)
+func (context *Context) analyzeModelOnServerDirectly(ginContext *gin.Context) {
+	folderNameOfKey, key, ok := context.checkTokenToFolderName(ginContext)
 	if !ok {
 		return
 	}
-	lockFolder(folderNameOfKey)
+	context.lockFolder(folderNameOfKey)
 	defer func() {
-		unlockFolder(folderNameOfKey)
+		context.unlockFolder(folderNameOfKey)
 		var err error
 		if r := recover(); r != nil {
 			err = r.(error)
-			if *verbose {
+			if *context.verbose {
 				log.Println(err)
 			}
 			log.Println(err)
-			context.JSON(http.StatusBadRequest, gin.H{
+			ginContext.JSON(http.StatusBadRequest, gin.H{
 				"error": strings.TrimSpace(err.Error()),
 			})
 			ok = false
 		}
 	}()
 
-	dpi, err := strconv.Atoi(context.DefaultQuery("dpi", strconv.Itoa(defaultGraphvizDPI)))
+	dpi, err := strconv.Atoi(ginContext.DefaultQuery("dpi", strconv.Itoa(defaultGraphvizDPI)))
 	if err != nil {
-		handleErrorInServiceCall(err, context)
+		context.handleErrorInServiceCall(err, ginContext)
 		return
 	}
 
-	_, yamlText, ok := readModel(context, context.Param("model-id"), key, folderNameOfKey)
+	_, yamlText, ok := context.readModel(ginContext, ginContext.Param("model-id"), key, folderNameOfKey)
 	if !ok {
 		return
 	}
-	tmpModelFile, err := os.CreateTemp(tempFolder, "threagile-direct-analyze-*")
+	tmpModelFile, err := os.CreateTemp(*context.tempFolder, "threagile-direct-analyze-*")
 	if err != nil {
-		handleErrorInServiceCall(err, context)
+		context.handleErrorInServiceCall(err, ginContext)
 		return
 	}
 	defer func() { _ = os.Remove(tmpModelFile.Name()) }()
-	tmpOutputDir, err := os.MkdirTemp(tempFolder, "threagile-direct-analyze-")
+	tmpOutputDir, err := os.MkdirTemp(*context.tempFolder, "threagile-direct-analyze-")
 	if err != nil {
-		handleErrorInServiceCall(err, context)
+		context.handleErrorInServiceCall(err, ginContext)
 		return
 	}
 	defer func() { _ = os.RemoveAll(tmpOutputDir) }()
-	tmpResultFile, err := os.CreateTemp(tempFolder, "threagile-result-*.zip")
+	tmpResultFile, err := os.CreateTemp(*context.tempFolder, "threagile-result-*.zip")
 	checkErr(err)
 	defer func() { _ = os.Remove(tmpResultFile.Name()) }()
 
 	err = os.WriteFile(tmpModelFile.Name(), []byte(yamlText), 0400)
 
-	doItViaRuntimeCall(tmpModelFile.Name(), tmpOutputDir, *executeModelMacro, *raaPlugin, *riskRulesPlugins, *skipRiskRules, *ignoreOrphanedRiskTracking, true, true, true, true, true, true, true, true, dpi)
+	context.doItViaRuntimeCall(tmpModelFile.Name(), tmpOutputDir, true, true, true, true, true, true, true, true, dpi)
 	if err != nil {
-		handleErrorInServiceCall(err, context)
+		context.handleErrorInServiceCall(err, ginContext)
 		return
 	}
 	err = os.WriteFile(filepath.Join(tmpOutputDir, outputFile), []byte(yamlText), 0400)
 	if err != nil {
-		handleErrorInServiceCall(err, context)
+		context.handleErrorInServiceCall(err, ginContext)
 		return
 	}
 
@@ -1955,12 +2002,12 @@ func analyzeModelOnServerDirectly(context *gin.Context) {
 		files = append(files, filepath.Join(tmpOutputDir, dataFlowDiagramFilenameDOT))
 		files = append(files, filepath.Join(tmpOutputDir, dataAssetDiagramFilenameDOT))
 	}
-	err = zipFiles(tmpResultFile.Name(), files)
+	err = context.zipFiles(tmpResultFile.Name(), files)
 	checkErr(err)
-	if *verbose {
+	if *context.verbose {
 		fmt.Println("Streaming back result file: " + tmpResultFile.Name())
 	}
-	context.FileAttachment(tmpResultFile.Name(), "threagile-result.zip")
+	ginContext.FileAttachment(tmpResultFile.Name(), "threagile-result.zip")
 }
 
 type responseType int
@@ -1976,166 +2023,174 @@ const (
 	statsJSON
 )
 
-func streamDataFlowDiagram(context *gin.Context) {
-	streamResponse(context, dataFlowDiagram)
+func (context *Context) streamDataFlowDiagram(ginContext *gin.Context) {
+	context.streamResponse(ginContext, dataFlowDiagram)
 }
-func streamDataAssetDiagram(context *gin.Context) {
-	streamResponse(context, dataAssetDiagram)
+
+func (context *Context) streamDataAssetDiagram(ginContext *gin.Context) {
+	context.streamResponse(ginContext, dataAssetDiagram)
 }
-func streamReportPDF(context *gin.Context) {
-	streamResponse(context, reportPDF)
+
+func (context *Context) streamReportPDF(ginContext *gin.Context) {
+	context.streamResponse(ginContext, reportPDF)
 }
-func streamRisksExcel(context *gin.Context) {
-	streamResponse(context, risksExcel)
+
+func (context *Context) streamRisksExcel(ginContext *gin.Context) {
+	context.streamResponse(ginContext, risksExcel)
 }
-func streamTagsExcel(context *gin.Context) {
-	streamResponse(context, tagsExcel)
+
+func (context *Context) streamTagsExcel(ginContext *gin.Context) {
+	context.streamResponse(ginContext, tagsExcel)
 }
-func streamRisksJSON(context *gin.Context) {
-	streamResponse(context, risksJSON)
+
+func (context *Context) streamRisksJSON(ginContext *gin.Context) {
+	context.streamResponse(ginContext, risksJSON)
 }
-func streamTechnicalAssetsJSON(context *gin.Context) {
-	streamResponse(context, technicalAssetsJSON)
+
+func (context *Context) streamTechnicalAssetsJSON(ginContext *gin.Context) {
+	context.streamResponse(ginContext, technicalAssetsJSON)
 }
-func streamStatsJSON(context *gin.Context) {
-	streamResponse(context, statsJSON)
+
+func (context *Context) streamStatsJSON(ginContext *gin.Context) {
+	context.streamResponse(ginContext, statsJSON)
 }
-func streamResponse(context *gin.Context, responseType responseType) {
-	folderNameOfKey, key, ok := checkTokenToFolderName(context)
+
+func (context *Context) streamResponse(ginContext *gin.Context, responseType responseType) {
+	folderNameOfKey, key, ok := context.checkTokenToFolderName(ginContext)
 	if !ok {
 		return
 	}
-	lockFolder(folderNameOfKey)
+	context.lockFolder(folderNameOfKey)
 	defer func() {
-		unlockFolder(folderNameOfKey)
+		context.unlockFolder(folderNameOfKey)
 		var err error
 		if r := recover(); r != nil {
 			err = r.(error)
-			if *verbose {
+			if *context.verbose {
 				log.Println(err)
 			}
 			log.Println(err)
-			context.JSON(http.StatusBadRequest, gin.H{
+			ginContext.JSON(http.StatusBadRequest, gin.H{
 				"error": strings.TrimSpace(err.Error()),
 			})
 			ok = false
 		}
 	}()
-	dpi, err := strconv.Atoi(context.DefaultQuery("dpi", strconv.Itoa(defaultGraphvizDPI)))
+	dpi, err := strconv.Atoi(ginContext.DefaultQuery("dpi", strconv.Itoa(defaultGraphvizDPI)))
 	if err != nil {
-		handleErrorInServiceCall(err, context)
+		context.handleErrorInServiceCall(err, ginContext)
 		return
 	}
-	_, yamlText, ok := readModel(context, context.Param("model-id"), key, folderNameOfKey)
+	_, yamlText, ok := context.readModel(ginContext, ginContext.Param("model-id"), key, folderNameOfKey)
 	if !ok {
 		return
 	}
-	tmpModelFile, err := os.CreateTemp(tempFolder, "threagile-render-*")
+	tmpModelFile, err := os.CreateTemp(*context.tempFolder, "threagile-render-*")
 	if err != nil {
-		handleErrorInServiceCall(err, context)
+		context.handleErrorInServiceCall(err, ginContext)
 		return
 	}
 	defer func() { _ = os.Remove(tmpModelFile.Name()) }()
-	tmpOutputDir, err := os.MkdirTemp(tempFolder, "threagile-render-")
+	tmpOutputDir, err := os.MkdirTemp(*context.tempFolder, "threagile-render-")
 	if err != nil {
-		handleErrorInServiceCall(err, context)
+		context.handleErrorInServiceCall(err, ginContext)
 		return
 	}
 	defer func() { _ = os.RemoveAll(tmpOutputDir) }()
 	err = os.WriteFile(tmpModelFile.Name(), []byte(yamlText), 0400)
 	if responseType == dataFlowDiagram {
-		doItViaRuntimeCall(tmpModelFile.Name(), tmpOutputDir, *executeModelMacro, *raaPlugin, *riskRulesPlugins, *skipRiskRules, *ignoreOrphanedRiskTracking, true, false, false, false, false, false, false, false, dpi)
+		context.doItViaRuntimeCall(tmpModelFile.Name(), tmpOutputDir, true, false, false, false, false, false, false, false, dpi)
 		if err != nil {
-			handleErrorInServiceCall(err, context)
+			context.handleErrorInServiceCall(err, ginContext)
 			return
 		}
-		context.File(filepath.Join(tmpOutputDir, dataFlowDiagramFilenamePNG))
+		ginContext.File(filepath.Join(tmpOutputDir, dataFlowDiagramFilenamePNG))
 	} else if responseType == dataAssetDiagram {
-		doItViaRuntimeCall(tmpModelFile.Name(), tmpOutputDir, *executeModelMacro, *raaPlugin, *riskRulesPlugins, *skipRiskRules, *ignoreOrphanedRiskTracking, false, true, false, false, false, false, false, false, dpi)
+		context.doItViaRuntimeCall(tmpModelFile.Name(), tmpOutputDir, false, true, false, false, false, false, false, false, dpi)
 		if err != nil {
-			handleErrorInServiceCall(err, context)
+			context.handleErrorInServiceCall(err, ginContext)
 			return
 		}
-		context.File(filepath.Join(tmpOutputDir, dataAssetDiagramFilenamePNG))
+		ginContext.File(filepath.Join(tmpOutputDir, dataAssetDiagramFilenamePNG))
 	} else if responseType == reportPDF {
-		doItViaRuntimeCall(tmpModelFile.Name(), tmpOutputDir, *executeModelMacro, *raaPlugin, *riskRulesPlugins, *skipRiskRules, *ignoreOrphanedRiskTracking, false, false, true, false, false, false, false, false, dpi)
+		context.doItViaRuntimeCall(tmpModelFile.Name(), tmpOutputDir, false, false, true, false, false, false, false, false, dpi)
 		if err != nil {
-			handleErrorInServiceCall(err, context)
+			context.handleErrorInServiceCall(err, ginContext)
 			return
 		}
-		context.FileAttachment(filepath.Join(tmpOutputDir, reportFilename), reportFilename)
+		ginContext.FileAttachment(filepath.Join(tmpOutputDir, reportFilename), reportFilename)
 	} else if responseType == risksExcel {
-		doItViaRuntimeCall(tmpModelFile.Name(), tmpOutputDir, *executeModelMacro, *raaPlugin, *riskRulesPlugins, *skipRiskRules, *ignoreOrphanedRiskTracking, false, false, false, true, false, false, false, false, dpi)
+		context.doItViaRuntimeCall(tmpModelFile.Name(), tmpOutputDir, false, false, false, true, false, false, false, false, dpi)
 		if err != nil {
-			handleErrorInServiceCall(err, context)
+			context.handleErrorInServiceCall(err, ginContext)
 			return
 		}
-		context.FileAttachment(filepath.Join(tmpOutputDir, excelRisksFilename), excelRisksFilename)
+		ginContext.FileAttachment(filepath.Join(tmpOutputDir, excelRisksFilename), excelRisksFilename)
 	} else if responseType == tagsExcel {
-		doItViaRuntimeCall(tmpModelFile.Name(), tmpOutputDir, *executeModelMacro, *raaPlugin, *riskRulesPlugins, *skipRiskRules, *ignoreOrphanedRiskTracking, false, false, false, false, true, false, false, false, dpi)
+		context.doItViaRuntimeCall(tmpModelFile.Name(), tmpOutputDir, false, false, false, false, true, false, false, false, dpi)
 		if err != nil {
-			handleErrorInServiceCall(err, context)
+			context.handleErrorInServiceCall(err, ginContext)
 			return
 		}
-		context.FileAttachment(filepath.Join(tmpOutputDir, excelTagsFilename), excelTagsFilename)
+		ginContext.FileAttachment(filepath.Join(tmpOutputDir, excelTagsFilename), excelTagsFilename)
 	} else if responseType == risksJSON {
-		doItViaRuntimeCall(tmpModelFile.Name(), tmpOutputDir, *executeModelMacro, *raaPlugin, *riskRulesPlugins, *skipRiskRules, *ignoreOrphanedRiskTracking, false, false, false, false, false, true, false, false, dpi)
+		context.doItViaRuntimeCall(tmpModelFile.Name(), tmpOutputDir, false, false, false, false, false, true, false, false, dpi)
 		if err != nil {
-			handleErrorInServiceCall(err, context)
+			context.handleErrorInServiceCall(err, ginContext)
 			return
 		}
-		json, err := os.ReadFile(filepath.Join(tmpOutputDir, jsonRisksFilename))
+		jsonData, err := os.ReadFile(filepath.Join(tmpOutputDir, jsonRisksFilename))
 		if err != nil {
-			handleErrorInServiceCall(err, context)
+			context.handleErrorInServiceCall(err, ginContext)
 			return
 		}
-		context.Data(http.StatusOK, "application/json", json) // stream directly with JSON content-type in response instead of file download
+		ginContext.Data(http.StatusOK, "application/json", jsonData) // stream directly with JSON content-type in response instead of file download
 	} else if responseType == technicalAssetsJSON {
-		doItViaRuntimeCall(tmpModelFile.Name(), tmpOutputDir, *executeModelMacro, *raaPlugin, *riskRulesPlugins, *skipRiskRules, *ignoreOrphanedRiskTracking, false, false, false, false, false, true, true, false, dpi)
+		context.doItViaRuntimeCall(tmpModelFile.Name(), tmpOutputDir, false, false, false, false, false, true, true, false, dpi)
 		if err != nil {
-			handleErrorInServiceCall(err, context)
+			context.handleErrorInServiceCall(err, ginContext)
 			return
 		}
-		json, err := os.ReadFile(filepath.Join(tmpOutputDir, jsonTechnicalAssetsFilename))
+		jsonData, err := os.ReadFile(filepath.Join(tmpOutputDir, jsonTechnicalAssetsFilename))
 		if err != nil {
-			handleErrorInServiceCall(err, context)
+			context.handleErrorInServiceCall(err, ginContext)
 			return
 		}
-		context.Data(http.StatusOK, "application/json", json) // stream directly with JSON content-type in response instead of file download
+		ginContext.Data(http.StatusOK, "application/json", jsonData) // stream directly with JSON content-type in response instead of file download
 	} else if responseType == statsJSON {
-		doItViaRuntimeCall(tmpModelFile.Name(), tmpOutputDir, *executeModelMacro, *raaPlugin, *riskRulesPlugins, *skipRiskRules, *ignoreOrphanedRiskTracking, false, false, false, false, false, false, false, true, dpi)
+		context.doItViaRuntimeCall(tmpModelFile.Name(), tmpOutputDir, false, false, false, false, false, false, false, true, dpi)
 		if err != nil {
-			handleErrorInServiceCall(err, context)
+			context.handleErrorInServiceCall(err, ginContext)
 			return
 		}
-		json, err := os.ReadFile(filepath.Join(tmpOutputDir, jsonStatsFilename))
+		jsonData, err := os.ReadFile(filepath.Join(tmpOutputDir, jsonStatsFilename))
 		if err != nil {
-			handleErrorInServiceCall(err, context)
+			context.handleErrorInServiceCall(err, ginContext)
 			return
 		}
-		context.Data(http.StatusOK, "application/json", json) // stream directly with JSON content-type in response instead of file download
+		ginContext.Data(http.StatusOK, "application/json", jsonData) // stream directly with JSON content-type in response instead of file download
 	}
 }
 
 // fully replaces threagile.yaml in sub-folder given by UUID
-func importModel(context *gin.Context) {
-	folderNameOfKey, key, ok := checkTokenToFolderName(context)
+func (context *Context) importModel(ginContext *gin.Context) {
+	folderNameOfKey, key, ok := context.checkTokenToFolderName(ginContext)
 	if !ok {
 		return
 	}
-	lockFolder(folderNameOfKey)
-	defer unlockFolder(folderNameOfKey)
+	context.lockFolder(folderNameOfKey)
+	defer context.unlockFolder(folderNameOfKey)
 
-	aUuid := context.Param("model-id") // UUID is syntactically validated in readModel+checkModelFolder (next line) via uuid.Parse(modelUUID)
-	_, _, ok = readModel(context, aUuid, key, folderNameOfKey)
+	aUuid := ginContext.Param("model-id") // UUID is syntactically validated in readModel+checkModelFolder (next line) via uuid.Parse(modelUUID)
+	_, _, ok = context.readModel(ginContext, aUuid, key, folderNameOfKey)
 	if ok {
 		// first analyze it simply by executing the full risk process (just discard the result) to ensure that everything would work
-		yamlContent, ok := execute(context, true)
+		yamlContent, ok := context.execute(ginContext, true)
 		if ok {
 			// if we're here, then no problem was raised, so ok to proceed
-			ok = writeModelYAML(context, string(yamlContent), key, folderNameForModel(folderNameOfKey, aUuid), "Model Import", false)
+			ok = context.writeModelYAML(ginContext, string(yamlContent), key, context.folderNameForModel(folderNameOfKey, aUuid), "Model Import", false)
 			if ok {
-				context.JSON(http.StatusCreated, gin.H{
+				ginContext.JSON(http.StatusCreated, gin.H{
 					"message": "model imported",
 				})
 			}
@@ -2143,12 +2198,12 @@ func importModel(context *gin.Context) {
 	}
 }
 
-func stats(context *gin.Context) {
+func (context *Context) stats(ginContext *gin.Context) {
 	keyCount, modelCount := 0, 0
-	keyFolders, err := os.ReadDir(baseFolder)
+	keyFolders, err := os.ReadDir(*context.baseFolder)
 	if err != nil {
 		log.Println(err)
-		context.JSON(http.StatusInternalServerError, gin.H{
+		ginContext.JSON(http.StatusInternalServerError, gin.H{
 			"error": "unable to collect stats",
 		})
 		return
@@ -2156,10 +2211,10 @@ func stats(context *gin.Context) {
 	for _, keyFolder := range keyFolders {
 		if len(keyFolder.Name()) == 128 { // it's a sha512 token hash probably, so count it as token folder for the stats
 			keyCount++
-			modelFolders, err := os.ReadDir(filepath.Join(baseFolder, keyFolder.Name()))
+			modelFolders, err := os.ReadDir(filepath.Join(*context.baseFolder, keyFolder.Name()))
 			if err != nil {
 				log.Println(err)
-				context.JSON(http.StatusInternalServerError, gin.H{
+				ginContext.JSON(http.StatusInternalServerError, gin.H{
 					"error": "unable to collect stats",
 				})
 				return
@@ -2172,51 +2227,51 @@ func stats(context *gin.Context) {
 		}
 	}
 	// TODO collect and deliver more stats (old model count?) and health info
-	context.JSON(http.StatusOK, gin.H{
+	ginContext.JSON(http.StatusOK, gin.H{
 		"key_count":     keyCount,
 		"model_count":   modelCount,
-		"success_count": successCount,
-		"error_count":   errorCount,
+		"success_count": context.successCount,
+		"error_count":   context.errorCount,
 	})
 }
 
-func getDataAsset(context *gin.Context) {
-	folderNameOfKey, key, ok := checkTokenToFolderName(context)
+func (context *Context) getDataAsset(ginContext *gin.Context) {
+	folderNameOfKey, key, ok := context.checkTokenToFolderName(ginContext)
 	if !ok {
 		return
 	}
-	lockFolder(folderNameOfKey)
-	defer unlockFolder(folderNameOfKey)
-	modelInput, _, ok := readModel(context, context.Param("model-id"), key, folderNameOfKey)
+	context.lockFolder(folderNameOfKey)
+	defer context.unlockFolder(folderNameOfKey)
+	modelInput, _, ok := context.readModel(ginContext, ginContext.Param("model-id"), key, folderNameOfKey)
 	if ok {
 		// yes, here keyed by title in YAML for better readability in the YAML file itself
 		for title, dataAsset := range modelInput.DataAssets {
-			if dataAsset.ID == context.Param("data-asset-id") {
-				context.JSON(http.StatusOK, gin.H{
+			if dataAsset.ID == ginContext.Param("data-asset-id") {
+				ginContext.JSON(http.StatusOK, gin.H{
 					title: dataAsset,
 				})
 				return
 			}
 		}
-		context.JSON(http.StatusNotFound, gin.H{
+		ginContext.JSON(http.StatusNotFound, gin.H{
 			"error": "data asset not found",
 		})
 	}
 }
 
-func deleteDataAsset(context *gin.Context) {
-	folderNameOfKey, key, ok := checkTokenToFolderName(context)
+func (context *Context) deleteDataAsset(ginContext *gin.Context) {
+	folderNameOfKey, key, ok := context.checkTokenToFolderName(ginContext)
 	if !ok {
 		return
 	}
-	lockFolder(folderNameOfKey)
-	defer unlockFolder(folderNameOfKey)
-	modelInput, _, ok := readModel(context, context.Param("model-id"), key, folderNameOfKey)
+	context.lockFolder(folderNameOfKey)
+	defer context.unlockFolder(folderNameOfKey)
+	modelInput, _, ok := context.readModel(ginContext, ginContext.Param("model-id"), key, folderNameOfKey)
 	if ok {
 		referencesDeleted := false
 		// yes, here keyed by title in YAML for better readability in the YAML file itself
 		for title, dataAsset := range modelInput.DataAssets {
-			if dataAsset.ID == context.Param("data-asset-id") {
+			if dataAsset.ID == ginContext.Param("data-asset-id") {
 				// also remove all usages of this data asset !!
 				for _, techAsset := range modelInput.TechnicalAssets {
 					if techAsset.DataAssetsProcessed != nil {
@@ -2290,9 +2345,9 @@ func deleteDataAsset(context *gin.Context) {
 				}
 				// remove it itself
 				delete(modelInput.DataAssets, title)
-				ok = writeModel(context, key, folderNameOfKey, &modelInput, "Data Asset Deletion")
+				ok = context.writeModel(ginContext, key, folderNameOfKey, &modelInput, "Data Asset Deletion")
 				if ok {
-					context.JSON(http.StatusOK, gin.H{
+					ginContext.JSON(http.StatusOK, gin.H{
 						"message":            "data asset deleted",
 						"id":                 dataAsset.ID,
 						"references_deleted": referencesDeleted, // in order to signal to clients, that other model parts might've been deleted as well
@@ -2301,34 +2356,34 @@ func deleteDataAsset(context *gin.Context) {
 				return
 			}
 		}
-		context.JSON(http.StatusNotFound, gin.H{
+		ginContext.JSON(http.StatusNotFound, gin.H{
 			"error": "data asset not found",
 		})
 	}
 }
 
-func setSharedRuntime(context *gin.Context) {
-	folderNameOfKey, key, ok := checkTokenToFolderName(context)
+func (context *Context) setSharedRuntime(ginContext *gin.Context) {
+	folderNameOfKey, key, ok := context.checkTokenToFolderName(ginContext)
 	if !ok {
 		return
 	}
-	lockFolder(folderNameOfKey)
-	defer unlockFolder(folderNameOfKey)
-	modelInput, _, ok := readModel(context, context.Param("model-id"), key, folderNameOfKey)
+	context.lockFolder(folderNameOfKey)
+	defer context.unlockFolder(folderNameOfKey)
+	modelInput, _, ok := context.readModel(ginContext, ginContext.Param("model-id"), key, folderNameOfKey)
 	if ok {
 		// yes, here keyed by title in YAML for better readability in the YAML file itself
 		for title, sharedRuntime := range modelInput.SharedRuntimes {
-			if sharedRuntime.ID == context.Param("shared-runtime-id") {
+			if sharedRuntime.ID == ginContext.Param("shared-runtime-id") {
 				payload := payloadSharedRuntime{}
-				err := context.BindJSON(&payload)
+				err := ginContext.BindJSON(&payload)
 				if err != nil {
 					log.Println(err)
-					context.JSON(http.StatusBadRequest, gin.H{
+					ginContext.JSON(http.StatusBadRequest, gin.H{
 						"error": "unable to parse request payload",
 					})
 					return
 				}
-				sharedRuntimeInput, ok := populateSharedRuntime(context, payload)
+				sharedRuntimeInput, ok := context.populateSharedRuntime(ginContext, payload)
 				if !ok {
 					return
 				}
@@ -2349,9 +2404,9 @@ func setSharedRuntime(context *gin.Context) {
 						}
 					}
 				}
-				ok = writeModel(context, key, folderNameOfKey, &modelInput, "Shared Runtime Update")
+				ok = context.writeModel(ginContext, key, folderNameOfKey, &modelInput, "Shared Runtime Update")
 				if ok {
-					context.JSON(http.StatusOK, gin.H{
+					ginContext.JSON(http.StatusOK, gin.H{
 						"message":    "shared runtime updated",
 						"id":         sharedRuntimeInput.ID,
 						"id_changed": idChanged, // in order to signal to clients, that other model parts might've received updates as well and should be reloaded
@@ -2360,34 +2415,34 @@ func setSharedRuntime(context *gin.Context) {
 				return
 			}
 		}
-		context.JSON(http.StatusNotFound, gin.H{
+		ginContext.JSON(http.StatusNotFound, gin.H{
 			"error": "shared runtime not found",
 		})
 	}
 }
 
-func setDataAsset(context *gin.Context) {
-	folderNameOfKey, key, ok := checkTokenToFolderName(context)
+func (context *Context) setDataAsset(ginContext *gin.Context) {
+	folderNameOfKey, key, ok := context.checkTokenToFolderName(ginContext)
 	if !ok {
 		return
 	}
-	lockFolder(folderNameOfKey)
-	defer unlockFolder(folderNameOfKey)
-	modelInput, _, ok := readModel(context, context.Param("model-id"), key, folderNameOfKey)
+	context.lockFolder(folderNameOfKey)
+	defer context.unlockFolder(folderNameOfKey)
+	modelInput, _, ok := context.readModel(ginContext, ginContext.Param("model-id"), key, folderNameOfKey)
 	if ok {
 		// yes, here keyed by title in YAML for better readability in the YAML file itself
 		for title, dataAsset := range modelInput.DataAssets {
-			if dataAsset.ID == context.Param("data-asset-id") {
+			if dataAsset.ID == ginContext.Param("data-asset-id") {
 				payload := payloadDataAsset{}
-				err := context.BindJSON(&payload)
+				err := ginContext.BindJSON(&payload)
 				if err != nil {
 					log.Println(err)
-					context.JSON(http.StatusBadRequest, gin.H{
+					ginContext.JSON(http.StatusBadRequest, gin.H{
 						"error": "unable to parse request payload",
 					})
 					return
 				}
-				dataAssetInput, ok := populateDataAsset(context, payload)
+				dataAssetInput, ok := context.populateDataAsset(ginContext, payload)
 				if !ok {
 					return
 				}
@@ -2443,9 +2498,9 @@ func setDataAsset(context *gin.Context) {
 						}
 					}
 				}
-				ok = writeModel(context, key, folderNameOfKey, &modelInput, "Data Asset Update")
+				ok = context.writeModel(ginContext, key, folderNameOfKey, &modelInput, "Data Asset Update")
 				if ok {
-					context.JSON(http.StatusOK, gin.H{
+					ginContext.JSON(http.StatusOK, gin.H{
 						"message":    "data asset updated",
 						"id":         dataAssetInput.ID,
 						"id_changed": idChanged, // in order to signal to clients, that other model parts might've received updates as well and should be reloaded
@@ -2454,57 +2509,57 @@ func setDataAsset(context *gin.Context) {
 				return
 			}
 		}
-		context.JSON(http.StatusNotFound, gin.H{
+		ginContext.JSON(http.StatusNotFound, gin.H{
 			"error": "data asset not found",
 		})
 	}
 }
 
-func getSharedRuntime(context *gin.Context) {
-	folderNameOfKey, key, ok := checkTokenToFolderName(context)
+func (context *Context) getSharedRuntime(ginContext *gin.Context) {
+	folderNameOfKey, key, ok := context.checkTokenToFolderName(ginContext)
 	if !ok {
 		return
 	}
-	lockFolder(folderNameOfKey)
-	defer unlockFolder(folderNameOfKey)
-	modelInput, _, ok := readModel(context, context.Param("model-id"), key, folderNameOfKey)
+	context.lockFolder(folderNameOfKey)
+	defer context.unlockFolder(folderNameOfKey)
+	modelInput, _, ok := context.readModel(ginContext, ginContext.Param("model-id"), key, folderNameOfKey)
 	if ok {
 		// yes, here keyed by title in YAML for better readability in the YAML file itself
 		for title, sharedRuntime := range modelInput.SharedRuntimes {
-			if sharedRuntime.ID == context.Param("shared-runtime-id") {
-				context.JSON(http.StatusOK, gin.H{
+			if sharedRuntime.ID == ginContext.Param("shared-runtime-id") {
+				ginContext.JSON(http.StatusOK, gin.H{
 					title: sharedRuntime,
 				})
 				return
 			}
 		}
-		context.JSON(http.StatusNotFound, gin.H{
+		ginContext.JSON(http.StatusNotFound, gin.H{
 			"error": "shared runtime not found",
 		})
 	}
 }
 
-func createNewSharedRuntime(context *gin.Context) {
-	folderNameOfKey, key, ok := checkTokenToFolderName(context)
+func (context *Context) createNewSharedRuntime(ginContext *gin.Context) {
+	folderNameOfKey, key, ok := context.checkTokenToFolderName(ginContext)
 	if !ok {
 		return
 	}
-	lockFolder(folderNameOfKey)
-	defer unlockFolder(folderNameOfKey)
-	modelInput, _, ok := readModel(context, context.Param("model-id"), key, folderNameOfKey)
+	context.lockFolder(folderNameOfKey)
+	defer context.unlockFolder(folderNameOfKey)
+	modelInput, _, ok := context.readModel(ginContext, ginContext.Param("model-id"), key, folderNameOfKey)
 	if ok {
 		payload := payloadSharedRuntime{}
-		err := context.BindJSON(&payload)
+		err := ginContext.BindJSON(&payload)
 		if err != nil {
 			log.Println(err)
-			context.JSON(http.StatusBadRequest, gin.H{
+			ginContext.JSON(http.StatusBadRequest, gin.H{
 				"error": "unable to parse request payload",
 			})
 			return
 		}
 		// yes, here keyed by title in YAML for better readability in the YAML file itself
 		if _, exists := modelInput.SharedRuntimes[payload.Title]; exists {
-			context.JSON(http.StatusConflict, gin.H{
+			ginContext.JSON(http.StatusConflict, gin.H{
 				"error": "shared runtime with this title already exists",
 			})
 			return
@@ -2512,19 +2567,19 @@ func createNewSharedRuntime(context *gin.Context) {
 		// but later it will in memory keyed by its "id", so do this uniqueness check also
 		for _, runtime := range modelInput.SharedRuntimes {
 			if runtime.ID == payload.Id {
-				context.JSON(http.StatusConflict, gin.H{
+				ginContext.JSON(http.StatusConflict, gin.H{
 					"error": "shared runtime with this id already exists",
 				})
 				return
 			}
 		}
-		if !checkTechnicalAssetsExisting(modelInput, payload.TechnicalAssetsRunning) {
-			context.JSON(http.StatusBadRequest, gin.H{
+		if !context.checkTechnicalAssetsExisting(modelInput, payload.TechnicalAssetsRunning) {
+			ginContext.JSON(http.StatusBadRequest, gin.H{
 				"error": "referenced technical asset does not exist",
 			})
 			return
 		}
-		sharedRuntimeInput, ok := populateSharedRuntime(context, payload)
+		sharedRuntimeInput, ok := context.populateSharedRuntime(ginContext, payload)
 		if !ok {
 			return
 		}
@@ -2532,9 +2587,9 @@ func createNewSharedRuntime(context *gin.Context) {
 			modelInput.SharedRuntimes = make(map[string]model.InputSharedRuntime)
 		}
 		modelInput.SharedRuntimes[payload.Title] = sharedRuntimeInput
-		ok = writeModel(context, key, folderNameOfKey, &modelInput, "Shared Runtime Creation")
+		ok = context.writeModel(ginContext, key, folderNameOfKey, &modelInput, "Shared Runtime Creation")
 		if ok {
-			context.JSON(http.StatusOK, gin.H{
+			ginContext.JSON(http.StatusOK, gin.H{
 				"message": "shared runtime created",
 				"id":      sharedRuntimeInput.ID,
 			})
@@ -2542,7 +2597,7 @@ func createNewSharedRuntime(context *gin.Context) {
 	}
 }
 
-func checkTechnicalAssetsExisting(modelInput model.ModelInput, techAssetIDs []string) (ok bool) {
+func (context *Context) checkTechnicalAssetsExisting(modelInput model.ModelInput, techAssetIDs []string) (ok bool) {
 	for _, techAssetID := range techAssetIDs {
 		exists := false
 		for _, val := range modelInput.TechnicalAssets {
@@ -2558,7 +2613,7 @@ func checkTechnicalAssetsExisting(modelInput model.ModelInput, techAssetIDs []st
 	return true
 }
 
-func populateSharedRuntime(_ *gin.Context, payload payloadSharedRuntime) (sharedRuntimeInput model.InputSharedRuntime, ok bool) {
+func (context *Context) populateSharedRuntime(_ *gin.Context, payload payloadSharedRuntime) (sharedRuntimeInput model.InputSharedRuntime, ok bool) {
 	sharedRuntimeInput = model.InputSharedRuntime{
 		ID:                     payload.Id,
 		Description:            payload.Description,
@@ -2568,19 +2623,19 @@ func populateSharedRuntime(_ *gin.Context, payload payloadSharedRuntime) (shared
 	return sharedRuntimeInput, true
 }
 
-func deleteSharedRuntime(context *gin.Context) {
-	folderNameOfKey, key, ok := checkTokenToFolderName(context)
+func (context *Context) deleteSharedRuntime(ginContext *gin.Context) {
+	folderNameOfKey, key, ok := context.checkTokenToFolderName(ginContext)
 	if !ok {
 		return
 	}
-	lockFolder(folderNameOfKey)
-	defer unlockFolder(folderNameOfKey)
-	modelInput, _, ok := readModel(context, context.Param("model-id"), key, folderNameOfKey)
+	context.lockFolder(folderNameOfKey)
+	defer context.unlockFolder(folderNameOfKey)
+	modelInput, _, ok := context.readModel(ginContext, ginContext.Param("model-id"), key, folderNameOfKey)
 	if ok {
 		referencesDeleted := false
 		// yes, here keyed by title in YAML for better readability in the YAML file itself
 		for title, sharedRuntime := range modelInput.SharedRuntimes {
-			if sharedRuntime.ID == context.Param("shared-runtime-id") {
+			if sharedRuntime.ID == ginContext.Param("shared-runtime-id") {
 				// also remove all usages of this shared runtime !!
 				for individualRiskCatTitle, individualRiskCat := range modelInput.IndividualRiskCategories {
 					if individualRiskCat.RisksIdentified != nil {
@@ -2596,9 +2651,9 @@ func deleteSharedRuntime(context *gin.Context) {
 				}
 				// remove it itself
 				delete(modelInput.SharedRuntimes, title)
-				ok = writeModel(context, key, folderNameOfKey, &modelInput, "Shared Runtime Deletion")
+				ok = context.writeModel(ginContext, key, folderNameOfKey, &modelInput, "Shared Runtime Deletion")
 				if ok {
-					context.JSON(http.StatusOK, gin.H{
+					ginContext.JSON(http.StatusOK, gin.H{
 						"message":            "shared runtime deleted",
 						"id":                 sharedRuntime.ID,
 						"references_deleted": referencesDeleted, // in order to signal to clients, that other model parts might've been deleted as well
@@ -2607,33 +2662,33 @@ func deleteSharedRuntime(context *gin.Context) {
 				return
 			}
 		}
-		context.JSON(http.StatusNotFound, gin.H{
+		ginContext.JSON(http.StatusNotFound, gin.H{
 			"error": "shared runtime not found",
 		})
 	}
 }
 
-func createNewDataAsset(context *gin.Context) {
-	folderNameOfKey, key, ok := checkTokenToFolderName(context)
+func (context *Context) createNewDataAsset(ginContext *gin.Context) {
+	folderNameOfKey, key, ok := context.checkTokenToFolderName(ginContext)
 	if !ok {
 		return
 	}
-	lockFolder(folderNameOfKey)
-	defer unlockFolder(folderNameOfKey)
-	modelInput, _, ok := readModel(context, context.Param("model-id"), key, folderNameOfKey)
+	context.lockFolder(folderNameOfKey)
+	defer context.unlockFolder(folderNameOfKey)
+	modelInput, _, ok := context.readModel(ginContext, ginContext.Param("model-id"), key, folderNameOfKey)
 	if ok {
 		payload := payloadDataAsset{}
-		err := context.BindJSON(&payload)
+		err := ginContext.BindJSON(&payload)
 		if err != nil {
 			log.Println(err)
-			context.JSON(http.StatusBadRequest, gin.H{
+			ginContext.JSON(http.StatusBadRequest, gin.H{
 				"error": "unable to parse request payload",
 			})
 			return
 		}
 		// yes, here keyed by title in YAML for better readability in the YAML file itself
 		if _, exists := modelInput.DataAssets[payload.Title]; exists {
-			context.JSON(http.StatusConflict, gin.H{
+			ginContext.JSON(http.StatusConflict, gin.H{
 				"error": "data asset with this title already exists",
 			})
 			return
@@ -2641,13 +2696,13 @@ func createNewDataAsset(context *gin.Context) {
 		// but later it will in memory keyed by its "id", so do this uniqueness check also
 		for _, asset := range modelInput.DataAssets {
 			if asset.ID == payload.Id {
-				context.JSON(http.StatusConflict, gin.H{
+				ginContext.JSON(http.StatusConflict, gin.H{
 					"error": "data asset with this id already exists",
 				})
 				return
 			}
 		}
-		dataAssetInput, ok := populateDataAsset(context, payload)
+		dataAssetInput, ok := context.populateDataAsset(ginContext, payload)
 		if !ok {
 			return
 		}
@@ -2655,9 +2710,9 @@ func createNewDataAsset(context *gin.Context) {
 			modelInput.DataAssets = make(map[string]model.InputDataAsset)
 		}
 		modelInput.DataAssets[payload.Title] = dataAssetInput
-		ok = writeModel(context, key, folderNameOfKey, &modelInput, "Data Asset Creation")
+		ok = context.writeModel(ginContext, key, folderNameOfKey, &modelInput, "Data Asset Creation")
 		if ok {
-			context.JSON(http.StatusOK, gin.H{
+			ginContext.JSON(http.StatusOK, gin.H{
 				"message": "data asset created",
 				"id":      dataAssetInput.ID,
 			})
@@ -2665,30 +2720,30 @@ func createNewDataAsset(context *gin.Context) {
 	}
 }
 
-func populateDataAsset(context *gin.Context, payload payloadDataAsset) (dataAssetInput model.InputDataAsset, ok bool) {
+func (context *Context) populateDataAsset(ginContext *gin.Context, payload payloadDataAsset) (dataAssetInput model.InputDataAsset, ok bool) {
 	usage, err := model.ParseUsage(payload.Usage)
 	if err != nil {
-		handleErrorInServiceCall(err, context)
+		context.handleErrorInServiceCall(err, ginContext)
 		return dataAssetInput, false
 	}
 	quantity, err := model.ParseQuantity(payload.Quantity)
 	if err != nil {
-		handleErrorInServiceCall(err, context)
+		context.handleErrorInServiceCall(err, ginContext)
 		return dataAssetInput, false
 	}
 	confidentiality, err := model.ParseConfidentiality(payload.Confidentiality)
 	if err != nil {
-		handleErrorInServiceCall(err, context)
+		context.handleErrorInServiceCall(err, ginContext)
 		return dataAssetInput, false
 	}
 	integrity, err := model.ParseCriticality(payload.Integrity)
 	if err != nil {
-		handleErrorInServiceCall(err, context)
+		context.handleErrorInServiceCall(err, ginContext)
 		return dataAssetInput, false
 	}
 	availability, err := model.ParseCriticality(payload.Availability)
 	if err != nil {
-		handleErrorInServiceCall(err, context)
+		context.handleErrorInServiceCall(err, ginContext)
 		return dataAssetInput, false
 	}
 	dataAssetInput = model.InputDataAsset{
@@ -2707,46 +2762,46 @@ func populateDataAsset(context *gin.Context, payload payloadDataAsset) (dataAsse
 	return dataAssetInput, true
 }
 
-func getDataAssets(context *gin.Context) {
-	folderNameOfKey, key, ok := checkTokenToFolderName(context)
+func (context *Context) getDataAssets(ginContext *gin.Context) {
+	folderNameOfKey, key, ok := context.checkTokenToFolderName(ginContext)
 	if !ok {
 		return
 	}
-	lockFolder(folderNameOfKey)
-	defer unlockFolder(folderNameOfKey)
-	aModel, _, ok := readModel(context, context.Param("model-id"), key, folderNameOfKey)
+	context.lockFolder(folderNameOfKey)
+	defer context.unlockFolder(folderNameOfKey)
+	aModel, _, ok := context.readModel(ginContext, ginContext.Param("model-id"), key, folderNameOfKey)
 	if ok {
-		context.JSON(http.StatusOK, aModel.DataAssets)
+		ginContext.JSON(http.StatusOK, aModel.DataAssets)
 	}
 }
 
-func getTrustBoundaries(context *gin.Context) {
-	folderNameOfKey, key, ok := checkTokenToFolderName(context)
+func (context *Context) getTrustBoundaries(ginContext *gin.Context) {
+	folderNameOfKey, key, ok := context.checkTokenToFolderName(ginContext)
 	if !ok {
 		return
 	}
-	lockFolder(folderNameOfKey)
-	defer unlockFolder(folderNameOfKey)
-	aModel, _, ok := readModel(context, context.Param("model-id"), key, folderNameOfKey)
+	context.lockFolder(folderNameOfKey)
+	defer context.unlockFolder(folderNameOfKey)
+	aModel, _, ok := context.readModel(ginContext, ginContext.Param("model-id"), key, folderNameOfKey)
 	if ok {
-		context.JSON(http.StatusOK, aModel.TrustBoundaries)
+		ginContext.JSON(http.StatusOK, aModel.TrustBoundaries)
 	}
 }
 
-func getSharedRuntimes(context *gin.Context) {
-	folderNameOfKey, key, ok := checkTokenToFolderName(context)
+func (context *Context) getSharedRuntimes(ginContext *gin.Context) {
+	folderNameOfKey, key, ok := context.checkTokenToFolderName(ginContext)
 	if !ok {
 		return
 	}
-	lockFolder(folderNameOfKey)
-	defer unlockFolder(folderNameOfKey)
-	aModel, _, ok := readModel(context, context.Param("model-id"), key, folderNameOfKey)
+	context.lockFolder(folderNameOfKey)
+	defer context.unlockFolder(folderNameOfKey)
+	aModel, _, ok := context.readModel(ginContext, ginContext.Param("model-id"), key, folderNameOfKey)
 	if ok {
-		context.JSON(http.StatusOK, aModel.SharedRuntimes)
+		ginContext.JSON(http.StatusOK, aModel.SharedRuntimes)
 	}
 }
 
-func arrayOfStringValues(values []model.TypeEnum) []string {
+func (context *Context) arrayOfStringValues(values []model.TypeEnum) []string {
 	result := make([]string, 0)
 	for _, value := range values {
 		result = append(result, value.String())
@@ -2754,48 +2809,48 @@ func arrayOfStringValues(values []model.TypeEnum) []string {
 	return result
 }
 
-func getModel(context *gin.Context) {
-	folderNameOfKey, key, ok := checkTokenToFolderName(context)
+func (context *Context) getModel(ginContext *gin.Context) {
+	folderNameOfKey, key, ok := context.checkTokenToFolderName(ginContext)
 	if !ok {
 		return
 	}
-	lockFolder(folderNameOfKey)
-	defer unlockFolder(folderNameOfKey)
-	_, yamlText, ok := readModel(context, context.Param("model-id"), key, folderNameOfKey)
+	context.lockFolder(folderNameOfKey)
+	defer context.unlockFolder(folderNameOfKey)
+	_, yamlText, ok := context.readModel(ginContext, ginContext.Param("model-id"), key, folderNameOfKey)
 	if ok {
-		tmpResultFile, err := os.CreateTemp(tempFolder, "threagile-*.yaml")
+		tmpResultFile, err := os.CreateTemp(*context.tempFolder, "threagile-*.yaml")
 		checkErr(err)
 		err = os.WriteFile(tmpResultFile.Name(), []byte(yamlText), 0400)
 		if err != nil {
 			log.Println(err)
-			context.JSON(http.StatusInternalServerError, gin.H{
+			ginContext.JSON(http.StatusInternalServerError, gin.H{
 				"error": "unable to stream model file",
 			})
 			return
 		}
 		defer func() { _ = os.Remove(tmpResultFile.Name()) }()
-		context.FileAttachment(tmpResultFile.Name(), outputFile)
+		ginContext.FileAttachment(tmpResultFile.Name(), outputFile)
 	}
 }
 
 type payloadModels struct {
-	ID                string    `json:"id"`
-	Title             string    `json:"title"`
-	TimestampCreated  time.Time `json:"timestamp_created"`
-	TimestampModified time.Time `json:"timestamp_modified"`
+	ID                string    `yaml:"id" json:"id"`
+	Title             string    `yaml:"title" json:"title"`
+	TimestampCreated  time.Time `yaml:"timestamp_created" json:"timestamp_created"`
+	TimestampModified time.Time `yaml:"timestamp_modified" json:"timestamp_modified"`
 }
 
 type payloadCover struct {
-	Title  string       `json:"title"`
-	Date   time.Time    `json:"date"`
-	Author model.Author `json:"author"`
+	Title  string       `yaml:"title" json:"title"`
+	Date   time.Time    `yaml:"date" json:"date"`
+	Author model.Author `yaml:"author" json:"author"`
 }
 
 type payloadOverview struct {
-	ManagementSummaryComment string         `json:"management_summary_comment"`
-	BusinessCriticality      string         `json:"business_criticality"`
-	BusinessOverview         model.Overview `json:"business_overview"`
-	TechnicalOverview        model.Overview `json:"technical_overview"`
+	ManagementSummaryComment string         `yaml:"management_summary_comment" json:"management_summary_comment"`
+	BusinessCriticality      string         `yaml:"business_criticality" json:"business_criticality"`
+	BusinessOverview         model.Overview `yaml:"business_overview" json:"business_overview"`
+	TechnicalOverview        model.Overview `yaml:"technical_overview" json:"technical_overview"`
 }
 
 type payloadAbuseCases map[string]string
@@ -2803,131 +2858,131 @@ type payloadAbuseCases map[string]string
 type payloadSecurityRequirements map[string]string
 
 type payloadDataAsset struct {
-	Title                  string   `json:"title"`
-	Id                     string   `json:"id"`
-	Description            string   `json:"description"`
-	Usage                  string   `json:"usage"`
-	Tags                   []string `json:"tags"`
-	Origin                 string   `json:"origin"`
-	Owner                  string   `json:"owner"`
-	Quantity               string   `json:"quantity"`
-	Confidentiality        string   `json:"confidentiality"`
-	Integrity              string   `json:"integrity"`
-	Availability           string   `json:"availability"`
-	JustificationCiaRating string   `json:"justification_cia_rating"`
+	Title                  string   `yaml:"title" json:"title"`
+	Id                     string   `yaml:"id" json:"id"`
+	Description            string   `yaml:"description" json:"description"`
+	Usage                  string   `yaml:"usage" json:"usage"`
+	Tags                   []string `yaml:"tags" json:"tags"`
+	Origin                 string   `yaml:"origin" json:"origin"`
+	Owner                  string   `yaml:"owner" json:"owner"`
+	Quantity               string   `yaml:"quantity" json:"quantity"`
+	Confidentiality        string   `yaml:"confidentiality" json:"confidentiality"`
+	Integrity              string   `yaml:"integrity" json:"integrity"`
+	Availability           string   `yaml:"availability" json:"availability"`
+	JustificationCiaRating string   `yaml:"justification_cia_rating" json:"justification_cia_rating"`
 }
 
 type payloadSharedRuntime struct {
-	Title                  string   `json:"title"`
-	Id                     string   `json:"id"`
-	Description            string   `json:"description"`
-	Tags                   []string `json:"tags"`
-	TechnicalAssetsRunning []string `json:"technical_assets_running"`
+	Title                  string   `yaml:"title" json:"title"`
+	Id                     string   `yaml:"id" json:"id"`
+	Description            string   `yaml:"description" json:"description"`
+	Tags                   []string `yaml:"tags" json:"tags"`
+	TechnicalAssetsRunning []string `yaml:"technical_assets_running" json:"technical_assets_running"`
 }
 
-func setSecurityRequirements(context *gin.Context) {
-	folderNameOfKey, key, ok := checkTokenToFolderName(context)
+func (context *Context) setSecurityRequirements(ginContext *gin.Context) {
+	folderNameOfKey, key, ok := context.checkTokenToFolderName(ginContext)
 	if !ok {
 		return
 	}
-	lockFolder(folderNameOfKey)
-	defer unlockFolder(folderNameOfKey)
-	modelInput, _, ok := readModel(context, context.Param("model-id"), key, folderNameOfKey)
+	context.lockFolder(folderNameOfKey)
+	defer context.unlockFolder(folderNameOfKey)
+	modelInput, _, ok := context.readModel(ginContext, ginContext.Param("model-id"), key, folderNameOfKey)
 	if ok {
 		payload := payloadSecurityRequirements{}
-		err := context.BindJSON(&payload)
+		err := ginContext.BindJSON(&payload)
 		if err != nil {
 			log.Println(err)
-			context.JSON(http.StatusBadRequest, gin.H{
+			ginContext.JSON(http.StatusBadRequest, gin.H{
 				"error": "unable to parse request payload",
 			})
 			return
 		}
 		modelInput.SecurityRequirements = payload
-		ok = writeModel(context, key, folderNameOfKey, &modelInput, "Security Requirements Update")
+		ok = context.writeModel(ginContext, key, folderNameOfKey, &modelInput, "Security Requirements Update")
 		if ok {
-			context.JSON(http.StatusOK, gin.H{
+			ginContext.JSON(http.StatusOK, gin.H{
 				"message": "model updated",
 			})
 		}
 	}
 }
 
-func getSecurityRequirements(context *gin.Context) {
-	folderNameOfKey, key, ok := checkTokenToFolderName(context)
+func (context *Context) getSecurityRequirements(ginContext *gin.Context) {
+	folderNameOfKey, key, ok := context.checkTokenToFolderName(ginContext)
 	if !ok {
 		return
 	}
-	lockFolder(folderNameOfKey)
-	defer unlockFolder(folderNameOfKey)
-	aModel, _, ok := readModel(context, context.Param("model-id"), key, folderNameOfKey)
+	context.lockFolder(folderNameOfKey)
+	defer context.unlockFolder(folderNameOfKey)
+	aModel, _, ok := context.readModel(ginContext, ginContext.Param("model-id"), key, folderNameOfKey)
 	if ok {
-		context.JSON(http.StatusOK, aModel.SecurityRequirements)
+		ginContext.JSON(http.StatusOK, aModel.SecurityRequirements)
 	}
 }
 
-func setAbuseCases(context *gin.Context) {
-	folderNameOfKey, key, ok := checkTokenToFolderName(context)
+func (context *Context) setAbuseCases(ginContext *gin.Context) {
+	folderNameOfKey, key, ok := context.checkTokenToFolderName(ginContext)
 	if !ok {
 		return
 	}
-	lockFolder(folderNameOfKey)
-	defer unlockFolder(folderNameOfKey)
-	modelInput, _, ok := readModel(context, context.Param("model-id"), key, folderNameOfKey)
+	context.lockFolder(folderNameOfKey)
+	defer context.unlockFolder(folderNameOfKey)
+	modelInput, _, ok := context.readModel(ginContext, ginContext.Param("model-id"), key, folderNameOfKey)
 	if ok {
 		payload := payloadAbuseCases{}
-		err := context.BindJSON(&payload)
+		err := ginContext.BindJSON(&payload)
 		if err != nil {
 			log.Println(err)
-			context.JSON(http.StatusBadRequest, gin.H{
+			ginContext.JSON(http.StatusBadRequest, gin.H{
 				"error": "unable to parse request payload",
 			})
 			return
 		}
 		modelInput.AbuseCases = payload
-		ok = writeModel(context, key, folderNameOfKey, &modelInput, "Abuse Cases Update")
+		ok = context.writeModel(ginContext, key, folderNameOfKey, &modelInput, "Abuse Cases Update")
 		if ok {
-			context.JSON(http.StatusOK, gin.H{
+			ginContext.JSON(http.StatusOK, gin.H{
 				"message": "model updated",
 			})
 		}
 	}
 }
 
-func getAbuseCases(context *gin.Context) {
-	folderNameOfKey, key, ok := checkTokenToFolderName(context)
+func (context *Context) getAbuseCases(ginContext *gin.Context) {
+	folderNameOfKey, key, ok := context.checkTokenToFolderName(ginContext)
 	if !ok {
 		return
 	}
-	lockFolder(folderNameOfKey)
-	defer unlockFolder(folderNameOfKey)
-	aModel, _, ok := readModel(context, context.Param("model-id"), key, folderNameOfKey)
+	context.lockFolder(folderNameOfKey)
+	defer context.unlockFolder(folderNameOfKey)
+	aModel, _, ok := context.readModel(ginContext, ginContext.Param("model-id"), key, folderNameOfKey)
 	if ok {
-		context.JSON(http.StatusOK, aModel.AbuseCases)
+		ginContext.JSON(http.StatusOK, aModel.AbuseCases)
 	}
 }
 
-func setOverview(context *gin.Context) {
-	folderNameOfKey, key, ok := checkTokenToFolderName(context)
+func (context *Context) setOverview(ginContext *gin.Context) {
+	folderNameOfKey, key, ok := context.checkTokenToFolderName(ginContext)
 	if !ok {
 		return
 	}
-	lockFolder(folderNameOfKey)
-	defer unlockFolder(folderNameOfKey)
-	modelInput, _, ok := readModel(context, context.Param("model-id"), key, folderNameOfKey)
+	context.lockFolder(folderNameOfKey)
+	defer context.unlockFolder(folderNameOfKey)
+	modelInput, _, ok := context.readModel(ginContext, ginContext.Param("model-id"), key, folderNameOfKey)
 	if ok {
 		payload := payloadOverview{}
-		err := context.BindJSON(&payload)
+		err := ginContext.BindJSON(&payload)
 		if err != nil {
 			log.Println(err)
-			context.JSON(http.StatusBadRequest, gin.H{
+			ginContext.JSON(http.StatusBadRequest, gin.H{
 				"error": "unable to parse request payload",
 			})
 			return
 		}
 		criticality, err := model.ParseCriticality(payload.BusinessCriticality)
 		if err != nil {
-			handleErrorInServiceCall(err, context)
+			context.handleErrorInServiceCall(err, ginContext)
 			return
 		}
 		modelInput.ManagementSummaryComment = payload.ManagementSummaryComment
@@ -2936,32 +2991,32 @@ func setOverview(context *gin.Context) {
 		modelInput.BusinessOverview.Images = payload.BusinessOverview.Images
 		modelInput.TechnicalOverview.Description = payload.TechnicalOverview.Description
 		modelInput.TechnicalOverview.Images = payload.TechnicalOverview.Images
-		ok = writeModel(context, key, folderNameOfKey, &modelInput, "Overview Update")
+		ok = context.writeModel(ginContext, key, folderNameOfKey, &modelInput, "Overview Update")
 		if ok {
-			context.JSON(http.StatusOK, gin.H{
+			ginContext.JSON(http.StatusOK, gin.H{
 				"message": "model updated",
 			})
 		}
 	}
 }
 
-func handleErrorInServiceCall(err error, context *gin.Context) {
+func (context *Context) handleErrorInServiceCall(err error, ginContext *gin.Context) {
 	log.Println(err)
-	context.JSON(http.StatusBadRequest, gin.H{
+	ginContext.JSON(http.StatusBadRequest, gin.H{
 		"error": strings.TrimSpace(err.Error()),
 	})
 }
 
-func getOverview(context *gin.Context) {
-	folderNameOfKey, key, ok := checkTokenToFolderName(context)
+func (context *Context) getOverview(ginContext *gin.Context) {
+	folderNameOfKey, key, ok := context.checkTokenToFolderName(ginContext)
 	if !ok {
 		return
 	}
-	lockFolder(folderNameOfKey)
-	defer unlockFolder(folderNameOfKey)
-	aModel, _, ok := readModel(context, context.Param("model-id"), key, folderNameOfKey)
+	context.lockFolder(folderNameOfKey)
+	defer context.unlockFolder(folderNameOfKey)
+	aModel, _, ok := context.readModel(ginContext, ginContext.Param("model-id"), key, folderNameOfKey)
 	if ok {
-		context.JSON(http.StatusOK, gin.H{
+		ginContext.JSON(http.StatusOK, gin.H{
 			"management_summary_comment": aModel.ManagementSummaryComment,
 			"business_criticality":       aModel.BusinessCriticality,
 			"business_overview":          aModel.BusinessOverview,
@@ -2970,19 +3025,19 @@ func getOverview(context *gin.Context) {
 	}
 }
 
-func setCover(context *gin.Context) {
-	folderNameOfKey, key, ok := checkTokenToFolderName(context)
+func (context *Context) setCover(ginContext *gin.Context) {
+	folderNameOfKey, key, ok := context.checkTokenToFolderName(ginContext)
 	if !ok {
 		return
 	}
-	lockFolder(folderNameOfKey)
-	defer unlockFolder(folderNameOfKey)
-	modelInput, _, ok := readModel(context, context.Param("model-id"), key, folderNameOfKey)
+	context.lockFolder(folderNameOfKey)
+	defer context.unlockFolder(folderNameOfKey)
+	modelInput, _, ok := context.readModel(ginContext, ginContext.Param("model-id"), key, folderNameOfKey)
 	if ok {
 		payload := payloadCover{}
-		err := context.BindJSON(&payload)
+		err := ginContext.BindJSON(&payload)
 		if err != nil {
-			context.JSON(http.StatusBadRequest, gin.H{
+			ginContext.JSON(http.StatusBadRequest, gin.H{
 				"error": "unable to parse request payload",
 			})
 			return
@@ -2993,25 +3048,25 @@ func setCover(context *gin.Context) {
 		}
 		modelInput.Author.Name = payload.Author.Name
 		modelInput.Author.Homepage = payload.Author.Homepage
-		ok = writeModel(context, key, folderNameOfKey, &modelInput, "Cover Update")
+		ok = context.writeModel(ginContext, key, folderNameOfKey, &modelInput, "Cover Update")
 		if ok {
-			context.JSON(http.StatusOK, gin.H{
+			ginContext.JSON(http.StatusOK, gin.H{
 				"message": "model updated",
 			})
 		}
 	}
 }
 
-func getCover(context *gin.Context) {
-	folderNameOfKey, key, ok := checkTokenToFolderName(context)
+func (context *Context) getCover(ginContext *gin.Context) {
+	folderNameOfKey, key, ok := context.checkTokenToFolderName(ginContext)
 	if !ok {
 		return
 	}
-	lockFolder(folderNameOfKey)
-	defer unlockFolder(folderNameOfKey)
-	aModel, _, ok := readModel(context, context.Param("model-id"), key, folderNameOfKey)
+	context.lockFolder(folderNameOfKey)
+	defer context.unlockFolder(folderNameOfKey)
+	aModel, _, ok := context.readModel(ginContext, ginContext.Param("model-id"), key, folderNameOfKey)
 	if ok {
-		context.JSON(http.StatusOK, gin.H{
+		ginContext.JSON(http.StatusOK, gin.H{
 			"title":  aModel.Title,
 			"date":   aModel.Date,
 			"author": aModel.Author,
@@ -3020,22 +3075,22 @@ func getCover(context *gin.Context) {
 }
 
 // creates a sub-folder (named by a new UUID) inside the token folder
-func createNewModel(context *gin.Context) {
-	folderNameOfKey, key, ok := checkTokenToFolderName(context)
+func (context *Context) createNewModel(ginContext *gin.Context) {
+	folderNameOfKey, key, ok := context.checkTokenToFolderName(ginContext)
 	if !ok {
 		return
 	}
-	ok = checkObjectCreationThrottler(context, "MODEL")
+	ok = context.checkObjectCreationThrottler(ginContext, "MODEL")
 	if !ok {
 		return
 	}
-	lockFolder(folderNameOfKey)
-	defer unlockFolder(folderNameOfKey)
+	context.lockFolder(folderNameOfKey)
+	defer context.unlockFolder(folderNameOfKey)
 
 	aUuid := uuid.New().String()
-	err := os.Mkdir(folderNameForModel(folderNameOfKey, aUuid), 0700)
+	err := os.Mkdir(context.folderNameForModel(folderNameOfKey, aUuid), 0700)
 	if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{
+		ginContext.JSON(http.StatusInternalServerError, gin.H{
 			"error": "unable to create model",
 		})
 		return
@@ -3072,28 +3127,28 @@ diagram_tweak_suppress_edge_labels: false
 diagram_tweak_invisible_connections_between_assets: []
 diagram_tweak_same_rank_assets: []`
 
-	ok = writeModelYAML(context, aYaml, key, folderNameForModel(folderNameOfKey, aUuid), "New Model Creation", true)
+	ok = context.writeModelYAML(ginContext, aYaml, key, context.folderNameForModel(folderNameOfKey, aUuid), "New Model Creation", true)
 	if ok {
-		context.JSON(http.StatusCreated, gin.H{
+		ginContext.JSON(http.StatusCreated, gin.H{
 			"message": "model created",
 			"id":      aUuid,
 		})
 	}
 }
 
-func listModels(context *gin.Context) { // TODO currently returns error when any model is no longer valid in syntax, so eventually have some fallback to not just bark on an invalid model...
-	folderNameOfKey, key, ok := checkTokenToFolderName(context)
+func (context *Context) listModels(ginContext *gin.Context) { // TODO currently returns error when any model is no longer valid in syntax, so eventually have some fallback to not just bark on an invalid model...
+	folderNameOfKey, key, ok := context.checkTokenToFolderName(ginContext)
 	if !ok {
 		return
 	}
-	lockFolder(folderNameOfKey)
-	defer unlockFolder(folderNameOfKey)
+	context.lockFolder(folderNameOfKey)
+	defer context.unlockFolder(folderNameOfKey)
 
 	result := make([]payloadModels, 0)
 	modelFolders, err := os.ReadDir(folderNameOfKey)
 	if err != nil {
 		log.Println(err)
-		context.JSON(http.StatusNotFound, gin.H{
+		ginContext.JSON(http.StatusNotFound, gin.H{
 			"error": "token not found",
 		})
 		return
@@ -3103,19 +3158,19 @@ func listModels(context *gin.Context) { // TODO currently returns error when any
 			modelStat, err := os.Stat(filepath.Join(folderNameOfKey, dirEntry.Name(), outputFile))
 			if err != nil {
 				log.Println(err)
-				context.JSON(http.StatusNotFound, gin.H{
+				ginContext.JSON(http.StatusNotFound, gin.H{
 					"error": "unable to list model",
 				})
 				return
 			}
-			aModel, _, ok := readModel(context, dirEntry.Name(), key, folderNameOfKey)
+			aModel, _, ok := context.readModel(ginContext, dirEntry.Name(), key, folderNameOfKey)
 			if !ok {
 				return
 			}
 			fileInfo, err := dirEntry.Info()
 			if err != nil {
 				log.Println(err)
-				context.JSON(http.StatusNotFound, gin.H{
+				ginContext.JSON(http.StatusNotFound, gin.H{
 					"error": "unable to get file info",
 				})
 				return
@@ -3128,41 +3183,41 @@ func listModels(context *gin.Context) { // TODO currently returns error when any
 			})
 		}
 	}
-	context.JSON(http.StatusOK, result)
+	ginContext.JSON(http.StatusOK, result)
 }
 
-func deleteModel(context *gin.Context) {
-	folderNameOfKey, _, ok := checkTokenToFolderName(context)
+func (context *Context) deleteModel(ginContext *gin.Context) {
+	folderNameOfKey, _, ok := context.checkTokenToFolderName(ginContext)
 	if !ok {
 		return
 	}
-	lockFolder(folderNameOfKey)
-	defer unlockFolder(folderNameOfKey)
-	folder, ok := checkModelFolder(context, context.Param("model-id"), folderNameOfKey)
+	context.lockFolder(folderNameOfKey)
+	defer context.unlockFolder(folderNameOfKey)
+	folder, ok := context.checkModelFolder(ginContext, ginContext.Param("model-id"), folderNameOfKey)
 	if ok {
 		err := os.RemoveAll(folder)
 		if err != nil {
-			context.JSON(http.StatusNotFound, gin.H{
+			ginContext.JSON(http.StatusNotFound, gin.H{
 				"error": "model not found",
 			})
 		}
-		context.JSON(http.StatusOK, gin.H{
+		ginContext.JSON(http.StatusOK, gin.H{
 			"message": "model deleted",
 		})
 	}
 }
 
-func checkModelFolder(context *gin.Context, modelUUID string, folderNameOfKey string) (modelFolder string, ok bool) {
+func (context *Context) checkModelFolder(ginContext *gin.Context, modelUUID string, folderNameOfKey string) (modelFolder string, ok bool) {
 	uuidParsed, err := uuid.Parse(modelUUID)
 	if err != nil {
-		context.JSON(http.StatusNotFound, gin.H{
+		ginContext.JSON(http.StatusNotFound, gin.H{
 			"error": "model not found",
 		})
 		return modelFolder, false
 	}
-	modelFolder = folderNameForModel(folderNameOfKey, uuidParsed.String())
+	modelFolder = context.folderNameForModel(folderNameOfKey, uuidParsed.String())
 	if _, err := os.Stat(modelFolder); os.IsNotExist(err) {
-		context.JSON(http.StatusNotFound, gin.H{
+		ginContext.JSON(http.StatusNotFound, gin.H{
 			"error": "model not found",
 		})
 		return modelFolder, false
@@ -3170,16 +3225,16 @@ func checkModelFolder(context *gin.Context, modelUUID string, folderNameOfKey st
 	return modelFolder, true
 }
 
-func readModel(context *gin.Context, modelUUID string, key []byte, folderNameOfKey string) (modelInputResult model.ModelInput, yamlText string, ok bool) {
-	modelFolder, ok := checkModelFolder(context, modelUUID, folderNameOfKey)
+func (context *Context) readModel(ginContext *gin.Context, modelUUID string, key []byte, folderNameOfKey string) (modelInputResult model.ModelInput, yamlText string, ok bool) {
+	modelFolder, ok := context.checkModelFolder(ginContext, modelUUID, folderNameOfKey)
 	if !ok {
 		return modelInputResult, yamlText, false
 	}
-	cryptoKey := generateKeyFromAlreadyStrongRandomInput(key)
+	cryptoKey := context.generateKeyFromAlreadyStrongRandomInput(key)
 	block, err := aes.NewCipher(cryptoKey)
 	if err != nil {
 		log.Println(err)
-		context.JSON(http.StatusInternalServerError, gin.H{
+		ginContext.JSON(http.StatusInternalServerError, gin.H{
 			"error": "unable to open model",
 		})
 		return modelInputResult, yamlText, false
@@ -3187,7 +3242,7 @@ func readModel(context *gin.Context, modelUUID string, key []byte, folderNameOfK
 	aesGcm, err := cipher.NewGCM(block)
 	if err != nil {
 		log.Println(err)
-		context.JSON(http.StatusInternalServerError, gin.H{
+		ginContext.JSON(http.StatusInternalServerError, gin.H{
 			"error": "unable to open model",
 		})
 		return modelInputResult, yamlText, false
@@ -3196,7 +3251,7 @@ func readModel(context *gin.Context, modelUUID string, key []byte, folderNameOfK
 	fileBytes, err := os.ReadFile(filepath.Join(modelFolder, outputFile))
 	if err != nil {
 		log.Println(err)
-		context.JSON(http.StatusInternalServerError, gin.H{
+		ginContext.JSON(http.StatusInternalServerError, gin.H{
 			"error": "unable to open model",
 		})
 		return modelInputResult, yamlText, false
@@ -3207,7 +3262,7 @@ func readModel(context *gin.Context, modelUUID string, key []byte, folderNameOfK
 	plaintext, err := aesGcm.Open(nil, nonce, ciphertext, nil)
 	if err != nil {
 		log.Println(err)
-		context.JSON(http.StatusInternalServerError, gin.H{
+		ginContext.JSON(http.StatusInternalServerError, gin.H{
 			"error": "unable to open model",
 		})
 		return modelInputResult, yamlText, false
@@ -3216,34 +3271,34 @@ func readModel(context *gin.Context, modelUUID string, key []byte, folderNameOfK
 	r, err := gzip.NewReader(bytes.NewReader(plaintext))
 	if err != nil {
 		log.Println(err)
-		context.JSON(http.StatusInternalServerError, gin.H{
+		ginContext.JSON(http.StatusInternalServerError, gin.H{
 			"error": "unable to open model",
 		})
 		return modelInputResult, yamlText, false
 	}
 	buf := new(bytes.Buffer)
 	_, _ = buf.ReadFrom(r)
-	modelInput := model.ModelInput{}
+	modelInput := new(model.ModelInput).Defaults()
 	yamlBytes := buf.Bytes()
 	err = yaml.Unmarshal(yamlBytes, &modelInput)
 	if err != nil {
 		log.Println(err)
-		context.JSON(http.StatusInternalServerError, gin.H{
+		ginContext.JSON(http.StatusInternalServerError, gin.H{
 			"error": "unable to open model",
 		})
 		return modelInputResult, yamlText, false
 	}
-	return modelInput, string(yamlBytes), true
+	return *modelInput, string(yamlBytes), true
 }
 
-func writeModel(context *gin.Context, key []byte, folderNameOfKey string, modelInput *model.ModelInput, changeReasonForHistory string) (ok bool) {
-	modelFolder, ok := checkModelFolder(context, context.Param("model-id"), folderNameOfKey)
+func (context *Context) writeModel(ginContext *gin.Context, key []byte, folderNameOfKey string, modelInput *model.ModelInput, changeReasonForHistory string) (ok bool) {
+	modelFolder, ok := context.checkModelFolder(ginContext, ginContext.Param("model-id"), folderNameOfKey)
 	if ok {
 		modelInput.ThreagileVersion = model.ThreagileVersion
 		yamlBytes, err := yaml.Marshal(modelInput)
 		if err != nil {
 			log.Println(err)
-			context.JSON(http.StatusInternalServerError, gin.H{
+			ginContext.JSON(http.StatusInternalServerError, gin.H{
 				"error": "unable to write model",
 			})
 			return false
@@ -3251,13 +3306,13 @@ func writeModel(context *gin.Context, key []byte, folderNameOfKey string, modelI
 		/*
 			yamlBytes = model.ReformatYAML(yamlBytes)
 		*/
-		return writeModelYAML(context, string(yamlBytes), key, modelFolder, changeReasonForHistory, false)
+		return context.writeModelYAML(ginContext, string(yamlBytes), key, modelFolder, changeReasonForHistory, false)
 	}
 	return false
 }
 
-func writeModelYAML(context *gin.Context, yaml string, key []byte, modelFolder string, changeReasonForHistory string, skipBackup bool) (ok bool) {
-	if *verbose {
+func (context *Context) writeModelYAML(ginContext *gin.Context, yaml string, key []byte, modelFolder string, changeReasonForHistory string, skipBackup bool) (ok bool) {
+	if *context.verbose {
 		fmt.Println("about to write " + strconv.Itoa(len(yaml)) + " bytes of yaml into model folder: " + modelFolder)
 	}
 	var b bytes.Buffer
@@ -3265,11 +3320,11 @@ func writeModelYAML(context *gin.Context, yaml string, key []byte, modelFolder s
 	_, _ = w.Write([]byte(yaml))
 	_ = w.Close()
 	plaintext := b.Bytes()
-	cryptoKey := generateKeyFromAlreadyStrongRandomInput(key)
+	cryptoKey := context.generateKeyFromAlreadyStrongRandomInput(key)
 	block, err := aes.NewCipher(cryptoKey)
 	if err != nil {
 		log.Println(err)
-		context.JSON(http.StatusInternalServerError, gin.H{
+		ginContext.JSON(http.StatusInternalServerError, gin.H{
 			"error": "unable to write model",
 		})
 		return false
@@ -3278,7 +3333,7 @@ func writeModelYAML(context *gin.Context, yaml string, key []byte, modelFolder s
 	nonce := make([]byte, 12)
 	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
 		log.Println(err)
-		context.JSON(http.StatusInternalServerError, gin.H{
+		ginContext.JSON(http.StatusInternalServerError, gin.H{
 			"error": "unable to write model",
 		})
 		return false
@@ -3286,17 +3341,17 @@ func writeModelYAML(context *gin.Context, yaml string, key []byte, modelFolder s
 	aesGcm, err := cipher.NewGCM(block)
 	if err != nil {
 		log.Println(err)
-		context.JSON(http.StatusInternalServerError, gin.H{
+		ginContext.JSON(http.StatusInternalServerError, gin.H{
 			"error": "unable to write model",
 		})
 		return false
 	}
 	ciphertext := aesGcm.Seal(nil, nonce, plaintext, nil)
 	if !skipBackup {
-		err = backupModelToHistory(modelFolder, changeReasonForHistory)
+		err = context.backupModelToHistory(modelFolder, changeReasonForHistory)
 		if err != nil {
 			log.Println(err)
-			context.JSON(http.StatusInternalServerError, gin.H{
+			ginContext.JSON(http.StatusInternalServerError, gin.H{
 				"error": "unable to write model",
 			})
 			return false
@@ -3305,7 +3360,7 @@ func writeModelYAML(context *gin.Context, yaml string, key []byte, modelFolder s
 	f, err := os.Create(filepath.Join(modelFolder, outputFile))
 	if err != nil {
 		log.Println(err)
-		context.JSON(http.StatusInternalServerError, gin.H{
+		ginContext.JSON(http.StatusInternalServerError, gin.H{
 			"error": "unable to write model",
 		})
 		return false
@@ -3316,7 +3371,7 @@ func writeModelYAML(context *gin.Context, yaml string, key []byte, modelFolder s
 	return true
 }
 
-func backupModelToHistory(modelFolder string, changeReasonForHistory string) (err error) {
+func (context *Context) backupModelToHistory(modelFolder string, changeReasonForHistory string) (err error) {
 	historyFolder := filepath.Join(modelFolder, "history")
 	if _, err := os.Stat(historyFolder); os.IsNotExist(err) {
 		err = os.Mkdir(historyFolder, 0700)
@@ -3365,7 +3420,7 @@ type argon2Params struct {
 	keyLength   uint32
 }
 
-func generateKeyFromAlreadyStrongRandomInput(alreadyRandomInput []byte) []byte {
+func (context *Context) generateKeyFromAlreadyStrongRandomInput(alreadyRandomInput []byte) []byte {
 	// Establish the parameters to use for Argon2.
 	p := &argon2Params{
 		memory:      64 * 1024,
@@ -3380,14 +3435,14 @@ func generateKeyFromAlreadyStrongRandomInput(alreadyRandomInput []byte) []byte {
 	return hash
 }
 
-func folderNameForModel(folderNameOfKey string, uuid string) string {
+func (context *Context) folderNameForModel(folderNameOfKey string, uuid string) string {
 	return filepath.Join(folderNameOfKey, uuid)
 }
 
 var throttlerLock sync.Mutex
 var createdObjectsThrottler = make(map[string][]int64)
 
-func checkObjectCreationThrottler(context *gin.Context, typeName string) bool {
+func (context *Context) checkObjectCreationThrottler(ginContext *gin.Context, typeName string) bool {
 	throttlerLock.Lock()
 	defer throttlerLock.Unlock()
 
@@ -3424,7 +3479,7 @@ func checkObjectCreationThrottler(context *gin.Context, typeName string) bool {
 		createdObjectsThrottler[keyHash] = append(createdObjectsThrottler[keyHash], now)
 		return true
 	}
-	context.JSON(http.StatusTooManyRequests, gin.H{
+	ginContext.JSON(http.StatusTooManyRequests, gin.H{
 		"error": "object creation throttling exceeded (denial-of-service protection): please wait some time and try again",
 	})
 	return false
@@ -3432,9 +3487,9 @@ func checkObjectCreationThrottler(context *gin.Context, typeName string) bool {
 
 var locksByFolderName = make(map[string]*sync.Mutex)
 
-func lockFolder(folderName string) {
-	globalLock.Lock()
-	defer globalLock.Unlock()
+func (context *Context) lockFolder(folderName string) {
+	context.globalLock.Lock()
+	defer context.globalLock.Unlock()
 	_, exists := locksByFolderName[folderName]
 	if !exists {
 		locksByFolderName[folderName] = &sync.Mutex{}
@@ -3442,7 +3497,7 @@ func lockFolder(folderName string) {
 	locksByFolderName[folderName].Lock()
 }
 
-func unlockFolder(folderName string) {
+func (context *Context) unlockFolder(folderName string) {
 	if _, exists := locksByFolderName[folderName]; exists {
 		locksByFolderName[folderName].Unlock()
 		delete(locksByFolderName, folderName)
@@ -3456,9 +3511,9 @@ type keyHeader struct {
 	Key string `header:"key"`
 }
 
-func folderNameFromKey(key []byte) string {
+func (context *Context) folderNameFromKey(key []byte) string {
 	sha512Hash := hashSHA256(key)
-	return filepath.Join(baseFolder, sha512Hash)
+	return filepath.Join(*context.baseFolder, sha512Hash)
 }
 
 func hashSHA256(key []byte) string {
@@ -3467,41 +3522,41 @@ func hashSHA256(key []byte) string {
 	return hex.EncodeToString(hasher.Sum(nil))
 }
 
-func createKey(context *gin.Context) {
-	ok := checkObjectCreationThrottler(context, "KEY")
+func (context *Context) createKey(ginContext *gin.Context) {
+	ok := context.checkObjectCreationThrottler(ginContext, "KEY")
 	if !ok {
 		return
 	}
-	globalLock.Lock()
-	defer globalLock.Unlock()
+	context.globalLock.Lock()
+	defer context.globalLock.Unlock()
 
 	keyBytesArr := make([]byte, keySize)
 	n, err := rand.Read(keyBytesArr[:])
 	if n != keySize || err != nil {
 		log.Println(err)
-		context.JSON(http.StatusInternalServerError, gin.H{
+		ginContext.JSON(http.StatusInternalServerError, gin.H{
 			"error": "unable to create key",
 		})
 		return
 	}
-	err = os.Mkdir(folderNameFromKey(keyBytesArr), 0700)
+	err = os.Mkdir(context.folderNameFromKey(keyBytesArr), 0700)
 	if err != nil {
 		log.Println(err)
-		context.JSON(http.StatusInternalServerError, gin.H{
+		ginContext.JSON(http.StatusInternalServerError, gin.H{
 			"error": "unable to create key",
 		})
 		return
 	}
-	context.JSON(http.StatusCreated, gin.H{
+	ginContext.JSON(http.StatusCreated, gin.H{
 		"key": base64.RawURLEncoding.EncodeToString(keyBytesArr[:]),
 	})
 }
 
-func checkTokenToFolderName(context *gin.Context) (folderNameOfKey string, key []byte, ok bool) {
+func (context *Context) checkTokenToFolderName(ginContext *gin.Context) (folderNameOfKey string, key []byte, ok bool) {
 	header := tokenHeader{}
-	if err := context.ShouldBindHeader(&header); err != nil {
+	if err := ginContext.ShouldBindHeader(&header); err != nil {
 		log.Println(err)
-		context.JSON(http.StatusNotFound, gin.H{
+		ginContext.JSON(http.StatusNotFound, gin.H{
 			"error": "token not found",
 		})
 		return folderNameOfKey, key, false
@@ -3511,22 +3566,22 @@ func checkTokenToFolderName(context *gin.Context) (folderNameOfKey string, key [
 		if err != nil {
 			log.Println(err)
 		}
-		context.JSON(http.StatusNotFound, gin.H{
+		ginContext.JSON(http.StatusNotFound, gin.H{
 			"error": "token not found",
 		})
 		return folderNameOfKey, key, false
 	}
-	globalLock.Lock()
-	defer globalLock.Unlock()
+	context.globalLock.Lock()
+	defer context.globalLock.Unlock()
 	housekeepingTokenMaps() // to remove timed-out ones
 	tokenHash := hashSHA256(token)
 	if timeoutStruct, exists := mapTokenHashToTimeoutStruct[tokenHash]; exists {
 		// re-create the key from token
 		key := xor(token, timeoutStruct.xorRand)
-		folderNameOfKey := folderNameFromKey(key)
+		folderNameOfKey := context.folderNameFromKey(key)
 		if _, err := os.Stat(folderNameOfKey); os.IsNotExist(err) {
 			log.Println(err)
-			context.JSON(http.StatusNotFound, gin.H{
+			ginContext.JSON(http.StatusNotFound, gin.H{
 				"error": "token not found",
 			})
 			return folderNameOfKey, key, false
@@ -3534,18 +3589,18 @@ func checkTokenToFolderName(context *gin.Context) (folderNameOfKey string, key [
 		timeoutStruct.lastAccessedNanoTime = time.Now().UnixNano()
 		return folderNameOfKey, key, true
 	} else {
-		context.JSON(http.StatusNotFound, gin.H{
+		ginContext.JSON(http.StatusNotFound, gin.H{
 			"error": "token not found",
 		})
 		return folderNameOfKey, key, false
 	}
 }
 
-func checkKeyToFolderName(context *gin.Context) (folderNameOfKey string, key []byte, ok bool) {
+func (context *Context) checkKeyToFolderName(ginContext *gin.Context) (folderNameOfKey string, key []byte, ok bool) {
 	header := keyHeader{}
-	if err := context.ShouldBindHeader(&header); err != nil {
+	if err := ginContext.ShouldBindHeader(&header); err != nil {
 		log.Println(err)
-		context.JSON(http.StatusNotFound, gin.H{
+		ginContext.JSON(http.StatusNotFound, gin.H{
 			"error": "key not found",
 		})
 		return folderNameOfKey, key, false
@@ -3555,15 +3610,15 @@ func checkKeyToFolderName(context *gin.Context) (folderNameOfKey string, key []b
 		if err != nil {
 			log.Println(err)
 		}
-		context.JSON(http.StatusNotFound, gin.H{
+		ginContext.JSON(http.StatusNotFound, gin.H{
 			"error": "key not found",
 		})
 		return folderNameOfKey, key, false
 	}
-	folderNameOfKey = folderNameFromKey(key)
+	folderNameOfKey = context.folderNameFromKey(key)
 	if _, err := os.Stat(folderNameOfKey); os.IsNotExist(err) {
 		log.Println(err)
-		context.JSON(http.StatusNotFound, gin.H{
+		ginContext.JSON(http.StatusNotFound, gin.H{
 			"error": "key not found",
 		})
 		return folderNameOfKey, key, false
@@ -3571,49 +3626,53 @@ func checkKeyToFolderName(context *gin.Context) (folderNameOfKey string, key []b
 	return folderNameOfKey, key, true
 }
 
-func deleteKey(context *gin.Context) {
-	folderName, _, ok := checkKeyToFolderName(context)
+func (context *Context) deleteKey(ginContext *gin.Context) {
+	folderName, _, ok := context.checkKeyToFolderName(ginContext)
 	if !ok {
 		return
 	}
-	globalLock.Lock()
-	defer globalLock.Unlock()
+	context.globalLock.Lock()
+	defer context.globalLock.Unlock()
 	err := os.RemoveAll(folderName)
 	if err != nil {
 		log.Println("error during key delete: " + err.Error())
-		context.JSON(http.StatusNotFound, gin.H{
+		ginContext.JSON(http.StatusNotFound, gin.H{
 			"error": "key not found",
 		})
 		return
 	}
-	context.JSON(http.StatusOK, gin.H{
+	ginContext.JSON(http.StatusOK, gin.H{
 		"message": "key deleted",
 	})
 }
 
-func parseCommandlineArgs() {
-	modelFilename = flag.String("model", outputFile, "input model yaml file")
-	outputDir = flag.String("output", ".", "output directory")
-	raaPlugin = flag.String("raa-plugin", "raa.so", "RAA calculation plugin (.so shared object) file name")
-	executeModelMacro = flag.String("execute-model-macro", "", "Execute model macro (by ID)")
-	createExampleModel = flag.Bool("create-example-model", false, "just create an example model named threagile-example-model.yaml in the output directory")
-	createStubModel = flag.Bool("create-stub-model", false, "just create a minimal stub model named threagile-stub-model.yaml in the output directory")
-	createEditingSupport = flag.Bool("create-editing-support", false, "just create some editing support stuff in the output directory")
-	serverPort = flag.Int("server", 0, "start a server (instead of commandline execution) on the given port")
-	templateFilename = flag.String("background", "background.pdf", "background pdf file")
-	generateDataFlowDiagram = flag.Bool("generate-data-flow-diagram", true, "generate data-flow diagram")
-	generateDataAssetDiagram = flag.Bool("generate-data-asset-diagram", true, "generate data asset diagram")
-	generateRisksJSON = flag.Bool("generate-risks-json", true, "generate risks json")
-	generateTechnicalAssetsJSON = flag.Bool("generate-technical-assets-json", true, "generate technical assets json")
-	generateStatsJSON = flag.Bool("generate-stats-json", true, "generate stats json")
-	generateRisksExcel = flag.Bool("generate-risks-excel", true, "generate risks excel")
-	generateTagsExcel = flag.Bool("generate-tags-excel", true, "generate tags excel")
-	generateReportPDF = flag.Bool("generate-report-pdf", true, "generate report pdf, including diagrams")
-	diagramDPI = flag.Int("diagram-dpi", defaultGraphvizDPI, "DPI used to render: maximum is "+strconv.Itoa(maxGraphvizDPI)+"")
-	skipRiskRules = flag.String("skip-risk-rules", "", "comma-separated list of risk rules (by their ID) to skip")
-	riskRulesPlugins = flag.String("custom-risk-rules-plugins", "", "comma-separated list of plugins (.so shared object) file names with custom risk rules to load")
-	verbose = flag.Bool("verbose", false, "verbose output")
-	ignoreOrphanedRiskTracking = flag.Bool("ignore-orphaned-risk-tracking", false, "ignore orphaned risk tracking (just log them) not matching a concrete risk")
+func (context *Context) parseCommandlineArgs() {
+	context.tempFolder = flag.String("temp-dir", tmpFolder, "temporary folder location")
+	context.modelFilename = flag.String("model", outputFile, "input model yaml file")
+	context.outputDir = flag.String("output", ".", "output directory")
+	context.raaPlugin = flag.String("raa-plugin", "raa.so", "RAA calculation plugin (.so shared object) file name")
+	context.executeModelMacro = flag.String("execute-model-macro", "", "Execute model macro (by ID)")
+	context.testParseModel = flag.Bool("test-parse-model", false, "test parse model functionality")
+	context.createExampleModel = flag.Bool("create-example-model", false, "just create an example model named threagile-example-model.yaml in the output directory")
+	context.createStubModel = flag.Bool("create-stub-model", false, "just create a minimal stub model named threagile-stub-model.yaml in the output directory")
+	context.createEditingSupport = flag.Bool("create-editing-support", false, "just create some editing support stuff in the output directory")
+	context.serverPort = flag.Int("server", 0, "start a server (instead of commandline execution) on the given port")
+	context.templateFilename = flag.String("background", "background.pdf", "background pdf file")
+	context.generateDataFlowDiagram = flag.Bool("generate-data-flow-diagram", true, "generate data-flow diagram")
+	context.generateDataAssetDiagram = flag.Bool("generate-data-asset-diagram", true, "generate data asset diagram")
+	context.generateRisksJSON = flag.Bool("generate-risks-json", true, "generate risks json")
+	context.generateTechnicalAssetsJSON = flag.Bool("generate-technical-assets-json", true, "generate technical assets json")
+	context.generateStatsJSON = flag.Bool("generate-stats-json", true, "generate stats json")
+	context.generateRisksExcel = flag.Bool("generate-risks-excel", true, "generate risks excel")
+	context.generateTagsExcel = flag.Bool("generate-tags-excel", true, "generate tags excel")
+	context.generateReportPDF = flag.Bool("generate-report-pdf", true, "generate report pdf, including diagrams")
+	context.diagramDPI = flag.Int("diagram-dpi", defaultGraphvizDPI, "DPI used to render: maximum is "+strconv.Itoa(maxGraphvizDPI)+"")
+	context.skipRiskRules = flag.String("skip-risk-rules", "", "comma-separated list of risk rules (by their ID) to skip")
+	context.riskRulesPlugins = flag.String("custom-risk-rules-plugins", "", "comma-separated list of plugins (.so shared object) file names with custom risk rules to load")
+	context.verbose = flag.Bool("verbose", false, "verbose output")
+	context.ignoreOrphanedRiskTracking = flag.Bool("ignore-orphaned-risk-tracking", false, "ignore orphaned risk tracking (just log them) not matching a concrete risk")
+	context.appFolder = flag.String("app-folder", appFolder, "app folder (default: "+appFolder+")")
+	context.baseFolder = flag.String("base-folder", baseFolder, "base folder (default: "+baseFolder+")")
 	version := flag.Bool("version", false, "print version")
 	listTypes := flag.Bool("list-types", false, "print type information (enum values to be used in models)")
 	listRiskRules := flag.Bool("list-risk-rules", false, "print risk rules")
@@ -3624,7 +3683,7 @@ func parseCommandlineArgs() {
 	print3rdParty := flag.Bool("print-3rd-party-licenses", false, "print 3rd-party license information")
 	license := flag.Bool("print-license", false, "print license information")
 	flag.Usage = func() {
-		printLogo()
+		context.printLogo()
 		_, _ = fmt.Fprintf(os.Stderr, "Usage: threagile [options]")
 		fmt.Println()
 		fmt.Println()
@@ -3638,33 +3697,33 @@ func parseCommandlineArgs() {
 		fmt.Println()
 		fmt.Println("If you want to create an example model (via docker) as a starting point to learn about Threagile just run: ")
 		fmt.Println(" docker run --rm -it " +
-			"-v \"$(pwd)\":" + filepath.Join(appFolder, "work") + " " +
+			"-v \"$(pwd)\":" + filepath.Join(*context.appFolder, "work") + " " +
 			"threagile/threagile " +
 			"-create-example-model " +
-			"-output " + filepath.Join(appFolder, "work"))
+			"-output " + filepath.Join(*context.appFolder, "work"))
 		fmt.Println()
 		fmt.Println("If you want to create a minimal stub model (via docker) as a starting point for your own model just run: ")
 		fmt.Println(" docker run --rm -it " +
-			"-v \"$(pwd)\":" + filepath.Join(appFolder, "work") + " " +
+			"-v \"$(pwd)\":" + filepath.Join(*context.appFolder, "work") + " " +
 			"threagile/threagile " +
 			"-create-stub-model " +
-			"-output " + filepath.Join(appFolder, "work"))
+			"-output " + filepath.Join(*context.appFolder, "work"))
 		fmt.Println()
-		printExamples()
+		context.printExamples()
 		fmt.Println()
 	}
 	flag.Parse()
-	if *diagramDPI < 20 {
-		*diagramDPI = 20
-	} else if *diagramDPI > maxGraphvizDPI {
-		*diagramDPI = 300
+	if *context.diagramDPI < 20 {
+		*context.diagramDPI = 20
+	} else if *context.diagramDPI > maxGraphvizDPI {
+		*context.diagramDPI = 300
 	}
 	if *version {
-		printLogo()
+		context.printLogo()
 		os.Exit(0)
 	}
 	if *listTypes {
-		printLogo()
+		context.printLogo()
 		fmt.Println("The following types are available (can be extended for custom rules):")
 		fmt.Println()
 		printTypes("Authentication", model.AuthenticationValues())
@@ -3712,7 +3771,7 @@ func parseCommandlineArgs() {
 		os.Exit(0)
 	}
 	if *listModelMacros {
-		printLogo()
+		context.printLogo()
 		fmt.Println("The following model macros are available (can be extended via custom model macros):")
 		fmt.Println()
 		/* TODO finish plugin stuff
@@ -3735,14 +3794,14 @@ func parseCommandlineArgs() {
 		os.Exit(0)
 	}
 	if *listRiskRules {
-		printLogo()
+		context.printLogo()
 		fmt.Println("The following risk rules are available (can be extended via custom risk rules):")
 		fmt.Println()
 		fmt.Println("------------------")
 		fmt.Println("Custom risk rules:")
 		fmt.Println("------------------")
-		loadCustomRiskRules()
-		for id, customRule := range customRiskRules {
+		context.loadCustomRiskRules()
+		for id, customRule := range context.customRiskRules {
 			fmt.Println(id, "-->", customRule.Category().Title, "--> with tags:", customRule.SupportedTags())
 		}
 		fmt.Println()
@@ -3795,7 +3854,7 @@ func parseCommandlineArgs() {
 		os.Exit(0)
 	}
 	if *explainTypes {
-		printLogo()
+		context.printLogo()
 		fmt.Println("Explanation for the types:")
 		fmt.Println()
 		printExplainTypes("Authentication", model.AuthenticationValues())
@@ -3823,7 +3882,7 @@ func parseCommandlineArgs() {
 		os.Exit(0)
 	}
 	if *explainModelMacros {
-		printLogo()
+		context.printLogo()
 		fmt.Println("Explanation for the model macros:")
 		fmt.Println()
 		fmt.Printf("%v: %v\n", addbuildpipeline.GetMacroDetails().ID, addbuildpipeline.GetMacroDetails().Description)
@@ -3837,7 +3896,7 @@ func parseCommandlineArgs() {
 
 	}
 	if *explainRiskRules {
-		printLogo()
+		context.printLogo()
 		fmt.Println("Explanation for risk rules:")
 		fmt.Println()
 		fmt.Printf("%v: %v\n", accidentalsecretleak.Category().Id, accidentalsecretleak.Category().Description)
@@ -3886,7 +3945,7 @@ func parseCommandlineArgs() {
 		os.Exit(0)
 	}
 	if *print3rdParty {
-		printLogo()
+		context.printLogo()
 		fmt.Println("Kudos & Credits to the following open-source projects:")
 		fmt.Println(" - golang (Google Go License): https://golang.org/LICENSE")
 		fmt.Println(" - go-yaml (MIT License): https://github.com/go-yaml/yaml/blob/v3/LICENSE")
@@ -3902,34 +3961,56 @@ func parseCommandlineArgs() {
 		os.Exit(0)
 	}
 	if *license {
-		printLogo()
-		content, err := os.ReadFile(filepath.Join(appFolder, "LICENSE.txt"))
+		context.printLogo()
+		content, err := os.ReadFile(filepath.Join(*context.appFolder, "LICENSE.txt"))
 		checkErr(err)
 		fmt.Print(string(content))
 		fmt.Println()
 		os.Exit(0)
 	}
-	if *createExampleModel {
-		createExampleModelFile()
-		printLogo()
+	if *context.testParseModel {
+		testError := context.goTestParseModel()
+		if testError != nil {
+			log.Fatalf("parse test failed: %v", testError)
+			return
+		}
+		fmt.Println("Parse test successful.")
+		fmt.Println()
+		os.Exit(0)
+	}
+	if *context.createExampleModel {
+		exampleError := context.createExampleModelFile()
+		if exampleError != nil {
+			log.Fatalf("Unable to copy example model: %v", exampleError)
+			return
+		}
+		context.printLogo()
 		fmt.Println("An example model was created named threagile-example-model.yaml in the output directory.")
 		fmt.Println()
-		printExamples()
+		context.printExamples()
 		fmt.Println()
 		os.Exit(0)
 	}
-	if *createStubModel {
-		createStubModelFile()
-		printLogo()
+	if *context.createStubModel {
+		stubError := context.createStubModelFile()
+		if stubError != nil {
+			log.Fatalf("Unable to copy stub model: %v", stubError)
+			return
+		}
+		context.printLogo()
 		fmt.Println("A minimal stub model was created named threagile-stub-model.yaml in the output directory.")
 		fmt.Println()
-		printExamples()
+		context.printExamples()
 		fmt.Println()
 		os.Exit(0)
 	}
-	if *createEditingSupport {
-		createEditingSupportFiles()
-		printLogo()
+	if *context.createEditingSupport {
+		supportError := context.createEditingSupportFiles()
+		if supportError != nil {
+			log.Fatalf("Unable to copy editing support files: %v", supportError)
+			return
+		}
+		context.printLogo()
 		fmt.Println("The following files were created in the output directory:")
 		fmt.Println(" - schema.json")
 		fmt.Println(" - live-templates.txt")
@@ -3943,50 +4024,58 @@ func parseCommandlineArgs() {
 	}
 }
 
-func printLogo() {
+func (context *Context) printLogo() {
 	fmt.Println()
 	fmt.Println("  _____ _                          _ _      \n |_   _| |__  _ __ ___  __ _  __ _(_) | ___ \n   | | | '_ \\| '__/ _ \\/ _` |/ _` | | |/ _ \\\n   | | | | | | | |  __/ (_| | (_| | | |  __/\n   |_| |_| |_|_|  \\___|\\__,_|\\__, |_|_|\\___|\n                             |___/        ")
 	fmt.Println("Threagile - Agile Threat Modeling")
 	fmt.Println()
 	fmt.Println()
-	printVersion()
+	context.printVersion()
 }
 
-func printVersion() {
+func (context *Context) printVersion() {
 	fmt.Println("Documentation: https://threagile.io")
 	fmt.Println("Docker Images: https://hub.docker.com/r/threagile/threagile")
 	fmt.Println("Sourcecode: https://github.com/threagile")
 	fmt.Println("License: Open-Source (MIT License)")
-	fmt.Println("Version: " + model.ThreagileVersion + " (" + buildTimestamp + ")")
+	fmt.Println("Version: " + model.ThreagileVersion + " (" + context.buildTimestamp + ")")
 	fmt.Println()
 	fmt.Println()
 }
 
-func createExampleModelFile() {
-	_, _ = copyFile(filepath.Join(appFolder, "threagile-example-model.yaml"), filepath.Join(*outputDir, "threagile-example-model.yaml"))
+func (context *Context) createExampleModelFile() error {
+	_, err := copyFile(filepath.Join(*context.appFolder, "threagile-example-model.yaml"), filepath.Join(*context.outputDir, "threagile-example-model.yaml"))
+	return err
 }
 
-func createStubModelFile() {
-	loadCustomRiskRules()
-	stub, err := os.ReadFile(filepath.Join(appFolder, "threagile-stub-model.yaml"))
-	checkErr(err)
-	err = os.WriteFile(filepath.Join(*outputDir, "threagile-stub-model.yaml"), addSupportedTags(stub), 0644)
-	checkErr(err)
+func (context *Context) createStubModelFile() error {
+	context.loadCustomRiskRules()
+	stub, err := os.ReadFile(filepath.Join(*context.appFolder, "threagile-stub-model.yaml"))
+	if err != nil {
+		return err
+	}
+
+	return os.WriteFile(filepath.Join(*context.outputDir, "threagile-stub-model.yaml"), context.addSupportedTags(stub), 0644)
 }
 
-func createEditingSupportFiles() {
-	_, _ = copyFile(filepath.Join(appFolder, "schema.json"), filepath.Join(*outputDir, "schema.json"))
-	_, _ = copyFile(filepath.Join(appFolder, "live-templates.txt"), filepath.Join(*outputDir, "live-templates.txt"))
+func (context *Context) createEditingSupportFiles() error {
+	_, schemaError := copyFile(filepath.Join(*context.appFolder, "schema.json"), filepath.Join(*context.outputDir, "schema.json"))
+	if schemaError != nil {
+		return schemaError
+	}
+
+	_, templateError := copyFile(filepath.Join(*context.appFolder, "live-templates.txt"), filepath.Join(*context.outputDir, "live-templates.txt"))
+	return templateError
 }
 
-func printExamples() {
+func (context *Context) printExamples() {
 	fmt.Println("If you want to execute Threagile on a model yaml file (via docker): ")
 	fmt.Println(" docker run --rm -it " +
-		"-v \"$(pwd)\":" + filepath.Join(appFolder, "work") + " " +
+		"-v \"$(pwd)\":" + filepath.Join(*context.appFolder, "work") + " " +
 		"threagile/threagile " +
 		"-verbose " +
-		"-model " + filepath.Join(appFolder, "work", outputFile) + " " +
-		"-output " + filepath.Join(appFolder, "work"))
+		"-model " + filepath.Join(*context.appFolder, "work", outputFile) + " " +
+		"-output " + filepath.Join(*context.appFolder, "work"))
 	fmt.Println()
 	fmt.Println("If you want to run Threagile as a server (REST API) on some port (here 8080): ")
 	fmt.Println(" docker run --rm -it " +
@@ -4000,13 +4089,13 @@ func printExamples() {
 	fmt.Println(" docker run --rm -it threagile/threagile -list-types")
 	fmt.Println()
 	fmt.Println("If you want to use some nice editing help (syntax validation, autocompletion, and live templates) in your favourite IDE: ")
-	fmt.Println(" docker run --rm -it -v \"$(pwd)\":" + filepath.Join(appFolder, "work") + " threagile/threagile -create-editing-support -output " + filepath.Join(appFolder, "work"))
+	fmt.Println(" docker run --rm -it -v \"$(pwd)\":" + filepath.Join(*context.appFolder, "work") + " threagile/threagile -create-editing-support -output " + filepath.Join(*context.appFolder, "work"))
 	fmt.Println()
 	fmt.Println("If you want to list all available model macros (which are macros capable of reading a model yaml file, asking you questions in a wizard-style and then update the model yaml file accordingly): ")
 	fmt.Println(" docker run --rm -it threagile/threagile -list-model-macros")
 	fmt.Println()
 	fmt.Println("If you want to execute a certain model macro on the model yaml file (here the macro add-build-pipeline): ")
-	fmt.Println(" docker run --rm -it -v \"$(pwd)\":" + filepath.Join(appFolder, "work") + " threagile/threagile -model " + filepath.Join(appFolder, "work", outputFile) + " -output " + filepath.Join(appFolder, "work") + " -execute-model-macro add-build-pipeline")
+	fmt.Println(" docker run --rm -it -v \"$(pwd)\":" + filepath.Join(*context.appFolder, "work") + " threagile/threagile -model " + filepath.Join(*context.appFolder, "work", outputFile) + " -output " + filepath.Join(*context.appFolder, "work") + " -execute-model-macro add-build-pipeline")
 }
 
 func printTypes(title string, value interface{}) {
@@ -4046,1028 +4135,1069 @@ func copyFile(src, dst string) (int64, error) {
 	return nBytes, err
 }
 
-func parseModel(inputFilename string) {
-	if *verbose {
-		fmt.Println("Parsing model:", inputFilename)
+func (context *Context) goTestParseModel() error {
+	flatModelFile := filepath.Join("test", "all.yaml")
+	flatModel := *new(model.ModelInput).Defaults()
+	flatLoadError := flatModel.Load(flatModelFile)
+	if flatLoadError != nil {
+		return fmt.Errorf("unable to parse model yaml %q: %v", flatModelFile, flatLoadError)
 	}
-	modelYaml, err := os.ReadFile(inputFilename)
-	if err == nil {
-		modelInput = model.ModelInput{}
-		err = yaml.Unmarshal(modelYaml, &modelInput)
-		checkErr(err)
-		//fmt.Println(modelInput)
 
-		var businessCriticality model.Criticality
-		switch modelInput.BusinessCriticality {
-		case model.Archive.String():
-			businessCriticality = model.Archive
-		case model.Operational.String():
-			businessCriticality = model.Operational
-		case model.Important.String():
-			businessCriticality = model.Important
-		case model.Critical.String():
-			businessCriticality = model.Critical
-		case model.MissionCritical.String():
-			businessCriticality = model.MissionCritical
+	sort.Slice(flatModel.TagsAvailable, func(i, j int) bool {
+		return flatModel.TagsAvailable[i] < flatModel.TagsAvailable[j]
+	})
+	flatModel.TagsAvailable = []string{strings.Join(flatModel.TagsAvailable, ", ")}
+
+	flatData, flatMarshalError := json.MarshalIndent(flatModel, "", "  ")
+	if flatMarshalError != nil {
+		return fmt.Errorf("unable to print model yaml %q: %v", flatModelFile, flatMarshalError)
+	}
+
+	splitModelFile := filepath.Join("test", "main.yaml")
+	splitModel := *new(model.ModelInput).Defaults()
+	splitLoadError := splitModel.Load(splitModelFile)
+	if splitLoadError != nil {
+		return fmt.Errorf("unable to parse model yaml %q: %v", splitModelFile, splitLoadError)
+	}
+
+	sort.Slice(splitModel.TagsAvailable, func(i, j int) bool {
+		return splitModel.TagsAvailable[i] < splitModel.TagsAvailable[j]
+	})
+	splitModel.TagsAvailable = []string{strings.Join(splitModel.TagsAvailable, ", ")}
+
+	splitModel.Includes = flatModel.Includes
+	splitData, splitMarshalError := json.MarshalIndent(splitModel, "", "  ")
+	if splitMarshalError != nil {
+		return fmt.Errorf("unable to print model yaml %q: %v", splitModelFile, splitMarshalError)
+	}
+
+	if string(flatData) != string(splitData) {
+		return fmt.Errorf("parsing split model files is broken; diff: %v", textdiff.Unified(flatModelFile, splitModelFile, string(flatData), string(splitData)))
+	}
+
+	return nil
+}
+
+func (context *Context) parseModel() {
+	if *context.verbose {
+		fmt.Println("Parsing model:", *context.modelFilename)
+	}
+
+	context.modelInput = *new(model.ModelInput).Defaults()
+	loadError := context.modelInput.Load(*context.modelFilename)
+	if loadError != nil {
+		log.Fatal("Unable to parse model yaml: ", loadError)
+	}
+
+	data, _ := json.MarshalIndent(context.modelInput, "", "  ")
+	fmt.Printf("%v\n", string(data))
+
+	var businessCriticality model.Criticality
+	switch context.modelInput.BusinessCriticality {
+	case model.Archive.String():
+		businessCriticality = model.Archive
+	case model.Operational.String():
+		businessCriticality = model.Operational
+	case model.Important.String():
+		businessCriticality = model.Important
+	case model.Critical.String():
+		businessCriticality = model.Critical
+	case model.MissionCritical.String():
+		businessCriticality = model.MissionCritical
+	default:
+		panic(errors.New("unknown 'business_criticality' value of application: " + context.modelInput.BusinessCriticality))
+	}
+
+	reportDate := time.Now()
+	if len(context.modelInput.Date) > 0 {
+		var parseError error
+		reportDate, parseError = time.Parse("2006-01-02", context.modelInput.Date)
+		if parseError != nil {
+			panic(errors.New("unable to parse 'date' value of model file"))
+		}
+	}
+
+	model.ParsedModelRoot = model.ParsedModel{
+		Author:                         context.modelInput.Author,
+		Title:                          context.modelInput.Title,
+		Date:                           reportDate,
+		ManagementSummaryComment:       context.modelInput.ManagementSummaryComment,
+		BusinessCriticality:            businessCriticality,
+		BusinessOverview:               removePathElementsFromImageFiles(context.modelInput.BusinessOverview),
+		TechnicalOverview:              removePathElementsFromImageFiles(context.modelInput.TechnicalOverview),
+		Questions:                      context.modelInput.Questions,
+		AbuseCases:                     context.modelInput.AbuseCases,
+		SecurityRequirements:           context.modelInput.SecurityRequirements,
+		TagsAvailable:                  lowerCaseAndTrim(context.modelInput.TagsAvailable),
+		DiagramTweakNodesep:            context.modelInput.DiagramTweakNodesep,
+		DiagramTweakRanksep:            context.modelInput.DiagramTweakRanksep,
+		DiagramTweakEdgeLayout:         context.modelInput.DiagramTweakEdgeLayout,
+		DiagramTweakSuppressEdgeLabels: context.modelInput.DiagramTweakSuppressEdgeLabels,
+		DiagramTweakLayoutLeftToRight:  context.modelInput.DiagramTweakLayoutLeftToRight,
+		DiagramTweakInvisibleConnectionsBetweenAssets: context.modelInput.DiagramTweakInvisibleConnectionsBetweenAssets,
+		DiagramTweakSameRankAssets:                    context.modelInput.DiagramTweakSameRankAssets,
+	}
+	if model.ParsedModelRoot.DiagramTweakNodesep == 0 {
+		model.ParsedModelRoot.DiagramTweakNodesep = 2
+	}
+	if model.ParsedModelRoot.DiagramTweakRanksep == 0 {
+		model.ParsedModelRoot.DiagramTweakRanksep = 2
+	}
+
+	// Data Assets ===============================================================================
+	model.ParsedModelRoot.DataAssets = make(map[string]model.DataAsset)
+	for title, asset := range context.modelInput.DataAssets {
+		id := fmt.Sprintf("%v", asset.ID)
+
+		var usage model.Usage
+		switch asset.Usage {
+		case model.Business.String():
+			usage = model.Business
+		case model.DevOps.String():
+			usage = model.DevOps
 		default:
-			panic(errors.New("unknown 'business_criticality' value of application: " + modelInput.BusinessCriticality))
+			panic(errors.New("unknown 'usage' value of data asset '" + title + "': " + asset.Usage))
 		}
 
-		reportDate := time.Now()
-		if len(modelInput.Date) > 0 {
-			reportDate, err = time.Parse("2006-01-02", modelInput.Date)
-			if err != nil {
-				panic(errors.New("unable to parse 'date' value of model file"))
-			}
+		var quantity model.Quantity
+		switch asset.Quantity {
+		case model.VeryFew.String():
+			quantity = model.VeryFew
+		case model.Few.String():
+			quantity = model.Few
+		case model.Many.String():
+			quantity = model.Many
+		case model.VeryMany.String():
+			quantity = model.VeryMany
+		default:
+			panic(errors.New("unknown 'quantity' value of data asset '" + title + "': " + asset.Quantity))
 		}
 
-		model.ParsedModelRoot = model.ParsedModel{
-			Author:                         modelInput.Author,
-			Title:                          modelInput.Title,
-			Date:                           reportDate,
-			ManagementSummaryComment:       modelInput.ManagementSummaryComment,
-			BusinessCriticality:            businessCriticality,
-			BusinessOverview:               removePathElementsFromImageFiles(modelInput.BusinessOverview),
-			TechnicalOverview:              removePathElementsFromImageFiles(modelInput.TechnicalOverview),
-			Questions:                      modelInput.Questions,
-			AbuseCases:                     modelInput.AbuseCases,
-			SecurityRequirements:           modelInput.SecurityRequirements,
-			TagsAvailable:                  lowerCaseAndTrim(modelInput.TagsAvailable),
-			DiagramTweakNodesep:            modelInput.DiagramTweakNodesep,
-			DiagramTweakRanksep:            modelInput.DiagramTweakRanksep,
-			DiagramTweakEdgeLayout:         modelInput.DiagramTweakEdgeLayout,
-			DiagramTweakSuppressEdgeLabels: modelInput.DiagramTweakSuppressEdgeLabels,
-			DiagramTweakLayoutLeftToRight:  modelInput.DiagramTweakLayoutLeftToRight,
-			DiagramTweakInvisibleConnectionsBetweenAssets: modelInput.DiagramTweakInvisibleConnectionsBetweenAssets,
-			DiagramTweakSameRankAssets:                    modelInput.DiagramTweakSameRankAssets,
-		}
-		if model.ParsedModelRoot.DiagramTweakNodesep == 0 {
-			model.ParsedModelRoot.DiagramTweakNodesep = 2
-		}
-		if model.ParsedModelRoot.DiagramTweakRanksep == 0 {
-			model.ParsedModelRoot.DiagramTweakRanksep = 2
+		var confidentiality model.Confidentiality
+		switch asset.Confidentiality {
+		case model.Public.String():
+			confidentiality = model.Public
+		case model.Internal.String():
+			confidentiality = model.Internal
+		case model.Restricted.String():
+			confidentiality = model.Restricted
+		case model.Confidential.String():
+			confidentiality = model.Confidential
+		case model.StrictlyConfidential.String():
+			confidentiality = model.StrictlyConfidential
+		default:
+			panic(errors.New("unknown 'confidentiality' value of data asset '" + title + "': " + asset.Confidentiality))
 		}
 
-		// Data Assets ===============================================================================
-		model.ParsedModelRoot.DataAssets = make(map[string]model.DataAsset)
-		for title, asset := range modelInput.DataAssets {
-			id := fmt.Sprintf("%v", asset.ID)
+		var integrity model.Criticality
+		switch asset.Integrity {
+		case model.Archive.String():
+			integrity = model.Archive
+		case model.Operational.String():
+			integrity = model.Operational
+		case model.Important.String():
+			integrity = model.Important
+		case model.Critical.String():
+			integrity = model.Critical
+		case model.MissionCritical.String():
+			integrity = model.MissionCritical
+		default:
+			panic(errors.New("unknown 'integrity' value of data asset '" + title + "': " + asset.Integrity))
+		}
 
-			var usage model.Usage
-			switch asset.Usage {
-			case model.Business.String():
-				usage = model.Business
-			case model.DevOps.String():
-				usage = model.DevOps
-			default:
-				panic(errors.New("unknown 'usage' value of data asset '" + title + "': " + asset.Usage))
-			}
+		var availability model.Criticality
+		switch asset.Availability {
+		case model.Archive.String():
+			availability = model.Archive
+		case model.Operational.String():
+			availability = model.Operational
+		case model.Important.String():
+			availability = model.Important
+		case model.Critical.String():
+			availability = model.Critical
+		case model.MissionCritical.String():
+			availability = model.MissionCritical
+		default:
+			panic(errors.New("unknown 'availability' value of data asset '" + title + "': " + asset.Availability))
+		}
 
-			var quantity model.Quantity
-			switch asset.Quantity {
-			case model.VeryFew.String():
-				quantity = model.VeryFew
-			case model.Few.String():
-				quantity = model.Few
-			case model.Many.String():
-				quantity = model.Many
-			case model.VeryMany.String():
-				quantity = model.VeryMany
-			default:
-				panic(errors.New("unknown 'quantity' value of data asset '" + title + "': " + asset.Quantity))
-			}
+		context.checkIdSyntax(id)
+		if _, exists := model.ParsedModelRoot.DataAssets[id]; exists {
+			panic(errors.New("duplicate id used: " + id))
+		}
+		model.ParsedModelRoot.DataAssets[id] = model.DataAsset{
+			Id:                     id,
+			Title:                  title,
+			Usage:                  usage,
+			Description:            withDefault(fmt.Sprintf("%v", asset.Description), title),
+			Quantity:               quantity,
+			Tags:                   checkTags(lowerCaseAndTrim(asset.Tags), "data asset '"+title+"'"),
+			Origin:                 fmt.Sprintf("%v", asset.Origin),
+			Owner:                  fmt.Sprintf("%v", asset.Owner),
+			Confidentiality:        confidentiality,
+			Integrity:              integrity,
+			Availability:           availability,
+			JustificationCiaRating: fmt.Sprintf("%v", asset.JustificationCiaRating),
+		}
+	}
 
-			var confidentiality model.Confidentiality
-			switch asset.Confidentiality {
-			case model.Public.String():
-				confidentiality = model.Public
-			case model.Internal.String():
-				confidentiality = model.Internal
-			case model.Restricted.String():
-				confidentiality = model.Restricted
-			case model.Confidential.String():
-				confidentiality = model.Confidential
-			case model.StrictlyConfidential.String():
-				confidentiality = model.StrictlyConfidential
-			default:
-				panic(errors.New("unknown 'confidentiality' value of data asset '" + title + "': " + asset.Confidentiality))
-			}
+	// Technical Assets ===============================================================================
+	model.ParsedModelRoot.TechnicalAssets = make(map[string]model.TechnicalAsset)
+	for title, asset := range context.modelInput.TechnicalAssets {
+		id := fmt.Sprintf("%v", asset.ID)
 
-			var integrity model.Criticality
-			switch asset.Integrity {
-			case model.Archive.String():
-				integrity = model.Archive
-			case model.Operational.String():
-				integrity = model.Operational
-			case model.Important.String():
-				integrity = model.Important
-			case model.Critical.String():
-				integrity = model.Critical
-			case model.MissionCritical.String():
-				integrity = model.MissionCritical
-			default:
-				panic(errors.New("unknown 'integrity' value of data asset '" + title + "': " + asset.Integrity))
-			}
+		var usage model.Usage
+		switch asset.Usage {
+		case model.Business.String():
+			usage = model.Business
+		case model.DevOps.String():
+			usage = model.DevOps
+		default:
+			panic(errors.New("unknown 'usage' value of technical asset '" + title + "': " + fmt.Sprintf("%v", asset.Usage)))
+		}
 
-			var availability model.Criticality
-			switch asset.Availability {
-			case model.Archive.String():
-				availability = model.Archive
-			case model.Operational.String():
-				availability = model.Operational
-			case model.Important.String():
-				availability = model.Important
-			case model.Critical.String():
-				availability = model.Critical
-			case model.MissionCritical.String():
-				availability = model.MissionCritical
-			default:
-				panic(errors.New("unknown 'availability' value of data asset '" + title + "': " + asset.Availability))
-			}
-
-			checkIdSyntax(id)
-			if _, exists := model.ParsedModelRoot.DataAssets[id]; exists {
-				panic(errors.New("duplicate id used: " + id))
-			}
-			model.ParsedModelRoot.DataAssets[id] = model.DataAsset{
-				Id:                     id,
-				Title:                  title,
-				Usage:                  usage,
-				Description:            withDefault(fmt.Sprintf("%v", asset.Description), title),
-				Quantity:               quantity,
-				Tags:                   checkTags(lowerCaseAndTrim(asset.Tags), "data asset '"+title+"'"),
-				Origin:                 fmt.Sprintf("%v", asset.Origin),
-				Owner:                  fmt.Sprintf("%v", asset.Owner),
-				Confidentiality:        confidentiality,
-				Integrity:              integrity,
-				Availability:           availability,
-				JustificationCiaRating: fmt.Sprintf("%v", asset.JustificationCiaRating),
+		var dataAssetsProcessed = make([]string, 0)
+		if asset.DataAssetsProcessed != nil {
+			dataAssetsProcessed = make([]string, len(asset.DataAssetsProcessed))
+			for i, parsedProcessedAsset := range asset.DataAssetsProcessed {
+				referencedAsset := fmt.Sprintf("%v", parsedProcessedAsset)
+				checkDataAssetTargetExists(referencedAsset, "technical asset '"+title+"'")
+				dataAssetsProcessed[i] = referencedAsset
 			}
 		}
 
-		// Technical Assets ===============================================================================
-		model.ParsedModelRoot.TechnicalAssets = make(map[string]model.TechnicalAsset)
-		for title, asset := range modelInput.TechnicalAssets {
-			id := fmt.Sprintf("%v", asset.ID)
-
-			var usage model.Usage
-			switch asset.Usage {
-			case model.Business.String():
-				usage = model.Business
-			case model.DevOps.String():
-				usage = model.DevOps
-			default:
-				panic(errors.New("unknown 'usage' value of technical asset '" + title + "': " + fmt.Sprintf("%v", asset.Usage)))
-			}
-
-			var dataAssetsProcessed = make([]string, 0)
-			if asset.DataAssetsProcessed != nil {
-				dataAssetsProcessed = make([]string, len(asset.DataAssetsProcessed))
-				for i, parsedProcessedAsset := range asset.DataAssetsProcessed {
-					referencedAsset := fmt.Sprintf("%v", parsedProcessedAsset)
-					checkDataAssetTargetExists(referencedAsset, "technical asset '"+title+"'")
-					dataAssetsProcessed[i] = referencedAsset
-				}
-			}
-
-			var dataAssetsStored = make([]string, 0)
-			if asset.DataAssetsStored != nil {
-				dataAssetsStored = make([]string, len(asset.DataAssetsStored))
-				for i, parsedStoredAssets := range asset.DataAssetsStored {
-					referencedAsset := fmt.Sprintf("%v", parsedStoredAssets)
-					checkDataAssetTargetExists(referencedAsset, "technical asset '"+title+"'")
-					dataAssetsStored[i] = referencedAsset
-				}
-			}
-
-			var technicalAssetType model.TechnicalAssetType
-			switch asset.Type {
-			case model.ExternalEntity.String():
-				technicalAssetType = model.ExternalEntity
-			case model.Process.String():
-				technicalAssetType = model.Process
-			case model.Datastore.String():
-				technicalAssetType = model.Datastore
-			default:
-				panic(errors.New("unknown 'type' value of technical asset '" + title + "': " + fmt.Sprintf("%v", asset.Type)))
-			}
-
-			var technicalAssetSize model.TechnicalAssetSize
-			switch asset.Size {
-			case model.Service.String():
-				technicalAssetSize = model.Service
-			case model.System.String():
-				technicalAssetSize = model.System
-			case model.Application.String():
-				technicalAssetSize = model.Application
-			case model.Component.String():
-				technicalAssetSize = model.Component
-			default:
-				panic(errors.New("unknown 'size' value of technical asset '" + title + "': " + fmt.Sprintf("%v", asset.Size)))
-			}
-
-			var technicalAssetTechnology model.TechnicalAssetTechnology
-			switch asset.Technology {
-			case model.UnknownTechnology.String():
-				technicalAssetTechnology = model.UnknownTechnology
-			case model.ClientSystem.String():
-				technicalAssetTechnology = model.ClientSystem
-			case model.Browser.String():
-				technicalAssetTechnology = model.Browser
-			case model.Desktop.String():
-				technicalAssetTechnology = model.Desktop
-			case model.MobileApp.String():
-				technicalAssetTechnology = model.MobileApp
-			case model.DevOpsClient.String():
-				technicalAssetTechnology = model.DevOpsClient
-			case model.WebServer.String():
-				technicalAssetTechnology = model.WebServer
-			case model.WebApplication.String():
-				technicalAssetTechnology = model.WebApplication
-			case model.ApplicationServer.String():
-				technicalAssetTechnology = model.ApplicationServer
-			case model.Database.String():
-				technicalAssetTechnology = model.Database
-			case model.FileServer.String():
-				technicalAssetTechnology = model.FileServer
-			case model.LocalFileSystem.String():
-				technicalAssetTechnology = model.LocalFileSystem
-			case model.ERP.String():
-				technicalAssetTechnology = model.ERP
-			case model.CMS.String():
-				technicalAssetTechnology = model.CMS
-			case model.WebServiceREST.String():
-				technicalAssetTechnology = model.WebServiceREST
-			case model.WebServiceSOAP.String():
-				technicalAssetTechnology = model.WebServiceSOAP
-			case model.EJB.String():
-				technicalAssetTechnology = model.EJB
-			case model.SearchIndex.String():
-				technicalAssetTechnology = model.SearchIndex
-			case model.SearchEngine.String():
-				technicalAssetTechnology = model.SearchEngine
-			case model.ServiceRegistry.String():
-				technicalAssetTechnology = model.ServiceRegistry
-			case model.ReverseProxy.String():
-				technicalAssetTechnology = model.ReverseProxy
-			case model.LoadBalancer.String():
-				technicalAssetTechnology = model.LoadBalancer
-			case model.BuildPipeline.String():
-				technicalAssetTechnology = model.BuildPipeline
-			case model.SourcecodeRepository.String():
-				technicalAssetTechnology = model.SourcecodeRepository
-			case model.ArtifactRegistry.String():
-				technicalAssetTechnology = model.ArtifactRegistry
-			case model.CodeInspectionPlatform.String():
-				technicalAssetTechnology = model.CodeInspectionPlatform
-			case model.Monitoring.String():
-				technicalAssetTechnology = model.Monitoring
-			case model.LDAPServer.String():
-				technicalAssetTechnology = model.LDAPServer
-			case model.ContainerPlatform.String():
-				technicalAssetTechnology = model.ContainerPlatform
-			case model.BatchProcessing.String():
-				technicalAssetTechnology = model.BatchProcessing
-			case model.EventListener.String():
-				technicalAssetTechnology = model.EventListener
-			case model.IdentityProvider.String():
-				technicalAssetTechnology = model.IdentityProvider
-			case model.IdentityStoreLDAP.String():
-				technicalAssetTechnology = model.IdentityStoreLDAP
-			case model.IdentityStoreDatabase.String():
-				technicalAssetTechnology = model.IdentityStoreDatabase
-			case model.Tool.String():
-				technicalAssetTechnology = model.Tool
-			case model.CLI.String():
-				technicalAssetTechnology = model.CLI
-			case model.Task.String():
-				technicalAssetTechnology = model.Task
-			case model.Function.String():
-				technicalAssetTechnology = model.Function
-			case model.Gateway.String():
-				technicalAssetTechnology = model.Gateway
-			case model.IoTDevice.String():
-				technicalAssetTechnology = model.IoTDevice
-			case model.MessageQueue.String():
-				technicalAssetTechnology = model.MessageQueue
-			case model.StreamProcessing.String():
-				technicalAssetTechnology = model.StreamProcessing
-			case model.ServiceMesh.String():
-				technicalAssetTechnology = model.ServiceMesh
-			case model.DataLake.String():
-				technicalAssetTechnology = model.DataLake
-			case model.BigDataPlatform.String():
-				technicalAssetTechnology = model.BigDataPlatform
-			case model.ReportEngine.String():
-				technicalAssetTechnology = model.ReportEngine
-			case model.AI.String():
-				technicalAssetTechnology = model.AI
-			case model.MailServer.String():
-				technicalAssetTechnology = model.MailServer
-			case model.Vault.String():
-				technicalAssetTechnology = model.Vault
-			case model.HSM.String():
-				technicalAssetTechnology = model.HSM
-			case model.WAF.String():
-				technicalAssetTechnology = model.WAF
-			case model.IDS.String():
-				technicalAssetTechnology = model.IDS
-			case model.IPS.String():
-				technicalAssetTechnology = model.IPS
-			case model.Scheduler.String():
-				technicalAssetTechnology = model.Scheduler
-			case model.Mainframe.String():
-				technicalAssetTechnology = model.Mainframe
-			case model.BlockStorage.String():
-				technicalAssetTechnology = model.BlockStorage
-			case model.Library.String():
-				technicalAssetTechnology = model.Library
-			default:
-				panic(errors.New("unknown 'technology' value of technical asset '" + title + "': " + fmt.Sprintf("%v", asset.Technology)))
-			}
-
-			var encryption model.EncryptionStyle
-			switch asset.Encryption {
-			case model.NoneEncryption.String():
-				encryption = model.NoneEncryption
-			case model.Transparent.String():
-				encryption = model.Transparent
-			case model.DataWithSymmetricSharedKey.String():
-				encryption = model.DataWithSymmetricSharedKey
-			case model.DataWithAsymmetricSharedKey.String():
-				encryption = model.DataWithAsymmetricSharedKey
-			case model.DataWithEndUserIndividualKey.String():
-				encryption = model.DataWithEndUserIndividualKey
-			default:
-				panic(errors.New("unknown 'encryption' value of technical asset '" + title + "': " + fmt.Sprintf("%v", asset.Encryption)))
-			}
-
-			var technicalAssetMachine model.TechnicalAssetMachine
-			switch asset.Machine {
-			case model.Physical.String():
-				technicalAssetMachine = model.Physical
-			case model.Virtual.String():
-				technicalAssetMachine = model.Virtual
-			case model.Container.String():
-				technicalAssetMachine = model.Container
-			case model.Serverless.String():
-				technicalAssetMachine = model.Serverless
-			default:
-				panic(errors.New("unknown 'machine' value of technical asset '" + title + "': " + fmt.Sprintf("%v", asset.Machine)))
-			}
-
-			var confidentiality model.Confidentiality
-			switch asset.Confidentiality {
-			case model.Public.String():
-				confidentiality = model.Public
-			case model.Internal.String():
-				confidentiality = model.Internal
-			case model.Restricted.String():
-				confidentiality = model.Restricted
-			case model.Confidential.String():
-				confidentiality = model.Confidential
-			case model.StrictlyConfidential.String():
-				confidentiality = model.StrictlyConfidential
-			default:
-				panic(errors.New("unknown 'confidentiality' value of technical asset '" + title + "': " + fmt.Sprintf("%v", asset.Confidentiality)))
-			}
-
-			var integrity model.Criticality
-			switch asset.Integrity {
-			case model.Archive.String():
-				integrity = model.Archive
-			case model.Operational.String():
-				integrity = model.Operational
-			case model.Important.String():
-				integrity = model.Important
-			case model.Critical.String():
-				integrity = model.Critical
-			case model.MissionCritical.String():
-				integrity = model.MissionCritical
-			default:
-				panic(errors.New("unknown 'integrity' value of technical asset '" + title + "': " + fmt.Sprintf("%v", asset.Integrity)))
-			}
-
-			var availability model.Criticality
-			switch asset.Availability {
-			case model.Archive.String():
-				availability = model.Archive
-			case model.Operational.String():
-				availability = model.Operational
-			case model.Important.String():
-				availability = model.Important
-			case model.Critical.String():
-				availability = model.Critical
-			case model.MissionCritical.String():
-				availability = model.MissionCritical
-			default:
-				panic(errors.New("unknown 'availability' value of technical asset '" + title + "': " + fmt.Sprintf("%v", asset.Availability)))
-			}
-
-			dataFormatsAccepted := make([]model.DataFormat, 0)
-			if asset.DataFormatsAccepted != nil {
-				for _, dataFormatName := range asset.DataFormatsAccepted {
-					switch dataFormatName {
-					case model.JSON.String():
-						dataFormatsAccepted = append(dataFormatsAccepted, model.JSON)
-					case model.XML.String():
-						dataFormatsAccepted = append(dataFormatsAccepted, model.XML)
-					case model.Serialization.String():
-						dataFormatsAccepted = append(dataFormatsAccepted, model.Serialization)
-					case model.File.String():
-						dataFormatsAccepted = append(dataFormatsAccepted, model.File)
-					case model.CSV.String():
-						dataFormatsAccepted = append(dataFormatsAccepted, model.CSV)
-					default:
-						panic(errors.New("unknown 'data_formats_accepted' value of technical asset '" + title + "': " + fmt.Sprintf("%v", dataFormatName)))
-					}
-				}
-			}
-
-			communicationLinks := make([]model.CommunicationLink, 0)
-			if asset.CommunicationLinks != nil {
-				for commLinkTitle, commLink := range asset.CommunicationLinks {
-					constraint := true
-					weight := 1
-					var protocol model.Protocol
-					var authentication model.Authentication
-					var authorization model.Authorization
-					var usage model.Usage
-					var dataAssetsSent []string
-					var dataAssetsReceived []string
-
-					switch commLink.Authentication {
-					case model.NoneAuthentication.String():
-						authentication = model.NoneAuthentication
-					case model.Credentials.String():
-						authentication = model.Credentials
-					case model.SessionId.String():
-						authentication = model.SessionId
-					case model.Token.String():
-						authentication = model.Token
-					case model.ClientCertificate.String():
-						authentication = model.ClientCertificate
-					case model.TwoFactor.String():
-						authentication = model.TwoFactor
-					case model.Externalized.String():
-						authentication = model.Externalized
-					default:
-						panic(errors.New("unknown 'authentication' value of technical asset '" + title + "' communication link '" + commLinkTitle + "': " + fmt.Sprintf("%v", commLink.Authentication)))
-					}
-
-					switch commLink.Authorization {
-					case model.NoneAuthorization.String():
-						authorization = model.NoneAuthorization
-					case model.TechnicalUser.String():
-						authorization = model.TechnicalUser
-					case model.EndUserIdentityPropagation.String():
-						authorization = model.EndUserIdentityPropagation
-					default:
-						panic(errors.New("unknown 'authorization' value of technical asset '" + title + "' communication link '" + commLinkTitle + "': " + fmt.Sprintf("%v", commLink.Authorization)))
-					}
-
-					switch commLink.Usage {
-					case model.Business.String():
-						usage = model.Business
-					case model.DevOps.String():
-						usage = model.DevOps
-					default:
-						panic(errors.New("unknown 'usage' value of technical asset '" + title + "' communication link '" + commLinkTitle + "': " + fmt.Sprintf("%v", commLink.Usage)))
-					}
-
-					switch commLink.Protocol {
-					case model.UnknownProtocol.String():
-						protocol = model.UnknownProtocol
-					case model.HTTP.String():
-						protocol = model.HTTP
-					case model.HTTPS.String():
-						protocol = model.HTTPS
-					case model.WS.String():
-						protocol = model.WS
-					case model.WSS.String():
-						protocol = model.WSS
-					case model.MQTT.String():
-						protocol = model.MQTT
-					case model.JDBC.String():
-						protocol = model.JDBC
-					case model.JdbcEncrypted.String():
-						protocol = model.JdbcEncrypted
-					case model.ODBC.String():
-						protocol = model.ODBC
-					case model.OdbcEncrypted.String():
-						protocol = model.OdbcEncrypted
-					case model.SqlAccessProtocol.String():
-						protocol = model.SqlAccessProtocol
-					case model.SqlAccessProtocolEncrypted.String():
-						protocol = model.SqlAccessProtocolEncrypted
-					case model.NosqlAccessProtocol.String():
-						protocol = model.NosqlAccessProtocol
-					case model.NosqlAccessProtocolEncrypted.String():
-						protocol = model.NosqlAccessProtocolEncrypted
-					case model.TEXT.String():
-						protocol = model.TEXT
-					case model.TextEncrypted.String():
-						protocol = model.TextEncrypted
-					case model.BINARY.String():
-						protocol = model.BINARY
-					case model.BinaryEncrypted.String():
-						protocol = model.BinaryEncrypted
-					case model.SSH.String():
-						protocol = model.SSH
-					case model.SshTunnel.String():
-						protocol = model.SshTunnel
-					case model.SMTP.String():
-						protocol = model.SMTP
-					case model.SmtpEncrypted.String():
-						protocol = model.SmtpEncrypted
-					case model.POP3.String():
-						protocol = model.POP3
-					case model.Pop3Encrypted.String():
-						protocol = model.Pop3Encrypted
-					case model.IMAP.String():
-						protocol = model.IMAP
-					case model.ImapEncrypted.String():
-						protocol = model.ImapEncrypted
-					case model.FTP.String():
-						protocol = model.FTP
-					case model.FTPS.String():
-						protocol = model.FTPS
-					case model.SFTP.String():
-						protocol = model.SFTP
-					case model.SCP.String():
-						protocol = model.SCP
-					case model.LDAP.String():
-						protocol = model.LDAP
-					case model.LDAPS.String():
-						protocol = model.LDAPS
-					case model.JMS.String():
-						protocol = model.JMS
-					case model.NFS.String():
-						protocol = model.NFS
-					case model.SMB.String():
-						protocol = model.SMB
-					case model.SmbEncrypted.String():
-						protocol = model.SmbEncrypted
-					case model.LocalFileAccess.String():
-						protocol = model.LocalFileAccess
-					case model.NRPE.String():
-						protocol = model.NRPE
-					case model.XMPP.String():
-						protocol = model.XMPP
-					case model.IIOP.String():
-						protocol = model.IIOP
-					case model.IiopEncrypted.String():
-						protocol = model.IiopEncrypted
-					case model.JRMP.String():
-						protocol = model.JRMP
-					case model.JrmpEncrypted.String():
-						protocol = model.JrmpEncrypted
-					case model.InProcessLibraryCall.String():
-						protocol = model.InProcessLibraryCall
-					case model.ContainerSpawning.String():
-						protocol = model.ContainerSpawning
-					default:
-						panic(errors.New("unknown 'protocol' of technical asset '" + title + "' communication link '" + commLinkTitle + "': " + fmt.Sprintf("%v", commLink.Protocol)))
-					}
-
-					if commLink.DataAssetsSent != nil {
-						for _, dataAssetSent := range commLink.DataAssetsSent {
-							referencedAsset := fmt.Sprintf("%v", dataAssetSent)
-							checkDataAssetTargetExists(referencedAsset, "communication link '"+commLinkTitle+"' of technical asset '"+title+"'")
-							dataAssetsSent = append(dataAssetsSent, referencedAsset)
-						}
-					}
-
-					if commLink.DataAssetsReceived != nil {
-						for _, dataAssetReceived := range commLink.DataAssetsReceived {
-							referencedAsset := fmt.Sprintf("%v", dataAssetReceived)
-							checkDataAssetTargetExists(referencedAsset, "communication link '"+commLinkTitle+"' of technical asset '"+title+"'")
-							dataAssetsReceived = append(dataAssetsReceived, referencedAsset)
-						}
-					}
-
-					if commLink.DiagramTweakWeight > 0 {
-						weight = commLink.DiagramTweakWeight
-					}
-
-					constraint = !commLink.DiagramTweakConstraint
-
-					checkErr(err)
-
-					dataFlowTitle := fmt.Sprintf("%v", commLinkTitle)
-					commLink := model.CommunicationLink{
-						Id:                     createDataFlowId(id, dataFlowTitle),
-						SourceId:               id,
-						TargetId:               commLink.Target,
-						Title:                  dataFlowTitle,
-						Description:            withDefault(commLink.Description, dataFlowTitle),
-						Protocol:               protocol,
-						Authentication:         authentication,
-						Authorization:          authorization,
-						Usage:                  usage,
-						Tags:                   checkTags(lowerCaseAndTrim(commLink.Tags), "communication link '"+commLinkTitle+"' of technical asset '"+title+"'"),
-						VPN:                    commLink.VPN,
-						IpFiltered:             commLink.IpFiltered,
-						Readonly:               commLink.Readonly,
-						DataAssetsSent:         dataAssetsSent,
-						DataAssetsReceived:     dataAssetsReceived,
-						DiagramTweakWeight:     weight,
-						DiagramTweakConstraint: constraint,
-					}
-					communicationLinks = append(communicationLinks, commLink)
-					// track all comm links
-					model.CommunicationLinks[commLink.Id] = commLink
-					// keep track of map of *all* comm links mapped by target-id (to be able to look up "who is calling me" kind of things)
-					model.IncomingTechnicalCommunicationLinksMappedByTargetId[commLink.TargetId] = append(
-						model.IncomingTechnicalCommunicationLinksMappedByTargetId[commLink.TargetId], commLink)
-				}
-			}
-
-			checkIdSyntax(id)
-			if _, exists := model.ParsedModelRoot.TechnicalAssets[id]; exists {
-				panic(errors.New("duplicate id used: " + id))
-			}
-			model.ParsedModelRoot.TechnicalAssets[id] = model.TechnicalAsset{
-				Id:                      id,
-				Usage:                   usage,
-				Title:                   title, //fmt.Sprintf("%v", asset["title"]),
-				Description:             withDefault(fmt.Sprintf("%v", asset.Description), title),
-				Type:                    technicalAssetType,
-				Size:                    technicalAssetSize,
-				Technology:              technicalAssetTechnology,
-				Tags:                    checkTags(lowerCaseAndTrim(asset.Tags), "technical asset '"+title+"'"),
-				Machine:                 technicalAssetMachine,
-				Internet:                asset.Internet,
-				Encryption:              encryption,
-				MultiTenant:             asset.MultiTenant,
-				Redundant:               asset.Redundant,
-				CustomDevelopedParts:    asset.CustomDevelopedParts,
-				UsedAsClientByHuman:     asset.UsedAsClientByHuman,
-				OutOfScope:              asset.OutOfScope,
-				JustificationOutOfScope: fmt.Sprintf("%v", asset.JustificationOutOfScope),
-				Owner:                   fmt.Sprintf("%v", asset.Owner),
-				Confidentiality:         confidentiality,
-				Integrity:               integrity,
-				Availability:            availability,
-				JustificationCiaRating:  fmt.Sprintf("%v", asset.JustificationCiaRating),
-				DataAssetsProcessed:     dataAssetsProcessed,
-				DataAssetsStored:        dataAssetsStored,
-				DataFormatsAccepted:     dataFormatsAccepted,
-				CommunicationLinks:      communicationLinks,
-				DiagramTweakOrder:       asset.DiagramTweakOrder,
+		var dataAssetsStored = make([]string, 0)
+		if asset.DataAssetsStored != nil {
+			dataAssetsStored = make([]string, len(asset.DataAssetsStored))
+			for i, parsedStoredAssets := range asset.DataAssetsStored {
+				referencedAsset := fmt.Sprintf("%v", parsedStoredAssets)
+				checkDataAssetTargetExists(referencedAsset, "technical asset '"+title+"'")
+				dataAssetsStored[i] = referencedAsset
 			}
 		}
 
-		// Trust Boundaries ===============================================================================
-		checklistToAvoidAssetBeingModeledInMultipleTrustBoundaries := make(map[string]bool)
-		model.ParsedModelRoot.TrustBoundaries = make(map[string]model.TrustBoundary)
-		for title, boundary := range modelInput.TrustBoundaries {
-			id := fmt.Sprintf("%v", boundary.ID)
-
-			var technicalAssetsInside = make([]string, 0)
-			if boundary.TechnicalAssetsInside != nil {
-				parsedInsideAssets := boundary.TechnicalAssetsInside
-				technicalAssetsInside = make([]string, len(parsedInsideAssets))
-				for i, parsedInsideAsset := range parsedInsideAssets {
-					technicalAssetsInside[i] = fmt.Sprintf("%v", parsedInsideAsset)
-					_, found := model.ParsedModelRoot.TechnicalAssets[technicalAssetsInside[i]]
-					if !found {
-						panic(errors.New("missing referenced technical asset " + technicalAssetsInside[i] + " at trust boundary '" + title + "'"))
-					}
-					if checklistToAvoidAssetBeingModeledInMultipleTrustBoundaries[technicalAssetsInside[i]] == true {
-						panic(errors.New("referenced technical asset " + technicalAssetsInside[i] + " at trust boundary '" + title + "' is modeled in multiple trust boundaries"))
-					}
-					checklistToAvoidAssetBeingModeledInMultipleTrustBoundaries[technicalAssetsInside[i]] = true
-					//fmt.Println("asset "+technicalAssetsInside[i]+" at i="+strconv.Itoa(i))
-				}
-			}
-
-			var trustBoundariesNested = make([]string, 0)
-			if boundary.TrustBoundariesNested != nil {
-				parsedNestedBoundaries := boundary.TrustBoundariesNested
-				trustBoundariesNested = make([]string, len(parsedNestedBoundaries))
-				for i, parsedNestedBoundary := range parsedNestedBoundaries {
-					trustBoundariesNested[i] = fmt.Sprintf("%v", parsedNestedBoundary)
-				}
-			}
-
-			var trustBoundaryType model.TrustBoundaryType
-			switch boundary.Type {
-			case model.NetworkOnPrem.String():
-				trustBoundaryType = model.NetworkOnPrem
-			case model.NetworkDedicatedHoster.String():
-				trustBoundaryType = model.NetworkDedicatedHoster
-			case model.NetworkVirtualLAN.String():
-				trustBoundaryType = model.NetworkVirtualLAN
-			case model.NetworkCloudProvider.String():
-				trustBoundaryType = model.NetworkCloudProvider
-			case model.NetworkCloudSecurityGroup.String():
-				trustBoundaryType = model.NetworkCloudSecurityGroup
-			case model.NetworkPolicyNamespaceIsolation.String():
-				trustBoundaryType = model.NetworkPolicyNamespaceIsolation
-			case model.ExecutionEnvironment.String():
-				trustBoundaryType = model.ExecutionEnvironment
-			default:
-				panic(errors.New("unknown 'type' of trust boundary '" + title + "': " + fmt.Sprintf("%v", boundary.Type)))
-			}
-
-			trustBoundary := model.TrustBoundary{
-				Id:                    id,
-				Title:                 title, //fmt.Sprintf("%v", boundary["title"]),
-				Description:           withDefault(fmt.Sprintf("%v", boundary.Description), title),
-				Type:                  trustBoundaryType,
-				Tags:                  checkTags(lowerCaseAndTrim(boundary.Tags), "trust boundary '"+title+"'"),
-				TechnicalAssetsInside: technicalAssetsInside,
-				TrustBoundariesNested: trustBoundariesNested,
-			}
-			checkIdSyntax(id)
-			if _, exists := model.ParsedModelRoot.TrustBoundaries[id]; exists {
-				panic(errors.New("duplicate id used: " + id))
-			}
-			model.ParsedModelRoot.TrustBoundaries[id] = trustBoundary
-			for _, technicalAsset := range trustBoundary.TechnicalAssetsInside {
-				model.DirectContainingTrustBoundaryMappedByTechnicalAssetId[technicalAsset] = trustBoundary
-				//fmt.Println("Asset "+technicalAsset+" is directly in trust boundary "+trustBoundary.Id)
-			}
-		}
-		checkNestedTrustBoundariesExisting()
-
-		// Shared Runtime ===============================================================================
-		model.ParsedModelRoot.SharedRuntimes = make(map[string]model.SharedRuntime)
-		for title, runtime := range modelInput.SharedRuntimes {
-			id := fmt.Sprintf("%v", runtime.ID)
-
-			var technicalAssetsRunning = make([]string, 0)
-			if runtime.TechnicalAssetsRunning != nil {
-				parsedRunningAssets := runtime.TechnicalAssetsRunning
-				technicalAssetsRunning = make([]string, len(parsedRunningAssets))
-				for i, parsedRunningAsset := range parsedRunningAssets {
-					assetId := fmt.Sprintf("%v", parsedRunningAsset)
-					checkTechnicalAssetExists(assetId, "shared runtime '"+title+"'", false)
-					technicalAssetsRunning[i] = assetId
-				}
-			}
-
-			sharedRuntime := model.SharedRuntime{
-				Id:                     id,
-				Title:                  title, //fmt.Sprintf("%v", boundary["title"]),
-				Description:            withDefault(fmt.Sprintf("%v", runtime.Description), title),
-				Tags:                   checkTags(runtime.Tags, "shared runtime '"+title+"'"),
-				TechnicalAssetsRunning: technicalAssetsRunning,
-			}
-			checkIdSyntax(id)
-			if _, exists := model.ParsedModelRoot.SharedRuntimes[id]; exists {
-				panic(errors.New("duplicate id used: " + id))
-			}
-			model.ParsedModelRoot.SharedRuntimes[id] = sharedRuntime
-			for _, technicalAssetId := range sharedRuntime.TechnicalAssetsRunning {
-				model.DirectContainingSharedRuntimeMappedByTechnicalAssetId[technicalAssetId] = sharedRuntime
-			}
+		var technicalAssetType model.TechnicalAssetType
+		switch asset.Type {
+		case model.ExternalEntity.String():
+			technicalAssetType = model.ExternalEntity
+		case model.Process.String():
+			technicalAssetType = model.Process
+		case model.Datastore.String():
+			technicalAssetType = model.Datastore
+		default:
+			panic(errors.New("unknown 'type' value of technical asset '" + title + "': " + fmt.Sprintf("%v", asset.Type)))
 		}
 
-		// Individual Risk Categories (just used as regular risk categories) ===============================================================================
-		model.ParsedModelRoot.IndividualRiskCategories = make(map[string]model.RiskCategory)
-		for title, individualCategory := range modelInput.IndividualRiskCategories {
-			id := fmt.Sprintf("%v", individualCategory.ID)
+		var technicalAssetSize model.TechnicalAssetSize
+		switch asset.Size {
+		case model.Service.String():
+			technicalAssetSize = model.Service
+		case model.System.String():
+			technicalAssetSize = model.System
+		case model.Application.String():
+			technicalAssetSize = model.Application
+		case model.Component.String():
+			technicalAssetSize = model.Component
+		default:
+			panic(errors.New("unknown 'size' value of technical asset '" + title + "': " + fmt.Sprintf("%v", asset.Size)))
+		}
 
-			var function model.RiskFunction
-			switch individualCategory.Function {
-			case model.BusinessSide.String():
-				function = model.BusinessSide
-			case model.Architecture.String():
-				function = model.Architecture
-			case model.Development.String():
-				function = model.Development
-			case model.Operations.String():
-				function = model.Operations
-			default:
-				panic(errors.New("unknown 'function' value of individual risk category '" + title + "': " + fmt.Sprintf("%v", individualCategory.Function)))
-			}
+		var technicalAssetTechnology model.TechnicalAssetTechnology
+		switch asset.Technology {
+		case model.UnknownTechnology.String():
+			technicalAssetTechnology = model.UnknownTechnology
+		case model.ClientSystem.String():
+			technicalAssetTechnology = model.ClientSystem
+		case model.Browser.String():
+			technicalAssetTechnology = model.Browser
+		case model.Desktop.String():
+			technicalAssetTechnology = model.Desktop
+		case model.MobileApp.String():
+			technicalAssetTechnology = model.MobileApp
+		case model.DevOpsClient.String():
+			technicalAssetTechnology = model.DevOpsClient
+		case model.WebServer.String():
+			technicalAssetTechnology = model.WebServer
+		case model.WebApplication.String():
+			technicalAssetTechnology = model.WebApplication
+		case model.ApplicationServer.String():
+			technicalAssetTechnology = model.ApplicationServer
+		case model.Database.String():
+			technicalAssetTechnology = model.Database
+		case model.FileServer.String():
+			technicalAssetTechnology = model.FileServer
+		case model.LocalFileSystem.String():
+			technicalAssetTechnology = model.LocalFileSystem
+		case model.ERP.String():
+			technicalAssetTechnology = model.ERP
+		case model.CMS.String():
+			technicalAssetTechnology = model.CMS
+		case model.WebServiceREST.String():
+			technicalAssetTechnology = model.WebServiceREST
+		case model.WebServiceSOAP.String():
+			technicalAssetTechnology = model.WebServiceSOAP
+		case model.EJB.String():
+			technicalAssetTechnology = model.EJB
+		case model.SearchIndex.String():
+			technicalAssetTechnology = model.SearchIndex
+		case model.SearchEngine.String():
+			technicalAssetTechnology = model.SearchEngine
+		case model.ServiceRegistry.String():
+			technicalAssetTechnology = model.ServiceRegistry
+		case model.ReverseProxy.String():
+			technicalAssetTechnology = model.ReverseProxy
+		case model.LoadBalancer.String():
+			technicalAssetTechnology = model.LoadBalancer
+		case model.BuildPipeline.String():
+			technicalAssetTechnology = model.BuildPipeline
+		case model.SourcecodeRepository.String():
+			technicalAssetTechnology = model.SourcecodeRepository
+		case model.ArtifactRegistry.String():
+			technicalAssetTechnology = model.ArtifactRegistry
+		case model.CodeInspectionPlatform.String():
+			technicalAssetTechnology = model.CodeInspectionPlatform
+		case model.Monitoring.String():
+			technicalAssetTechnology = model.Monitoring
+		case model.LDAPServer.String():
+			technicalAssetTechnology = model.LDAPServer
+		case model.ContainerPlatform.String():
+			technicalAssetTechnology = model.ContainerPlatform
+		case model.BatchProcessing.String():
+			technicalAssetTechnology = model.BatchProcessing
+		case model.EventListener.String():
+			technicalAssetTechnology = model.EventListener
+		case model.IdentityProvider.String():
+			technicalAssetTechnology = model.IdentityProvider
+		case model.IdentityStoreLDAP.String():
+			technicalAssetTechnology = model.IdentityStoreLDAP
+		case model.IdentityStoreDatabase.String():
+			technicalAssetTechnology = model.IdentityStoreDatabase
+		case model.Tool.String():
+			technicalAssetTechnology = model.Tool
+		case model.CLI.String():
+			technicalAssetTechnology = model.CLI
+		case model.Task.String():
+			technicalAssetTechnology = model.Task
+		case model.Function.String():
+			technicalAssetTechnology = model.Function
+		case model.Gateway.String():
+			technicalAssetTechnology = model.Gateway
+		case model.IoTDevice.String():
+			technicalAssetTechnology = model.IoTDevice
+		case model.MessageQueue.String():
+			technicalAssetTechnology = model.MessageQueue
+		case model.StreamProcessing.String():
+			technicalAssetTechnology = model.StreamProcessing
+		case model.ServiceMesh.String():
+			technicalAssetTechnology = model.ServiceMesh
+		case model.DataLake.String():
+			technicalAssetTechnology = model.DataLake
+		case model.BigDataPlatform.String():
+			technicalAssetTechnology = model.BigDataPlatform
+		case model.ReportEngine.String():
+			technicalAssetTechnology = model.ReportEngine
+		case model.AI.String():
+			technicalAssetTechnology = model.AI
+		case model.MailServer.String():
+			technicalAssetTechnology = model.MailServer
+		case model.Vault.String():
+			technicalAssetTechnology = model.Vault
+		case model.HSM.String():
+			technicalAssetTechnology = model.HSM
+		case model.WAF.String():
+			technicalAssetTechnology = model.WAF
+		case model.IDS.String():
+			technicalAssetTechnology = model.IDS
+		case model.IPS.String():
+			technicalAssetTechnology = model.IPS
+		case model.Scheduler.String():
+			technicalAssetTechnology = model.Scheduler
+		case model.Mainframe.String():
+			technicalAssetTechnology = model.Mainframe
+		case model.BlockStorage.String():
+			technicalAssetTechnology = model.BlockStorage
+		case model.Library.String():
+			technicalAssetTechnology = model.Library
+		default:
+			panic(errors.New("unknown 'technology' value of technical asset '" + title + "': " + fmt.Sprintf("%v", asset.Technology)))
+		}
 
-			var stride model.STRIDE
-			switch individualCategory.STRIDE {
-			case model.Spoofing.String():
-				stride = model.Spoofing
-			case model.Tampering.String():
-				stride = model.Tampering
-			case model.Repudiation.String():
-				stride = model.Repudiation
-			case model.InformationDisclosure.String():
-				stride = model.InformationDisclosure
-			case model.DenialOfService.String():
-				stride = model.DenialOfService
-			case model.ElevationOfPrivilege.String():
-				stride = model.ElevationOfPrivilege
-			default:
-				panic(errors.New("unknown 'stride' value of individual risk category '" + title + "': " + fmt.Sprintf("%v", individualCategory.STRIDE)))
-			}
+		var encryption model.EncryptionStyle
+		switch asset.Encryption {
+		case model.NoneEncryption.String():
+			encryption = model.NoneEncryption
+		case model.Transparent.String():
+			encryption = model.Transparent
+		case model.DataWithSymmetricSharedKey.String():
+			encryption = model.DataWithSymmetricSharedKey
+		case model.DataWithAsymmetricSharedKey.String():
+			encryption = model.DataWithAsymmetricSharedKey
+		case model.DataWithEndUserIndividualKey.String():
+			encryption = model.DataWithEndUserIndividualKey
+		default:
+			panic(errors.New("unknown 'encryption' value of technical asset '" + title + "': " + fmt.Sprintf("%v", asset.Encryption)))
+		}
 
-			cat := model.RiskCategory{
-				Id:                         id,
-				Title:                      title,
-				Description:                withDefault(fmt.Sprintf("%v", individualCategory.Description), title),
-				Impact:                     fmt.Sprintf("%v", individualCategory.Impact),
-				ASVS:                       fmt.Sprintf("%v", individualCategory.ASVS),
-				CheatSheet:                 fmt.Sprintf("%v", individualCategory.CheatSheet),
-				Action:                     fmt.Sprintf("%v", individualCategory.Action),
-				Mitigation:                 fmt.Sprintf("%v", individualCategory.Mitigation),
-				Check:                      fmt.Sprintf("%v", individualCategory.Check),
-				DetectionLogic:             fmt.Sprintf("%v", individualCategory.DetectionLogic),
-				RiskAssessment:             fmt.Sprintf("%v", individualCategory.RiskAssessment),
-				FalsePositives:             fmt.Sprintf("%v", individualCategory.FalsePositives),
-				Function:                   function,
-				STRIDE:                     stride,
-				ModelFailurePossibleReason: individualCategory.ModelFailurePossibleReason,
-				CWE:                        individualCategory.CWE,
-			}
-			checkIdSyntax(id)
-			if _, exists := model.ParsedModelRoot.IndividualRiskCategories[id]; exists {
-				panic(errors.New("duplicate id used: " + id))
-			}
-			model.ParsedModelRoot.IndividualRiskCategories[id] = cat
+		var technicalAssetMachine model.TechnicalAssetMachine
+		switch asset.Machine {
+		case model.Physical.String():
+			technicalAssetMachine = model.Physical
+		case model.Virtual.String():
+			technicalAssetMachine = model.Virtual
+		case model.Container.String():
+			technicalAssetMachine = model.Container
+		case model.Serverless.String():
+			technicalAssetMachine = model.Serverless
+		default:
+			panic(errors.New("unknown 'machine' value of technical asset '" + title + "': " + fmt.Sprintf("%v", asset.Machine)))
+		}
 
-			// NOW THE INDIVIDUAL RISK INSTANCES:
-			//individualRiskInstances := make([]model.Risk, 0)
-			if individualCategory.RisksIdentified != nil { // TODO: also add syntax checks of input YAML when linked asset is not found or when synthetic-id is already used...
-				for title, individualRiskInstance := range individualCategory.RisksIdentified {
-					var severity model.RiskSeverity
-					var exploitationLikelihood model.RiskExploitationLikelihood
-					var exploitationImpact model.RiskExploitationImpact
-					var mostRelevantDataAssetId, mostRelevantTechnicalAssetId, mostRelevantCommunicationLinkId, mostRelevantTrustBoundaryId, mostRelevantSharedRuntimeId string
-					var dataBreachProbability model.DataBreachProbability
-					var dataBreachTechnicalAssetIDs []string
+		var confidentiality model.Confidentiality
+		switch asset.Confidentiality {
+		case model.Public.String():
+			confidentiality = model.Public
+		case model.Internal.String():
+			confidentiality = model.Internal
+		case model.Restricted.String():
+			confidentiality = model.Restricted
+		case model.Confidential.String():
+			confidentiality = model.Confidential
+		case model.StrictlyConfidential.String():
+			confidentiality = model.StrictlyConfidential
+		default:
+			panic(errors.New("unknown 'confidentiality' value of technical asset '" + title + "': " + fmt.Sprintf("%v", asset.Confidentiality)))
+		}
 
-					switch individualRiskInstance.Severity {
-					case model.LowSeverity.String():
-						severity = model.LowSeverity
-					case model.MediumSeverity.String():
-						severity = model.MediumSeverity
-					case model.ElevatedSeverity.String():
-						severity = model.ElevatedSeverity
-					case model.HighSeverity.String():
-						severity = model.HighSeverity
-					case model.CriticalSeverity.String():
-						severity = model.CriticalSeverity
-					case "": // added default
-						severity = model.MediumSeverity
-					default:
-						panic(errors.New("unknown 'severity' value of individual risk instance '" + title + "': " + fmt.Sprintf("%v", individualRiskInstance.Severity)))
-					}
+		var integrity model.Criticality
+		switch asset.Integrity {
+		case model.Archive.String():
+			integrity = model.Archive
+		case model.Operational.String():
+			integrity = model.Operational
+		case model.Important.String():
+			integrity = model.Important
+		case model.Critical.String():
+			integrity = model.Critical
+		case model.MissionCritical.String():
+			integrity = model.MissionCritical
+		default:
+			panic(errors.New("unknown 'integrity' value of technical asset '" + title + "': " + fmt.Sprintf("%v", asset.Integrity)))
+		}
 
-					switch individualRiskInstance.ExploitationLikelihood {
-					case model.Unlikely.String():
-						exploitationLikelihood = model.Unlikely
-					case model.Likely.String():
-						exploitationLikelihood = model.Likely
-					case model.VeryLikely.String():
-						exploitationLikelihood = model.VeryLikely
-					case model.Frequent.String():
-						exploitationLikelihood = model.Frequent
-					case "": // added default
-						exploitationLikelihood = model.Likely
-					default:
-						panic(errors.New("unknown 'exploitation_likelihood' value of individual risk instance '" + title + "': " + fmt.Sprintf("%v", individualRiskInstance.ExploitationLikelihood)))
-					}
+		var availability model.Criticality
+		switch asset.Availability {
+		case model.Archive.String():
+			availability = model.Archive
+		case model.Operational.String():
+			availability = model.Operational
+		case model.Important.String():
+			availability = model.Important
+		case model.Critical.String():
+			availability = model.Critical
+		case model.MissionCritical.String():
+			availability = model.MissionCritical
+		default:
+			panic(errors.New("unknown 'availability' value of technical asset '" + title + "': " + fmt.Sprintf("%v", asset.Availability)))
+		}
 
-					switch individualRiskInstance.ExploitationImpact {
-					case model.LowImpact.String():
-						exploitationImpact = model.LowImpact
-					case model.MediumImpact.String():
-						exploitationImpact = model.MediumImpact
-					case model.HighImpact.String():
-						exploitationImpact = model.HighImpact
-					case model.VeryHighImpact.String():
-						exploitationImpact = model.VeryHighImpact
-					case "": // added default
-						exploitationImpact = model.MediumImpact
-					default:
-						panic(errors.New("unknown 'exploitation_impact' value of individual risk instance '" + title + "': " + fmt.Sprintf("%v", individualRiskInstance.ExploitationImpact)))
-					}
-
-					if len(individualRiskInstance.MostRelevantDataAsset) > 0 {
-						mostRelevantDataAssetId = fmt.Sprintf("%v", individualRiskInstance.MostRelevantDataAsset)
-						checkDataAssetTargetExists(mostRelevantDataAssetId, "individual risk '"+title+"'")
-					}
-
-					if len(individualRiskInstance.MostRelevantTechnicalAsset) > 0 {
-						mostRelevantTechnicalAssetId = fmt.Sprintf("%v", individualRiskInstance.MostRelevantTechnicalAsset)
-						checkTechnicalAssetExists(mostRelevantTechnicalAssetId, "individual risk '"+title+"'", false)
-					}
-
-					if len(individualRiskInstance.MostRelevantCommunicationLink) > 0 {
-						mostRelevantCommunicationLinkId = fmt.Sprintf("%v", individualRiskInstance.MostRelevantCommunicationLink)
-						checkCommunicationLinkExists(mostRelevantCommunicationLinkId, "individual risk '"+title+"'")
-					}
-
-					if len(individualRiskInstance.MostRelevantTrustBoundary) > 0 {
-						mostRelevantTrustBoundaryId = fmt.Sprintf("%v", individualRiskInstance.MostRelevantTrustBoundary)
-						checkTrustBoundaryExists(mostRelevantTrustBoundaryId, "individual risk '"+title+"'")
-					}
-
-					if len(individualRiskInstance.MostRelevantSharedRuntime) > 0 {
-						mostRelevantSharedRuntimeId = fmt.Sprintf("%v", individualRiskInstance.MostRelevantSharedRuntime)
-						checkSharedRuntimeExists(mostRelevantSharedRuntimeId, "individual risk '"+title+"'")
-					}
-
-					switch individualRiskInstance.DataBreachProbability {
-					case model.Improbable.String():
-						dataBreachProbability = model.Improbable
-					case model.Possible.String():
-						dataBreachProbability = model.Possible
-					case model.Probable.String():
-						dataBreachProbability = model.Probable
-					case "": // added default
-						dataBreachProbability = model.Possible
-					default:
-						panic(errors.New("unknown 'data_breach_probability' value of individual risk instance '" + title + "': " + fmt.Sprintf("%v", individualRiskInstance.DataBreachProbability)))
-					}
-
-					if individualRiskInstance.DataBreachTechnicalAssets != nil {
-						dataBreachTechnicalAssetIDs = make([]string, len(individualRiskInstance.DataBreachTechnicalAssets))
-						for i, parsedReferencedAsset := range individualRiskInstance.DataBreachTechnicalAssets {
-							assetId := fmt.Sprintf("%v", parsedReferencedAsset)
-							checkTechnicalAssetExists(assetId, "data breach technical assets of individual risk '"+title+"'", false)
-							dataBreachTechnicalAssetIDs[i] = assetId
-						}
-					}
-
-					checkErr(err)
-
-					individualRiskInstance := model.Risk{
-						SyntheticId:                     createSyntheticId(cat.Id, mostRelevantDataAssetId, mostRelevantTechnicalAssetId, mostRelevantCommunicationLinkId, mostRelevantTrustBoundaryId, mostRelevantSharedRuntimeId),
-						Title:                           fmt.Sprintf("%v", title),
-						Category:                        cat,
-						Severity:                        severity,
-						ExploitationLikelihood:          exploitationLikelihood,
-						ExploitationImpact:              exploitationImpact,
-						MostRelevantDataAssetId:         mostRelevantDataAssetId,
-						MostRelevantTechnicalAssetId:    mostRelevantTechnicalAssetId,
-						MostRelevantCommunicationLinkId: mostRelevantCommunicationLinkId,
-						MostRelevantTrustBoundaryId:     mostRelevantTrustBoundaryId,
-						MostRelevantSharedRuntimeId:     mostRelevantSharedRuntimeId,
-						DataBreachProbability:           dataBreachProbability,
-						DataBreachTechnicalAssetIDs:     dataBreachTechnicalAssetIDs,
-					}
-					model.GeneratedRisksByCategory[cat] = append(model.GeneratedRisksByCategory[cat], individualRiskInstance)
+		dataFormatsAccepted := make([]model.DataFormat, 0)
+		if asset.DataFormatsAccepted != nil {
+			for _, dataFormatName := range asset.DataFormatsAccepted {
+				switch dataFormatName {
+				case model.JSON.String():
+					dataFormatsAccepted = append(dataFormatsAccepted, model.JSON)
+				case model.XML.String():
+					dataFormatsAccepted = append(dataFormatsAccepted, model.XML)
+				case model.Serialization.String():
+					dataFormatsAccepted = append(dataFormatsAccepted, model.Serialization)
+				case model.File.String():
+					dataFormatsAccepted = append(dataFormatsAccepted, model.File)
+				case model.CSV.String():
+					dataFormatsAccepted = append(dataFormatsAccepted, model.CSV)
+				default:
+					panic(errors.New("unknown 'data_formats_accepted' value of technical asset '" + title + "': " + fmt.Sprintf("%v", dataFormatName)))
 				}
 			}
 		}
 
-		// Risk Tracking ===============================================================================
-		model.ParsedModelRoot.RiskTracking = make(map[string]model.RiskTracking)
-		for syntheticRiskId, riskTracking := range modelInput.RiskTracking {
-			justification := fmt.Sprintf("%v", riskTracking.Justification)
-			checkedBy := fmt.Sprintf("%v", riskTracking.CheckedBy)
-			ticket := fmt.Sprintf("%v", riskTracking.Ticket)
-			var date time.Time
-			if len(riskTracking.Date) > 0 {
-				date, err = time.Parse("2006-01-02", riskTracking.Date)
-				if err != nil {
-					panic(errors.New("unable to parse 'date' of risk tracking '" + syntheticRiskId + "': " + riskTracking.Date))
+		communicationLinks := make([]model.CommunicationLink, 0)
+		if asset.CommunicationLinks != nil {
+			for commLinkTitle, commLink := range asset.CommunicationLinks {
+				constraint := true
+				weight := 1
+				var protocol model.Protocol
+				var authentication model.Authentication
+				var authorization model.Authorization
+				var usage model.Usage
+				var dataAssetsSent []string
+				var dataAssetsReceived []string
+
+				switch commLink.Authentication {
+				case model.NoneAuthentication.String():
+					authentication = model.NoneAuthentication
+				case model.Credentials.String():
+					authentication = model.Credentials
+				case model.SessionId.String():
+					authentication = model.SessionId
+				case model.Token.String():
+					authentication = model.Token
+				case model.ClientCertificate.String():
+					authentication = model.ClientCertificate
+				case model.TwoFactor.String():
+					authentication = model.TwoFactor
+				case model.Externalized.String():
+					authentication = model.Externalized
+				default:
+					panic(errors.New("unknown 'authentication' value of technical asset '" + title + "' communication link '" + commLinkTitle + "': " + fmt.Sprintf("%v", commLink.Authentication)))
 				}
-			}
 
-			var status model.RiskStatus
-			switch riskTracking.Status {
-			case model.Unchecked.String():
-				status = model.Unchecked
-			case model.Mitigated.String():
-				status = model.Mitigated
-			case model.InProgress.String():
-				status = model.InProgress
-			case model.Accepted.String():
-				status = model.Accepted
-			case model.InDiscussion.String():
-				status = model.InDiscussion
-			case model.FalsePositive.String():
-				status = model.FalsePositive
-			default:
-				panic(errors.New("unknown 'status' value of risk tracking '" + syntheticRiskId + "': " + riskTracking.Status))
-			}
+				switch commLink.Authorization {
+				case model.NoneAuthorization.String():
+					authorization = model.NoneAuthorization
+				case model.TechnicalUser.String():
+					authorization = model.TechnicalUser
+				case model.EndUserIdentityPropagation.String():
+					authorization = model.EndUserIdentityPropagation
+				default:
+					panic(errors.New("unknown 'authorization' value of technical asset '" + title + "' communication link '" + commLinkTitle + "': " + fmt.Sprintf("%v", commLink.Authorization)))
+				}
 
-			tracking := model.RiskTracking{
-				SyntheticRiskId: strings.TrimSpace(syntheticRiskId),
-				Justification:   justification,
-				CheckedBy:       checkedBy,
-				Ticket:          ticket,
-				Date:            date,
-				Status:          status,
-			}
-			if strings.Contains(syntheticRiskId, "*") { // contains a wildcard char
-				deferredRiskTrackingDueToWildcardMatching[syntheticRiskId] = tracking
-			} else {
-				model.ParsedModelRoot.RiskTracking[syntheticRiskId] = tracking
+				switch commLink.Usage {
+				case model.Business.String():
+					usage = model.Business
+				case model.DevOps.String():
+					usage = model.DevOps
+				default:
+					panic(errors.New("unknown 'usage' value of technical asset '" + title + "' communication link '" + commLinkTitle + "': " + fmt.Sprintf("%v", commLink.Usage)))
+				}
+
+				switch commLink.Protocol {
+				case model.UnknownProtocol.String():
+					protocol = model.UnknownProtocol
+				case model.HTTP.String():
+					protocol = model.HTTP
+				case model.HTTPS.String():
+					protocol = model.HTTPS
+				case model.WS.String():
+					protocol = model.WS
+				case model.WSS.String():
+					protocol = model.WSS
+				case model.MQTT.String():
+					protocol = model.MQTT
+				case model.JDBC.String():
+					protocol = model.JDBC
+				case model.JdbcEncrypted.String():
+					protocol = model.JdbcEncrypted
+				case model.ODBC.String():
+					protocol = model.ODBC
+				case model.OdbcEncrypted.String():
+					protocol = model.OdbcEncrypted
+				case model.SqlAccessProtocol.String():
+					protocol = model.SqlAccessProtocol
+				case model.SqlAccessProtocolEncrypted.String():
+					protocol = model.SqlAccessProtocolEncrypted
+				case model.NosqlAccessProtocol.String():
+					protocol = model.NosqlAccessProtocol
+				case model.NosqlAccessProtocolEncrypted.String():
+					protocol = model.NosqlAccessProtocolEncrypted
+				case model.TEXT.String():
+					protocol = model.TEXT
+				case model.TextEncrypted.String():
+					protocol = model.TextEncrypted
+				case model.BINARY.String():
+					protocol = model.BINARY
+				case model.BinaryEncrypted.String():
+					protocol = model.BinaryEncrypted
+				case model.SSH.String():
+					protocol = model.SSH
+				case model.SshTunnel.String():
+					protocol = model.SshTunnel
+				case model.SMTP.String():
+					protocol = model.SMTP
+				case model.SmtpEncrypted.String():
+					protocol = model.SmtpEncrypted
+				case model.POP3.String():
+					protocol = model.POP3
+				case model.Pop3Encrypted.String():
+					protocol = model.Pop3Encrypted
+				case model.IMAP.String():
+					protocol = model.IMAP
+				case model.ImapEncrypted.String():
+					protocol = model.ImapEncrypted
+				case model.FTP.String():
+					protocol = model.FTP
+				case model.FTPS.String():
+					protocol = model.FTPS
+				case model.SFTP.String():
+					protocol = model.SFTP
+				case model.SCP.String():
+					protocol = model.SCP
+				case model.LDAP.String():
+					protocol = model.LDAP
+				case model.LDAPS.String():
+					protocol = model.LDAPS
+				case model.JMS.String():
+					protocol = model.JMS
+				case model.NFS.String():
+					protocol = model.NFS
+				case model.SMB.String():
+					protocol = model.SMB
+				case model.SmbEncrypted.String():
+					protocol = model.SmbEncrypted
+				case model.LocalFileAccess.String():
+					protocol = model.LocalFileAccess
+				case model.NRPE.String():
+					protocol = model.NRPE
+				case model.XMPP.String():
+					protocol = model.XMPP
+				case model.IIOP.String():
+					protocol = model.IIOP
+				case model.IiopEncrypted.String():
+					protocol = model.IiopEncrypted
+				case model.JRMP.String():
+					protocol = model.JRMP
+				case model.JrmpEncrypted.String():
+					protocol = model.JrmpEncrypted
+				case model.InProcessLibraryCall.String():
+					protocol = model.InProcessLibraryCall
+				case model.ContainerSpawning.String():
+					protocol = model.ContainerSpawning
+				default:
+					panic(errors.New("unknown 'protocol' of technical asset '" + title + "' communication link '" + commLinkTitle + "': " + fmt.Sprintf("%v", commLink.Protocol)))
+				}
+
+				if commLink.DataAssetsSent != nil {
+					for _, dataAssetSent := range commLink.DataAssetsSent {
+						referencedAsset := fmt.Sprintf("%v", dataAssetSent)
+						checkDataAssetTargetExists(referencedAsset, "communication link '"+commLinkTitle+"' of technical asset '"+title+"'")
+						dataAssetsSent = append(dataAssetsSent, referencedAsset)
+					}
+				}
+
+				if commLink.DataAssetsReceived != nil {
+					for _, dataAssetReceived := range commLink.DataAssetsReceived {
+						referencedAsset := fmt.Sprintf("%v", dataAssetReceived)
+						checkDataAssetTargetExists(referencedAsset, "communication link '"+commLinkTitle+"' of technical asset '"+title+"'")
+						dataAssetsReceived = append(dataAssetsReceived, referencedAsset)
+					}
+				}
+
+				if commLink.DiagramTweakWeight > 0 {
+					weight = commLink.DiagramTweakWeight
+				}
+
+				constraint = !commLink.DiagramTweakConstraint
+
+				dataFlowTitle := fmt.Sprintf("%v", commLinkTitle)
+				commLink := model.CommunicationLink{
+					Id:                     createDataFlowId(id, dataFlowTitle),
+					SourceId:               id,
+					TargetId:               commLink.Target,
+					Title:                  dataFlowTitle,
+					Description:            withDefault(commLink.Description, dataFlowTitle),
+					Protocol:               protocol,
+					Authentication:         authentication,
+					Authorization:          authorization,
+					Usage:                  usage,
+					Tags:                   checkTags(lowerCaseAndTrim(commLink.Tags), "communication link '"+commLinkTitle+"' of technical asset '"+title+"'"),
+					VPN:                    commLink.VPN,
+					IpFiltered:             commLink.IpFiltered,
+					Readonly:               commLink.Readonly,
+					DataAssetsSent:         dataAssetsSent,
+					DataAssetsReceived:     dataAssetsReceived,
+					DiagramTweakWeight:     weight,
+					DiagramTweakConstraint: constraint,
+				}
+				communicationLinks = append(communicationLinks, commLink)
+				// track all comm links
+				model.CommunicationLinks[commLink.Id] = commLink
+				// keep track of map of *all* comm links mapped by target-id (to be able to look up "who is calling me" kind of things)
+				model.IncomingTechnicalCommunicationLinksMappedByTargetId[commLink.TargetId] = append(
+					model.IncomingTechnicalCommunicationLinksMappedByTargetId[commLink.TargetId], commLink)
 			}
 		}
 
-		// ====================== model consistency check (linking)
-		for _, technicalAsset := range model.ParsedModelRoot.TechnicalAssets {
-			for _, commLink := range technicalAsset.CommunicationLinks {
-				checkTechnicalAssetExists(commLink.TargetId, "communication link '"+commLink.Title+"' of technical asset '"+technicalAsset.Title+"'", false)
+		context.checkIdSyntax(id)
+		if _, exists := model.ParsedModelRoot.TechnicalAssets[id]; exists {
+			panic(errors.New("duplicate id used: " + id))
+		}
+		model.ParsedModelRoot.TechnicalAssets[id] = model.TechnicalAsset{
+			Id:                      id,
+			Usage:                   usage,
+			Title:                   title, //fmt.Sprintf("%v", asset["title"]),
+			Description:             withDefault(fmt.Sprintf("%v", asset.Description), title),
+			Type:                    technicalAssetType,
+			Size:                    technicalAssetSize,
+			Technology:              technicalAssetTechnology,
+			Tags:                    checkTags(lowerCaseAndTrim(asset.Tags), "technical asset '"+title+"'"),
+			Machine:                 technicalAssetMachine,
+			Internet:                asset.Internet,
+			Encryption:              encryption,
+			MultiTenant:             asset.MultiTenant,
+			Redundant:               asset.Redundant,
+			CustomDevelopedParts:    asset.CustomDevelopedParts,
+			UsedAsClientByHuman:     asset.UsedAsClientByHuman,
+			OutOfScope:              asset.OutOfScope,
+			JustificationOutOfScope: fmt.Sprintf("%v", asset.JustificationOutOfScope),
+			Owner:                   fmt.Sprintf("%v", asset.Owner),
+			Confidentiality:         confidentiality,
+			Integrity:               integrity,
+			Availability:            availability,
+			JustificationCiaRating:  fmt.Sprintf("%v", asset.JustificationCiaRating),
+			DataAssetsProcessed:     dataAssetsProcessed,
+			DataAssetsStored:        dataAssetsStored,
+			DataFormatsAccepted:     dataFormatsAccepted,
+			CommunicationLinks:      communicationLinks,
+			DiagramTweakOrder:       asset.DiagramTweakOrder,
+		}
+	}
+
+	// Trust Boundaries ===============================================================================
+	checklistToAvoidAssetBeingModeledInMultipleTrustBoundaries := make(map[string]bool)
+	model.ParsedModelRoot.TrustBoundaries = make(map[string]model.TrustBoundary)
+	for title, boundary := range context.modelInput.TrustBoundaries {
+		id := fmt.Sprintf("%v", boundary.ID)
+
+		var technicalAssetsInside = make([]string, 0)
+		if boundary.TechnicalAssetsInside != nil {
+			parsedInsideAssets := boundary.TechnicalAssetsInside
+			technicalAssetsInside = make([]string, len(parsedInsideAssets))
+			for i, parsedInsideAsset := range parsedInsideAssets {
+				technicalAssetsInside[i] = fmt.Sprintf("%v", parsedInsideAsset)
+				_, found := model.ParsedModelRoot.TechnicalAssets[technicalAssetsInside[i]]
+				if !found {
+					panic(errors.New("missing referenced technical asset " + technicalAssetsInside[i] + " at trust boundary '" + title + "'"))
+				}
+				if checklistToAvoidAssetBeingModeledInMultipleTrustBoundaries[technicalAssetsInside[i]] == true {
+					panic(errors.New("referenced technical asset " + technicalAssetsInside[i] + " at trust boundary '" + title + "' is modeled in multiple trust boundaries"))
+				}
+				checklistToAvoidAssetBeingModeledInMultipleTrustBoundaries[technicalAssetsInside[i]] = true
+				//fmt.Println("asset "+technicalAssetsInside[i]+" at i="+strconv.Itoa(i))
 			}
 		}
-	} else {
-		log.Fatal("Unable to read/parse model yaml: ", err)
+
+		var trustBoundariesNested = make([]string, 0)
+		if boundary.TrustBoundariesNested != nil {
+			parsedNestedBoundaries := boundary.TrustBoundariesNested
+			trustBoundariesNested = make([]string, len(parsedNestedBoundaries))
+			for i, parsedNestedBoundary := range parsedNestedBoundaries {
+				trustBoundariesNested[i] = fmt.Sprintf("%v", parsedNestedBoundary)
+			}
+		}
+
+		var trustBoundaryType model.TrustBoundaryType
+		switch boundary.Type {
+		case model.NetworkOnPrem.String():
+			trustBoundaryType = model.NetworkOnPrem
+		case model.NetworkDedicatedHoster.String():
+			trustBoundaryType = model.NetworkDedicatedHoster
+		case model.NetworkVirtualLAN.String():
+			trustBoundaryType = model.NetworkVirtualLAN
+		case model.NetworkCloudProvider.String():
+			trustBoundaryType = model.NetworkCloudProvider
+		case model.NetworkCloudSecurityGroup.String():
+			trustBoundaryType = model.NetworkCloudSecurityGroup
+		case model.NetworkPolicyNamespaceIsolation.String():
+			trustBoundaryType = model.NetworkPolicyNamespaceIsolation
+		case model.ExecutionEnvironment.String():
+			trustBoundaryType = model.ExecutionEnvironment
+		default:
+			panic(errors.New("unknown 'type' of trust boundary '" + title + "': " + fmt.Sprintf("%v", boundary.Type)))
+		}
+
+		trustBoundary := model.TrustBoundary{
+			Id:                    id,
+			Title:                 title, //fmt.Sprintf("%v", boundary["title"]),
+			Description:           withDefault(fmt.Sprintf("%v", boundary.Description), title),
+			Type:                  trustBoundaryType,
+			Tags:                  checkTags(lowerCaseAndTrim(boundary.Tags), "trust boundary '"+title+"'"),
+			TechnicalAssetsInside: technicalAssetsInside,
+			TrustBoundariesNested: trustBoundariesNested,
+		}
+		context.checkIdSyntax(id)
+		if _, exists := model.ParsedModelRoot.TrustBoundaries[id]; exists {
+			panic(errors.New("duplicate id used: " + id))
+		}
+		model.ParsedModelRoot.TrustBoundaries[id] = trustBoundary
+		for _, technicalAsset := range trustBoundary.TechnicalAssetsInside {
+			model.DirectContainingTrustBoundaryMappedByTechnicalAssetId[technicalAsset] = trustBoundary
+			//fmt.Println("Asset "+technicalAsset+" is directly in trust boundary "+trustBoundary.Id)
+		}
+	}
+	checkNestedTrustBoundariesExisting()
+
+	// Shared Runtime ===============================================================================
+	model.ParsedModelRoot.SharedRuntimes = make(map[string]model.SharedRuntime)
+	for title, runtime := range context.modelInput.SharedRuntimes {
+		id := fmt.Sprintf("%v", runtime.ID)
+
+		var technicalAssetsRunning = make([]string, 0)
+		if runtime.TechnicalAssetsRunning != nil {
+			parsedRunningAssets := runtime.TechnicalAssetsRunning
+			technicalAssetsRunning = make([]string, len(parsedRunningAssets))
+			for i, parsedRunningAsset := range parsedRunningAssets {
+				assetId := fmt.Sprintf("%v", parsedRunningAsset)
+				checkTechnicalAssetExists(assetId, "shared runtime '"+title+"'", false)
+				technicalAssetsRunning[i] = assetId
+			}
+		}
+
+		sharedRuntime := model.SharedRuntime{
+			Id:                     id,
+			Title:                  title, //fmt.Sprintf("%v", boundary["title"]),
+			Description:            withDefault(fmt.Sprintf("%v", runtime.Description), title),
+			Tags:                   checkTags(runtime.Tags, "shared runtime '"+title+"'"),
+			TechnicalAssetsRunning: technicalAssetsRunning,
+		}
+		context.checkIdSyntax(id)
+		if _, exists := model.ParsedModelRoot.SharedRuntimes[id]; exists {
+			panic(errors.New("duplicate id used: " + id))
+		}
+		model.ParsedModelRoot.SharedRuntimes[id] = sharedRuntime
+		for _, technicalAssetId := range sharedRuntime.TechnicalAssetsRunning {
+			model.DirectContainingSharedRuntimeMappedByTechnicalAssetId[technicalAssetId] = sharedRuntime
+		}
+	}
+
+	// Individual Risk Categories (just used as regular risk categories) ===============================================================================
+	model.ParsedModelRoot.IndividualRiskCategories = make(map[string]model.RiskCategory)
+	for title, individualCategory := range context.modelInput.IndividualRiskCategories {
+		id := fmt.Sprintf("%v", individualCategory.ID)
+
+		var function model.RiskFunction
+		switch individualCategory.Function {
+		case model.BusinessSide.String():
+			function = model.BusinessSide
+		case model.Architecture.String():
+			function = model.Architecture
+		case model.Development.String():
+			function = model.Development
+		case model.Operations.String():
+			function = model.Operations
+		default:
+			panic(errors.New("unknown 'function' value of individual risk category '" + title + "': " + fmt.Sprintf("%v", individualCategory.Function)))
+		}
+
+		var stride model.STRIDE
+		switch individualCategory.STRIDE {
+		case model.Spoofing.String():
+			stride = model.Spoofing
+		case model.Tampering.String():
+			stride = model.Tampering
+		case model.Repudiation.String():
+			stride = model.Repudiation
+		case model.InformationDisclosure.String():
+			stride = model.InformationDisclosure
+		case model.DenialOfService.String():
+			stride = model.DenialOfService
+		case model.ElevationOfPrivilege.String():
+			stride = model.ElevationOfPrivilege
+		default:
+			panic(errors.New("unknown 'stride' value of individual risk category '" + title + "': " + fmt.Sprintf("%v", individualCategory.STRIDE)))
+		}
+
+		cat := model.RiskCategory{
+			Id:                         id,
+			Title:                      title,
+			Description:                withDefault(fmt.Sprintf("%v", individualCategory.Description), title),
+			Impact:                     fmt.Sprintf("%v", individualCategory.Impact),
+			ASVS:                       fmt.Sprintf("%v", individualCategory.ASVS),
+			CheatSheet:                 fmt.Sprintf("%v", individualCategory.CheatSheet),
+			Action:                     fmt.Sprintf("%v", individualCategory.Action),
+			Mitigation:                 fmt.Sprintf("%v", individualCategory.Mitigation),
+			Check:                      fmt.Sprintf("%v", individualCategory.Check),
+			DetectionLogic:             fmt.Sprintf("%v", individualCategory.DetectionLogic),
+			RiskAssessment:             fmt.Sprintf("%v", individualCategory.RiskAssessment),
+			FalsePositives:             fmt.Sprintf("%v", individualCategory.FalsePositives),
+			Function:                   function,
+			STRIDE:                     stride,
+			ModelFailurePossibleReason: individualCategory.ModelFailurePossibleReason,
+			CWE:                        individualCategory.CWE,
+		}
+		context.checkIdSyntax(id)
+		if _, exists := model.ParsedModelRoot.IndividualRiskCategories[id]; exists {
+			panic(errors.New("duplicate id used: " + id))
+		}
+		model.ParsedModelRoot.IndividualRiskCategories[id] = cat
+
+		// NOW THE INDIVIDUAL RISK INSTANCES:
+		//individualRiskInstances := make([]model.Risk, 0)
+		if individualCategory.RisksIdentified != nil { // TODO: also add syntax checks of input YAML when linked asset is not found or when synthetic-id is already used...
+			for title, individualRiskInstance := range individualCategory.RisksIdentified {
+				var severity model.RiskSeverity
+				var exploitationLikelihood model.RiskExploitationLikelihood
+				var exploitationImpact model.RiskExploitationImpact
+				var mostRelevantDataAssetId, mostRelevantTechnicalAssetId, mostRelevantCommunicationLinkId, mostRelevantTrustBoundaryId, mostRelevantSharedRuntimeId string
+				var dataBreachProbability model.DataBreachProbability
+				var dataBreachTechnicalAssetIDs []string
+
+				switch individualRiskInstance.Severity {
+				case model.LowSeverity.String():
+					severity = model.LowSeverity
+				case model.MediumSeverity.String():
+					severity = model.MediumSeverity
+				case model.ElevatedSeverity.String():
+					severity = model.ElevatedSeverity
+				case model.HighSeverity.String():
+					severity = model.HighSeverity
+				case model.CriticalSeverity.String():
+					severity = model.CriticalSeverity
+				case "": // added default
+					severity = model.MediumSeverity
+				default:
+					panic(errors.New("unknown 'severity' value of individual risk instance '" + title + "': " + fmt.Sprintf("%v", individualRiskInstance.Severity)))
+				}
+
+				switch individualRiskInstance.ExploitationLikelihood {
+				case model.Unlikely.String():
+					exploitationLikelihood = model.Unlikely
+				case model.Likely.String():
+					exploitationLikelihood = model.Likely
+				case model.VeryLikely.String():
+					exploitationLikelihood = model.VeryLikely
+				case model.Frequent.String():
+					exploitationLikelihood = model.Frequent
+				case "": // added default
+					exploitationLikelihood = model.Likely
+				default:
+					panic(errors.New("unknown 'exploitation_likelihood' value of individual risk instance '" + title + "': " + fmt.Sprintf("%v", individualRiskInstance.ExploitationLikelihood)))
+				}
+
+				switch individualRiskInstance.ExploitationImpact {
+				case model.LowImpact.String():
+					exploitationImpact = model.LowImpact
+				case model.MediumImpact.String():
+					exploitationImpact = model.MediumImpact
+				case model.HighImpact.String():
+					exploitationImpact = model.HighImpact
+				case model.VeryHighImpact.String():
+					exploitationImpact = model.VeryHighImpact
+				case "": // added default
+					exploitationImpact = model.MediumImpact
+				default:
+					panic(errors.New("unknown 'exploitation_impact' value of individual risk instance '" + title + "': " + fmt.Sprintf("%v", individualRiskInstance.ExploitationImpact)))
+				}
+
+				if len(individualRiskInstance.MostRelevantDataAsset) > 0 {
+					mostRelevantDataAssetId = fmt.Sprintf("%v", individualRiskInstance.MostRelevantDataAsset)
+					checkDataAssetTargetExists(mostRelevantDataAssetId, "individual risk '"+title+"'")
+				}
+
+				if len(individualRiskInstance.MostRelevantTechnicalAsset) > 0 {
+					mostRelevantTechnicalAssetId = fmt.Sprintf("%v", individualRiskInstance.MostRelevantTechnicalAsset)
+					checkTechnicalAssetExists(mostRelevantTechnicalAssetId, "individual risk '"+title+"'", false)
+				}
+
+				if len(individualRiskInstance.MostRelevantCommunicationLink) > 0 {
+					mostRelevantCommunicationLinkId = fmt.Sprintf("%v", individualRiskInstance.MostRelevantCommunicationLink)
+					checkCommunicationLinkExists(mostRelevantCommunicationLinkId, "individual risk '"+title+"'")
+				}
+
+				if len(individualRiskInstance.MostRelevantTrustBoundary) > 0 {
+					mostRelevantTrustBoundaryId = fmt.Sprintf("%v", individualRiskInstance.MostRelevantTrustBoundary)
+					checkTrustBoundaryExists(mostRelevantTrustBoundaryId, "individual risk '"+title+"'")
+				}
+
+				if len(individualRiskInstance.MostRelevantSharedRuntime) > 0 {
+					mostRelevantSharedRuntimeId = fmt.Sprintf("%v", individualRiskInstance.MostRelevantSharedRuntime)
+					checkSharedRuntimeExists(mostRelevantSharedRuntimeId, "individual risk '"+title+"'")
+				}
+
+				switch individualRiskInstance.DataBreachProbability {
+				case model.Improbable.String():
+					dataBreachProbability = model.Improbable
+				case model.Possible.String():
+					dataBreachProbability = model.Possible
+				case model.Probable.String():
+					dataBreachProbability = model.Probable
+				case "": // added default
+					dataBreachProbability = model.Possible
+				default:
+					panic(errors.New("unknown 'data_breach_probability' value of individual risk instance '" + title + "': " + fmt.Sprintf("%v", individualRiskInstance.DataBreachProbability)))
+				}
+
+				if individualRiskInstance.DataBreachTechnicalAssets != nil {
+					dataBreachTechnicalAssetIDs = make([]string, len(individualRiskInstance.DataBreachTechnicalAssets))
+					for i, parsedReferencedAsset := range individualRiskInstance.DataBreachTechnicalAssets {
+						assetId := fmt.Sprintf("%v", parsedReferencedAsset)
+						checkTechnicalAssetExists(assetId, "data breach technical assets of individual risk '"+title+"'", false)
+						dataBreachTechnicalAssetIDs[i] = assetId
+					}
+				}
+
+				individualRiskInstance := model.Risk{
+					SyntheticId:                     createSyntheticId(cat.Id, mostRelevantDataAssetId, mostRelevantTechnicalAssetId, mostRelevantCommunicationLinkId, mostRelevantTrustBoundaryId, mostRelevantSharedRuntimeId),
+					Title:                           fmt.Sprintf("%v", title),
+					Category:                        cat,
+					Severity:                        severity,
+					ExploitationLikelihood:          exploitationLikelihood,
+					ExploitationImpact:              exploitationImpact,
+					MostRelevantDataAssetId:         mostRelevantDataAssetId,
+					MostRelevantTechnicalAssetId:    mostRelevantTechnicalAssetId,
+					MostRelevantCommunicationLinkId: mostRelevantCommunicationLinkId,
+					MostRelevantTrustBoundaryId:     mostRelevantTrustBoundaryId,
+					MostRelevantSharedRuntimeId:     mostRelevantSharedRuntimeId,
+					DataBreachProbability:           dataBreachProbability,
+					DataBreachTechnicalAssetIDs:     dataBreachTechnicalAssetIDs,
+				}
+				model.GeneratedRisksByCategory[cat] = append(model.GeneratedRisksByCategory[cat], individualRiskInstance)
+			}
+		}
+	}
+
+	// Risk Tracking ===============================================================================
+	model.ParsedModelRoot.RiskTracking = make(map[string]model.RiskTracking)
+	for syntheticRiskId, riskTracking := range context.modelInput.RiskTracking {
+		justification := fmt.Sprintf("%v", riskTracking.Justification)
+		checkedBy := fmt.Sprintf("%v", riskTracking.CheckedBy)
+		ticket := fmt.Sprintf("%v", riskTracking.Ticket)
+		var date time.Time
+		if len(riskTracking.Date) > 0 {
+			var parseError error
+			date, parseError = time.Parse("2006-01-02", riskTracking.Date)
+			if parseError != nil {
+				panic(errors.New("unable to parse 'date' of risk tracking '" + syntheticRiskId + "': " + riskTracking.Date))
+			}
+		}
+
+		var status model.RiskStatus
+		switch riskTracking.Status {
+		case model.Unchecked.String():
+			status = model.Unchecked
+		case model.Mitigated.String():
+			status = model.Mitigated
+		case model.InProgress.String():
+			status = model.InProgress
+		case model.Accepted.String():
+			status = model.Accepted
+		case model.InDiscussion.String():
+			status = model.InDiscussion
+		case model.FalsePositive.String():
+			status = model.FalsePositive
+		default:
+			panic(errors.New("unknown 'status' value of risk tracking '" + syntheticRiskId + "': " + riskTracking.Status))
+		}
+
+		tracking := model.RiskTracking{
+			SyntheticRiskId: strings.TrimSpace(syntheticRiskId),
+			Justification:   justification,
+			CheckedBy:       checkedBy,
+			Ticket:          ticket,
+			Date:            date,
+			Status:          status,
+		}
+		if strings.Contains(syntheticRiskId, "*") { // contains a wildcard char
+			context.deferredRiskTrackingDueToWildcardMatching[syntheticRiskId] = tracking
+		} else {
+			model.ParsedModelRoot.RiskTracking[syntheticRiskId] = tracking
+		}
+	}
+
+	// ====================== model consistency check (linking)
+	for _, technicalAsset := range model.ParsedModelRoot.TechnicalAssets {
+		for _, commLink := range technicalAsset.CommunicationLinks {
+			checkTechnicalAssetExists(commLink.TargetId, "communication link '"+commLink.Title+"' of technical asset '"+technicalAsset.Title+"'", false)
+		}
 	}
 }
 
@@ -5103,11 +5233,11 @@ func removePathElementsFromImageFiles(overview model.Overview) model.Overview {
 	return overview
 }
 
-func applyWildcardRiskTrackingEvaluation() {
-	if *verbose {
+func (context *Context) applyWildcardRiskTrackingEvaluation() {
+	if *context.verbose {
 		fmt.Println("Executing risk tracking evaluation")
 	}
-	for syntheticRiskIdPattern, riskTracking := range deferredRiskTrackingDueToWildcardMatching {
+	for syntheticRiskIdPattern, riskTracking := range context.deferredRiskTrackingDueToWildcardMatching {
 		foundSome := false
 		var matchingRiskIdExpression = regexp.MustCompile(strings.ReplaceAll(regexp.QuoteMeta(syntheticRiskIdPattern), `\*`, `[^@]+`))
 		for syntheticRiskId := range model.GeneratedRisksBySyntheticId {
@@ -5124,7 +5254,7 @@ func applyWildcardRiskTrackingEvaluation() {
 			}
 		}
 		if !foundSome {
-			if *ignoreOrphanedRiskTracking {
+			if *context.ignoreOrphanedRiskTracking {
 				fmt.Println("Wildcard risk tracking does not match any risk id: " + syntheticRiskIdPattern)
 			} else {
 				panic(errors.New("wildcard risk tracking does not match any risk id: " + syntheticRiskIdPattern))
@@ -5231,8 +5361,8 @@ func hash(s string) string {
 	return fmt.Sprintf("%v", h.Sum32())
 }
 
-func writeDataAssetDiagramGraphvizDOT(diagramFilenameDOT string, dpi int) *os.File {
-	if *verbose {
+func (context *Context) writeDataAssetDiagramGraphvizDOT(diagramFilenameDOT string, dpi int) *os.File {
+	if *context.verbose {
 		fmt.Println("Writing data asset diagram input")
 	}
 	var dotContent strings.Builder
@@ -5317,8 +5447,8 @@ func writeDataAssetDiagramGraphvizDOT(diagramFilenameDOT string, dpi int) *os.Fi
 	return file
 }
 
-func writeDataFlowDiagramGraphvizDOT(diagramFilenameDOT string, dpi int) *os.File {
-	if *verbose {
+func (context *Context) writeDataFlowDiagramGraphvizDOT(diagramFilenameDOT string, dpi int) *os.File {
+	if *context.verbose {
 		fmt.Println("Writing data flow diagram input")
 	}
 	var dotContent strings.Builder
@@ -5338,19 +5468,19 @@ func writeDataFlowDiagramGraphvizDOT(diagramFilenameDOT string, dpi int) *os.Fil
 		switch model.ParsedModelRoot.DiagramTweakEdgeLayout {
 		case "spline":
 			splines = "spline"
-			drawSpaceLinesForLayoutUnfortunatelyFurtherSeparatesAllRanks = false
+			context.drawSpaceLinesForLayoutUnfortunatelyFurtherSeparatesAllRanks = false
 		case "polyline":
 			splines = "polyline"
-			drawSpaceLinesForLayoutUnfortunatelyFurtherSeparatesAllRanks = false
+			context.drawSpaceLinesForLayoutUnfortunatelyFurtherSeparatesAllRanks = false
 		case "ortho":
 			splines = "ortho"
 			suppressBidirectionalArrows = true
 		case "curved":
 			splines = "curved"
-			drawSpaceLinesForLayoutUnfortunatelyFurtherSeparatesAllRanks = false
+			context.drawSpaceLinesForLayoutUnfortunatelyFurtherSeparatesAllRanks = false
 		case "false":
 			splines = "false"
-			drawSpaceLinesForLayoutUnfortunatelyFurtherSeparatesAllRanks = false
+			context.drawSpaceLinesForLayoutUnfortunatelyFurtherSeparatesAllRanks = false
 		default:
 			panic(errors.New("unknown value for diagram_tweak_suppress_edge_labels (spline, polyline, ortho, curved, false): " +
 				model.ParsedModelRoot.DiagramTweakEdgeLayout))
@@ -5361,8 +5491,7 @@ func writeDataFlowDiagramGraphvizDOT(diagramFilenameDOT string, dpi int) *os.Fil
 		rankdir = "LR"
 	}
 	modelTitle := ""
-	addModelTitle := false
-	if addModelTitle {
+	if context.addModelTitle {
 		modelTitle = `label="` + model.ParsedModelRoot.Title + `"`
 	}
 	dotContent.WriteString(`	graph [ ` + modelTitle + `
@@ -5399,7 +5528,7 @@ func writeDataFlowDiagramGraphvizDOT(diagramFilenameDOT string, dpi int) *os.Fil
 		trustBoundary := model.ParsedModelRoot.TrustBoundaries[key]
 		var snippet strings.Builder
 		if len(trustBoundary.TechnicalAssetsInside) > 0 || len(trustBoundary.TrustBoundariesNested) > 0 {
-			if drawSpaceLinesForLayoutUnfortunatelyFurtherSeparatesAllRanks {
+			if context.drawSpaceLinesForLayoutUnfortunatelyFurtherSeparatesAllRanks {
 				// see https://stackoverflow.com/questions/17247455/how-do-i-add-extra-space-between-clusters?noredirect=1&lq=1
 				snippet.WriteString("\n subgraph cluster_space_boundary_for_layout_only_1" + hash(trustBoundary.Id) + " {\n")
 				snippet.WriteString(`	graph [
@@ -5462,7 +5591,7 @@ func writeDataFlowDiagramGraphvizDOT(diagramFilenameDOT string, dpi int) *os.Fil
 				snippet.WriteString(";\n")
 			}
 			snippet.WriteString(" }\n\n")
-			if drawSpaceLinesForLayoutUnfortunatelyFurtherSeparatesAllRanks {
+			if context.drawSpaceLinesForLayoutUnfortunatelyFurtherSeparatesAllRanks {
 				snippet.WriteString(" }\n\n")
 			}
 		}
@@ -5691,16 +5820,16 @@ func encode(value string) string {
 	return strings.ReplaceAll(value, "&", "&amp;")
 }
 
-func renderDataFlowDiagramGraphvizImage(dotFile *os.File, targetDir string) {
-	if *verbose {
+func (context *Context) renderDataFlowDiagramGraphvizImage(dotFile *os.File, targetDir string) {
+	if *context.verbose {
 		fmt.Println("Rendering data flow diagram input")
 	}
 	// tmp files
-	tmpFileDOT, err := os.CreateTemp(tempFolder, "diagram-*-.gv")
+	tmpFileDOT, err := os.CreateTemp(*context.tempFolder, "diagram-*-.gv")
 	checkErr(err)
 	defer func() { _ = os.Remove(tmpFileDOT.Name()) }()
 
-	tmpFilePNG, err := os.CreateTemp(tempFolder, "diagram-*-.png")
+	tmpFilePNG, err := os.CreateTemp(*context.tempFolder, "diagram-*-.png")
 	checkErr(err)
 	defer func() { _ = os.Remove(tmpFilePNG.Name()) }()
 
@@ -5739,16 +5868,16 @@ func renderDataFlowDiagramGraphvizImage(dotFile *os.File, targetDir string) {
 	}
 }
 
-func renderDataAssetDiagramGraphvizImage(dotFile *os.File, targetDir string) { // TODO dedupe with other render...() method here
-	if *verbose {
+func (context *Context) renderDataAssetDiagramGraphvizImage(dotFile *os.File, targetDir string) { // TODO dedupe with other render...() method here
+	if *context.verbose {
 		fmt.Println("Rendering data asset diagram input")
 	}
 	// tmp files
-	tmpFileDOT, err := os.CreateTemp(tempFolder, "diagram-*-.gv")
+	tmpFileDOT, err := os.CreateTemp(*context.tempFolder, "diagram-*-.gv")
 	checkErr(err)
 	defer func() { _ = os.Remove(tmpFileDOT.Name()) }()
 
-	tmpFilePNG, err := os.CreateTemp(tempFolder, "diagram-*-.png")
+	tmpFilePNG, err := os.CreateTemp(*context.tempFolder, "diagram-*-.png")
 	checkErr(err)
 	defer func() { _ = os.Remove(tmpFilePNG.Name()) }()
 

@@ -1,0 +1,16 @@
+# Tags can be used for anything, it's just a tag. Also risk rules can act based on tags if you like.
+# Tags can be used for example to name the products used (which is more concrete than the technology types that only specify the type)
+tags_available:
+  - linux
+  - apache
+  - mysql
+  - jboss
+  - keycloak
+  - jenkins
+  - git
+  - oracle
+  - some-erp
+  - vmware
+  - aws
+  - aws:ec2
+  - aws:s3
