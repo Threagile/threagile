@@ -4045,17 +4045,30 @@ func (context *Context) printVersion() {
 
 func (context *Context) createExampleModelFile() error {
 	_, err := copyFile(filepath.Join(*context.appFolder, "threagile-example-model.yaml"), filepath.Join(*context.outputDir, "threagile-example-model.yaml"))
-	return err
-}
+	if err == nil {
+		return nil
+	}
 
-func (context *Context) createStubModelFile() error {
-	context.loadCustomRiskRules()
-	stub, err := os.ReadFile(filepath.Join(*context.appFolder, "threagile-stub-model.yaml"))
-	if err != nil {
+	_, altError := copyFile(filepath.Join(*context.appFolder, "threagile.yaml"), filepath.Join(*context.outputDir, "threagile-example-model.yaml"))
+	if altError != nil {
 		return err
 	}
 
-	return os.WriteFile(filepath.Join(*context.outputDir, "threagile-stub-model.yaml"), context.addSupportedTags(stub), 0644)
+	return nil
+}
+
+func (context *Context) createStubModelFile() error {
+	_, err := copyFile(filepath.Join(*context.appFolder, "threagile-stub-model.yaml"), filepath.Join(*context.outputDir, "threagile-stub-model.yaml"))
+	if err == nil {
+		return nil
+	}
+
+	_, altError := copyFile(filepath.Join(*context.appFolder, "threagile.yaml"), filepath.Join(*context.outputDir, "threagile-stub-model.yaml"))
+	if altError != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (context *Context) createEditingSupportFiles() error {
