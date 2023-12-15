@@ -13,6 +13,7 @@ require (
 )
 
 require (
+	github.com/akedrou/textdiff v0.0.0-20230423230343-2ebdcebdccc1 // indirect
 	github.com/blend/go-sdk v1.20220411.3 // indirect
 	github.com/bytedance/sonic v1.10.2 // indirect
 	github.com/chenzhuoyu/base64x v0.0.0-20230717121745-296ad89f973d // indirect

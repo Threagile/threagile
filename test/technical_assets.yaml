@@ -1,0 +1,6 @@
+includes:
+  - technical_assets_clients.yaml
+  - technical_assets_infrastructure.yaml
+  - technical_assets_servers.yaml
+  - technical_assets_databases.yaml
+  - technical_assets_devops.yaml
