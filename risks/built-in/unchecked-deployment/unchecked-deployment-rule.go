@@ -43,17 +43,17 @@ func SupportedTags() []string {
 	return []string{}
 }
 
-func GenerateRisks(input *model.ModelInput) []model.Risk {
+func GenerateRisks(input *model.ParsedModel) []model.Risk {
 	risks := make([]model.Risk, 0)
-	for _, technicalAsset := range model.ParsedModelRoot.TechnicalAssets {
+	for _, technicalAsset := range input.TechnicalAssets {
 		if technicalAsset.Technology.IsDevelopmentRelevant() {
-			risks = append(risks, createRisk(technicalAsset))
+			risks = append(risks, createRisk(input, technicalAsset))
 		}
 	}
 	return risks
 }
 
-func createRisk(technicalAsset model.TechnicalAsset) model.Risk {
+func createRisk(input *model.ParsedModel, technicalAsset model.TechnicalAsset) model.Risk {
 	title := "<b>Unchecked Deployment</b> risk at <b>" + technicalAsset.Title + "</b>"
 	// impact is depending on highest rating
 	impact := model.LowImpact
@@ -64,10 +64,10 @@ func createRisk(technicalAsset model.TechnicalAsset) model.Risk {
 		if codeDeploymentTargetCommLink.Usage == model.DevOps {
 			for _, dataAssetID := range codeDeploymentTargetCommLink.DataAssetsSent {
 				// it appears to be code when elevated integrity rating of sent data asset
-				if model.ParsedModelRoot.DataAssets[dataAssetID].Integrity >= model.Important {
+				if input.DataAssets[dataAssetID].Integrity >= model.Important {
 					// here we've got a deployment target which has its data assets at risk via deployment of backdoored code
 					uniqueDataBreachTechnicalAssetIDs[codeDeploymentTargetCommLink.TargetId] = true
-					targetTechAsset := model.ParsedModelRoot.TechnicalAssets[codeDeploymentTargetCommLink.TargetId]
+					targetTechAsset := input.TechnicalAssets[codeDeploymentTargetCommLink.TargetId]
 					if targetTechAsset.HighestConfidentiality() >= model.Confidential ||
 						targetTechAsset.HighestIntegrity() >= model.Critical ||
 						targetTechAsset.HighestAvailability() >= model.Critical {

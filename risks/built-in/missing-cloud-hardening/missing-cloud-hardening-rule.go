@@ -57,7 +57,7 @@ func SupportedTags() []string {
 	return res
 }
 
-func GenerateRisks(input *model.ModelInput) []model.Risk {
+func GenerateRisks(input *model.ParsedModel) []model.Risk {
 	risks := make([]model.Risk, 0)
 
 	sharedRuntimesWithUnspecificCloudRisks := make(map[string]bool)
@@ -82,14 +82,14 @@ func GenerateRisks(input *model.ModelInput) []model.Risk {
 
 	techAssetIDsWithSubtagSpecificCloudRisks := make(map[string]bool)
 
-	for _, trustBoundary := range model.ParsedModelRoot.TrustBoundaries {
+	for _, trustBoundary := range input.TrustBoundaries {
 		taggedOuterTB := trustBoundary.IsTaggedWithAny(SupportedTags()...) // false = generic cloud risks only // true = cloud-individual risks
 		if taggedOuterTB || trustBoundary.Type.IsWithinCloud() {
 			addTrustBoundaryAccordingToBaseTag(trustBoundary, trustBoundariesWithUnspecificCloudRisks,
 				trustBoundaryIDsAWS, trustBoundaryIDsAzure, trustBoundaryIDsGCP, trustBoundaryIDsOCP)
 			for _, techAssetID := range trustBoundary.RecursivelyAllTechnicalAssetIDsInside() {
 				added := false
-				tA := model.ParsedModelRoot.TechnicalAssets[techAssetID]
+				tA := input.TechnicalAssets[techAssetID]
 				if tA.IsTaggedWithAny(SupportedTags()...) {
 					addAccordingToBaseTag(tA, tA.Tags,
 						techAssetIDsWithSubtagSpecificCloudRisks,
@@ -116,7 +116,7 @@ func GenerateRisks(input *model.ModelInput) []model.Risk {
 	}
 	for _, tB := range model.TrustBoundariesTaggedWithAny(SupportedTags()...) {
 		for _, candidateID := range tB.RecursivelyAllTechnicalAssetIDsInside() {
-			tA := model.ParsedModelRoot.TechnicalAssets[candidateID]
+			tA := input.TechnicalAssets[candidateID]
 			if tA.IsTaggedWithAny(SupportedTags()...) {
 				addAccordingToBaseTag(tA, tA.Tags,
 					techAssetIDsWithSubtagSpecificCloudRisks,
@@ -132,7 +132,7 @@ func GenerateRisks(input *model.ModelInput) []model.Risk {
 		addSharedRuntimeAccordingToBaseTag(sR, sharedRuntimesWithUnspecificCloudRisks,
 			sharedRuntimeIDsAWS, sharedRuntimeIDsAzure, sharedRuntimeIDsGCP, sharedRuntimeIDsOCP)
 		for _, candidateID := range sR.TechnicalAssetsRunning {
-			tA := model.ParsedModelRoot.TechnicalAssets[candidateID]
+			tA := input.TechnicalAssets[candidateID]
 			addAccordingToBaseTag(tA, sR.Tags,
 				techAssetIDsWithSubtagSpecificCloudRisks,
 				techAssetIDsAWS, techAssetIDsAzure, techAssetIDsGCP, techAssetIDsOCP)
@@ -189,49 +189,49 @@ func GenerateRisks(input *model.ModelInput) []model.Risk {
 
 	// first try to add shared runtimes...
 	for id := range sharedRuntimeIDsAWS {
-		risks = append(risks, createRiskForSharedRuntime(model.ParsedModelRoot.SharedRuntimes[id], "AWS", "CIS Benchmark for AWS"))
+		risks = append(risks, createRiskForSharedRuntime(input, input.SharedRuntimes[id], "AWS", "CIS Benchmark for AWS"))
 		addedAWS = true
 	}
 	for id := range sharedRuntimeIDsAzure {
-		risks = append(risks, createRiskForSharedRuntime(model.ParsedModelRoot.SharedRuntimes[id], "Azure", "CIS Benchmark for Microsoft Azure"))
+		risks = append(risks, createRiskForSharedRuntime(input, input.SharedRuntimes[id], "Azure", "CIS Benchmark for Microsoft Azure"))
 		addedAzure = true
 	}
 	for id := range sharedRuntimeIDsGCP {
-		risks = append(risks, createRiskForSharedRuntime(model.ParsedModelRoot.SharedRuntimes[id], "GCP", "CIS Benchmark for Google Cloud Computing Platform"))
+		risks = append(risks, createRiskForSharedRuntime(input, input.SharedRuntimes[id], "GCP", "CIS Benchmark for Google Cloud Computing Platform"))
 		addedGCP = true
 	}
 	for id := range sharedRuntimeIDsOCP {
-		risks = append(risks, createRiskForSharedRuntime(model.ParsedModelRoot.SharedRuntimes[id], "OCP", "Vendor Best Practices for Oracle Cloud Platform"))
+		risks = append(risks, createRiskForSharedRuntime(input, input.SharedRuntimes[id], "OCP", "Vendor Best Practices for Oracle Cloud Platform"))
 		addedOCP = true
 	}
 	for id := range sharedRuntimesWithUnspecificCloudRisks {
-		risks = append(risks, createRiskForSharedRuntime(model.ParsedModelRoot.SharedRuntimes[id], "", ""))
+		risks = append(risks, createRiskForSharedRuntime(input, input.SharedRuntimes[id], "", ""))
 	}
 
 	// ... followed by trust boundaries for the generic risks
 	for id := range trustBoundaryIDsAWS {
-		risks = append(risks, createRiskForTrustBoundary(model.ParsedModelRoot.TrustBoundaries[id], "AWS", "CIS Benchmark for AWS"))
+		risks = append(risks, createRiskForTrustBoundary(input.TrustBoundaries[id], "AWS", "CIS Benchmark for AWS"))
 		addedAWS = true
 	}
 	for id := range trustBoundaryIDsAzure {
-		risks = append(risks, createRiskForTrustBoundary(model.ParsedModelRoot.TrustBoundaries[id], "Azure", "CIS Benchmark for Microsoft Azure"))
+		risks = append(risks, createRiskForTrustBoundary(input.TrustBoundaries[id], "Azure", "CIS Benchmark for Microsoft Azure"))
 		addedAzure = true
 	}
 	for id := range trustBoundaryIDsGCP {
-		risks = append(risks, createRiskForTrustBoundary(model.ParsedModelRoot.TrustBoundaries[id], "GCP", "CIS Benchmark for Google Cloud Computing Platform"))
+		risks = append(risks, createRiskForTrustBoundary(input.TrustBoundaries[id], "GCP", "CIS Benchmark for Google Cloud Computing Platform"))
 		addedGCP = true
 	}
 	for id := range trustBoundaryIDsOCP {
-		risks = append(risks, createRiskForTrustBoundary(model.ParsedModelRoot.TrustBoundaries[id], "OCP", "Vendor Best Practices for Oracle Cloud Platform"))
+		risks = append(risks, createRiskForTrustBoundary(input.TrustBoundaries[id], "OCP", "Vendor Best Practices for Oracle Cloud Platform"))
 		addedOCP = true
 	}
 	for id := range trustBoundariesWithUnspecificCloudRisks {
-		risks = append(risks, createRiskForTrustBoundary(model.ParsedModelRoot.TrustBoundaries[id], "", ""))
+		risks = append(risks, createRiskForTrustBoundary(input.TrustBoundaries[id], "", ""))
 	}
 
 	// just use the most sensitive asset as an example - to only create one general "AWS cloud hardening" risk, not many
 	if !addedAWS {
-		mostRelevantAsset := findMostSensitiveTechnicalAsset(techAssetIDsAWS)
+		mostRelevantAsset := findMostSensitiveTechnicalAsset(input, techAssetIDsAWS)
 		if !mostRelevantAsset.IsZero() {
 			risks = append(risks, createRiskForTechnicalAsset(mostRelevantAsset, "AWS", "CIS Benchmark for AWS"))
 			addedAWS = true
@@ -239,7 +239,7 @@ func GenerateRisks(input *model.ModelInput) []model.Risk {
 	}
 	// just use the most sensitive asset as an example - to only create one general "Azure cloud hardening" risk, not many
 	if !addedAzure {
-		mostRelevantAsset := findMostSensitiveTechnicalAsset(techAssetIDsAzure)
+		mostRelevantAsset := findMostSensitiveTechnicalAsset(input, techAssetIDsAzure)
 		if !mostRelevantAsset.IsZero() {
 			risks = append(risks, createRiskForTechnicalAsset(mostRelevantAsset, "Azure", "CIS Benchmark for Microsoft Azure"))
 			addedAzure = true
@@ -247,7 +247,7 @@ func GenerateRisks(input *model.ModelInput) []model.Risk {
 	}
 	// just use the most sensitive asset as an example - to only create one general "GCP cloud hardening" risk, not many
 	if !addedGCP {
-		mostRelevantAsset := findMostSensitiveTechnicalAsset(techAssetIDsGCP)
+		mostRelevantAsset := findMostSensitiveTechnicalAsset(input, techAssetIDsGCP)
 		if !mostRelevantAsset.IsZero() {
 			risks = append(risks, createRiskForTechnicalAsset(mostRelevantAsset, "GCP", "CIS Benchmark for Google Cloud Computing Platform"))
 			addedGCP = true
@@ -255,7 +255,7 @@ func GenerateRisks(input *model.ModelInput) []model.Risk {
 	}
 	// just use the most sensitive asset as an example - to only create one general "GCP cloud hardening" risk, not many
 	if !addedOCP {
-		mostRelevantAsset := findMostSensitiveTechnicalAsset(techAssetIDsOCP)
+		mostRelevantAsset := findMostSensitiveTechnicalAsset(input, techAssetIDsOCP)
 		if !mostRelevantAsset.IsZero() {
 			risks = append(risks, createRiskForTechnicalAsset(mostRelevantAsset, "OCP", "Vendor Best Practices for Oracle Cloud Platform"))
 			addedOCP = true
@@ -264,7 +264,7 @@ func GenerateRisks(input *model.ModelInput) []model.Risk {
 
 	// now also add all tech asset specific tag-specific risks, as they are specific to the asset anyway (therefore don't set added to true here)
 	for id := range techAssetIDsWithSubtagSpecificCloudRisks {
-		tA := model.ParsedModelRoot.TechnicalAssets[id]
+		tA := input.TechnicalAssets[id]
 		if tA.IsTaggedWithAnyTraversingUp("aws:ec2") {
 			risks = append(risks, createRiskForTechnicalAsset(tA, "EC2", "CIS Benchmark for Amazon Linux"))
 		}
@@ -348,7 +348,7 @@ func addAccordingToBaseTag(techAsset model.TechnicalAsset, tags []string,
 	}
 }
 
-func findMostSensitiveTechnicalAsset(techAssets map[string]bool) model.TechnicalAsset {
+func findMostSensitiveTechnicalAsset(input *model.ParsedModel, techAssets map[string]bool) model.TechnicalAsset {
 	var mostRelevantAsset model.TechnicalAsset
 	keys := make([]string, 0, len(techAssets))
 	for k := range techAssets {
@@ -356,7 +356,7 @@ func findMostSensitiveTechnicalAsset(techAssets map[string]bool) model.Technical
 	}
 	sort.Strings(keys)
 	for _, id := range keys {
-		tA := model.ParsedModelRoot.TechnicalAssets[id]
+		tA := input.TechnicalAssets[id]
 		if mostRelevantAsset.IsZero() || tA.HighestSensitivityScore() > mostRelevantAsset.HighestSensitivityScore() {
 			mostRelevantAsset = tA
 		}
@@ -364,7 +364,7 @@ func findMostSensitiveTechnicalAsset(techAssets map[string]bool) model.Technical
 	return mostRelevantAsset
 }
 
-func createRiskForSharedRuntime(sharedRuntime model.SharedRuntime, prefix, details string) model.Risk {
+func createRiskForSharedRuntime(input *model.ParsedModel, sharedRuntime model.SharedRuntime, prefix, details string) model.Risk {
 	if len(prefix) > 0 {
 		prefix = " (" + prefix + ")"
 	}

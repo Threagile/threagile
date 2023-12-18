@@ -38,12 +38,12 @@ func SupportedTags() []string {
 	return []string{}
 }
 
-func GenerateRisks(input *model.ModelInput) []model.Risk {
+func GenerateRisks(input *model.ParsedModel) []model.Risk {
 	risks := make([]model.Risk, 0)
-	for _, trustBoundary := range model.ParsedModelRoot.TrustBoundaries {
+	for _, trustBoundary := range input.TrustBoundaries {
 		if trustBoundary.Type == model.NetworkPolicyNamespaceIsolation {
 			for _, techAssetID := range trustBoundary.TechnicalAssetsInside {
-				techAsset := model.ParsedModelRoot.TechnicalAssets[techAssetID]
+				techAsset := input.TechnicalAssets[techAssetID]
 				if techAsset.Machine != model.Container && techAsset.Machine != model.Serverless {
 					risks = append(risks, createRisk(techAsset))
 				}

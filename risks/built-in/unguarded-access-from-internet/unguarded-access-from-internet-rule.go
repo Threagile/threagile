@@ -51,10 +51,10 @@ func SupportedTags() []string {
 	return []string{}
 }
 
-func GenerateRisks(input *model.ModelInput) []model.Risk {
+func GenerateRisks(input *model.ParsedModel) []model.Risk {
 	risks := make([]model.Risk, 0)
 	for _, id := range model.SortedTechnicalAssetIDs() {
-		technicalAsset := model.ParsedModelRoot.TechnicalAssets[id]
+		technicalAsset := input.TechnicalAssets[id]
 		if !technicalAsset.OutOfScope {
 			commLinks := model.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id]
 			sort.Sort(model.ByTechnicalCommunicationLinkIdSort(commLinks))
@@ -70,17 +70,17 @@ func GenerateRisks(input *model.ModelInput) []model.Risk {
 							continue
 						}
 					}
-					if model.ParsedModelRoot.TechnicalAssets[incomingAccess.SourceId].Technology == model.Monitoring ||
+					if input.TechnicalAssets[incomingAccess.SourceId].Technology == model.Monitoring ||
 						incomingAccess.VPN {
 						continue
 					}
 					if technicalAsset.Confidentiality >= model.Confidential || technicalAsset.Integrity >= model.Critical {
-						sourceAsset := model.ParsedModelRoot.TechnicalAssets[incomingAccess.SourceId]
+						sourceAsset := input.TechnicalAssets[incomingAccess.SourceId]
 						if sourceAsset.Internet {
 							highRisk := technicalAsset.Confidentiality == model.StrictlyConfidential ||
 								technicalAsset.Integrity == model.MissionCritical
 							risks = append(risks, createRisk(technicalAsset, incomingAccess,
-								model.ParsedModelRoot.TechnicalAssets[incomingAccess.SourceId], highRisk))
+								input.TechnicalAssets[incomingAccess.SourceId], highRisk))
 						}
 					}
 				}

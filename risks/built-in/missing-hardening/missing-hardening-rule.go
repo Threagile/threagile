@@ -44,10 +44,10 @@ func SupportedTags() []string {
 	return []string{"tomcat"}
 }
 
-func GenerateRisks(input *model.ModelInput) []model.Risk {
+func GenerateRisks(input *model.ParsedModel) []model.Risk {
 	risks := make([]model.Risk, 0)
 	for _, id := range model.SortedTechnicalAssetIDs() {
-		technicalAsset := model.ParsedModelRoot.TechnicalAssets[id]
+		technicalAsset := input.TechnicalAssets[id]
 		if !technicalAsset.OutOfScope {
 			if technicalAsset.RAA >= raaLimit || (technicalAsset.RAA >= raaLimitReduced &&
 				(technicalAsset.Type == model.Datastore || technicalAsset.Technology == model.ApplicationServer || technicalAsset.Technology == model.IdentityProvider || technicalAsset.Technology == model.ERP)) {

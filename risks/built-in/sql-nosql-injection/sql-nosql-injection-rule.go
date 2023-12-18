@@ -40,26 +40,26 @@ func SupportedTags() []string {
 	return []string{}
 }
 
-func GenerateRisks(input *model.ModelInput) []model.Risk {
+func GenerateRisks(input *model.ParsedModel) []model.Risk {
 	risks := make([]model.Risk, 0)
 	for _, id := range model.SortedTechnicalAssetIDs() {
-		technicalAsset := model.ParsedModelRoot.TechnicalAssets[id]
+		technicalAsset := input.TechnicalAssets[id]
 		incomingFlows := model.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id]
 		for _, incomingFlow := range incomingFlows {
-			if model.ParsedModelRoot.TechnicalAssets[incomingFlow.SourceId].OutOfScope {
+			if input.TechnicalAssets[incomingFlow.SourceId].OutOfScope {
 				continue
 			}
 			if incomingFlow.Protocol.IsPotentialDatabaseAccessProtocol(true) && (technicalAsset.Technology == model.Database || technicalAsset.Technology == model.IdentityStoreDatabase) ||
 				(incomingFlow.Protocol.IsPotentialDatabaseAccessProtocol(false)) {
-				risks = append(risks, createRisk(technicalAsset, incomingFlow))
+				risks = append(risks, createRisk(input, technicalAsset, incomingFlow))
 			}
 		}
 	}
 	return risks
 }
 
-func createRisk(technicalAsset model.TechnicalAsset, incomingFlow model.CommunicationLink) model.Risk {
-	caller := model.ParsedModelRoot.TechnicalAssets[incomingFlow.SourceId]
+func createRisk(input *model.ParsedModel, technicalAsset model.TechnicalAsset, incomingFlow model.CommunicationLink) model.Risk {
+	caller := input.TechnicalAssets[incomingFlow.SourceId]
 	title := "<b>SQL/NoSQL-Injection</b> risk at <b>" + caller.Title + "</b> against database <b>" + technicalAsset.Title + "</b>" +
 		" via <b>" + incomingFlow.Title + "</b>"
 	impact := model.MediumImpact

@@ -42,10 +42,10 @@ func SupportedTags() []string {
 	return []string{}
 }
 
-func GenerateRisks(input *model.ModelInput) []model.Risk {
+func GenerateRisks(input *model.ParsedModel) []model.Risk {
 	risks := make([]model.Risk, 0)
 	for _, id := range model.SortedTechnicalAssetIDs() {
-		technicalAsset := model.ParsedModelRoot.TechnicalAssets[id]
+		technicalAsset := input.TechnicalAssets[id]
 		if technicalAsset.OutOfScope ||
 			technicalAsset.Technology.IsTrafficForwarding() ||
 			technicalAsset.Technology.IsUnprotectedCommunicationsTolerated() {
@@ -58,7 +58,7 @@ func GenerateRisks(input *model.ModelInput) []model.Risk {
 			// check each incoming data flow
 			commLinks := model.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id]
 			for _, commLink := range commLinks {
-				caller := model.ParsedModelRoot.TechnicalAssets[commLink.SourceId]
+				caller := input.TechnicalAssets[commLink.SourceId]
 				if caller.Technology.IsUnprotectedCommunicationsTolerated() || caller.Type == model.Datastore {
 					continue
 				}
@@ -66,13 +66,13 @@ func GenerateRisks(input *model.ModelInput) []model.Risk {
 					moreRisky := commLink.HighestConfidentiality() >= model.Confidential ||
 						commLink.HighestIntegrity() >= model.Critical
 					if moreRisky && commLink.Authentication != model.TwoFactor {
-						risks = append(risks, missing_authentication.CreateRisk(technicalAsset, commLink, commLink, "", model.MediumImpact, model.Unlikely, true, Category()))
+						risks = append(risks, missing_authentication.CreateRisk(input, technicalAsset, commLink, commLink, "", model.MediumImpact, model.Unlikely, true, Category()))
 					}
 				} else if caller.Technology.IsTrafficForwarding() {
 					// Now try to walk a call chain up (1 hop only) to find a caller's caller used by human
 					callersCommLinks := model.IncomingTechnicalCommunicationLinksMappedByTargetId[caller.Id]
 					for _, callersCommLink := range callersCommLinks {
-						callersCaller := model.ParsedModelRoot.TechnicalAssets[callersCommLink.SourceId]
+						callersCaller := input.TechnicalAssets[callersCommLink.SourceId]
 						if callersCaller.Technology.IsUnprotectedCommunicationsTolerated() || callersCaller.Type == model.Datastore {
 							continue
 						}
@@ -80,7 +80,7 @@ func GenerateRisks(input *model.ModelInput) []model.Risk {
 							moreRisky := callersCommLink.HighestConfidentiality() >= model.Confidential ||
 								callersCommLink.HighestIntegrity() >= model.Critical
 							if moreRisky && callersCommLink.Authentication != model.TwoFactor {
-								risks = append(risks, missing_authentication.CreateRisk(technicalAsset, commLink, callersCommLink, caller.Title, model.MediumImpact, model.Unlikely, true, Category()))
+								risks = append(risks, missing_authentication.CreateRisk(input, technicalAsset, commLink, callersCommLink, caller.Title, model.MediumImpact, model.Unlikely, true, Category()))
 							}
 						}
 					}

@@ -43,9 +43,9 @@ func SupportedTags() []string {
 	return []string{}
 }
 
-func GenerateRisks(input *model.ModelInput) []model.Risk {
+func GenerateRisks(input *model.ParsedModel) []model.Risk {
 	risks := make([]model.Risk, 0)
-	for _, technicalAsset := range model.ParsedModelRoot.TechnicalAssets {
+	for _, technicalAsset := range input.TechnicalAssets {
 		if !technicalAsset.OutOfScope && technicalAsset.Technology == model.Vault {
 			moreImpact := technicalAsset.Confidentiality == model.StrictlyConfidential ||
 				technicalAsset.Integrity == model.MissionCritical ||
@@ -53,9 +53,9 @@ func GenerateRisks(input *model.ModelInput) []model.Risk {
 			sameExecutionEnv := false
 			createRiskEntry := false
 			// now check for any other same-network assets of non-vault-related types
-			for sparringAssetCandidateId := range model.ParsedModelRoot.TechnicalAssets { // so inner loop again over all assets
+			for sparringAssetCandidateId := range input.TechnicalAssets { // so inner loop again over all assets
 				if technicalAsset.Id != sparringAssetCandidateId {
-					sparringAssetCandidate := model.ParsedModelRoot.TechnicalAssets[sparringAssetCandidateId]
+					sparringAssetCandidate := input.TechnicalAssets[sparringAssetCandidateId]
 					if sparringAssetCandidate.Technology != model.Vault && !isVaultStorage(technicalAsset, sparringAssetCandidate) {
 						if technicalAsset.IsSameExecutionEnvironment(sparringAssetCandidateId) {
 							createRiskEntry = true

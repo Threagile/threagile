@@ -49,24 +49,24 @@ func SupportedTags() []string {
 	return []string{}
 }
 
-func GenerateRisks(input *model.ModelInput) []model.Risk {
+func GenerateRisks(input *model.ParsedModel) []model.Risk {
 	risks := make([]model.Risk, 0)
 	// first create them in memory (see the link replacement below for nested trust boundaries) - otherwise in Go ranging over map is random order
 	// range over them in sorted (hence re-producible) way:
 	keys := make([]string, 0)
-	for k := range model.ParsedModelRoot.TechnicalAssets {
+	for k := range input.TechnicalAssets {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
 	for _, key := range keys {
-		technicalAsset := model.ParsedModelRoot.TechnicalAssets[key]
+		technicalAsset := input.TechnicalAssets[key]
 		if !technicalAsset.OutOfScope && technicalAsset.Technology != model.ReverseProxy && technicalAsset.Technology != model.WAF && technicalAsset.Technology != model.IDS && technicalAsset.Technology != model.IPS && technicalAsset.Technology != model.ServiceRegistry {
 			if technicalAsset.RAA >= raaLimit && (technicalAsset.Type == model.Datastore || technicalAsset.Confidentiality >= model.Confidential ||
 				technicalAsset.Integrity >= model.Critical || technicalAsset.Availability >= model.Critical) {
 				// now check for any other same-network assets of certain types which have no direct connection
 				for _, sparringAssetCandidateId := range keys { // so inner loop again over all assets
 					if technicalAsset.Id != sparringAssetCandidateId {
-						sparringAssetCandidate := model.ParsedModelRoot.TechnicalAssets[sparringAssetCandidateId]
+						sparringAssetCandidate := input.TechnicalAssets[sparringAssetCandidateId]
 						if sparringAssetCandidate.Technology.IsLessProtectedType() &&
 							technicalAsset.IsSameTrustBoundaryNetworkOnly(sparringAssetCandidateId) &&
 							!technicalAsset.HasDirectConnection(sparringAssetCandidateId) &&

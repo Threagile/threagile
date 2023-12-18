@@ -39,10 +39,10 @@ func SupportedTags() []string {
 	return []string{}
 }
 
-func GenerateRisks(input *model.ModelInput) []model.Risk {
+func GenerateRisks(input *model.ParsedModel) []model.Risk {
 	risks := make([]model.Risk, 0)
 	for _, id := range model.SortedTechnicalAssetIDs() {
-		technicalAsset := model.ParsedModelRoot.TechnicalAssets[id]
+		technicalAsset := input.TechnicalAssets[id]
 		if len(technicalAsset.DataAssetsProcessed) == 0 && len(technicalAsset.DataAssetsStored) == 0 ||
 			(len(technicalAsset.CommunicationLinks) == 0 && len(model.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id]) == 0) {
 			risks = append(risks, createRisk(technicalAsset))

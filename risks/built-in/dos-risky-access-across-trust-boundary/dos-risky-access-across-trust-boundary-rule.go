@@ -46,22 +46,22 @@ func SupportedTags() []string {
 	return []string{}
 }
 
-func GenerateRisks(input *model.ModelInput) []model.Risk {
+func GenerateRisks(input *model.ParsedModel) []model.Risk {
 	risks := make([]model.Risk, 0)
 	for _, id := range model.SortedTechnicalAssetIDs() {
-		technicalAsset := model.ParsedModelRoot.TechnicalAssets[id]
+		technicalAsset := input.TechnicalAssets[id]
 		if !technicalAsset.OutOfScope && technicalAsset.Technology != model.LoadBalancer &&
 			technicalAsset.Availability >= model.Critical {
 			for _, incomingAccess := range model.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id] {
-				sourceAsset := model.ParsedModelRoot.TechnicalAssets[incomingAccess.SourceId]
+				sourceAsset := input.TechnicalAssets[incomingAccess.SourceId]
 				if sourceAsset.Technology.IsTrafficForwarding() {
 					// Now try to walk a call chain up (1 hop only) to find a caller's caller used by human
 					callersCommLinks := model.IncomingTechnicalCommunicationLinksMappedByTargetId[sourceAsset.Id]
 					for _, callersCommLink := range callersCommLinks {
-						risks = checkRisk(technicalAsset, callersCommLink, sourceAsset.Title, risks)
+						risks = checkRisk(input, technicalAsset, callersCommLink, sourceAsset.Title, risks)
 					}
 				} else {
-					risks = checkRisk(technicalAsset, incomingAccess, "", risks)
+					risks = checkRisk(input, technicalAsset, incomingAccess, "", risks)
 				}
 			}
 		}
@@ -69,13 +69,13 @@ func GenerateRisks(input *model.ModelInput) []model.Risk {
 	return risks
 }
 
-func checkRisk(technicalAsset model.TechnicalAsset, incomingAccess model.CommunicationLink, hopBetween string, risks []model.Risk) []model.Risk {
+func checkRisk(input *model.ParsedModel, technicalAsset model.TechnicalAsset, incomingAccess model.CommunicationLink, hopBetween string, risks []model.Risk) []model.Risk {
 	if incomingAccess.IsAcrossTrustBoundaryNetworkOnly() &&
 		!incomingAccess.Protocol.IsProcessLocal() && incomingAccess.Usage != model.DevOps {
 		highRisk := technicalAsset.Availability == model.MissionCritical &&
 			!incomingAccess.VPN && !incomingAccess.IpFiltered && !technicalAsset.Redundant
 		risks = append(risks, createRisk(technicalAsset, incomingAccess, hopBetween,
-			model.ParsedModelRoot.TechnicalAssets[incomingAccess.SourceId], highRisk))
+			input.TechnicalAssets[incomingAccess.SourceId], highRisk))
 	}
 	return risks
 }

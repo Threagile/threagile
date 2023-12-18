@@ -47,10 +47,10 @@ func SupportedTags() []string {
 	return []string{}
 }
 
-func GenerateRisks(input *model.ModelInput) []model.Risk {
+func GenerateRisks(input *model.ParsedModel) []model.Risk {
 	risks := make([]model.Risk, 0)
 	for _, id := range model.SortedTechnicalAssetIDs() {
-		technicalAsset := model.ParsedModelRoot.TechnicalAssets[id]
+		technicalAsset := input.TechnicalAssets[id]
 		if technicalAsset.OutOfScope {
 			continue
 		}
@@ -65,7 +65,7 @@ func GenerateRisks(input *model.ModelInput) []model.Risk {
 			// check each incoming authenticated data flow
 			commLinks := model.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id]
 			for _, commLink := range commLinks {
-				caller := model.ParsedModelRoot.TechnicalAssets[commLink.SourceId]
+				caller := input.TechnicalAssets[commLink.SourceId]
 				if !caller.Technology.IsUsuallyAbleToPropagateIdentityToOutgoingTargets() || caller.Type == model.Datastore {
 					continue
 				}
@@ -77,7 +77,7 @@ func GenerateRisks(input *model.ModelInput) []model.Risk {
 					highRisk := technicalAsset.Confidentiality == model.StrictlyConfidential ||
 						technicalAsset.Integrity == model.MissionCritical ||
 						technicalAsset.Availability == model.MissionCritical
-					risks = append(risks, createRisk(technicalAsset, commLink, highRisk))
+					risks = append(risks, createRisk(input, technicalAsset, commLink, highRisk))
 				}
 			}
 		}
@@ -85,7 +85,7 @@ func GenerateRisks(input *model.ModelInput) []model.Risk {
 	return risks
 }
 
-func createRisk(technicalAsset model.TechnicalAsset, incomingAccess model.CommunicationLink, moreRisky bool) model.Risk {
+func createRisk(input *model.ParsedModel, technicalAsset model.TechnicalAsset, incomingAccess model.CommunicationLink, moreRisky bool) model.Risk {
 	impact := model.LowImpact
 	if moreRisky {
 		impact = model.MediumImpact
@@ -96,13 +96,13 @@ func createRisk(technicalAsset model.TechnicalAsset, incomingAccess model.Commun
 		ExploitationLikelihood: model.Unlikely,
 		ExploitationImpact:     impact,
 		Title: "<b>Missing End User Identity Propagation</b> over communication link <b>" + incomingAccess.Title + "</b> " +
-			"from <b>" + model.ParsedModelRoot.TechnicalAssets[incomingAccess.SourceId].Title + "</b> " +
+			"from <b>" + input.TechnicalAssets[incomingAccess.SourceId].Title + "</b> " +
 			"to <b>" + technicalAsset.Title + "</b>",
 		MostRelevantTechnicalAssetId:    technicalAsset.Id,
 		MostRelevantCommunicationLinkId: incomingAccess.Id,
 		DataBreachProbability:           model.Improbable,
 		DataBreachTechnicalAssetIDs:     []string{technicalAsset.Id},
 	}
-	risk.SyntheticId = risk.Category.Id + "@" + incomingAccess.Id + "@" + model.ParsedModelRoot.TechnicalAssets[incomingAccess.SourceId].Id + "@" + technicalAsset.Id
+	risk.SyntheticId = risk.Category.Id + "@" + incomingAccess.Id + "@" + input.TechnicalAssets[incomingAccess.SourceId].Id + "@" + technicalAsset.Id
 	return risk
 }
