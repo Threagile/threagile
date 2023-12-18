@@ -52,13 +52,13 @@ uninstall:
 	$(RM) $(ASSET_DIR)
 
 bin/raa: raa/raa/raa.go
-	$(GO) build $(GOFLAGS) -buildmode=plugin -o $@ $<
+	$(GO) build $(GOFLAGS) -o $@ $<
 
 bin/raa_dummy: raa/dummy/dummy.go
-	$(GO) build $(GOFLAGS) -buildmode=plugin -o $@ $<
+	$(GO) build $(GOFLAGS) -o $@ $<
 
 bin/risk_demo: risks/custom/demo/demo-rule.go
-	$(GO) build $(GOFLAGS) -buildmode=plugin -o $@ $<
+	$(GO) build $(GOFLAGS) -o $@ $<
 
 bin/threagile: main.go
 	$(GO) build $(GOFLAGS) -o $@ $<

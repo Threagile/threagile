@@ -4,6 +4,14 @@ import (
 	"github.com/threagile/threagile/model"
 )
 
+func Rule() model.CustomRiskRule {
+	return model.CustomRiskRule{
+		Category:      Category,
+		SupportedTags: SupportedTags,
+		GenerateRisks: GenerateRisks,
+	}
+}
+
 func Category() model.RiskCategory {
 	return model.RiskCategory{
 		Id:    "accidental-secret-leak",
@@ -34,7 +42,7 @@ func SupportedTags() []string {
 	return []string{"git", "nexus"}
 }
 
-func GenerateRisks() []model.Risk {
+func GenerateRisks(input *model.ModelInput) []model.Risk {
 	risks := make([]model.Risk, 0)
 	for _, id := range model.SortedTechnicalAssetIDs() {
 		techAsset := model.ParsedModelRoot.TechnicalAssets[id]

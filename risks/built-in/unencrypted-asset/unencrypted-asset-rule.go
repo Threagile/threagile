@@ -4,6 +4,14 @@ import (
 	"github.com/threagile/threagile/model"
 )
 
+func Rule() model.CustomRiskRule {
+	return model.CustomRiskRule{
+		Category:      Category,
+		SupportedTags: SupportedTags,
+		GenerateRisks: GenerateRisks,
+	}
+}
+
 func Category() model.RiskCategory {
 	return model.RiskCategory{
 		Id:    "unencrypted-asset",
@@ -37,7 +45,7 @@ func SupportedTags() []string {
 
 // check for technical assets that should be encrypted due to their confidentiality
 
-func GenerateRisks() []model.Risk {
+func GenerateRisks(input *model.ModelInput) []model.Risk {
 	risks := make([]model.Risk, 0)
 	for _, id := range model.SortedTechnicalAssetIDs() {
 		technicalAsset := model.ParsedModelRoot.TechnicalAssets[id]

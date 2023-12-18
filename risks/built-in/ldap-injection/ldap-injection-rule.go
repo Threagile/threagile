@@ -4,6 +4,14 @@ import (
 	"github.com/threagile/threagile/model"
 )
 
+func Rule() model.CustomRiskRule {
+	return model.CustomRiskRule{
+		Category:      Category,
+		SupportedTags: SupportedTags,
+		GenerateRisks: GenerateRisks,
+	}
+}
+
 func Category() model.RiskCategory {
 	return model.RiskCategory{
 		Id:    "ldap-injection",
@@ -29,7 +37,7 @@ func Category() model.RiskCategory {
 	}
 }
 
-func GenerateRisks() []model.Risk {
+func GenerateRisks(input *model.ModelInput) []model.Risk {
 	risks := make([]model.Risk, 0)
 	for _, technicalAsset := range model.ParsedModelRoot.TechnicalAssets {
 		incomingFlows := model.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id]

@@ -7,6 +7,14 @@ import (
 
 const raaLimit = 50
 
+func Rule() model.CustomRiskRule {
+	return model.CustomRiskRule{
+		Category:      Category,
+		SupportedTags: SupportedTags,
+		GenerateRisks: GenerateRisks,
+	}
+}
+
 func Category() model.RiskCategory {
 	return model.RiskCategory{
 		Id:    "missing-network-segmentation",
@@ -41,7 +49,7 @@ func SupportedTags() []string {
 	return []string{}
 }
 
-func GenerateRisks() []model.Risk {
+func GenerateRisks(input *model.ModelInput) []model.Risk {
 	risks := make([]model.Risk, 0)
 	// first create them in memory (see the link replacement below for nested trust boundaries) - otherwise in Go ranging over map is random order
 	// range over them in sorted (hence re-producible) way:

@@ -19,9 +19,9 @@ WORKDIR /app
 COPY --from=clone /app/threagile /app
 RUN go version
 RUN go test ./...
-RUN GOOS=linux go build -a -trimpath -ldflags="-s -w -X main.buildTimestamp=$(date '+%Y%m%d%H%M%S')" -buildmode=plugin -o raa.so raa/raa/raa.go
-RUN GOOS=linux go build -a -trimpath -ldflags="-s -w -X main.buildTimestamp=$(date '+%Y%m%d%H%M%S')" -buildmode=plugin -o dummy.so raa/dummy/dummy.go
-RUN GOOS=linux go build -a -trimpath -ldflags="-s -w -X main.buildTimestamp=$(date '+%Y%m%d%H%M%S')" -buildmode=plugin -o demo-rule.so risks/custom/demo/demo-rule.go
+RUN GOOS=linux go build -a -trimpath -ldflags="-s -w -X main.buildTimestamp=$(date '+%Y%m%d%H%M%S')" -buildmode=run -o raa.so raa/raa/raa.go
+RUN GOOS=linux go build -a -trimpath -ldflags="-s -w -X main.buildTimestamp=$(date '+%Y%m%d%H%M%S')" -buildmode=run -o dummy.so raa/dummy/dummy.go
+RUN GOOS=linux go build -a -trimpath -ldflags="-s -w -X main.buildTimestamp=$(date '+%Y%m%d%H%M%S')" -buildmode=run -o demo-rule.so risks/custom/demo/demo-rule.go
 RUN GOOS=linux go build -a -trimpath -ldflags="-s -w -X main.buildTimestamp=$(date '+%Y%m%d%H%M%S')" -o threagile
 # add the -race parameter to go build call in order to instrument with race condition detector: https://blog.golang.org/race-detector
 # NOTE: copy files with final name to send to final build

@@ -4,6 +4,14 @@ import (
 	"github.com/threagile/threagile/model"
 )
 
+func Rule() model.CustomRiskRule {
+	return model.CustomRiskRule{
+		Category:      Category,
+		SupportedTags: SupportedTags,
+		GenerateRisks: GenerateRisks,
+	}
+}
+
 func Category() model.RiskCategory {
 	return model.RiskCategory{
 		Id:          "unguarded-direct-datastore-access",
@@ -36,7 +44,7 @@ func SupportedTags() []string {
 
 // check for data stores that should not be accessed directly across trust boundaries
 
-func GenerateRisks() []model.Risk {
+func GenerateRisks(input *model.ModelInput) []model.Risk {
 	risks := make([]model.Risk, 0)
 	for _, id := range model.SortedTechnicalAssetIDs() {
 		technicalAsset := model.ParsedModelRoot.TechnicalAssets[id]

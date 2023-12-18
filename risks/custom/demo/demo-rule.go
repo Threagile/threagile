@@ -1,7 +1,14 @@
 package main
 
 import (
+	"bufio"
+	"encoding/json"
+	"flag"
+	"fmt"
 	"github.com/threagile/threagile/model"
+	"github.com/threagile/threagile/risks"
+	"io"
+	"os"
 )
 
 type customRiskRule string
@@ -9,6 +16,59 @@ type customRiskRule string
 // exported as symbol (here simply as variable to interface to bundle many functions under one symbol) named "CustomRiskRule"
 
 var CustomRiskRule customRiskRule
+
+func main() {
+	getInfo := flag.Bool("get-info", false, "get rule info")
+	generateRisks := flag.Bool("generate-risks", false, "generate risks")
+	flag.Parse()
+
+	if *getInfo {
+		rule := new(customRiskRule)
+		category := rule.Category()
+		riskData, marshalError := json.Marshal(risks.CustomRisk{
+			ID:       category.Id,
+			Category: category,
+			Tags:     rule.SupportedTags(),
+		})
+
+		if marshalError != nil {
+			_, _ = fmt.Fprintf(os.Stderr, "failed to print risk data: %v", marshalError)
+			os.Exit(-2)
+		}
+
+		_, _ = fmt.Fprint(os.Stdout, riskData)
+		os.Exit(0)
+	}
+
+	if *generateRisks {
+		reader := bufio.NewReader(os.Stdin)
+		inData, outError := io.ReadAll(reader)
+		if outError != nil {
+			_, _ = fmt.Fprintf(os.Stderr, "failed to read model data from stdin\n")
+			os.Exit(-2)
+		}
+
+		var input model.ParsedModel
+		inError := json.Unmarshal(inData, &input)
+		if inError != nil {
+			_, _ = fmt.Fprintf(os.Stderr, "failed to parse model: %v\n", inError)
+			os.Exit(-2)
+		}
+
+		generatedRisks := new(customRiskRule).GenerateRisks(&input)
+		outData, marshalError := json.Marshal(generatedRisks)
+		if marshalError != nil {
+			_, _ = fmt.Fprintf(os.Stderr, "failed to print generated risks: %v\n", marshalError)
+			os.Exit(-2)
+		}
+
+		_, _ = fmt.Fprint(os.Stdout, outData)
+		os.Exit(0)
+	}
+
+	flag.Usage()
+	os.Exit(-2)
+}
 
 func (r customRiskRule) Category() model.RiskCategory {
 	return model.RiskCategory{
@@ -35,12 +95,12 @@ func (r customRiskRule) SupportedTags() []string {
 	return []string{"demo tag"}
 }
 
-func (r customRiskRule) GenerateRisks() []model.Risk {
-	risks := make([]model.Risk, 0)
-	for _, techAsset := range model.ParsedModelRoot.TechnicalAssets {
-		risks = append(risks, createRisk(techAsset))
+func (r customRiskRule) GenerateRisks(input *model.ParsedModel) []model.Risk {
+	generatedRisks := make([]model.Risk, 0)
+	for _, techAsset := range input.TechnicalAssets {
+		generatedRisks = append(generatedRisks, createRisk(techAsset))
 	}
-	return risks
+	return generatedRisks
 }
 
 func createRisk(technicalAsset model.TechnicalAsset) model.Risk {

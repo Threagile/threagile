@@ -4,6 +4,14 @@ import (
 	"github.com/threagile/threagile/model"
 )
 
+func Rule() model.CustomRiskRule {
+	return model.CustomRiskRule{
+		Category:      Category,
+		SupportedTags: SupportedTags,
+		GenerateRisks: GenerateRisks,
+	}
+}
+
 func Category() model.RiskCategory {
 	return model.RiskCategory{
 		Id:    "missing-vault-isolation",
@@ -35,7 +43,7 @@ func SupportedTags() []string {
 	return []string{}
 }
 
-func GenerateRisks() []model.Risk {
+func GenerateRisks(input *model.ModelInput) []model.Risk {
 	risks := make([]model.Risk, 0)
 	for _, technicalAsset := range model.ParsedModelRoot.TechnicalAssets {
 		if !technicalAsset.OutOfScope && technicalAsset.Technology == model.Vault {
