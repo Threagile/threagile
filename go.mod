@@ -8,7 +8,7 @@ require (
 	github.com/jung-kurt/gofpdf v1.16.2
 	github.com/wcharczuk/go-chart v2.0.1+incompatible
 	github.com/xuri/excelize/v2 v2.8.0
-	golang.org/x/crypto v0.14.0
+	golang.org/x/crypto v0.17.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -43,7 +43,7 @@ require (
 	golang.org/x/arch v0.5.0 // indirect
 	golang.org/x/image v0.13.0 // indirect
 	golang.org/x/net v0.17.0 // indirect
-	golang.org/x/sys v0.13.0 // indirect
-	golang.org/x/text v0.13.0 // indirect
+	golang.org/x/sys v0.15.0 // indirect
+	golang.org/x/text v0.14.0 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 )
