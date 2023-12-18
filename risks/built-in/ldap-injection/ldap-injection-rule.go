@@ -37,12 +37,12 @@ func Category() model.RiskCategory {
 	}
 }
 
-func GenerateRisks(input *model.ModelInput) []model.Risk {
+func GenerateRisks(input *model.ParsedModel) []model.Risk {
 	risks := make([]model.Risk, 0)
-	for _, technicalAsset := range model.ParsedModelRoot.TechnicalAssets {
+	for _, technicalAsset := range input.TechnicalAssets {
 		incomingFlows := model.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id]
 		for _, incomingFlow := range incomingFlows {
-			if model.ParsedModelRoot.TechnicalAssets[incomingFlow.SourceId].OutOfScope {
+			if input.TechnicalAssets[incomingFlow.SourceId].OutOfScope {
 				continue
 			}
 			if incomingFlow.Protocol == model.LDAP || incomingFlow.Protocol == model.LDAPS {
@@ -50,7 +50,7 @@ func GenerateRisks(input *model.ModelInput) []model.Risk {
 				if incomingFlow.Usage == model.DevOps {
 					likelihood = model.Unlikely
 				}
-				risks = append(risks, createRisk(technicalAsset, incomingFlow, likelihood))
+				risks = append(risks, createRisk(input, technicalAsset, incomingFlow, likelihood))
 			}
 		}
 	}
@@ -61,8 +61,8 @@ func SupportedTags() []string {
 	return []string{}
 }
 
-func createRisk(technicalAsset model.TechnicalAsset, incomingFlow model.CommunicationLink, likelihood model.RiskExploitationLikelihood) model.Risk {
-	caller := model.ParsedModelRoot.TechnicalAssets[incomingFlow.SourceId]
+func createRisk(input *model.ParsedModel, technicalAsset model.TechnicalAsset, incomingFlow model.CommunicationLink, likelihood model.RiskExploitationLikelihood) model.Risk {
+	caller := input.TechnicalAssets[incomingFlow.SourceId]
 	title := "<b>LDAP-Injection</b> risk at <b>" + caller.Title + "</b> against LDAP server <b>" + technicalAsset.Title + "</b>" +
 		" via <b>" + incomingFlow.Title + "</b>"
 	impact := model.MediumImpact

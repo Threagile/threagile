@@ -170,7 +170,7 @@ func (context *Context) applyRisk(rule model.CustomRiskRule, skippedRules *map[s
 		delete(*skippedRules, rule.Category().Id)
 	} else {
 		model.AddToListOfSupportedTags(rule.SupportedTags())
-		generatedRisks := rule.GenerateRisks(&context.modelInput)
+		generatedRisks := rule.GenerateRisks(&model.ParsedModelRoot)
 		if generatedRisks != nil {
 			if len(generatedRisks) > 0 {
 				model.GeneratedRisksByCategory[rule.Category()] = generatedRisks

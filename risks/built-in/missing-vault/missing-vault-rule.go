@@ -42,13 +42,13 @@ func SupportedTags() []string {
 	return []string{}
 }
 
-func GenerateRisks(input *model.ModelInput) []model.Risk {
+func GenerateRisks(input *model.ParsedModel) []model.Risk {
 	risks := make([]model.Risk, 0)
 	hasVault := false
 	var mostRelevantAsset model.TechnicalAsset
 	impact := model.LowImpact
 	for _, id := range model.SortedTechnicalAssetIDs() { // use the sorted one to always get the same tech asset with the highest sensitivity as example asset
-		techAsset := model.ParsedModelRoot.TechnicalAssets[id]
+		techAsset := input.TechnicalAssets[id]
 		if techAsset.Technology == model.Vault {
 			hasVault = true
 		}

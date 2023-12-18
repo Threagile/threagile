@@ -41,10 +41,10 @@ func SupportedTags() []string {
 	return []string{}
 }
 
-func GenerateRisks(input *model.ModelInput) []model.Risk {
+func GenerateRisks(input *model.ParsedModel) []model.Risk {
 	risks := make([]model.Risk, 0)
 	for _, id := range model.SortedTechnicalAssetIDs() {
-		technicalAsset := model.ParsedModelRoot.TechnicalAssets[id]
+		technicalAsset := input.TechnicalAssets[id]
 		if technicalAsset.OutOfScope || technicalAsset.Technology == model.LoadBalancer ||
 			technicalAsset.Technology == model.ReverseProxy || technicalAsset.Technology == model.ServiceRegistry || technicalAsset.Technology == model.WAF || technicalAsset.Technology == model.IDS || technicalAsset.Technology == model.IPS {
 			continue
@@ -56,7 +56,7 @@ func GenerateRisks(input *model.ModelInput) []model.Risk {
 			// check each incoming data flow
 			commLinks := model.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id]
 			for _, commLink := range commLinks {
-				caller := model.ParsedModelRoot.TechnicalAssets[commLink.SourceId]
+				caller := input.TechnicalAssets[commLink.SourceId]
 				if caller.Technology.IsUnprotectedCommunicationsTolerated() || caller.Type == model.Datastore {
 					continue
 				}
@@ -71,7 +71,7 @@ func GenerateRisks(input *model.ModelInput) []model.Risk {
 					impact = model.LowImpact
 				}
 				if commLink.Authentication == model.NoneAuthentication && !commLink.Protocol.IsProcessLocal() {
-					risks = append(risks, CreateRisk(technicalAsset, commLink, commLink, "", impact, model.Likely, false, Category()))
+					risks = append(risks, CreateRisk(input, technicalAsset, commLink, commLink, "", impact, model.Likely, false, Category()))
 				}
 			}
 		}
@@ -79,7 +79,7 @@ func GenerateRisks(input *model.ModelInput) []model.Risk {
 	return risks
 }
 
-func CreateRisk(technicalAsset model.TechnicalAsset, incomingAccess, incomingAccessOrigin model.CommunicationLink, hopBetween string,
+func CreateRisk(input *model.ParsedModel, technicalAsset model.TechnicalAsset, incomingAccess, incomingAccessOrigin model.CommunicationLink, hopBetween string,
 	impact model.RiskExploitationImpact, likelihood model.RiskExploitationLikelihood, twoFactor bool, category model.RiskCategory) model.Risk {
 	factorString := ""
 	if twoFactor {
@@ -94,13 +94,13 @@ func CreateRisk(technicalAsset model.TechnicalAsset, incomingAccess, incomingAcc
 		ExploitationLikelihood: likelihood,
 		ExploitationImpact:     impact,
 		Title: "<b>Missing " + factorString + "Authentication</b> covering communication link <b>" + incomingAccess.Title + "</b> " +
-			"from <b>" + model.ParsedModelRoot.TechnicalAssets[incomingAccessOrigin.SourceId].Title + "</b> " + hopBetween +
+			"from <b>" + input.TechnicalAssets[incomingAccessOrigin.SourceId].Title + "</b> " + hopBetween +
 			"to <b>" + technicalAsset.Title + "</b>",
 		MostRelevantTechnicalAssetId:    technicalAsset.Id,
 		MostRelevantCommunicationLinkId: incomingAccess.Id,
 		DataBreachProbability:           model.Possible,
 		DataBreachTechnicalAssetIDs:     []string{technicalAsset.Id},
 	}
-	risk.SyntheticId = risk.Category.Id + "@" + incomingAccess.Id + "@" + model.ParsedModelRoot.TechnicalAssets[incomingAccess.SourceId].Id + "@" + technicalAsset.Id
+	risk.SyntheticId = risk.Category.Id + "@" + incomingAccess.Id + "@" + input.TechnicalAssets[incomingAccess.SourceId].Id + "@" + technicalAsset.Id
 	return risk
 }

@@ -9,7 +9,7 @@ import (
 type BuiltInRisk struct {
 	Category      func() model.RiskCategory
 	SupportedTags func() []string
-	GenerateRisks func(m *model.ModelInput) []model.Risk
+	GenerateRisks func(m *model.ParsedModel) []model.Risk
 }
 
 type CustomRisk struct {

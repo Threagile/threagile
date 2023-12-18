@@ -41,15 +41,15 @@ func SupportedTags() []string {
 	return []string{}
 }
 
-func GenerateRisks(input *model.ModelInput) []model.Risk {
+func GenerateRisks(input *model.ParsedModel) []model.Risk {
 	risks := make([]model.Risk, 0)
 	// first create them in memory - otherwise in Go ranging over map is random order
 	// range over them in sorted (hence re-producible) way:
 	unusedDataAssetIDs := make(map[string]bool)
-	for k := range model.ParsedModelRoot.DataAssets {
+	for k := range input.DataAssets {
 		unusedDataAssetIDs[k] = true
 	}
-	for _, technicalAsset := range model.ParsedModelRoot.TechnicalAssets {
+	for _, technicalAsset := range input.TechnicalAssets {
 		for _, processedDataAssetID := range technicalAsset.DataAssetsProcessed {
 			delete(unusedDataAssetIDs, processedDataAssetID)
 		}
@@ -71,13 +71,13 @@ func GenerateRisks(input *model.ModelInput) []model.Risk {
 	}
 	sort.Strings(keys)
 	for _, unusedDataAssetID := range keys {
-		risks = append(risks, createRisk(unusedDataAssetID))
+		risks = append(risks, createRisk(input, unusedDataAssetID))
 	}
 	return risks
 }
 
-func createRisk(unusedDataAssetID string) model.Risk {
-	unusedDataAsset := model.ParsedModelRoot.DataAssets[unusedDataAssetID]
+func createRisk(input *model.ParsedModel, unusedDataAssetID string) model.Risk {
+	unusedDataAsset := input.DataAssets[unusedDataAssetID]
 	title := "<b>Unnecessary Data Asset</b> named <b>" + unusedDataAsset.Title + "</b>"
 	risk := model.Risk{
 		Category:                    Category(),

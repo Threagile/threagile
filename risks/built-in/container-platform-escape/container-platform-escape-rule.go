@@ -48,18 +48,18 @@ func SupportedTags() []string {
 	return []string{"docker", "kubernetes", "openshift"}
 }
 
-func GenerateRisks(input *model.ModelInput) []model.Risk {
+func GenerateRisks(input *model.ParsedModel) []model.Risk {
 	risks := make([]model.Risk, 0)
 	for _, id := range model.SortedTechnicalAssetIDs() {
-		technicalAsset := model.ParsedModelRoot.TechnicalAssets[id]
+		technicalAsset := input.TechnicalAssets[id]
 		if !technicalAsset.OutOfScope && technicalAsset.Technology == model.ContainerPlatform {
-			risks = append(risks, createRisk(technicalAsset))
+			risks = append(risks, createRisk(input, technicalAsset))
 		}
 	}
 	return risks
 }
 
-func createRisk(technicalAsset model.TechnicalAsset) model.Risk {
+func createRisk(input *model.ParsedModel, technicalAsset model.TechnicalAsset) model.Risk {
 	title := "<b>Container Platform Escape</b> risk at <b>" + technicalAsset.Title + "</b>"
 	impact := model.MediumImpact
 	if technicalAsset.HighestConfidentiality() == model.StrictlyConfidential ||
@@ -69,7 +69,7 @@ func createRisk(technicalAsset model.TechnicalAsset) model.Risk {
 	}
 	// data breach at all container assets
 	dataBreachTechnicalAssetIDs := make([]string, 0)
-	for id, techAsset := range model.ParsedModelRoot.TechnicalAssets {
+	for id, techAsset := range input.TechnicalAssets {
 		if techAsset.Machine == model.Container {
 			dataBreachTechnicalAssetIDs = append(dataBreachTechnicalAssetIDs, id)
 		}

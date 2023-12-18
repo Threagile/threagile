@@ -44,10 +44,10 @@ func SupportedTags() []string {
 	return []string{}
 }
 
-func GenerateRisks(input *model.ModelInput) []model.Risk {
+func GenerateRisks(input *model.ParsedModel) []model.Risk {
 	risks := make([]model.Risk, 0)
 	for _, id := range model.SortedTechnicalAssetIDs() {
-		technicalAsset := model.ParsedModelRoot.TechnicalAssets[id]
+		technicalAsset := input.TechnicalAssets[id]
 		if technicalAsset.OutOfScope || !technicalAsset.Technology.IsWebApplication() {
 			continue
 		}
@@ -58,15 +58,15 @@ func GenerateRisks(input *model.ModelInput) []model.Risk {
 				if incomingFlow.Usage == model.DevOps {
 					likelihood = model.Likely
 				}
-				risks = append(risks, createRisk(technicalAsset, incomingFlow, likelihood))
+				risks = append(risks, createRisk(input, technicalAsset, incomingFlow, likelihood))
 			}
 		}
 	}
 	return risks
 }
 
-func createRisk(technicalAsset model.TechnicalAsset, incomingFlow model.CommunicationLink, likelihood model.RiskExploitationLikelihood) model.Risk {
-	sourceAsset := model.ParsedModelRoot.TechnicalAssets[incomingFlow.SourceId]
+func createRisk(input *model.ParsedModel, technicalAsset model.TechnicalAsset, incomingFlow model.CommunicationLink, likelihood model.RiskExploitationLikelihood) model.Risk {
+	sourceAsset := input.TechnicalAssets[incomingFlow.SourceId]
 	title := "<b>Cross-Site Request Forgery (CSRF)</b> risk at <b>" + technicalAsset.Title + "</b> via <b>" + incomingFlow.Title + "</b> from <b>" + sourceAsset.Title + "</b>"
 	impact := model.LowImpact
 	if incomingFlow.HighestIntegrity() == model.MissionCritical {

@@ -41,9 +41,9 @@ func SupportedTags() []string {
 	return []string{}
 }
 
-func GenerateRisks(input *model.ModelInput) []model.Risk {
+func GenerateRisks(input *model.ParsedModel) []model.Risk {
 	risks := make([]model.Risk, 0)
-	for _, technicalAsset := range model.ParsedModelRoot.TechnicalAssets {
+	for _, technicalAsset := range input.TechnicalAssets {
 		if !technicalAsset.OutOfScope &&
 			(technicalAsset.Technology == model.IdentityStoreLDAP || technicalAsset.Technology == model.IdentityStoreDatabase) {
 			// everything fine, no risk, as we have an in-scope identity store in the model
@@ -55,11 +55,11 @@ func GenerateRisks(input *model.ModelInput) []model.Risk {
 	var mostRelevantAsset model.TechnicalAsset
 	impact := model.LowImpact
 	for _, id := range model.SortedTechnicalAssetIDs() { // use the sorted one to always get the same tech asset with the highest sensitivity as example asset
-		technicalAsset := model.ParsedModelRoot.TechnicalAssets[id]
+		technicalAsset := input.TechnicalAssets[id]
 		for _, commLink := range technicalAsset.CommunicationLinksSorted() { // use the sorted one to always get the same tech asset with the highest sensitivity as example asset
 			if commLink.Authorization == model.EndUserIdentityPropagation {
 				riskIdentified = true
-				targetAsset := model.ParsedModelRoot.TechnicalAssets[commLink.TargetId]
+				targetAsset := input.TechnicalAssets[commLink.TargetId]
 				if impact == model.LowImpact {
 					mostRelevantAsset = targetAsset
 					if targetAsset.HighestConfidentiality() >= model.Confidential ||

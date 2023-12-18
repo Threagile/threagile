@@ -45,10 +45,10 @@ func SupportedTags() []string {
 
 // check for technical assets that should be encrypted due to their confidentiality
 
-func GenerateRisks(input *model.ModelInput) []model.Risk {
+func GenerateRisks(input *model.ParsedModel) []model.Risk {
 	risks := make([]model.Risk, 0)
 	for _, id := range model.SortedTechnicalAssetIDs() {
-		technicalAsset := model.ParsedModelRoot.TechnicalAssets[id]
+		technicalAsset := input.TechnicalAssets[id]
 		if !technicalAsset.OutOfScope && !IsEncryptionWaiver(technicalAsset) &&
 			(technicalAsset.HighestConfidentiality() >= model.Confidential ||
 				technicalAsset.HighestIntegrity() >= model.Critical) {

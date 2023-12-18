@@ -44,13 +44,13 @@ func SupportedTags() []string {
 
 // check for data stores that should not be accessed directly across trust boundaries
 
-func GenerateRisks(input *model.ModelInput) []model.Risk {
+func GenerateRisks(input *model.ParsedModel) []model.Risk {
 	risks := make([]model.Risk, 0)
 	for _, id := range model.SortedTechnicalAssetIDs() {
-		technicalAsset := model.ParsedModelRoot.TechnicalAssets[id]
+		technicalAsset := input.TechnicalAssets[id]
 		if !technicalAsset.OutOfScope && technicalAsset.Type == model.Datastore {
 			for _, incomingAccess := range model.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id] {
-				sourceAsset := model.ParsedModelRoot.TechnicalAssets[incomingAccess.SourceId]
+				sourceAsset := input.TechnicalAssets[incomingAccess.SourceId]
 				if (technicalAsset.Technology == model.IdentityStoreLDAP || technicalAsset.Technology == model.IdentityStoreDatabase) &&
 					sourceAsset.Technology == model.IdentityProvider {
 					continue
@@ -61,7 +61,7 @@ func GenerateRisks(input *model.ModelInput) []model.Risk {
 						highRisk := technicalAsset.Confidentiality == model.StrictlyConfidential ||
 							technicalAsset.Integrity == model.MissionCritical
 						risks = append(risks, createRisk(technicalAsset, incomingAccess,
-							model.ParsedModelRoot.TechnicalAssets[incomingAccess.SourceId], highRisk))
+							input.TechnicalAssets[incomingAccess.SourceId], highRisk))
 					}
 				}
 			}

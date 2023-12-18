@@ -58,7 +58,7 @@ func AddToListOfSupportedTags(tags []string) {
 type CustomRiskRule struct {
 	Category      func() RiskCategory
 	SupportedTags func() []string
-	GenerateRisks func(input *ModelInput) []Risk
+	GenerateRisks func(input *ParsedModel) []Risk
 }
 
 // === To be used by model macros etc. =======================

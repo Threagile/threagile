@@ -38,13 +38,13 @@ func SupportedTags() []string {
 	return []string{}
 }
 
-func GenerateRisks(input *model.ModelInput) []model.Risk {
+func GenerateRisks(input *model.ParsedModel) []model.Risk {
 	risks := make([]model.Risk, 0)
 	for _, id := range model.SortedTechnicalAssetIDs() {
-		technicalAsset := model.ParsedModelRoot.TechnicalAssets[id]
+		technicalAsset := input.TechnicalAssets[id]
 		for _, commLink := range technicalAsset.CommunicationLinks {
 			if len(commLink.DataAssetsSent) == 0 && len(commLink.DataAssetsReceived) == 0 {
-				if !technicalAsset.OutOfScope || !model.ParsedModelRoot.TechnicalAssets[commLink.TargetId].OutOfScope {
+				if !technicalAsset.OutOfScope || !input.TechnicalAssets[commLink.TargetId].OutOfScope {
 					risks = append(risks, createRisk(technicalAsset, commLink))
 				}
 			}

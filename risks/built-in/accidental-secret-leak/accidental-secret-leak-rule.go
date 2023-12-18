@@ -42,10 +42,10 @@ func SupportedTags() []string {
 	return []string{"git", "nexus"}
 }
 
-func GenerateRisks(input *model.ModelInput) []model.Risk {
+func GenerateRisks(input *model.ParsedModel) []model.Risk {
 	risks := make([]model.Risk, 0)
 	for _, id := range model.SortedTechnicalAssetIDs() {
-		techAsset := model.ParsedModelRoot.TechnicalAssets[id]
+		techAsset := input.TechnicalAssets[id]
 		if !techAsset.OutOfScope &&
 			(techAsset.Technology == model.SourcecodeRepository || techAsset.Technology == model.ArtifactRegistry) {
 			var risk model.Risk
