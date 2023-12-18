@@ -17,6 +17,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/akedrou/textdiff"
+	"github.com/threagile/threagile/risks"
 	"hash/fnv"
 	"io"
 	"log"
@@ -24,7 +25,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"plugin"
 	"regexp"
 	"sort"
 	"strconv"
@@ -85,6 +85,7 @@ import (
 	wrongcommunicationlinkcontent "github.com/threagile/threagile/risks/built-in/wrong-communication-link-content"
 	wrongtrustboundarycontent "github.com/threagile/threagile/risks/built-in/wrong-trust-boundary-content"
 	xmlexternalentity "github.com/threagile/threagile/risks/built-in/xml-external-entity"
+	"github.com/threagile/threagile/run"
 	"golang.org/x/crypto/argon2"
 	"gopkg.in/yaml.v3"
 )
@@ -101,9 +102,11 @@ const (
 
 const (
 	buildTimestamp                         = ""
-	tmpFolder                              = "/dev/shm" // TODO: make configurable via cmdline arg?
-	appFolder                              = "/app"
-	baseFolder                             = "/data"
+	tempDir                                = "/dev/shm" // TODO: make configurable via cmdline arg?
+	binDir                                 = "/app"
+	appDir                                 = "/app"
+	dataDir                                = "/data"
+	keyDir                                 = "keys"
 	reportFilename                         = "report.pdf"
 	excelRisksFilename                     = "risks.xlsx"
 	excelTagsFilename                      = "tags.xlsx"
@@ -116,7 +119,7 @@ const (
 	dataAssetDiagramFilenamePNG            = "data-asset-diagram.png"
 	graphvizDataFlowDiagramConversionCall  = "render-data-flow-diagram.sh"
 	graphvizDataAssetDiagramConversionCall = "render-data-asset-diagram.sh"
-	outputFile                             = "threagile.yaml"
+	inputFile                              = "threagile.yaml"
 )
 
 type Context struct {
@@ -128,20 +131,21 @@ type Context struct {
 	globalLock sync.Mutex
 	modelInput model.ModelInput
 
-	tempFolder                                                                                        *string
 	modelFilename, templateFilename                                                                   *string
 	testParseModel                                                                                    *bool
 	createExampleModel, createStubModel, createEditingSupport, verbose, ignoreOrphanedRiskTracking    *bool
 	generateDataFlowDiagram, generateDataAssetDiagram, generateRisksJSON, generateTechnicalAssetsJSON *bool
 	generateStatsJSON, generateRisksExcel, generateTagsExcel, generateReportPDF                       *bool
 	outputDir, raaPlugin, skipRiskRules, riskRulesPlugins, executeModelMacro                          *string
-	customRiskRules                                                                                   map[string]model.CustomRiskRule
+	customRiskRules                                                                                   map[string]*risks.CustomRisk
 	diagramDPI, serverPort                                                                            *int
 	deferredRiskTrackingDueToWildcardMatching                                                         map[string]model.RiskTracking
 	addModelTitle                                                                                     bool
 	keepDiagramSourceFiles                                                                            bool
 	appFolder                                                                                         *string
-	baseFolder                                                                                        *string
+	binFolder                                                                                         *string
+	serverFolder                                                                                      *string
+	tempFolder                                                                                        *string
 }
 
 func (context *Context) Defaults() *Context {
@@ -149,7 +153,7 @@ func (context *Context) Defaults() *Context {
 		keepDiagramSourceFiles: keepDiagramSourceFiles,
 		addModelTitle:          addModelTitle,
 		buildTimestamp:         buildTimestamp,
-		customRiskRules:        make(map[string]model.CustomRiskRule),
+		customRiskRules:        make(map[string]*risks.CustomRisk),
 		deferredRiskTrackingDueToWildcardMatching:                    make(map[string]model.RiskTracking),
 		drawSpaceLinesForLayoutUnfortunatelyFurtherSeparatesAllRanks: true,
 	}
@@ -157,482 +161,85 @@ func (context *Context) Defaults() *Context {
 	return context
 }
 
+func (context *Context) applyRisk(rule model.CustomRiskRule, skippedRules *map[string]bool) {
+	id := rule.Category().Id
+	_, ok := (*skippedRules)[id]
+
+	if ok {
+		fmt.Printf("Skipping risk rule %q\n", rule.Category().Id)
+		delete(*skippedRules, rule.Category().Id)
+	} else {
+		model.AddToListOfSupportedTags(rule.SupportedTags())
+		generatedRisks := rule.GenerateRisks(&context.modelInput)
+		if generatedRisks != nil {
+			if len(generatedRisks) > 0 {
+				model.GeneratedRisksByCategory[rule.Category()] = generatedRisks
+			}
+		} else {
+			fmt.Printf("Failed to generate risks for %q\n", id)
+		}
+	}
+}
+
 func (context *Context) applyRiskGeneration() {
 	if *context.verbose {
 		fmt.Println("Applying risk generation")
 	}
-	skippedRules := make(map[string]interface{})
+
+	skippedRules := make(map[string]bool)
 	if len(*context.skipRiskRules) > 0 {
 		for _, id := range strings.Split(*context.skipRiskRules, ",") {
 			skippedRules[id] = true
 		}
 	}
 
-	if _, ok := skippedRules[unencryptedasset.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", unencryptedasset.Category().Id)
-		delete(skippedRules, unencryptedasset.Category().Id)
-	} else {
-		model.AddToListOfSupportedTags(unencryptedasset.SupportedTags())
-		risks := unencryptedasset.GenerateRisks()
-		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[unencryptedasset.Category()] = risks
-		}
-	}
-
-	if _, ok := skippedRules[unencryptedcommunication.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", unencryptedcommunication.Category().Id)
-		delete(skippedRules, unencryptedcommunication.Category().Id)
-	} else {
-		model.AddToListOfSupportedTags(unencryptedcommunication.SupportedTags())
-		risks := unencryptedcommunication.GenerateRisks()
-		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[unencryptedcommunication.Category()] = risks
-		}
-	}
-
-	if _, ok := skippedRules[unguardeddirectdatastoreaccess.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", unguardeddirectdatastoreaccess.Category().Id)
-		delete(skippedRules, unguardeddirectdatastoreaccess.Category().Id)
-	} else {
-		model.AddToListOfSupportedTags(unguardeddirectdatastoreaccess.SupportedTags())
-		risks := unguardeddirectdatastoreaccess.GenerateRisks()
-		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[unguardeddirectdatastoreaccess.Category()] = risks
-		}
-	}
-
-	if _, ok := skippedRules[unguardedaccessfrominternet.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", unguardedaccessfrominternet.Category().Id)
-		delete(skippedRules, unguardedaccessfrominternet.Category().Id)
-	} else {
-		model.AddToListOfSupportedTags(unguardedaccessfrominternet.SupportedTags())
-		risks := unguardedaccessfrominternet.GenerateRisks()
-		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[unguardedaccessfrominternet.Category()] = risks
-		}
-	}
-
-	if _, ok := skippedRules[dosriskyaccessacrosstrustboundary.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", dosriskyaccessacrosstrustboundary.Category().Id)
-		delete(skippedRules, dosriskyaccessacrosstrustboundary.Category().Id)
-	} else {
-		model.AddToListOfSupportedTags(dosriskyaccessacrosstrustboundary.SupportedTags())
-		risks := dosriskyaccessacrosstrustboundary.GenerateRisks()
-		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[dosriskyaccessacrosstrustboundary.Category()] = risks
-		}
-	}
-
-	if _, ok := skippedRules[missingnetworksegmentation.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", missingnetworksegmentation.Category().Id)
-		delete(skippedRules, missingnetworksegmentation.Category().Id)
-	} else {
-		model.AddToListOfSupportedTags(missingnetworksegmentation.SupportedTags())
-		risks := missingnetworksegmentation.GenerateRisks()
-		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[missingnetworksegmentation.Category()] = risks
-		}
-	}
-
-	if _, ok := skippedRules[mixedtargetsonsharedruntime.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", mixedtargetsonsharedruntime.Category().Id)
-		delete(skippedRules, mixedtargetsonsharedruntime.Category().Id)
-	} else {
-		model.AddToListOfSupportedTags(mixedtargetsonsharedruntime.SupportedTags())
-		risks := mixedtargetsonsharedruntime.GenerateRisks()
-		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[mixedtargetsonsharedruntime.Category()] = risks
-		}
-	}
-
-	if _, ok := skippedRules[missingidentitypropagation.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", missingidentitypropagation.Category().Id)
-		delete(skippedRules, missingidentitypropagation.Category().Id)
-	} else {
-		model.AddToListOfSupportedTags(missingidentitypropagation.SupportedTags())
-		risks := missingidentitypropagation.GenerateRisks()
-		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[missingidentitypropagation.Category()] = risks
-		}
-	}
-
-	if _, ok := skippedRules[missingidentitystore.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", missingidentitystore.Category().Id)
-		delete(skippedRules, missingidentitystore.Category().Id)
-	} else {
-		model.AddToListOfSupportedTags(missingidentitystore.SupportedTags())
-		risks := missingidentitystore.GenerateRisks()
-		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[missingidentitystore.Category()] = risks
-		}
-	}
-
-	if _, ok := skippedRules[missingauthentication.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", missingauthentication.Category().Id)
-		delete(skippedRules, missingauthentication.Category().Id)
-	} else {
-		model.AddToListOfSupportedTags(missingauthentication.SupportedTags())
-		risks := missingauthentication.GenerateRisks()
-		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[missingauthentication.Category()] = risks
-		}
-	}
-
-	if _, ok := skippedRules[missingauthenticationsecondfactor.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", missingauthenticationsecondfactor.Category().Id)
-		delete(skippedRules, missingauthenticationsecondfactor.Category().Id)
-	} else {
-		model.AddToListOfSupportedTags(missingauthenticationsecondfactor.SupportedTags())
-		risks := missingauthenticationsecondfactor.GenerateRisks()
-		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[missingauthenticationsecondfactor.Category()] = risks
-		}
-	}
-
-	if _, ok := skippedRules[unnecessarydatatransfer.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", unnecessarydatatransfer.Category().Id)
-		delete(skippedRules, unnecessarydatatransfer.Category().Id)
-	} else {
-		model.AddToListOfSupportedTags(unnecessarydatatransfer.SupportedTags())
-		risks := unnecessarydatatransfer.GenerateRisks()
-		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[unnecessarydatatransfer.Category()] = risks
-		}
-	}
-
-	if _, ok := skippedRules[unnecessarycommunicationlink.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", unnecessarycommunicationlink.Category().Id)
-		delete(skippedRules, unnecessarycommunicationlink.Category().Id)
-	} else {
-		model.AddToListOfSupportedTags(unnecessarycommunicationlink.SupportedTags())
-		risks := unnecessarycommunicationlink.GenerateRisks()
-		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[unnecessarycommunicationlink.Category()] = risks
-		}
-	}
-
-	if _, ok := skippedRules[unnecessarytechnicalasset.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", unnecessarytechnicalasset.Category().Id)
-		delete(skippedRules, unnecessarytechnicalasset.Category().Id)
-	} else {
-		model.AddToListOfSupportedTags(unnecessarytechnicalasset.SupportedTags())
-		risks := unnecessarytechnicalasset.GenerateRisks()
-		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[unnecessarytechnicalasset.Category()] = risks
-		}
-	}
-
-	if _, ok := skippedRules[unnecessarydataasset.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", unnecessarydataasset.Category().Id)
-		delete(skippedRules, unnecessarydataasset.Category().Id)
-	} else {
-		model.AddToListOfSupportedTags(unnecessarydataasset.SupportedTags())
-		risks := unnecessarydataasset.GenerateRisks()
-		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[unnecessarydataasset.Category()] = risks
-		}
-	}
-
-	if _, ok := skippedRules[sqlnosqlinjection.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", sqlnosqlinjection.Category().Id)
-		delete(skippedRules, sqlnosqlinjection.Category().Id)
-	} else {
-		model.AddToListOfSupportedTags(sqlnosqlinjection.SupportedTags())
-		risks := sqlnosqlinjection.GenerateRisks()
-		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[sqlnosqlinjection.Category()] = risks
-		}
-	}
-
-	if _, ok := skippedRules[ldapinjection.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", ldapinjection.Category().Id)
-		delete(skippedRules, ldapinjection.Category().Id)
-	} else {
-		model.AddToListOfSupportedTags(ldapinjection.SupportedTags())
-		risks := ldapinjection.GenerateRisks()
-		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[ldapinjection.Category()] = risks
-		}
-	}
-
-	if _, ok := skippedRules[crosssitescripting.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", crosssitescripting.Category().Id)
-		delete(skippedRules, crosssitescripting.Category().Id)
-	} else {
-		model.AddToListOfSupportedTags(crosssitescripting.SupportedTags())
-		risks := crosssitescripting.GenerateRisks()
-		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[crosssitescripting.Category()] = risks
-		}
-	}
-
-	if _, ok := skippedRules[crosssiterequestforgery.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", crosssiterequestforgery.Category().Id)
-		delete(skippedRules, crosssiterequestforgery.Category().Id)
-	} else {
-		model.AddToListOfSupportedTags(crosssiterequestforgery.SupportedTags())
-		risks := crosssiterequestforgery.GenerateRisks()
-		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[crosssiterequestforgery.Category()] = risks
-		}
-	}
-
-	if _, ok := skippedRules[serversiderequestforgery.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", serversiderequestforgery.Category().Id)
-		delete(skippedRules, serversiderequestforgery.Category().Id)
-	} else {
-		model.AddToListOfSupportedTags(serversiderequestforgery.SupportedTags())
-		risks := serversiderequestforgery.GenerateRisks()
-		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[serversiderequestforgery.Category()] = risks
-		}
-	}
-
-	if _, ok := skippedRules[pathtraversal.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", pathtraversal.Category().Id)
-		delete(skippedRules, pathtraversal.Category().Id)
-	} else {
-		model.AddToListOfSupportedTags(pathtraversal.SupportedTags())
-		risks := pathtraversal.GenerateRisks()
-		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[pathtraversal.Category()] = risks
-		}
-	}
-
-	if _, ok := skippedRules[pushinsteadofpulldeployment.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", pushinsteadofpulldeployment.Category().Id)
-		delete(skippedRules, pushinsteadofpulldeployment.Category().Id)
-	} else {
-		model.AddToListOfSupportedTags(pushinsteadofpulldeployment.SupportedTags())
-		risks := pushinsteadofpulldeployment.GenerateRisks()
-		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[pushinsteadofpulldeployment.Category()] = risks
-		}
-	}
-
-	if _, ok := skippedRules[searchqueryinjection.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", searchqueryinjection.Category().Id)
-		delete(skippedRules, searchqueryinjection.Category().Id)
-	} else {
-		model.AddToListOfSupportedTags(searchqueryinjection.SupportedTags())
-		risks := searchqueryinjection.GenerateRisks()
-		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[searchqueryinjection.Category()] = risks
-		}
-	}
-
-	if _, ok := skippedRules[serviceregistrypoisoning.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", serviceregistrypoisoning.Category().Id)
-		delete(skippedRules, serviceregistrypoisoning.Category().Id)
-	} else {
-		model.AddToListOfSupportedTags(serviceregistrypoisoning.SupportedTags())
-		risks := serviceregistrypoisoning.GenerateRisks()
-		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[serviceregistrypoisoning.Category()] = risks
-		}
-	}
-
-	if _, ok := skippedRules[untrusteddeserialization.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", untrusteddeserialization.Category().Id)
-		delete(skippedRules, untrusteddeserialization.Category().Id)
-	} else {
-		model.AddToListOfSupportedTags(untrusteddeserialization.SupportedTags())
-		risks := untrusteddeserialization.GenerateRisks()
-		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[untrusteddeserialization.Category()] = risks
-		}
-	}
-
-	if _, ok := skippedRules[xmlexternalentity.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", xmlexternalentity.Category().Id)
-		delete(skippedRules, xmlexternalentity.Category().Id)
-	} else {
-		model.AddToListOfSupportedTags(xmlexternalentity.SupportedTags())
-		risks := xmlexternalentity.GenerateRisks()
-		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[xmlexternalentity.Category()] = risks
-		}
-	}
-
-	if _, ok := skippedRules[missingcloudhardening.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", missingcloudhardening.Category().Id)
-		delete(skippedRules, missingcloudhardening.Category().Id)
-	} else {
-		model.AddToListOfSupportedTags(missingcloudhardening.SupportedTags())
-		risks := missingcloudhardening.GenerateRisks()
-		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[missingcloudhardening.Category()] = risks
-		}
-	}
-
-	if _, ok := skippedRules[missingfilevalidation.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", missingfilevalidation.Category().Id)
-		delete(skippedRules, missingfilevalidation.Category().Id)
-	} else {
-		model.AddToListOfSupportedTags(missingfilevalidation.SupportedTags())
-		risks := missingfilevalidation.GenerateRisks()
-		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[missingfilevalidation.Category()] = risks
-		}
-	}
-
-	if _, ok := skippedRules[missinghardening.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", missinghardening.Category().Id)
-		delete(skippedRules, missinghardening.Category().Id)
-	} else {
-		model.AddToListOfSupportedTags(missinghardening.SupportedTags())
-		risks := missinghardening.GenerateRisks()
-		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[missinghardening.Category()] = risks
-		}
-	}
-
-	if _, ok := skippedRules[accidentalsecretleak.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", accidentalsecretleak.Category().Id)
-		delete(skippedRules, accidentalsecretleak.Category().Id)
-	} else {
-		model.AddToListOfSupportedTags(accidentalsecretleak.SupportedTags())
-		risks := accidentalsecretleak.GenerateRisks()
-		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[accidentalsecretleak.Category()] = risks
-		}
-	}
-
-	if _, ok := skippedRules[codebackdooring.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", codebackdooring.Category().Id)
-		delete(skippedRules, codebackdooring.Category().Id)
-	} else {
-		model.AddToListOfSupportedTags(codebackdooring.SupportedTags())
-		risks := codebackdooring.GenerateRisks()
-		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[codebackdooring.Category()] = risks
-		}
-	}
-
-	if _, ok := skippedRules[containerbaseimagebackdooring.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", containerbaseimagebackdooring.Category().Id)
-		delete(skippedRules, containerbaseimagebackdooring.Category().Id)
-	} else {
-		model.AddToListOfSupportedTags(containerbaseimagebackdooring.SupportedTags())
-		risks := containerbaseimagebackdooring.GenerateRisks()
-		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[containerbaseimagebackdooring.Category()] = risks
-		}
-	}
-
-	if _, ok := skippedRules[containerplatformescape.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", containerplatformescape.Category().Id)
-		delete(skippedRules, containerplatformescape.Category().Id)
-	} else {
-		model.AddToListOfSupportedTags(containerplatformescape.SupportedTags())
-		risks := containerplatformescape.GenerateRisks()
-		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[containerplatformescape.Category()] = risks
-		}
-	}
-
-	if _, ok := skippedRules[incompletemodel.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", incompletemodel.Category().Id)
-		delete(skippedRules, incompletemodel.Category().Id)
-	} else {
-		model.AddToListOfSupportedTags(incompletemodel.SupportedTags())
-		risks := incompletemodel.GenerateRisks()
-		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[incompletemodel.Category()] = risks
-		}
-	}
-
-	if _, ok := skippedRules[uncheckeddeployment.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", uncheckeddeployment.Category().Id)
-		delete(skippedRules, uncheckeddeployment.Category().Id)
-	} else {
-		model.AddToListOfSupportedTags(uncheckeddeployment.SupportedTags())
-		risks := uncheckeddeployment.GenerateRisks()
-		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[uncheckeddeployment.Category()] = risks
-		}
-	}
-
-	if _, ok := skippedRules[missingbuildinfrastructure.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", missingbuildinfrastructure.Category().Id)
-		delete(skippedRules, missingbuildinfrastructure.Category().Id)
-	} else {
-		model.AddToListOfSupportedTags(missingbuildinfrastructure.SupportedTags())
-		risks := missingbuildinfrastructure.GenerateRisks()
-		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[missingbuildinfrastructure.Category()] = risks
-		}
-	}
-
-	if _, ok := skippedRules[missingidentityproviderisolation.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", missingidentityproviderisolation.Category().Id)
-		delete(skippedRules, missingidentityproviderisolation.Category().Id)
-	} else {
-		model.AddToListOfSupportedTags(missingidentityproviderisolation.SupportedTags())
-		risks := missingidentityproviderisolation.GenerateRisks()
-		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[missingidentityproviderisolation.Category()] = risks
-		}
-	}
-
-	if _, ok := skippedRules[missingvault.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", missingvault.Category().Id)
-		delete(skippedRules, missingvault.Category().Id)
-	} else {
-		model.AddToListOfSupportedTags(missingvault.SupportedTags())
-		risks := missingvault.GenerateRisks()
-		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[missingvault.Category()] = risks
-		}
-	}
-
-	if _, ok := skippedRules[missingvaultisolation.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", missingvaultisolation.Category().Id)
-		delete(skippedRules, missingvaultisolation.Category().Id)
-	} else {
-		model.AddToListOfSupportedTags(missingvaultisolation.SupportedTags())
-		risks := missingvaultisolation.GenerateRisks()
-		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[missingvaultisolation.Category()] = risks
-		}
-	}
-
-	if _, ok := skippedRules[missingwaf.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", missingwaf.Category().Id)
-		delete(skippedRules, missingwaf.Category().Id)
-	} else {
-		model.AddToListOfSupportedTags(missingwaf.SupportedTags())
-		risks := missingwaf.GenerateRisks()
-		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[missingwaf.Category()] = risks
-		}
-	}
-
-	if _, ok := skippedRules[wrongcommunicationlinkcontent.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", wrongcommunicationlinkcontent.Category().Id)
-		delete(skippedRules, wrongcommunicationlinkcontent.Category().Id)
-	} else {
-		model.AddToListOfSupportedTags(wrongcommunicationlinkcontent.SupportedTags())
-		risks := wrongcommunicationlinkcontent.GenerateRisks()
-		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[wrongcommunicationlinkcontent.Category()] = risks
-		}
-	}
-
-	if _, ok := skippedRules[wrongtrustboundarycontent.Category().Id]; ok {
-		fmt.Println("Skipping risk rule:", wrongtrustboundarycontent.Category().Id)
-		delete(skippedRules, wrongtrustboundarycontent.Category().Id)
-	} else {
-		model.AddToListOfSupportedTags(wrongtrustboundarycontent.SupportedTags())
-		risks := wrongtrustboundarycontent.GenerateRisks()
-		if len(risks) > 0 {
-			model.GeneratedRisksByCategory[wrongtrustboundarycontent.Category()] = risks
-		}
-	}
+	context.applyRisk(accidentalsecretleak.Rule(), &skippedRules)
+	context.applyRisk(codebackdooring.Rule(), &skippedRules)
+	context.applyRisk(containerbaseimagebackdooring.Rule(), &skippedRules)
+	context.applyRisk(containerplatformescape.Rule(), &skippedRules)
+	context.applyRisk(crosssiterequestforgery.Rule(), &skippedRules)
+	context.applyRisk(crosssitescripting.Rule(), &skippedRules)
+	context.applyRisk(dosriskyaccessacrosstrustboundary.Rule(), &skippedRules)
+	context.applyRisk(incompletemodel.Rule(), &skippedRules)
+	context.applyRisk(ldapinjection.Rule(), &skippedRules)
+	context.applyRisk(missingauthentication.Rule(), &skippedRules)
+	context.applyRisk(missingauthenticationsecondfactor.Rule(), &skippedRules)
+	context.applyRisk(missingbuildinfrastructure.Rule(), &skippedRules)
+	context.applyRisk(missingcloudhardening.Rule(), &skippedRules)
+	context.applyRisk(missingfilevalidation.Rule(), &skippedRules)
+	context.applyRisk(missinghardening.Rule(), &skippedRules)
+	context.applyRisk(missingidentitypropagation.Rule(), &skippedRules)
+	context.applyRisk(missingidentityproviderisolation.Rule(), &skippedRules)
+	context.applyRisk(missingidentitystore.Rule(), &skippedRules)
+	context.applyRisk(missingnetworksegmentation.Rule(), &skippedRules)
+	context.applyRisk(missingvault.Rule(), &skippedRules)
+	context.applyRisk(missingvaultisolation.Rule(), &skippedRules)
+	context.applyRisk(missingwaf.Rule(), &skippedRules)
+	context.applyRisk(mixedtargetsonsharedruntime.Rule(), &skippedRules)
+	context.applyRisk(pathtraversal.Rule(), &skippedRules)
+	context.applyRisk(pushinsteadofpulldeployment.Rule(), &skippedRules)
+	context.applyRisk(searchqueryinjection.Rule(), &skippedRules)
+	context.applyRisk(serversiderequestforgery.Rule(), &skippedRules)
+	context.applyRisk(serviceregistrypoisoning.Rule(), &skippedRules)
+	context.applyRisk(sqlnosqlinjection.Rule(), &skippedRules)
+	context.applyRisk(uncheckeddeployment.Rule(), &skippedRules)
+	context.applyRisk(unencryptedasset.Rule(), &skippedRules)
+	context.applyRisk(unencryptedcommunication.Rule(), &skippedRules)
+	context.applyRisk(unguardedaccessfrominternet.Rule(), &skippedRules)
+	context.applyRisk(unguardeddirectdatastoreaccess.Rule(), &skippedRules)
+	context.applyRisk(unnecessarycommunicationlink.Rule(), &skippedRules)
+	context.applyRisk(unnecessarydataasset.Rule(), &skippedRules)
+	context.applyRisk(unnecessarydatatransfer.Rule(), &skippedRules)
+	context.applyRisk(unnecessarytechnicalasset.Rule(), &skippedRules)
+	context.applyRisk(untrusteddeserialization.Rule(), &skippedRules)
+	context.applyRisk(wrongcommunicationlinkcontent.Rule(), &skippedRules)
+	context.applyRisk(wrongtrustboundarycontent.Rule(), &skippedRules)
+	context.applyRisk(xmlexternalentity.Rule(), &skippedRules)
 
 	// NOW THE CUSTOM RISK RULES (if any)
 	for id, customRule := range context.customRiskRules {
-		if _, ok := skippedRules[customRule.Category().Id]; ok {
+		_, ok := skippedRules[customRule.ID]
+		if ok {
 			if *context.verbose {
 				fmt.Println("Skipping custom risk rule:", id)
 			}
@@ -641,13 +248,14 @@ func (context *Context) applyRiskGeneration() {
 			if *context.verbose {
 				fmt.Println("Executing custom risk rule:", id)
 			}
-			model.AddToListOfSupportedTags(customRule.SupportedTags())
-			risks := customRule.GenerateRisks()
-			if len(risks) > 0 {
-				model.GeneratedRisksByCategory[customRule.Category()] = risks
+			model.AddToListOfSupportedTags(customRule.Tags)
+			customRisks := customRule.GenerateRisks(&model.ParsedModelRoot)
+			if len(customRisks) > 0 {
+				model.GeneratedRisksByCategory[customRule.Category] = customRisks
 			}
+
 			if *context.verbose {
-				fmt.Println("Added custom risks:", len(risks))
+				fmt.Println("Added custom risks:", len(customRisks))
 			}
 		}
 	}
@@ -664,8 +272,8 @@ func (context *Context) applyRiskGeneration() {
 
 	// save also in map keyed by synthetic risk-id
 	for _, category := range model.SortedRiskCategories() {
-		risks := model.SortedRisksOfCategory(category)
-		for _, risk := range risks {
+		someRisks := model.SortedRisksOfCategory(category)
+		for _, risk := range someRisks {
 			model.GeneratedRisksBySyntheticId[strings.ToLower(risk.SyntheticId)] = risk
 		}
 	}
@@ -1230,7 +838,7 @@ func (context *Context) doIt() {
 			fmt.Println("Writing report pdf")
 		}
 		report.WriteReportPDF(filepath.Join(*context.outputDir, reportFilename),
-			*context.templateFilename,
+			filepath.Join(*context.appFolder, *context.templateFilename),
 			filepath.Join(*context.outputDir, dataFlowDiagramFilenamePNG),
 			filepath.Join(*context.outputDir, dataAssetDiagramFilenamePNG),
 			*context.modelFilename,
@@ -1258,67 +866,55 @@ func (context *Context) applyRAA() string {
 	if *context.verbose {
 		fmt.Println("Applying RAA calculation:", *context.raaPlugin)
 	}
-	// determine plugin to load.
-	// load plugin: open the ".so" file to load the symbols
-	plug, err := plugin.Open(*context.raaPlugin)
-	if err != nil {
-		fmt.Printf("WARNING: plugin %q not applied: %v\n", *context.raaPlugin, err)
-		return ""
-	}
-	//	checkErr(err)
-	// look up a symbol (an exported function or variable): in this case, function CalculateRAA
-	symCalculateRAA, err := plug.Lookup("CalculateRAA")
-	if err != nil {
-		fmt.Printf("WARNING: plugin %q not applied: %v\n", *context.raaPlugin, err)
-		return ""
-	}
-	//	checkErr(err)
-	// use the plugin
-	raaCalcFunc, ok := symCalculateRAA.(func() string) // symCalculateRAA.(func(model.ParsedModel) string)
-	if !ok {
-		fmt.Printf("WARNING: invalid plugin %q\n", *context.raaPlugin)
-		return ""
-	}
-	/*	if !ok {
-			panic(errors.New("RAA plugin has no 'CalculateRAA() string' function"))
+
+	raa := *context.raaPlugin
+	runner, loadError := new(run.Runner).Load(filepath.Join(*context.binFolder, *context.raaPlugin))
+	if loadError != nil {
+		raa = strings.TrimSuffix(raa, filepath.Ext(raa))
+		runner, loadError = new(run.Runner).Load(filepath.Join(*context.binFolder, raa))
+		if loadError != nil {
+			fmt.Printf("WARNING: raa %q not loaded: %v\n", *context.raaPlugin, loadError)
+			return ""
 		}
-	*/
-	// call it
-	return raaCalcFunc()
+	}
+
+	runError := runner.Run(model.ParsedModelRoot, &model.ParsedModelRoot)
+	if runError != nil {
+		fmt.Printf("WARNING: raa %q not applied: %v\n", *context.raaPlugin, runError)
+		return ""
+	}
+
+	return runner.ErrorOutput
 }
 
 func (context *Context) loadCustomRiskRules() {
-	context.customRiskRules = make(map[string]model.CustomRiskRule)
+	context.customRiskRules = make(map[string]*risks.CustomRisk)
 	if len(*context.riskRulesPlugins) > 0 {
 		if *context.verbose {
 			fmt.Println("Loading custom risk rules:", *context.riskRulesPlugins)
 		}
+
 		for _, pluginFile := range strings.Split(*context.riskRulesPlugins, ",") {
 			if len(pluginFile) > 0 {
-				// check that the plugin file to load exists
-				_, err := os.Stat(pluginFile)
-				if os.IsNotExist(err) {
-					log.Fatal("Custom risk rule implementation file not found: ", pluginFile)
+				runner, loadError := new(run.Runner).Load(pluginFile)
+				if loadError != nil {
+					log.Fatalf("WARNING: Custom risk rule %q not loaded: %v\n", pluginFile, loadError)
 				}
-				// load plugin: open the ".so" file to load the symbols
-				plug, err := plugin.Open(pluginFile)
-				checkErr(err)
-				// look up a symbol (an exported function or variable): in this case variable CustomRiskRule
-				symCustomRiskRule, err := plug.Lookup("CustomRiskRule")
-				checkErr(err)
-				// register the risk rule plugin for later use: in this case interface type model.CustomRiskRule (defined above)
-				symCustomRiskRuleVar, ok := symCustomRiskRule.(model.CustomRiskRule)
-				if !ok {
-					panic(errors.New("custom risk rule plugin has no 'CustomRiskRule' variable"))
+
+				risk := new(risks.CustomRisk)
+				runError := runner.Run(nil, &risk, "-get-info")
+				if runError != nil {
+					log.Fatalf("WARNING: Failed to get ID for custom risk rule %q: %v\n", pluginFile, runError)
 				}
-				// simply add to a map (just convenience) where key is the category id and value the rule's execution function
-				ruleID := symCustomRiskRuleVar.Category().Id
-				context.customRiskRules[ruleID] = symCustomRiskRuleVar
+
+				risk.Runner = runner
+				context.customRiskRules[risk.ID] = risk
 				if *context.verbose {
-					fmt.Println("Custom risk rule loaded:", ruleID)
+					fmt.Println("Custom risk rule loaded:", risk.ID)
 				}
 			}
 		}
+
 		if *context.verbose {
 			fmt.Println("Loaded custom risk rules:", len(context.customRiskRules))
 		}
@@ -1426,12 +1022,12 @@ func (context *Context) execute(ginContext *gin.Context, dryRun bool) (yamlConte
 
 	yamlContent, err = os.ReadFile(yamlFile)
 	checkErr(err)
-	err = os.WriteFile(filepath.Join(tmpOutputDir, outputFile), yamlContent, 0400)
+	err = os.WriteFile(filepath.Join(tmpOutputDir, inputFile), yamlContent, 0400)
 	checkErr(err)
 
 	if !dryRun {
 		files := []string{
-			filepath.Join(tmpOutputDir, outputFile),
+			filepath.Join(tmpOutputDir, inputFile),
 			filepath.Join(tmpOutputDir, dataFlowDiagramFilenamePNG),
 			filepath.Join(tmpOutputDir, dataAssetDiagramFilenamePNG),
 			filepath.Join(tmpOutputDir, reportFilename),
@@ -1462,7 +1058,7 @@ func (context *Context) doItViaRuntimeCall(modelFile string, outputDir string,
 	dpi int) {
 	// Remember to also add the same args to the exec based sub-process calls!
 	var cmd *exec.Cmd
-	args := []string{"-model", modelFile, "-output", outputDir, "-execute-model-macro", *context.executeModelMacro, "-raa-plugin", *context.raaPlugin, "-custom-risk-rules-plugins", *context.riskRulesPlugins, "-skip-risk-rules", *context.skipRiskRules, "-diagram-dpi", strconv.Itoa(dpi)}
+	args := []string{"-model", modelFile, "-output", outputDir, "-execute-model-macro", *context.executeModelMacro, "-raa-run", *context.raaPlugin, "-custom-risk-rules-plugins", *context.riskRulesPlugins, "-skip-risk-rules", *context.skipRiskRules, "-diagram-dpi", strconv.Itoa(dpi)}
 	if *context.verbose {
 		args = append(args, "-verbose")
 	}
@@ -1656,7 +1252,7 @@ func (context *Context) addSupportedTags(input []byte) []byte {
 	// add distinct tags as "tags_available"
 	supportedTags := make(map[string]bool)
 	for _, customRule := range context.customRiskRules {
-		for _, tag := range customRule.SupportedTags() {
+		for _, tag := range customRule.Tags {
 			supportedTags[strings.ToLower(tag)] = true
 		}
 	}
@@ -1981,14 +1577,14 @@ func (context *Context) analyzeModelOnServerDirectly(ginContext *gin.Context) {
 		context.handleErrorInServiceCall(err, ginContext)
 		return
 	}
-	err = os.WriteFile(filepath.Join(tmpOutputDir, outputFile), []byte(yamlText), 0400)
+	err = os.WriteFile(filepath.Join(tmpOutputDir, inputFile), []byte(yamlText), 0400)
 	if err != nil {
 		context.handleErrorInServiceCall(err, ginContext)
 		return
 	}
 
 	files := []string{
-		filepath.Join(tmpOutputDir, outputFile),
+		filepath.Join(tmpOutputDir, inputFile),
 		filepath.Join(tmpOutputDir, dataFlowDiagramFilenamePNG),
 		filepath.Join(tmpOutputDir, dataAssetDiagramFilenamePNG),
 		filepath.Join(tmpOutputDir, reportFilename),
@@ -2200,7 +1796,7 @@ func (context *Context) importModel(ginContext *gin.Context) {
 
 func (context *Context) stats(ginContext *gin.Context) {
 	keyCount, modelCount := 0, 0
-	keyFolders, err := os.ReadDir(*context.baseFolder)
+	keyFolders, err := os.ReadDir(filepath.Join(*context.serverFolder, keyDir))
 	if err != nil {
 		log.Println(err)
 		ginContext.JSON(http.StatusInternalServerError, gin.H{
@@ -2211,7 +1807,7 @@ func (context *Context) stats(ginContext *gin.Context) {
 	for _, keyFolder := range keyFolders {
 		if len(keyFolder.Name()) == 128 { // it's a sha512 token hash probably, so count it as token folder for the stats
 			keyCount++
-			modelFolders, err := os.ReadDir(filepath.Join(*context.baseFolder, keyFolder.Name()))
+			modelFolders, err := os.ReadDir(filepath.Join(*context.serverFolder, keyDir, keyFolder.Name()))
 			if err != nil {
 				log.Println(err)
 				ginContext.JSON(http.StatusInternalServerError, gin.H{
@@ -2829,7 +2425,7 @@ func (context *Context) getModel(ginContext *gin.Context) {
 			return
 		}
 		defer func() { _ = os.Remove(tmpResultFile.Name()) }()
-		ginContext.FileAttachment(tmpResultFile.Name(), outputFile)
+		ginContext.FileAttachment(tmpResultFile.Name(), inputFile)
 	}
 }
 
@@ -3155,7 +2751,7 @@ func (context *Context) listModels(ginContext *gin.Context) { // TODO currently 
 	}
 	for _, dirEntry := range modelFolders {
 		if dirEntry.IsDir() {
-			modelStat, err := os.Stat(filepath.Join(folderNameOfKey, dirEntry.Name(), outputFile))
+			modelStat, err := os.Stat(filepath.Join(folderNameOfKey, dirEntry.Name(), inputFile))
 			if err != nil {
 				log.Println(err)
 				ginContext.JSON(http.StatusNotFound, gin.H{
@@ -3248,7 +2844,7 @@ func (context *Context) readModel(ginContext *gin.Context, modelUUID string, key
 		return modelInputResult, yamlText, false
 	}
 
-	fileBytes, err := os.ReadFile(filepath.Join(modelFolder, outputFile))
+	fileBytes, err := os.ReadFile(filepath.Join(modelFolder, inputFile))
 	if err != nil {
 		log.Println(err)
 		ginContext.JSON(http.StatusInternalServerError, gin.H{
@@ -3357,7 +2953,7 @@ func (context *Context) writeModelYAML(ginContext *gin.Context, yaml string, key
 			return false
 		}
 	}
-	f, err := os.Create(filepath.Join(modelFolder, outputFile))
+	f, err := os.Create(filepath.Join(modelFolder, inputFile))
 	if err != nil {
 		log.Println(err)
 		ginContext.JSON(http.StatusInternalServerError, gin.H{
@@ -3379,7 +2975,7 @@ func (context *Context) backupModelToHistory(modelFolder string, changeReasonFor
 			return err
 		}
 	}
-	input, err := os.ReadFile(filepath.Join(modelFolder, outputFile))
+	input, err := os.ReadFile(filepath.Join(modelFolder, inputFile))
 	if err != nil {
 		return err
 	}
@@ -3513,7 +3109,7 @@ type keyHeader struct {
 
 func (context *Context) folderNameFromKey(key []byte) string {
 	sha512Hash := hashSHA256(key)
-	return filepath.Join(*context.baseFolder, sha512Hash)
+	return filepath.Join(*context.serverFolder, keyDir, sha512Hash)
 }
 
 func hashSHA256(key []byte) string {
@@ -3539,7 +3135,7 @@ func (context *Context) createKey(ginContext *gin.Context) {
 		})
 		return
 	}
-	err = os.Mkdir(context.folderNameFromKey(keyBytesArr), 0700)
+	err = os.MkdirAll(context.folderNameFromKey(keyBytesArr), 0700)
 	if err != nil {
 		log.Println(err)
 		ginContext.JSON(http.StatusInternalServerError, gin.H{
@@ -3647,10 +3243,13 @@ func (context *Context) deleteKey(ginContext *gin.Context) {
 }
 
 func (context *Context) parseCommandlineArgs() {
-	context.tempFolder = flag.String("temp-dir", tmpFolder, "temporary folder location")
-	context.modelFilename = flag.String("model", outputFile, "input model yaml file")
+	context.tempFolder = flag.String("temp-dir", tempDir, "temporary folder location")
+	context.binFolder = flag.String("bin-dir", binDir, "binary folder location")
+	context.appFolder = flag.String("app-dir", appDir, "app folder (default: "+appDir+")")
+	context.serverFolder = flag.String("server-dir", dataDir, "base folder for server mode (default: "+dataDir+")")
+	context.modelFilename = flag.String("model", inputFile, "input model yaml file")
 	context.outputDir = flag.String("output", ".", "output directory")
-	context.raaPlugin = flag.String("raa-plugin", "raa.so", "RAA calculation plugin (.so shared object) file name")
+	context.raaPlugin = flag.String("raa-run", "raa.so", "RAA calculation run (.so shared object) file name")
 	context.executeModelMacro = flag.String("execute-model-macro", "", "Execute model macro (by ID)")
 	context.testParseModel = flag.Bool("test-parse-model", false, "test parse model functionality")
 	context.createExampleModel = flag.Bool("create-example-model", false, "just create an example model named threagile-example-model.yaml in the output directory")
@@ -3671,8 +3270,6 @@ func (context *Context) parseCommandlineArgs() {
 	context.riskRulesPlugins = flag.String("custom-risk-rules-plugins", "", "comma-separated list of plugins (.so shared object) file names with custom risk rules to load")
 	context.verbose = flag.Bool("verbose", false, "verbose output")
 	context.ignoreOrphanedRiskTracking = flag.Bool("ignore-orphaned-risk-tracking", false, "ignore orphaned risk tracking (just log them) not matching a concrete risk")
-	context.appFolder = flag.String("app-folder", appFolder, "app folder (default: "+appFolder+")")
-	context.baseFolder = flag.String("base-folder", baseFolder, "base folder (default: "+baseFolder+")")
 	version := flag.Bool("version", false, "print version")
 	listTypes := flag.Bool("list-types", false, "print type information (enum values to be used in models)")
 	listRiskRules := flag.Bool("list-risk-rules", false, "print risk rules")
@@ -3774,7 +3371,7 @@ func (context *Context) parseCommandlineArgs() {
 		context.printLogo()
 		fmt.Println("The following model macros are available (can be extended via custom model macros):")
 		fmt.Println()
-		/* TODO finish plugin stuff
+		/* TODO finish run stuff
 		fmt.Println("Custom model macros:")
 		for id, customModelMacro := range customModelMacros {
 			fmt.Println(id, "-->", customModelMacro.GetMacroDetails().Title)
@@ -3802,7 +3399,7 @@ func (context *Context) parseCommandlineArgs() {
 		fmt.Println("------------------")
 		context.loadCustomRiskRules()
 		for id, customRule := range context.customRiskRules {
-			fmt.Println(id, "-->", customRule.Category().Title, "--> with tags:", customRule.SupportedTags())
+			fmt.Println(id, "-->", customRule.Category.Title, "--> with tags:", customRule.Tags)
 		}
 		fmt.Println()
 		fmt.Println("--------------------")
@@ -4087,7 +3684,7 @@ func (context *Context) printExamples() {
 		"-v \"$(pwd)\":" + filepath.Join(*context.appFolder, "work") + " " +
 		"threagile/threagile " +
 		"-verbose " +
-		"-model " + filepath.Join(*context.appFolder, "work", outputFile) + " " +
+		"-model " + filepath.Join(*context.appFolder, "work", inputFile) + " " +
 		"-output " + filepath.Join(*context.appFolder, "work"))
 	fmt.Println()
 	fmt.Println("If you want to run Threagile as a server (REST API) on some port (here 8080): ")
@@ -4108,7 +3705,7 @@ func (context *Context) printExamples() {
 	fmt.Println(" docker run --rm -it threagile/threagile -list-model-macros")
 	fmt.Println()
 	fmt.Println("If you want to execute a certain model macro on the model yaml file (here the macro add-build-pipeline): ")
-	fmt.Println(" docker run --rm -it -v \"$(pwd)\":" + filepath.Join(*context.appFolder, "work") + " threagile/threagile -model " + filepath.Join(*context.appFolder, "work", outputFile) + " -output " + filepath.Join(*context.appFolder, "work") + " -execute-model-macro add-build-pipeline")
+	fmt.Println(" docker run --rm -it -v \"$(pwd)\":" + filepath.Join(*context.appFolder, "work") + " threagile/threagile -model " + filepath.Join(*context.appFolder, "work", inputFile) + " -output " + filepath.Join(*context.appFolder, "work") + " -execute-model-macro add-build-pipeline")
 }
 
 func printTypes(title string, value interface{}) {
@@ -4156,9 +3753,7 @@ func (context *Context) goTestParseModel() error {
 		return fmt.Errorf("unable to parse model yaml %q: %v", flatModelFile, flatLoadError)
 	}
 
-	sort.Slice(flatModel.TagsAvailable, func(i, j int) bool {
-		return flatModel.TagsAvailable[i] < flatModel.TagsAvailable[j]
-	})
+	sort.Strings(flatModel.TagsAvailable)
 	flatModel.TagsAvailable = []string{strings.Join(flatModel.TagsAvailable, ", ")}
 
 	flatData, flatMarshalError := json.MarshalIndent(flatModel, "", "  ")
@@ -4173,9 +3768,7 @@ func (context *Context) goTestParseModel() error {
 		return fmt.Errorf("unable to parse model yaml %q: %v", splitModelFile, splitLoadError)
 	}
 
-	sort.Slice(splitModel.TagsAvailable, func(i, j int) bool {
-		return splitModel.TagsAvailable[i] < splitModel.TagsAvailable[j]
-	})
+	sort.Strings(splitModel.TagsAvailable)
 	splitModel.TagsAvailable = []string{strings.Join(splitModel.TagsAvailable, ", ")}
 
 	splitModel.Includes = flatModel.Includes
@@ -4202,8 +3795,8 @@ func (context *Context) parseModel() {
 		log.Fatal("Unable to parse model yaml: ", loadError)
 	}
 
-	data, _ := json.MarshalIndent(context.modelInput, "", "  ")
-	fmt.Printf("%v\n", string(data))
+	//	data, _ := json.MarshalIndent(context.modelInput, "", "  ")
+	//	fmt.Printf("%v\n", string(data))
 
 	var businessCriticality model.Criticality
 	switch context.modelInput.BusinessCriticality {
@@ -5251,6 +4844,10 @@ func (context *Context) applyWildcardRiskTrackingEvaluation() {
 		fmt.Println("Executing risk tracking evaluation")
 	}
 	for syntheticRiskIdPattern, riskTracking := range context.deferredRiskTrackingDueToWildcardMatching {
+		if *context.verbose {
+			fmt.Println("Applying wildcard risk tracking for risk id: " + syntheticRiskIdPattern)
+		}
+
 		foundSome := false
 		var matchingRiskIdExpression = regexp.MustCompile(strings.ReplaceAll(regexp.QuoteMeta(syntheticRiskIdPattern), `\*`, `[^@]+`))
 		for syntheticRiskId := range model.GeneratedRisksBySyntheticId {
@@ -5266,9 +4863,10 @@ func (context *Context) applyWildcardRiskTrackingEvaluation() {
 				}
 			}
 		}
+
 		if !foundSome {
 			if *context.ignoreOrphanedRiskTracking {
-				fmt.Println("Wildcard risk tracking does not match any risk id: " + syntheticRiskIdPattern)
+				fmt.Println("WARNING: Wildcard risk tracking does not match any risk id: " + syntheticRiskIdPattern)
 			} else {
 				panic(errors.New("wildcard risk tracking does not match any risk id: " + syntheticRiskIdPattern))
 			}
@@ -5745,8 +5343,8 @@ func makeTechAssetNode(technicalAsset model.TechnicalAsset, simplified bool) str
 	if simplified {
 		color := colors.RgbHexColorOutOfScope()
 		if !technicalAsset.OutOfScope {
-			risks := technicalAsset.GeneratedRisks()
-			switch model.HighestSeverityStillAtRisk(risks) {
+			generatedRisks := technicalAsset.GeneratedRisks()
+			switch model.HighestSeverityStillAtRisk(generatedRisks) {
 			case model.CriticalSeverity:
 				color = colors.RgbHexColorCriticalRisk()
 			case model.HighSeverity:
@@ -5760,7 +5358,7 @@ func makeTechAssetNode(technicalAsset model.TechnicalAsset, simplified bool) str
 			default:
 				color = "#444444" // since black is too dark here as fill color
 			}
-			if len(model.ReduceToOnlyStillAtRisk(risks)) == 0 {
+			if len(model.ReduceToOnlyStillAtRisk(generatedRisks)) == 0 {
 				color = "#444444" // since black is too dark here as fill color
 			}
 		}
@@ -5860,7 +5458,7 @@ func (context *Context) renderDataFlowDiagramGraphvizImage(dotFile *os.File, tar
 	}
 
 	// exec
-	cmd := exec.Command(graphvizDataFlowDiagramConversionCall, tmpFileDOT.Name(), tmpFilePNG.Name())
+	cmd := exec.Command(filepath.Join(*context.binFolder, graphvizDataFlowDiagramConversionCall), tmpFileDOT.Name(), tmpFilePNG.Name())
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
@@ -5908,7 +5506,7 @@ func (context *Context) renderDataAssetDiagramGraphvizImage(dotFile *os.File, ta
 	}
 
 	// exec
-	cmd := exec.Command(graphvizDataAssetDiagramConversionCall, tmpFileDOT.Name(), tmpFilePNG.Name())
+	cmd := exec.Command(filepath.Join(*context.binFolder, graphvizDataAssetDiagramConversionCall), tmpFileDOT.Name(), tmpFilePNG.Name())
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()

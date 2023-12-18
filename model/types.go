@@ -55,10 +55,10 @@ func AddToListOfSupportedTags(tags []string) {
 	}
 }
 
-type CustomRiskRule interface {
-	Category() RiskCategory
-	SupportedTags() []string
-	GenerateRisks() []Risk
+type CustomRiskRule struct {
+	Category      func() RiskCategory
+	SupportedTags func() []string
+	GenerateRisks func(input *ModelInput) []Risk
 }
 
 // === To be used by model macros etc. =======================
@@ -3348,6 +3348,23 @@ func (what RiskFunction) MarshalJSON() ([]byte, error) {
 	return json.Marshal(what.String())
 }
 
+func (what *RiskFunction) UnmarshalJSON(value []byte) error {
+	text := ""
+	unmarshalError := json.Unmarshal(value, &text)
+	if unmarshalError != nil {
+		return unmarshalError
+	}
+
+	for n, v := range RiskFunctionTypeDescription {
+		if strings.ToLower(v.Name) == strings.ToLower(text) {
+			*what = RiskFunction(n)
+			return nil
+		}
+	}
+
+	return fmt.Errorf("unknown value %q for risk function\n", text)
+}
+
 type STRIDE int
 
 const (
@@ -3394,6 +3411,23 @@ func (what STRIDE) Title() string {
 
 func (what STRIDE) MarshalJSON() ([]byte, error) {
 	return json.Marshal(what.String())
+}
+
+func (what *STRIDE) UnmarshalJSON(value []byte) error {
+	text := ""
+	unmarshalError := json.Unmarshal(value, &text)
+	if unmarshalError != nil {
+		return unmarshalError
+	}
+
+	for n, v := range StrideTypeDescription {
+		if strings.ToLower(v.Name) == strings.ToLower(text) {
+			*what = STRIDE(n)
+			return nil
+		}
+	}
+
+	return fmt.Errorf("unknown value %q for STRIDE category\n", text)
 }
 
 type MacroDetails struct {
@@ -3641,6 +3675,23 @@ func (what RiskStatus) Title() string {
 
 func (what RiskStatus) MarshalJSON() ([]byte, error) {
 	return json.Marshal(what.String())
+}
+
+func (what *RiskStatus) UnmarshalJSON(value []byte) error {
+	text := ""
+	unmarshalError := json.Unmarshal(value, &text)
+	if unmarshalError != nil {
+		return unmarshalError
+	}
+
+	for n, v := range RiskStatusTypeDescription {
+		if strings.ToLower(v.Name) == strings.ToLower(text) {
+			*what = RiskStatus(n)
+			return nil
+		}
+	}
+
+	return fmt.Errorf("unknown value %q for risk status\n", text)
 }
 
 func (what RiskStatus) IsStillAtRisk() bool {

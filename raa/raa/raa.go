@@ -1,22 +1,52 @@
 package main
 
 import (
+	"bufio"
+	"encoding/json"
+	"fmt"
 	"github.com/threagile/threagile/model"
+	"io"
+	"os"
 	"sort"
 )
 
-var (
-	_ = CalculateRAA
-)
+// used from run caller:
 
-// used from plugin caller:
+func main() {
+	reader := bufio.NewReader(os.Stdin)
+	inData, outError := io.ReadAll(reader)
+	if outError != nil {
+		_, _ = fmt.Fprintf(os.Stderr, "failed to read model data from stdin\n")
+		os.Exit(-2)
+	}
 
-func CalculateRAA() string {
-	for techAssetID, techAsset := range model.ParsedModelRoot.TechnicalAssets {
-		aa := calculateAttackerAttractiveness(techAsset)
-		aa += calculatePivotingNeighbourEffectAdjustment(techAsset)
-		techAsset.RAA = calculateRelativeAttackerAttractiveness(aa)
-		model.ParsedModelRoot.TechnicalAssets[techAssetID] = techAsset
+	var input model.ParsedModel
+	inError := json.Unmarshal(inData, &input)
+	if inError != nil {
+		_, _ = fmt.Fprintf(os.Stderr, "failed to parse model: %v\n", inError)
+		_, _ = fmt.Fprint(os.Stderr, string(inData))
+		_, _ = fmt.Fprintf(os.Stderr, "\n")
+		os.Exit(-2)
+	}
+
+	text := CalculateRAA(&input)
+	outData, marshalError := json.Marshal(input)
+	if marshalError != nil {
+		_, _ = fmt.Fprintf(os.Stderr, "failed to print model: %v\n", marshalError)
+		os.Exit(-2)
+	}
+
+	_, _ = fmt.Fprint(os.Stdout, string(outData))
+	_, _ = fmt.Fprint(os.Stderr, text)
+	os.Exit(0)
+}
+
+func CalculateRAA(input *model.ParsedModel) string {
+	for techAssetID, techAsset := range input.TechnicalAssets {
+		aa := calculateAttackerAttractiveness(input, techAsset)
+		aa += calculatePivotingNeighbourEffectAdjustment(input, techAsset)
+		techAsset.RAA = calculateRelativeAttackerAttractiveness(input, aa)
+		input.TechnicalAssets[techAssetID] = techAsset
 	}
 	// return intro text (for reporting etc., can be short summary-like)
 	return "For each technical asset the <b>\"Relative Attacker Attractiveness\"</b> (RAA) value was calculated " +
@@ -31,24 +61,24 @@ func CalculateRAA() string {
 var attackerAttractivenessMinimum, attackerAttractivenessMaximum, spread float64 = 0, 0, 0
 
 // set the concrete value in relation to the minimum and maximum of all
-func calculateRelativeAttackerAttractiveness(attractiveness float64) float64 {
+func calculateRelativeAttackerAttractiveness(input *model.ParsedModel, attractiveness float64) float64 {
 	if attackerAttractivenessMinimum == 0 || attackerAttractivenessMaximum == 0 {
 		attackerAttractivenessMinimum, attackerAttractivenessMaximum = 9223372036854775807, -9223372036854775808
 		// determine (only one time required) the min/max of all
 		// first create them in memory (see the link replacement below for nested trust boundaries) - otherwise in Go ranging over map is random order
 		// range over them in sorted (hence re-producible) way:
 		keys := make([]string, 0)
-		for k := range model.ParsedModelRoot.TechnicalAssets {
+		for k := range input.TechnicalAssets {
 			keys = append(keys, k)
 		}
 		sort.Strings(keys)
 		for _, key := range keys {
-			techAsset := model.ParsedModelRoot.TechnicalAssets[key]
-			if calculateAttackerAttractiveness(techAsset) > attackerAttractivenessMaximum {
-				attackerAttractivenessMaximum = calculateAttackerAttractiveness(techAsset)
+			techAsset := input.TechnicalAssets[key]
+			if calculateAttackerAttractiveness(input, techAsset) > attackerAttractivenessMaximum {
+				attackerAttractivenessMaximum = calculateAttackerAttractiveness(input, techAsset)
 			}
-			if calculateAttackerAttractiveness(techAsset) < attackerAttractivenessMinimum {
-				attackerAttractivenessMinimum = calculateAttackerAttractiveness(techAsset)
+			if calculateAttackerAttractiveness(input, techAsset) < attackerAttractivenessMinimum {
+				attackerAttractivenessMinimum = calculateAttackerAttractiveness(input, techAsset)
 			}
 		}
 		if !(attackerAttractivenessMinimum < attackerAttractivenessMaximum) {
@@ -66,15 +96,15 @@ func calculateRelativeAttackerAttractiveness(attractiveness float64) float64 {
 }
 
 // increase the RAA (relative attacker attractiveness) by one third (1/3) of the delta to the highest outgoing neighbour (if positive delta)
-func calculatePivotingNeighbourEffectAdjustment(techAsset model.TechnicalAsset) float64 {
+func calculatePivotingNeighbourEffectAdjustment(input *model.ParsedModel, techAsset model.TechnicalAsset) float64 {
 	if techAsset.OutOfScope {
 		return 0
 	}
 	adjustment := 0.0
 	for _, commLink := range techAsset.CommunicationLinks {
-		outgoingNeighbour := model.ParsedModelRoot.TechnicalAssets[commLink.TargetId]
+		outgoingNeighbour := input.TechnicalAssets[commLink.TargetId]
 		//if outgoingNeighbour.getTrustBoundary() == techAsset.getTrustBoundary() { // same trust boundary
-		delta := calculateRelativeAttackerAttractiveness(calculateAttackerAttractiveness(outgoingNeighbour)) - calculateRelativeAttackerAttractiveness(calculateAttackerAttractiveness(techAsset))
+		delta := calculateRelativeAttackerAttractiveness(input, calculateAttackerAttractiveness(input, outgoingNeighbour)) - calculateRelativeAttackerAttractiveness(input, calculateAttackerAttractiveness(input, techAsset))
 		if delta > 0 {
 			potentialIncrease := delta / 3
 			//fmt.Println("Positive delta from", techAsset.Id, "to", outgoingNeighbour.Id, "is", delta, "yields to pivoting neighbour effect of an increase of", potentialIncrease)
@@ -89,7 +119,7 @@ func calculatePivotingNeighbourEffectAdjustment(techAsset model.TechnicalAsset) 
 
 // The sum of all CIAs of the asset itself (fibonacci scale) plus the sum of the comm-links' transferred CIAs
 // Multiplied by the quantity values of the data asset for C and I (not A)
-func calculateAttackerAttractiveness(techAsset model.TechnicalAsset) float64 {
+func calculateAttackerAttractiveness(input *model.ParsedModel, techAsset model.TechnicalAsset) float64 {
 	if techAsset.OutOfScope {
 		return 0
 	}
@@ -98,26 +128,26 @@ func calculateAttackerAttractiveness(techAsset model.TechnicalAsset) float64 {
 	score += techAsset.Integrity.AttackerAttractivenessForAsset()
 	score += techAsset.Availability.AttackerAttractivenessForAsset()
 	for _, dataAssetProcessed := range techAsset.DataAssetsProcessed {
-		dataAsset := model.ParsedModelRoot.DataAssets[dataAssetProcessed]
+		dataAsset := input.DataAssets[dataAssetProcessed]
 		score += dataAsset.Confidentiality.AttackerAttractivenessForProcessedOrStoredData() * dataAsset.Quantity.QuantityFactor()
 		score += dataAsset.Integrity.AttackerAttractivenessForProcessedOrStoredData() * dataAsset.Quantity.QuantityFactor()
 		score += dataAsset.Availability.AttackerAttractivenessForProcessedOrStoredData()
 	}
 	for _, dataAssetStored := range techAsset.DataAssetsStored {
-		dataAsset := model.ParsedModelRoot.DataAssets[dataAssetStored]
+		dataAsset := input.DataAssets[dataAssetStored]
 		score += dataAsset.Confidentiality.AttackerAttractivenessForProcessedOrStoredData() * dataAsset.Quantity.QuantityFactor()
 		score += dataAsset.Integrity.AttackerAttractivenessForProcessedOrStoredData() * dataAsset.Quantity.QuantityFactor()
 		score += dataAsset.Availability.AttackerAttractivenessForProcessedOrStoredData()
 	}
 	for _, dataFlow := range techAsset.CommunicationLinks {
 		for _, dataAssetSent := range dataFlow.DataAssetsSent {
-			dataAsset := model.ParsedModelRoot.DataAssets[dataAssetSent]
+			dataAsset := input.DataAssets[dataAssetSent]
 			score += dataAsset.Confidentiality.AttackerAttractivenessForInOutTransferredData() * dataAsset.Quantity.QuantityFactor()
 			score += dataAsset.Integrity.AttackerAttractivenessForInOutTransferredData() * dataAsset.Quantity.QuantityFactor()
 			score += dataAsset.Availability.AttackerAttractivenessForInOutTransferredData()
 		}
 		for _, dataAssetReceived := range dataFlow.DataAssetsReceived {
-			dataAsset := model.ParsedModelRoot.DataAssets[dataAssetReceived]
+			dataAsset := input.DataAssets[dataAssetReceived]
 			score += dataAsset.Confidentiality.AttackerAttractivenessForInOutTransferredData() * dataAsset.Quantity.QuantityFactor()
 			score += dataAsset.Integrity.AttackerAttractivenessForInOutTransferredData() * dataAsset.Quantity.QuantityFactor()
 			score += dataAsset.Availability.AttackerAttractivenessForInOutTransferredData()

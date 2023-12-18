@@ -7,6 +7,7 @@ import (
 	"github.com/jung-kurt/gofpdf/contrib/gofpdi"
 	"github.com/threagile/threagile/colors"
 	"github.com/threagile/threagile/model"
+	"github.com/threagile/threagile/risks"
 	"github.com/threagile/threagile/risks/built-in/accidental-secret-leak"
 	"github.com/threagile/threagile/risks/built-in/code-backdooring"
 	"github.com/threagile/threagile/risks/built-in/container-baseimage-backdooring"
@@ -118,7 +119,7 @@ func WriteReportPDF(reportFilename string,
 	buildTimestamp string,
 	modelHash string,
 	introTextRAA string,
-	customRiskRules map[string]model.CustomRiskRule,
+	customRiskRules map[string]*risks.CustomRisk,
 	tempFolder string) {
 	initReport()
 	createPdfAndInitMetadata()
@@ -271,17 +272,17 @@ func createTableOfContents() {
 	pdf.Line(15.6, y+1.3, 11+171.5, y+1.3)
 	pdf.Link(10, y-5, 172.5, 6.5, pdf.AddLink())
 
-	risks := "Risks"
+	risksStr := "Risks"
 	catStr := "Categories"
 	count, catCount := model.TotalRiskCount(), len(model.GeneratedRisksByCategory)
 	if count == 1 {
-		risks = "Risk"
+		risksStr = "Risk"
 	}
 	if catCount == 1 {
 		catStr = "Category"
 	}
 	y += 6
-	pdf.Text(11, y, "    "+"Impact Analysis of "+strconv.Itoa(count)+" Initial "+risks+" in "+strconv.Itoa(catCount)+" "+catStr)
+	pdf.Text(11, y, "    "+"Impact Analysis of "+strconv.Itoa(count)+" Initial "+risksStr+" in "+strconv.Itoa(catCount)+" "+catStr)
 	pdf.Text(175, y, "{impact-analysis-initial-risks}")
 	pdf.Line(15.6, y+1.3, 11+171.5, y+1.3)
 	pdf.Link(10, y-5, 172.5, 6.5, pdf.AddLink())
@@ -293,16 +294,16 @@ func createTableOfContents() {
 	pdf.Link(10, y-5, 172.5, 6.5, pdf.AddLink())
 
 	y += 6
-	risks = "Risks"
+	risksStr = "Risks"
 	catStr = "Categories"
 	count, catCount = len(model.FilteredByStillAtRisk()), len(model.CategoriesOfOnlyRisksStillAtRisk(model.GeneratedRisksByCategory))
 	if count == 1 {
-		risks = "Risk"
+		risksStr = "Risk"
 	}
 	if catCount == 1 {
 		catStr = "Category"
 	}
-	pdf.Text(11, y, "    "+"Impact Analysis of "+strconv.Itoa(count)+" Remaining "+risks+" in "+strconv.Itoa(catCount)+" "+catStr)
+	pdf.Text(11, y, "    "+"Impact Analysis of "+strconv.Itoa(count)+" Remaining "+risksStr+" in "+strconv.Itoa(catCount)+" "+catStr)
 	pdf.Text(175, y, "{impact-analysis-remaining-risks}")
 	pdf.Line(15.6, y+1.3, 11+171.5, y+1.3)
 	pdf.Link(10, y-5, 172.5, 6.5, pdf.AddLink())
@@ -387,16 +388,16 @@ func createTableOfContents() {
 
 	y += 6
 	modelFailures := model.FlattenRiskSlice(model.FilterByModelFailures(model.GeneratedRisksByCategory))
-	risks = "Risks"
+	risksStr = "Risks"
 	count = len(modelFailures)
 	if count == 1 {
-		risks = "Risk"
+		risksStr = "Risk"
 	}
 	countStillAtRisk := len(model.ReduceToOnlyStillAtRisk(modelFailures))
 	if countStillAtRisk > 0 {
 		colors.ColorModelFailure(pdf)
 	}
-	pdf.Text(11, y, "    "+"Potential Model Failures: "+strconv.Itoa(countStillAtRisk)+" / "+strconv.Itoa(count)+" "+risks)
+	pdf.Text(11, y, "    "+"Potential Model Failures: "+strconv.Itoa(countStillAtRisk)+" / "+strconv.Itoa(count)+" "+risksStr)
 	pdf.Text(175, y, "{model-failures}")
 	pdfColorBlack()
 	pdf.Line(15.6, y+1.3, 11+171.5, y+1.3)
@@ -436,8 +437,8 @@ func createTableOfContents() {
 		pdf.Line(15.6, y+1.3, 11+171.5, y+1.3)
 		pdf.Link(10, y-5, 172.5, 6.5, pdf.AddLink())
 		for _, category := range model.SortedRiskCategories() {
-			risks := model.SortedRisksOfCategory(category)
-			switch model.HighestSeverityStillAtRisk(risks) {
+			newRisksStr := model.SortedRisksOfCategory(category)
+			switch model.HighestSeverityStillAtRisk(newRisksStr) {
 			case model.CriticalSeverity:
 				colors.ColorCriticalRisk(pdf)
 			case model.HighSeverity:
@@ -451,7 +452,7 @@ func createTableOfContents() {
 			default:
 				pdfColorBlack()
 			}
-			if len(model.ReduceToOnlyStillAtRisk(risks)) == 0 {
+			if len(model.ReduceToOnlyStillAtRisk(newRisksStr)) == 0 {
 				pdfColorBlack()
 			}
 			y += 6
@@ -459,9 +460,9 @@ func createTableOfContents() {
 				pageBreakInLists()
 				y = 40
 			}
-			countStillAtRisk := len(model.ReduceToOnlyStillAtRisk(risks))
-			suffix := strconv.Itoa(countStillAtRisk) + " / " + strconv.Itoa(len(risks)) + " Risk"
-			if len(risks) != 1 {
+			countStillAtRisk := len(model.ReduceToOnlyStillAtRisk(newRisksStr))
+			suffix := strconv.Itoa(countStillAtRisk) + " / " + strconv.Itoa(len(newRisksStr)) + " Risk"
+			if len(newRisksStr) != 1 {
 				suffix += "s"
 			}
 			pdf.Text(11, y, "    "+uni(category.Title)+": "+suffix)
@@ -491,22 +492,22 @@ func createTableOfContents() {
 		pdf.Line(15.6, y+1.3, 11+171.5, y+1.3)
 		pdf.Link(10, y-5, 172.5, 6.5, pdf.AddLink())
 		for _, technicalAsset := range model.SortedTechnicalAssetsByRiskSeverityAndTitle() {
-			risks := technicalAsset.GeneratedRisks()
+			newRisksStr := technicalAsset.GeneratedRisks()
 			y += 6
 			if y > 275 {
 				pageBreakInLists()
 				y = 40
 			}
-			countStillAtRisk := len(model.ReduceToOnlyStillAtRisk(risks))
-			suffix := strconv.Itoa(countStillAtRisk) + " / " + strconv.Itoa(len(risks)) + " Risk"
-			if len(risks) != 1 {
+			countStillAtRisk := len(model.ReduceToOnlyStillAtRisk(newRisksStr))
+			suffix := strconv.Itoa(countStillAtRisk) + " / " + strconv.Itoa(len(newRisksStr)) + " Risk"
+			if len(newRisksStr) != 1 {
 				suffix += "s"
 			}
 			if technicalAsset.OutOfScope {
 				pdfColorOutOfScope()
 				suffix = "out-of-scope"
 			} else {
-				switch model.HighestSeverityStillAtRisk(risks) {
+				switch model.HighestSeverityStillAtRisk(newRisksStr) {
 				case model.CriticalSeverity:
 					colors.ColorCriticalRisk(pdf)
 				case model.HighSeverity:
@@ -520,7 +521,7 @@ func createTableOfContents() {
 				default:
 					pdfColorBlack()
 				}
-				if len(model.ReduceToOnlyStillAtRisk(risks)) == 0 {
+				if len(model.ReduceToOnlyStillAtRisk(newRisksStr)) == 0 {
 					pdfColorBlack()
 				}
 			}
@@ -556,10 +557,10 @@ func createTableOfContents() {
 				pageBreakInLists()
 				y = 40
 			}
-			risks := dataAsset.IdentifiedDataBreachProbabilityRisks()
-			countStillAtRisk := len(model.ReduceToOnlyStillAtRisk(risks))
-			suffix := strconv.Itoa(countStillAtRisk) + " / " + strconv.Itoa(len(risks)) + " Risk"
-			if len(risks) != 1 {
+			newRisksStr := dataAsset.IdentifiedDataBreachProbabilityRisks()
+			countStillAtRisk := len(model.ReduceToOnlyStillAtRisk(newRisksStr))
+			suffix := strconv.Itoa(countStillAtRisk) + " / " + strconv.Itoa(len(newRisksStr)) + " Risk"
+			if len(newRisksStr) != 1 {
 				suffix += "s"
 			}
 			switch dataAsset.IdentifiedDataBreachProbabilityStillAtRisk() {
@@ -1412,16 +1413,16 @@ func createOutOfScopeAssets() {
 func createModelFailures() {
 	pdf.SetTextColor(0, 0, 0)
 	modelFailures := model.FlattenRiskSlice(model.FilterByModelFailures(model.GeneratedRisksByCategory))
-	risks := "Risks"
+	risksStr := "Risks"
 	count := len(modelFailures)
 	if count == 1 {
-		risks = "Risk"
+		risksStr = "Risk"
 	}
 	countStillAtRisk := len(model.ReduceToOnlyStillAtRisk(modelFailures))
 	if countStillAtRisk > 0 {
 		colors.ColorModelFailure(pdf)
 	}
-	chapTitle := "Potential Model Failures: " + strconv.Itoa(countStillAtRisk) + " / " + strconv.Itoa(count) + " " + risks
+	chapTitle := "Potential Model Failures: " + strconv.Itoa(countStillAtRisk) + " / " + strconv.Itoa(count) + " " + risksStr
 	addHeadline(chapTitle, false)
 	defineLinkTarget("{model-failures}")
 	currentChapterTitleBreadcrumb = chapTitle
@@ -1489,8 +1490,8 @@ func createRAA(introTextRAA string) {
 		} else {
 			strBuilder.WriteString("<br><br>")
 		}
-		risks := technicalAsset.GeneratedRisks()
-		switch model.HighestSeverityStillAtRisk(risks) {
+		newRisksStr := technicalAsset.GeneratedRisks()
+		switch model.HighestSeverityStillAtRisk(newRisksStr) {
 		case model.HighSeverity:
 			colors.ColorHighRisk(pdf)
 		case model.MediumSeverity:
@@ -1500,7 +1501,7 @@ func createRAA(introTextRAA string) {
 		default:
 			pdfColorBlack()
 		}
-		if len(model.ReduceToOnlyStillAtRisk(risks)) == 0 {
+		if len(model.ReduceToOnlyStillAtRisk(newRisksStr)) == 0 {
 			pdfColorBlack()
 		}
 
@@ -1611,11 +1612,11 @@ func addCategories(riskCategories []model.RiskCategory, severity model.RiskSever
 	var strBuilder strings.Builder
 	sort.Sort(model.ByRiskCategoryTitleSort(riskCategories))
 	for _, riskCategory := range riskCategories {
-		risks := model.GeneratedRisksByCategory[riskCategory]
+		risksStr := model.GeneratedRisksByCategory[riskCategory]
 		if !initialRisks {
-			risks = model.ReduceToOnlyStillAtRisk(risks)
+			risksStr = model.ReduceToOnlyStillAtRisk(risksStr)
 		}
-		if len(risks) == 0 {
+		if len(risksStr) == 0 {
 			continue
 		}
 		if pdf.GetY() > 250 {
@@ -1645,7 +1646,7 @@ func addCategories(riskCategories []model.RiskCategory, severity model.RiskSever
 			pdfColorBlack()
 			prefix = ""
 		}
-		switch model.HighestSeverityStillAtRisk(risks) {
+		switch model.HighestSeverityStillAtRisk(risksStr) {
 		case model.CriticalSeverity:
 			colors.ColorCriticalRisk(pdf)
 		case model.HighSeverity:
@@ -1657,7 +1658,7 @@ func addCategories(riskCategories []model.RiskCategory, severity model.RiskSever
 		case model.LowSeverity:
 			colors.ColorLowRisk(pdf)
 		}
-		if len(model.ReduceToOnlyStillAtRisk(risks)) == 0 {
+		if len(model.ReduceToOnlyStillAtRisk(risksStr)) == 0 {
 			pdfColorBlack()
 		}
 		html.Write(5, strBuilder.String())
@@ -1667,12 +1668,12 @@ func addCategories(riskCategories []model.RiskCategory, severity model.RiskSever
 		strBuilder.WriteString("<b>")
 		strBuilder.WriteString(riskCategory.Title)
 		strBuilder.WriteString("</b>: ")
-		count := len(risks)
+		count := len(risksStr)
 		initialStr := "Initial"
 		if !initialRisks {
 			initialStr = "Remaining"
 		}
-		remainingRisks := model.ReduceToOnlyStillAtRisk(risks)
+		remainingRisks := model.ReduceToOnlyStillAtRisk(risksStr)
 		suffix := strconv.Itoa(count) + " " + initialStr + " Risk"
 		if bothInitialAndRemainingRisks {
 			suffix = strconv.Itoa(len(remainingRisks)) + " / " + strconv.Itoa(count) + " Risk"
@@ -1682,7 +1683,7 @@ func addCategories(riskCategories []model.RiskCategory, severity model.RiskSever
 		}
 		suffix += " - Exploitation likelihood is <i>"
 		if initialRisks {
-			suffix += model.HighestExploitationLikelihood(risks).Title() + "</i> with <i>" + model.HighestExploitationImpact(risks).Title() + "</i> impact."
+			suffix += model.HighestExploitationLikelihood(risksStr).Title() + "</i> with <i>" + model.HighestExploitationImpact(risksStr).Title() + "</i> impact."
 		} else {
 			suffix += model.HighestExploitationLikelihood(remainingRisks).Title() + "</i> with <i>" + model.HighestExploitationImpact(remainingRisks).Title() + "</i> impact."
 		}
@@ -2263,10 +2264,10 @@ func createRiskCategories() {
 	text.Reset()
 	currentChapterTitleBreadcrumb = title
 	for _, category := range model.SortedRiskCategories() {
-		risks := model.SortedRisksOfCategory(category)
+		risksStr := model.SortedRisksOfCategory(category)
 
 		// category color
-		switch model.HighestSeverityStillAtRisk(risks) {
+		switch model.HighestSeverityStillAtRisk(risksStr) {
 		case model.CriticalSeverity:
 			colors.ColorCriticalRisk(pdf)
 		case model.HighSeverity:
@@ -2280,14 +2281,14 @@ func createRiskCategories() {
 		default:
 			pdfColorBlack()
 		}
-		if len(model.ReduceToOnlyStillAtRisk(risks)) == 0 {
+		if len(model.ReduceToOnlyStillAtRisk(risksStr)) == 0 {
 			pdfColorBlack()
 		}
 
 		// category title
-		countStillAtRisk := len(model.ReduceToOnlyStillAtRisk(risks))
-		suffix := strconv.Itoa(countStillAtRisk) + " / " + strconv.Itoa(len(risks)) + " Risk"
-		if len(risks) != 1 {
+		countStillAtRisk := len(model.ReduceToOnlyStillAtRisk(risksStr))
+		suffix := strconv.Itoa(countStillAtRisk) + " / " + strconv.Itoa(len(risksStr)) + " Risk"
+		if len(risksStr) != 1 {
 			suffix += "s"
 		}
 		title := category.Title + ": " + suffix
@@ -2354,8 +2355,8 @@ func createRiskCategories() {
 		pageBreak()
 		pdf.SetY(36)
 		text.WriteString("<b>Risk Findings</b><br><br>")
-		times := strconv.Itoa(len(risks)) + " time"
-		if len(risks) > 1 {
+		times := strconv.Itoa(len(risksStr)) + " time"
+		if len(risksStr) > 1 {
 			times += "s"
 		}
 		text.WriteString("The risk <b>" + category.Title + "</b> was found <b>" + times + "</b> in the analyzed architecture to be " +
@@ -2369,7 +2370,7 @@ func createRiskCategories() {
 		pdf.SetFont("Helvetica", "", fontSizeBody)
 		oldLeft, _, _, _ := pdf.GetMargins()
 		headlineCriticalWritten, headlineHighWritten, headlineElevatedWritten, headlineMediumWritten, headlineLowWritten := false, false, false, false, false
-		for _, risk := range risks {
+		for _, risk := range risksStr {
 			text.WriteString("<br>")
 			html.Write(5, text.String())
 			text.Reset()
@@ -2531,17 +2532,17 @@ func createTechnicalAssets() {
 	text.Reset()
 	currentChapterTitleBreadcrumb = title
 	for _, technicalAsset := range model.SortedTechnicalAssetsByRiskSeverityAndTitle() {
-		risks := technicalAsset.GeneratedRisks()
-		countStillAtRisk := len(model.ReduceToOnlyStillAtRisk(risks))
-		suffix := strconv.Itoa(countStillAtRisk) + " / " + strconv.Itoa(len(risks)) + " Risk"
-		if len(risks) != 1 {
+		risksStr := technicalAsset.GeneratedRisks()
+		countStillAtRisk := len(model.ReduceToOnlyStillAtRisk(risksStr))
+		suffix := strconv.Itoa(countStillAtRisk) + " / " + strconv.Itoa(len(risksStr)) + " Risk"
+		if len(risksStr) != 1 {
 			suffix += "s"
 		}
 		if technicalAsset.OutOfScope {
 			pdfColorOutOfScope()
 			suffix = "out-of-scope"
 		} else {
-			switch model.HighestSeverityStillAtRisk(risks) {
+			switch model.HighestSeverityStillAtRisk(risksStr) {
 			case model.CriticalSeverity:
 				colors.ColorCriticalRisk(pdf)
 			case model.HighSeverity:
@@ -2555,7 +2556,7 @@ func createTechnicalAssets() {
 			default:
 				pdfColorBlack()
 			}
-			if len(model.ReduceToOnlyStillAtRisk(risks)) == 0 {
+			if len(model.ReduceToOnlyStillAtRisk(risksStr)) == 0 {
 				pdfColorBlack()
 			}
 		}
@@ -2589,7 +2590,7 @@ func createTechnicalAssets() {
 		pdf.CellFormat(190, 6, "Identified Risks of Asset", "0", 0, "", false, 0, "")
 		pdfColorGray()
 		oldLeft, _, _, _ := pdf.GetMargins()
-		if len(risks) > 0 {
+		if len(risksStr) > 0 {
 			pdf.SetFont("Helvetica", "", fontSizeSmall)
 			html.Write(5, "Risk finding paragraphs are clickable and link to the corresponding chapter.")
 			pdf.SetFont("Helvetica", "", fontSizeBody)
@@ -2599,11 +2600,11 @@ func createTechnicalAssets() {
 				pdf.Ln(-1)
 				pdfColorGray()
 				pdf.CellFormat(5, 6, "", "0", 0, "", false, 0, "")
-				pdf.CellFormat(185, 6, strconv.Itoa(len(risks))+" risks in total were identified", "0", 0, "", false, 0, "")
+				pdf.CellFormat(185, 6, strconv.Itoa(len(risksStr))+" risksStr in total were identified", "0", 0, "", false, 0, "")
 			*/
 			headlineCriticalWritten, headlineHighWritten, headlineElevatedWritten, headlineMediumWritten, headlineLowWritten := false, false, false, false, false
 			pdf.Ln(-1)
-			for _, risk := range risks {
+			for _, risk := range risksStr {
 				text.WriteString("<br>")
 				html.Write(5, text.String())
 				text.Reset()
@@ -2680,7 +2681,7 @@ func createTechnicalAssets() {
 			pdfColorGray()
 			pdf.SetFont("Helvetica", "", fontSizeBody)
 			pdf.SetLeftMargin(15)
-			text := "No risks were identified."
+			text := "No risksStr were identified."
 			if technicalAsset.OutOfScope {
 				text = "Asset was defined as out-of-scope."
 			}
@@ -3362,10 +3363,10 @@ func createDataAssets() {
 		if !dataAsset.IsDataBreachPotentialStillAtRisk() {
 			pdfColorBlack()
 		}
-		risks := dataAsset.IdentifiedDataBreachProbabilityRisks()
-		countStillAtRisk := len(model.ReduceToOnlyStillAtRisk(risks))
-		suffix := strconv.Itoa(countStillAtRisk) + " / " + strconv.Itoa(len(risks)) + " Risk"
-		if len(risks) != 1 {
+		risksStr := dataAsset.IdentifiedDataBreachProbabilityRisks()
+		countStillAtRisk := len(model.ReduceToOnlyStillAtRisk(risksStr))
+		suffix := strconv.Itoa(countStillAtRisk) + " / " + strconv.Itoa(len(risksStr)) + " Risk"
+		if len(risksStr) != 1 {
 			suffix += "s"
 		}
 		title := uni(dataAsset.Title) + ": " + suffix
@@ -3641,12 +3642,12 @@ func createDataAssets() {
 					default:
 						pdfColorBlack()
 					}
-					risks := techAssetResponsible.GeneratedRisks()
-					if len(model.ReduceToOnlyStillAtRisk(risks)) == 0 {
+					risksStr := techAssetResponsible.GeneratedRisks()
+					if len(model.ReduceToOnlyStillAtRisk(risksStr)) == 0 {
 						pdfColorBlack()
 					}
-					riskStr := "risks"
-					if len(risks) == 1 {
+					riskStr := "risksStr"
+					if len(risksStr) == 1 {
 						riskStr = "risk"
 					}
 					pdf.CellFormat(10, 6, "", "0", 0, "", false, 0, "")
@@ -3705,7 +3706,7 @@ func createDataAssets() {
 			pdf.MultiCell(145, 6, "This data asset has no data breach potential.", "0", "0", false)
 		} else {
 			pdfColorBlack()
-			riskRemainingStr := "risks"
+			riskRemainingStr := "risksStr"
 			if countStillAtRisk == 1 {
 				riskRemainingStr = "risk"
 			}
@@ -3941,7 +3942,7 @@ func createSharedRuntimes() {
 	}
 }
 
-func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTimestamp string, modelHash string, customRiskRules map[string]model.CustomRiskRule) {
+func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTimestamp string, modelHash string, customRiskRules map[string]*risks.CustomRisk) {
 	pdf.SetTextColor(0, 0, 0)
 	title := "Risk Rules Checked by Threagile"
 	addHeadline(title, false)
@@ -3969,7 +3970,7 @@ func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTim
 	html.Write(5, strBuilder.String())
 	strBuilder.Reset()
 
-	// TODO use the new plugin system to discover risk rules instead of hard-coding them here:
+	// TODO use the new run system to discover risk rules instead of hard-coding them here:
 	skippedRules := strings.Split(skipRiskRules, ",")
 	skipped := ""
 	pdf.Ln(-1)
@@ -3982,7 +3983,7 @@ func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTim
 		} else {
 			skipped = ""
 		}
-		pdf.CellFormat(190, 3, skipped+customRule.Category().Title, "0", 0, "", false, 0, "")
+		pdf.CellFormat(190, 3, skipped+customRule.Category.Title, "0", 0, "", false, 0, "")
 		pdf.Ln(-1)
 		pdf.SetFont("Helvetica", "", fontSizeSmall)
 		pdf.CellFormat(190, 6, id, "0", 0, "", false, 0, "")
@@ -3995,22 +3996,22 @@ func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTim
 		pdf.CellFormat(5, 6, "", "0", 0, "", false, 0, "")
 		pdf.CellFormat(25, 6, "STRIDE:", "0", 0, "", false, 0, "")
 		pdfColorBlack()
-		pdf.MultiCell(160, 6, customRule.Category().STRIDE.Title(), "0", "0", false)
+		pdf.MultiCell(160, 6, customRule.Category.STRIDE.Title(), "0", "0", false)
 		pdfColorGray()
 		pdf.CellFormat(5, 6, "", "0", 0, "", false, 0, "")
 		pdf.CellFormat(25, 6, "Description:", "0", 0, "", false, 0, "")
 		pdfColorBlack()
-		pdf.MultiCell(160, 6, firstParagraph(customRule.Category().Description), "0", "0", false)
+		pdf.MultiCell(160, 6, firstParagraph(customRule.Category.Description), "0", "0", false)
 		pdfColorGray()
 		pdf.CellFormat(5, 6, "", "0", 0, "", false, 0, "")
 		pdf.CellFormat(25, 6, "Detection:", "0", 0, "", false, 0, "")
 		pdfColorBlack()
-		pdf.MultiCell(160, 6, customRule.Category().DetectionLogic, "0", "0", false)
+		pdf.MultiCell(160, 6, customRule.Category.DetectionLogic, "0", "0", false)
 		pdfColorGray()
 		pdf.CellFormat(5, 6, "", "0", 0, "", false, 0, "")
 		pdf.CellFormat(25, 6, "Rating:", "0", 0, "", false, 0, "")
 		pdfColorBlack()
-		pdf.MultiCell(160, 6, customRule.Category().RiskAssessment, "0", "0", false)
+		pdf.MultiCell(160, 6, customRule.Category.RiskAssessment, "0", "0", false)
 	}
 
 	for _, key := range model.SortedKeysOfIndividualRiskCategories() {
