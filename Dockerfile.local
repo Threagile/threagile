@@ -61,7 +61,9 @@ RUN adduser \
 
 # Copy necessary files from build image
 COPY --from=build \
-    /app/*.so \
+    /app/raa.so \
+    /app/dummy.so \
+    /app/demo-rule.so \
     /app/demo/example/threagile-example-model.yaml \
     /app/demo/stub/threagile-stub-model.yaml \
     /app/LICENSE.txt \
