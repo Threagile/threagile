@@ -12,11 +12,9 @@ import (
 	"crypto/sha512"
 	"encoding/base64"
 	"encoding/hex"
-	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/akedrou/textdiff"
 	"github.com/threagile/threagile/risks"
 	"hash/fnv"
 	"io"
@@ -133,7 +131,6 @@ type Context struct {
 	modelInput model.ModelInput
 
 	modelFilename, templateFilename                                                                   *string
-	testParseModel                                                                                    *bool
 	createExampleModel, createStubModel, createEditingSupport, verbose, ignoreOrphanedRiskTracking    *bool
 	generateDataFlowDiagram, generateDataAssetDiagram, generateRisksJSON, generateTechnicalAssetsJSON *bool
 	generateStatsJSON, generateRisksExcel, generateTagsExcel, generateReportPDF                       *bool
@@ -3309,7 +3306,6 @@ func (context *Context) parseCommandlineArgs() {
 	// commands
 	context.serverPort = flag.Int("server", 0, "start a server (instead of commandline execution) on the given port")
 	context.executeModelMacro = flag.String("execute-model-macro", "", "Execute model macro (by ID)")
-	context.testParseModel = flag.Bool("test-parse-model", false, "test parse model functionality")
 	context.createExampleModel = flag.Bool("create-example-model", false, "just create an example model named threagile-example-model.yaml in the output directory")
 	context.createStubModel = flag.Bool("create-stub-model", false, "just create a minimal stub model named threagile-stub-model.yaml in the output directory")
 	context.createEditingSupport = flag.Bool("create-editing-support", false, "just create some editing support stuff in the output directory")
@@ -3631,16 +3627,6 @@ func (context *Context) parseCommandlineArgs() {
 		fmt.Println()
 		os.Exit(0)
 	}
-	if *context.testParseModel {
-		testError := context.goTestParseModel()
-		if testError != nil {
-			log.Fatalf("parse test failed: %v", testError)
-			return
-		}
-		fmt.Println("Parse test successful.")
-		fmt.Println()
-		os.Exit(0)
-	}
 	if *context.createExampleModel {
 		exampleError := context.createExampleModelFile()
 		if exampleError != nil {
@@ -3809,45 +3795,6 @@ func copyFile(src, dst string) (int64, error) {
 	defer func() { _ = destination.Close() }()
 	nBytes, err := io.Copy(destination, source)
 	return nBytes, err
-}
-
-func (context *Context) goTestParseModel() error {
-	flatModelFile := filepath.Join("test", "all.yaml")
-	flatModel := *new(model.ModelInput).Defaults()
-	flatLoadError := flatModel.Load(flatModelFile)
-	if flatLoadError != nil {
-		return fmt.Errorf("unable to parse model yaml %q: %v", flatModelFile, flatLoadError)
-	}
-
-	sort.Strings(flatModel.TagsAvailable)
-	flatModel.TagsAvailable = []string{strings.Join(flatModel.TagsAvailable, ", ")}
-
-	flatData, flatMarshalError := json.MarshalIndent(flatModel, "", "  ")
-	if flatMarshalError != nil {
-		return fmt.Errorf("unable to print model yaml %q: %v", flatModelFile, flatMarshalError)
-	}
-
-	splitModelFile := filepath.Join("test", "main.yaml")
-	splitModel := *new(model.ModelInput).Defaults()
-	splitLoadError := splitModel.Load(splitModelFile)
-	if splitLoadError != nil {
-		return fmt.Errorf("unable to parse model yaml %q: %v", splitModelFile, splitLoadError)
-	}
-
-	sort.Strings(splitModel.TagsAvailable)
-	splitModel.TagsAvailable = []string{strings.Join(splitModel.TagsAvailable, ", ")}
-
-	splitModel.Includes = flatModel.Includes
-	splitData, splitMarshalError := json.MarshalIndent(splitModel, "", "  ")
-	if splitMarshalError != nil {
-		return fmt.Errorf("unable to print model yaml %q: %v", splitModelFile, splitMarshalError)
-	}
-
-	if string(flatData) != string(splitData) {
-		return fmt.Errorf("parsing split model files is broken; diff: %v", textdiff.Unified(flatModelFile, splitModelFile, string(flatData), string(splitData)))
-	}
-
-	return nil
 }
 
 func (context *Context) parseModel() {
