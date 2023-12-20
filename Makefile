@@ -9,9 +9,9 @@ ASSETS			= 							\
 	support/live-templates.txt				\
 	server
 BIN				= 							\
-	raa 									\
+	raa_calc 								\
 	raa_dummy 								\
-	risk_demo 								\
+	risk_demo_rule 							\
 	threagile
 SCRIPTS			= 							\
 	support/render-data-asset-diagram.sh 	\
@@ -38,6 +38,13 @@ all: prep $(addprefix bin/,$(BIN))
 clean:
 	$(RM) bin vendor
 
+tidy: clean
+	$(RM) .DS_Store
+	$(RM) just-for-docker-build-?.txt
+	$(RM) data-asset-diagram.* data-flow-diagram.*
+	$(RM) report.pdf risks.xlsx tags.xlsx risks.json technical-assets.json stats.json
+	$(RM) *.exe *.exe~ *.dll *.so *.dylibc *.test *.out
+
 install: all
 	mkdir -p $(BIN_DIR) $(ASSET_DIR)
 	$(CP) $(addprefix bin/,$(BIN)) $(BIN_DIR)
@@ -51,13 +58,13 @@ uninstall:
 	$(RM) $(addprefix $(BIN_DIR)/,$(notdir $(SCRIPTS)))
 	$(RM) $(ASSET_DIR)
 
-bin/raa: raa/raa/raa.go
+bin/raa_calc: raa/raa/raa.go
 	$(GO) build $(GOFLAGS) -o $@ $<
 
 bin/raa_dummy: raa/dummy/dummy.go
 	$(GO) build $(GOFLAGS) -o $@ $<
 
-bin/risk_demo: risks/custom/demo/demo-rule.go
+bin/risk_demo_rule: risks/custom/demo/demo-rule.go
 	$(GO) build $(GOFLAGS) -o $@ $<
 
 bin/threagile: main.go
