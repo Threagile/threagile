@@ -26,6 +26,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"sort"
 	"strconv"
 	"strings"
@@ -355,6 +356,9 @@ func (context *Context) unzip(src string, dest string) ([]string, error) {
 		// Make File
 		if err = os.MkdirAll(filepath.Dir(path), os.ModePerm); err != nil {
 			return filenames, err
+		}
+		if path != filepath.Clean(path) {
+			return filenames, fmt.Errorf("weird file path %v", path)
 		}
 		outFile, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
 		if err != nil {
@@ -867,15 +871,10 @@ func (context *Context) applyRAA() string {
 		fmt.Println("Applying RAA calculation:", *context.raaPlugin)
 	}
 
-	raa := *context.raaPlugin
 	runner, loadError := new(run.Runner).Load(filepath.Join(*context.binFolder, *context.raaPlugin))
 	if loadError != nil {
-		raa = strings.TrimSuffix(raa, filepath.Ext(raa))
-		runner, loadError = new(run.Runner).Load(filepath.Join(*context.binFolder, raa))
-		if loadError != nil {
-			fmt.Printf("WARNING: raa %q not loaded: %v\n", *context.raaPlugin, loadError)
-			return ""
-		}
+		fmt.Printf("WARNING: raa %q not loaded: %v\n", *context.raaPlugin, loadError)
+		return ""
 	}
 
 	runError := runner.Run(model.ParsedModelRoot, &model.ParsedModelRoot)
@@ -1089,7 +1088,10 @@ func (context *Context) doItViaRuntimeCall(modelFile string, outputDir string,
 	if generateStatsJSON {
 		args = append(args, "-generate-stats-json")
 	}
-	self := os.Args[0]
+	self, nameError := os.Executable()
+	if nameError != nil {
+		panic(nameError)
+	}
 	cmd = exec.Command(self, args...)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
@@ -1807,6 +1809,12 @@ func (context *Context) stats(ginContext *gin.Context) {
 	for _, keyFolder := range keyFolders {
 		if len(keyFolder.Name()) == 128 { // it's a sha512 token hash probably, so count it as token folder for the stats
 			keyCount++
+			if keyFolder.Name() != filepath.Clean(keyFolder.Name()) {
+				ginContext.JSON(http.StatusInternalServerError, gin.H{
+					"error": "weird file path",
+				})
+				return
+			}
 			modelFolders, err := os.ReadDir(filepath.Join(*context.serverFolder, keyDir, keyFolder.Name()))
 			if err != nil {
 				log.Println(err)
@@ -2161,8 +2169,8 @@ func (context *Context) createNewSharedRuntime(ginContext *gin.Context) {
 			return
 		}
 		// but later it will in memory keyed by its "id", so do this uniqueness check also
-		for _, runtime := range modelInput.SharedRuntimes {
-			if runtime.ID == payload.Id {
+		for _, sharedRuntime := range modelInput.SharedRuntimes {
+			if sharedRuntime.ID == payload.Id {
 				ginContext.JSON(http.StatusConflict, gin.H{
 					"error": "shared runtime with this id already exists",
 				})
@@ -2791,11 +2799,18 @@ func (context *Context) deleteModel(ginContext *gin.Context) {
 	defer context.unlockFolder(folderNameOfKey)
 	folder, ok := context.checkModelFolder(ginContext, ginContext.Param("model-id"), folderNameOfKey)
 	if ok {
+		if folder != filepath.Clean(folder) {
+			ginContext.JSON(http.StatusInternalServerError, gin.H{
+				"error": "model-id is weird",
+			})
+			return
+		}
 		err := os.RemoveAll(folder)
 		if err != nil {
 			ginContext.JSON(http.StatusNotFound, gin.H{
 				"error": "model not found",
 			})
+			return
 		}
 		ginContext.JSON(http.StatusOK, gin.H{
 			"message": "model deleted",
@@ -2996,6 +3011,9 @@ func (context *Context) backupModelToHistory(modelFolder string, changeReasonFor
 		})
 		for _, file := range files {
 			requiredToDelete--
+			if file.Name() != filepath.Clean(file.Name()) {
+				return fmt.Errorf("weird file name %v", file.Name())
+			}
 			err = os.Remove(filepath.Join(historyFolder, file.Name()))
 			if err != nil {
 				return err
@@ -3242,20 +3260,59 @@ func (context *Context) deleteKey(ginContext *gin.Context) {
 	})
 }
 
+func (context *Context) userHomeDir() string {
+	switch runtime.GOOS {
+	case "windows":
+		home := os.Getenv("HOMEDRIVE") + os.Getenv("HOMEPATH")
+		if home == "" {
+			home = os.Getenv("USERPROFILE")
+		}
+		return home
+
+	default:
+		return os.Getenv("HOME")
+	}
+}
+
+func (context *Context) expandPath(path string) *string {
+	home := context.userHomeDir()
+	if strings.HasPrefix(path, "~") {
+		path = strings.Replace(path, "~", home, 1)
+	}
+
+	if strings.HasPrefix(path, "$HOME") {
+		path = strings.Replace(path, "$HOME", home, -1)
+	}
+
+	return &path
+}
+
 func (context *Context) parseCommandlineArgs() {
-	context.tempFolder = flag.String("temp-dir", tempDir, "temporary folder location")
-	context.binFolder = flag.String("bin-dir", binDir, "binary folder location")
+	// folders
 	context.appFolder = flag.String("app-dir", appDir, "app folder (default: "+appDir+")")
 	context.serverFolder = flag.String("server-dir", dataDir, "base folder for server mode (default: "+dataDir+")")
-	context.modelFilename = flag.String("model", inputFile, "input model yaml file")
+	context.tempFolder = flag.String("temp-dir", tempDir, "temporary folder location")
+	context.binFolder = flag.String("bin-dir", binDir, "binary folder location")
 	context.outputDir = flag.String("output", ".", "output directory")
-	context.raaPlugin = flag.String("raa-run", "raa.so", "RAA calculation run (.so shared object) file name")
+
+	// files
+	context.modelFilename = flag.String("model", inputFile, "input model yaml file")
+	context.raaPlugin = flag.String("raa-run", "raa_calc", "RAA calculation run file name")
+
+	// flags
+	context.verbose = flag.Bool("verbose", false, "verbose output")
+	context.diagramDPI = flag.Int("diagram-dpi", defaultGraphvizDPI, "DPI used to render: maximum is "+strconv.Itoa(maxGraphvizDPI)+"")
+	context.skipRiskRules = flag.String("skip-risk-rules", "", "comma-separated list of risk rules (by their ID) to skip")
+	context.riskRulesPlugins = flag.String("custom-risk-rules-plugins", "", "comma-separated list of plugins file names with custom risk rules to load")
+	context.ignoreOrphanedRiskTracking = flag.Bool("ignore-orphaned-risk-tracking", false, "ignore orphaned risk tracking (just log them) not matching a concrete risk")
+
+	// commands
+	context.serverPort = flag.Int("server", 0, "start a server (instead of commandline execution) on the given port")
 	context.executeModelMacro = flag.String("execute-model-macro", "", "Execute model macro (by ID)")
 	context.testParseModel = flag.Bool("test-parse-model", false, "test parse model functionality")
 	context.createExampleModel = flag.Bool("create-example-model", false, "just create an example model named threagile-example-model.yaml in the output directory")
 	context.createStubModel = flag.Bool("create-stub-model", false, "just create a minimal stub model named threagile-stub-model.yaml in the output directory")
 	context.createEditingSupport = flag.Bool("create-editing-support", false, "just create some editing support stuff in the output directory")
-	context.serverPort = flag.Int("server", 0, "start a server (instead of commandline execution) on the given port")
 	context.templateFilename = flag.String("background", "background.pdf", "background pdf file")
 	context.generateDataFlowDiagram = flag.Bool("generate-data-flow-diagram", true, "generate data-flow diagram")
 	context.generateDataAssetDiagram = flag.Bool("generate-data-asset-diagram", true, "generate data asset diagram")
@@ -3265,11 +3322,8 @@ func (context *Context) parseCommandlineArgs() {
 	context.generateRisksExcel = flag.Bool("generate-risks-excel", true, "generate risks excel")
 	context.generateTagsExcel = flag.Bool("generate-tags-excel", true, "generate tags excel")
 	context.generateReportPDF = flag.Bool("generate-report-pdf", true, "generate report pdf, including diagrams")
-	context.diagramDPI = flag.Int("diagram-dpi", defaultGraphvizDPI, "DPI used to render: maximum is "+strconv.Itoa(maxGraphvizDPI)+"")
-	context.skipRiskRules = flag.String("skip-risk-rules", "", "comma-separated list of risk rules (by their ID) to skip")
-	context.riskRulesPlugins = flag.String("custom-risk-rules-plugins", "", "comma-separated list of plugins (.so shared object) file names with custom risk rules to load")
-	context.verbose = flag.Bool("verbose", false, "verbose output")
-	context.ignoreOrphanedRiskTracking = flag.Bool("ignore-orphaned-risk-tracking", false, "ignore orphaned risk tracking (just log them) not matching a concrete risk")
+
+	// more commands
 	version := flag.Bool("version", false, "print version")
 	listTypes := flag.Bool("list-types", false, "print type information (enum values to be used in models)")
 	listRiskRules := flag.Bool("list-risk-rules", false, "print risk rules")
@@ -3279,6 +3333,7 @@ func (context *Context) parseCommandlineArgs() {
 	explainModelMacros := flag.Bool("explain-model-macros", false, "Detailed explanation of all the model macros")
 	print3rdParty := flag.Bool("print-3rd-party-licenses", false, "print 3rd-party license information")
 	license := flag.Bool("print-license", false, "print license information")
+
 	flag.Usage = func() {
 		context.printLogo()
 		_, _ = fmt.Fprintf(os.Stderr, "Usage: threagile [options]")
@@ -3310,6 +3365,14 @@ func (context *Context) parseCommandlineArgs() {
 		fmt.Println()
 	}
 	flag.Parse()
+
+	context.modelFilename = context.expandPath(*context.modelFilename)
+	context.appFolder = context.expandPath(*context.appFolder)
+	context.serverFolder = context.expandPath(*context.serverFolder)
+	context.tempFolder = context.expandPath(*context.tempFolder)
+	context.binFolder = context.expandPath(*context.binFolder)
+	context.outputDir = context.expandPath(*context.outputDir)
+
 	if *context.diagramDPI < 20 {
 		*context.diagramDPI = 20
 	} else if *context.diagramDPI > maxGraphvizDPI {
@@ -3559,6 +3622,9 @@ func (context *Context) parseCommandlineArgs() {
 	}
 	if *license {
 		context.printLogo()
+		if *context.appFolder != filepath.Clean(*context.appFolder) {
+			log.Fatalf("weird app folder %v", *context.appFolder)
+		}
 		content, err := os.ReadFile(filepath.Join(*context.appFolder, "LICENSE.txt"))
 		checkErr(err)
 		fmt.Print(string(content))
@@ -4534,12 +4600,12 @@ func (context *Context) parseModel() {
 
 	// Shared Runtime ===============================================================================
 	model.ParsedModelRoot.SharedRuntimes = make(map[string]model.SharedRuntime)
-	for title, runtime := range context.modelInput.SharedRuntimes {
-		id := fmt.Sprintf("%v", runtime.ID)
+	for title, inputRuntime := range context.modelInput.SharedRuntimes {
+		id := fmt.Sprintf("%v", inputRuntime.ID)
 
 		var technicalAssetsRunning = make([]string, 0)
-		if runtime.TechnicalAssetsRunning != nil {
-			parsedRunningAssets := runtime.TechnicalAssetsRunning
+		if inputRuntime.TechnicalAssetsRunning != nil {
+			parsedRunningAssets := inputRuntime.TechnicalAssetsRunning
 			technicalAssetsRunning = make([]string, len(parsedRunningAssets))
 			for i, parsedRunningAsset := range parsedRunningAssets {
 				assetId := fmt.Sprintf("%v", parsedRunningAsset)
@@ -4551,8 +4617,8 @@ func (context *Context) parseModel() {
 		sharedRuntime := model.SharedRuntime{
 			Id:                     id,
 			Title:                  title, //fmt.Sprintf("%v", boundary["title"]),
-			Description:            withDefault(fmt.Sprintf("%v", runtime.Description), title),
-			Tags:                   checkTags(runtime.Tags, "shared runtime '"+title+"'"),
+			Description:            withDefault(fmt.Sprintf("%v", inputRuntime.Description), title),
+			Tags:                   checkTags(inputRuntime.Tags, "shared runtime '"+title+"'"),
 			TechnicalAssetsRunning: technicalAssetsRunning,
 		}
 		context.checkIdSyntax(id)
