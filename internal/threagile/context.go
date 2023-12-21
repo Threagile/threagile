@@ -1,4 +1,4 @@
-package main
+package threagile
 
 import (
 	"archive/zip"
@@ -15,7 +15,63 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/threagile/threagile/risks"
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+	"github.com/threagile/threagile/colors"
+	"github.com/threagile/threagile/model"
+	addbuildpipeline "github.com/threagile/threagile/pkg/macros/built-in/add-build-pipeline"
+	addvault "github.com/threagile/threagile/pkg/macros/built-in/add-vault"
+	prettyprint "github.com/threagile/threagile/pkg/macros/built-in/pretty-print"
+	removeunusedtags "github.com/threagile/threagile/pkg/macros/built-in/remove-unused-tags"
+	seedrisktracking "github.com/threagile/threagile/pkg/macros/built-in/seed-risk-tracking"
+	seedtags "github.com/threagile/threagile/pkg/macros/built-in/seed-tags"
+	"github.com/threagile/threagile/pkg/report"
+	"github.com/threagile/threagile/pkg/risks"
+	accidentalsecretleak "github.com/threagile/threagile/pkg/risks/built-in/accidental-secret-leak"
+	codebackdooring "github.com/threagile/threagile/pkg/risks/built-in/code-backdooring"
+	containerbaseimagebackdooring "github.com/threagile/threagile/pkg/risks/built-in/container-baseimage-backdooring"
+	containerplatformescape "github.com/threagile/threagile/pkg/risks/built-in/container-platform-escape"
+	crosssiterequestforgery "github.com/threagile/threagile/pkg/risks/built-in/cross-site-request-forgery"
+	crosssitescripting "github.com/threagile/threagile/pkg/risks/built-in/cross-site-scripting"
+	dosriskyaccessacrosstrustboundary "github.com/threagile/threagile/pkg/risks/built-in/dos-risky-access-across-trust-boundary"
+	incompletemodel "github.com/threagile/threagile/pkg/risks/built-in/incomplete-model"
+	ldapinjection "github.com/threagile/threagile/pkg/risks/built-in/ldap-injection"
+	missingauthentication "github.com/threagile/threagile/pkg/risks/built-in/missing-authentication"
+	missingauthenticationsecondfactor "github.com/threagile/threagile/pkg/risks/built-in/missing-authentication-second-factor"
+	missingbuildinfrastructure "github.com/threagile/threagile/pkg/risks/built-in/missing-build-infrastructure"
+	missingcloudhardening "github.com/threagile/threagile/pkg/risks/built-in/missing-cloud-hardening"
+	missingfilevalidation "github.com/threagile/threagile/pkg/risks/built-in/missing-file-validation"
+	missinghardening "github.com/threagile/threagile/pkg/risks/built-in/missing-hardening"
+	missingidentitypropagation "github.com/threagile/threagile/pkg/risks/built-in/missing-identity-propagation"
+	missingidentityproviderisolation "github.com/threagile/threagile/pkg/risks/built-in/missing-identity-provider-isolation"
+	missingidentitystore "github.com/threagile/threagile/pkg/risks/built-in/missing-identity-store"
+	missingnetworksegmentation "github.com/threagile/threagile/pkg/risks/built-in/missing-network-segmentation"
+	missingvault "github.com/threagile/threagile/pkg/risks/built-in/missing-vault"
+	missingvaultisolation "github.com/threagile/threagile/pkg/risks/built-in/missing-vault-isolation"
+	missingwaf "github.com/threagile/threagile/pkg/risks/built-in/missing-waf"
+	mixedtargetsonsharedruntime "github.com/threagile/threagile/pkg/risks/built-in/mixed-targets-on-shared-runtime"
+	pathtraversal "github.com/threagile/threagile/pkg/risks/built-in/path-traversal"
+	pushinsteadofpulldeployment "github.com/threagile/threagile/pkg/risks/built-in/push-instead-of-pull-deployment"
+	searchqueryinjection "github.com/threagile/threagile/pkg/risks/built-in/search-query-injection"
+	serversiderequestforgery "github.com/threagile/threagile/pkg/risks/built-in/server-side-request-forgery"
+	serviceregistrypoisoning "github.com/threagile/threagile/pkg/risks/built-in/service-registry-poisoning"
+	sqlnosqlinjection "github.com/threagile/threagile/pkg/risks/built-in/sql-nosql-injection"
+	uncheckeddeployment "github.com/threagile/threagile/pkg/risks/built-in/unchecked-deployment"
+	unencryptedasset "github.com/threagile/threagile/pkg/risks/built-in/unencrypted-asset"
+	unencryptedcommunication "github.com/threagile/threagile/pkg/risks/built-in/unencrypted-communication"
+	unguardedaccessfrominternet "github.com/threagile/threagile/pkg/risks/built-in/unguarded-access-from-internet"
+	unguardeddirectdatastoreaccess "github.com/threagile/threagile/pkg/risks/built-in/unguarded-direct-datastore-access"
+	unnecessarycommunicationlink "github.com/threagile/threagile/pkg/risks/built-in/unnecessary-communication-link"
+	unnecessarydataasset "github.com/threagile/threagile/pkg/risks/built-in/unnecessary-data-asset"
+	unnecessarydatatransfer "github.com/threagile/threagile/pkg/risks/built-in/unnecessary-data-transfer"
+	unnecessarytechnicalasset "github.com/threagile/threagile/pkg/risks/built-in/unnecessary-technical-asset"
+	untrusteddeserialization "github.com/threagile/threagile/pkg/risks/built-in/untrusted-deserialization"
+	wrongcommunicationlinkcontent "github.com/threagile/threagile/pkg/risks/built-in/wrong-communication-link-content"
+	wrongtrustboundarycontent "github.com/threagile/threagile/pkg/risks/built-in/wrong-trust-boundary-content"
+	xmlexternalentity "github.com/threagile/threagile/pkg/risks/built-in/xml-external-entity"
+	"github.com/threagile/threagile/pkg/run"
+	"golang.org/x/crypto/argon2"
+	"gopkg.in/yaml.v3"
 	"hash/fnv"
 	"io"
 	"log"
@@ -30,63 +86,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
-	"github.com/threagile/threagile/colors"
-	addbuildpipeline "github.com/threagile/threagile/macros/built-in/add-build-pipeline"
-	addvault "github.com/threagile/threagile/macros/built-in/add-vault"
-	prettyprint "github.com/threagile/threagile/macros/built-in/pretty-print"
-	removeunusedtags "github.com/threagile/threagile/macros/built-in/remove-unused-tags"
-	seedrisktracking "github.com/threagile/threagile/macros/built-in/seed-risk-tracking"
-	seedtags "github.com/threagile/threagile/macros/built-in/seed-tags"
-	"github.com/threagile/threagile/model"
-	"github.com/threagile/threagile/report"
-	accidentalsecretleak "github.com/threagile/threagile/risks/built-in/accidental-secret-leak"
-	codebackdooring "github.com/threagile/threagile/risks/built-in/code-backdooring"
-	containerbaseimagebackdooring "github.com/threagile/threagile/risks/built-in/container-baseimage-backdooring"
-	containerplatformescape "github.com/threagile/threagile/risks/built-in/container-platform-escape"
-	crosssiterequestforgery "github.com/threagile/threagile/risks/built-in/cross-site-request-forgery"
-	crosssitescripting "github.com/threagile/threagile/risks/built-in/cross-site-scripting"
-	dosriskyaccessacrosstrustboundary "github.com/threagile/threagile/risks/built-in/dos-risky-access-across-trust-boundary"
-	incompletemodel "github.com/threagile/threagile/risks/built-in/incomplete-model"
-	ldapinjection "github.com/threagile/threagile/risks/built-in/ldap-injection"
-	missingauthentication "github.com/threagile/threagile/risks/built-in/missing-authentication"
-	missingauthenticationsecondfactor "github.com/threagile/threagile/risks/built-in/missing-authentication-second-factor"
-	missingbuildinfrastructure "github.com/threagile/threagile/risks/built-in/missing-build-infrastructure"
-	missingcloudhardening "github.com/threagile/threagile/risks/built-in/missing-cloud-hardening"
-	missingfilevalidation "github.com/threagile/threagile/risks/built-in/missing-file-validation"
-	missinghardening "github.com/threagile/threagile/risks/built-in/missing-hardening"
-	missingidentitypropagation "github.com/threagile/threagile/risks/built-in/missing-identity-propagation"
-	missingidentityproviderisolation "github.com/threagile/threagile/risks/built-in/missing-identity-provider-isolation"
-	missingidentitystore "github.com/threagile/threagile/risks/built-in/missing-identity-store"
-	missingnetworksegmentation "github.com/threagile/threagile/risks/built-in/missing-network-segmentation"
-	missingvault "github.com/threagile/threagile/risks/built-in/missing-vault"
-	missingvaultisolation "github.com/threagile/threagile/risks/built-in/missing-vault-isolation"
-	missingwaf "github.com/threagile/threagile/risks/built-in/missing-waf"
-	mixedtargetsonsharedruntime "github.com/threagile/threagile/risks/built-in/mixed-targets-on-shared-runtime"
-	pathtraversal "github.com/threagile/threagile/risks/built-in/path-traversal"
-	pushinsteadofpulldeployment "github.com/threagile/threagile/risks/built-in/push-instead-of-pull-deployment"
-	searchqueryinjection "github.com/threagile/threagile/risks/built-in/search-query-injection"
-	serversiderequestforgery "github.com/threagile/threagile/risks/built-in/server-side-request-forgery"
-	serviceregistrypoisoning "github.com/threagile/threagile/risks/built-in/service-registry-poisoning"
-	sqlnosqlinjection "github.com/threagile/threagile/risks/built-in/sql-nosql-injection"
-	uncheckeddeployment "github.com/threagile/threagile/risks/built-in/unchecked-deployment"
-	unencryptedasset "github.com/threagile/threagile/risks/built-in/unencrypted-asset"
-	unencryptedcommunication "github.com/threagile/threagile/risks/built-in/unencrypted-communication"
-	unguardedaccessfrominternet "github.com/threagile/threagile/risks/built-in/unguarded-access-from-internet"
-	unguardeddirectdatastoreaccess "github.com/threagile/threagile/risks/built-in/unguarded-direct-datastore-access"
-	unnecessarycommunicationlink "github.com/threagile/threagile/risks/built-in/unnecessary-communication-link"
-	unnecessarydataasset "github.com/threagile/threagile/risks/built-in/unnecessary-data-asset"
-	unnecessarydatatransfer "github.com/threagile/threagile/risks/built-in/unnecessary-data-transfer"
-	unnecessarytechnicalasset "github.com/threagile/threagile/risks/built-in/unnecessary-technical-asset"
-	untrusteddeserialization "github.com/threagile/threagile/risks/built-in/untrusted-deserialization"
-	wrongcommunicationlinkcontent "github.com/threagile/threagile/risks/built-in/wrong-communication-link-content"
-	wrongtrustboundarycontent "github.com/threagile/threagile/risks/built-in/wrong-trust-boundary-content"
-	xmlexternalentity "github.com/threagile/threagile/risks/built-in/xml-external-entity"
-	"github.com/threagile/threagile/run"
-	"golang.org/x/crypto/argon2"
-	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -122,6 +121,8 @@ const (
 )
 
 type Context struct {
+	ServerPort int
+
 	successCount                                                 int
 	errorCount                                                   int
 	drawSpaceLinesForLayoutUnfortunatelyFurtherSeparatesAllRanks bool
@@ -136,7 +137,7 @@ type Context struct {
 	generateStatsJSON, generateRisksExcel, generateTagsExcel, generateReportPDF                       *bool
 	outputDir, raaPlugin, skipRiskRules, riskRulesPlugins, executeModelMacro                          *string
 	customRiskRules                                                                                   map[string]*risks.CustomRisk
-	diagramDPI, serverPort                                                                            *int
+	diagramDPI                                                                                        *int
 	deferredRiskTrackingDueToWildcardMatching                                                         map[string]model.RiskTracking
 	addModelTitle                                                                                     bool
 	keepDiagramSourceFiles                                                                            bool
@@ -144,6 +145,12 @@ type Context struct {
 	binFolder                                                                                         *string
 	serverFolder                                                                                      *string
 	tempFolder                                                                                        *string
+}
+
+func checkErr(err error) {
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (context *Context) Defaults() *Context {
@@ -308,24 +315,6 @@ func (context *Context) checkRiskTracking() {
 	}
 }
 
-// === Error handling stuff ========================================
-
-func checkErr(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
-
-func main() {
-	context := new(Context).Defaults()
-	context.parseCommandlineArgs()
-	if *context.serverPort > 0 {
-		context.startServer()
-	} else {
-		context.doIt()
-	}
-}
-
 // Unzip will decompress a zip archive, moving all files and folders
 // within the zip file (parameter 1) to an output directory (parameter 2).
 func (context *Context) unzip(src string, dest string) ([]string, error) {
@@ -432,7 +421,7 @@ func (context *Context) addFileToZip(zipWriter *zip.Writer, filename string) err
 	return err
 }
 
-func (context *Context) doIt() {
+func (context *Context) DoIt() {
 	defer func() {
 		var err error
 		if r := recover(); r != nil {
@@ -1102,7 +1091,7 @@ func (context *Context) doItViaRuntimeCall(modelFile string, outputDir string,
 	}
 }
 
-func (context *Context) startServer() {
+func (context *Context) StartServer() {
 	router := gin.Default()
 	router.LoadHTMLGlob("server/static/*.html") // <==
 	router.GET("/", func(c *gin.Context) {
@@ -1232,7 +1221,7 @@ func (context *Context) startServer() {
 	router.DELETE("/models/:model-id/shared-runtimes/:shared-runtime-id", context.deleteSharedRuntime)
 
 	fmt.Println("Threagile server running...")
-	_ = router.Run(":" + strconv.Itoa(*context.serverPort)) // listen and serve on 0.0.0.0:8080 or whatever port was specified
+	_ = router.Run(":" + strconv.Itoa(context.ServerPort)) // listen and serve on 0.0.0.0:8080 or whatever port was specified
 }
 
 func (context *Context) exampleFile(ginContext *gin.Context) {
@@ -3284,7 +3273,7 @@ func (context *Context) expandPath(path string) *string {
 	return &path
 }
 
-func (context *Context) parseCommandlineArgs() {
+func (context *Context) ParseCommandlineArgs() {
 	// folders
 	context.appFolder = flag.String("app-dir", appDir, "app folder (default: "+appDir+")")
 	context.serverFolder = flag.String("server-dir", dataDir, "base folder for server mode (default: "+dataDir+")")
@@ -3304,7 +3293,7 @@ func (context *Context) parseCommandlineArgs() {
 	context.ignoreOrphanedRiskTracking = flag.Bool("ignore-orphaned-risk-tracking", false, "ignore orphaned risk tracking (just log them) not matching a concrete risk")
 
 	// commands
-	context.serverPort = flag.Int("server", 0, "start a server (instead of commandline execution) on the given port")
+	flag.IntVar(&context.ServerPort, "server", 0, "start a server (instead of commandline execution) on the given port")
 	context.executeModelMacro = flag.String("execute-model-macro", "", "Execute model macro (by ID)")
 	context.createExampleModel = flag.Bool("create-example-model", false, "just create an example model named threagile-example-model.yaml in the output directory")
 	context.createStubModel = flag.Bool("create-stub-model", false, "just create a minimal stub model named threagile-stub-model.yaml in the output directory")

@@ -2,7 +2,7 @@ package missing_authentication_second_factor
 
 import (
 	"github.com/threagile/threagile/model"
-	"github.com/threagile/threagile/risks/built-in/missing-authentication"
+	"github.com/threagile/threagile/pkg/risks/built-in/missing-authentication"
 )
 
 func Rule() model.CustomRiskRule {
