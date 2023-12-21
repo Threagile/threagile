@@ -6,7 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/threagile/threagile/model"
-	"github.com/threagile/threagile/risks"
+	"github.com/threagile/threagile/pkg/risks"
 	"io"
 	"os"
 )

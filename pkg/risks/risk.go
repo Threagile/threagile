@@ -2,7 +2,7 @@ package risks
 
 import (
 	"github.com/threagile/threagile/model"
-	"github.com/threagile/threagile/run"
+	"github.com/threagile/threagile/pkg/run"
 	"log"
 )
 

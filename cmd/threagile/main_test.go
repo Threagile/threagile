@@ -11,7 +11,7 @@ import (
 )
 
 func TestParseModel(t *testing.T) {
-	flatModelFile := filepath.Join("test", "all.yaml")
+	flatModelFile := filepath.Join("..", "..", "test", "all.yaml")
 	flatModel := *new(model.ModelInput).Defaults()
 	flatLoadError := flatModel.Load(flatModelFile)
 	if flatLoadError != nil {
@@ -28,7 +28,7 @@ func TestParseModel(t *testing.T) {
 		return
 	}
 
-	splitModelFile := filepath.Join("test", "main.yaml")
+	splitModelFile := filepath.Join("..", "..", "test", "main.yaml")
 	splitModel := *new(model.ModelInput).Defaults()
 	splitLoadError := splitModel.Load(splitModelFile)
 	if splitLoadError != nil {

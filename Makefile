@@ -3,7 +3,7 @@ ASSET_DIR		= $(HOME)/.threagile
 BIN_DIR			= $(HOME)/bin
 ASSETS			= 							\
 	LICENSE.txt 							\
-	report/template/background.pdf 			\
+	pkg/report/template/background.pdf 		\
 	support/openapi.yaml 					\
 	support/schema.json 					\
 	support/live-templates.txt				\
@@ -25,7 +25,7 @@ CP		= cp -r
 RM		= rm -rf
 
 # Targets
-.phony: all install clean uninstall
+.phony: all run_tests install clean uninstall
 
 default: all
 
@@ -33,7 +33,10 @@ prep:
 	env GO111MODULE=on go mod vendor
 	$(MKDIR) bin
 
-all: prep $(addprefix bin/,$(BIN))
+run_tests:
+	$(GO) test ./...
+
+all: prep run_tests $(addprefix bin/,$(BIN))
 
 clean:
 	$(RM) bin vendor
@@ -58,14 +61,14 @@ uninstall:
 	$(RM) $(addprefix $(BIN_DIR)/,$(notdir $(SCRIPTS)))
 	$(RM) $(ASSET_DIR)
 
-bin/raa_calc: raa/raa/raa.go
+bin/raa_calc: cmd/raa/main.go
 	$(GO) build $(GOFLAGS) -o $@ $<
 
-bin/raa_dummy: raa/dummy/dummy.go
+bin/raa_dummy: cmd/raa_dummy/main.go
 	$(GO) build $(GOFLAGS) -o $@ $<
 
-bin/risk_demo_rule: risks/custom/demo/demo-rule.go
+bin/risk_demo_rule: cmd/risk_demo/main.go
 	$(GO) build $(GOFLAGS) -o $@ $<
 
-bin/threagile: main.go
+bin/threagile: cmd/threagile/main.go
 	$(GO) build $(GOFLAGS) -o $@ $<

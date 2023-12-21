@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/threagile/threagile/colors"
 	"gopkg.in/yaml.v3"
-	"log"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -132,18 +131,18 @@ func (model *ModelInput) Defaults() *ModelInput {
 func (model *ModelInput) Load(inputFilename string) error {
 	modelYaml, readError := os.ReadFile(inputFilename)
 	if readError != nil {
-		log.Fatal("Unable to read model file: ", readError)
+		return fmt.Errorf("unable to read model file: %v", readError)
 	}
 
 	unmarshalError := yaml.Unmarshal(modelYaml, &model)
 	if unmarshalError != nil {
-		log.Fatal("Unable to parse model yaml: ", unmarshalError)
+		return fmt.Errorf("unable to parse model yaml: %v", unmarshalError)
 	}
 
 	for _, includeFile := range model.Includes {
 		mergeError := model.Merge(filepath.Dir(inputFilename), includeFile)
 		if mergeError != nil {
-			log.Fatalf("Unable to merge model include %q: %v", includeFile, mergeError)
+			return fmt.Errorf("unable to merge model include %q: %v", includeFile, mergeError)
 		}
 	}
 
