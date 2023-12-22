@@ -4,10 +4,12 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"github.com/threagile/threagile/model"
 	"io"
 	"os"
 	"sort"
+
+	"github.com/threagile/threagile/pkg/model"
+	"github.com/threagile/threagile/pkg/security/types"
 )
 
 // used from run caller:
@@ -153,24 +155,24 @@ func calculateAttackerAttractiveness(input *model.ParsedModel, techAsset model.T
 			score += dataAsset.Availability.AttackerAttractivenessForInOutTransferredData()
 		}
 	}
-	if techAsset.Technology == model.LoadBalancer || techAsset.Technology == model.ReverseProxy {
+	if techAsset.Technology == types.LoadBalancer || techAsset.Technology == types.ReverseProxy {
 		score = score / 5.5
 	}
-	if techAsset.Technology == model.Monitoring {
+	if techAsset.Technology == types.Monitoring {
 		score = score / 5
 	}
-	if techAsset.Technology == model.ContainerPlatform {
+	if techAsset.Technology == types.ContainerPlatform {
 		score = score * 5
 	}
-	if techAsset.Technology == model.Vault {
+	if techAsset.Technology == types.Vault {
 		score = score * 2
 	}
-	if techAsset.Technology == model.BuildPipeline || techAsset.Technology == model.SourcecodeRepository || techAsset.Technology == model.ArtifactRegistry {
+	if techAsset.Technology == types.BuildPipeline || techAsset.Technology == types.SourcecodeRepository || techAsset.Technology == types.ArtifactRegistry {
 		score = score * 2
 	}
-	if techAsset.Technology == model.IdentityProvider || techAsset.Technology == model.IdentityStoreDatabase || techAsset.Technology == model.IdentityStoreLDAP {
+	if techAsset.Technology == types.IdentityProvider || techAsset.Technology == types.IdentityStoreDatabase || techAsset.Technology == types.IdentityStoreLDAP {
 		score = score * 2.5
-	} else if techAsset.Type == model.Datastore {
+	} else if techAsset.Type == types.Datastore {
 		score = score * 2
 	}
 	if techAsset.MultiTenant {

@@ -4,10 +4,11 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"github.com/threagile/threagile/model"
 	"io"
 	"math/rand"
 	"os"
+
+	"github.com/threagile/threagile/pkg/model"
 )
 
 // JUST A DUMMY TO HAVE AN ALTERNATIVE PLUGIN TO USE/TEST

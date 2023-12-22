@@ -1,21 +1,25 @@
 package seed_risk_tracking
 
 import (
-	"github.com/threagile/threagile/model"
 	"sort"
 	"strconv"
+
+	"github.com/threagile/threagile/pkg/input"
+	"github.com/threagile/threagile/pkg/macros"
+	"github.com/threagile/threagile/pkg/model"
+	"github.com/threagile/threagile/pkg/security/types"
 )
 
-func GetMacroDetails() model.MacroDetails {
-	return model.MacroDetails{
+func GetMacroDetails() macros.MacroDetails {
+	return macros.MacroDetails{
 		ID:          "seed-risk-tracking",
 		Title:       "Seed Risk Tracking",
 		Description: "This model macro simply seeds the model file with initial risk tracking entries for all untracked risks.",
 	}
 }
 
-func GetNextQuestion() (nextQuestion model.MacroQuestion, err error) {
-	return model.NoMoreQuestions(), nil
+func GetNextQuestion() (nextQuestion macros.MacroQuestion, err error) {
+	return macros.NoMoreQuestions(), nil
 }
 
 func ApplyAnswer(_ string, _ ...string) (message string, validResult bool, err error) {
@@ -26,24 +30,24 @@ func GoBack() (message string, validResult bool, err error) {
 	return "Cannot go back further", false, nil
 }
 
-func GetFinalChangeImpact(_ *model.ModelInput) (changes []string, message string, validResult bool, err error) {
+func GetFinalChangeImpact(_ *input.ModelInput) (changes []string, message string, validResult bool, err error) {
 	return []string{"seed the model file with with initial risk tracking entries for all untracked risks"}, "Changeset valid", true, err
 }
 
-func Execute(modelInput *model.ModelInput) (message string, validResult bool, err error) {
+func Execute(parsedModel *model.ParsedModel, modelInput *input.ModelInput) (message string, validResult bool, err error) {
 	syntheticRiskIDsToCreateTrackingFor := make([]string, 0)
-	for id, risk := range model.GeneratedRisksBySyntheticId {
-		if !risk.IsRiskTracked() {
+	for id, risk := range parsedModel.GeneratedRisksBySyntheticId {
+		if !risk.IsRiskTracked(parsedModel) {
 			syntheticRiskIDsToCreateTrackingFor = append(syntheticRiskIDsToCreateTrackingFor, id)
 		}
 	}
 	sort.Strings(syntheticRiskIDsToCreateTrackingFor)
 	if modelInput.RiskTracking == nil {
-		modelInput.RiskTracking = make(map[string]model.InputRiskTracking)
+		modelInput.RiskTracking = make(map[string]input.InputRiskTracking)
 	}
 	for _, id := range syntheticRiskIDsToCreateTrackingFor {
-		modelInput.RiskTracking[id] = model.InputRiskTracking{
-			Status:        model.Unchecked.String(),
+		modelInput.RiskTracking[id] = input.InputRiskTracking{
+			Status:        types.Unchecked.String(),
 			Justification: "",
 			Ticket:        "",
 			Date:          "",

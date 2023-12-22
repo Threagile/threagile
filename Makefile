@@ -3,7 +3,7 @@ ASSET_DIR		= $(HOME)/.threagile
 BIN_DIR			= $(HOME)/bin
 ASSETS			= 							\
 	LICENSE.txt 							\
-	pkg/report/template/background.pdf 		\
+	report/template/background.pdf 			\
 	support/openapi.yaml 					\
 	support/schema.json 					\
 	support/live-templates.txt				\
