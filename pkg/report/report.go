@@ -3,55 +3,6 @@ package report
 import (
 	"errors"
 	"fmt"
-	"github.com/jung-kurt/gofpdf"
-	"github.com/jung-kurt/gofpdf/contrib/gofpdi"
-	"github.com/threagile/threagile/colors"
-	"github.com/threagile/threagile/model"
-	"github.com/threagile/threagile/pkg/risks"
-	"github.com/threagile/threagile/pkg/risks/built-in/accidental-secret-leak"
-	"github.com/threagile/threagile/pkg/risks/built-in/code-backdooring"
-	"github.com/threagile/threagile/pkg/risks/built-in/container-baseimage-backdooring"
-	"github.com/threagile/threagile/pkg/risks/built-in/container-platform-escape"
-	"github.com/threagile/threagile/pkg/risks/built-in/cross-site-request-forgery"
-	"github.com/threagile/threagile/pkg/risks/built-in/cross-site-scripting"
-	"github.com/threagile/threagile/pkg/risks/built-in/dos-risky-access-across-trust-boundary"
-	"github.com/threagile/threagile/pkg/risks/built-in/incomplete-model"
-	"github.com/threagile/threagile/pkg/risks/built-in/ldap-injection"
-	"github.com/threagile/threagile/pkg/risks/built-in/missing-authentication"
-	"github.com/threagile/threagile/pkg/risks/built-in/missing-authentication-second-factor"
-	"github.com/threagile/threagile/pkg/risks/built-in/missing-build-infrastructure"
-	"github.com/threagile/threagile/pkg/risks/built-in/missing-cloud-hardening"
-	"github.com/threagile/threagile/pkg/risks/built-in/missing-file-validation"
-	"github.com/threagile/threagile/pkg/risks/built-in/missing-hardening"
-	"github.com/threagile/threagile/pkg/risks/built-in/missing-identity-propagation"
-	"github.com/threagile/threagile/pkg/risks/built-in/missing-identity-provider-isolation"
-	"github.com/threagile/threagile/pkg/risks/built-in/missing-identity-store"
-	"github.com/threagile/threagile/pkg/risks/built-in/missing-network-segmentation"
-	"github.com/threagile/threagile/pkg/risks/built-in/missing-vault"
-	"github.com/threagile/threagile/pkg/risks/built-in/missing-vault-isolation"
-	"github.com/threagile/threagile/pkg/risks/built-in/missing-waf"
-	"github.com/threagile/threagile/pkg/risks/built-in/mixed-targets-on-shared-runtime"
-	"github.com/threagile/threagile/pkg/risks/built-in/path-traversal"
-	"github.com/threagile/threagile/pkg/risks/built-in/push-instead-of-pull-deployment"
-	"github.com/threagile/threagile/pkg/risks/built-in/search-query-injection"
-	"github.com/threagile/threagile/pkg/risks/built-in/server-side-request-forgery"
-	"github.com/threagile/threagile/pkg/risks/built-in/service-registry-poisoning"
-	"github.com/threagile/threagile/pkg/risks/built-in/sql-nosql-injection"
-	"github.com/threagile/threagile/pkg/risks/built-in/unchecked-deployment"
-	"github.com/threagile/threagile/pkg/risks/built-in/unencrypted-asset"
-	"github.com/threagile/threagile/pkg/risks/built-in/unencrypted-communication"
-	"github.com/threagile/threagile/pkg/risks/built-in/unguarded-access-from-internet"
-	"github.com/threagile/threagile/pkg/risks/built-in/unguarded-direct-datastore-access"
-	"github.com/threagile/threagile/pkg/risks/built-in/unnecessary-communication-link"
-	"github.com/threagile/threagile/pkg/risks/built-in/unnecessary-data-asset"
-	"github.com/threagile/threagile/pkg/risks/built-in/unnecessary-data-transfer"
-	"github.com/threagile/threagile/pkg/risks/built-in/unnecessary-technical-asset"
-	"github.com/threagile/threagile/pkg/risks/built-in/untrusted-deserialization"
-	"github.com/threagile/threagile/pkg/risks/built-in/wrong-communication-link-content"
-	"github.com/threagile/threagile/pkg/risks/built-in/wrong-trust-boundary-content"
-	"github.com/threagile/threagile/pkg/risks/built-in/xml-external-entity"
-	"github.com/wcharczuk/go-chart"
-	"github.com/wcharczuk/go-chart/drawing"
 	"image"
 	"log"
 	"os"
@@ -62,6 +13,57 @@ import (
 	"strings"
 	"time"
 	"unicode/utf8"
+
+	"github.com/jung-kurt/gofpdf"
+	"github.com/jung-kurt/gofpdf/contrib/gofpdi"
+	"github.com/threagile/threagile/pkg/colors"
+	"github.com/threagile/threagile/pkg/docs"
+	"github.com/threagile/threagile/pkg/model"
+	accidental_secret_leak "github.com/threagile/threagile/pkg/security/risks/built-in/accidental-secret-leak"
+	code_backdooring "github.com/threagile/threagile/pkg/security/risks/built-in/code-backdooring"
+	container_baseimage_backdooring "github.com/threagile/threagile/pkg/security/risks/built-in/container-baseimage-backdooring"
+	container_platform_escape "github.com/threagile/threagile/pkg/security/risks/built-in/container-platform-escape"
+	cross_site_request_forgery "github.com/threagile/threagile/pkg/security/risks/built-in/cross-site-request-forgery"
+	cross_site_scripting "github.com/threagile/threagile/pkg/security/risks/built-in/cross-site-scripting"
+	dos_risky_access_across_trust_boundary "github.com/threagile/threagile/pkg/security/risks/built-in/dos-risky-access-across-trust-boundary"
+	incomplete_model "github.com/threagile/threagile/pkg/security/risks/built-in/incomplete-model"
+	ldap_injection "github.com/threagile/threagile/pkg/security/risks/built-in/ldap-injection"
+	missing_authentication "github.com/threagile/threagile/pkg/security/risks/built-in/missing-authentication"
+	missing_authentication_second_factor "github.com/threagile/threagile/pkg/security/risks/built-in/missing-authentication-second-factor"
+	missing_build_infrastructure "github.com/threagile/threagile/pkg/security/risks/built-in/missing-build-infrastructure"
+	missing_cloud_hardening "github.com/threagile/threagile/pkg/security/risks/built-in/missing-cloud-hardening"
+	missing_file_validation "github.com/threagile/threagile/pkg/security/risks/built-in/missing-file-validation"
+	missing_hardening "github.com/threagile/threagile/pkg/security/risks/built-in/missing-hardening"
+	missing_identity_propagation "github.com/threagile/threagile/pkg/security/risks/built-in/missing-identity-propagation"
+	missing_identity_provider_isolation "github.com/threagile/threagile/pkg/security/risks/built-in/missing-identity-provider-isolation"
+	missing_identity_store "github.com/threagile/threagile/pkg/security/risks/built-in/missing-identity-store"
+	missing_network_segmentation "github.com/threagile/threagile/pkg/security/risks/built-in/missing-network-segmentation"
+	missing_vault "github.com/threagile/threagile/pkg/security/risks/built-in/missing-vault"
+	missing_vault_isolation "github.com/threagile/threagile/pkg/security/risks/built-in/missing-vault-isolation"
+	missing_waf "github.com/threagile/threagile/pkg/security/risks/built-in/missing-waf"
+	mixed_targets_on_shared_runtime "github.com/threagile/threagile/pkg/security/risks/built-in/mixed-targets-on-shared-runtime"
+	path_traversal "github.com/threagile/threagile/pkg/security/risks/built-in/path-traversal"
+	push_instead_of_pull_deployment "github.com/threagile/threagile/pkg/security/risks/built-in/push-instead-of-pull-deployment"
+	search_query_injection "github.com/threagile/threagile/pkg/security/risks/built-in/search-query-injection"
+	server_side_request_forgery "github.com/threagile/threagile/pkg/security/risks/built-in/server-side-request-forgery"
+	service_registry_poisoning "github.com/threagile/threagile/pkg/security/risks/built-in/service-registry-poisoning"
+	sql_nosql_injection "github.com/threagile/threagile/pkg/security/risks/built-in/sql-nosql-injection"
+	unchecked_deployment "github.com/threagile/threagile/pkg/security/risks/built-in/unchecked-deployment"
+	unencrypted_asset "github.com/threagile/threagile/pkg/security/risks/built-in/unencrypted-asset"
+	unencrypted_communication "github.com/threagile/threagile/pkg/security/risks/built-in/unencrypted-communication"
+	unguarded_access_from_internet "github.com/threagile/threagile/pkg/security/risks/built-in/unguarded-access-from-internet"
+	unguarded_direct_datastore_access "github.com/threagile/threagile/pkg/security/risks/built-in/unguarded-direct-datastore-access"
+	unnecessary_communication_link "github.com/threagile/threagile/pkg/security/risks/built-in/unnecessary-communication-link"
+	unnecessary_data_asset "github.com/threagile/threagile/pkg/security/risks/built-in/unnecessary-data-asset"
+	unnecessary_data_transfer "github.com/threagile/threagile/pkg/security/risks/built-in/unnecessary-data-transfer"
+	unnecessary_technical_asset "github.com/threagile/threagile/pkg/security/risks/built-in/unnecessary-technical-asset"
+	untrusted_deserialization "github.com/threagile/threagile/pkg/security/risks/built-in/untrusted-deserialization"
+	wrong_communication_link_content "github.com/threagile/threagile/pkg/security/risks/built-in/wrong-communication-link-content"
+	wrong_trust_boundary_content "github.com/threagile/threagile/pkg/security/risks/built-in/wrong-trust-boundary-content"
+	xml_external_entity "github.com/threagile/threagile/pkg/security/risks/built-in/xml-external-entity"
+	"github.com/threagile/threagile/pkg/security/types"
+	"github.com/wcharczuk/go-chart"
+	"github.com/wcharczuk/go-chart/drawing"
 )
 
 const fontSizeHeadline, fontSizeHeadlineSmall, fontSizeBody, fontSizeSmall, fontSizeVerySmall = 20, 16, 12, 9, 7
@@ -80,25 +82,6 @@ var homeLink int
 var currentChapterTitleBreadcrumb string
 
 var firstParagraphRegEx = regexp.MustCompile(`(.*?)((<br>)|(<p>))`)
-var (
-	_ = pdfColorDataAssets
-	_ = rgbHexColorDataAssets
-	_ = pdfColorTechnicalAssets
-	_ = rgbHexColorTechnicalAssets
-	_ = pdfColorTrustBoundaries
-	_ = pdfColorSharedRuntime
-	_ = rgbHexColorTrustBoundaries
-	_ = rgbHexColorSharedRuntime
-	_ = pdfColorRiskFindings
-	_ = rgbHexColorRiskFindings
-	_ = rgbHexColorDisclaimer
-	_ = rgbHexColorGray
-	_ = rgbHexColorLightGray
-	_ = rgbHexColorOutOfScope
-	_ = rgbHexColorBlack
-	_ = pdfColorRed
-	_ = rgbHexColorRed
-)
 
 func initReport() {
 	pdf = nil
@@ -119,37 +102,38 @@ func WriteReportPDF(reportFilename string,
 	buildTimestamp string,
 	modelHash string,
 	introTextRAA string,
-	customRiskRules map[string]*risks.CustomRisk,
-	tempFolder string) {
+	customRiskRules map[string]*model.CustomRisk,
+	tempFolder string,
+	model *model.ParsedModel) {
 	initReport()
-	createPdfAndInitMetadata()
+	createPdfAndInitMetadata(model)
 	parseBackgroundTemplate(templateFilename)
-	createCover()
-	createTableOfContents()
-	createManagementSummary(tempFolder)
-	createImpactInitialRisks()
-	createRiskMitigationStatus(tempFolder)
-	createImpactRemainingRisks()
-	createTargetDescription(filepath.Dir(modelFilename))
+	createCover(model)
+	createTableOfContents(model)
+	createManagementSummary(model, tempFolder)
+	createImpactInitialRisks(model)
+	createRiskMitigationStatus(model, tempFolder)
+	createImpactRemainingRisks(model)
+	createTargetDescription(model, filepath.Dir(modelFilename))
 	embedDataFlowDiagram(dataFlowDiagramFilenamePNG, tempFolder)
-	createSecurityRequirements()
-	createAbuseCases()
-	createTagListing()
-	createSTRIDE()
-	createAssignmentByFunction()
-	createRAA(introTextRAA)
+	createSecurityRequirements(model)
+	createAbuseCases(model)
+	createTagListing(model)
+	createSTRIDE(model)
+	createAssignmentByFunction(model)
+	createRAA(model, introTextRAA)
 	embedDataRiskMapping(dataAssetDiagramFilenamePNG, tempFolder)
 	//createDataRiskQuickWins()
-	createOutOfScopeAssets()
-	createModelFailures()
-	createQuestions()
-	createRiskCategories()
-	createTechnicalAssets()
-	createDataAssets()
-	createTrustBoundaries()
-	createSharedRuntimes()
-	createRiskRulesChecked(modelFilename, skipRiskRules, buildTimestamp, modelHash, customRiskRules)
-	createDisclaimer()
+	createOutOfScopeAssets(model)
+	createModelFailures(model)
+	createQuestions(model)
+	createRiskCategories(model)
+	createTechnicalAssets(model)
+	createDataAssets(model)
+	createTrustBoundaries(model)
+	createSharedRuntimes(model)
+	createRiskRulesChecked(model, modelFilename, skipRiskRules, buildTimestamp, modelHash, customRiskRules)
+	createDisclaimer(model)
 	writeReportToFile(reportFilename)
 }
 
@@ -159,15 +143,31 @@ func checkErr(err error) {
 	}
 }
 
-func createPdfAndInitMetadata() {
+func createPdfAndInitMetadata(model *model.ParsedModel) {
 	pdf = gofpdf.New("P", "mm", "A4", "")
-	pdf.SetCreator(model.ParsedModelRoot.Author.Homepage, true)
-	pdf.SetAuthor(model.ParsedModelRoot.Author.Name, true)
-	pdf.SetTitle("Threat Model Report: "+model.ParsedModelRoot.Title, true)
-	pdf.SetSubject("Threat Model Report: "+model.ParsedModelRoot.Title, true)
+	pdf.SetCreator(model.Author.Homepage, true)
+	pdf.SetAuthor(model.Author.Name, true)
+	pdf.SetTitle("Threat Model Report: "+model.Title, true)
+	pdf.SetSubject("Threat Model Report: "+model.Title, true)
 	//	pdf.SetPageBox("crop", 0, 0, 100, 010)
 	pdf.SetHeaderFunc(headerFunc)
-	pdf.SetFooterFunc(footerFunc)
+	pdf.SetFooterFunc(func() {
+		addBreadcrumb(model)
+		pdf.SetFont("Helvetica", "", 10)
+		pdf.SetTextColor(127, 127, 127)
+		pdf.Text(8.6, 284, "Threat Model Report via Threagile") //: "+parsedModel.Title)
+		pdf.Link(8.4, 281, 54.6, 4, homeLink)
+		pageNo++
+		text := "Page " + strconv.Itoa(pageNo)
+		if pageNo < 10 {
+			text = "    " + text
+		} else if pageNo < 100 {
+			text = "  " + text
+		}
+		if pageNo > 1 {
+			pdf.Text(186, 284, text)
+		}
+	})
 	linkCounter = 1 // link counting starts at 1 via pdf.AddLink
 }
 
@@ -178,30 +178,12 @@ func headerFunc() {
 	}
 }
 
-func footerFunc() {
-	addBreadcrumb()
-	pdf.SetFont("Helvetica", "", 10)
-	pdf.SetTextColor(127, 127, 127)
-	pdf.Text(8.6, 284, "Threat Model Report via Threagile") //: "+model.ParsedModelRoot.Title)
-	pdf.Link(8.4, 281, 54.6, 4, homeLink)
-	pageNo++
-	text := "Page " + strconv.Itoa(pageNo)
-	if pageNo < 10 {
-		text = "    " + text
-	} else if pageNo < 100 {
-		text = "  " + text
-	}
-	if pageNo > 1 {
-		pdf.Text(186, 284, text)
-	}
-}
-
-func addBreadcrumb() {
+func addBreadcrumb(parsedModel *model.ParsedModel) {
 	if len(currentChapterTitleBreadcrumb) > 0 {
 		uni := pdf.UnicodeTranslatorFromDescriptor("")
 		pdf.SetFont("Helvetica", "", 10)
 		pdf.SetTextColor(127, 127, 127)
-		pdf.Text(46.7, 24.5, uni(currentChapterTitleBreadcrumb+"   -   "+model.ParsedModelRoot.Title))
+		pdf.Text(46.7, 24.5, uni(currentChapterTitleBreadcrumb+"   -   "+parsedModel.Title))
 	}
 }
 
@@ -221,29 +203,29 @@ func parseBackgroundTemplate(templateFilename string) {
 	diagramLegendTemplateId = gofpdi.ImportPage(pdf, templateFilename, 3, "/MediaBox")
 }
 
-func createCover() {
+func createCover(parsedModel *model.ParsedModel) {
 	uni := pdf.UnicodeTranslatorFromDescriptor("")
 	pdf.AddPage()
 	gofpdi.UseImportedTemplate(pdf, coverTemplateId, 0, 0, 0, 300)
 	pdf.SetFont("Helvetica", "B", 28)
 	pdf.SetTextColor(0, 0, 0)
 	pdf.Text(40, 110, "Threat Model Report")
-	pdf.Text(40, 125, uni(model.ParsedModelRoot.Title))
+	pdf.Text(40, 125, uni(parsedModel.Title))
 	pdf.SetFont("Helvetica", "", 12)
-	reportDate := model.ParsedModelRoot.Date
+	reportDate := parsedModel.Date
 	if reportDate.IsZero() {
 		reportDate = time.Now()
 	}
 	pdf.Text(40.7, 145, reportDate.Format("2 January 2006"))
-	pdf.Text(40.7, 153, uni(model.ParsedModelRoot.Author.Name))
+	pdf.Text(40.7, 153, uni(parsedModel.Author.Name))
 	pdf.SetFont("Helvetica", "", 10)
 	pdf.SetTextColor(80, 80, 80)
-	pdf.Text(8.6, 275, model.ParsedModelRoot.Author.Homepage)
+	pdf.Text(8.6, 275, parsedModel.Author.Homepage)
 	pdf.SetFont("Helvetica", "", 12)
 	pdf.SetTextColor(0, 0, 0)
 }
 
-func createTableOfContents() {
+func createTableOfContents(parsedModel *model.ParsedModel) {
 	uni := pdf.UnicodeTranslatorFromDescriptor("")
 	pdf.AddPage()
 	currentChapterTitleBreadcrumb = "Table of Contents"
@@ -274,7 +256,7 @@ func createTableOfContents() {
 
 	risksStr := "Risks"
 	catStr := "Categories"
-	count, catCount := model.TotalRiskCount(), len(model.GeneratedRisksByCategory)
+	count, catCount := model.TotalRiskCount(parsedModel), len(parsedModel.GeneratedRisksByCategory)
 	if count == 1 {
 		risksStr = "Risk"
 	}
@@ -296,7 +278,7 @@ func createTableOfContents() {
 	y += 6
 	risksStr = "Risks"
 	catStr = "Categories"
-	count, catCount = len(model.FilteredByStillAtRisk()), len(model.CategoriesOfOnlyRisksStillAtRisk(model.GeneratedRisksByCategory))
+	count, catCount = len(model.FilteredByStillAtRisk(parsedModel)), len(model.CategoriesOfOnlyRisksStillAtRisk(parsedModel, parsedModel.GeneratedRisksByCategory))
 	if count == 1 {
 		risksStr = "Risk"
 	}
@@ -377,7 +359,7 @@ func createTableOfContents() {
 
 	y += 6
 	assets := "Assets"
-	count = len(model.OutOfScopeTechnicalAssets())
+	count = len(parsedModel.OutOfScopeTechnicalAssets())
 	if count == 1 {
 		assets = "Asset"
 	}
@@ -387,13 +369,13 @@ func createTableOfContents() {
 	pdf.Link(10, y-5, 172.5, 6.5, pdf.AddLink())
 
 	y += 6
-	modelFailures := model.FlattenRiskSlice(model.FilterByModelFailures(model.GeneratedRisksByCategory))
+	modelFailures := model.FlattenRiskSlice(model.FilterByModelFailures(parsedModel.GeneratedRisksByCategory))
 	risksStr = "Risks"
 	count = len(modelFailures)
 	if count == 1 {
 		risksStr = "Risk"
 	}
-	countStillAtRisk := len(model.ReduceToOnlyStillAtRisk(modelFailures))
+	countStillAtRisk := len(model.ReduceToOnlyStillAtRisk(parsedModel, modelFailures))
 	if countStillAtRisk > 0 {
 		colors.ColorModelFailure(pdf)
 	}
@@ -405,14 +387,14 @@ func createTableOfContents() {
 
 	y += 6
 	questions := "Questions"
-	count = len(model.ParsedModelRoot.Questions)
+	count = len(parsedModel.Questions)
 	if count == 1 {
 		questions = "Question"
 	}
-	if model.QuestionsUnanswered() > 0 {
+	if questionsUnanswered(parsedModel) > 0 {
 		colors.ColorModelFailure(pdf)
 	}
-	pdf.Text(11, y, "    "+"Questions: "+strconv.Itoa(model.QuestionsUnanswered())+" / "+strconv.Itoa(count)+" "+questions)
+	pdf.Text(11, y, "    "+"Questions: "+strconv.Itoa(questionsUnanswered(parsedModel))+" / "+strconv.Itoa(count)+" "+questions)
 	pdf.Text(175, y, "{questions}")
 	pdfColorBlack()
 	pdf.Line(15.6, y+1.3, 11+171.5, y+1.3)
@@ -420,7 +402,7 @@ func createTableOfContents() {
 
 	// ===============
 
-	if len(model.GeneratedRisksByCategory) > 0 {
+	if len(parsedModel.GeneratedRisksByCategory) > 0 {
 		y += 6
 		y += 6
 		if y > 260 { // 260 instead of 275 for major group headlines to avoid "Schusterjungen"
@@ -436,23 +418,23 @@ func createTableOfContents() {
 		pdf.Text(175, y, "{intro-risks-by-vulnerability-category}")
 		pdf.Line(15.6, y+1.3, 11+171.5, y+1.3)
 		pdf.Link(10, y-5, 172.5, 6.5, pdf.AddLink())
-		for _, category := range model.SortedRiskCategories() {
-			newRisksStr := model.SortedRisksOfCategory(category)
-			switch model.HighestSeverityStillAtRisk(newRisksStr) {
-			case model.CriticalSeverity:
+		for _, category := range model.SortedRiskCategories(parsedModel) {
+			newRisksStr := model.SortedRisksOfCategory(parsedModel, category)
+			switch model.HighestSeverityStillAtRisk(parsedModel, newRisksStr) {
+			case types.CriticalSeverity:
 				colors.ColorCriticalRisk(pdf)
-			case model.HighSeverity:
+			case types.HighSeverity:
 				colors.ColorHighRisk(pdf)
-			case model.ElevatedSeverity:
+			case types.ElevatedSeverity:
 				colors.ColorElevatedRisk(pdf)
-			case model.MediumSeverity:
+			case types.MediumSeverity:
 				colors.ColorMediumRisk(pdf)
-			case model.LowSeverity:
+			case types.LowSeverity:
 				colors.ColorLowRisk(pdf)
 			default:
 				pdfColorBlack()
 			}
-			if len(model.ReduceToOnlyStillAtRisk(newRisksStr)) == 0 {
+			if len(model.ReduceToOnlyStillAtRisk(parsedModel, newRisksStr)) == 0 {
 				pdfColorBlack()
 			}
 			y += 6
@@ -460,7 +442,7 @@ func createTableOfContents() {
 				pageBreakInLists()
 				y = 40
 			}
-			countStillAtRisk := len(model.ReduceToOnlyStillAtRisk(newRisksStr))
+			countStillAtRisk := len(model.ReduceToOnlyStillAtRisk(parsedModel, newRisksStr))
 			suffix := strconv.Itoa(countStillAtRisk) + " / " + strconv.Itoa(len(newRisksStr)) + " Risk"
 			if len(newRisksStr) != 1 {
 				suffix += "s"
@@ -475,7 +457,7 @@ func createTableOfContents() {
 
 	// ===============
 
-	if len(model.ParsedModelRoot.TechnicalAssets) > 0 {
+	if len(parsedModel.TechnicalAssets) > 0 {
 		y += 6
 		y += 6
 		if y > 260 { // 260 instead of 275 for major group headlines to avoid "Schusterjungen"
@@ -491,14 +473,14 @@ func createTableOfContents() {
 		pdf.Text(175, y, "{intro-risks-by-technical-asset}")
 		pdf.Line(15.6, y+1.3, 11+171.5, y+1.3)
 		pdf.Link(10, y-5, 172.5, 6.5, pdf.AddLink())
-		for _, technicalAsset := range model.SortedTechnicalAssetsByRiskSeverityAndTitle() {
-			newRisksStr := technicalAsset.GeneratedRisks()
+		for _, technicalAsset := range sortedTechnicalAssetsByRiskSeverityAndTitle(parsedModel) {
+			newRisksStr := technicalAsset.GeneratedRisks(parsedModel)
 			y += 6
 			if y > 275 {
 				pageBreakInLists()
 				y = 40
 			}
-			countStillAtRisk := len(model.ReduceToOnlyStillAtRisk(newRisksStr))
+			countStillAtRisk := len(model.ReduceToOnlyStillAtRisk(parsedModel, newRisksStr))
 			suffix := strconv.Itoa(countStillAtRisk) + " / " + strconv.Itoa(len(newRisksStr)) + " Risk"
 			if len(newRisksStr) != 1 {
 				suffix += "s"
@@ -507,21 +489,21 @@ func createTableOfContents() {
 				pdfColorOutOfScope()
 				suffix = "out-of-scope"
 			} else {
-				switch model.HighestSeverityStillAtRisk(newRisksStr) {
-				case model.CriticalSeverity:
+				switch model.HighestSeverityStillAtRisk(parsedModel, newRisksStr) {
+				case types.CriticalSeverity:
 					colors.ColorCriticalRisk(pdf)
-				case model.HighSeverity:
+				case types.HighSeverity:
 					colors.ColorHighRisk(pdf)
-				case model.ElevatedSeverity:
+				case types.ElevatedSeverity:
 					colors.ColorElevatedRisk(pdf)
-				case model.MediumSeverity:
+				case types.MediumSeverity:
 					colors.ColorMediumRisk(pdf)
-				case model.LowSeverity:
+				case types.LowSeverity:
 					colors.ColorLowRisk(pdf)
 				default:
 					pdfColorBlack()
 				}
-				if len(model.ReduceToOnlyStillAtRisk(newRisksStr)) == 0 {
+				if len(model.ReduceToOnlyStillAtRisk(parsedModel, newRisksStr)) == 0 {
 					pdfColorBlack()
 				}
 			}
@@ -535,7 +517,7 @@ func createTableOfContents() {
 
 	// ===============
 
-	if len(model.ParsedModelRoot.DataAssets) > 0 {
+	if len(parsedModel.DataAssets) > 0 {
 		y += 6
 		y += 6
 		if y > 260 { // 260 instead of 275 for major group headlines to avoid "Schusterjungen"
@@ -551,29 +533,29 @@ func createTableOfContents() {
 		pdf.Text(175, y, "{intro-risks-by-data-asset}")
 		pdf.Line(15.6, y+1.3, 11+171.5, y+1.3)
 		pdf.Link(10, y-5, 172.5, 6.5, pdf.AddLink())
-		for _, dataAsset := range model.SortedDataAssetsByDataBreachProbabilityAndTitle() {
+		for _, dataAsset := range sortedDataAssetsByDataBreachProbabilityAndTitle(parsedModel) {
 			y += 6
 			if y > 275 {
 				pageBreakInLists()
 				y = 40
 			}
-			newRisksStr := dataAsset.IdentifiedDataBreachProbabilityRisks()
-			countStillAtRisk := len(model.ReduceToOnlyStillAtRisk(newRisksStr))
+			newRisksStr := dataAsset.IdentifiedDataBreachProbabilityRisks(parsedModel)
+			countStillAtRisk := len(model.ReduceToOnlyStillAtRisk(parsedModel, newRisksStr))
 			suffix := strconv.Itoa(countStillAtRisk) + " / " + strconv.Itoa(len(newRisksStr)) + " Risk"
 			if len(newRisksStr) != 1 {
 				suffix += "s"
 			}
-			switch dataAsset.IdentifiedDataBreachProbabilityStillAtRisk() {
-			case model.Probable:
+			switch dataAsset.IdentifiedDataBreachProbabilityStillAtRisk(parsedModel) {
+			case types.Probable:
 				colors.ColorHighRisk(pdf)
-			case model.Possible:
+			case types.Possible:
 				colors.ColorMediumRisk(pdf)
-			case model.Improbable:
+			case types.Improbable:
 				colors.ColorLowRisk(pdf)
 			default:
 				pdfColorBlack()
 			}
-			if !dataAsset.IsDataBreachPotentialStillAtRisk() {
+			if !dataAsset.IsDataBreachPotentialStillAtRisk(parsedModel) {
 				pdfColorBlack()
 			}
 			pdf.Text(11, y, "    "+uni(dataAsset.Title)+": "+suffix)
@@ -586,7 +568,7 @@ func createTableOfContents() {
 
 	// ===============
 
-	if len(model.ParsedModelRoot.TrustBoundaries) > 0 {
+	if len(parsedModel.TrustBoundaries) > 0 {
 		y += 6
 		y += 6
 		if y > 260 { // 260 instead of 275 for major group headlines to avoid "Schusterjungen"
@@ -597,8 +579,8 @@ func createTableOfContents() {
 		pdfColorBlack()
 		pdf.Text(11, y, "Trust Boundaries")
 		pdf.SetFont("Helvetica", "", fontSizeBody)
-		for _, key := range model.SortedKeysOfTrustBoundaries() {
-			trustBoundary := model.ParsedModelRoot.TrustBoundaries[key]
+		for _, key := range model.SortedKeysOfTrustBoundaries(parsedModel) {
+			trustBoundary := parsedModel.TrustBoundaries[key]
 			y += 6
 			if y > 275 {
 				pageBreakInLists()
@@ -619,7 +601,7 @@ func createTableOfContents() {
 
 	// ===============
 
-	if len(model.ParsedModelRoot.SharedRuntimes) > 0 {
+	if len(parsedModel.SharedRuntimes) > 0 {
 		y += 6
 		y += 6
 		if y > 260 { // 260 instead of 275 for major group headlines to avoid "Schusterjungen"
@@ -630,8 +612,8 @@ func createTableOfContents() {
 		pdfColorBlack()
 		pdf.Text(11, y, "Shared Runtime")
 		pdf.SetFont("Helvetica", "", fontSizeBody)
-		for _, key := range model.SortedKeysOfSharedRuntime() {
-			sharedRuntime := model.ParsedModelRoot.SharedRuntimes[key]
+		for _, key := range model.SortedKeysOfSharedRuntime(parsedModel) {
+			sharedRuntime := parsedModel.SharedRuntimes[key]
 			y += 6
 			if y > 275 {
 				pageBreakInLists()
@@ -686,6 +668,25 @@ func createTableOfContents() {
 	// by the current page number. --> See the "pdf.RegisterAlias()" calls during the PDF creation in this file
 }
 
+func sortedTechnicalAssetsByRiskSeverityAndTitle(parsedModel *model.ParsedModel) []model.TechnicalAsset {
+	assets := make([]model.TechnicalAsset, 0)
+	for _, asset := range parsedModel.TechnicalAssets {
+		assets = append(assets, asset)
+	}
+	model.SortByTechnicalAssetRiskSeverityAndTitleStillAtRisk(assets, parsedModel)
+	return assets
+}
+
+func sortedDataAssetsByDataBreachProbabilityAndTitle(parsedModel *model.ParsedModel) []model.DataAsset {
+	assets := make([]model.DataAsset, 0)
+	for _, asset := range parsedModel.DataAssets {
+		assets = append(assets, asset)
+	}
+
+	model.SortByDataAssetDataBreachProbabilityAndTitleStillAtRisk(parsedModel, assets)
+	return assets
+}
+
 func defineLinkTarget(alias string) {
 	pageNumbStr := strconv.Itoa(pdf.PageNo())
 	if len(pageNumbStr) == 1 {
@@ -698,7 +699,7 @@ func defineLinkTarget(alias string) {
 	linkCounter++
 }
 
-func createDisclaimer() {
+func createDisclaimer(parsedModel *model.ParsedModel) {
 	pdf.AddPage()
 	currentChapterTitleBreadcrumb = "Disclaimer"
 	defineLinkTarget("{disclaimer}")
@@ -710,7 +711,7 @@ func createDisclaimer() {
 	pdf.SetY(46)
 
 	var disclaimer strings.Builder
-	disclaimer.WriteString(model.ParsedModelRoot.Author.Name + " conducted this threat analysis using the open-source Threagile toolkit " +
+	disclaimer.WriteString(parsedModel.Author.Name + " conducted this threat analysis using the open-source Threagile toolkit " +
 		"on the applications and systems that were modeled as of this report's date. " +
 		"Information security threats are continually changing, with new " +
 		"vulnerabilities discovered on a daily basis, and no application can ever be 100% secure no matter how much " +
@@ -718,7 +719,7 @@ func createDisclaimer() {
 		"(for example yearly) to ensure a high ongoing level of security and constantly check for new attack vectors. " +
 		"<br><br>" +
 		"This report cannot and does not protect against personal or business loss as the result of use of the " +
-		"applications or systems described. " + model.ParsedModelRoot.Author.Name + " and the Threagile toolkit offers no warranties, representations or " +
+		"applications or systems described. " + parsedModel.Author.Name + " and the Threagile toolkit offers no warranties, representations or " +
 		"legal certifications concerning the applications or systems it tests. All software includes defects: nothing " +
 		"in this document is intended to represent or warrant that threat modeling was complete and without error, " +
 		"nor does this document represent or warrant that the architecture analyzed is suitable to task, free of other " +
@@ -728,7 +729,7 @@ func createDisclaimer() {
 		"These kinds of checks would only be possible with a separate code review and penetration test against " +
 		"a working system and not via a threat model." +
 		"<br><br>" +
-		"By using the resulting information you agree that " + model.ParsedModelRoot.Author.Name + " and the Threagile toolkit " +
+		"By using the resulting information you agree that " + parsedModel.Author.Name + " and the Threagile toolkit " +
 		"shall be held harmless in any event." +
 		"<br><br>" +
 		"This report is confidential and intended for internal, confidential use by the client. The recipient " +
@@ -751,33 +752,33 @@ func createDisclaimer() {
 	pdfColorBlack()
 }
 
-func createManagementSummary(tempFolder string) {
+func createManagementSummary(parsedModel *model.ParsedModel, tempFolder string) {
 	uni := pdf.UnicodeTranslatorFromDescriptor("")
 	pdf.SetTextColor(0, 0, 0)
 	title := "Management Summary"
 	addHeadline(title, false)
 	defineLinkTarget("{management-summary}")
 	currentChapterTitleBreadcrumb = title
-	countCritical := len(model.FilteredByOnlyCriticalRisks())
-	countHigh := len(model.FilteredByOnlyHighRisks())
-	countElevated := len(model.FilteredByOnlyElevatedRisks())
-	countMedium := len(model.FilteredByOnlyMediumRisks())
-	countLow := len(model.FilteredByOnlyLowRisks())
+	countCritical := len(model.FilteredByOnlyCriticalRisks(parsedModel))
+	countHigh := len(model.FilteredByOnlyHighRisks(parsedModel))
+	countElevated := len(model.FilteredByOnlyElevatedRisks(parsedModel))
+	countMedium := len(model.FilteredByOnlyMediumRisks(parsedModel))
+	countLow := len(model.FilteredByOnlyLowRisks(parsedModel))
 
-	countStatusUnchecked := len(model.FilteredByRiskTrackingUnchecked())
-	countStatusInDiscussion := len(model.FilteredByRiskTrackingInDiscussion())
-	countStatusAccepted := len(model.FilteredByRiskTrackingAccepted())
-	countStatusInProgress := len(model.FilteredByRiskTrackingInProgress())
-	countStatusMitigated := len(model.FilteredByRiskTrackingMitigated())
-	countStatusFalsePositive := len(model.FilteredByRiskTrackingFalsePositive())
+	countStatusUnchecked := len(model.FilteredByRiskTrackingUnchecked(parsedModel))
+	countStatusInDiscussion := len(model.FilteredByRiskTrackingInDiscussion(parsedModel))
+	countStatusAccepted := len(model.FilteredByRiskTrackingAccepted(parsedModel))
+	countStatusInProgress := len(model.FilteredByRiskTrackingInProgress(parsedModel))
+	countStatusMitigated := len(model.FilteredByRiskTrackingMitigated(parsedModel))
+	countStatusFalsePositive := len(model.FilteredByRiskTrackingFalsePositive(parsedModel))
 
 	html := pdf.HTMLBasicNew()
-	html.Write(5, "Threagile toolkit was used to model the architecture of \""+uni(model.ParsedModelRoot.Title)+"\" "+
+	html.Write(5, "Threagile toolkit was used to model the architecture of \""+uni(parsedModel.Title)+"\" "+
 		"and derive risks by analyzing the components and data flows. The risks identified during this analysis are shown "+
 		"in the following chapters. Identified risks during threat modeling do not necessarily mean that the "+
 		"vulnerability associated with this risk actually exists: it is more to be seen as a list of potential risks and "+
 		"threats, which should be individually reviewed and reduced by removing false positives. For the remaining risks it should "+
-		"be checked in the design and implementation of \""+uni(model.ParsedModelRoot.Title)+"\" whether the mitigation advices "+
+		"be checked in the design and implementation of \""+uni(parsedModel.Title)+"\" whether the mitigation advices "+
 		"have been applied or not."+
 		"<br><br>"+
 		"Each risk finding references a chapter of the OWASP ASVS (Application Security Verification Standard) audit checklist. "+
@@ -785,7 +786,7 @@ func createManagementSummary(tempFolder string) {
 		"the application in a Defense-in-Depth approach. Additionally, for each risk finding a "+
 		"link towards a matching OWASP Cheat Sheet or similar with technical details about how to implement a mitigation is given."+
 		"<br><br>"+
-		"In total <b>"+strconv.Itoa(model.TotalRiskCount())+" initial risks</b> in <b>"+strconv.Itoa(len(model.GeneratedRisksByCategory))+" categories</b> have "+
+		"In total <b>"+strconv.Itoa(model.TotalRiskCount(parsedModel))+" initial risks</b> in <b>"+strconv.Itoa(len(parsedModel.GeneratedRisksByCategory))+" categories</b> have "+
 		"been identified during the threat modeling process:<br><br>") // TODO plural singular stuff risk/s category/ies has/have
 
 	pdf.SetFont("Helvetica", "B", fontSizeBody)
@@ -932,15 +933,15 @@ func createManagementSummary(tempFolder string) {
 
 	// individual management summary comment
 	pdfColorBlack()
-	if len(model.ParsedModelRoot.ManagementSummaryComment) > 0 {
+	if len(parsedModel.ManagementSummaryComment) > 0 {
 		html.Write(5, "<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>"+
-			model.ParsedModelRoot.ManagementSummaryComment)
+			parsedModel.ManagementSummaryComment)
 	}
 }
 
-func createRiskMitigationStatus(tempFolder string) {
+func createRiskMitigationStatus(parsedModel *model.ParsedModel, tempFolder string) {
 	pdf.SetTextColor(0, 0, 0)
-	stillAtRisk := model.FilteredByStillAtRisk()
+	stillAtRisk := model.FilteredByStillAtRisk(parsedModel)
 	count := len(stillAtRisk)
 	title := "Risk Mitigation"
 	addHeadline(title, false)
@@ -950,18 +951,18 @@ func createRiskMitigationStatus(tempFolder string) {
 	html := pdf.HTMLBasicNew()
 	html.Write(5, "The following chart gives a high-level overview of the risk tracking status (including mitigated risks):")
 
-	risksCritical := model.FilteredByOnlyCriticalRisks()
-	risksHigh := model.FilteredByOnlyHighRisks()
-	risksElevated := model.FilteredByOnlyElevatedRisks()
-	risksMedium := model.FilteredByOnlyMediumRisks()
-	risksLow := model.FilteredByOnlyLowRisks()
+	risksCritical := model.FilteredByOnlyCriticalRisks(parsedModel)
+	risksHigh := model.FilteredByOnlyHighRisks(parsedModel)
+	risksElevated := model.FilteredByOnlyElevatedRisks(parsedModel)
+	risksMedium := model.FilteredByOnlyMediumRisks(parsedModel)
+	risksLow := model.FilteredByOnlyLowRisks(parsedModel)
 
-	countStatusUnchecked := len(model.FilteredByRiskTrackingUnchecked())
-	countStatusInDiscussion := len(model.FilteredByRiskTrackingInDiscussion())
-	countStatusAccepted := len(model.FilteredByRiskTrackingAccepted())
-	countStatusInProgress := len(model.FilteredByRiskTrackingInProgress())
-	countStatusMitigated := len(model.FilteredByRiskTrackingMitigated())
-	countStatusFalsePositive := len(model.FilteredByRiskTrackingFalsePositive())
+	countStatusUnchecked := len(model.FilteredByRiskTrackingUnchecked(parsedModel))
+	countStatusInDiscussion := len(model.FilteredByRiskTrackingInDiscussion(parsedModel))
+	countStatusAccepted := len(model.FilteredByRiskTrackingAccepted(parsedModel))
+	countStatusInProgress := len(model.FilteredByRiskTrackingInProgress(parsedModel))
+	countStatusMitigated := len(model.FilteredByRiskTrackingMitigated(parsedModel))
+	countStatusFalsePositive := len(model.FilteredByRiskTrackingFalsePositive(parsedModel))
 
 	stackedBarChartRiskTracking := chart.StackedBarChart{
 		Width: 4000,
@@ -970,92 +971,92 @@ func createRiskMitigationStatus(tempFolder string) {
 		YAxis: chart.Style{Show: true, FontSize: 26, TextVerticalAlign: chart.TextVerticalAlignBottom},
 		Bars: []chart.StackedBar{
 			{
-				Name:  model.LowSeverity.Title(),
+				Name:  types.LowSeverity.Title(),
 				Width: 130,
 				Values: []chart.Value{
-					{Value: float64(len(model.ReduceToOnlyRiskTrackingUnchecked(risksLow))), Label: model.Unchecked.Title(),
+					{Value: float64(len(model.ReduceToOnlyRiskTrackingUnchecked(parsedModel, risksLow))), Label: types.Unchecked.Title(),
 						Style: chart.Style{FillColor: makeColor(colors.RgbHexColorRiskStatusUnchecked()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
-					{Value: float64(len(model.ReduceToOnlyRiskTrackingInDiscussion(risksLow))), Label: model.InDiscussion.Title(),
+					{Value: float64(len(model.ReduceToOnlyRiskTrackingInDiscussion(parsedModel, risksLow))), Label: types.InDiscussion.Title(),
 						Style: chart.Style{FillColor: makeColor(colors.RgbHexColorRiskStatusInDiscussion()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
-					{Value: float64(len(model.ReduceToOnlyRiskTrackingAccepted(risksLow))), Label: model.Accepted.Title(),
+					{Value: float64(len(model.ReduceToOnlyRiskTrackingAccepted(parsedModel, risksLow))), Label: types.Accepted.Title(),
 						Style: chart.Style{FillColor: makeColor(colors.RgbHexColorRiskStatusAccepted()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
-					{Value: float64(len(model.ReduceToOnlyRiskTrackingInProgress(risksLow))), Label: model.InProgress.Title(),
+					{Value: float64(len(model.ReduceToOnlyRiskTrackingInProgress(parsedModel, risksLow))), Label: types.InProgress.Title(),
 						Style: chart.Style{FillColor: makeColor(colors.RgbHexColorRiskStatusInProgress()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
-					{Value: float64(len(model.ReduceToOnlyRiskTrackingMitigated(risksLow))), Label: model.Mitigated.Title(),
+					{Value: float64(len(model.ReduceToOnlyRiskTrackingMitigated(parsedModel, risksLow))), Label: types.Mitigated.Title(),
 						Style: chart.Style{FillColor: makeColor(colors.RgbHexColorRiskStatusMitigated()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
-					{Value: float64(len(model.ReduceToOnlyRiskTrackingFalsePositive(risksLow))), Label: model.FalsePositive.Title(),
+					{Value: float64(len(model.ReduceToOnlyRiskTrackingFalsePositive(parsedModel, risksLow))), Label: types.FalsePositive.Title(),
 						Style: chart.Style{FillColor: makeColor(colors.RgbHexColorRiskStatusFalsePositive()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
 				},
 			},
 			{
-				Name:  model.MediumSeverity.Title(),
+				Name:  types.MediumSeverity.Title(),
 				Width: 130,
 				Values: []chart.Value{
-					{Value: float64(len(model.ReduceToOnlyRiskTrackingUnchecked(risksMedium))), Label: model.Unchecked.Title(),
+					{Value: float64(len(model.ReduceToOnlyRiskTrackingUnchecked(parsedModel, risksMedium))), Label: types.Unchecked.Title(),
 						Style: chart.Style{FillColor: makeColor(colors.RgbHexColorRiskStatusUnchecked()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
-					{Value: float64(len(model.ReduceToOnlyRiskTrackingInDiscussion(risksMedium))), Label: model.InDiscussion.Title(),
+					{Value: float64(len(model.ReduceToOnlyRiskTrackingInDiscussion(parsedModel, risksMedium))), Label: types.InDiscussion.Title(),
 						Style: chart.Style{FillColor: makeColor(colors.RgbHexColorRiskStatusInDiscussion()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
-					{Value: float64(len(model.ReduceToOnlyRiskTrackingAccepted(risksMedium))), Label: model.Accepted.Title(),
+					{Value: float64(len(model.ReduceToOnlyRiskTrackingAccepted(parsedModel, risksMedium))), Label: types.Accepted.Title(),
 						Style: chart.Style{FillColor: makeColor(colors.RgbHexColorRiskStatusAccepted()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
-					{Value: float64(len(model.ReduceToOnlyRiskTrackingInProgress(risksMedium))), Label: model.InProgress.Title(),
+					{Value: float64(len(model.ReduceToOnlyRiskTrackingInProgress(parsedModel, risksMedium))), Label: types.InProgress.Title(),
 						Style: chart.Style{FillColor: makeColor(colors.RgbHexColorRiskStatusInProgress()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
-					{Value: float64(len(model.ReduceToOnlyRiskTrackingMitigated(risksMedium))), Label: model.Mitigated.Title(),
+					{Value: float64(len(model.ReduceToOnlyRiskTrackingMitigated(parsedModel, risksMedium))), Label: types.Mitigated.Title(),
 						Style: chart.Style{FillColor: makeColor(colors.RgbHexColorRiskStatusMitigated()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
-					{Value: float64(len(model.ReduceToOnlyRiskTrackingFalsePositive(risksMedium))), Label: model.FalsePositive.Title(),
+					{Value: float64(len(model.ReduceToOnlyRiskTrackingFalsePositive(parsedModel, risksMedium))), Label: types.FalsePositive.Title(),
 						Style: chart.Style{FillColor: makeColor(colors.RgbHexColorRiskStatusFalsePositive()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
 				},
 			},
 			{
-				Name:  model.ElevatedSeverity.Title(),
+				Name:  types.ElevatedSeverity.Title(),
 				Width: 130,
 				Values: []chart.Value{
-					{Value: float64(len(model.ReduceToOnlyRiskTrackingUnchecked(risksElevated))), Label: model.Unchecked.Title(),
+					{Value: float64(len(model.ReduceToOnlyRiskTrackingUnchecked(parsedModel, risksElevated))), Label: types.Unchecked.Title(),
 						Style: chart.Style{FillColor: makeColor(colors.RgbHexColorRiskStatusUnchecked()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
-					{Value: float64(len(model.ReduceToOnlyRiskTrackingInDiscussion(risksElevated))), Label: model.InDiscussion.Title(),
+					{Value: float64(len(model.ReduceToOnlyRiskTrackingInDiscussion(parsedModel, risksElevated))), Label: types.InDiscussion.Title(),
 						Style: chart.Style{FillColor: makeColor(colors.RgbHexColorRiskStatusInDiscussion()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
-					{Value: float64(len(model.ReduceToOnlyRiskTrackingAccepted(risksElevated))), Label: model.Accepted.Title(),
+					{Value: float64(len(model.ReduceToOnlyRiskTrackingAccepted(parsedModel, risksElevated))), Label: types.Accepted.Title(),
 						Style: chart.Style{FillColor: makeColor(colors.RgbHexColorRiskStatusAccepted()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
-					{Value: float64(len(model.ReduceToOnlyRiskTrackingInProgress(risksElevated))), Label: model.InProgress.Title(),
+					{Value: float64(len(model.ReduceToOnlyRiskTrackingInProgress(parsedModel, risksElevated))), Label: types.InProgress.Title(),
 						Style: chart.Style{FillColor: makeColor(colors.RgbHexColorRiskStatusInProgress()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
-					{Value: float64(len(model.ReduceToOnlyRiskTrackingMitigated(risksElevated))), Label: model.Mitigated.Title(),
+					{Value: float64(len(model.ReduceToOnlyRiskTrackingMitigated(parsedModel, risksElevated))), Label: types.Mitigated.Title(),
 						Style: chart.Style{FillColor: makeColor(colors.RgbHexColorRiskStatusMitigated()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
-					{Value: float64(len(model.ReduceToOnlyRiskTrackingFalsePositive(risksElevated))), Label: model.FalsePositive.Title(),
+					{Value: float64(len(model.ReduceToOnlyRiskTrackingFalsePositive(parsedModel, risksElevated))), Label: types.FalsePositive.Title(),
 						Style: chart.Style{FillColor: makeColor(colors.RgbHexColorRiskStatusFalsePositive()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
 				},
 			},
 			{
-				Name:  model.HighSeverity.Title(),
+				Name:  types.HighSeverity.Title(),
 				Width: 130,
 				Values: []chart.Value{
-					{Value: float64(len(model.ReduceToOnlyRiskTrackingUnchecked(risksHigh))), Label: model.Unchecked.Title(),
+					{Value: float64(len(model.ReduceToOnlyRiskTrackingUnchecked(parsedModel, risksHigh))), Label: types.Unchecked.Title(),
 						Style: chart.Style{FillColor: makeColor(colors.RgbHexColorRiskStatusUnchecked()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
-					{Value: float64(len(model.ReduceToOnlyRiskTrackingInDiscussion(risksHigh))), Label: model.InDiscussion.Title(),
+					{Value: float64(len(model.ReduceToOnlyRiskTrackingInDiscussion(parsedModel, risksHigh))), Label: types.InDiscussion.Title(),
 						Style: chart.Style{FillColor: makeColor(colors.RgbHexColorRiskStatusInDiscussion()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
-					{Value: float64(len(model.ReduceToOnlyRiskTrackingAccepted(risksHigh))), Label: model.Accepted.Title(),
+					{Value: float64(len(model.ReduceToOnlyRiskTrackingAccepted(parsedModel, risksHigh))), Label: types.Accepted.Title(),
 						Style: chart.Style{FillColor: makeColor(colors.RgbHexColorRiskStatusAccepted()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
-					{Value: float64(len(model.ReduceToOnlyRiskTrackingInProgress(risksHigh))), Label: model.InProgress.Title(),
+					{Value: float64(len(model.ReduceToOnlyRiskTrackingInProgress(parsedModel, risksHigh))), Label: types.InProgress.Title(),
 						Style: chart.Style{FillColor: makeColor(colors.RgbHexColorRiskStatusInProgress()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
-					{Value: float64(len(model.ReduceToOnlyRiskTrackingMitigated(risksHigh))), Label: model.Mitigated.Title(),
+					{Value: float64(len(model.ReduceToOnlyRiskTrackingMitigated(parsedModel, risksHigh))), Label: types.Mitigated.Title(),
 						Style: chart.Style{FillColor: makeColor(colors.RgbHexColorRiskStatusMitigated()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
-					{Value: float64(len(model.ReduceToOnlyRiskTrackingFalsePositive(risksHigh))), Label: model.FalsePositive.Title(),
+					{Value: float64(len(model.ReduceToOnlyRiskTrackingFalsePositive(parsedModel, risksHigh))), Label: types.FalsePositive.Title(),
 						Style: chart.Style{FillColor: makeColor(colors.RgbHexColorRiskStatusFalsePositive()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
 				},
 			},
 			{
-				Name:  model.CriticalSeverity.Title(),
+				Name:  types.CriticalSeverity.Title(),
 				Width: 130,
 				Values: []chart.Value{
-					{Value: float64(len(model.ReduceToOnlyRiskTrackingUnchecked(risksCritical))), Label: model.Unchecked.Title(),
+					{Value: float64(len(model.ReduceToOnlyRiskTrackingUnchecked(parsedModel, risksCritical))), Label: types.Unchecked.Title(),
 						Style: chart.Style{FillColor: makeColor(colors.RgbHexColorRiskStatusUnchecked()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
-					{Value: float64(len(model.ReduceToOnlyRiskTrackingInDiscussion(risksCritical))), Label: model.InDiscussion.Title(),
+					{Value: float64(len(model.ReduceToOnlyRiskTrackingInDiscussion(parsedModel, risksCritical))), Label: types.InDiscussion.Title(),
 						Style: chart.Style{FillColor: makeColor(colors.RgbHexColorRiskStatusInDiscussion()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
-					{Value: float64(len(model.ReduceToOnlyRiskTrackingAccepted(risksCritical))), Label: model.Accepted.Title(),
+					{Value: float64(len(model.ReduceToOnlyRiskTrackingAccepted(parsedModel, risksCritical))), Label: types.Accepted.Title(),
 						Style: chart.Style{FillColor: makeColor(colors.RgbHexColorRiskStatusAccepted()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
-					{Value: float64(len(model.ReduceToOnlyRiskTrackingInProgress(risksCritical))), Label: model.InProgress.Title(),
+					{Value: float64(len(model.ReduceToOnlyRiskTrackingInProgress(parsedModel, risksCritical))), Label: types.InProgress.Title(),
 						Style: chart.Style{FillColor: makeColor(colors.RgbHexColorRiskStatusInProgress()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
-					{Value: float64(len(model.ReduceToOnlyRiskTrackingMitigated(risksCritical))), Label: model.Mitigated.Title(),
+					{Value: float64(len(model.ReduceToOnlyRiskTrackingMitigated(parsedModel, risksCritical))), Label: types.Mitigated.Title(),
 						Style: chart.Style{FillColor: makeColor(colors.RgbHexColorRiskStatusMitigated()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
-					{Value: float64(len(model.ReduceToOnlyRiskTrackingFalsePositive(risksCritical))), Label: model.FalsePositive.Title(),
+					{Value: float64(len(model.ReduceToOnlyRiskTrackingFalsePositive(parsedModel, risksCritical))), Label: types.FalsePositive.Title(),
 						Style: chart.Style{FillColor: makeColor(colors.RgbHexColorRiskStatusFalsePositive()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
 				},
 			},
@@ -1124,16 +1125,16 @@ func createRiskMitigationStatus(tempFolder string) {
 			"After removal of risks with status <i>mitigated</i> and <i>false positive</i> "+
 			"the following <b>"+strconv.Itoa(count)+" remain unmitigated</b>:")
 
-		countCritical := len(model.ReduceToOnlyStillAtRisk(model.FilteredByOnlyCriticalRisks()))
-		countHigh := len(model.ReduceToOnlyStillAtRisk(model.FilteredByOnlyHighRisks()))
-		countElevated := len(model.ReduceToOnlyStillAtRisk(model.FilteredByOnlyElevatedRisks()))
-		countMedium := len(model.ReduceToOnlyStillAtRisk(model.FilteredByOnlyMediumRisks()))
-		countLow := len(model.ReduceToOnlyStillAtRisk(model.FilteredByOnlyLowRisks()))
+		countCritical := len(model.ReduceToOnlyStillAtRisk(parsedModel, model.FilteredByOnlyCriticalRisks(parsedModel)))
+		countHigh := len(model.ReduceToOnlyStillAtRisk(parsedModel, model.FilteredByOnlyHighRisks(parsedModel)))
+		countElevated := len(model.ReduceToOnlyStillAtRisk(parsedModel, model.FilteredByOnlyElevatedRisks(parsedModel)))
+		countMedium := len(model.ReduceToOnlyStillAtRisk(parsedModel, model.FilteredByOnlyMediumRisks(parsedModel)))
+		countLow := len(model.ReduceToOnlyStillAtRisk(parsedModel, model.FilteredByOnlyLowRisks(parsedModel)))
 
-		countBusinessSide := len(model.ReduceToOnlyStillAtRisk(model.FilteredByOnlyBusinessSide()))
-		countArchitecture := len(model.ReduceToOnlyStillAtRisk(model.FilteredByOnlyArchitecture()))
-		countDevelopment := len(model.ReduceToOnlyStillAtRisk(model.FilteredByOnlyDevelopment()))
-		countOperation := len(model.ReduceToOnlyStillAtRisk(model.FilteredByOnlyOperation()))
+		countBusinessSide := len(model.ReduceToOnlyStillAtRisk(parsedModel, model.FilteredByOnlyBusinessSide(parsedModel)))
+		countArchitecture := len(model.ReduceToOnlyStillAtRisk(parsedModel, model.FilteredByOnlyArchitecture(parsedModel)))
+		countDevelopment := len(model.ReduceToOnlyStillAtRisk(parsedModel, model.FilteredByOnlyDevelopment(parsedModel)))
+		countOperation := len(model.ReduceToOnlyStillAtRisk(parsedModel, model.FilteredByOnlyOperation(parsedModel)))
 
 		pieChartRemainingRiskSeverity := chart.PieChart{
 			Width:  1500,
@@ -1279,19 +1280,19 @@ func makeColor(hexColor string) drawing.Color {
 	return drawing.ColorFromHex(hexColor[i:]) // = remove first char, which is # in rgb hex here
 }
 
-func createImpactInitialRisks() {
-	renderImpactAnalysis(true)
+func createImpactInitialRisks(parsedModel *model.ParsedModel) {
+	renderImpactAnalysis(parsedModel, true)
 }
 
-func createImpactRemainingRisks() {
-	renderImpactAnalysis(false)
+func createImpactRemainingRisks(parsedModel *model.ParsedModel) {
+	renderImpactAnalysis(parsedModel, false)
 }
 
-func renderImpactAnalysis(initialRisks bool) {
+func renderImpactAnalysis(parsedModel *model.ParsedModel, initialRisks bool) {
 	pdf.SetTextColor(0, 0, 0)
-	count, catCount := model.TotalRiskCount(), len(model.GeneratedRisksByCategory)
+	count, catCount := model.TotalRiskCount(parsedModel), len(parsedModel.GeneratedRisksByCategory)
 	if !initialRisks {
-		count, catCount = len(model.FilteredByStillAtRisk()), len(model.CategoriesOfOnlyRisksStillAtRisk(model.GeneratedRisksByCategory))
+		count, catCount = len(model.FilteredByStillAtRisk(parsedModel)), len(model.CategoriesOfOnlyRisksStillAtRisk(parsedModel, parsedModel.GeneratedRisksByCategory))
 	}
 	riskStr, catStr := "Risks", "Categories"
 	if count == 1 {
@@ -1332,26 +1333,26 @@ func renderImpactAnalysis(initialRisks bool) {
 	html.Write(5, "Risk finding paragraphs are clickable and link to the corresponding chapter.")
 	pdf.SetFont("Helvetica", "", fontSizeBody)
 
-	addCategories(model.CategoriesOfOnlyCriticalRisks(model.GeneratedRisksByCategory, initialRisks),
-		model.CriticalSeverity, false, initialRisks, true, false)
-	addCategories(model.CategoriesOfOnlyHighRisks(model.GeneratedRisksByCategory, initialRisks),
-		model.HighSeverity, false, initialRisks, true, false)
-	addCategories(model.CategoriesOfOnlyElevatedRisks(model.GeneratedRisksByCategory, initialRisks),
-		model.ElevatedSeverity, false, initialRisks, true, false)
-	addCategories(model.CategoriesOfOnlyMediumRisks(model.GeneratedRisksByCategory, initialRisks),
-		model.MediumSeverity, false, initialRisks, true, false)
-	addCategories(model.CategoriesOfOnlyLowRisks(model.GeneratedRisksByCategory, initialRisks),
-		model.LowSeverity, false, initialRisks, true, false)
+	addCategories(parsedModel, model.CategoriesOfOnlyCriticalRisks(parsedModel, parsedModel.GeneratedRisksByCategory, initialRisks),
+		types.CriticalSeverity, false, initialRisks, true, false)
+	addCategories(parsedModel, model.CategoriesOfOnlyHighRisks(parsedModel, parsedModel.GeneratedRisksByCategory, initialRisks),
+		types.HighSeverity, false, initialRisks, true, false)
+	addCategories(parsedModel, model.CategoriesOfOnlyElevatedRisks(parsedModel, parsedModel.GeneratedRisksByCategory, initialRisks),
+		types.ElevatedSeverity, false, initialRisks, true, false)
+	addCategories(parsedModel, model.CategoriesOfOnlyMediumRisks(parsedModel, parsedModel.GeneratedRisksByCategory, initialRisks),
+		types.MediumSeverity, false, initialRisks, true, false)
+	addCategories(parsedModel, model.CategoriesOfOnlyLowRisks(parsedModel, parsedModel.GeneratedRisksByCategory, initialRisks),
+		types.LowSeverity, false, initialRisks, true, false)
 
 	pdf.SetDrawColor(0, 0, 0)
 	pdf.SetDashPattern([]float64{}, 0)
 }
 
-func createOutOfScopeAssets() {
+func createOutOfScopeAssets(parsedModel *model.ParsedModel) {
 	uni := pdf.UnicodeTranslatorFromDescriptor("")
 	pdf.SetTextColor(0, 0, 0)
 	assets := "Assets"
-	count := len(model.OutOfScopeTechnicalAssets())
+	count := len(parsedModel.OutOfScopeTechnicalAssets())
 	if count == 1 {
 		assets = "Asset"
 	}
@@ -1373,7 +1374,7 @@ func createOutOfScopeAssets() {
 	pdf.SetFont("Helvetica", "", fontSizeBody)
 
 	outOfScopeAssetCount := 0
-	for _, technicalAsset := range model.SortedTechnicalAssetsByRAAAndTitle() {
+	for _, technicalAsset := range sortedTechnicalAssetsByRAAAndTitle(parsedModel) {
 		if technicalAsset.OutOfScope {
 			outOfScopeAssetCount++
 			if pdf.GetY() > 250 {
@@ -1410,15 +1411,24 @@ func createOutOfScopeAssets() {
 	pdf.SetDashPattern([]float64{}, 0)
 }
 
-func createModelFailures() {
+func sortedTechnicalAssetsByRAAAndTitle(parsedModel *model.ParsedModel) []model.TechnicalAsset {
+	assets := make([]model.TechnicalAsset, 0)
+	for _, asset := range parsedModel.TechnicalAssets {
+		assets = append(assets, asset)
+	}
+	sort.Sort(model.ByTechnicalAssetRAAAndTitleSort(assets))
+	return assets
+}
+
+func createModelFailures(parsedModel *model.ParsedModel) {
 	pdf.SetTextColor(0, 0, 0)
-	modelFailures := model.FlattenRiskSlice(model.FilterByModelFailures(model.GeneratedRisksByCategory))
+	modelFailures := model.FlattenRiskSlice(model.FilterByModelFailures(parsedModel.GeneratedRisksByCategory))
 	risksStr := "Risks"
 	count := len(modelFailures)
 	if count == 1 {
 		risksStr = "Risk"
 	}
-	countStillAtRisk := len(model.ReduceToOnlyStillAtRisk(modelFailures))
+	countStillAtRisk := len(model.ReduceToOnlyStillAtRisk(parsedModel, modelFailures))
 	if countStillAtRisk > 0 {
 		colors.ColorModelFailure(pdf)
 	}
@@ -1440,28 +1450,28 @@ func createModelFailures() {
 	html.Write(5, "Risk finding paragraphs are clickable and link to the corresponding chapter.")
 	pdf.SetFont("Helvetica", "", fontSizeBody)
 
-	modelFailuresByCategory := model.FilterByModelFailures(model.GeneratedRisksByCategory)
+	modelFailuresByCategory := model.FilterByModelFailures(parsedModel.GeneratedRisksByCategory)
 	if len(modelFailuresByCategory) == 0 {
 		pdfColorGray()
 		html.Write(5, "<br><br>No potential model failures have been identified.")
 	} else {
-		addCategories(model.CategoriesOfOnlyCriticalRisks(modelFailuresByCategory, true),
-			model.CriticalSeverity, true, true, false, true)
-		addCategories(model.CategoriesOfOnlyHighRisks(modelFailuresByCategory, true),
-			model.HighSeverity, true, true, false, true)
-		addCategories(model.CategoriesOfOnlyElevatedRisks(modelFailuresByCategory, true),
-			model.ElevatedSeverity, true, true, false, true)
-		addCategories(model.CategoriesOfOnlyMediumRisks(modelFailuresByCategory, true),
-			model.MediumSeverity, true, true, false, true)
-		addCategories(model.CategoriesOfOnlyLowRisks(modelFailuresByCategory, true),
-			model.LowSeverity, true, true, false, true)
+		addCategories(parsedModel, model.CategoriesOfOnlyCriticalRisks(parsedModel, modelFailuresByCategory, true),
+			types.CriticalSeverity, true, true, false, true)
+		addCategories(parsedModel, model.CategoriesOfOnlyHighRisks(parsedModel, modelFailuresByCategory, true),
+			types.HighSeverity, true, true, false, true)
+		addCategories(parsedModel, model.CategoriesOfOnlyElevatedRisks(parsedModel, modelFailuresByCategory, true),
+			types.ElevatedSeverity, true, true, false, true)
+		addCategories(parsedModel, model.CategoriesOfOnlyMediumRisks(parsedModel, modelFailuresByCategory, true),
+			types.MediumSeverity, true, true, false, true)
+		addCategories(parsedModel, model.CategoriesOfOnlyLowRisks(parsedModel, modelFailuresByCategory, true),
+			types.LowSeverity, true, true, false, true)
 	}
 
 	pdf.SetDrawColor(0, 0, 0)
 	pdf.SetDashPattern([]float64{}, 0)
 }
 
-func createRAA(introTextRAA string) {
+func createRAA(parsedModel *model.ParsedModel, introTextRAA string) {
 	uni := pdf.UnicodeTranslatorFromDescriptor("")
 	pdf.SetTextColor(0, 0, 0)
 	chapTitle := "RAA Analysis"
@@ -1480,7 +1490,7 @@ func createRAA(introTextRAA string) {
 	html.Write(5, "Technical asset paragraphs are clickable and link to the corresponding chapter.")
 	pdf.SetFont("Helvetica", "", fontSizeBody)
 
-	for _, technicalAsset := range model.SortedTechnicalAssetsByRAAAndTitle() {
+	for _, technicalAsset := range sortedTechnicalAssetsByRAAAndTitle(parsedModel) {
 		if technicalAsset.OutOfScope {
 			continue
 		}
@@ -1490,18 +1500,18 @@ func createRAA(introTextRAA string) {
 		} else {
 			strBuilder.WriteString("<br><br>")
 		}
-		newRisksStr := technicalAsset.GeneratedRisks()
-		switch model.HighestSeverityStillAtRisk(newRisksStr) {
-		case model.HighSeverity:
+		newRisksStr := technicalAsset.GeneratedRisks(parsedModel)
+		switch model.HighestSeverityStillAtRisk(parsedModel, newRisksStr) {
+		case types.HighSeverity:
 			colors.ColorHighRisk(pdf)
-		case model.MediumSeverity:
+		case types.MediumSeverity:
 			colors.ColorMediumRisk(pdf)
-		case model.LowSeverity:
+		case types.LowSeverity:
 			colors.ColorLowRisk(pdf)
 		default:
 			pdfColorBlack()
 		}
-		if len(model.ReduceToOnlyStillAtRisk(newRisksStr)) == 0 {
+		if len(model.ReduceToOnlyStillAtRisk(parsedModel, newRisksStr)) == 0 {
 			pdfColorBlack()
 		}
 
@@ -1607,14 +1617,14 @@ func createDataRiskQuickWins() {
 }
 */
 
-func addCategories(riskCategories []model.RiskCategory, severity model.RiskSeverity, bothInitialAndRemainingRisks bool, initialRisks bool, describeImpact bool, describeDescription bool) {
+func addCategories(parsedModel *model.ParsedModel, riskCategories []model.RiskCategory, severity types.RiskSeverity, bothInitialAndRemainingRisks bool, initialRisks bool, describeImpact bool, describeDescription bool) {
 	html := pdf.HTMLBasicNew()
 	var strBuilder strings.Builder
 	sort.Sort(model.ByRiskCategoryTitleSort(riskCategories))
 	for _, riskCategory := range riskCategories {
-		risksStr := model.GeneratedRisksByCategory[riskCategory]
+		risksStr := parsedModel.GeneratedRisksByCategory[riskCategory]
 		if !initialRisks {
-			risksStr = model.ReduceToOnlyStillAtRisk(risksStr)
+			risksStr = model.ReduceToOnlyStillAtRisk(parsedModel, risksStr)
 		}
 		if len(risksStr) == 0 {
 			continue
@@ -1627,38 +1637,38 @@ func addCategories(riskCategories []model.RiskCategory, severity model.RiskSever
 		}
 		var prefix string
 		switch severity {
-		case model.CriticalSeverity:
+		case types.CriticalSeverity:
 			colors.ColorCriticalRisk(pdf)
 			prefix = "Critical: "
-		case model.HighSeverity:
+		case types.HighSeverity:
 			colors.ColorHighRisk(pdf)
 			prefix = "High: "
-		case model.ElevatedSeverity:
+		case types.ElevatedSeverity:
 			colors.ColorElevatedRisk(pdf)
 			prefix = "Elevated: "
-		case model.MediumSeverity:
+		case types.MediumSeverity:
 			colors.ColorMediumRisk(pdf)
 			prefix = "Medium: "
-		case model.LowSeverity:
+		case types.LowSeverity:
 			colors.ColorLowRisk(pdf)
 			prefix = "Low: "
 		default:
 			pdfColorBlack()
 			prefix = ""
 		}
-		switch model.HighestSeverityStillAtRisk(risksStr) {
-		case model.CriticalSeverity:
+		switch model.HighestSeverityStillAtRisk(parsedModel, risksStr) {
+		case types.CriticalSeverity:
 			colors.ColorCriticalRisk(pdf)
-		case model.HighSeverity:
+		case types.HighSeverity:
 			colors.ColorHighRisk(pdf)
-		case model.ElevatedSeverity:
+		case types.ElevatedSeverity:
 			colors.ColorElevatedRisk(pdf)
-		case model.MediumSeverity:
+		case types.MediumSeverity:
 			colors.ColorMediumRisk(pdf)
-		case model.LowSeverity:
+		case types.LowSeverity:
 			colors.ColorLowRisk(pdf)
 		}
-		if len(model.ReduceToOnlyStillAtRisk(risksStr)) == 0 {
+		if len(model.ReduceToOnlyStillAtRisk(parsedModel, risksStr)) == 0 {
 			pdfColorBlack()
 		}
 		html.Write(5, strBuilder.String())
@@ -1673,7 +1683,7 @@ func addCategories(riskCategories []model.RiskCategory, severity model.RiskSever
 		if !initialRisks {
 			initialStr = "Remaining"
 		}
-		remainingRisks := model.ReduceToOnlyStillAtRisk(risksStr)
+		remainingRisks := model.ReduceToOnlyStillAtRisk(parsedModel, risksStr)
 		suffix := strconv.Itoa(count) + " " + initialStr + " Risk"
 		if bothInitialAndRemainingRisks {
 			suffix = strconv.Itoa(len(remainingRisks)) + " / " + strconv.Itoa(count) + " Risk"
@@ -1712,17 +1722,17 @@ func firstParagraph(text string) string {
 	return match[1]
 }
 
-func createAssignmentByFunction() {
+func createAssignmentByFunction(parsedModel *model.ParsedModel) {
 	pdf.SetTextColor(0, 0, 0)
 	title := "Assignment by Function"
 	addHeadline(title, false)
 	defineLinkTarget("{function-assignment}")
 	currentChapterTitleBreadcrumb = title
 
-	risksBusinessSideFunction := model.RisksOfOnlyBusinessSide(model.GeneratedRisksByCategory)
-	risksArchitectureFunction := model.RisksOfOnlyArchitecture(model.GeneratedRisksByCategory)
-	risksDevelopmentFunction := model.RisksOfOnlyDevelopment(model.GeneratedRisksByCategory)
-	risksOperationFunction := model.RisksOfOnlyOperation(model.GeneratedRisksByCategory)
+	risksBusinessSideFunction := model.RisksOfOnlyBusinessSide(parsedModel.GeneratedRisksByCategory)
+	risksArchitectureFunction := model.RisksOfOnlyArchitecture(parsedModel.GeneratedRisksByCategory)
+	risksDevelopmentFunction := model.RisksOfOnlyDevelopment(parsedModel.GeneratedRisksByCategory)
+	risksOperationFunction := model.RisksOfOnlyOperation(parsedModel.GeneratedRisksByCategory)
 
 	countBusinessSideFunction := model.CountRisks(risksBusinessSideFunction)
 	countArchitectureFunction := model.CountRisks(risksArchitectureFunction)
@@ -1731,11 +1741,11 @@ func createAssignmentByFunction() {
 	var intro strings.Builder
 	intro.WriteString("This chapter clusters and assigns the risks by functions which are most likely able to " +
 		"check and mitigate them: " +
-		"In total <b>" + strconv.Itoa(model.TotalRiskCount()) + " potential risks</b> have been identified during the threat modeling process " +
-		"of which <b>" + strconv.Itoa(countBusinessSideFunction) + " should be checked by " + model.BusinessSide.Title() + "</b>, " +
-		"<b>" + strconv.Itoa(countArchitectureFunction) + " should be checked by " + model.Architecture.Title() + "</b>, " +
-		"<b>" + strconv.Itoa(countDevelopmentFunction) + " should be checked by " + model.Development.Title() + "</b>, " +
-		"and <b>" + strconv.Itoa(countOperationFunction) + " should be checked by " + model.Operations.Title() + "</b>.<br>")
+		"In total <b>" + strconv.Itoa(model.TotalRiskCount(parsedModel)) + " potential risks</b> have been identified during the threat modeling process " +
+		"of which <b>" + strconv.Itoa(countBusinessSideFunction) + " should be checked by " + types.BusinessSide.Title() + "</b>, " +
+		"<b>" + strconv.Itoa(countArchitectureFunction) + " should be checked by " + types.Architecture.Title() + "</b>, " +
+		"<b>" + strconv.Itoa(countDevelopmentFunction) + " should be checked by " + types.Development.Title() + "</b>, " +
+		"and <b>" + strconv.Itoa(countOperationFunction) + " should be checked by " + types.Operations.Title() + "</b>.<br>")
 	html := pdf.HTMLBasicNew()
 	html.Write(5, intro.String())
 	intro.Reset()
@@ -1754,22 +1764,22 @@ func createAssignmentByFunction() {
 	}
 	pdf.SetFont("Helvetica", "", fontSizeBody)
 	pdf.SetTextColor(0, 0, 0)
-	html.Write(5, "<b>"+model.BusinessSide.Title()+"</b>")
+	html.Write(5, "<b>"+types.BusinessSide.Title()+"</b>")
 	pdf.SetLeftMargin(15)
 	if len(risksBusinessSideFunction) == 0 {
 		pdf.SetTextColor(150, 150, 150)
 		html.Write(5, "<br><br>n/a")
 	} else {
-		addCategories(model.CategoriesOfOnlyCriticalRisks(risksBusinessSideFunction, true),
-			model.CriticalSeverity, true, true, false, false)
-		addCategories(model.CategoriesOfOnlyHighRisks(risksBusinessSideFunction, true),
-			model.HighSeverity, true, true, false, false)
-		addCategories(model.CategoriesOfOnlyElevatedRisks(risksBusinessSideFunction, true),
-			model.ElevatedSeverity, true, true, false, false)
-		addCategories(model.CategoriesOfOnlyMediumRisks(risksBusinessSideFunction, true),
-			model.MediumSeverity, true, true, false, false)
-		addCategories(model.CategoriesOfOnlyLowRisks(risksBusinessSideFunction, true),
-			model.LowSeverity, true, true, false, false)
+		addCategories(parsedModel, model.CategoriesOfOnlyCriticalRisks(parsedModel, risksBusinessSideFunction, true),
+			types.CriticalSeverity, true, true, false, false)
+		addCategories(parsedModel, model.CategoriesOfOnlyHighRisks(parsedModel, risksBusinessSideFunction, true),
+			types.HighSeverity, true, true, false, false)
+		addCategories(parsedModel, model.CategoriesOfOnlyElevatedRisks(parsedModel, risksBusinessSideFunction, true),
+			types.ElevatedSeverity, true, true, false, false)
+		addCategories(parsedModel, model.CategoriesOfOnlyMediumRisks(parsedModel, risksBusinessSideFunction, true),
+			types.MediumSeverity, true, true, false, false)
+		addCategories(parsedModel, model.CategoriesOfOnlyLowRisks(parsedModel, risksBusinessSideFunction, true),
+			types.LowSeverity, true, true, false, false)
 	}
 	pdf.SetLeftMargin(oldLeft)
 
@@ -1781,22 +1791,22 @@ func createAssignmentByFunction() {
 	}
 	pdf.SetFont("Helvetica", "", fontSizeBody)
 	pdf.SetTextColor(0, 0, 0)
-	html.Write(5, "<b>"+model.Architecture.Title()+"</b>")
+	html.Write(5, "<b>"+types.Architecture.Title()+"</b>")
 	pdf.SetLeftMargin(15)
 	if len(risksArchitectureFunction) == 0 {
 		pdf.SetTextColor(150, 150, 150)
 		html.Write(5, "<br><br>n/a")
 	} else {
-		addCategories(model.CategoriesOfOnlyCriticalRisks(risksArchitectureFunction, true),
-			model.CriticalSeverity, true, true, false, false)
-		addCategories(model.CategoriesOfOnlyHighRisks(risksArchitectureFunction, true),
-			model.HighSeverity, true, true, false, false)
-		addCategories(model.CategoriesOfOnlyElevatedRisks(risksArchitectureFunction, true),
-			model.ElevatedSeverity, true, true, false, false)
-		addCategories(model.CategoriesOfOnlyMediumRisks(risksArchitectureFunction, true),
-			model.MediumSeverity, true, true, false, false)
-		addCategories(model.CategoriesOfOnlyLowRisks(risksArchitectureFunction, true),
-			model.LowSeverity, true, true, false, false)
+		addCategories(parsedModel, model.CategoriesOfOnlyCriticalRisks(parsedModel, risksArchitectureFunction, true),
+			types.CriticalSeverity, true, true, false, false)
+		addCategories(parsedModel, model.CategoriesOfOnlyHighRisks(parsedModel, risksArchitectureFunction, true),
+			types.HighSeverity, true, true, false, false)
+		addCategories(parsedModel, model.CategoriesOfOnlyElevatedRisks(parsedModel, risksArchitectureFunction, true),
+			types.ElevatedSeverity, true, true, false, false)
+		addCategories(parsedModel, model.CategoriesOfOnlyMediumRisks(parsedModel, risksArchitectureFunction, true),
+			types.MediumSeverity, true, true, false, false)
+		addCategories(parsedModel, model.CategoriesOfOnlyLowRisks(parsedModel, risksArchitectureFunction, true),
+			types.LowSeverity, true, true, false, false)
 	}
 	pdf.SetLeftMargin(oldLeft)
 
@@ -1808,22 +1818,22 @@ func createAssignmentByFunction() {
 	}
 	pdf.SetFont("Helvetica", "", fontSizeBody)
 	pdf.SetTextColor(0, 0, 0)
-	html.Write(5, "<b>"+model.Development.Title()+"</b>")
+	html.Write(5, "<b>"+types.Development.Title()+"</b>")
 	pdf.SetLeftMargin(15)
 	if len(risksDevelopmentFunction) == 0 {
 		pdf.SetTextColor(150, 150, 150)
 		html.Write(5, "<br><br>n/a")
 	} else {
-		addCategories(model.CategoriesOfOnlyCriticalRisks(risksDevelopmentFunction, true),
-			model.CriticalSeverity, true, true, false, false)
-		addCategories(model.CategoriesOfOnlyHighRisks(risksDevelopmentFunction, true),
-			model.HighSeverity, true, true, false, false)
-		addCategories(model.CategoriesOfOnlyElevatedRisks(risksDevelopmentFunction, true),
-			model.ElevatedSeverity, true, true, false, false)
-		addCategories(model.CategoriesOfOnlyMediumRisks(risksDevelopmentFunction, true),
-			model.MediumSeverity, true, true, false, false)
-		addCategories(model.CategoriesOfOnlyLowRisks(risksDevelopmentFunction, true),
-			model.LowSeverity, true, true, false, false)
+		addCategories(parsedModel, model.CategoriesOfOnlyCriticalRisks(parsedModel, risksDevelopmentFunction, true),
+			types.CriticalSeverity, true, true, false, false)
+		addCategories(parsedModel, model.CategoriesOfOnlyHighRisks(parsedModel, risksDevelopmentFunction, true),
+			types.HighSeverity, true, true, false, false)
+		addCategories(parsedModel, model.CategoriesOfOnlyElevatedRisks(parsedModel, risksDevelopmentFunction, true),
+			types.ElevatedSeverity, true, true, false, false)
+		addCategories(parsedModel, model.CategoriesOfOnlyMediumRisks(parsedModel, risksDevelopmentFunction, true),
+			types.MediumSeverity, true, true, false, false)
+		addCategories(parsedModel, model.CategoriesOfOnlyLowRisks(parsedModel, risksDevelopmentFunction, true),
+			types.LowSeverity, true, true, false, false)
 	}
 	pdf.SetLeftMargin(oldLeft)
 
@@ -1835,22 +1845,22 @@ func createAssignmentByFunction() {
 	}
 	pdf.SetFont("Helvetica", "", fontSizeBody)
 	pdf.SetTextColor(0, 0, 0)
-	html.Write(5, "<b>"+model.Operations.Title()+"</b>")
+	html.Write(5, "<b>"+types.Operations.Title()+"</b>")
 	pdf.SetLeftMargin(15)
 	if len(risksOperationFunction) == 0 {
 		pdf.SetTextColor(150, 150, 150)
 		html.Write(5, "<br><br>n/a")
 	} else {
-		addCategories(model.CategoriesOfOnlyCriticalRisks(risksOperationFunction, true),
-			model.CriticalSeverity, true, true, false, false)
-		addCategories(model.CategoriesOfOnlyHighRisks(risksOperationFunction, true),
-			model.HighSeverity, true, true, false, false)
-		addCategories(model.CategoriesOfOnlyElevatedRisks(risksOperationFunction, true),
-			model.ElevatedSeverity, true, true, false, false)
-		addCategories(model.CategoriesOfOnlyMediumRisks(risksOperationFunction, true),
-			model.MediumSeverity, true, true, false, false)
-		addCategories(model.CategoriesOfOnlyLowRisks(risksOperationFunction, true),
-			model.LowSeverity, true, true, false, false)
+		addCategories(parsedModel, model.CategoriesOfOnlyCriticalRisks(parsedModel, risksOperationFunction, true),
+			types.CriticalSeverity, true, true, false, false)
+		addCategories(parsedModel, model.CategoriesOfOnlyHighRisks(parsedModel, risksOperationFunction, true),
+			types.HighSeverity, true, true, false, false)
+		addCategories(parsedModel, model.CategoriesOfOnlyElevatedRisks(parsedModel, risksOperationFunction, true),
+			types.ElevatedSeverity, true, true, false, false)
+		addCategories(parsedModel, model.CategoriesOfOnlyMediumRisks(parsedModel, risksOperationFunction, true),
+			types.MediumSeverity, true, true, false, false)
+		addCategories(parsedModel, model.CategoriesOfOnlyLowRisks(parsedModel, risksOperationFunction, true),
+			types.LowSeverity, true, true, false, false)
 	}
 	pdf.SetLeftMargin(oldLeft)
 
@@ -1858,19 +1868,19 @@ func createAssignmentByFunction() {
 	pdf.SetDashPattern([]float64{}, 0)
 }
 
-func createSTRIDE() {
+func createSTRIDE(parsedModel *model.ParsedModel) {
 	pdf.SetTextColor(0, 0, 0)
 	title := "STRIDE Classification of Identified Risks"
 	addHeadline(title, false)
 	defineLinkTarget("{stride}")
 	currentChapterTitleBreadcrumb = title
 
-	risksSTRIDESpoofing := model.RisksOfOnlySTRIDESpoofing(model.GeneratedRisksByCategory)
-	risksSTRIDETampering := model.RisksOfOnlySTRIDETampering(model.GeneratedRisksByCategory)
-	risksSTRIDERepudiation := model.RisksOfOnlySTRIDERepudiation(model.GeneratedRisksByCategory)
-	risksSTRIDEInformationDisclosure := model.RisksOfOnlySTRIDEInformationDisclosure(model.GeneratedRisksByCategory)
-	risksSTRIDEDenialOfService := model.RisksOfOnlySTRIDEDenialOfService(model.GeneratedRisksByCategory)
-	risksSTRIDEElevationOfPrivilege := model.RisksOfOnlySTRIDEElevationOfPrivilege(model.GeneratedRisksByCategory)
+	risksSTRIDESpoofing := model.RisksOfOnlySTRIDESpoofing(parsedModel.GeneratedRisksByCategory)
+	risksSTRIDETampering := model.RisksOfOnlySTRIDETampering(parsedModel.GeneratedRisksByCategory)
+	risksSTRIDERepudiation := model.RisksOfOnlySTRIDERepudiation(parsedModel.GeneratedRisksByCategory)
+	risksSTRIDEInformationDisclosure := model.RisksOfOnlySTRIDEInformationDisclosure(parsedModel.GeneratedRisksByCategory)
+	risksSTRIDEDenialOfService := model.RisksOfOnlySTRIDEDenialOfService(parsedModel.GeneratedRisksByCategory)
+	risksSTRIDEElevationOfPrivilege := model.RisksOfOnlySTRIDEElevationOfPrivilege(parsedModel.GeneratedRisksByCategory)
 
 	countSTRIDESpoofing := model.CountRisks(risksSTRIDESpoofing)
 	countSTRIDETampering := model.CountRisks(risksSTRIDETampering)
@@ -1880,13 +1890,13 @@ func createSTRIDE() {
 	countSTRIDEElevationOfPrivilege := model.CountRisks(risksSTRIDEElevationOfPrivilege)
 	var intro strings.Builder
 	intro.WriteString("This chapter clusters and classifies the risks by STRIDE categories: " +
-		"In total <b>" + strconv.Itoa(model.TotalRiskCount()) + " potential risks</b> have been identified during the threat modeling process " +
-		"of which <b>" + strconv.Itoa(countSTRIDESpoofing) + " in the " + model.Spoofing.Title() + "</b> category, " +
-		"<b>" + strconv.Itoa(countSTRIDETampering) + " in the " + model.Tampering.Title() + "</b> category, " +
-		"<b>" + strconv.Itoa(countSTRIDERepudiation) + " in the " + model.Repudiation.Title() + "</b> category, " +
-		"<b>" + strconv.Itoa(countSTRIDEInformationDisclosure) + " in the " + model.InformationDisclosure.Title() + "</b> category, " +
-		"<b>" + strconv.Itoa(countSTRIDEDenialOfService) + " in the " + model.DenialOfService.Title() + "</b> category, " +
-		"and <b>" + strconv.Itoa(countSTRIDEElevationOfPrivilege) + " in the " + model.ElevationOfPrivilege.Title() + "</b> category.<br>")
+		"In total <b>" + strconv.Itoa(model.TotalRiskCount(parsedModel)) + " potential risks</b> have been identified during the threat modeling process " +
+		"of which <b>" + strconv.Itoa(countSTRIDESpoofing) + " in the " + types.Spoofing.Title() + "</b> category, " +
+		"<b>" + strconv.Itoa(countSTRIDETampering) + " in the " + types.Tampering.Title() + "</b> category, " +
+		"<b>" + strconv.Itoa(countSTRIDERepudiation) + " in the " + types.Repudiation.Title() + "</b> category, " +
+		"<b>" + strconv.Itoa(countSTRIDEInformationDisclosure) + " in the " + types.InformationDisclosure.Title() + "</b> category, " +
+		"<b>" + strconv.Itoa(countSTRIDEDenialOfService) + " in the " + types.DenialOfService.Title() + "</b> category, " +
+		"and <b>" + strconv.Itoa(countSTRIDEElevationOfPrivilege) + " in the " + types.ElevationOfPrivilege.Title() + "</b> category.<br>")
 	html := pdf.HTMLBasicNew()
 	html.Write(5, intro.String())
 	intro.Reset()
@@ -1905,22 +1915,22 @@ func createSTRIDE() {
 	}
 	pdf.SetFont("Helvetica", "", fontSizeBody)
 	pdf.SetTextColor(0, 0, 0)
-	html.Write(5, "<b>"+model.Spoofing.Title()+"</b>")
+	html.Write(5, "<b>"+types.Spoofing.Title()+"</b>")
 	pdf.SetLeftMargin(15)
 	if len(risksSTRIDESpoofing) == 0 {
 		pdf.SetTextColor(150, 150, 150)
 		html.Write(5, "<br><br>n/a")
 	} else {
-		addCategories(model.CategoriesOfOnlyCriticalRisks(risksSTRIDESpoofing, true),
-			model.CriticalSeverity, true, true, false, true)
-		addCategories(model.CategoriesOfOnlyHighRisks(risksSTRIDESpoofing, true),
-			model.HighSeverity, true, true, false, true)
-		addCategories(model.CategoriesOfOnlyElevatedRisks(risksSTRIDESpoofing, true),
-			model.ElevatedSeverity, true, true, false, true)
-		addCategories(model.CategoriesOfOnlyMediumRisks(risksSTRIDESpoofing, true),
-			model.MediumSeverity, true, true, false, true)
-		addCategories(model.CategoriesOfOnlyLowRisks(risksSTRIDESpoofing, true),
-			model.LowSeverity, true, true, false, true)
+		addCategories(parsedModel, model.CategoriesOfOnlyCriticalRisks(parsedModel, risksSTRIDESpoofing, true),
+			types.CriticalSeverity, true, true, false, true)
+		addCategories(parsedModel, model.CategoriesOfOnlyHighRisks(parsedModel, risksSTRIDESpoofing, true),
+			types.HighSeverity, true, true, false, true)
+		addCategories(parsedModel, model.CategoriesOfOnlyElevatedRisks(parsedModel, risksSTRIDESpoofing, true),
+			types.ElevatedSeverity, true, true, false, true)
+		addCategories(parsedModel, model.CategoriesOfOnlyMediumRisks(parsedModel, risksSTRIDESpoofing, true),
+			types.MediumSeverity, true, true, false, true)
+		addCategories(parsedModel, model.CategoriesOfOnlyLowRisks(parsedModel, risksSTRIDESpoofing, true),
+			types.LowSeverity, true, true, false, true)
 	}
 	pdf.SetLeftMargin(oldLeft)
 
@@ -1932,22 +1942,22 @@ func createSTRIDE() {
 	}
 	pdf.SetFont("Helvetica", "", fontSizeBody)
 	pdf.SetTextColor(0, 0, 0)
-	html.Write(5, "<b>"+model.Tampering.Title()+"</b>")
+	html.Write(5, "<b>"+types.Tampering.Title()+"</b>")
 	pdf.SetLeftMargin(15)
 	if len(risksSTRIDETampering) == 0 {
 		pdf.SetTextColor(150, 150, 150)
 		html.Write(5, "<br><br>n/a")
 	} else {
-		addCategories(model.CategoriesOfOnlyCriticalRisks(risksSTRIDETampering, true),
-			model.CriticalSeverity, true, true, false, true)
-		addCategories(model.CategoriesOfOnlyHighRisks(risksSTRIDETampering, true),
-			model.HighSeverity, true, true, false, true)
-		addCategories(model.CategoriesOfOnlyElevatedRisks(risksSTRIDETampering, true),
-			model.ElevatedSeverity, true, true, false, true)
-		addCategories(model.CategoriesOfOnlyMediumRisks(risksSTRIDETampering, true),
-			model.MediumSeverity, true, true, false, true)
-		addCategories(model.CategoriesOfOnlyLowRisks(risksSTRIDETampering, true),
-			model.LowSeverity, true, true, false, true)
+		addCategories(parsedModel, model.CategoriesOfOnlyCriticalRisks(parsedModel, risksSTRIDETampering, true),
+			types.CriticalSeverity, true, true, false, true)
+		addCategories(parsedModel, model.CategoriesOfOnlyHighRisks(parsedModel, risksSTRIDETampering, true),
+			types.HighSeverity, true, true, false, true)
+		addCategories(parsedModel, model.CategoriesOfOnlyElevatedRisks(parsedModel, risksSTRIDETampering, true),
+			types.ElevatedSeverity, true, true, false, true)
+		addCategories(parsedModel, model.CategoriesOfOnlyMediumRisks(parsedModel, risksSTRIDETampering, true),
+			types.MediumSeverity, true, true, false, true)
+		addCategories(parsedModel, model.CategoriesOfOnlyLowRisks(parsedModel, risksSTRIDETampering, true),
+			types.LowSeverity, true, true, false, true)
 	}
 	pdf.SetLeftMargin(oldLeft)
 
@@ -1959,22 +1969,22 @@ func createSTRIDE() {
 	}
 	pdf.SetFont("Helvetica", "", fontSizeBody)
 	pdf.SetTextColor(0, 0, 0)
-	html.Write(5, "<b>"+model.Repudiation.Title()+"</b>")
+	html.Write(5, "<b>"+types.Repudiation.Title()+"</b>")
 	pdf.SetLeftMargin(15)
 	if len(risksSTRIDERepudiation) == 0 {
 		pdf.SetTextColor(150, 150, 150)
 		html.Write(5, "<br><br>n/a")
 	} else {
-		addCategories(model.CategoriesOfOnlyCriticalRisks(risksSTRIDERepudiation, true),
-			model.CriticalSeverity, true, true, false, true)
-		addCategories(model.CategoriesOfOnlyHighRisks(risksSTRIDERepudiation, true),
-			model.HighSeverity, true, true, false, true)
-		addCategories(model.CategoriesOfOnlyElevatedRisks(risksSTRIDERepudiation, true),
-			model.ElevatedSeverity, true, true, false, true)
-		addCategories(model.CategoriesOfOnlyMediumRisks(risksSTRIDERepudiation, true),
-			model.MediumSeverity, true, true, false, true)
-		addCategories(model.CategoriesOfOnlyLowRisks(risksSTRIDERepudiation, true),
-			model.LowSeverity, true, true, false, true)
+		addCategories(parsedModel, model.CategoriesOfOnlyCriticalRisks(parsedModel, risksSTRIDERepudiation, true),
+			types.CriticalSeverity, true, true, false, true)
+		addCategories(parsedModel, model.CategoriesOfOnlyHighRisks(parsedModel, risksSTRIDERepudiation, true),
+			types.HighSeverity, true, true, false, true)
+		addCategories(parsedModel, model.CategoriesOfOnlyElevatedRisks(parsedModel, risksSTRIDERepudiation, true),
+			types.ElevatedSeverity, true, true, false, true)
+		addCategories(parsedModel, model.CategoriesOfOnlyMediumRisks(parsedModel, risksSTRIDERepudiation, true),
+			types.MediumSeverity, true, true, false, true)
+		addCategories(parsedModel, model.CategoriesOfOnlyLowRisks(parsedModel, risksSTRIDERepudiation, true),
+			types.LowSeverity, true, true, false, true)
 	}
 	pdf.SetLeftMargin(oldLeft)
 
@@ -1986,22 +1996,22 @@ func createSTRIDE() {
 	}
 	pdf.SetFont("Helvetica", "", fontSizeBody)
 	pdf.SetTextColor(0, 0, 0)
-	html.Write(5, "<b>"+model.InformationDisclosure.Title()+"</b>")
+	html.Write(5, "<b>"+types.InformationDisclosure.Title()+"</b>")
 	pdf.SetLeftMargin(15)
 	if len(risksSTRIDEInformationDisclosure) == 0 {
 		pdf.SetTextColor(150, 150, 150)
 		html.Write(5, "<br><br>n/a")
 	} else {
-		addCategories(model.CategoriesOfOnlyCriticalRisks(risksSTRIDEInformationDisclosure, true),
-			model.CriticalSeverity, true, true, false, true)
-		addCategories(model.CategoriesOfOnlyHighRisks(risksSTRIDEInformationDisclosure, true),
-			model.HighSeverity, true, true, false, true)
-		addCategories(model.CategoriesOfOnlyElevatedRisks(risksSTRIDEInformationDisclosure, true),
-			model.ElevatedSeverity, true, true, false, true)
-		addCategories(model.CategoriesOfOnlyMediumRisks(risksSTRIDEInformationDisclosure, true),
-			model.MediumSeverity, true, true, false, true)
-		addCategories(model.CategoriesOfOnlyLowRisks(risksSTRIDEInformationDisclosure, true),
-			model.LowSeverity, true, true, false, true)
+		addCategories(parsedModel, model.CategoriesOfOnlyCriticalRisks(parsedModel, risksSTRIDEInformationDisclosure, true),
+			types.CriticalSeverity, true, true, false, true)
+		addCategories(parsedModel, model.CategoriesOfOnlyHighRisks(parsedModel, risksSTRIDEInformationDisclosure, true),
+			types.HighSeverity, true, true, false, true)
+		addCategories(parsedModel, model.CategoriesOfOnlyElevatedRisks(parsedModel, risksSTRIDEInformationDisclosure, true),
+			types.ElevatedSeverity, true, true, false, true)
+		addCategories(parsedModel, model.CategoriesOfOnlyMediumRisks(parsedModel, risksSTRIDEInformationDisclosure, true),
+			types.MediumSeverity, true, true, false, true)
+		addCategories(parsedModel, model.CategoriesOfOnlyLowRisks(parsedModel, risksSTRIDEInformationDisclosure, true),
+			types.LowSeverity, true, true, false, true)
 	}
 	pdf.SetLeftMargin(oldLeft)
 
@@ -2013,22 +2023,22 @@ func createSTRIDE() {
 	}
 	pdf.SetFont("Helvetica", "", fontSizeBody)
 	pdf.SetTextColor(0, 0, 0)
-	html.Write(5, "<b>"+model.DenialOfService.Title()+"</b>")
+	html.Write(5, "<b>"+types.DenialOfService.Title()+"</b>")
 	pdf.SetLeftMargin(15)
 	if len(risksSTRIDEDenialOfService) == 0 {
 		pdf.SetTextColor(150, 150, 150)
 		html.Write(5, "<br><br>n/a")
 	} else {
-		addCategories(model.CategoriesOfOnlyCriticalRisks(risksSTRIDEDenialOfService, true),
-			model.CriticalSeverity, true, true, false, true)
-		addCategories(model.CategoriesOfOnlyHighRisks(risksSTRIDEDenialOfService, true),
-			model.HighSeverity, true, true, false, true)
-		addCategories(model.CategoriesOfOnlyElevatedRisks(risksSTRIDEDenialOfService, true),
-			model.ElevatedSeverity, true, true, false, true)
-		addCategories(model.CategoriesOfOnlyMediumRisks(risksSTRIDEDenialOfService, true),
-			model.MediumSeverity, true, true, false, true)
-		addCategories(model.CategoriesOfOnlyLowRisks(risksSTRIDEDenialOfService, true),
-			model.LowSeverity, true, true, false, true)
+		addCategories(parsedModel, model.CategoriesOfOnlyCriticalRisks(parsedModel, risksSTRIDEDenialOfService, true),
+			types.CriticalSeverity, true, true, false, true)
+		addCategories(parsedModel, model.CategoriesOfOnlyHighRisks(parsedModel, risksSTRIDEDenialOfService, true),
+			types.HighSeverity, true, true, false, true)
+		addCategories(parsedModel, model.CategoriesOfOnlyElevatedRisks(parsedModel, risksSTRIDEDenialOfService, true),
+			types.ElevatedSeverity, true, true, false, true)
+		addCategories(parsedModel, model.CategoriesOfOnlyMediumRisks(parsedModel, risksSTRIDEDenialOfService, true),
+			types.MediumSeverity, true, true, false, true)
+		addCategories(parsedModel, model.CategoriesOfOnlyLowRisks(parsedModel, risksSTRIDEDenialOfService, true),
+			types.LowSeverity, true, true, false, true)
 	}
 	pdf.SetLeftMargin(oldLeft)
 
@@ -2040,22 +2050,22 @@ func createSTRIDE() {
 	}
 	pdf.SetFont("Helvetica", "", fontSizeBody)
 	pdf.SetTextColor(0, 0, 0)
-	html.Write(5, "<b>"+model.ElevationOfPrivilege.Title()+"</b>")
+	html.Write(5, "<b>"+types.ElevationOfPrivilege.Title()+"</b>")
 	pdf.SetLeftMargin(15)
 	if len(risksSTRIDEElevationOfPrivilege) == 0 {
 		pdf.SetTextColor(150, 150, 150)
 		html.Write(5, "<br><br>n/a")
 	} else {
-		addCategories(model.CategoriesOfOnlyCriticalRisks(risksSTRIDEElevationOfPrivilege, true),
-			model.CriticalSeverity, true, true, false, true)
-		addCategories(model.CategoriesOfOnlyHighRisks(risksSTRIDEElevationOfPrivilege, true),
-			model.HighSeverity, true, true, false, true)
-		addCategories(model.CategoriesOfOnlyElevatedRisks(risksSTRIDEElevationOfPrivilege, true),
-			model.ElevatedSeverity, true, true, false, true)
-		addCategories(model.CategoriesOfOnlyMediumRisks(risksSTRIDEElevationOfPrivilege, true),
-			model.MediumSeverity, true, true, false, true)
-		addCategories(model.CategoriesOfOnlyLowRisks(risksSTRIDEElevationOfPrivilege, true),
-			model.LowSeverity, true, true, false, true)
+		addCategories(parsedModel, model.CategoriesOfOnlyCriticalRisks(parsedModel, risksSTRIDEElevationOfPrivilege, true),
+			types.CriticalSeverity, true, true, false, true)
+		addCategories(parsedModel, model.CategoriesOfOnlyHighRisks(parsedModel, risksSTRIDEElevationOfPrivilege, true),
+			types.HighSeverity, true, true, false, true)
+		addCategories(parsedModel, model.CategoriesOfOnlyElevatedRisks(parsedModel, risksSTRIDEElevationOfPrivilege, true),
+			types.ElevatedSeverity, true, true, false, true)
+		addCategories(parsedModel, model.CategoriesOfOnlyMediumRisks(parsedModel, risksSTRIDEElevationOfPrivilege, true),
+			types.MediumSeverity, true, true, false, true)
+		addCategories(parsedModel, model.CategoriesOfOnlyLowRisks(parsedModel, risksSTRIDEElevationOfPrivilege, true),
+			types.LowSeverity, true, true, false, true)
 	}
 	pdf.SetLeftMargin(oldLeft)
 
@@ -2063,7 +2073,7 @@ func createSTRIDE() {
 	pdf.SetDashPattern([]float64{}, 0)
 }
 
-func createSecurityRequirements() {
+func createSecurityRequirements(parsedModel *model.ParsedModel) {
 	uni := pdf.UnicodeTranslatorFromDescriptor("")
 	pdf.SetTextColor(0, 0, 0)
 	chapTitle := "Security Requirements"
@@ -2074,8 +2084,8 @@ func createSecurityRequirements() {
 	html := pdf.HTMLBasicNew()
 	html.Write(5, "This chapter lists the custom security requirements which have been defined for the modeled target.")
 	pdfColorBlack()
-	for _, title := range model.SortedKeysOfSecurityRequirements() {
-		description := model.ParsedModelRoot.SecurityRequirements[title]
+	for _, title := range sortedKeysOfSecurityRequirements(parsedModel) {
+		description := parsedModel.SecurityRequirements[title]
 		if pdf.GetY() > 250 {
 			pageBreak()
 			pdf.SetY(36)
@@ -2095,7 +2105,16 @@ func createSecurityRequirements() {
 		"taken into account as well. Also custom individual security requirements might exist for the project.</i>")
 }
 
-func createAbuseCases() {
+func sortedKeysOfSecurityRequirements(parsedModel *model.ParsedModel) []string {
+	keys := make([]string, 0)
+	for k := range parsedModel.SecurityRequirements {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
+}
+
+func createAbuseCases(parsedModel *model.ParsedModel) {
 	pdf.SetTextColor(0, 0, 0)
 	chapTitle := "Abuse Cases"
 	addHeadline(chapTitle, false)
@@ -2105,8 +2124,8 @@ func createAbuseCases() {
 	html := pdf.HTMLBasicNew()
 	html.Write(5, "This chapter lists the custom abuse cases which have been defined for the modeled target.")
 	pdfColorBlack()
-	for _, title := range model.SortedKeysOfAbuseCases() {
-		description := model.ParsedModelRoot.AbuseCases[title]
+	for _, title := range sortedKeysOfAbuseCases(parsedModel) {
+		description := parsedModel.AbuseCases[title]
 		if pdf.GetY() > 250 {
 			pageBreak()
 			pdf.SetY(36)
@@ -2126,18 +2145,27 @@ func createAbuseCases() {
 		"taken into account as well. Also custom individual abuse cases might exist for the project.</i>")
 }
 
-func createQuestions() {
+func sortedKeysOfAbuseCases(parsedModel *model.ParsedModel) []string {
+	keys := make([]string, 0)
+	for k := range parsedModel.AbuseCases {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
+}
+
+func createQuestions(parsedModel *model.ParsedModel) {
 	uni := pdf.UnicodeTranslatorFromDescriptor("")
 	pdf.SetTextColor(0, 0, 0)
 	questions := "Questions"
-	count := len(model.ParsedModelRoot.Questions)
+	count := len(parsedModel.Questions)
 	if count == 1 {
 		questions = "Question"
 	}
-	if model.QuestionsUnanswered() > 0 {
+	if questionsUnanswered(parsedModel) > 0 {
 		colors.ColorModelFailure(pdf)
 	}
-	chapTitle := "Questions: " + strconv.Itoa(model.QuestionsUnanswered()) + " / " + strconv.Itoa(count) + " " + questions
+	chapTitle := "Questions: " + strconv.Itoa(questionsUnanswered(parsedModel)) + " / " + strconv.Itoa(count) + " " + questions
 	addHeadline(chapTitle, false)
 	defineLinkTarget("{questions}")
 	currentChapterTitleBreadcrumb = chapTitle
@@ -2146,14 +2174,14 @@ func createQuestions() {
 	html := pdf.HTMLBasicNew()
 	html.Write(5, "This chapter lists custom questions that arose during the threat modeling process.")
 
-	if len(model.ParsedModelRoot.Questions) == 0 {
+	if len(parsedModel.Questions) == 0 {
 		pdfColorLightGray()
 		html.Write(5, "<br><br><br>")
 		html.Write(5, "No custom questions arose during the threat modeling process.")
 	}
 	pdfColorBlack()
-	for _, question := range model.SortedKeysOfQuestions() {
-		answer := model.ParsedModelRoot.Questions[question]
+	for _, question := range sortedKeysOfQuestions(parsedModel) {
+		answer := parsedModel.Questions[question]
 		if pdf.GetY() > 250 {
 			pageBreak()
 			pdf.SetY(36)
@@ -2174,7 +2202,16 @@ func createQuestions() {
 	}
 }
 
-func createTagListing() {
+func sortedKeysOfQuestions(parsedModel *model.ParsedModel) []string {
+	keys := make([]string, 0)
+	for k := range parsedModel.Questions {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
+}
+
+func createTagListing(parsedModel *model.ParsedModel) {
 	pdf.SetTextColor(0, 0, 0)
 	chapTitle := "Tag Listing"
 	addHeadline(chapTitle, false)
@@ -2184,19 +2221,19 @@ func createTagListing() {
 	html := pdf.HTMLBasicNew()
 	html.Write(5, "This chapter lists what tags are used by which elements.")
 	pdfColorBlack()
-	sorted := model.ParsedModelRoot.TagsAvailable
+	sorted := parsedModel.TagsAvailable
 	sort.Strings(sorted)
 	for _, tag := range sorted {
 		description := "" // TODO: add some separation texts to distinguish between technical assets and data assets etc. for example?
-		for _, techAsset := range model.SortedTechnicalAssetsByTitle() {
-			if model.Contains(techAsset.Tags, tag) {
+		for _, techAsset := range sortedTechnicalAssetsByTitle(parsedModel) {
+			if contains(techAsset.Tags, tag) {
 				if len(description) > 0 {
 					description += ", "
 				}
 				description += techAsset.Title
 			}
 			for _, commLink := range techAsset.CommunicationLinksSorted() {
-				if model.Contains(commLink.Tags, tag) {
+				if contains(commLink.Tags, tag) {
 					if len(description) > 0 {
 						description += ", "
 					}
@@ -2204,24 +2241,24 @@ func createTagListing() {
 				}
 			}
 		}
-		for _, dataAsset := range model.SortedDataAssetsByTitle() {
-			if model.Contains(dataAsset.Tags, tag) {
+		for _, dataAsset := range sortedDataAssetsByTitle(parsedModel) {
+			if contains(dataAsset.Tags, tag) {
 				if len(description) > 0 {
 					description += ", "
 				}
 				description += dataAsset.Title
 			}
 		}
-		for _, trustBoundary := range model.SortedTrustBoundariesByTitle() {
-			if model.Contains(trustBoundary.Tags, tag) {
+		for _, trustBoundary := range sortedTrustBoundariesByTitle(parsedModel) {
+			if contains(trustBoundary.Tags, tag) {
 				if len(description) > 0 {
 					description += ", "
 				}
 				description += trustBoundary.Title
 			}
 		}
-		for _, sharedRuntime := range model.SortedSharedRuntimesByTitle() {
-			if model.Contains(sharedRuntime.Tags, tag) {
+		for _, sharedRuntime := range sortedSharedRuntimesByTitle(parsedModel) {
+			if contains(sharedRuntime.Tags, tag) {
 				if len(description) > 0 {
 					description += ", "
 				}
@@ -2242,7 +2279,25 @@ func createTagListing() {
 	}
 }
 
-func createRiskCategories() {
+func sortedSharedRuntimesByTitle(parsedModel *model.ParsedModel) []model.SharedRuntime {
+	result := make([]model.SharedRuntime, 0)
+	for _, runtime := range parsedModel.SharedRuntimes {
+		result = append(result, runtime)
+	}
+	sort.Sort(model.BySharedRuntimeTitleSort(result))
+	return result
+}
+
+func sortedTechnicalAssetsByTitle(parsedModel *model.ParsedModel) []model.TechnicalAsset {
+	assets := make([]model.TechnicalAsset, 0)
+	for _, asset := range parsedModel.TechnicalAssets {
+		assets = append(assets, asset)
+	}
+	sort.Sort(model.ByTechnicalAssetTitleSort(assets))
+	return assets
+}
+
+func createRiskCategories(parsedModel *model.ParsedModel) {
 	uni := pdf.UnicodeTranslatorFromDescriptor("")
 	// category title
 	title := "Identified Risks by Vulnerability Category"
@@ -2251,42 +2306,42 @@ func createRiskCategories() {
 	defineLinkTarget("{intro-risks-by-vulnerability-category}")
 	html := pdf.HTMLBasicNew()
 	var text strings.Builder
-	text.WriteString("In total <b>" + strconv.Itoa(model.TotalRiskCount()) + " potential risks</b> have been identified during the threat modeling process " +
+	text.WriteString("In total <b>" + strconv.Itoa(model.TotalRiskCount(parsedModel)) + " potential risks</b> have been identified during the threat modeling process " +
 		"of which " +
-		"<b>" + strconv.Itoa(len(model.FilteredByOnlyCriticalRisks())) + " are rated as critical</b>, " +
-		"<b>" + strconv.Itoa(len(model.FilteredByOnlyHighRisks())) + " as high</b>, " +
-		"<b>" + strconv.Itoa(len(model.FilteredByOnlyElevatedRisks())) + " as elevated</b>, " +
-		"<b>" + strconv.Itoa(len(model.FilteredByOnlyMediumRisks())) + " as medium</b>, " +
-		"and <b>" + strconv.Itoa(len(model.FilteredByOnlyLowRisks())) + " as low</b>. " +
-		"<br><br>These risks are distributed across <b>" + strconv.Itoa(len(model.GeneratedRisksByCategory)) + " vulnerability categories</b>. ")
+		"<b>" + strconv.Itoa(len(model.FilteredByOnlyCriticalRisks(parsedModel))) + " are rated as critical</b>, " +
+		"<b>" + strconv.Itoa(len(model.FilteredByOnlyHighRisks(parsedModel))) + " as high</b>, " +
+		"<b>" + strconv.Itoa(len(model.FilteredByOnlyElevatedRisks(parsedModel))) + " as elevated</b>, " +
+		"<b>" + strconv.Itoa(len(model.FilteredByOnlyMediumRisks(parsedModel))) + " as medium</b>, " +
+		"and <b>" + strconv.Itoa(len(model.FilteredByOnlyLowRisks(parsedModel))) + " as low</b>. " +
+		"<br><br>These risks are distributed across <b>" + strconv.Itoa(len(parsedModel.GeneratedRisksByCategory)) + " vulnerability categories</b>. ")
 	text.WriteString("The following sub-chapters of this section describe each identified risk category.") // TODO more explanation text
 	html.Write(5, text.String())
 	text.Reset()
 	currentChapterTitleBreadcrumb = title
-	for _, category := range model.SortedRiskCategories() {
-		risksStr := model.SortedRisksOfCategory(category)
+	for _, category := range model.SortedRiskCategories(parsedModel) {
+		risksStr := model.SortedRisksOfCategory(parsedModel, category)
 
 		// category color
-		switch model.HighestSeverityStillAtRisk(risksStr) {
-		case model.CriticalSeverity:
+		switch model.HighestSeverityStillAtRisk(parsedModel, risksStr) {
+		case types.CriticalSeverity:
 			colors.ColorCriticalRisk(pdf)
-		case model.HighSeverity:
+		case types.HighSeverity:
 			colors.ColorHighRisk(pdf)
-		case model.ElevatedSeverity:
+		case types.ElevatedSeverity:
 			colors.ColorElevatedRisk(pdf)
-		case model.MediumSeverity:
+		case types.MediumSeverity:
 			colors.ColorMediumRisk(pdf)
-		case model.LowSeverity:
+		case types.LowSeverity:
 			colors.ColorLowRisk(pdf)
 		default:
 			pdfColorBlack()
 		}
-		if len(model.ReduceToOnlyStillAtRisk(risksStr)) == 0 {
+		if len(model.ReduceToOnlyStillAtRisk(parsedModel, risksStr)) == 0 {
 			pdfColorBlack()
 		}
 
 		// category title
-		countStillAtRisk := len(model.ReduceToOnlyStillAtRisk(risksStr))
+		countStillAtRisk := len(model.ReduceToOnlyStillAtRisk(parsedModel, risksStr))
 		suffix := strconv.Itoa(countStillAtRisk) + " / " + strconv.Itoa(len(risksStr)) + " Risk"
 		if len(risksStr) != 1 {
 			suffix += "s"
@@ -2379,7 +2434,7 @@ func createRiskCategories() {
 				pdf.SetY(36)
 			}
 			switch risk.Severity {
-			case model.CriticalSeverity:
+			case types.CriticalSeverity:
 				colors.ColorCriticalRisk(pdf)
 				if !headlineCriticalWritten {
 					pdf.SetFont("Helvetica", "", fontSizeBody)
@@ -2389,7 +2444,7 @@ func createRiskCategories() {
 					text.Reset()
 					headlineCriticalWritten = true
 				}
-			case model.HighSeverity:
+			case types.HighSeverity:
 				colors.ColorHighRisk(pdf)
 				if !headlineHighWritten {
 					pdf.SetFont("Helvetica", "", fontSizeBody)
@@ -2399,7 +2454,7 @@ func createRiskCategories() {
 					text.Reset()
 					headlineHighWritten = true
 				}
-			case model.ElevatedSeverity:
+			case types.ElevatedSeverity:
 				colors.ColorElevatedRisk(pdf)
 				if !headlineElevatedWritten {
 					pdf.SetFont("Helvetica", "", fontSizeBody)
@@ -2409,7 +2464,7 @@ func createRiskCategories() {
 					text.Reset()
 					headlineElevatedWritten = true
 				}
-			case model.MediumSeverity:
+			case types.MediumSeverity:
 				colors.ColorMediumRisk(pdf)
 				if !headlineMediumWritten {
 					pdf.SetFont("Helvetica", "", fontSizeBody)
@@ -2419,7 +2474,7 @@ func createRiskCategories() {
 					text.Reset()
 					headlineMediumWritten = true
 				}
-			case model.LowSeverity:
+			case types.LowSeverity:
 				colors.ColorLowRisk(pdf)
 				if !headlineLowWritten {
 					pdf.SetFont("Helvetica", "", fontSizeBody)
@@ -2432,7 +2487,7 @@ func createRiskCategories() {
 			default:
 				pdfColorBlack()
 			}
-			if !risk.GetRiskTrackingStatusDefaultingUnchecked().IsStillAtRisk() {
+			if !risk.GetRiskTrackingStatusDefaultingUnchecked(parsedModel).IsStillAtRisk() {
 				pdfColorBlack()
 			}
 			posY := pdf.GetY()
@@ -2453,7 +2508,7 @@ func createRiskCategories() {
 			} else if len(risk.MostRelevantTechnicalAssetId) > 0 {
 				pdf.Link(20, posY, 180, pdf.GetY()-posY, tocLinkIdByAssetId[risk.MostRelevantTechnicalAssetId])
 			}
-			writeRiskTrackingStatus(risk)
+			writeRiskTrackingStatus(parsedModel, risk)
 			pdf.SetLeftMargin(oldLeft)
 			html.Write(5, text.String())
 			text.Reset()
@@ -2462,33 +2517,33 @@ func createRiskCategories() {
 	}
 }
 
-func writeRiskTrackingStatus(risk model.Risk) {
+func writeRiskTrackingStatus(parsedModel *model.ParsedModel, risk model.Risk) {
 	uni := pdf.UnicodeTranslatorFromDescriptor("")
-	tracking := risk.GetRiskTracking()
+	tracking := risk.GetRiskTracking(parsedModel)
 	pdfColorBlack()
 	pdf.CellFormat(10, 6, "", "0", 0, "", false, 0, "")
 	switch tracking.Status {
-	case model.Unchecked:
+	case types.Unchecked:
 		colors.ColorRiskStatusUnchecked(pdf)
-	case model.InDiscussion:
+	case types.InDiscussion:
 		colors.ColorRiskStatusInDiscussion(pdf)
-	case model.Accepted:
+	case types.Accepted:
 		colors.ColorRiskStatusAccepted(pdf)
-	case model.InProgress:
+	case types.InProgress:
 		colors.ColorRiskStatusInProgress(pdf)
-	case model.Mitigated:
+	case types.Mitigated:
 		colors.ColorRiskStatusMitigated(pdf)
-	case model.FalsePositive:
+	case types.FalsePositive:
 		colors.ColorRiskStatusFalsePositive(pdf)
 	default:
 		pdfColorBlack()
 	}
 	pdf.SetFont("Helvetica", "", fontSizeSmall)
-	if tracking.Status == model.Unchecked {
+	if tracking.Status == types.Unchecked {
 		pdf.SetFont("Helvetica", "B", fontSizeSmall)
 	}
 	pdf.CellFormat(25, 4, tracking.Status.Title(), "0", 0, "B", false, 0, "")
-	if tracking.Status != model.Unchecked {
+	if tracking.Status != types.Unchecked {
 		dateStr := tracking.Date.Format("2006-01-02")
 		if dateStr == "0001-01-01" {
 			dateStr = ""
@@ -2509,7 +2564,7 @@ func writeRiskTrackingStatus(risk model.Risk) {
 	pdfColorBlack()
 }
 
-func createTechnicalAssets() {
+func createTechnicalAssets(parsedModel *model.ParsedModel) {
 	uni := pdf.UnicodeTranslatorFromDescriptor("")
 	// category title
 	title := "Identified Risks by Technical Asset"
@@ -2518,22 +2573,22 @@ func createTechnicalAssets() {
 	defineLinkTarget("{intro-risks-by-technical-asset}")
 	html := pdf.HTMLBasicNew()
 	var text strings.Builder
-	text.WriteString("In total <b>" + strconv.Itoa(model.TotalRiskCount()) + " potential risks</b> have been identified during the threat modeling process " +
+	text.WriteString("In total <b>" + strconv.Itoa(model.TotalRiskCount(parsedModel)) + " potential risks</b> have been identified during the threat modeling process " +
 		"of which " +
-		"<b>" + strconv.Itoa(len(model.FilteredByOnlyCriticalRisks())) + " are rated as critical</b>, " +
-		"<b>" + strconv.Itoa(len(model.FilteredByOnlyHighRisks())) + " as high</b>, " +
-		"<b>" + strconv.Itoa(len(model.FilteredByOnlyElevatedRisks())) + " as elevated</b>, " +
-		"<b>" + strconv.Itoa(len(model.FilteredByOnlyMediumRisks())) + " as medium</b>, " +
-		"and <b>" + strconv.Itoa(len(model.FilteredByOnlyLowRisks())) + " as low</b>. " +
-		"<br><br>These risks are distributed across <b>" + strconv.Itoa(len(model.InScopeTechnicalAssets())) + " in-scope technical assets</b>. ")
+		"<b>" + strconv.Itoa(len(model.FilteredByOnlyCriticalRisks(parsedModel))) + " are rated as critical</b>, " +
+		"<b>" + strconv.Itoa(len(model.FilteredByOnlyHighRisks(parsedModel))) + " as high</b>, " +
+		"<b>" + strconv.Itoa(len(model.FilteredByOnlyElevatedRisks(parsedModel))) + " as elevated</b>, " +
+		"<b>" + strconv.Itoa(len(model.FilteredByOnlyMediumRisks(parsedModel))) + " as medium</b>, " +
+		"and <b>" + strconv.Itoa(len(model.FilteredByOnlyLowRisks(parsedModel))) + " as low</b>. " +
+		"<br><br>These risks are distributed across <b>" + strconv.Itoa(len(parsedModel.InScopeTechnicalAssets())) + " in-scope technical assets</b>. ")
 	text.WriteString("The following sub-chapters of this section describe each identified risk grouped by technical asset. ") // TODO more explanation text
 	text.WriteString("The RAA value of a technical asset is the calculated \"Relative Attacker Attractiveness\" value in percent.")
 	html.Write(5, text.String())
 	text.Reset()
 	currentChapterTitleBreadcrumb = title
-	for _, technicalAsset := range model.SortedTechnicalAssetsByRiskSeverityAndTitle() {
-		risksStr := technicalAsset.GeneratedRisks()
-		countStillAtRisk := len(model.ReduceToOnlyStillAtRisk(risksStr))
+	for _, technicalAsset := range sortedTechnicalAssetsByRiskSeverityAndTitle(parsedModel) {
+		risksStr := technicalAsset.GeneratedRisks(parsedModel)
+		countStillAtRisk := len(model.ReduceToOnlyStillAtRisk(parsedModel, risksStr))
 		suffix := strconv.Itoa(countStillAtRisk) + " / " + strconv.Itoa(len(risksStr)) + " Risk"
 		if len(risksStr) != 1 {
 			suffix += "s"
@@ -2542,21 +2597,21 @@ func createTechnicalAssets() {
 			pdfColorOutOfScope()
 			suffix = "out-of-scope"
 		} else {
-			switch model.HighestSeverityStillAtRisk(risksStr) {
-			case model.CriticalSeverity:
+			switch model.HighestSeverityStillAtRisk(parsedModel, risksStr) {
+			case types.CriticalSeverity:
 				colors.ColorCriticalRisk(pdf)
-			case model.HighSeverity:
+			case types.HighSeverity:
 				colors.ColorHighRisk(pdf)
-			case model.ElevatedSeverity:
+			case types.ElevatedSeverity:
 				colors.ColorElevatedRisk(pdf)
-			case model.MediumSeverity:
+			case types.MediumSeverity:
 				colors.ColorMediumRisk(pdf)
-			case model.LowSeverity:
+			case types.LowSeverity:
 				colors.ColorLowRisk(pdf)
 			default:
 				pdfColorBlack()
 			}
-			if len(model.ReduceToOnlyStillAtRisk(risksStr)) == 0 {
+			if len(model.ReduceToOnlyStillAtRisk(parsedModel, risksStr)) == 0 {
 				pdfColorBlack()
 			}
 		}
@@ -2613,7 +2668,7 @@ func createTechnicalAssets() {
 					pdf.SetY(36)
 				}
 				switch risk.Severity {
-				case model.CriticalSeverity:
+				case types.CriticalSeverity:
 					colors.ColorCriticalRisk(pdf)
 					if !headlineCriticalWritten {
 						pdf.SetFont("Helvetica", "", fontSizeBody)
@@ -2621,7 +2676,7 @@ func createTechnicalAssets() {
 						html.Write(5, "<br><b><i>Critical Risk Severity</i></b><br><br>")
 						headlineCriticalWritten = true
 					}
-				case model.HighSeverity:
+				case types.HighSeverity:
 					colors.ColorHighRisk(pdf)
 					if !headlineHighWritten {
 						pdf.SetFont("Helvetica", "", fontSizeBody)
@@ -2629,7 +2684,7 @@ func createTechnicalAssets() {
 						html.Write(5, "<br><b><i>High Risk Severity</i></b><br><br>")
 						headlineHighWritten = true
 					}
-				case model.ElevatedSeverity:
+				case types.ElevatedSeverity:
 					colors.ColorElevatedRisk(pdf)
 					if !headlineElevatedWritten {
 						pdf.SetFont("Helvetica", "", fontSizeBody)
@@ -2637,7 +2692,7 @@ func createTechnicalAssets() {
 						html.Write(5, "<br><b><i>Elevated Risk Severity</i></b><br><br>")
 						headlineElevatedWritten = true
 					}
-				case model.MediumSeverity:
+				case types.MediumSeverity:
 					colors.ColorMediumRisk(pdf)
 					if !headlineMediumWritten {
 						pdf.SetFont("Helvetica", "", fontSizeBody)
@@ -2645,7 +2700,7 @@ func createTechnicalAssets() {
 						html.Write(5, "<br><b><i>Medium Risk Severity</i></b><br><br>")
 						headlineMediumWritten = true
 					}
-				case model.LowSeverity:
+				case types.LowSeverity:
 					colors.ColorLowRisk(pdf)
 					if !headlineLowWritten {
 						pdf.SetFont("Helvetica", "", fontSizeBody)
@@ -2656,7 +2711,7 @@ func createTechnicalAssets() {
 				default:
 					pdfColorBlack()
 				}
-				if !risk.GetRiskTrackingStatusDefaultingUnchecked().IsStillAtRisk() {
+				if !risk.GetRiskTrackingStatusDefaultingUnchecked(parsedModel).IsStillAtRisk() {
 					pdfColorBlack()
 				}
 				posY := pdf.GetY()
@@ -2672,7 +2727,7 @@ func createTechnicalAssets() {
 				pdf.MultiCell(215, 5, uni(risk.SyntheticId), "0", "0", false)
 				pdf.Link(20, posY, 180, pdf.GetY()-posY, tocLinkIdByAssetId[risk.Category.Id])
 				pdf.SetFont("Helvetica", "", fontSizeBody)
-				writeRiskTrackingStatus(risk)
+				writeRiskTrackingStatus(parsedModel, risk)
 				pdf.SetLeftMargin(oldLeft)
 			}
 		} else {
@@ -2848,7 +2903,7 @@ func createTechnicalAssets() {
 		pdf.CellFormat(40, 6, "Data Processed:", "0", 0, "", false, 0, "")
 		pdfColorBlack()
 		dataAssetsProcessedText := ""
-		for _, dataAsset := range technicalAsset.DataAssetsProcessedSorted() {
+		for _, dataAsset := range technicalAsset.DataAssetsProcessedSorted(parsedModel) {
 			if len(dataAssetsProcessedText) > 0 {
 				dataAssetsProcessedText += ", "
 			}
@@ -2865,7 +2920,7 @@ func createTechnicalAssets() {
 		pdf.CellFormat(40, 6, "Data Stored:", "0", 0, "", false, 0, "")
 		pdfColorBlack()
 		dataAssetsStoredText := ""
-		for _, dataAsset := range technicalAsset.DataAssetsStoredSorted() {
+		for _, dataAsset := range technicalAsset.DataAssetsStoredSorted(parsedModel) {
 			if len(dataAssetsStoredText) > 0 {
 				dataAssetsStoredText += ", "
 			}
@@ -3015,7 +3070,7 @@ func createTechnicalAssets() {
 				pdf.CellFormat(15, 6, "", "0", 0, "", false, 0, "")
 				pdf.CellFormat(35, 6, "Target:", "0", 0, "", false, 0, "")
 				pdfColorBlack()
-				pdf.MultiCell(125, 6, uni(model.ParsedModelRoot.TechnicalAssets[outgoingCommLink.TargetId].Title), "0", "0", false)
+				pdf.MultiCell(125, 6, uni(parsedModel.TechnicalAssets[outgoingCommLink.TargetId].Title), "0", "0", false)
 				pdf.Link(60, pdf.GetY()-5, 70, 5, tocLinkIdByAssetId[outgoingCommLink.TargetId])
 				if pdf.GetY() > 270 {
 					pageBreak()
@@ -3116,7 +3171,7 @@ func createTechnicalAssets() {
 				pdf.CellFormat(35, 6, "Data Sent:", "0", 0, "", false, 0, "")
 				pdfColorBlack()
 				dataAssetsSentText := ""
-				for _, dataAsset := range outgoingCommLink.DataAssetsSentSorted() {
+				for _, dataAsset := range outgoingCommLink.DataAssetsSentSorted(parsedModel) {
 					if len(dataAssetsSentText) > 0 {
 						dataAssetsSentText += ", "
 					}
@@ -3132,7 +3187,7 @@ func createTechnicalAssets() {
 				pdf.CellFormat(35, 6, "Data Received:", "0", 0, "", false, 0, "")
 				pdfColorBlack()
 				dataAssetsReceivedText := ""
-				for _, dataAsset := range outgoingCommLink.DataAssetsReceivedSorted() {
+				for _, dataAsset := range outgoingCommLink.DataAssetsReceivedSorted(parsedModel) {
 					if len(dataAssetsReceivedText) > 0 {
 						dataAssetsReceivedText += ", "
 					}
@@ -3147,7 +3202,7 @@ func createTechnicalAssets() {
 			}
 		}
 
-		incomingCommLinks := model.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id]
+		incomingCommLinks := parsedModel.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id]
 		if len(incomingCommLinks) > 0 {
 			pdf.Ln(-1)
 			if pdf.GetY() > 260 { // 260 only for major titles (to avoid "Schusterjungen"), for the rest attributes 270
@@ -3185,7 +3240,7 @@ func createTechnicalAssets() {
 				pdf.CellFormat(15, 6, "", "0", 0, "", false, 0, "")
 				pdf.CellFormat(35, 6, "Source:", "0", 0, "", false, 0, "")
 				pdfColorBlack()
-				pdf.MultiCell(140, 6, uni(model.ParsedModelRoot.TechnicalAssets[incomingCommLink.SourceId].Title), "0", "0", false)
+				pdf.MultiCell(140, 6, uni(parsedModel.TechnicalAssets[incomingCommLink.SourceId].Title), "0", "0", false)
 				pdf.Link(60, pdf.GetY()-5, 70, 5, tocLinkIdByAssetId[incomingCommLink.SourceId])
 				if pdf.GetY() > 270 {
 					pageBreak()
@@ -3287,7 +3342,7 @@ func createTechnicalAssets() {
 				pdfColorBlack()
 				dataAssetsSentText := ""
 				// yep, here we reverse the sent/received direction, as it's the incoming stuff
-				for _, dataAsset := range incomingCommLink.DataAssetsSentSorted() {
+				for _, dataAsset := range incomingCommLink.DataAssetsSentSorted(parsedModel) {
 					if len(dataAssetsSentText) > 0 {
 						dataAssetsSentText += ", "
 					}
@@ -3304,7 +3359,7 @@ func createTechnicalAssets() {
 				pdfColorBlack()
 				dataAssetsReceivedText := ""
 				// yep, here we reverse the sent/received direction, as it's the incoming stuff
-				for _, dataAsset := range incomingCommLink.DataAssetsReceivedSorted() {
+				for _, dataAsset := range incomingCommLink.DataAssetsReceivedSorted(parsedModel) {
 					if len(dataAssetsReceivedText) > 0 {
 						dataAssetsReceivedText += ", "
 					}
@@ -3321,28 +3376,28 @@ func createTechnicalAssets() {
 	}
 }
 
-func createDataAssets() {
+func createDataAssets(parsedModel *model.ParsedModel) {
 	uni := pdf.UnicodeTranslatorFromDescriptor("")
 	title := "Identified Data Breach Probabilities by Data Asset"
 	pdfColorBlack()
 	addHeadline(title, false)
 	defineLinkTarget("{intro-risks-by-data-asset}")
 	html := pdf.HTMLBasicNew()
-	html.Write(5, "In total <b>"+strconv.Itoa(model.TotalRiskCount())+" potential risks</b> have been identified during the threat modeling process "+
+	html.Write(5, "In total <b>"+strconv.Itoa(model.TotalRiskCount(parsedModel))+" potential risks</b> have been identified during the threat modeling process "+
 		"of which "+
-		"<b>"+strconv.Itoa(len(model.FilteredByOnlyCriticalRisks()))+" are rated as critical</b>, "+
-		"<b>"+strconv.Itoa(len(model.FilteredByOnlyHighRisks()))+" as high</b>, "+
-		"<b>"+strconv.Itoa(len(model.FilteredByOnlyElevatedRisks()))+" as elevated</b>, "+
-		"<b>"+strconv.Itoa(len(model.FilteredByOnlyMediumRisks()))+" as medium</b>, "+
-		"and <b>"+strconv.Itoa(len(model.FilteredByOnlyLowRisks()))+" as low</b>. "+
-		"<br><br>These risks are distributed across <b>"+strconv.Itoa(len(model.ParsedModelRoot.DataAssets))+" data assets</b>. ")
+		"<b>"+strconv.Itoa(len(model.FilteredByOnlyCriticalRisks(parsedModel)))+" are rated as critical</b>, "+
+		"<b>"+strconv.Itoa(len(model.FilteredByOnlyHighRisks(parsedModel)))+" as high</b>, "+
+		"<b>"+strconv.Itoa(len(model.FilteredByOnlyElevatedRisks(parsedModel)))+" as elevated</b>, "+
+		"<b>"+strconv.Itoa(len(model.FilteredByOnlyMediumRisks(parsedModel)))+" as medium</b>, "+
+		"and <b>"+strconv.Itoa(len(model.FilteredByOnlyLowRisks(parsedModel)))+" as low</b>. "+
+		"<br><br>These risks are distributed across <b>"+strconv.Itoa(len(parsedModel.DataAssets))+" data assets</b>. ")
 	html.Write(5, "The following sub-chapters of this section describe the derived data breach probabilities grouped by data asset.<br>") // TODO more explanation text
 	pdf.SetFont("Helvetica", "", fontSizeSmall)
 	pdfColorGray()
 	html.Write(5, "Technical asset names and risk IDs are clickable and link to the corresponding chapter.")
 	pdf.SetFont("Helvetica", "", fontSizeBody)
 	currentChapterTitleBreadcrumb = title
-	for _, dataAsset := range model.SortedDataAssetsByDataBreachProbabilityAndTitle() {
+	for _, dataAsset := range sortedDataAssetsByDataBreachProbabilityAndTitle(parsedModel) {
 		if pdf.GetY() > 280 { // 280 as only small font previously (not 250)
 			pageBreak()
 			pdf.SetY(36)
@@ -3350,21 +3405,21 @@ func createDataAssets() {
 			html.Write(5, "<br><br><br>")
 		}
 		pdfColorBlack()
-		switch dataAsset.IdentifiedDataBreachProbabilityStillAtRisk() {
-		case model.Probable:
+		switch dataAsset.IdentifiedDataBreachProbabilityStillAtRisk(parsedModel) {
+		case types.Probable:
 			colors.ColorHighRisk(pdf)
-		case model.Possible:
+		case types.Possible:
 			colors.ColorMediumRisk(pdf)
-		case model.Improbable:
+		case types.Improbable:
 			colors.ColorLowRisk(pdf)
 		default:
 			pdfColorBlack()
 		}
-		if !dataAsset.IsDataBreachPotentialStillAtRisk() {
+		if !dataAsset.IsDataBreachPotentialStillAtRisk(parsedModel) {
 			pdfColorBlack()
 		}
-		risksStr := dataAsset.IdentifiedDataBreachProbabilityRisks()
-		countStillAtRisk := len(model.ReduceToOnlyStillAtRisk(risksStr))
+		risksStr := dataAsset.IdentifiedDataBreachProbabilityRisks(parsedModel)
+		countStillAtRisk := len(model.ReduceToOnlyStillAtRisk(parsedModel, risksStr))
 		suffix := strconv.Itoa(countStillAtRisk) + " / " + strconv.Itoa(len(risksStr)) + " Risk"
 		if len(risksStr) != 1 {
 			suffix += "s"
@@ -3527,7 +3582,7 @@ func createDataAssets() {
 		pdf.CellFormat(40, 6, "Processed by:", "0", 0, "", false, 0, "")
 		pdfColorBlack()
 		processedByText := ""
-		for _, dataAsset := range dataAsset.ProcessedByTechnicalAssetsSorted() {
+		for _, dataAsset := range dataAsset.ProcessedByTechnicalAssetsSorted(parsedModel) {
 			if len(processedByText) > 0 {
 				processedByText += ", "
 			}
@@ -3548,7 +3603,7 @@ func createDataAssets() {
 		pdf.CellFormat(40, 6, "Stored by:", "0", 0, "", false, 0, "")
 		pdfColorBlack()
 		storedByText := ""
-		for _, dataAsset := range dataAsset.StoredByTechnicalAssetsSorted() {
+		for _, dataAsset := range dataAsset.StoredByTechnicalAssetsSorted(parsedModel) {
 			if len(storedByText) > 0 {
 				storedByText += ", "
 			}
@@ -3569,7 +3624,7 @@ func createDataAssets() {
 		pdf.CellFormat(40, 6, "Sent via:", "0", 0, "", false, 0, "")
 		pdfColorBlack()
 		sentViaText := ""
-		for _, commLink := range dataAsset.SentViaCommLinksSorted() {
+		for _, commLink := range dataAsset.SentViaCommLinksSorted(parsedModel) {
 			if len(sentViaText) > 0 {
 				sentViaText += ", "
 			}
@@ -3590,7 +3645,7 @@ func createDataAssets() {
 		pdf.CellFormat(40, 6, "Received via:", "0", 0, "", false, 0, "")
 		pdfColorBlack()
 		receivedViaText := ""
-		for _, commLink := range dataAsset.ReceivedViaCommLinksSorted() {
+		for _, commLink := range dataAsset.ReceivedViaCommLinksSorted(parsedModel) {
 			if len(receivedViaText) > 0 {
 				receivedViaText += ", "
 			}
@@ -3607,7 +3662,7 @@ func createDataAssets() {
 			risksByTechAssetId := dataAsset.IdentifiedRisksByResponsibleTechnicalAssetId()
 			techAssetsResponsible := make([]model.TechnicalAsset, 0)
 			for techAssetId, _ := range risksByTechAssetId {
-				techAssetsResponsible = append(techAssetsResponsible, model.ParsedModelRoot.TechnicalAssets[techAssetId])
+				techAssetsResponsible = append(techAssetsResponsible, parsedModel.TechnicalAssets[techAssetId])
 			}
 			sort.Sort(model.ByTechnicalAssetRiskSeverityAndTitleSortStillAtRisk(techAssetsResponsible))
 			assetStr := "assets"
@@ -3668,19 +3723,19 @@ func createDataAssets() {
 		pdf.CellFormat(40, 6, "Data Breach:", "0", 0, "", false, 0, "")
 		pdfColorBlack()
 		pdf.SetFont("Helvetica", "B", fontSizeBody)
-		dataBreachProbability := dataAsset.IdentifiedDataBreachProbabilityStillAtRisk()
+		dataBreachProbability := dataAsset.IdentifiedDataBreachProbabilityStillAtRisk(parsedModel)
 		riskText := dataBreachProbability.String()
 		switch dataBreachProbability {
-		case model.Probable:
+		case types.Probable:
 			colors.ColorHighRisk(pdf)
-		case model.Possible:
+		case types.Possible:
 			colors.ColorMediumRisk(pdf)
-		case model.Improbable:
+		case types.Improbable:
 			colors.ColorLowRisk(pdf)
 		default:
 			pdfColorBlack()
 		}
-		if !dataAsset.IsDataBreachPotentialStillAtRisk() {
+		if !dataAsset.IsDataBreachPotentialStillAtRisk(parsedModel) {
 			pdfColorBlack()
 			riskText = "none"
 		}
@@ -3692,8 +3747,8 @@ func createDataAssets() {
 		}
 
 		// how can is this data asset be indirectly lost (i.e. why)
-		dataBreachRisksStillAtRisk := dataAsset.IdentifiedDataBreachProbabilityRisksStillAtRisk()
-		sort.Sort(model.ByDataBreachProbabilitySort(dataBreachRisksStillAtRisk))
+		dataBreachRisksStillAtRisk := dataAsset.IdentifiedDataBreachProbabilityRisksStillAtRisk(parsedModel)
+		model.SortByDataBreachProbability(dataBreachRisksStillAtRisk, parsedModel)
 		if pdf.GetY() > 265 {
 			pageBreak()
 			pdf.SetY(36)
@@ -3718,16 +3773,16 @@ func createDataAssets() {
 					pdf.SetY(36)
 				}
 				switch dataBreachRisk.DataBreachProbability {
-				case model.Probable:
+				case types.Probable:
 					colors.ColorHighRisk(pdf)
-				case model.Possible:
+				case types.Possible:
 					colors.ColorMediumRisk(pdf)
-				case model.Improbable:
+				case types.Improbable:
 					colors.ColorLowRisk(pdf)
 				default:
 					pdfColorBlack()
 				}
-				if !dataBreachRisk.GetRiskTrackingStatusDefaultingUnchecked().IsStillAtRisk() {
+				if !dataBreachRisk.GetRiskTrackingStatusDefaultingUnchecked(parsedModel).IsStillAtRisk() {
 					pdfColorBlack()
 				}
 				pdf.CellFormat(10, 6, "", "0", 0, "", false, 0, "")
@@ -3742,7 +3797,7 @@ func createDataAssets() {
 	}
 }
 
-func createTrustBoundaries() {
+func createTrustBoundaries(parsedModel *model.ParsedModel) {
 	uni := pdf.UnicodeTranslatorFromDescriptor("")
 	title := "Trust Boundaries"
 	pdfColorBlack()
@@ -3750,13 +3805,13 @@ func createTrustBoundaries() {
 
 	html := pdf.HTMLBasicNew()
 	word := "has"
-	if len(model.ParsedModelRoot.TrustBoundaries) > 1 {
+	if len(parsedModel.TrustBoundaries) > 1 {
 		word = "have"
 	}
-	html.Write(5, "In total <b>"+strconv.Itoa(len(model.ParsedModelRoot.TrustBoundaries))+" trust boundaries</b> "+word+" been "+
+	html.Write(5, "In total <b>"+strconv.Itoa(len(parsedModel.TrustBoundaries))+" trust boundaries</b> "+word+" been "+
 		"modeled during the threat modeling process.")
 	currentChapterTitleBreadcrumb = title
-	for _, trustBoundary := range model.SortedTrustBoundariesByTitle() {
+	for _, trustBoundary := range sortedTrustBoundariesByTitle(parsedModel) {
 		if pdf.GetY() > 250 {
 			pageBreak()
 			pdf.SetY(36)
@@ -3830,7 +3885,7 @@ func createTrustBoundaries() {
 			if len(assetsInsideText) > 0 {
 				assetsInsideText += ", "
 			}
-			assetsInsideText += model.ParsedModelRoot.TechnicalAssets[assetKey].Title // TODO add link to technical asset detail chapter and back
+			assetsInsideText += parsedModel.TechnicalAssets[assetKey].Title // TODO add link to technical asset detail chapter and back
 		}
 		if len(assetsInsideText) == 0 {
 			pdfColorGray()
@@ -3851,7 +3906,7 @@ func createTrustBoundaries() {
 			if len(boundariesNestedText) > 0 {
 				boundariesNestedText += ", "
 			}
-			boundariesNestedText += model.ParsedModelRoot.TrustBoundaries[assetKey].Title
+			boundariesNestedText += parsedModel.TrustBoundaries[assetKey].Title
 		}
 		if len(boundariesNestedText) == 0 {
 			pdfColorGray()
@@ -3861,7 +3916,17 @@ func createTrustBoundaries() {
 	}
 }
 
-func createSharedRuntimes() {
+func questionsUnanswered(parsedModel *model.ParsedModel) int {
+	result := 0
+	for _, answer := range parsedModel.Questions {
+		if len(strings.TrimSpace(answer)) == 0 {
+			result++
+		}
+	}
+	return result
+}
+
+func createSharedRuntimes(parsedModel *model.ParsedModel) {
 	uni := pdf.UnicodeTranslatorFromDescriptor("")
 	title := "Shared Runtimes"
 	pdfColorBlack()
@@ -3869,13 +3934,13 @@ func createSharedRuntimes() {
 
 	html := pdf.HTMLBasicNew()
 	word, runtime := "has", "runtime"
-	if len(model.ParsedModelRoot.SharedRuntimes) > 1 {
+	if len(parsedModel.SharedRuntimes) > 1 {
 		word, runtime = "have", "runtimes"
 	}
-	html.Write(5, "In total <b>"+strconv.Itoa(len(model.ParsedModelRoot.SharedRuntimes))+" shared "+runtime+"</b> "+word+" been "+
+	html.Write(5, "In total <b>"+strconv.Itoa(len(parsedModel.SharedRuntimes))+" shared "+runtime+"</b> "+word+" been "+
 		"modeled during the threat modeling process.")
 	currentChapterTitleBreadcrumb = title
-	for _, sharedRuntime := range model.SortedSharedRuntimesByTitle() {
+	for _, sharedRuntime := range sortedSharedRuntimesByTitle(parsedModel) {
 		pdfColorBlack()
 		if pdf.GetY() > 250 {
 			pageBreak()
@@ -3932,7 +3997,7 @@ func createSharedRuntimes() {
 			if len(assetsInsideText) > 0 {
 				assetsInsideText += ", "
 			}
-			assetsInsideText += model.ParsedModelRoot.TechnicalAssets[assetKey].Title // TODO add link to technical asset detail chapter and back
+			assetsInsideText += parsedModel.TechnicalAssets[assetKey].Title // TODO add link to technical asset detail chapter and back
 		}
 		if len(assetsInsideText) == 0 {
 			pdfColorGray()
@@ -3942,7 +4007,7 @@ func createSharedRuntimes() {
 	}
 }
 
-func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTimestamp string, modelHash string, customRiskRules map[string]*risks.CustomRisk) {
+func createRiskRulesChecked(parsedModel *model.ParsedModel, modelFilename string, skipRiskRules string, buildTimestamp string, modelHash string, customRiskRules map[string]*model.CustomRisk) {
 	pdf.SetTextColor(0, 0, 0)
 	title := "Risk Rules Checked by Threagile"
 	addHeadline(title, false)
@@ -3954,7 +4019,7 @@ func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTim
 	pdfColorGray()
 	pdf.SetFont("Helvetica", "", fontSizeSmall)
 	timestamp := time.Now()
-	strBuilder.WriteString("<b>Threagile Version:</b> " + model.ThreagileVersion)
+	strBuilder.WriteString("<b>Threagile Version:</b> " + docs.ThreagileVersion)
 	strBuilder.WriteString("<br><b>Threagile Build Timestamp:</b> " + buildTimestamp)
 	strBuilder.WriteString("<br><b>Threagile Execution Timestamp:</b> " + timestamp.Format("20060102150405"))
 	strBuilder.WriteString("<br><b>Model Filename:</b> " + modelFilename)
@@ -3978,7 +4043,7 @@ func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTim
 	for id, customRule := range customRiskRules {
 		pdf.Ln(-1)
 		pdf.SetFont("Helvetica", "B", fontSizeBody)
-		if model.Contains(skippedRules, id) {
+		if contains(skippedRules, id) {
 			skipped = "SKIPPED - "
 		} else {
 			skipped = ""
@@ -4014,8 +4079,8 @@ func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTim
 		pdf.MultiCell(160, 6, customRule.Category.RiskAssessment, "0", "0", false)
 	}
 
-	for _, key := range model.SortedKeysOfIndividualRiskCategories() {
-		individualRiskCategory := model.ParsedModelRoot.IndividualRiskCategories[key]
+	for _, key := range sortedKeysOfIndividualRiskCategories(parsedModel) {
+		individualRiskCategory := parsedModel.IndividualRiskCategories[key]
 		pdf.Ln(-1)
 		pdf.SetFont("Helvetica", "B", fontSizeBody)
 		pdf.CellFormat(190, 3, individualRiskCategory.Title, "0", 0, "", false, 0, "")
@@ -4051,7 +4116,7 @@ func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTim
 
 	pdf.Ln(-1)
 	pdf.SetFont("Helvetica", "B", fontSizeBody)
-	if model.Contains(skippedRules, accidental_secret_leak.Category().Id) {
+	if contains(skippedRules, accidental_secret_leak.Category().Id) {
 		skipped = "SKIPPED - "
 	} else {
 		skipped = ""
@@ -4085,7 +4150,7 @@ func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTim
 
 	pdf.Ln(-1)
 	pdf.SetFont("Helvetica", "B", fontSizeBody)
-	if model.Contains(skippedRules, code_backdooring.Category().Id) {
+	if contains(skippedRules, code_backdooring.Category().Id) {
 		skipped = "SKIPPED - "
 	} else {
 		skipped = ""
@@ -4119,7 +4184,7 @@ func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTim
 
 	pdf.Ln(-1)
 	pdf.SetFont("Helvetica", "B", fontSizeBody)
-	if model.Contains(skippedRules, container_baseimage_backdooring.Category().Id) {
+	if contains(skippedRules, container_baseimage_backdooring.Category().Id) {
 		skipped = "SKIPPED - "
 	} else {
 		skipped = ""
@@ -4153,7 +4218,7 @@ func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTim
 
 	pdf.Ln(-1)
 	pdf.SetFont("Helvetica", "B", fontSizeBody)
-	if model.Contains(skippedRules, container_platform_escape.Category().Id) {
+	if contains(skippedRules, container_platform_escape.Category().Id) {
 		skipped = "SKIPPED - "
 	} else {
 		skipped = ""
@@ -4187,7 +4252,7 @@ func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTim
 
 	pdf.Ln(-1)
 	pdf.SetFont("Helvetica", "B", fontSizeBody)
-	if model.Contains(skippedRules, cross_site_request_forgery.Category().Id) {
+	if contains(skippedRules, cross_site_request_forgery.Category().Id) {
 		skipped = "SKIPPED - "
 	} else {
 		skipped = ""
@@ -4221,7 +4286,7 @@ func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTim
 
 	pdf.Ln(-1)
 	pdf.SetFont("Helvetica", "B", fontSizeBody)
-	if model.Contains(skippedRules, cross_site_scripting.Category().Id) {
+	if contains(skippedRules, cross_site_scripting.Category().Id) {
 		skipped = "SKIPPED - "
 	} else {
 		skipped = ""
@@ -4255,7 +4320,7 @@ func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTim
 
 	pdf.Ln(-1)
 	pdf.SetFont("Helvetica", "B", fontSizeBody)
-	if model.Contains(skippedRules, dos_risky_access_across_trust_boundary.Category().Id) {
+	if contains(skippedRules, dos_risky_access_across_trust_boundary.Category().Id) {
 		skipped = "SKIPPED - "
 	} else {
 		skipped = ""
@@ -4289,7 +4354,7 @@ func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTim
 
 	pdf.Ln(-1)
 	pdf.SetFont("Helvetica", "B", fontSizeBody)
-	if model.Contains(skippedRules, incomplete_model.Category().Id) {
+	if contains(skippedRules, incomplete_model.Category().Id) {
 		skipped = "SKIPPED - "
 	} else {
 		skipped = ""
@@ -4323,7 +4388,7 @@ func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTim
 
 	pdf.Ln(-1)
 	pdf.SetFont("Helvetica", "B", fontSizeBody)
-	if model.Contains(skippedRules, ldap_injection.Category().Id) {
+	if contains(skippedRules, ldap_injection.Category().Id) {
 		skipped = "SKIPPED - "
 	} else {
 		skipped = ""
@@ -4357,7 +4422,7 @@ func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTim
 
 	pdf.Ln(-1)
 	pdf.SetFont("Helvetica", "B", fontSizeBody)
-	if model.Contains(skippedRules, missing_authentication.Category().Id) {
+	if contains(skippedRules, missing_authentication.Category().Id) {
 		skipped = "SKIPPED - "
 	} else {
 		skipped = ""
@@ -4391,7 +4456,7 @@ func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTim
 
 	pdf.Ln(-1)
 	pdf.SetFont("Helvetica", "B", fontSizeBody)
-	if model.Contains(skippedRules, missing_authentication_second_factor.Category().Id) {
+	if contains(skippedRules, missing_authentication_second_factor.Category().Id) {
 		skipped = "SKIPPED - "
 	} else {
 		skipped = ""
@@ -4425,7 +4490,7 @@ func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTim
 
 	pdf.Ln(-1)
 	pdf.SetFont("Helvetica", "B", fontSizeBody)
-	if model.Contains(skippedRules, missing_build_infrastructure.Category().Id) {
+	if contains(skippedRules, missing_build_infrastructure.Category().Id) {
 		skipped = "SKIPPED - "
 	} else {
 		skipped = ""
@@ -4459,7 +4524,7 @@ func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTim
 
 	pdf.Ln(-1)
 	pdf.SetFont("Helvetica", "B", fontSizeBody)
-	if model.Contains(skippedRules, missing_cloud_hardening.Category().Id) {
+	if contains(skippedRules, missing_cloud_hardening.Category().Id) {
 		skipped = "SKIPPED - "
 	} else {
 		skipped = ""
@@ -4493,7 +4558,7 @@ func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTim
 
 	pdf.Ln(-1)
 	pdf.SetFont("Helvetica", "B", fontSizeBody)
-	if model.Contains(skippedRules, missing_file_validation.Category().Id) {
+	if contains(skippedRules, missing_file_validation.Category().Id) {
 		skipped = "SKIPPED - "
 	} else {
 		skipped = ""
@@ -4527,7 +4592,7 @@ func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTim
 
 	pdf.Ln(-1)
 	pdf.SetFont("Helvetica", "B", fontSizeBody)
-	if model.Contains(skippedRules, missing_hardening.Category().Id) {
+	if contains(skippedRules, missing_hardening.Category().Id) {
 		skipped = "SKIPPED - "
 	} else {
 		skipped = ""
@@ -4561,7 +4626,7 @@ func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTim
 
 	pdf.Ln(-1)
 	pdf.SetFont("Helvetica", "B", fontSizeBody)
-	if model.Contains(skippedRules, missing_identity_propagation.Category().Id) {
+	if contains(skippedRules, missing_identity_propagation.Category().Id) {
 		skipped = "SKIPPED - "
 	} else {
 		skipped = ""
@@ -4595,7 +4660,7 @@ func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTim
 
 	pdf.Ln(-1)
 	pdf.SetFont("Helvetica", "B", fontSizeBody)
-	if model.Contains(skippedRules, missing_identity_provider_isolation.Category().Id) {
+	if contains(skippedRules, missing_identity_provider_isolation.Category().Id) {
 		skipped = "SKIPPED - "
 	} else {
 		skipped = ""
@@ -4629,7 +4694,7 @@ func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTim
 
 	pdf.Ln(-1)
 	pdf.SetFont("Helvetica", "B", fontSizeBody)
-	if model.Contains(skippedRules, missing_identity_store.Category().Id) {
+	if contains(skippedRules, missing_identity_store.Category().Id) {
 		skipped = "SKIPPED - "
 	} else {
 		skipped = ""
@@ -4663,7 +4728,7 @@ func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTim
 
 	pdf.Ln(-1)
 	pdf.SetFont("Helvetica", "B", fontSizeBody)
-	if model.Contains(skippedRules, missing_network_segmentation.Category().Id) {
+	if contains(skippedRules, missing_network_segmentation.Category().Id) {
 		skipped = "SKIPPED - "
 	} else {
 		skipped = ""
@@ -4697,7 +4762,7 @@ func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTim
 
 	pdf.Ln(-1)
 	pdf.SetFont("Helvetica", "B", fontSizeBody)
-	if model.Contains(skippedRules, missing_vault.Category().Id) {
+	if contains(skippedRules, missing_vault.Category().Id) {
 		skipped = "SKIPPED - "
 	} else {
 		skipped = ""
@@ -4731,7 +4796,7 @@ func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTim
 
 	pdf.Ln(-1)
 	pdf.SetFont("Helvetica", "B", fontSizeBody)
-	if model.Contains(skippedRules, missing_vault_isolation.Category().Id) {
+	if contains(skippedRules, missing_vault_isolation.Category().Id) {
 		skipped = "SKIPPED - "
 	} else {
 		skipped = ""
@@ -4765,7 +4830,7 @@ func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTim
 
 	pdf.Ln(-1)
 	pdf.SetFont("Helvetica", "B", fontSizeBody)
-	if model.Contains(skippedRules, missing_waf.Category().Id) {
+	if contains(skippedRules, missing_waf.Category().Id) {
 		skipped = "SKIPPED - "
 	} else {
 		skipped = ""
@@ -4799,7 +4864,7 @@ func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTim
 
 	pdf.Ln(-1)
 	pdf.SetFont("Helvetica", "B", fontSizeBody)
-	if model.Contains(skippedRules, mixed_targets_on_shared_runtime.Category().Id) {
+	if contains(skippedRules, mixed_targets_on_shared_runtime.Category().Id) {
 		skipped = "SKIPPED - "
 	} else {
 		skipped = ""
@@ -4833,7 +4898,7 @@ func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTim
 
 	pdf.Ln(-1)
 	pdf.SetFont("Helvetica", "B", fontSizeBody)
-	if model.Contains(skippedRules, path_traversal.Category().Id) {
+	if contains(skippedRules, path_traversal.Category().Id) {
 		skipped = "SKIPPED - "
 	} else {
 		skipped = ""
@@ -4867,7 +4932,7 @@ func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTim
 
 	pdf.Ln(-1)
 	pdf.SetFont("Helvetica", "B", fontSizeBody)
-	if model.Contains(skippedRules, push_instead_of_pull_deployment.Category().Id) {
+	if contains(skippedRules, push_instead_of_pull_deployment.Category().Id) {
 		skipped = "SKIPPED - "
 	} else {
 		skipped = ""
@@ -4901,7 +4966,7 @@ func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTim
 
 	pdf.Ln(-1)
 	pdf.SetFont("Helvetica", "B", fontSizeBody)
-	if model.Contains(skippedRules, search_query_injection.Category().Id) {
+	if contains(skippedRules, search_query_injection.Category().Id) {
 		skipped = "SKIPPED - "
 	} else {
 		skipped = ""
@@ -4935,7 +5000,7 @@ func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTim
 
 	pdf.Ln(-1)
 	pdf.SetFont("Helvetica", "B", fontSizeBody)
-	if model.Contains(skippedRules, server_side_request_forgery.Category().Id) {
+	if contains(skippedRules, server_side_request_forgery.Category().Id) {
 		skipped = "SKIPPED - "
 	} else {
 		skipped = ""
@@ -4969,7 +5034,7 @@ func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTim
 
 	pdf.Ln(-1)
 	pdf.SetFont("Helvetica", "B", fontSizeBody)
-	if model.Contains(skippedRules, service_registry_poisoning.Category().Id) {
+	if contains(skippedRules, service_registry_poisoning.Category().Id) {
 		skipped = "SKIPPED - "
 	} else {
 		skipped = ""
@@ -5003,7 +5068,7 @@ func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTim
 
 	pdf.Ln(-1)
 	pdf.SetFont("Helvetica", "B", fontSizeBody)
-	if model.Contains(skippedRules, sql_nosql_injection.Category().Id) {
+	if contains(skippedRules, sql_nosql_injection.Category().Id) {
 		skipped = "SKIPPED - "
 	} else {
 		skipped = ""
@@ -5037,7 +5102,7 @@ func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTim
 
 	pdf.Ln(-1)
 	pdf.SetFont("Helvetica", "B", fontSizeBody)
-	if model.Contains(skippedRules, unchecked_deployment.Category().Id) {
+	if contains(skippedRules, unchecked_deployment.Category().Id) {
 		skipped = "SKIPPED - "
 	} else {
 		skipped = ""
@@ -5071,7 +5136,7 @@ func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTim
 
 	pdf.Ln(-1)
 	pdf.SetFont("Helvetica", "B", fontSizeBody)
-	if model.Contains(skippedRules, unencrypted_asset.Category().Id) {
+	if contains(skippedRules, unencrypted_asset.Category().Id) {
 		skipped = "SKIPPED - "
 	} else {
 		skipped = ""
@@ -5105,7 +5170,7 @@ func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTim
 
 	pdf.Ln(-1)
 	pdf.SetFont("Helvetica", "B", fontSizeBody)
-	if model.Contains(skippedRules, unencrypted_communication.Category().Id) {
+	if contains(skippedRules, unencrypted_communication.Category().Id) {
 		skipped = "SKIPPED - "
 	} else {
 		skipped = ""
@@ -5139,7 +5204,7 @@ func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTim
 
 	pdf.Ln(-1)
 	pdf.SetFont("Helvetica", "B", fontSizeBody)
-	if model.Contains(skippedRules, unguarded_access_from_internet.Category().Id) {
+	if contains(skippedRules, unguarded_access_from_internet.Category().Id) {
 		skipped = "SKIPPED - "
 	} else {
 		skipped = ""
@@ -5173,7 +5238,7 @@ func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTim
 
 	pdf.Ln(-1)
 	pdf.SetFont("Helvetica", "B", fontSizeBody)
-	if model.Contains(skippedRules, unguarded_direct_datastore_access.Category().Id) {
+	if contains(skippedRules, unguarded_direct_datastore_access.Category().Id) {
 		skipped = "SKIPPED - "
 	} else {
 		skipped = ""
@@ -5207,7 +5272,7 @@ func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTim
 
 	pdf.Ln(-1)
 	pdf.SetFont("Helvetica", "B", fontSizeBody)
-	if model.Contains(skippedRules, unnecessary_communication_link.Category().Id) {
+	if contains(skippedRules, unnecessary_communication_link.Category().Id) {
 		skipped = "SKIPPED - "
 	} else {
 		skipped = ""
@@ -5241,7 +5306,7 @@ func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTim
 
 	pdf.Ln(-1)
 	pdf.SetFont("Helvetica", "B", fontSizeBody)
-	if model.Contains(skippedRules, unnecessary_data_asset.Category().Id) {
+	if contains(skippedRules, unnecessary_data_asset.Category().Id) {
 		skipped = "SKIPPED - "
 	} else {
 		skipped = ""
@@ -5275,7 +5340,7 @@ func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTim
 
 	pdf.Ln(-1)
 	pdf.SetFont("Helvetica", "B", fontSizeBody)
-	if model.Contains(skippedRules, unnecessary_data_transfer.Category().Id) {
+	if contains(skippedRules, unnecessary_data_transfer.Category().Id) {
 		skipped = "SKIPPED - "
 	} else {
 		skipped = ""
@@ -5309,7 +5374,7 @@ func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTim
 
 	pdf.Ln(-1)
 	pdf.SetFont("Helvetica", "B", fontSizeBody)
-	if model.Contains(skippedRules, unnecessary_technical_asset.Category().Id) {
+	if contains(skippedRules, unnecessary_technical_asset.Category().Id) {
 		skipped = "SKIPPED - "
 	} else {
 		skipped = ""
@@ -5343,7 +5408,7 @@ func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTim
 
 	pdf.Ln(-1)
 	pdf.SetFont("Helvetica", "B", fontSizeBody)
-	if model.Contains(skippedRules, untrusted_deserialization.Category().Id) {
+	if contains(skippedRules, untrusted_deserialization.Category().Id) {
 		skipped = "SKIPPED - "
 	} else {
 		skipped = ""
@@ -5377,7 +5442,7 @@ func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTim
 
 	pdf.Ln(-1)
 	pdf.SetFont("Helvetica", "B", fontSizeBody)
-	if model.Contains(skippedRules, wrong_communication_link_content.Category().Id) {
+	if contains(skippedRules, wrong_communication_link_content.Category().Id) {
 		skipped = "SKIPPED - "
 	} else {
 		skipped = ""
@@ -5411,7 +5476,7 @@ func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTim
 
 	pdf.Ln(-1)
 	pdf.SetFont("Helvetica", "B", fontSizeBody)
-	if model.Contains(skippedRules, wrong_trust_boundary_content.Category().Id) {
+	if contains(skippedRules, wrong_trust_boundary_content.Category().Id) {
 		skipped = "SKIPPED - "
 	} else {
 		skipped = ""
@@ -5445,7 +5510,7 @@ func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTim
 
 	pdf.Ln(-1)
 	pdf.SetFont("Helvetica", "B", fontSizeBody)
-	if model.Contains(skippedRules, xml_external_entity.Category().Id) {
+	if contains(skippedRules, xml_external_entity.Category().Id) {
 		skipped = "SKIPPED - "
 	} else {
 		skipped = ""
@@ -5478,7 +5543,7 @@ func createRiskRulesChecked(modelFilename string, skipRiskRules string, buildTim
 	pdf.MultiCell(160, 6, xml_external_entity.Category().RiskAssessment, "0", "0", false)
 }
 
-func createTargetDescription(baseFolder string) {
+func createTargetDescription(parsedModel *model.ParsedModel, baseFolder string) {
 	uni := pdf.UnicodeTranslatorFromDescriptor("")
 	pdf.SetTextColor(0, 0, 0)
 	title := "Application Overview"
@@ -5490,70 +5555,70 @@ func createTargetDescription(baseFolder string) {
 	html := pdf.HTMLBasicNew()
 
 	intro.WriteString("<b>Business Criticality</b><br><br>")
-	intro.WriteString("The overall business criticality of \"" + uni(model.ParsedModelRoot.Title) + "\" was rated as:<br><br>")
+	intro.WriteString("The overall business criticality of \"" + uni(parsedModel.Title) + "\" was rated as:<br><br>")
 	html.Write(5, intro.String())
-	criticality := model.ParsedModelRoot.BusinessCriticality
+	criticality := parsedModel.BusinessCriticality
 	intro.Reset()
 	pdfColorGray()
 	intro.WriteString("(  ")
-	if criticality == model.Archive {
+	if criticality == types.Archive {
 		html.Write(5, intro.String())
 		intro.Reset()
 		pdfColorBlack()
-		intro.WriteString("<b><u>" + strings.ToUpper(model.Archive.String()) + "</u></b>")
+		intro.WriteString("<b><u>" + strings.ToUpper(types.Archive.String()) + "</u></b>")
 		html.Write(5, intro.String())
 		intro.Reset()
 		pdfColorGray()
 	} else {
-		intro.WriteString(model.Archive.String())
+		intro.WriteString(types.Archive.String())
 	}
 	intro.WriteString("  |  ")
-	if criticality == model.Operational {
+	if criticality == types.Operational {
 		html.Write(5, intro.String())
 		intro.Reset()
 		pdfColorBlack()
-		intro.WriteString("<b><u>" + strings.ToUpper(model.Operational.String()) + "</u></b>")
+		intro.WriteString("<b><u>" + strings.ToUpper(types.Operational.String()) + "</u></b>")
 		html.Write(5, intro.String())
 		intro.Reset()
 		pdfColorGray()
 	} else {
-		intro.WriteString(model.Operational.String())
+		intro.WriteString(types.Operational.String())
 	}
 	intro.WriteString("  |  ")
-	if criticality == model.Important {
+	if criticality == types.Important {
 		html.Write(5, intro.String())
 		intro.Reset()
 		pdfColorBlack()
-		intro.WriteString("<b><u>" + strings.ToUpper(model.Important.String()) + "</u></b>")
+		intro.WriteString("<b><u>" + strings.ToUpper(types.Important.String()) + "</u></b>")
 		html.Write(5, intro.String())
 		intro.Reset()
 		pdfColorGray()
 	} else {
-		intro.WriteString(model.Important.String())
+		intro.WriteString(types.Important.String())
 	}
 	intro.WriteString("  |  ")
-	if criticality == model.Critical {
+	if criticality == types.Critical {
 		html.Write(5, intro.String())
 		intro.Reset()
 		pdfColorBlack()
-		intro.WriteString("<b><u>" + strings.ToUpper(model.Critical.String()) + "</u></b>")
+		intro.WriteString("<b><u>" + strings.ToUpper(types.Critical.String()) + "</u></b>")
 		html.Write(5, intro.String())
 		intro.Reset()
 		pdfColorGray()
 	} else {
-		intro.WriteString(model.Critical.String())
+		intro.WriteString(types.Critical.String())
 	}
 	intro.WriteString("  |  ")
-	if criticality == model.MissionCritical {
+	if criticality == types.MissionCritical {
 		html.Write(5, intro.String())
 		intro.Reset()
 		pdfColorBlack()
-		intro.WriteString("<b><u>" + strings.ToUpper(model.MissionCritical.String()) + "</u></b>")
+		intro.WriteString("<b><u>" + strings.ToUpper(types.MissionCritical.String()) + "</u></b>")
 		html.Write(5, intro.String())
 		intro.Reset()
 		pdfColorGray()
 	} else {
-		intro.WriteString(model.MissionCritical.String())
+		intro.WriteString(types.MissionCritical.String())
 	}
 	intro.WriteString("  )")
 	html.Write(5, intro.String())
@@ -5561,16 +5626,16 @@ func createTargetDescription(baseFolder string) {
 	pdfColorBlack()
 
 	intro.WriteString("<br><br><br><b>Business Overview</b><br><br>")
-	intro.WriteString(uni(model.ParsedModelRoot.BusinessOverview.Description))
+	intro.WriteString(uni(parsedModel.BusinessOverview.Description))
 	html.Write(5, intro.String())
 	intro.Reset()
-	addCustomImages(model.ParsedModelRoot.BusinessOverview.Images, baseFolder, html)
+	addCustomImages(parsedModel.BusinessOverview.Images, baseFolder, html)
 
 	intro.WriteString("<br><br><br><b>Technical Overview</b><br><br>")
-	intro.WriteString(uni(model.ParsedModelRoot.TechnicalOverview.Description))
+	intro.WriteString(uni(parsedModel.TechnicalOverview.Description))
 	html.Write(5, intro.String())
 	intro.Reset()
-	addCustomImages(model.ParsedModelRoot.TechnicalOverview.Images, baseFolder, html)
+	addCustomImages(parsedModel.TechnicalOverview.Images, baseFolder, html)
 }
 
 func addCustomImages(customImages []map[string]string, baseFolder string, html gofpdf.HTMLBasicType) {
@@ -5714,6 +5779,15 @@ func embedDataFlowDiagram(diagramFilenamePNG string, tempFolder string) {
 	}
 }
 
+func sortedKeysOfIndividualRiskCategories(parsedModel *model.ParsedModel) []string {
+	keys := make([]string, 0)
+	for k := range parsedModel.IndividualRiskCategories {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
+}
+
 func embedDataRiskMapping(diagramFilenamePNG string, tempFolder string) {
 	pdf.SetTextColor(0, 0, 0)
 	title := "Data Mapping"
@@ -5817,6 +5891,7 @@ func pageBreak() {
 	pdf.SetX(17)
 	pdf.SetY(20)
 }
+
 func pageBreakInLists() {
 	pageBreak()
 	pdf.SetLineWidth(0.25)
@@ -5900,4 +5975,13 @@ func pdfColorRed() {
 }
 func rgbHexColorRed() string {
 	return "#FF0000"
+}
+
+func contains(a []string, x string) bool {
+	for _, n := range a {
+		if x == n {
+			return true
+		}
+	}
+	return false
 }

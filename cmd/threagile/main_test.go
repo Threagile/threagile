@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/json"
 	"github.com/akedrou/textdiff"
-	"github.com/threagile/threagile/model"
+	"github.com/threagile/threagile/pkg/input"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -12,7 +12,7 @@ import (
 
 func TestParseModel(t *testing.T) {
 	flatModelFile := filepath.Join("..", "..", "test", "all.yaml")
-	flatModel := *new(model.ModelInput).Defaults()
+	flatModel := *new(input.ModelInput).Defaults()
 	flatLoadError := flatModel.Load(flatModelFile)
 	if flatLoadError != nil {
 		t.Errorf("unable to parse model yaml %q: %v", flatModelFile, flatLoadError)
@@ -29,7 +29,7 @@ func TestParseModel(t *testing.T) {
 	}
 
 	splitModelFile := filepath.Join("..", "..", "test", "main.yaml")
-	splitModel := *new(model.ModelInput).Defaults()
+	splitModel := *new(input.ModelInput).Defaults()
 	splitLoadError := splitModel.Load(splitModelFile)
 	if splitLoadError != nil {
 		t.Errorf("unable to parse model yaml %q: %v", splitModelFile, splitLoadError)

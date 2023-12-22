@@ -5,10 +5,11 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/threagile/threagile/model"
-	"github.com/threagile/threagile/pkg/risks"
 	"io"
 	"os"
+
+	"github.com/threagile/threagile/pkg/model"
+	"github.com/threagile/threagile/pkg/security/types"
 )
 
 type customRiskRule string
@@ -25,7 +26,7 @@ func main() {
 	if *getInfo {
 		rule := new(customRiskRule)
 		category := rule.Category()
-		riskData, marshalError := json.Marshal(risks.CustomRisk{
+		riskData, marshalError := json.Marshal(model.CustomRisk{
 			ID:       category.Id,
 			Category: category,
 			Tags:     rule.SupportedTags(),
@@ -81,8 +82,8 @@ func (r customRiskRule) Category() model.RiskCategory {
 		Action:                     "Demo Action",
 		Mitigation:                 "Demo Mitigation",
 		Check:                      "Demo Check",
-		Function:                   model.Development,
-		STRIDE:                     model.Tampering,
+		Function:                   types.Development,
+		STRIDE:                     types.Tampering,
 		DetectionLogic:             "Demo Detection",
 		RiskAssessment:             "Demo Risk Assessment",
 		FalsePositives:             "Demo False Positive.",
@@ -95,9 +96,9 @@ func (r customRiskRule) SupportedTags() []string {
 	return []string{"demo tag"}
 }
 
-func (r customRiskRule) GenerateRisks(input *model.ParsedModel) []model.Risk {
+func (r customRiskRule) GenerateRisks(parsedModel *model.ParsedModel) []model.Risk {
 	generatedRisks := make([]model.Risk, 0)
-	for _, techAsset := range input.TechnicalAssets {
+	for _, techAsset := range parsedModel.TechnicalAssets {
 		generatedRisks = append(generatedRisks, createRisk(techAsset))
 	}
 	return generatedRisks
@@ -106,12 +107,12 @@ func (r customRiskRule) GenerateRisks(input *model.ParsedModel) []model.Risk {
 func createRisk(technicalAsset model.TechnicalAsset) model.Risk {
 	risk := model.Risk{
 		Category:                     CustomRiskRule.Category(),
-		Severity:                     model.CalculateSeverity(model.VeryLikely, model.MediumImpact),
-		ExploitationLikelihood:       model.VeryLikely,
-		ExploitationImpact:           model.MediumImpact,
+		Severity:                     model.CalculateSeverity(types.VeryLikely, types.MediumImpact),
+		ExploitationLikelihood:       types.VeryLikely,
+		ExploitationImpact:           types.MediumImpact,
 		Title:                        "<b>Demo</b> risk at <b>" + technicalAsset.Title + "</b>",
 		MostRelevantTechnicalAssetId: technicalAsset.Id,
-		DataBreachProbability:        model.Possible,
+		DataBreachProbability:        types.Possible,
 		DataBreachTechnicalAssetIDs:  []string{technicalAsset.Id},
 	}
 	risk.SyntheticId = risk.Category.Id + "@" + technicalAsset.Id

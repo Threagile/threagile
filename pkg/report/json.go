@@ -2,11 +2,12 @@ package report
 
 import (
 	"encoding/json"
-	"github.com/threagile/threagile/model"
 	"os"
+
+	"github.com/threagile/threagile/pkg/model"
 )
 
-func WriteRisksJSON(filename string) {
+func WriteRisksJSON(parsedModel *model.ParsedModel, filename string) {
 	/*
 		remainingRisks := make([]model.Risk, 0)
 		for _, category := range model.SortedRiskCategories() {
@@ -16,7 +17,7 @@ func WriteRisksJSON(filename string) {
 			}
 		}
 	*/
-	jsonBytes, err := json.Marshal(model.AllRisks())
+	jsonBytes, err := json.Marshal(model.AllRisks(parsedModel))
 	if err != nil {
 		panic(err)
 	}
@@ -28,8 +29,8 @@ func WriteRisksJSON(filename string) {
 
 // TODO: also a "data assets" json?
 
-func WriteTechnicalAssetsJSON(filename string) {
-	jsonBytes, err := json.Marshal(model.ParsedModelRoot.TechnicalAssets)
+func WriteTechnicalAssetsJSON(parsedModel *model.ParsedModel, filename string) {
+	jsonBytes, err := json.Marshal(parsedModel.TechnicalAssets)
 	if err != nil {
 		panic(err)
 	}
@@ -39,8 +40,8 @@ func WriteTechnicalAssetsJSON(filename string) {
 	}
 }
 
-func WriteStatsJSON(filename string) {
-	jsonBytes, err := json.Marshal(model.OverallRiskStatistics())
+func WriteStatsJSON(parsedModel *model.ParsedModel, filename string) {
+	jsonBytes, err := json.Marshal(model.OverallRiskStatistics(parsedModel))
 	if err != nil {
 		panic(err)
 	}

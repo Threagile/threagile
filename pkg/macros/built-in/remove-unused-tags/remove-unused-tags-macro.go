@@ -1,21 +1,24 @@
 package remove_unused_tags
 
 import (
-	"github.com/threagile/threagile/model"
 	"sort"
 	"strconv"
+
+	"github.com/threagile/threagile/pkg/input"
+	"github.com/threagile/threagile/pkg/macros"
+	"github.com/threagile/threagile/pkg/model"
 )
 
-func GetMacroDetails() model.MacroDetails {
-	return model.MacroDetails{
+func GetMacroDetails() macros.MacroDetails {
+	return macros.MacroDetails{
 		ID:          "remove-unused-tags",
 		Title:       "Remove Unused Tags",
 		Description: "This model macro simply removes all unused tags from the model file.",
 	}
 }
 
-func GetNextQuestion() (nextQuestion model.MacroQuestion, err error) {
-	return model.NoMoreQuestions(), nil
+func GetNextQuestion() (nextQuestion macros.MacroQuestion, err error) {
+	return macros.NoMoreQuestions(), nil
 }
 
 func ApplyAnswer(_ string, _ ...string) (message string, validResult bool, err error) {
@@ -26,21 +29,21 @@ func GoBack() (message string, validResult bool, err error) {
 	return "Cannot go back further", false, nil
 }
 
-func GetFinalChangeImpact(_ *model.ModelInput) (changes []string, message string, validResult bool, err error) {
+func GetFinalChangeImpact(_ *input.ModelInput) (changes []string, message string, validResult bool, err error) {
 	return []string{"remove unused tags from the model file"}, "Changeset valid", true, err
 }
 
-func Execute(modelInput *model.ModelInput) (message string, validResult bool, err error) {
+func Execute(modelInput *input.ModelInput, parsedModel *model.ParsedModel) (message string, validResult bool, err error) {
 	tagUsageMap := make(map[string]bool)
-	for _, tag := range model.ParsedModelRoot.TagsAvailable {
+	for _, tag := range parsedModel.TagsAvailable {
 		tagUsageMap[tag] = false // false = tag is not used
 	}
-	for _, dA := range model.ParsedModelRoot.DataAssets {
+	for _, dA := range parsedModel.DataAssets {
 		for _, tag := range dA.Tags {
 			tagUsageMap[tag] = true // true = tag is used
 		}
 	}
-	for _, tA := range model.ParsedModelRoot.TechnicalAssets {
+	for _, tA := range parsedModel.TechnicalAssets {
 		for _, tag := range tA.Tags {
 			tagUsageMap[tag] = true // true = tag is used
 		}
@@ -50,12 +53,12 @@ func Execute(modelInput *model.ModelInput) (message string, validResult bool, er
 			}
 		}
 	}
-	for _, tB := range model.ParsedModelRoot.TrustBoundaries {
+	for _, tB := range parsedModel.TrustBoundaries {
 		for _, tag := range tB.Tags {
 			tagUsageMap[tag] = true // true = tag is used
 		}
 	}
-	for _, sR := range model.ParsedModelRoot.SharedRuntimes {
+	for _, sR := range parsedModel.SharedRuntimes {
 		for _, tag := range sR.Tags {
 			tagUsageMap[tag] = true // true = tag is used
 		}
