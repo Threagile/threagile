@@ -61,7 +61,6 @@ var explainRiskRules = &cobra.Command{
 		cmd.Println("----------------------")
 		cmd.Println("Custom risk rules:")
 		cmd.Println("----------------------")
-		// TODO: parse custom risk rules and print them
 		customRiskRules := risks.LoadCustomRiskRules(strings.Split(plugins, ","), getProgressReporter(cmd))
 		for _, customRule := range customRiskRules {
 			cmd.Printf("%v: %v\n", customRule.Category.Id, customRule.Category.Description)
