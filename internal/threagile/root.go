@@ -32,6 +32,4 @@ func init() {
 	rootCmd.PersistentFlags().String(binDirFlagName, "/app", "binary folder location")
 	rootCmd.PersistentFlags().String(outputFlagName, ".", "output directory")
 	rootCmd.PersistentFlags().String(tempDirFlagName, "/tmp", "output directory")
-
-	rootCmd.AddCommand(versionCmd)
 }
