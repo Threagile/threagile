@@ -4545,10 +4545,6 @@ func (context *Context) ParseCommandlineArgs() { // folders
 	context.generateTagsExcel = flag.Bool("generate-tags-excel", true, "generate tags excel")
 	context.generateReportPDF = flag.Bool("generate-report-pdf", true, "generate report pdf, including diagrams")
 
-	// more commands
-	print3rdParty := flag.Bool("print-3rd-party-licenses", false, "print 3rd-party license information")
-	license := flag.Bool("print-license", false, "print license information")
-
 	flag.Usage = func() {
 		fmt.Println(docs.Logo + "\n\n" + docs.VersionText)
 		_, _ = fmt.Fprintf(os.Stderr, "Usage: threagile [options]")
@@ -4572,34 +4568,6 @@ func (context *Context) ParseCommandlineArgs() { // folders
 	context.progressReporter = SilentProgressReporter{}
 	if *context.verbose {
 		context.progressReporter = CommandLineProgressReporter{}
-	}
-
-	if *print3rdParty {
-		fmt.Println(docs.Logo + "\n\n" + docs.VersionText)
-		fmt.Println("Kudos & Credits to the following open-source projects:")
-		fmt.Println(" - golang (Google Go License): https://golang.org/LICENSE")
-		fmt.Println(" - go-yaml (MIT License): https://github.com/go-yaml/yaml/blob/v3/LICENSE")
-		fmt.Println(" - graphviz (CPL License): https://graphviz.gitlab.io/license/")
-		fmt.Println(" - gofpdf (MIT License): https://github.com/jung-kurt/gofpdf/blob/master/LICENSE")
-		fmt.Println(" - go-chart (MIT License): https://github.com/wcharczuk/go-chart/blob/master/LICENSE")
-		fmt.Println(" - excelize (BSD License): https://github.com/qax-os/excelize/blob/master/LICENSE")
-		fmt.Println(" - graphics-go (BSD License): https://github.com/BurntSushi/graphics-go/blob/master/LICENSE")
-		fmt.Println(" - google-uuid (BSD License): https://github.com/google/uuid/blob/master/LICENSE")
-		fmt.Println(" - gin-gonic (MIT License): https://github.com/gin-gonic/gin/blob/master/LICENSE")
-		fmt.Println(" - swagger-ui (Apache License): https://swagger.io/license/")
-		fmt.Println()
-		os.Exit(0)
-	}
-	if *license {
-		fmt.Println(docs.Logo + "\n\n" + docs.VersionText)
-		if *context.appFolder != filepath.Clean(*context.appFolder) {
-			log.Fatalf("weird app folder %v", *context.appFolder)
-		}
-		content, err := os.ReadFile(filepath.Join(*context.appFolder, "LICENSE.txt"))
-		checkErr(err)
-		fmt.Print(string(content))
-		fmt.Println()
-		os.Exit(0)
 	}
 
 	context.ServerMode = (*context.serverPort > 0)

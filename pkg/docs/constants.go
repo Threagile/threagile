@@ -29,4 +29,15 @@ const (
 		" docker run --rm -it threagile/threagile -list-model-macros \n\n" +
 		"If you want to execute a certain model macro on the model yaml file (here the macro add-build-pipeline): \n" +
 		" docker run --rm -it -v \"$(pwd)\":app/work threagile/threagile -model app/work/threagile.yaml -output app/work -execute-model-macro add-build-pipeline"
+	ThirdPartyLicenses = " - golang (Google Go License): https://golang.org/LICENSE\n" +
+		" - go-yaml (MIT License): https://github.com/go-yaml/yaml/blob/v3/LICENSE\n" +
+		" - graphviz (CPL License): https://graphviz.gitlab.io/license/\n" +
+		" - gofpdf (MIT License): https://github.com/jung-kurt/gofpdf/blob/master/LICENSE\n" +
+		" - go-chart (MIT License): https://github.com/wcharczuk/go-chart/blob/master/LICENSE\n" +
+		" - excelize (BSD License): https://github.com/qax-os/excelize/blob/master/LICENSE\n" +
+		" - graphics-go (BSD License): https://github.com/BurntSushi/graphics-go/blob/master/LICENSE\n" +
+		" - google-uuid (BSD License): https://github.com/google/uuid/blob/master/LICENSE\n" +
+		" - gin-gonic (MIT License): https://github.com/gin-gonic/gin/blob/master/LICENSE\n" +
+		" - swagger-ui (Apache License): https://swagger.io/license/\n" +
+		" - cobra-cli (Apache License): https://github.com/spf13/cobra-cli/blob/main/LICENSE.txt\n"
 )
