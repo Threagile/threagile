@@ -101,7 +101,7 @@ type Context struct {
 	parsedModel model.ParsedModel
 
 	modelFilename, templateFilename                                                                   *string
-	createExampleModel, createStubModel, createEditingSupport, verbose, ignoreOrphanedRiskTracking    *bool
+	verbose, ignoreOrphanedRiskTracking                                                               *bool
 	generateDataFlowDiagram, generateDataAssetDiagram, generateRisksJSON, generateTechnicalAssetsJSON *bool
 	generateStatsJSON, generateRisksExcel, generateTagsExcel, generateReportPDF                       *bool
 	outputDir, raaPlugin, skipRiskRules, riskRulesPlugins, executeModelMacro                          *string
@@ -2293,6 +2293,31 @@ func (context *Context) DoIt() {
 			*context.tempFolder,
 			&context.parsedModel)
 	}
+}
+
+func copyFile(src, dst string) (int64, error) {
+	sourceFileStat, err := os.Stat(src)
+	if err != nil {
+		return 0, err
+	}
+
+	if !sourceFileStat.Mode().IsRegular() {
+		return 0, fmt.Errorf("%s is not a regular file", src)
+	}
+
+	source, err := os.Open(src)
+	if err != nil {
+		return 0, err
+	}
+	defer func() { _ = source.Close() }()
+
+	destination, err := os.Create(dst)
+	if err != nil {
+		return 0, err
+	}
+	defer func() { _ = destination.Close() }()
+	nBytes, err := io.Copy(destination, source)
+	return nBytes, err
 }
 
 func (context *Context) printBorder(length int, bold bool) {
@@ -4513,9 +4538,6 @@ func (context *Context) ParseCommandlineArgs() { // folders
 	// commands
 	context.serverPort = flag.Int("server", 0, "start a server (instead of commandline execution) on the given port")
 	context.executeModelMacro = flag.String("execute-model-macro", "", "Execute model macro (by ID)")
-	context.createExampleModel = flag.Bool("create-example-model", false, "just create an example model named threagile-example-model.yaml in the output directory")
-	context.createStubModel = flag.Bool("create-stub-model", false, "just create a minimal stub model named threagile-stub-model.yaml in the output directory")
-	context.createEditingSupport = flag.Bool("create-editing-support", false, "just create some editing support stuff in the output directory")
 	context.templateFilename = flag.String("background", "background.pdf", "background pdf file")
 	context.generateDataFlowDiagram = flag.Bool("generate-data-flow-diagram", true, "generate data-flow diagram")
 	context.generateDataAssetDiagram = flag.Bool("generate-data-asset-diagram", true, "generate data asset diagram")
@@ -4579,115 +4601,8 @@ func (context *Context) ParseCommandlineArgs() { // folders
 		fmt.Println()
 		os.Exit(0)
 	}
-	if *context.createExampleModel {
-		exampleError := context.createExampleModelFile()
-		if exampleError != nil {
-			log.Fatalf("Unable to copy example model: %v", exampleError)
-			return
-		}
-		fmt.Println(docs.Logo + "\n\n" + docs.VersionText)
-		fmt.Println("An example model was created named threagile-example-model.yaml in the output directory.")
-		fmt.Println()
-		fmt.Println(docs.Examples)
-		fmt.Println()
-		os.Exit(0)
-	}
-	if *context.createStubModel {
-		stubError := context.createStubModelFile()
-		if stubError != nil {
-			log.Fatalf("Unable to copy stub model: %v", stubError)
-			return
-		}
-		fmt.Println(docs.Logo + "\n\n" + docs.VersionText)
-		fmt.Println("A minimal stub model was created named threagile-stub-model.yaml in the output directory.")
-		fmt.Println()
-		fmt.Println(docs.Examples)
-		fmt.Println()
-		os.Exit(0)
-	}
-	if *context.createEditingSupport {
-		supportError := context.createEditingSupportFiles()
-		if supportError != nil {
-			log.Fatalf("Unable to copy editing support files: %v", supportError)
-			return
-		}
-		fmt.Println(docs.Logo + "\n\n" + docs.VersionText)
-		fmt.Println("The following files were created in the output directory:")
-		fmt.Println(" - schema.json")
-		fmt.Println(" - live-templates.txt")
-		fmt.Println()
-		fmt.Println("For a perfect editing experience within your IDE of choice you can easily get " +
-			"model syntax validation and autocompletion (very handy for enum values) as well as live templates: " +
-			"Just import the schema.json into your IDE and assign it as \"schema\" to each Threagile YAML file. " +
-			"Also try to import individual parts from the live-templates.txt file into your IDE as live editing templates.")
-		fmt.Println()
-		os.Exit(0)
-	}
 
 	context.ServerMode = (*context.serverPort > 0)
-}
-
-func (context *Context) createExampleModelFile() error {
-	_, err := copyFile(filepath.Join(*context.appFolder, "threagile-example-model.yaml"), filepath.Join(*context.outputDir, "threagile-example-model.yaml"))
-	if err == nil {
-		return nil
-	}
-
-	_, altError := copyFile(filepath.Join(*context.appFolder, "threagile.yaml"), filepath.Join(*context.outputDir, "threagile-example-model.yaml"))
-	if altError != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (context *Context) createStubModelFile() error {
-	_, err := copyFile(filepath.Join(*context.appFolder, "threagile-stub-model.yaml"), filepath.Join(*context.outputDir, "threagile-stub-model.yaml"))
-	if err == nil {
-		return nil
-	}
-
-	_, altError := copyFile(filepath.Join(*context.appFolder, "threagile.yaml"), filepath.Join(*context.outputDir, "threagile-stub-model.yaml"))
-	if altError != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (context *Context) createEditingSupportFiles() error {
-	_, schemaError := copyFile(filepath.Join(*context.appFolder, "schema.json"), filepath.Join(*context.outputDir, "schema.json"))
-	if schemaError != nil {
-		return schemaError
-	}
-
-	_, templateError := copyFile(filepath.Join(*context.appFolder, "live-templates.txt"), filepath.Join(*context.outputDir, "live-templates.txt"))
-	return templateError
-}
-
-func copyFile(src, dst string) (int64, error) {
-	sourceFileStat, err := os.Stat(src)
-	if err != nil {
-		return 0, err
-	}
-
-	if !sourceFileStat.Mode().IsRegular() {
-		return 0, fmt.Errorf("%s is not a regular file", src)
-	}
-
-	source, err := os.Open(src)
-	if err != nil {
-		return 0, err
-	}
-	defer func() { _ = source.Close() }()
-
-	destination, err := os.Create(dst)
-	if err != nil {
-		return 0, err
-	}
-	defer func() { _ = destination.Close() }()
-	nBytes, err := io.Copy(destination, source)
-	return nBytes, err
 }
 
 func (context *Context) applyWildcardRiskTrackingEvaluation() {

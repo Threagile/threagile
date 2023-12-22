@@ -27,11 +27,11 @@ func Execute() {
 }
 
 func init() {
+	rootCmd.PersistentFlags().BoolP(verboseFlagName, verboseFlagShorthand, false, "verbose output")
+	rootCmd.PersistentFlags().String(appDirFlagName, "/app", "app folder (default: /app)")
+	rootCmd.PersistentFlags().String(binDirFlagName, "/app", "binary folder location")
+	rootCmd.PersistentFlags().String(outputFlagName, ".", "output directory")
+	rootCmd.PersistentFlags().String(tempDirFlagName, "/tmp", "output directory")
+
 	rootCmd.AddCommand(versionCmd)
-	rootCmd.AddCommand(listMacrosCmd)
-	rootCmd.AddCommand(explainMacrosCmd)
-	rootCmd.AddCommand(listTypesCmd)
-	rootCmd.AddCommand(explainTypesCmd)
-	rootCmd.AddCommand(listRiskRules)
-	rootCmd.AddCommand(explainRiskRules)
 }

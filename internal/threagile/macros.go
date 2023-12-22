@@ -58,3 +58,8 @@ var explainMacrosCmd = &cobra.Command{
 		cmd.Println()
 	},
 }
+
+func init() {
+	rootCmd.AddCommand(listMacrosCmd)
+	rootCmd.AddCommand(explainMacrosCmd)
+}
