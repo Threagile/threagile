@@ -44,3 +44,8 @@ var explainTypesCmd = &cobra.Command{
 		}
 	},
 }
+
+func init() {
+	rootCmd.AddCommand(listTypesCmd)
+	rootCmd.AddCommand(explainTypesCmd)
+}

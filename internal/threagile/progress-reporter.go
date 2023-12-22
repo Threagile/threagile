@@ -7,6 +7,8 @@ package threagile
 import (
 	"fmt"
 	"log"
+
+	"github.com/spf13/cobra"
 )
 
 type ProgressReporter interface {
@@ -30,4 +32,14 @@ func (CommandLineProgressReporter) Println(a ...any) (n int, err error) {
 }
 func (CommandLineProgressReporter) Fatalf(format string, v ...any) {
 	log.Fatalf(format, v...)
+}
+
+func getProgressReporter(cobraCmd *cobra.Command) ProgressReporter {
+	if cobraCmd == nil {
+		return CommandLineProgressReporter{}
+	}
+	if cobraCmd.Flags().Lookup("verbose") != nil && cobraCmd.Flags().Lookup("verbose").Changed {
+		return SilentProgressReporter{}
+	}
+	return CommandLineProgressReporter{}
 }
