@@ -15,6 +15,7 @@ import (
 	"errors"
 	"flag"
 	"fmt" // TODO: no fmt here
+	"github.com/threagile/threagile/pkg/common"
 	"hash/fnv"
 	"io"
 	"log"
@@ -49,43 +50,17 @@ import (
 	"github.com/threagile/threagile/pkg/model"
 	"github.com/threagile/threagile/pkg/report"
 	"github.com/threagile/threagile/pkg/run"
-	risks "github.com/threagile/threagile/pkg/security/risks"
+	"github.com/threagile/threagile/pkg/security/risks"
 	"github.com/threagile/threagile/pkg/security/types"
 )
 
 const (
-	keepDiagramSourceFiles = false
-	addModelTitle          = false
-)
-
-const (
 	defaultGraphvizDPI, maxGraphvizDPI = 120, 240
-	backupHistoryFilesToKeep           = 50
-)
-
-const (
-	buildTimestamp                         = ""
-	tempDir                                = "/dev/shm" // TODO: make configurable via cmdline arg?
-	binDir                                 = "/app"
-	appDir                                 = "/app"
-	dataDir                                = "/data"
-	keyDir                                 = "keys"
-	reportFilename                         = "report.pdf"
-	excelRisksFilename                     = "risks.xlsx"
-	excelTagsFilename                      = "tags.xlsx"
-	jsonRisksFilename                      = "risks.json"
-	jsonTechnicalAssetsFilename            = "technical-assets.json"
-	jsonStatsFilename                      = "stats.json"
-	dataFlowDiagramFilenameDOT             = "data-flow-diagram.gv"
-	dataFlowDiagramFilenamePNG             = "data-flow-diagram.png"
-	dataAssetDiagramFilenameDOT            = "data-asset-diagram.gv"
-	dataAssetDiagramFilenamePNG            = "data-asset-diagram.png"
-	graphvizDataFlowDiagramConversionCall  = "render-data-flow-diagram.sh"
-	graphvizDataAssetDiagramConversionCall = "render-data-asset-diagram.sh"
-	inputFile                              = "threagile.yaml"
 )
 
 type Context struct {
+	common.Config
+
 	ServerMode bool
 
 	successCount                                                 int
@@ -115,8 +90,6 @@ type Context struct {
 	serverFolder                                                                                      *string
 	tempFolder                                                                                        *string
 
-	defaultGraphvizDPI       int
-	maxGraphvizDPI           int
 	backupHistoryFilesToKeep int
 
 	tempDir                                string
@@ -178,7 +151,7 @@ func (context *Context) checkRiskTracking() {
 	}
 }
 
-func (context *Context) Defaults(buildTimestamp string) *Context {
+func (context *Context) Init(buildTimestamp string) *Context {
 	*context = Context{
 		keepDiagramSourceFiles: false,
 		addModelTitle:          false,
@@ -186,29 +159,34 @@ func (context *Context) Defaults(buildTimestamp string) *Context {
 		customRiskRules:        make(map[string]*model.CustomRisk),
 		deferredRiskTrackingDueToWildcardMatching:                    make(map[string]model.RiskTracking),
 		drawSpaceLinesForLayoutUnfortunatelyFurtherSeparatesAllRanks: true,
-		defaultGraphvizDPI:       120,
-		maxGraphvizDPI:           240,
-		backupHistoryFilesToKeep: 50,
 	}
 
-	context.tempDir = "/dev/shm" // TODO: make configurable via cmdline arg?
-	context.binDir = "/app"
-	context.appDir = "/app"
-	context.dataDir = "/data"
-	context.keyDir = "keys"
-	context.reportFilename = "report.pdf"
-	context.excelRisksFilename = "risks.xlsx"
-	context.excelTagsFilename = "tags.xlsx"
-	context.jsonRisksFilename = "risks.json"
-	context.jsonTechnicalAssetsFilename = "technical-assets.json"
-	context.jsonStatsFilename = "stats.json"
-	context.dataFlowDiagramFilenameDOT = "data-flow-diagram.gv"
-	context.dataFlowDiagramFilenamePNG = "data-flow-diagram.png"
-	context.dataAssetDiagramFilenameDOT = "data-asset-diagram.gv"
-	context.dataAssetDiagramFilenamePNG = "data-asset-diagram.png"
-	context.graphvizDataFlowDiagramConversionCall = "render-data-flow-diagram.sh"
-	context.graphvizDataAssetDiagramConversionCall = "render-data-asset-diagram.sh"
-	context.inputFile = "threagile.yaml"
+	return context
+}
+
+func (context *Context) Defaults(buildTimestamp string) *Context {
+	*context = *new(Context).Init(buildTimestamp)
+	context.backupHistoryFilesToKeep = 50
+	context.tempDir = common.TempDir
+	context.binDir = common.BinDir
+	context.appDir = common.AppDir
+	context.dataDir = common.DataDir
+	context.keyDir = common.KeyDir
+	context.reportFilename = common.ReportFilename
+	context.excelRisksFilename = common.ExcelRisksFilename
+	context.excelTagsFilename = common.ExcelTagsFilename
+	context.jsonRisksFilename = common.JsonRisksFilename
+	context.jsonTechnicalAssetsFilename = common.JsonTechnicalAssetsFilename
+	context.jsonStatsFilename = common.JsonStatsFilename
+	context.dataFlowDiagramFilenameDOT = common.DataFlowDiagramFilenameDOT
+	context.dataFlowDiagramFilenamePNG = common.DataFlowDiagramFilenamePNG
+	context.dataAssetDiagramFilenameDOT = common.DataAssetDiagramFilenameDOT
+	context.dataAssetDiagramFilenamePNG = common.DataAssetDiagramFilenamePNG
+	context.graphvizDataFlowDiagramConversionCall = common.GraphvizDataFlowDiagramConversionCall
+	context.graphvizDataAssetDiagramConversionCall = common.GraphvizDataAssetDiagramConversionCall
+	context.inputFile = common.InputFile
+
+	context.Config.Defaults()
 
 	return context
 }
@@ -420,7 +398,7 @@ func (context *Context) analyzeModelOnServerDirectly(ginContext *gin.Context) {
 		}
 	}()
 
-	dpi, err := strconv.Atoi(ginContext.DefaultQuery("dpi", strconv.Itoa(context.defaultGraphvizDPI)))
+	dpi, err := strconv.Atoi(ginContext.DefaultQuery("dpi", strconv.Itoa(context.DefaultGraphvizDPI)))
 	if err != nil {
 		context.handleErrorInServiceCall(err, ginContext)
 		return
@@ -2385,7 +2363,7 @@ func (context *Context) execute(ginContext *gin.Context, dryRun bool) (yamlConte
 		}
 	}()
 
-	dpi, err := strconv.Atoi(ginContext.DefaultQuery("dpi", strconv.Itoa(context.defaultGraphvizDPI)))
+	dpi, err := strconv.Atoi(ginContext.DefaultQuery("dpi", strconv.Itoa(context.DefaultGraphvizDPI)))
 	checkErr(err)
 
 	fileUploaded, header, err := ginContext.Request.FormFile("file")
@@ -2856,7 +2834,7 @@ func (context *Context) streamResponse(ginContext *gin.Context, responseType res
 			ok = false
 		}
 	}()
-	dpi, err := strconv.Atoi(ginContext.DefaultQuery("dpi", strconv.Itoa(context.defaultGraphvizDPI)))
+	dpi, err := strconv.Atoi(ginContext.DefaultQuery("dpi", strconv.Itoa(context.DefaultGraphvizDPI)))
 	if err != nil {
 		context.handleErrorInServiceCall(err, ginContext)
 		return
@@ -4172,12 +4150,12 @@ func (context *Context) backupModelToHistory(modelFolder string, changeReasonFor
 			return err
 		}
 	}
-	input, err := os.ReadFile(filepath.Join(modelFolder, context.inputFile))
+	inputModel, err := os.ReadFile(filepath.Join(modelFolder, context.inputFile))
 	if err != nil {
 		return err
 	}
 	historyFile := filepath.Join(historyFolder, time.Now().Format("2006-01-02 15:04:05")+" "+changeReasonForHistory+".backup")
-	err = os.WriteFile(historyFile, input, 0400)
+	err = os.WriteFile(historyFile, inputModel, 0400)
 	if err != nil {
 		return err
 	}
@@ -4518,14 +4496,14 @@ func (context *Context) expandPath(path string) *string {
 }
 
 func (context *Context) ParseCommandlineArgs() { // folders
-	context.appFolder = flag.String("app-dir", appDir, "app folder (default: "+appDir+")")
-	context.serverFolder = flag.String("server-dir", dataDir, "base folder for server mode (default: "+dataDir+")")
-	context.tempFolder = flag.String("temp-dir", tempDir, "temporary folder location")
-	context.binFolder = flag.String("bin-dir", binDir, "binary folder location")
+	context.appFolder = flag.String("app-dir", common.AppDir, "app folder (default: "+common.AppDir+")")
+	context.serverFolder = flag.String("server-dir", common.DataDir, "base folder for server mode (default: "+common.DataDir+")")
+	context.tempFolder = flag.String("temp-dir", common.TempDir, "temporary folder location")
+	context.binFolder = flag.String("bin-dir", common.BinDir, "binary folder location")
 	context.outputDir = flag.String("output", ".", "output directory")
 
 	// files
-	context.modelFilename = flag.String("model", inputFile, "input model yaml file")
+	context.modelFilename = flag.String("model", common.InputFile, "input model yaml file")
 	context.raaPlugin = flag.String("raa-run", "raa_calc", "RAA calculation run file name")
 
 	// flags
@@ -4561,7 +4539,7 @@ func (context *Context) ParseCommandlineArgs() { // folders
 
 	if *context.diagramDPI < 20 {
 		*context.diagramDPI = 20
-	} else if *context.diagramDPI > context.maxGraphvizDPI {
+	} else if *context.diagramDPI > context.MaxGraphvizDPI {
 		*context.diagramDPI = 300
 	}
 
@@ -4570,7 +4548,7 @@ func (context *Context) ParseCommandlineArgs() { // folders
 		context.progressReporter = CommandLineProgressReporter{}
 	}
 
-	context.ServerMode = (*context.serverPort > 0)
+	context.ServerMode = *context.serverPort > 0
 }
 
 func (context *Context) applyWildcardRiskTrackingEvaluation() {
@@ -4804,12 +4782,12 @@ func (context *Context) renderDataFlowDiagramGraphvizImage(dotFile *os.File, tar
 	defer func() { _ = os.Remove(tmpFilePNG.Name()) }()
 
 	// copy into tmp file as input
-	input, err := os.ReadFile(dotFile.Name())
+	inputDOT, err := os.ReadFile(dotFile.Name())
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	err = os.WriteFile(tmpFileDOT.Name(), input, 0644)
+	err = os.WriteFile(tmpFileDOT.Name(), inputDOT, 0644)
 	if err != nil {
 		fmt.Println("Error creating", tmpFileDOT.Name())
 		fmt.Println(err)
@@ -4825,12 +4803,12 @@ func (context *Context) renderDataFlowDiagramGraphvizImage(dotFile *os.File, tar
 		panic(errors.New("graph rendering call failed with error:" + err.Error()))
 	}
 	// copy into resulting file
-	input, err = os.ReadFile(tmpFilePNG.Name())
+	inputPNG, err := os.ReadFile(tmpFilePNG.Name())
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	err = os.WriteFile(filepath.Join(targetDir, context.dataFlowDiagramFilenamePNG), input, 0644)
+	err = os.WriteFile(filepath.Join(targetDir, context.dataFlowDiagramFilenamePNG), inputPNG, 0644)
 	if err != nil {
 		fmt.Println("Error creating", context.dataFlowDiagramFilenamePNG)
 		fmt.Println(err)
@@ -4852,12 +4830,12 @@ func (context *Context) renderDataAssetDiagramGraphvizImage(dotFile *os.File, ta
 	defer func() { _ = os.Remove(tmpFilePNG.Name()) }()
 
 	// copy into tmp file as input
-	input, err := os.ReadFile(dotFile.Name())
+	inputDOT, err := os.ReadFile(dotFile.Name())
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	err = os.WriteFile(tmpFileDOT.Name(), input, 0644)
+	err = os.WriteFile(tmpFileDOT.Name(), inputDOT, 0644)
 	if err != nil {
 		fmt.Println("Error creating", tmpFileDOT.Name())
 		fmt.Println(err)
@@ -4873,12 +4851,12 @@ func (context *Context) renderDataAssetDiagramGraphvizImage(dotFile *os.File, ta
 		panic(errors.New("graph rendering call failed with error: " + err.Error()))
 	}
 	// copy into resulting file
-	input, err = os.ReadFile(tmpFilePNG.Name())
+	inputPNG, err := os.ReadFile(tmpFilePNG.Name())
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	err = os.WriteFile(filepath.Join(targetDir, context.dataAssetDiagramFilenamePNG), input, 0644)
+	err = os.WriteFile(filepath.Join(targetDir, context.dataAssetDiagramFilenamePNG), inputPNG, 0644)
 	if err != nil {
 		fmt.Println("Error creating", context.dataAssetDiagramFilenamePNG)
 		fmt.Println(err)

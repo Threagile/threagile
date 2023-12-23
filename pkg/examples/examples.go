@@ -5,6 +5,7 @@ package examples
 
 import (
 	"fmt"
+	"github.com/threagile/threagile/pkg/common"
 	"io"
 	"os"
 	"path/filepath"
@@ -16,7 +17,7 @@ func CreateExampleModelFile(appFolder, outputDir string) error {
 		return nil
 	}
 
-	_, altError := copyFile(filepath.Join(appFolder, "threagile.yaml"), filepath.Join(outputDir, "threagile-example-model.yaml"))
+	_, altError := copyFile(filepath.Join(appFolder, common.InputFile), filepath.Join(outputDir, "threagile-example-model.yaml"))
 	if altError != nil {
 		return err
 	}
@@ -30,7 +31,7 @@ func CreateStubModelFile(appFolder, outputDir string) error {
 		return nil
 	}
 
-	_, altError := copyFile(filepath.Join(appFolder, "threagile.yaml"), filepath.Join(outputDir, "threagile-stub-model.yaml"))
+	_, altError := copyFile(filepath.Join(appFolder, common.InputFile), filepath.Join(outputDir, "threagile-stub-model.yaml"))
 	if altError != nil {
 		return err
 	}
