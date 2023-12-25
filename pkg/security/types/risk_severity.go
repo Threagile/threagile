@@ -3,7 +3,11 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 */
 package types
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"errors"
+	"strings"
+)
 
 type RiskSeverity int
 
@@ -31,6 +35,19 @@ var RiskSeverityTypeDescription = [...]TypeDescription{
 	{"elevated", "Elevated"},
 	{"high", "High"},
 	{"critical", "Critical"},
+}
+
+func ParseRiskSeverity(value string) (riskSeverity RiskSeverity, err error) {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return MediumSeverity, nil
+	}
+	for _, candidate := range RiskSeverityValues() {
+		if candidate.String() == value {
+			return candidate.(RiskSeverity), err
+		}
+	}
+	return riskSeverity, errors.New("Unable to parse into type: " + value)
 }
 
 func (what RiskSeverity) String() string {

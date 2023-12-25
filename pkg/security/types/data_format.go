@@ -3,6 +3,11 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 */
 package types
 
+import (
+	"errors"
+	"strings"
+)
+
 type DataFormat int
 
 const (
@@ -29,6 +34,16 @@ var DataFormatTypeDescription = [...]TypeDescription{
 	{"serialization", "Serialized program objects"},
 	{"file", "Specific file types for data"},
 	{"csv", "CSV"},
+}
+
+func ParseDataFormat(value string) (dataFormat DataFormat, err error) {
+	value = strings.TrimSpace(value)
+	for _, candidate := range DataFormatValues() {
+		if candidate.String() == value {
+			return candidate.(DataFormat), err
+		}
+	}
+	return dataFormat, errors.New("Unable to parse into type: " + value)
 }
 
 func (what DataFormat) String() string {
