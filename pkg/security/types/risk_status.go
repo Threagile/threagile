@@ -3,7 +3,11 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 */
 package types
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"errors"
+	"strings"
+)
 
 type RiskStatus int
 
@@ -34,6 +38,16 @@ var RiskStatusTypeDescription = [...]TypeDescription{
 	{"in-progress", "Risk mitigation is currently in progress"},
 	{"mitigated", "Risk has been mitigated"},
 	{"false-positive", "Risk is a false positive (i.e. no risk at all or not applicable)"},
+}
+
+func ParseRiskStatus(value string) (riskStatus RiskStatus, err error) {
+	value = strings.TrimSpace(value)
+	for _, candidate := range RiskStatusValues() {
+		if candidate.String() == value {
+			return candidate.(RiskStatus), err
+		}
+	}
+	return riskStatus, errors.New("Unable to parse into type: " + value)
 }
 
 func (what RiskStatus) String() string {

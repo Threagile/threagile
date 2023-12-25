@@ -3,6 +3,11 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 */
 package types
 
+import (
+	"errors"
+	"strings"
+)
+
 type Protocol int
 
 const (
@@ -155,6 +160,16 @@ var ProtocolTypeDescription = [...]TypeDescription{
 	{"jrmp-encrypted", "Java Remote Method Protocol, encrypted"},
 	{"in-process-library-call", "Call to local library"},
 	{"container-spawning", "Spawn a container"},
+}
+
+func ParseProtocol(value string) (protocol Protocol, err error) {
+	value = strings.TrimSpace(value)
+	for _, candidate := range ProtocolValues() {
+		if candidate.String() == value {
+			return candidate.(Protocol), err
+		}
+	}
+	return protocol, errors.New("Unable to parse into type: " + value)
 }
 
 func (what Protocol) String() string {

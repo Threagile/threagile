@@ -3,7 +3,11 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 */
 package types
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"errors"
+	"strings"
+)
 
 type RiskFunction int
 
@@ -28,6 +32,16 @@ var RiskFunctionTypeDescription = [...]TypeDescription{
 	{"architecture", "Architecture"},
 	{"development", "Development"},
 	{"operations", "Operations"},
+}
+
+func ParseRiskFunction(value string) (riskFunction RiskFunction, err error) {
+	value = strings.TrimSpace(value)
+	for _, candidate := range RiskFunctionValues() {
+		if candidate.String() == value {
+			return candidate.(RiskFunction), err
+		}
+	}
+	return riskFunction, errors.New("Unable to parse into type: " + value)
 }
 
 func (what RiskFunction) String() string {

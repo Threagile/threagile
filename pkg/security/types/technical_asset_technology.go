@@ -3,6 +3,11 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 */
 package types
 
+import (
+	"errors"
+	"strings"
+)
+
 type TechnicalAssetTechnology int
 
 const (
@@ -194,6 +199,16 @@ func (what TechnicalAssetTechnology) String() string {
 
 func (what TechnicalAssetTechnology) Explain() string {
 	return TechnicalAssetTechnologyTypeDescription[what].Description
+}
+
+func ParseTechnicalAssetTechnology(value string) (technicalAssetTechnology TechnicalAssetTechnology, err error) {
+	value = strings.TrimSpace(value)
+	for _, candidate := range TechnicalAssetTechnologyValues() {
+		if candidate.String() == value {
+			return candidate.(TechnicalAssetTechnology), err
+		}
+	}
+	return technicalAssetTechnology, errors.New("Unable to parse into type: " + value)
 }
 
 func (what TechnicalAssetTechnology) IsWebApplication() bool {
