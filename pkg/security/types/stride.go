@@ -3,7 +3,11 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 */
 package types
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"errors"
+	"strings"
+)
 
 type STRIDE int
 
@@ -34,6 +38,16 @@ var StrideTypeDescription = [...]TypeDescription{
 	{"information-disclosure", "Information disclosure - Confidentiality"},
 	{"denial-of-service", "Denial of service - Availability"},
 	{"elevation-of-privilege", "Elevation of privilege - Authorization"},
+}
+
+func ParseSTRIDE(value string) (stride STRIDE, err error) {
+	value = strings.TrimSpace(value)
+	for _, candidate := range STRIDEValues() {
+		if candidate.String() == value {
+			return candidate.(STRIDE), err
+		}
+	}
+	return stride, errors.New("Unable to parse into type: " + value)
 }
 
 func (what STRIDE) String() string {

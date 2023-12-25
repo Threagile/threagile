@@ -3,7 +3,11 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 */
 package types
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"errors"
+	"strings"
+)
 
 type DataBreachProbability int
 
@@ -25,6 +29,20 @@ var DataBreachProbabilityTypeDescription = [...]TypeDescription{
 	{"improbable", "Improbable"},
 	{"possible", "Possible"},
 	{"probable", "Probable"},
+}
+
+func ParseDataBreachProbability(value string) (dataBreachProbability DataBreachProbability, err error) {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return Possible, err
+	}
+
+	for _, candidate := range DataBreachProbabilityValues() {
+		if candidate.String() == value {
+			return candidate.(DataBreachProbability), err
+		}
+	}
+	return dataBreachProbability, errors.New("Unable to parse into type: " + value)
 }
 
 func (what DataBreachProbability) String() string {

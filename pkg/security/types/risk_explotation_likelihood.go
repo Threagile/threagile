@@ -3,7 +3,11 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 */
 package types
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"errors"
+	"strings"
+)
 
 type RiskExploitationLikelihood int
 
@@ -28,6 +32,19 @@ var RiskExploitationLikelihoodTypeDescription = [...]TypeDescription{
 	{"likely", "Likely"},
 	{"very-likely", "Very-Likely"},
 	{"frequent", "Frequent"},
+}
+
+func ParseRiskExploitationLikelihood(value string) (riskExploitationLikelihood RiskExploitationLikelihood, err error) {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return Likely, nil
+	}
+	for _, candidate := range RiskExploitationLikelihoodValues() {
+		if candidate.String() == value {
+			return candidate.(RiskExploitationLikelihood), err
+		}
+	}
+	return riskExploitationLikelihood, errors.New("Unable to parse into type: " + value)
 }
 
 func (what RiskExploitationLikelihood) String() string {

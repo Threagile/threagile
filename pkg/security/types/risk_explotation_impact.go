@@ -3,7 +3,11 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 */
 package types
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"errors"
+	"strings"
+)
 
 type RiskExploitationImpact int
 
@@ -28,6 +32,19 @@ var RiskExploitationImpactTypeDescription = [...]TypeDescription{
 	{"medium", "Medium"},
 	{"high", "High"},
 	{"very-high", "Very High"},
+}
+
+func ParseRiskExploitationImpact(value string) (riskExploitationImpact RiskExploitationImpact, err error) {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return MediumImpact, nil
+	}
+	for _, candidate := range RiskExploitationImpactValues() {
+		if candidate.String() == value {
+			return candidate.(RiskExploitationImpact), err
+		}
+	}
+	return riskExploitationImpact, errors.New("Unable to parse into type: " + value)
 }
 
 func (what RiskExploitationImpact) String() string {

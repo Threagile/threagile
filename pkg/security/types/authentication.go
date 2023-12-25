@@ -3,6 +3,11 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 */
 package types
 
+import (
+	"errors"
+	"strings"
+)
+
 type Authentication int
 
 const (
@@ -35,6 +40,16 @@ var AuthenticationTypeDescription = [...]TypeDescription{
 	{"client-certificate", "A certificate file stored on the client identifying this specific client"},
 	{"two-factor", "Credentials plus another factor like a physical object (card) or biometrics"},
 	{"externalized", "Some external company handles authentication"},
+}
+
+func ParseAuthentication(value string) (authentication Authentication, err error) {
+	value = strings.TrimSpace(value)
+	for _, candidate := range AuthenticationValues() {
+		if candidate.String() == value {
+			return candidate.(Authentication), err
+		}
+	}
+	return authentication, errors.New("Unable to parse into type: " + value)
 }
 
 func (what Authentication) String() string {
