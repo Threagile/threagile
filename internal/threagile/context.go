@@ -83,7 +83,6 @@ type Context struct {
 	outputDir, raaPlugin, skipRiskRules, riskRulesPlugins, executeModelMacro                          *string
 	customRiskRules                                                                                   map[string]*model.CustomRisk
 	diagramDPI, serverPort                                                                            *int
-	deferredRiskTrackingDueToWildcardMatching                                                         map[string]model.RiskTracking
 	addModelTitle                                                                                     bool
 	keepDiagramSourceFiles                                                                            bool
 	appFolder                                                                                         *string
@@ -158,7 +157,6 @@ func (context *Context) Init(buildTimestamp string) *Context {
 		addModelTitle:          false,
 		buildTimestamp:         buildTimestamp,
 		customRiskRules:        make(map[string]*model.CustomRisk),
-		deferredRiskTrackingDueToWildcardMatching:                    make(map[string]model.RiskTracking),
 		drawSpaceLinesForLayoutUnfortunatelyFurtherSeparatesAllRanks: true,
 	}
 
@@ -401,7 +399,7 @@ func (context *Context) analyzeModelOnServerDirectly(ginContext *gin.Context) {
 
 	dpi, err := strconv.Atoi(ginContext.DefaultQuery("dpi", strconv.Itoa(context.DefaultGraphvizDPI)))
 	if err != nil {
-		context.handleErrorInServiceCall(err, ginContext)
+		handleErrorInServiceCall(err, ginContext)
 		return
 	}
 
@@ -411,13 +409,13 @@ func (context *Context) analyzeModelOnServerDirectly(ginContext *gin.Context) {
 	}
 	tmpModelFile, err := os.CreateTemp(*context.tempFolder, "threagile-direct-analyze-*")
 	if err != nil {
-		context.handleErrorInServiceCall(err, ginContext)
+		handleErrorInServiceCall(err, ginContext)
 		return
 	}
 	defer func() { _ = os.Remove(tmpModelFile.Name()) }()
 	tmpOutputDir, err := os.MkdirTemp(*context.tempFolder, "threagile-direct-analyze-")
 	if err != nil {
-		context.handleErrorInServiceCall(err, ginContext)
+		handleErrorInServiceCall(err, ginContext)
 		return
 	}
 	defer func() { _ = os.RemoveAll(tmpOutputDir) }()
@@ -429,12 +427,12 @@ func (context *Context) analyzeModelOnServerDirectly(ginContext *gin.Context) {
 
 	context.doItViaRuntimeCall(tmpModelFile.Name(), tmpOutputDir, true, true, true, true, true, true, true, true, dpi)
 	if err != nil {
-		context.handleErrorInServiceCall(err, ginContext)
+		handleErrorInServiceCall(err, ginContext)
 		return
 	}
 	err = os.WriteFile(filepath.Join(tmpOutputDir, context.inputFile), []byte(yamlText), 0400)
 	if err != nil {
-		context.handleErrorInServiceCall(err, ginContext)
+		handleErrorInServiceCall(err, ginContext)
 		return
 	}
 
@@ -459,632 +457,6 @@ func (context *Context) analyzeModelOnServerDirectly(ginContext *gin.Context) {
 		fmt.Println("Streaming back result file: " + tmpResultFile.Name())
 	}
 	ginContext.FileAttachment(tmpResultFile.Name(), "threagile-result.zip")
-}
-
-func (context *Context) parseModel() {
-	if *context.verbose {
-		fmt.Println("Parsing model:", *context.modelFilename)
-	}
-
-	context.modelInput = *new(input.ModelInput).Defaults()
-	loadError := context.modelInput.Load(*context.modelFilename)
-	if loadError != nil {
-		log.Fatal("Unable to parse model yaml: ", loadError)
-	}
-
-	//	data, _ := json.MarshalIndent(context.modelInput, "", "  ")
-	//	fmt.Printf("%v\n", string(data))
-
-	businessCriticality, err := types.ParseCriticality(context.modelInput.BusinessCriticality)
-	if err != nil {
-		panic(errors.New("unknown 'business_criticality' value of application: " + context.modelInput.BusinessCriticality))
-	}
-
-	reportDate := time.Now()
-	if len(context.modelInput.Date) > 0 {
-		var parseError error
-		reportDate, parseError = time.Parse("2006-01-02", context.modelInput.Date)
-		if parseError != nil {
-			panic(errors.New("unable to parse 'date' value of model file"))
-		}
-	}
-
-	context.parsedModel = model.ParsedModel{
-		Author:                         context.modelInput.Author,
-		Title:                          context.modelInput.Title,
-		Date:                           reportDate,
-		ManagementSummaryComment:       context.modelInput.ManagementSummaryComment,
-		BusinessCriticality:            businessCriticality,
-		BusinessOverview:               removePathElementsFromImageFiles(context.modelInput.BusinessOverview),
-		TechnicalOverview:              removePathElementsFromImageFiles(context.modelInput.TechnicalOverview),
-		Questions:                      context.modelInput.Questions,
-		AbuseCases:                     context.modelInput.AbuseCases,
-		SecurityRequirements:           context.modelInput.SecurityRequirements,
-		TagsAvailable:                  lowerCaseAndTrim(context.modelInput.TagsAvailable),
-		DiagramTweakNodesep:            context.modelInput.DiagramTweakNodesep,
-		DiagramTweakRanksep:            context.modelInput.DiagramTweakRanksep,
-		DiagramTweakEdgeLayout:         context.modelInput.DiagramTweakEdgeLayout,
-		DiagramTweakSuppressEdgeLabels: context.modelInput.DiagramTweakSuppressEdgeLabels,
-		DiagramTweakLayoutLeftToRight:  context.modelInput.DiagramTweakLayoutLeftToRight,
-		DiagramTweakInvisibleConnectionsBetweenAssets: context.modelInput.DiagramTweakInvisibleConnectionsBetweenAssets,
-		DiagramTweakSameRankAssets:                    context.modelInput.DiagramTweakSameRankAssets,
-	}
-
-	context.parsedModel.CommunicationLinks = make(map[string]model.CommunicationLink)
-	context.parsedModel.IncomingTechnicalCommunicationLinksMappedByTargetId = make(map[string][]model.CommunicationLink)
-	context.parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId = make(map[string]model.TrustBoundary)
-	context.parsedModel.GeneratedRisksByCategory = make(map[model.RiskCategory][]model.Risk)
-	context.parsedModel.GeneratedRisksBySyntheticId = make(map[string]model.Risk)
-	context.parsedModel.AllSupportedTags = make(map[string]bool)
-
-	if context.parsedModel.DiagramTweakNodesep == 0 {
-		context.parsedModel.DiagramTweakNodesep = 2
-	}
-	if context.parsedModel.DiagramTweakRanksep == 0 {
-		context.parsedModel.DiagramTweakRanksep = 2
-	}
-
-	// Data Assets ===============================================================================
-	context.parsedModel.DataAssets = make(map[string]model.DataAsset)
-	for title, asset := range context.modelInput.DataAssets {
-		id := fmt.Sprintf("%v", asset.ID)
-
-		usage, err := types.ParseUsage(asset.Usage)
-		if err != nil {
-			panic(errors.New("unknown 'usage' value of data asset '" + title + "': " + asset.Usage))
-		}
-		quantity, err := types.ParseQuantity(asset.Quantity)
-		if err != nil {
-			panic(errors.New("unknown 'quantity' value of data asset '" + title + "': " + asset.Quantity))
-		}
-		confidentiality, err := types.ParseConfidentiality(asset.Confidentiality)
-		if err != nil {
-			panic(errors.New("unknown 'confidentiality' value of data asset '" + title + "': " + asset.Confidentiality))
-		}
-		integrity, err := types.ParseCriticality(asset.Integrity)
-		if err != nil {
-			panic(errors.New("unknown 'integrity' value of data asset '" + title + "': " + asset.Integrity))
-		}
-		availability, err := types.ParseCriticality(asset.Availability)
-		if err != nil {
-			panic(errors.New("unknown 'availability' value of data asset '" + title + "': " + asset.Availability))
-		}
-
-		context.checkIdSyntax(id)
-		if _, exists := context.parsedModel.DataAssets[id]; exists {
-			panic(errors.New("duplicate id used: " + id))
-		}
-		context.parsedModel.DataAssets[id] = model.DataAsset{
-			Id:                     id,
-			Title:                  title,
-			Usage:                  usage,
-			Description:            withDefault(fmt.Sprintf("%v", asset.Description), title),
-			Quantity:               quantity,
-			Tags:                   context.checkTags(lowerCaseAndTrim(asset.Tags), "data asset '"+title+"'"),
-			Origin:                 fmt.Sprintf("%v", asset.Origin),
-			Owner:                  fmt.Sprintf("%v", asset.Owner),
-			Confidentiality:        confidentiality,
-			Integrity:              integrity,
-			Availability:           availability,
-			JustificationCiaRating: fmt.Sprintf("%v", asset.JustificationCiaRating),
-		}
-	}
-
-	// Technical Assets ===============================================================================
-	context.parsedModel.TechnicalAssets = make(map[string]model.TechnicalAsset)
-	for title, asset := range context.modelInput.TechnicalAssets {
-		id := fmt.Sprintf("%v", asset.ID)
-
-		usage, err := types.ParseUsage(asset.Usage)
-		if err != nil {
-			panic(errors.New("unknown 'usage' value of technical asset '" + title + "': " + asset.Usage))
-		}
-
-		var dataAssetsProcessed = make([]string, 0)
-		if asset.DataAssetsProcessed != nil {
-			dataAssetsProcessed = make([]string, len(asset.DataAssetsProcessed))
-			for i, parsedProcessedAsset := range asset.DataAssetsProcessed {
-				referencedAsset := fmt.Sprintf("%v", parsedProcessedAsset)
-				context.checkDataAssetTargetExists(referencedAsset, "technical asset '"+title+"'")
-				dataAssetsProcessed[i] = referencedAsset
-			}
-		}
-
-		var dataAssetsStored = make([]string, 0)
-		if asset.DataAssetsStored != nil {
-			dataAssetsStored = make([]string, len(asset.DataAssetsStored))
-			for i, parsedStoredAssets := range asset.DataAssetsStored {
-				referencedAsset := fmt.Sprintf("%v", parsedStoredAssets)
-				context.checkDataAssetTargetExists(referencedAsset, "technical asset '"+title+"'")
-				dataAssetsStored[i] = referencedAsset
-			}
-		}
-
-		technicalAssetType, err := types.ParseTechnicalAssetType(asset.Type)
-		if err != nil {
-			panic(errors.New("unknown 'type' value of technical asset '" + title + "': " + fmt.Sprintf("%v", asset.Type)))
-		}
-		technicalAssetSize, err := types.ParseTechnicalAssetSize(asset.Size)
-		if err != nil {
-			panic(errors.New("unknown 'size' value of technical asset '" + title + "': " + fmt.Sprintf("%v", asset.Size)))
-		}
-		technicalAssetTechnology, err := types.ParseTechnicalAssetTechnology(asset.Technology)
-		if err != nil {
-			panic(errors.New("unknown 'technology' value of technical asset '" + title + "': " + fmt.Sprintf("%v", asset.Technology)))
-		}
-		encryption, err := types.ParseEncryptionStyle(asset.Encryption)
-		if err != nil {
-			panic(errors.New("unknown 'encryption' value of technical asset '" + title + "': " + fmt.Sprintf("%v", asset.Encryption)))
-		}
-		technicalAssetMachine, err := types.ParseTechnicalAssetMachine(asset.Machine)
-		if err != nil {
-			panic(errors.New("unknown 'machine' value of technical asset '" + title + "': " + fmt.Sprintf("%v", asset.Machine)))
-		}
-		confidentiality, err := types.ParseConfidentiality(asset.Confidentiality)
-		if err != nil {
-			panic(errors.New("unknown 'confidentiality' value of technical asset '" + title + "': " + fmt.Sprintf("%v", asset.Confidentiality)))
-		}
-		integrity, err := types.ParseCriticality(asset.Integrity)
-		if err != nil {
-			panic(errors.New("unknown 'integrity' value of technical asset '" + title + "': " + fmt.Sprintf("%v", asset.Integrity)))
-		}
-		availability, err := types.ParseCriticality(asset.Availability)
-		if err != nil {
-			panic(errors.New("unknown 'availability' value of technical asset '" + title + "': " + fmt.Sprintf("%v", asset.Availability)))
-		}
-
-		dataFormatsAccepted := make([]types.DataFormat, 0)
-		if asset.DataFormatsAccepted != nil {
-			for _, dataFormatName := range asset.DataFormatsAccepted {
-				dataFormat, err := types.ParseDataFormat(dataFormatName)
-				if err != nil {
-					panic(errors.New("unknown 'data_formats_accepted' value of technical asset '" + title + "': " + fmt.Sprintf("%v", dataFormatName)))
-				}
-				dataFormatsAccepted = append(dataFormatsAccepted, dataFormat)
-			}
-		}
-
-		communicationLinks := make([]model.CommunicationLink, 0)
-		if asset.CommunicationLinks != nil {
-			for commLinkTitle, commLink := range asset.CommunicationLinks {
-				constraint := true
-				weight := 1
-				var dataAssetsSent []string
-				var dataAssetsReceived []string
-
-				authentication, err := types.ParseAuthentication(commLink.Authentication)
-				if err != nil {
-					panic(errors.New("unknown 'authentication' value of technical asset '" + title + "' communication link '" + commLinkTitle + "': " + fmt.Sprintf("%v", commLink.Authentication)))
-				}
-				authorization, err := types.ParseAuthorization(commLink.Authorization)
-				if err != nil {
-					panic(errors.New("unknown 'authorization' value of technical asset '" + title + "' communication link '" + commLinkTitle + "': " + fmt.Sprintf("%v", commLink.Authorization)))
-				}
-				usage, err := types.ParseUsage(commLink.Usage)
-				if err != nil {
-					panic(errors.New("unknown 'usage' value of technical asset '" + title + "' communication link '" + commLinkTitle + "': " + fmt.Sprintf("%v", commLink.Usage)))
-				}
-				protocol, err := types.ParseProtocol(commLink.Protocol)
-				if err != nil {
-					panic(errors.New("unknown 'protocol' value of technical asset '" + title + "' communication link '" + commLinkTitle + "': " + fmt.Sprintf("%v", commLink.Protocol)))
-				}
-
-				if commLink.DataAssetsSent != nil {
-					for _, dataAssetSent := range commLink.DataAssetsSent {
-						referencedAsset := fmt.Sprintf("%v", dataAssetSent)
-						context.checkDataAssetTargetExists(referencedAsset, "communication link '"+commLinkTitle+"' of technical asset '"+title+"'")
-						dataAssetsSent = append(dataAssetsSent, referencedAsset)
-					}
-				}
-
-				if commLink.DataAssetsReceived != nil {
-					for _, dataAssetReceived := range commLink.DataAssetsReceived {
-						referencedAsset := fmt.Sprintf("%v", dataAssetReceived)
-						context.checkDataAssetTargetExists(referencedAsset, "communication link '"+commLinkTitle+"' of technical asset '"+title+"'")
-						dataAssetsReceived = append(dataAssetsReceived, referencedAsset)
-					}
-				}
-
-				if commLink.DiagramTweakWeight > 0 {
-					weight = commLink.DiagramTweakWeight
-				}
-
-				constraint = !commLink.DiagramTweakConstraint
-
-				dataFlowTitle := fmt.Sprintf("%v", commLinkTitle)
-				commLink := model.CommunicationLink{
-					Id:                     createDataFlowId(id, dataFlowTitle),
-					SourceId:               id,
-					TargetId:               commLink.Target,
-					Title:                  dataFlowTitle,
-					Description:            withDefault(commLink.Description, dataFlowTitle),
-					Protocol:               protocol,
-					Authentication:         authentication,
-					Authorization:          authorization,
-					Usage:                  usage,
-					Tags:                   context.checkTags(lowerCaseAndTrim(commLink.Tags), "communication link '"+commLinkTitle+"' of technical asset '"+title+"'"),
-					VPN:                    commLink.VPN,
-					IpFiltered:             commLink.IpFiltered,
-					Readonly:               commLink.Readonly,
-					DataAssetsSent:         dataAssetsSent,
-					DataAssetsReceived:     dataAssetsReceived,
-					DiagramTweakWeight:     weight,
-					DiagramTweakConstraint: constraint,
-				}
-				communicationLinks = append(communicationLinks, commLink)
-				// track all comm links
-				context.parsedModel.CommunicationLinks[commLink.Id] = commLink
-				// keep track of map of *all* comm links mapped by target-id (to be able to look up "who is calling me" kind of things)
-				context.parsedModel.IncomingTechnicalCommunicationLinksMappedByTargetId[commLink.TargetId] = append(
-					context.parsedModel.IncomingTechnicalCommunicationLinksMappedByTargetId[commLink.TargetId], commLink)
-			}
-		}
-
-		context.checkIdSyntax(id)
-		if _, exists := context.parsedModel.TechnicalAssets[id]; exists {
-			panic(errors.New("duplicate id used: " + id))
-		}
-		context.parsedModel.TechnicalAssets[id] = model.TechnicalAsset{
-			Id:                      id,
-			Usage:                   usage,
-			Title:                   title, //fmt.Sprintf("%v", asset["title"]),
-			Description:             withDefault(fmt.Sprintf("%v", asset.Description), title),
-			Type:                    technicalAssetType,
-			Size:                    technicalAssetSize,
-			Technology:              technicalAssetTechnology,
-			Tags:                    context.checkTags(lowerCaseAndTrim(asset.Tags), "technical asset '"+title+"'"),
-			Machine:                 technicalAssetMachine,
-			Internet:                asset.Internet,
-			Encryption:              encryption,
-			MultiTenant:             asset.MultiTenant,
-			Redundant:               asset.Redundant,
-			CustomDevelopedParts:    asset.CustomDevelopedParts,
-			UsedAsClientByHuman:     asset.UsedAsClientByHuman,
-			OutOfScope:              asset.OutOfScope,
-			JustificationOutOfScope: fmt.Sprintf("%v", asset.JustificationOutOfScope),
-			Owner:                   fmt.Sprintf("%v", asset.Owner),
-			Confidentiality:         confidentiality,
-			Integrity:               integrity,
-			Availability:            availability,
-			JustificationCiaRating:  fmt.Sprintf("%v", asset.JustificationCiaRating),
-			DataAssetsProcessed:     dataAssetsProcessed,
-			DataAssetsStored:        dataAssetsStored,
-			DataFormatsAccepted:     dataFormatsAccepted,
-			CommunicationLinks:      communicationLinks,
-			DiagramTweakOrder:       asset.DiagramTweakOrder,
-		}
-	}
-
-	// Trust Boundaries ===============================================================================
-	checklistToAvoidAssetBeingModeledInMultipleTrustBoundaries := make(map[string]bool)
-	context.parsedModel.TrustBoundaries = make(map[string]model.TrustBoundary)
-	for title, boundary := range context.modelInput.TrustBoundaries {
-		id := fmt.Sprintf("%v", boundary.ID)
-
-		var technicalAssetsInside = make([]string, 0)
-		if boundary.TechnicalAssetsInside != nil {
-			parsedInsideAssets := boundary.TechnicalAssetsInside
-			technicalAssetsInside = make([]string, len(parsedInsideAssets))
-			for i, parsedInsideAsset := range parsedInsideAssets {
-				technicalAssetsInside[i] = fmt.Sprintf("%v", parsedInsideAsset)
-				_, found := context.parsedModel.TechnicalAssets[technicalAssetsInside[i]]
-				if !found {
-					panic(errors.New("missing referenced technical asset " + technicalAssetsInside[i] + " at trust boundary '" + title + "'"))
-				}
-				if checklistToAvoidAssetBeingModeledInMultipleTrustBoundaries[technicalAssetsInside[i]] == true {
-					panic(errors.New("referenced technical asset " + technicalAssetsInside[i] + " at trust boundary '" + title + "' is modeled in multiple trust boundaries"))
-				}
-				checklistToAvoidAssetBeingModeledInMultipleTrustBoundaries[technicalAssetsInside[i]] = true
-				//fmt.Println("asset "+technicalAssetsInside[i]+" at i="+strconv.Itoa(i))
-			}
-		}
-
-		var trustBoundariesNested = make([]string, 0)
-		if boundary.TrustBoundariesNested != nil {
-			parsedNestedBoundaries := boundary.TrustBoundariesNested
-			trustBoundariesNested = make([]string, len(parsedNestedBoundaries))
-			for i, parsedNestedBoundary := range parsedNestedBoundaries {
-				trustBoundariesNested[i] = fmt.Sprintf("%v", parsedNestedBoundary)
-			}
-		}
-
-		trustBoundaryType, err := types.ParseTrustBoundary(boundary.Type)
-		if err != nil {
-			panic(errors.New("unknown 'type' of trust boundary '" + title + "': " + fmt.Sprintf("%v", boundary.Type)))
-		}
-
-		trustBoundary := model.TrustBoundary{
-			Id:                    id,
-			Title:                 title, //fmt.Sprintf("%v", boundary["title"]),
-			Description:           withDefault(fmt.Sprintf("%v", boundary.Description), title),
-			Type:                  trustBoundaryType,
-			Tags:                  context.checkTags(lowerCaseAndTrim(boundary.Tags), "trust boundary '"+title+"'"),
-			TechnicalAssetsInside: technicalAssetsInside,
-			TrustBoundariesNested: trustBoundariesNested,
-		}
-		context.checkIdSyntax(id)
-		if _, exists := context.parsedModel.TrustBoundaries[id]; exists {
-			panic(errors.New("duplicate id used: " + id))
-		}
-		context.parsedModel.TrustBoundaries[id] = trustBoundary
-		for _, technicalAsset := range trustBoundary.TechnicalAssetsInside {
-			context.parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[technicalAsset] = trustBoundary
-			//fmt.Println("Asset "+technicalAsset+" is directly in trust boundary "+trustBoundary.Id)
-		}
-	}
-	context.checkNestedTrustBoundariesExisting()
-
-	// Shared Runtime ===============================================================================
-	context.parsedModel.SharedRuntimes = make(map[string]model.SharedRuntime)
-	for title, inputRuntime := range context.modelInput.SharedRuntimes {
-		id := fmt.Sprintf("%v", inputRuntime.ID)
-
-		var technicalAssetsRunning = make([]string, 0)
-		if inputRuntime.TechnicalAssetsRunning != nil {
-			parsedRunningAssets := inputRuntime.TechnicalAssetsRunning
-			technicalAssetsRunning = make([]string, len(parsedRunningAssets))
-			for i, parsedRunningAsset := range parsedRunningAssets {
-				assetId := fmt.Sprintf("%v", parsedRunningAsset)
-				context.checkTechnicalAssetExists(assetId, "shared runtime '"+title+"'", false)
-				technicalAssetsRunning[i] = assetId
-			}
-		}
-
-		sharedRuntime := model.SharedRuntime{
-			Id:                     id,
-			Title:                  title, //fmt.Sprintf("%v", boundary["title"]),
-			Description:            withDefault(fmt.Sprintf("%v", inputRuntime.Description), title),
-			Tags:                   context.checkTags(inputRuntime.Tags, "shared runtime '"+title+"'"),
-			TechnicalAssetsRunning: technicalAssetsRunning,
-		}
-		context.checkIdSyntax(id)
-		if _, exists := context.parsedModel.SharedRuntimes[id]; exists {
-			panic(errors.New("duplicate id used: " + id))
-		}
-		context.parsedModel.SharedRuntimes[id] = sharedRuntime
-	}
-
-	// Individual Risk Categories (just used as regular risk categories) ===============================================================================
-	context.parsedModel.IndividualRiskCategories = make(map[string]model.RiskCategory)
-	for title, individualCategory := range context.modelInput.IndividualRiskCategories {
-		id := fmt.Sprintf("%v", individualCategory.ID)
-
-		function, err := types.ParseRiskFunction(individualCategory.Function)
-		if err != nil {
-			panic(errors.New("unknown 'function' value of individual risk category '" + title + "': " + fmt.Sprintf("%v", individualCategory.Function)))
-		}
-		stride, err := types.ParseSTRIDE(individualCategory.STRIDE)
-		if err != nil {
-			panic(errors.New("unknown 'stride' value of individual risk category '" + title + "': " + fmt.Sprintf("%v", individualCategory.STRIDE)))
-		}
-
-		cat := model.RiskCategory{
-			Id:                         id,
-			Title:                      title,
-			Description:                withDefault(fmt.Sprintf("%v", individualCategory.Description), title),
-			Impact:                     fmt.Sprintf("%v", individualCategory.Impact),
-			ASVS:                       fmt.Sprintf("%v", individualCategory.ASVS),
-			CheatSheet:                 fmt.Sprintf("%v", individualCategory.CheatSheet),
-			Action:                     fmt.Sprintf("%v", individualCategory.Action),
-			Mitigation:                 fmt.Sprintf("%v", individualCategory.Mitigation),
-			Check:                      fmt.Sprintf("%v", individualCategory.Check),
-			DetectionLogic:             fmt.Sprintf("%v", individualCategory.DetectionLogic),
-			RiskAssessment:             fmt.Sprintf("%v", individualCategory.RiskAssessment),
-			FalsePositives:             fmt.Sprintf("%v", individualCategory.FalsePositives),
-			Function:                   function,
-			STRIDE:                     stride,
-			ModelFailurePossibleReason: individualCategory.ModelFailurePossibleReason,
-			CWE:                        individualCategory.CWE,
-		}
-		context.checkIdSyntax(id)
-		if _, exists := context.parsedModel.IndividualRiskCategories[id]; exists {
-			panic(errors.New("duplicate id used: " + id))
-		}
-		context.parsedModel.IndividualRiskCategories[id] = cat
-
-		// NOW THE INDIVIDUAL RISK INSTANCES:
-		//individualRiskInstances := make([]model.Risk, 0)
-		if individualCategory.RisksIdentified != nil { // TODO: also add syntax checks of input YAML when linked asset is not found or when synthetic-id is already used...
-			for title, individualRiskInstance := range individualCategory.RisksIdentified {
-				var mostRelevantDataAssetId, mostRelevantTechnicalAssetId, mostRelevantCommunicationLinkId, mostRelevantTrustBoundaryId, mostRelevantSharedRuntimeId string
-				var dataBreachProbability types.DataBreachProbability
-				var dataBreachTechnicalAssetIDs []string
-				severity, err := types.ParseRiskSeverity(individualRiskInstance.Severity)
-				if err != nil {
-					panic(errors.New("unknown 'severity' value of individual risk instance '" + title + "': " + fmt.Sprintf("%v", individualRiskInstance.Severity)))
-				}
-				exploitationLikelihood, err := types.ParseRiskExploitationLikelihood(individualRiskInstance.ExploitationLikelihood)
-				if err != nil {
-					panic(errors.New("unknown 'exploitation_likelihood' value of individual risk instance '" + title + "': " + fmt.Sprintf("%v", individualRiskInstance.ExploitationLikelihood)))
-				}
-				exploitationImpact, err := types.ParseRiskExploitationImpact(individualRiskInstance.ExploitationImpact)
-				if err != nil {
-					panic(errors.New("unknown 'exploitation_impact' value of individual risk instance '" + title + "': " + fmt.Sprintf("%v", individualRiskInstance.ExploitationImpact)))
-				}
-
-				if len(individualRiskInstance.MostRelevantDataAsset) > 0 {
-					mostRelevantDataAssetId = fmt.Sprintf("%v", individualRiskInstance.MostRelevantDataAsset)
-					context.checkDataAssetTargetExists(mostRelevantDataAssetId, "individual risk '"+title+"'")
-				}
-
-				if len(individualRiskInstance.MostRelevantTechnicalAsset) > 0 {
-					mostRelevantTechnicalAssetId = fmt.Sprintf("%v", individualRiskInstance.MostRelevantTechnicalAsset)
-					context.checkTechnicalAssetExists(mostRelevantTechnicalAssetId, "individual risk '"+title+"'", false)
-				}
-
-				if len(individualRiskInstance.MostRelevantCommunicationLink) > 0 {
-					mostRelevantCommunicationLinkId = fmt.Sprintf("%v", individualRiskInstance.MostRelevantCommunicationLink)
-					context.checkCommunicationLinkExists(mostRelevantCommunicationLinkId, "individual risk '"+title+"'")
-				}
-
-				if len(individualRiskInstance.MostRelevantTrustBoundary) > 0 {
-					mostRelevantTrustBoundaryId = fmt.Sprintf("%v", individualRiskInstance.MostRelevantTrustBoundary)
-					context.checkTrustBoundaryExists(mostRelevantTrustBoundaryId, "individual risk '"+title+"'")
-				}
-
-				if len(individualRiskInstance.MostRelevantSharedRuntime) > 0 {
-					mostRelevantSharedRuntimeId = fmt.Sprintf("%v", individualRiskInstance.MostRelevantSharedRuntime)
-					context.checkSharedRuntimeExists(mostRelevantSharedRuntimeId, "individual risk '"+title+"'")
-				}
-
-				dataBreachProbability, err = types.ParseDataBreachProbability(individualRiskInstance.DataBreachProbability)
-				if err != nil {
-					panic(errors.New("unknown 'data_breach_probability' value of individual risk instance '" + title + "': " + fmt.Sprintf("%v", individualRiskInstance.DataBreachProbability)))
-				}
-
-				if individualRiskInstance.DataBreachTechnicalAssets != nil {
-					dataBreachTechnicalAssetIDs = make([]string, len(individualRiskInstance.DataBreachTechnicalAssets))
-					for i, parsedReferencedAsset := range individualRiskInstance.DataBreachTechnicalAssets {
-						assetId := fmt.Sprintf("%v", parsedReferencedAsset)
-						context.checkTechnicalAssetExists(assetId, "data breach technical assets of individual risk '"+title+"'", false)
-						dataBreachTechnicalAssetIDs[i] = assetId
-					}
-				}
-
-				individualRiskInstance := model.Risk{
-					SyntheticId:                     createSyntheticId(cat.Id, mostRelevantDataAssetId, mostRelevantTechnicalAssetId, mostRelevantCommunicationLinkId, mostRelevantTrustBoundaryId, mostRelevantSharedRuntimeId),
-					Title:                           fmt.Sprintf("%v", title),
-					Category:                        cat,
-					Severity:                        severity,
-					ExploitationLikelihood:          exploitationLikelihood,
-					ExploitationImpact:              exploitationImpact,
-					MostRelevantDataAssetId:         mostRelevantDataAssetId,
-					MostRelevantTechnicalAssetId:    mostRelevantTechnicalAssetId,
-					MostRelevantCommunicationLinkId: mostRelevantCommunicationLinkId,
-					MostRelevantTrustBoundaryId:     mostRelevantTrustBoundaryId,
-					MostRelevantSharedRuntimeId:     mostRelevantSharedRuntimeId,
-					DataBreachProbability:           dataBreachProbability,
-					DataBreachTechnicalAssetIDs:     dataBreachTechnicalAssetIDs,
-				}
-				context.parsedModel.GeneratedRisksByCategory[cat] = append(context.parsedModel.GeneratedRisksByCategory[cat], individualRiskInstance)
-			}
-		}
-	}
-
-	// Risk Tracking ===============================================================================
-	context.parsedModel.RiskTracking = make(map[string]model.RiskTracking)
-	for syntheticRiskId, riskTracking := range context.modelInput.RiskTracking {
-		justification := fmt.Sprintf("%v", riskTracking.Justification)
-		checkedBy := fmt.Sprintf("%v", riskTracking.CheckedBy)
-		ticket := fmt.Sprintf("%v", riskTracking.Ticket)
-		var date time.Time
-		if len(riskTracking.Date) > 0 {
-			var parseError error
-			date, parseError = time.Parse("2006-01-02", riskTracking.Date)
-			if parseError != nil {
-				panic(errors.New("unable to parse 'date' of risk tracking '" + syntheticRiskId + "': " + riskTracking.Date))
-			}
-		}
-
-		status, err := types.ParseRiskStatus(riskTracking.Status)
-		if err != nil {
-			panic(errors.New("unknown 'status' value of risk tracking '" + syntheticRiskId + "': " + riskTracking.Status))
-		}
-
-		tracking := model.RiskTracking{
-			SyntheticRiskId: strings.TrimSpace(syntheticRiskId),
-			Justification:   justification,
-			CheckedBy:       checkedBy,
-			Ticket:          ticket,
-			Date:            date,
-			Status:          status,
-		}
-		if strings.Contains(syntheticRiskId, "*") { // contains a wildcard char
-			context.deferredRiskTrackingDueToWildcardMatching[syntheticRiskId] = tracking
-		} else {
-			context.parsedModel.RiskTracking[syntheticRiskId] = tracking
-		}
-	}
-
-	// ====================== model consistency check (linking)
-	for _, technicalAsset := range context.parsedModel.TechnicalAssets {
-		for _, commLink := range technicalAsset.CommunicationLinks {
-			context.checkTechnicalAssetExists(commLink.TargetId, "communication link '"+commLink.Title+"' of technical asset '"+technicalAsset.Title+"'", false)
-		}
-	}
-}
-
-func createSyntheticId(categoryId string,
-	mostRelevantDataAssetId, mostRelevantTechnicalAssetId, mostRelevantCommunicationLinkId, mostRelevantTrustBoundaryId, mostRelevantSharedRuntimeId string) string {
-	result := categoryId
-	if len(mostRelevantTechnicalAssetId) > 0 {
-		result += "@" + mostRelevantTechnicalAssetId
-	}
-	if len(mostRelevantCommunicationLinkId) > 0 {
-		result += "@" + mostRelevantCommunicationLinkId
-	}
-	if len(mostRelevantTrustBoundaryId) > 0 {
-		result += "@" + mostRelevantTrustBoundaryId
-	}
-	if len(mostRelevantSharedRuntimeId) > 0 {
-		result += "@" + mostRelevantSharedRuntimeId
-	}
-	if len(mostRelevantDataAssetId) > 0 {
-		result += "@" + mostRelevantDataAssetId
-	}
-	return result
-}
-
-func createDataFlowId(sourceAssetId, title string) string {
-	reg, err := regexp.Compile("[^A-Za-z0-9]+")
-	checkErr(err)
-	return sourceAssetId + ">" + strings.Trim(reg.ReplaceAllString(strings.ToLower(title), "-"), "- ")
-}
-
-func (context *Context) checkDataAssetTargetExists(referencedAsset, where string) {
-	if _, ok := context.parsedModel.DataAssets[referencedAsset]; !ok {
-		panic(errors.New("missing referenced data asset target at " + where + ": " + referencedAsset))
-	}
-}
-
-func (context *Context) checkTrustBoundaryExists(referencedId, where string) {
-	if _, ok := context.parsedModel.TrustBoundaries[referencedId]; !ok {
-		panic(errors.New("missing referenced trust boundary at " + where + ": " + referencedId))
-	}
-}
-
-func (context *Context) checkSharedRuntimeExists(referencedId, where string) {
-	if _, ok := context.parsedModel.SharedRuntimes[referencedId]; !ok {
-		panic(errors.New("missing referenced shared runtime at " + where + ": " + referencedId))
-	}
-}
-
-func (context *Context) checkCommunicationLinkExists(referencedId, where string) {
-	if _, ok := context.parsedModel.CommunicationLinks[referencedId]; !ok {
-		panic(errors.New("missing referenced communication link at " + where + ": " + referencedId))
-	}
-}
-
-func (context *Context) checkTechnicalAssetExists(referencedAsset, where string, onlyForTweak bool) {
-	if _, ok := context.parsedModel.TechnicalAssets[referencedAsset]; !ok {
-		suffix := ""
-		if onlyForTweak {
-			suffix = " (only referenced in diagram tweak)"
-		}
-		panic(errors.New("missing referenced technical asset target" + suffix + " at " + where + ": " + referencedAsset))
-	}
-}
-
-func (context *Context) checkNestedTrustBoundariesExisting() {
-	for _, trustBoundary := range context.parsedModel.TrustBoundaries {
-		for _, nestedId := range trustBoundary.TrustBoundariesNested {
-			if _, ok := context.parsedModel.TrustBoundaries[nestedId]; !ok {
-				panic(errors.New("missing referenced nested trust boundary: " + nestedId))
-			}
-		}
-	}
-}
-
-// in order to prevent Path-Traversal like stuff...
-func removePathElementsFromImageFiles(overview input.Overview) input.Overview {
-	for i := range overview.Images {
-		newValue := make(map[string]string)
-		for file, desc := range overview.Images[i] {
-			newValue[filepath.Base(file)] = desc
-		}
-		overview.Images[i] = newValue
-	}
-	return overview
 }
 
 func (context *Context) writeDataFlowDiagramGraphvizDOT(diagramFilenameDOT string, dpi int) *os.File {
@@ -1338,7 +710,7 @@ func (context *Context) makeDiagramSameRankNodeTweaks() string {
 			if len(assetIDs) > 0 {
 				tweak += "{ rank=same; "
 				for _, id := range assetIDs {
-					context.checkTechnicalAssetExists(id, "diagram tweak same-rank", true)
+					checkErr(context.parsedModel.CheckTechnicalAssetExists(id, "diagram tweak same-rank", true))
 					if len(context.parsedModel.TechnicalAssets[id].GetTrustBoundaryId(&context.parsedModel)) > 0 {
 						panic(errors.New("technical assets (referenced in same rank diagram tweak) are inside trust boundaries: " +
 							fmt.Sprintf("%v", context.parsedModel.DiagramTweakSameRankAssets)))
@@ -1359,8 +731,8 @@ func (context *Context) makeDiagramInvisibleConnectionsTweaks() string {
 		for _, invisibleConnections := range context.parsedModel.DiagramTweakInvisibleConnectionsBetweenAssets {
 			assetIDs := strings.Split(invisibleConnections, ":")
 			if len(assetIDs) == 2 {
-				context.checkTechnicalAssetExists(assetIDs[0], "diagram tweak connections", true)
-				context.checkTechnicalAssetExists(assetIDs[1], "diagram tweak connections", true)
+				checkErr(context.parsedModel.CheckTechnicalAssetExists(assetIDs[0], "diagram tweak connections", true))
+				checkErr(context.parsedModel.CheckTechnicalAssetExists(assetIDs[1], "diagram tweak connections", true))
 				tweak += "\n" + hash(assetIDs[0]) + " -> " + hash(assetIDs[1]) + " [style=invis]; \n"
 			}
 		}
@@ -1389,7 +761,26 @@ func (context *Context) DoIt() {
 		}
 	}
 
-	context.parseModel()
+	if *context.verbose {
+		fmt.Println("Parsing model:", *context.modelFilename)
+	}
+
+	context.modelInput = *new(input.ModelInput).Defaults()
+	loadError := context.modelInput.Load(*context.modelFilename)
+	if loadError != nil {
+		log.Fatal("Unable to parse model yaml: ", loadError)
+	}
+
+	//	data, _ := json.MarshalIndent(context.modelInput, "", "  ")
+	//	fmt.Printf("%v\n", string(data))
+
+	parsedModel, err := model.ParseModel(&context.modelInput)
+	if err != nil {
+		panic(err)
+	}
+
+	context.parsedModel = *parsedModel
+
 	introTextRAA := context.applyRAA()
 
 	context.customRiskRules = risks.LoadCustomRiskRules(strings.Split(*context.riskRulesPlugins, ","), context.progressReporter)
@@ -1843,13 +1234,6 @@ func (context *Context) applyRAA() string {
 	}
 
 	return runner.ErrorOutput
-}
-
-func (context *Context) checkIdSyntax(id string) {
-	validIdSyntax := regexp.MustCompile(`^[a-zA-Z0-9\-]+$`)
-	if !validIdSyntax.MatchString(id) {
-		panic(errors.New("invalid id syntax used (only letters, numbers, and hyphen allowed): " + id))
-	}
 }
 
 func (context *Context) analyze(ginContext *gin.Context) {
@@ -2352,7 +1736,7 @@ func (context *Context) streamResponse(ginContext *gin.Context, responseType res
 	}()
 	dpi, err := strconv.Atoi(ginContext.DefaultQuery("dpi", strconv.Itoa(context.DefaultGraphvizDPI)))
 	if err != nil {
-		context.handleErrorInServiceCall(err, ginContext)
+		handleErrorInServiceCall(err, ginContext)
 		return
 	}
 	_, yamlText, ok := context.readModel(ginContext, ginContext.Param("model-id"), key, folderNameOfKey)
@@ -2361,13 +1745,13 @@ func (context *Context) streamResponse(ginContext *gin.Context, responseType res
 	}
 	tmpModelFile, err := os.CreateTemp(*context.tempFolder, "threagile-render-*")
 	if err != nil {
-		context.handleErrorInServiceCall(err, ginContext)
+		handleErrorInServiceCall(err, ginContext)
 		return
 	}
 	defer func() { _ = os.Remove(tmpModelFile.Name()) }()
 	tmpOutputDir, err := os.MkdirTemp(*context.tempFolder, "threagile-render-")
 	if err != nil {
-		context.handleErrorInServiceCall(err, ginContext)
+		handleErrorInServiceCall(err, ginContext)
 		return
 	}
 	defer func() { _ = os.RemoveAll(tmpOutputDir) }()
@@ -2375,71 +1759,71 @@ func (context *Context) streamResponse(ginContext *gin.Context, responseType res
 	if responseType == dataFlowDiagram {
 		context.doItViaRuntimeCall(tmpModelFile.Name(), tmpOutputDir, true, false, false, false, false, false, false, false, dpi)
 		if err != nil {
-			context.handleErrorInServiceCall(err, ginContext)
+			handleErrorInServiceCall(err, ginContext)
 			return
 		}
 		ginContext.File(filepath.Join(tmpOutputDir, context.dataFlowDiagramFilenamePNG))
 	} else if responseType == dataAssetDiagram {
 		context.doItViaRuntimeCall(tmpModelFile.Name(), tmpOutputDir, false, true, false, false, false, false, false, false, dpi)
 		if err != nil {
-			context.handleErrorInServiceCall(err, ginContext)
+			handleErrorInServiceCall(err, ginContext)
 			return
 		}
 		ginContext.File(filepath.Join(tmpOutputDir, context.dataAssetDiagramFilenamePNG))
 	} else if responseType == reportPDF {
 		context.doItViaRuntimeCall(tmpModelFile.Name(), tmpOutputDir, false, false, true, false, false, false, false, false, dpi)
 		if err != nil {
-			context.handleErrorInServiceCall(err, ginContext)
+			handleErrorInServiceCall(err, ginContext)
 			return
 		}
 		ginContext.FileAttachment(filepath.Join(tmpOutputDir, context.reportFilename), context.reportFilename)
 	} else if responseType == risksExcel {
 		context.doItViaRuntimeCall(tmpModelFile.Name(), tmpOutputDir, false, false, false, true, false, false, false, false, dpi)
 		if err != nil {
-			context.handleErrorInServiceCall(err, ginContext)
+			handleErrorInServiceCall(err, ginContext)
 			return
 		}
 		ginContext.FileAttachment(filepath.Join(tmpOutputDir, context.excelRisksFilename), context.excelRisksFilename)
 	} else if responseType == tagsExcel {
 		context.doItViaRuntimeCall(tmpModelFile.Name(), tmpOutputDir, false, false, false, false, true, false, false, false, dpi)
 		if err != nil {
-			context.handleErrorInServiceCall(err, ginContext)
+			handleErrorInServiceCall(err, ginContext)
 			return
 		}
 		ginContext.FileAttachment(filepath.Join(tmpOutputDir, context.excelTagsFilename), context.excelTagsFilename)
 	} else if responseType == risksJSON {
 		context.doItViaRuntimeCall(tmpModelFile.Name(), tmpOutputDir, false, false, false, false, false, true, false, false, dpi)
 		if err != nil {
-			context.handleErrorInServiceCall(err, ginContext)
+			handleErrorInServiceCall(err, ginContext)
 			return
 		}
 		jsonData, err := os.ReadFile(filepath.Join(tmpOutputDir, context.jsonRisksFilename))
 		if err != nil {
-			context.handleErrorInServiceCall(err, ginContext)
+			handleErrorInServiceCall(err, ginContext)
 			return
 		}
 		ginContext.Data(http.StatusOK, "application/json", jsonData) // stream directly with JSON content-type in response instead of file download
 	} else if responseType == technicalAssetsJSON {
 		context.doItViaRuntimeCall(tmpModelFile.Name(), tmpOutputDir, false, false, false, false, false, true, true, false, dpi)
 		if err != nil {
-			context.handleErrorInServiceCall(err, ginContext)
+			handleErrorInServiceCall(err, ginContext)
 			return
 		}
 		jsonData, err := os.ReadFile(filepath.Join(tmpOutputDir, context.jsonTechnicalAssetsFilename))
 		if err != nil {
-			context.handleErrorInServiceCall(err, ginContext)
+			handleErrorInServiceCall(err, ginContext)
 			return
 		}
 		ginContext.Data(http.StatusOK, "application/json", jsonData) // stream directly with JSON content-type in response instead of file download
 	} else if responseType == statsJSON {
 		context.doItViaRuntimeCall(tmpModelFile.Name(), tmpOutputDir, false, false, false, false, false, false, false, true, dpi)
 		if err != nil {
-			context.handleErrorInServiceCall(err, ginContext)
+			handleErrorInServiceCall(err, ginContext)
 			return
 		}
 		jsonData, err := os.ReadFile(filepath.Join(tmpOutputDir, context.jsonStatsFilename))
 		if err != nil {
-			context.handleErrorInServiceCall(err, ginContext)
+			handleErrorInServiceCall(err, ginContext)
 			return
 		}
 		ginContext.Data(http.StatusOK, "application/json", jsonData) // stream directly with JSON content-type in response instead of file download
@@ -2462,7 +1846,7 @@ func (context *Context) importModel(ginContext *gin.Context) {
 		yamlContent, ok := context.execute(ginContext, true)
 		if ok {
 			// if we're here, then no problem was raised, so ok to proceed
-			ok = context.writeModelYAML(ginContext, string(yamlContent), key, context.folderNameForModel(folderNameOfKey, aUuid), "Model Import", false)
+			ok = context.writeModelYAML(ginContext, string(yamlContent), key, folderNameForModel(folderNameOfKey, aUuid), "Model Import", false)
 			if ok {
 				ginContext.JSON(http.StatusCreated, gin.H{
 					"message": "model imported",
@@ -2671,7 +2055,7 @@ func (context *Context) setSharedRuntime(ginContext *gin.Context) {
 					})
 					return
 				}
-				sharedRuntimeInput, ok := context.populateSharedRuntime(ginContext, payload)
+				sharedRuntimeInput, ok := populateSharedRuntime(ginContext, payload)
 				if !ok {
 					return
 				}
@@ -2882,7 +2266,7 @@ func (context *Context) createNewSharedRuntime(ginContext *gin.Context) {
 			})
 			return
 		}
-		sharedRuntimeInput, ok := context.populateSharedRuntime(ginContext, payload)
+		sharedRuntimeInput, ok := populateSharedRuntime(ginContext, payload)
 		if !ok {
 			return
 		}
@@ -2916,7 +2300,7 @@ func (context *Context) checkTechnicalAssetsExisting(modelInput input.ModelInput
 	return true
 }
 
-func (context *Context) populateSharedRuntime(_ *gin.Context, payload payloadSharedRuntime) (sharedRuntimeInput input.InputSharedRuntime, ok bool) {
+func populateSharedRuntime(_ *gin.Context, payload payloadSharedRuntime) (sharedRuntimeInput input.InputSharedRuntime, ok bool) {
 	sharedRuntimeInput = input.InputSharedRuntime{
 		ID:                     payload.Id,
 		Description:            payload.Description,
@@ -3026,27 +2410,27 @@ func (context *Context) createNewDataAsset(ginContext *gin.Context) {
 func (context *Context) populateDataAsset(ginContext *gin.Context, payload payloadDataAsset) (dataAssetInput input.InputDataAsset, ok bool) {
 	usage, err := types.ParseUsage(payload.Usage)
 	if err != nil {
-		context.handleErrorInServiceCall(err, ginContext)
+		handleErrorInServiceCall(err, ginContext)
 		return dataAssetInput, false
 	}
 	quantity, err := types.ParseQuantity(payload.Quantity)
 	if err != nil {
-		context.handleErrorInServiceCall(err, ginContext)
+		handleErrorInServiceCall(err, ginContext)
 		return dataAssetInput, false
 	}
 	confidentiality, err := types.ParseConfidentiality(payload.Confidentiality)
 	if err != nil {
-		context.handleErrorInServiceCall(err, ginContext)
+		handleErrorInServiceCall(err, ginContext)
 		return dataAssetInput, false
 	}
 	integrity, err := types.ParseCriticality(payload.Integrity)
 	if err != nil {
-		context.handleErrorInServiceCall(err, ginContext)
+		handleErrorInServiceCall(err, ginContext)
 		return dataAssetInput, false
 	}
 	availability, err := types.ParseCriticality(payload.Availability)
 	if err != nil {
-		context.handleErrorInServiceCall(err, ginContext)
+		handleErrorInServiceCall(err, ginContext)
 		return dataAssetInput, false
 	}
 	dataAssetInput = input.InputDataAsset{
@@ -3249,7 +2633,7 @@ func (context *Context) setOverview(ginContext *gin.Context) {
 		}
 		criticality, err := types.ParseCriticality(payload.BusinessCriticality)
 		if err != nil {
-			context.handleErrorInServiceCall(err, ginContext)
+			handleErrorInServiceCall(err, ginContext)
 			return
 		}
 		modelInput.ManagementSummaryComment = payload.ManagementSummaryComment
@@ -3267,7 +2651,7 @@ func (context *Context) setOverview(ginContext *gin.Context) {
 	}
 }
 
-func (context *Context) handleErrorInServiceCall(err error, ginContext *gin.Context) {
+func handleErrorInServiceCall(err error, ginContext *gin.Context) {
 	log.Println(err)
 	ginContext.JSON(http.StatusBadRequest, gin.H{
 		"error": strings.TrimSpace(err.Error()),
@@ -3361,7 +2745,7 @@ func (context *Context) createNewModel(ginContext *gin.Context) {
 	defer context.unlockFolder(folderNameOfKey)
 
 	aUuid := uuid.New().String()
-	err := os.Mkdir(context.folderNameForModel(folderNameOfKey, aUuid), 0700)
+	err := os.Mkdir(folderNameForModel(folderNameOfKey, aUuid), 0700)
 	if err != nil {
 		ginContext.JSON(http.StatusInternalServerError, gin.H{
 			"error": "unable to create model",
@@ -3400,7 +2784,7 @@ diagram_tweak_suppress_edge_labels: false
 diagram_tweak_invisible_connections_between_assets: []
 diagram_tweak_same_rank_assets: []`
 
-	ok = context.writeModelYAML(ginContext, aYaml, key, context.folderNameForModel(folderNameOfKey, aUuid), "New Model Creation", true)
+	ok = context.writeModelYAML(ginContext, aYaml, key, folderNameForModel(folderNameOfKey, aUuid), "New Model Creation", true)
 	if ok {
 		ginContext.JSON(http.StatusCreated, gin.H{
 			"message": "model created",
@@ -3502,7 +2886,7 @@ func (context *Context) checkModelFolder(ginContext *gin.Context, modelUUID stri
 		})
 		return modelFolder, false
 	}
-	modelFolder = context.folderNameForModel(folderNameOfKey, uuidParsed.String())
+	modelFolder = folderNameForModel(folderNameOfKey, uuidParsed.String())
 	if _, err := os.Stat(modelFolder); os.IsNotExist(err) {
 		ginContext.JSON(http.StatusNotFound, gin.H{
 			"error": "model not found",
@@ -3717,7 +3101,7 @@ func (context *Context) generateKeyFromAlreadyStrongRandomInput(alreadyRandomInp
 	return hash
 }
 
-func (context *Context) folderNameForModel(folderNameOfKey string, uuid string) string {
+func folderNameForModel(folderNameOfKey string, uuid string) string {
 	return filepath.Join(folderNameOfKey, uuid)
 }
 
@@ -4035,6 +3419,9 @@ func (context *Context) ParseCommandlineArgs() { // folders
 	context.templateFilename = flag.String("background", "background.pdf", "background pdf file")
 	context.generateDataFlowDiagram = flag.Bool("generate-data-flow-diagram", true, "generate data-flow diagram")
 	context.generateDataAssetDiagram = flag.Bool("generate-data-asset-diagram", true, "generate data asset diagram")
+	context.generateRisksJSON = flag.Bool("generate-risks-json", true, "generate risks json")
+	context.generateStatsJSON = flag.Bool("generate-stats-json", true, "generate stats json")
+	context.generateTechnicalAssetsJSON = flag.Bool("generate-technical-assets-json", true, "generate technical assets json")
 	context.generateRisksExcel = flag.Bool("generate-risks-excel", true, "generate risks excel")
 	context.generateTagsExcel = flag.Bool("generate-tags-excel", true, "generate tags excel")
 	context.generateReportPDF = flag.Bool("generate-report-pdf", true, "generate report pdf, including diagrams")
@@ -4071,7 +3458,7 @@ func (context *Context) applyWildcardRiskTrackingEvaluation() {
 	if *context.verbose {
 		fmt.Println("Executing risk tracking evaluation")
 	}
-	for syntheticRiskIdPattern, riskTracking := range context.deferredRiskTrackingDueToWildcardMatching {
+	for syntheticRiskIdPattern, riskTracking := range context.getDeferredRiskTrackingDueToWildcardMatching() {
 		if *context.verbose {
 			fmt.Println("Applying wildcard risk tracking for risk id: " + syntheticRiskIdPattern)
 		}
@@ -4100,6 +3487,17 @@ func (context *Context) applyWildcardRiskTrackingEvaluation() {
 			}
 		}
 	}
+}
+
+func (context *Context) getDeferredRiskTrackingDueToWildcardMatching() map[string]model.RiskTracking {
+	deferredRiskTrackingDueToWildcardMatching := make(map[string]model.RiskTracking)
+	for syntheticRiskId, riskTracking := range context.parsedModel.RiskTracking {
+		if strings.Contains(syntheticRiskId, "*") { // contains a wildcard char
+			deferredRiskTrackingDueToWildcardMatching[syntheticRiskId] = riskTracking
+		}
+	}
+
+	return deferredRiskTrackingDueToWildcardMatching
 }
 
 func (context *Context) hasNotYetAnyDirectNonWildcardRiskTracking(syntheticRiskId string) bool {
@@ -4393,25 +3791,6 @@ func lowerCaseAndTrim(tags []string) []string {
 	return tags
 }
 
-func (context *Context) checkTags(tags []string, where string) []string {
-	var tagsUsed = make([]string, 0)
-	if tags != nil {
-		tagsUsed = make([]string, len(tags))
-		for i, parsedEntry := range tags {
-			referencedTag := fmt.Sprintf("%v", parsedEntry)
-			context.checkTagExists(referencedTag, where)
-			tagsUsed[i] = referencedTag
-		}
-	}
-	return tagsUsed
-}
-
-func (context *Context) checkTagExists(referencedTag, where string) {
-	if !contains(context.parsedModel.TagsAvailable, referencedTag) {
-		panic(errors.New("missing referenced tag in overall tag list at " + where + ": " + referencedTag))
-	}
-}
-
 func contains(a []string, x string) bool {
 	for _, n := range a {
 		if x == n {
@@ -4419,14 +3798,6 @@ func contains(a []string, x string) bool {
 		}
 	}
 	return false
-}
-
-func withDefault(value string, defaultWhenEmpty string) string {
-	trimmed := strings.TrimSpace(value)
-	if len(trimmed) > 0 && trimmed != "<nil>" {
-		return trimmed
-	}
-	return strings.TrimSpace(defaultWhenEmpty)
 }
 
 func hash(s string) string {
