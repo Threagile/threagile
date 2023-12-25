@@ -3,6 +3,11 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 */
 package types
 
+import (
+	"errors"
+	"strings"
+)
+
 type TechnicalAssetMachine int
 
 const (
@@ -26,6 +31,16 @@ var TechnicalAssetMachineTypeDescription = [...]TypeDescription{
 	{"virtual", "A virtual machine"},
 	{"container", "A container"},
 	{"serverless", "A serverless application"},
+}
+
+func ParseTechnicalAssetMachine(value string) (technicalAssetMachine TechnicalAssetMachine, err error) {
+	value = strings.TrimSpace(value)
+	for _, candidate := range TechnicalAssetMachineValues() {
+		if candidate.String() == value {
+			return candidate.(TechnicalAssetMachine), err
+		}
+	}
+	return technicalAssetMachine, errors.New("Unable to parse into type: " + value)
 }
 
 func (what TechnicalAssetMachine) String() string {

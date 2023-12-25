@@ -3,6 +3,11 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 */
 package types
 
+import (
+	"errors"
+	"strings"
+)
+
 type TrustBoundaryType int
 
 const (
@@ -35,6 +40,16 @@ var TrustBoundaryTypeDescription = [...]TypeDescription{
 	{"network-cloud-security-group", "Cloud rules controlling network traffic"},
 	{"network-policy-namespace-isolation", "Segregation in a Kubernetes cluster"},
 	{"execution-environment", "Logical group of items (not a protective network boundary in that sense). More like a namespace or another logical group of items"},
+}
+
+func ParseTrustBoundary(value string) (trustBoundary TrustBoundaryType, err error) {
+	value = strings.TrimSpace(value)
+	for _, candidate := range TrustBoundaryTypeValues() {
+		if candidate.String() == value {
+			return candidate.(TrustBoundaryType), err
+		}
+	}
+	return trustBoundary, errors.New("Unable to parse into type: " + value)
 }
 
 func (what TrustBoundaryType) String() string {
