@@ -53,7 +53,7 @@ type ParsedModel struct {
 func ParseModel(modelInput *input.ModelInput) (*ParsedModel, error) {
 	businessCriticality, err := types.ParseCriticality(modelInput.BusinessCriticality)
 	if err != nil {
-		panic(errors.New("unknown 'business_criticality' value of application: " + modelInput.BusinessCriticality))
+		return nil, errors.New("unknown 'business_criticality' value of application: " + modelInput.BusinessCriticality)
 	}
 
 	reportDate := time.Now()
@@ -61,7 +61,7 @@ func ParseModel(modelInput *input.ModelInput) (*ParsedModel, error) {
 		var parseError error
 		reportDate, parseError = time.Parse("2006-01-02", modelInput.Date)
 		if parseError != nil {
-			panic(errors.New("unable to parse 'date' value of model file"))
+			return nil, errors.New("unable to parse 'date' value of model file")
 		}
 	}
 
@@ -107,28 +107,35 @@ func ParseModel(modelInput *input.ModelInput) (*ParsedModel, error) {
 
 		usage, err := types.ParseUsage(asset.Usage)
 		if err != nil {
-			panic(errors.New("unknown 'usage' value of data asset '" + title + "': " + asset.Usage))
+			return nil, errors.New("unknown 'usage' value of data asset '" + title + "': " + asset.Usage)
 		}
 		quantity, err := types.ParseQuantity(asset.Quantity)
 		if err != nil {
-			panic(errors.New("unknown 'quantity' value of data asset '" + title + "': " + asset.Quantity))
+			return nil, errors.New("unknown 'quantity' value of data asset '" + title + "': " + asset.Quantity)
 		}
 		confidentiality, err := types.ParseConfidentiality(asset.Confidentiality)
 		if err != nil {
-			panic(errors.New("unknown 'confidentiality' value of data asset '" + title + "': " + asset.Confidentiality))
+			return nil, errors.New("unknown 'confidentiality' value of data asset '" + title + "': " + asset.Confidentiality)
 		}
 		integrity, err := types.ParseCriticality(asset.Integrity)
 		if err != nil {
-			panic(errors.New("unknown 'integrity' value of data asset '" + title + "': " + asset.Integrity))
+			return nil, errors.New("unknown 'integrity' value of data asset '" + title + "': " + asset.Integrity)
 		}
 		availability, err := types.ParseCriticality(asset.Availability)
 		if err != nil {
-			panic(errors.New("unknown 'availability' value of data asset '" + title + "': " + asset.Availability))
+			return nil, errors.New("unknown 'availability' value of data asset '" + title + "': " + asset.Availability)
 		}
 
-		checkIdSyntax(id)
+		err = checkIdSyntax(id)
+		if err != nil {
+			return nil, err
+		}
 		if _, exists := parsedModel.DataAssets[id]; exists {
-			panic(errors.New("duplicate id used: " + id))
+			return nil, errors.New("duplicate id used: " + id)
+		}
+		tags, err := parsedModel.checkTags(lowerCaseAndTrim(asset.Tags), "data asset '"+title+"'")
+		if err != nil {
+			return nil, err
 		}
 		parsedModel.DataAssets[id] = DataAsset{
 			Id:                     id,
@@ -136,7 +143,7 @@ func ParseModel(modelInput *input.ModelInput) (*ParsedModel, error) {
 			Usage:                  usage,
 			Description:            withDefault(fmt.Sprintf("%v", asset.Description), title),
 			Quantity:               quantity,
-			Tags:                   parsedModel.checkTags(lowerCaseAndTrim(asset.Tags), "data asset '"+title+"'"),
+			Tags:                   tags,
 			Origin:                 fmt.Sprintf("%v", asset.Origin),
 			Owner:                  fmt.Sprintf("%v", asset.Owner),
 			Confidentiality:        confidentiality,
@@ -153,7 +160,7 @@ func ParseModel(modelInput *input.ModelInput) (*ParsedModel, error) {
 
 		usage, err := types.ParseUsage(asset.Usage)
 		if err != nil {
-			panic(errors.New("unknown 'usage' value of technical asset '" + title + "': " + asset.Usage))
+			return nil, errors.New("unknown 'usage' value of technical asset '" + title + "': " + asset.Usage)
 		}
 
 		var dataAssetsProcessed = make([]string, 0)
@@ -220,7 +227,7 @@ func ParseModel(modelInput *input.ModelInput) (*ParsedModel, error) {
 			for _, dataFormatName := range asset.DataFormatsAccepted {
 				dataFormat, err := types.ParseDataFormat(dataFormatName)
 				if err != nil {
-					panic(errors.New("unknown 'data_formats_accepted' value of technical asset '" + title + "': " + fmt.Sprintf("%v", dataFormatName)))
+					return nil, errors.New("unknown 'data_formats_accepted' value of technical asset '" + title + "': " + fmt.Sprintf("%v", dataFormatName))
 				}
 				dataFormatsAccepted = append(dataFormatsAccepted, dataFormat)
 			}
@@ -287,6 +294,10 @@ func ParseModel(modelInput *input.ModelInput) (*ParsedModel, error) {
 				if err != nil {
 					return nil, err
 				}
+				tags, err := parsedModel.checkTags(lowerCaseAndTrim(commLink.Tags), "communication link '"+commLinkTitle+"' of technical asset '"+title+"'")
+				if err != nil {
+					return nil, err
+				}
 				commLink := CommunicationLink{
 					Id:                     commLinkId,
 					SourceId:               id,
@@ -297,7 +308,7 @@ func ParseModel(modelInput *input.ModelInput) (*ParsedModel, error) {
 					Authentication:         authentication,
 					Authorization:          authorization,
 					Usage:                  usage,
-					Tags:                   parsedModel.checkTags(lowerCaseAndTrim(commLink.Tags), "communication link '"+commLinkTitle+"' of technical asset '"+title+"'"),
+					Tags:                   tags,
 					VPN:                    commLink.VPN,
 					IpFiltered:             commLink.IpFiltered,
 					Readonly:               commLink.Readonly,
@@ -315,9 +326,16 @@ func ParseModel(modelInput *input.ModelInput) (*ParsedModel, error) {
 			}
 		}
 
-		checkIdSyntax(id)
+		err = checkIdSyntax(id)
+		if err != nil {
+			return nil, err
+		}
 		if _, exists := parsedModel.TechnicalAssets[id]; exists {
-			panic(errors.New("duplicate id used: " + id))
+			return nil, errors.New("duplicate id used: " + id)
+		}
+		tags, err := parsedModel.checkTags(lowerCaseAndTrim(asset.Tags), "technical asset '"+title+"'")
+		if err != nil {
+			return nil, err
 		}
 		parsedModel.TechnicalAssets[id] = TechnicalAsset{
 			Id:                      id,
@@ -327,7 +345,7 @@ func ParseModel(modelInput *input.ModelInput) (*ParsedModel, error) {
 			Type:                    technicalAssetType,
 			Size:                    technicalAssetSize,
 			Technology:              technicalAssetTechnology,
-			Tags:                    parsedModel.checkTags(lowerCaseAndTrim(asset.Tags), "technical asset '"+title+"'"),
+			Tags:                    tags,
 			Machine:                 technicalAssetMachine,
 			Internet:                asset.Internet,
 			Encryption:              encryption,
@@ -364,10 +382,10 @@ func ParseModel(modelInput *input.ModelInput) (*ParsedModel, error) {
 				technicalAssetsInside[i] = fmt.Sprintf("%v", parsedInsideAsset)
 				_, found := parsedModel.TechnicalAssets[technicalAssetsInside[i]]
 				if !found {
-					panic(errors.New("missing referenced technical asset " + technicalAssetsInside[i] + " at trust boundary '" + title + "'"))
+					return nil, errors.New("missing referenced technical asset " + technicalAssetsInside[i] + " at trust boundary '" + title + "'")
 				}
 				if checklistToAvoidAssetBeingModeledInMultipleTrustBoundaries[technicalAssetsInside[i]] == true {
-					panic(errors.New("referenced technical asset " + technicalAssetsInside[i] + " at trust boundary '" + title + "' is modeled in multiple trust boundaries"))
+					return nil, errors.New("referenced technical asset " + technicalAssetsInside[i] + " at trust boundary '" + title + "' is modeled in multiple trust boundaries")
 				}
 				checklistToAvoidAssetBeingModeledInMultipleTrustBoundaries[technicalAssetsInside[i]] = true
 				//fmt.Println("asset "+technicalAssetsInside[i]+" at i="+strconv.Itoa(i))
@@ -385,21 +403,24 @@ func ParseModel(modelInput *input.ModelInput) (*ParsedModel, error) {
 
 		trustBoundaryType, err := types.ParseTrustBoundary(boundary.Type)
 		if err != nil {
-			panic(errors.New("unknown 'type' of trust boundary '" + title + "': " + fmt.Sprintf("%v", boundary.Type)))
+			return nil, errors.New("unknown 'type' of trust boundary '" + title + "': " + fmt.Sprintf("%v", boundary.Type))
 		}
-
+		tags, err := parsedModel.checkTags(lowerCaseAndTrim(boundary.Tags), "trust boundary '"+title+"'")
 		trustBoundary := TrustBoundary{
 			Id:                    id,
 			Title:                 title, //fmt.Sprintf("%v", boundary["title"]),
 			Description:           withDefault(fmt.Sprintf("%v", boundary.Description), title),
 			Type:                  trustBoundaryType,
-			Tags:                  parsedModel.checkTags(lowerCaseAndTrim(boundary.Tags), "trust boundary '"+title+"'"),
+			Tags:                  tags,
 			TechnicalAssetsInside: technicalAssetsInside,
 			TrustBoundariesNested: trustBoundariesNested,
 		}
-		checkIdSyntax(id)
+		err = checkIdSyntax(id)
+		if err != nil {
+			return nil, err
+		}
 		if _, exists := parsedModel.TrustBoundaries[id]; exists {
-			panic(errors.New("duplicate id used: " + id))
+			return nil, errors.New("duplicate id used: " + id)
 		}
 		parsedModel.TrustBoundaries[id] = trustBoundary
 		for _, technicalAsset := range trustBoundary.TechnicalAssetsInside {
@@ -430,17 +451,23 @@ func ParseModel(modelInput *input.ModelInput) (*ParsedModel, error) {
 				technicalAssetsRunning[i] = assetId
 			}
 		}
-
+		tags, err := parsedModel.checkTags(lowerCaseAndTrim(inputRuntime.Tags), "shared runtime '"+title+"'")
+		if err != nil {
+			return nil, err
+		}
 		sharedRuntime := SharedRuntime{
 			Id:                     id,
 			Title:                  title, //fmt.Sprintf("%v", boundary["title"]),
 			Description:            withDefault(fmt.Sprintf("%v", inputRuntime.Description), title),
-			Tags:                   parsedModel.checkTags(inputRuntime.Tags, "shared runtime '"+title+"'"),
+			Tags:                   tags,
 			TechnicalAssetsRunning: technicalAssetsRunning,
 		}
-		checkIdSyntax(id)
+		err = checkIdSyntax(id)
+		if err != nil {
+			return nil, err
+		}
 		if _, exists := parsedModel.SharedRuntimes[id]; exists {
-			panic(errors.New("duplicate id used: " + id))
+			return nil, errors.New("duplicate id used: " + id)
 		}
 		parsedModel.SharedRuntimes[id] = sharedRuntime
 	}
@@ -452,11 +479,11 @@ func ParseModel(modelInput *input.ModelInput) (*ParsedModel, error) {
 
 		function, err := types.ParseRiskFunction(individualCategory.Function)
 		if err != nil {
-			panic(errors.New("unknown 'function' value of individual risk category '" + title + "': " + fmt.Sprintf("%v", individualCategory.Function)))
+			return nil, errors.New("unknown 'function' value of individual risk category '" + title + "': " + fmt.Sprintf("%v", individualCategory.Function))
 		}
 		stride, err := types.ParseSTRIDE(individualCategory.STRIDE)
 		if err != nil {
-			panic(errors.New("unknown 'stride' value of individual risk category '" + title + "': " + fmt.Sprintf("%v", individualCategory.STRIDE)))
+			return nil, errors.New("unknown 'stride' value of individual risk category '" + title + "': " + fmt.Sprintf("%v", individualCategory.STRIDE))
 		}
 
 		cat := RiskCategory{
@@ -477,9 +504,12 @@ func ParseModel(modelInput *input.ModelInput) (*ParsedModel, error) {
 			ModelFailurePossibleReason: individualCategory.ModelFailurePossibleReason,
 			CWE:                        individualCategory.CWE,
 		}
-		checkIdSyntax(id)
+		err = checkIdSyntax(id)
+		if err != nil {
+			return nil, err
+		}
 		if _, exists := parsedModel.IndividualRiskCategories[id]; exists {
-			panic(errors.New("duplicate id used: " + id))
+			return nil, errors.New("duplicate id used: " + id)
 		}
 		parsedModel.IndividualRiskCategories[id] = cat
 
@@ -492,15 +522,15 @@ func ParseModel(modelInput *input.ModelInput) (*ParsedModel, error) {
 				var dataBreachTechnicalAssetIDs []string
 				severity, err := types.ParseRiskSeverity(individualRiskInstance.Severity)
 				if err != nil {
-					panic(errors.New("unknown 'severity' value of individual risk instance '" + title + "': " + fmt.Sprintf("%v", individualRiskInstance.Severity)))
+					return nil, errors.New("unknown 'severity' value of individual risk instance '" + title + "': " + fmt.Sprintf("%v", individualRiskInstance.Severity))
 				}
 				exploitationLikelihood, err := types.ParseRiskExploitationLikelihood(individualRiskInstance.ExploitationLikelihood)
 				if err != nil {
-					panic(errors.New("unknown 'exploitation_likelihood' value of individual risk instance '" + title + "': " + fmt.Sprintf("%v", individualRiskInstance.ExploitationLikelihood)))
+					return nil, errors.New("unknown 'exploitation_likelihood' value of individual risk instance '" + title + "': " + fmt.Sprintf("%v", individualRiskInstance.ExploitationLikelihood))
 				}
 				exploitationImpact, err := types.ParseRiskExploitationImpact(individualRiskInstance.ExploitationImpact)
 				if err != nil {
-					panic(errors.New("unknown 'exploitation_impact' value of individual risk instance '" + title + "': " + fmt.Sprintf("%v", individualRiskInstance.ExploitationImpact)))
+					return nil, errors.New("unknown 'exploitation_impact' value of individual risk instance '" + title + "': " + fmt.Sprintf("%v", individualRiskInstance.ExploitationImpact))
 				}
 
 				if len(individualRiskInstance.MostRelevantDataAsset) > 0 {
@@ -591,13 +621,13 @@ func ParseModel(modelInput *input.ModelInput) (*ParsedModel, error) {
 			var parseError error
 			date, parseError = time.Parse("2006-01-02", riskTracking.Date)
 			if parseError != nil {
-				panic(errors.New("unable to parse 'date' of risk tracking '" + syntheticRiskId + "': " + riskTracking.Date))
+				return nil, errors.New("unable to parse 'date' of risk tracking '" + syntheticRiskId + "': " + riskTracking.Date)
 			}
 		}
 
 		status, err := types.ParseRiskStatus(riskTracking.Status)
 		if err != nil {
-			panic(errors.New("unknown 'status' value of risk tracking '" + syntheticRiskId + "': " + riskTracking.Status))
+			return nil, errors.New("unknown 'status' value of risk tracking '" + syntheticRiskId + "': " + riskTracking.Status)
 		}
 
 		tracking := RiskTracking{
@@ -625,11 +655,12 @@ func ParseModel(modelInput *input.ModelInput) (*ParsedModel, error) {
 	return &parsedModel, nil
 }
 
-func checkIdSyntax(id string) {
+func checkIdSyntax(id string) error {
 	validIdSyntax := regexp.MustCompile(`^[a-zA-Z0-9\-]+$`)
 	if !validIdSyntax.MatchString(id) {
-		panic(errors.New("invalid id syntax used (only letters, numbers, and hyphen allowed): " + id))
+		return errors.New("invalid id syntax used (only letters, numbers, and hyphen allowed): " + id)
 	}
+	return nil
 }
 
 func createSyntheticId(categoryId string,
@@ -680,23 +711,27 @@ func lowerCaseAndTrim(tags []string) []string {
 	return tags
 }
 
-func (parsedModel *ParsedModel) checkTags(tags []string, where string) []string {
+func (parsedModel *ParsedModel) checkTags(tags []string, where string) ([]string, error) {
 	var tagsUsed = make([]string, 0)
 	if tags != nil {
 		tagsUsed = make([]string, len(tags))
 		for i, parsedEntry := range tags {
 			referencedTag := fmt.Sprintf("%v", parsedEntry)
-			parsedModel.checkTagExists(referencedTag, where)
+			err := parsedModel.checkTagExists(referencedTag, where)
+			if err != nil {
+				return nil, err
+			}
 			tagsUsed[i] = referencedTag
 		}
 	}
-	return tagsUsed
+	return tagsUsed, nil
 }
 
-func (parsedModel *ParsedModel) checkTagExists(referencedTag, where string) {
+func (parsedModel *ParsedModel) checkTagExists(referencedTag, where string) error {
 	if !contains(parsedModel.TagsAvailable, referencedTag) {
-		panic(errors.New("missing referenced tag in overall tag list at " + where + ": " + referencedTag))
+		return errors.New("missing referenced tag in overall tag list at " + where + ": " + referencedTag)
 	}
+	return nil
 }
 
 func createDataFlowId(sourceAssetId, title string) (string, error) {
@@ -709,7 +744,7 @@ func createDataFlowId(sourceAssetId, title string) (string, error) {
 
 func (parsedModel *ParsedModel) checkDataAssetTargetExists(referencedAsset, where string) error {
 	if _, ok := parsedModel.DataAssets[referencedAsset]; !ok {
-		panic(errors.New("missing referenced data asset target at " + where + ": " + referencedAsset))
+		return errors.New("missing referenced data asset target at " + where + ": " + referencedAsset)
 	}
 	return nil
 }
