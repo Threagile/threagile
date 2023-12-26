@@ -18,37 +18,38 @@ import (
 )
 
 type ParsedModel struct {
-	Author                                        input.Author
-	Title                                         string
-	Date                                          time.Time
-	ManagementSummaryComment                      string
-	BusinessOverview                              input.Overview
-	TechnicalOverview                             input.Overview
-	BusinessCriticality                           types.Criticality
-	SecurityRequirements                          map[string]string
-	Questions                                     map[string]string
-	AbuseCases                                    map[string]string
-	TagsAvailable                                 []string
-	DataAssets                                    map[string]DataAsset
-	TechnicalAssets                               map[string]TechnicalAsset
-	TrustBoundaries                               map[string]TrustBoundary
-	SharedRuntimes                                map[string]SharedRuntime
-	IndividualRiskCategories                      map[string]RiskCategory
-	RiskTracking                                  map[string]RiskTracking
-	CommunicationLinks                            map[string]CommunicationLink
-	AllSupportedTags                              map[string]bool
-	DiagramTweakNodesep, DiagramTweakRanksep      int
-	DiagramTweakEdgeLayout                        string
-	DiagramTweakSuppressEdgeLabels                bool
-	DiagramTweakLayoutLeftToRight                 bool
-	DiagramTweakInvisibleConnectionsBetweenAssets []string
-	DiagramTweakSameRankAssets                    []string
+	Author                                        input.Author                 `json:"author" yaml:"author"`
+	Title                                         string                       `json:"title,omitempty" yaml:"title"`
+	Date                                          time.Time                    `json:"date" yaml:"date"`
+	ManagementSummaryComment                      string                       `json:"management_summary_comment,omitempty" yaml:"management_summary_comment"`
+	BusinessOverview                              input.Overview               `json:"business_overview" yaml:"business_overview"`
+	TechnicalOverview                             input.Overview               `json:"technical_overview" yaml:"technical_overview"`
+	BusinessCriticality                           types.Criticality            `json:"business_criticality,omitempty" yaml:"business_criticality"`
+	SecurityRequirements                          map[string]string            `json:"security_requirements,omitempty" yaml:"security_requirements"`
+	Questions                                     map[string]string            `json:"questions,omitempty" yaml:"questions"`
+	AbuseCases                                    map[string]string            `json:"abuse_cases,omitempty" yaml:"abuse_cases"`
+	TagsAvailable                                 []string                     `json:"tags_available,omitempty" yaml:"tags_available"`
+	DataAssets                                    map[string]DataAsset         `json:"data_assets,omitempty" yaml:"data_assets"`
+	TechnicalAssets                               map[string]TechnicalAsset    `json:"technical_assets,omitempty" yaml:"technical_assets"`
+	TrustBoundaries                               map[string]TrustBoundary     `json:"trust_boundaries,omitempty" yaml:"trust_boundaries"`
+	SharedRuntimes                                map[string]SharedRuntime     `json:"shared_runtimes,omitempty" yaml:"shared_runtimes"`
+	IndividualRiskCategories                      map[string]RiskCategory      `json:"individual_risk_categories,omitempty" yaml:"individual_risk_categories"`
+	RiskTracking                                  map[string]RiskTracking      `json:"risk_tracking,omitempty" yaml:"risk_tracking"`
+	CommunicationLinks                            map[string]CommunicationLink `json:"communication_links,omitempty" yaml:"communication_links"`
+	AllSupportedTags                              map[string]bool              `json:"all_supported_tags,omitempty" yaml:"all_supported_tags"`
+	DiagramTweakNodesep                           int                          `json:"diagram_tweak_nodesep,omitempty" yaml:"diagram_tweak_nodesep"`
+	DiagramTweakRanksep                           int                          `json:"diagram_tweak_ranksep,omitempty" yaml:"diagram_tweak_ranksep"`
+	DiagramTweakEdgeLayout                        string                       `json:"diagram_tweak_edge_layout,omitempty" yaml:"diagram_tweak_edge_layout"`
+	DiagramTweakSuppressEdgeLabels                bool                         `json:"diagram_tweak_suppress_edge_labels,omitempty" yaml:"diagram_tweak_suppress_edge_labels"`
+	DiagramTweakLayoutLeftToRight                 bool                         `json:"diagram_tweak_layout_left_to_right,omitempty" yaml:"diagram_tweak_layout_left_to_right"`
+	DiagramTweakInvisibleConnectionsBetweenAssets []string                     `json:"diagram_tweak_invisible_connections_between_assets,omitempty" yaml:"diagram_tweak_invisible_connections_between_assets"`
+	DiagramTweakSameRankAssets                    []string                     `json:"diagram_tweak_same_rank_assets,omitempty" yaml:"diagram_tweak_same_rank_assets"`
 
 	// TODO: those are generated based on items above and needs to be private
-	IncomingTechnicalCommunicationLinksMappedByTargetId   map[string][]CommunicationLink
-	DirectContainingTrustBoundaryMappedByTechnicalAssetId map[string]TrustBoundary
-	GeneratedRisksByCategory                              map[string][]Risk
-	GeneratedRisksBySyntheticId                           map[string]Risk
+	IncomingTechnicalCommunicationLinksMappedByTargetId   map[string][]CommunicationLink `json:"incoming_technical_communication_links_mapped_by_target_id,omitempty" yaml:"incoming_technical_communication_links_mapped_by_target_id"`
+	DirectContainingTrustBoundaryMappedByTechnicalAssetId map[string]TrustBoundary       `json:"direct_containing_trust_boundary_mapped_by_technical_asset_id,omitempty" yaml:"direct_containing_trust_boundary_mapped_by_technical_asset_id"`
+	GeneratedRisksByCategory                              map[string][]Risk              `json:"generated_risks_by_category,omitempty" yaml:"generated_risks_by_category"`
+	GeneratedRisksBySyntheticId                           map[string]Risk                `json:"generated_risks_by_synthetic_id,omitempty" yaml:"generated_risks_by_synthetic_id"`
 }
 
 func ParseModel(modelInput *input.ModelInput) (*ParsedModel, error) {

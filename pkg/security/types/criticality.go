@@ -4,7 +4,9 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package types
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
 )
 
@@ -87,4 +89,19 @@ func (what Criticality) RatingStringInScale() string {
 	}
 	result += " in scale of 5)"
 	return result
+}
+
+func (what Criticality) MarshalJSON() ([]byte, error) {
+	return json.Marshal(what.String())
+}
+
+func (what *Criticality) UnmarshalJSON([]byte) error {
+	for index, description := range CriticalityTypeDescription {
+		if strings.ToLower(what.String()) == strings.ToLower(description.Name) {
+			*what = Criticality(index)
+			return nil
+		}
+	}
+
+	return fmt.Errorf("unknown criticality value %q", int(*what))
 }

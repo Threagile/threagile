@@ -9,7 +9,7 @@ const (
 	ReportFilename                         = "report.pdf"
 	ExcelRisksFilename                     = "risks.xlsx"
 	ExcelTagsFilename                      = "tags.xlsx"
-	JsonRisksFilename                      = "risks.json"
+	JsonRisksFilename                      = "all.json"
 	JsonTechnicalAssetsFilename            = "technical-assets.json"
 	JsonStatsFilename                      = "stats.json"
 	DataFlowDiagramFilenameDOT             = "data-flow-diagram.gv"

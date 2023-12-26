@@ -4,7 +4,9 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package types
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
 )
 
@@ -49,4 +51,19 @@ func (what Usage) Explain() string {
 
 func (what Usage) Title() string {
 	return [...]string{"Business", "DevOps"}[what]
+}
+
+func (what Usage) MarshalJSON() ([]byte, error) {
+	return json.Marshal(what.String())
+}
+
+func (what *Usage) UnmarshalJSON([]byte) error {
+	for index, description := range UsageTypeDescription {
+		if strings.ToLower(what.String()) == strings.ToLower(description.Name) {
+			*what = Usage(index)
+			return nil
+		}
+	}
+
+	return fmt.Errorf("unknown usage type value %q", int(*what))
 }

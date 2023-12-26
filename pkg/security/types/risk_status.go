@@ -6,6 +6,7 @@ package types
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
 )
 
@@ -69,4 +70,15 @@ func (what RiskStatus) MarshalJSON() ([]byte, error) {
 
 func (what RiskStatus) IsStillAtRisk() bool {
 	return what == Unchecked || what == InDiscussion || what == Accepted || what == InProgress
+}
+
+func (what *RiskStatus) UnmarshalJSON([]byte) error {
+	for index, description := range RiskStatusTypeDescription {
+		if strings.ToLower(what.String()) == strings.ToLower(description.Name) {
+			*what = RiskStatus(index)
+			return nil
+		}
+	}
+
+	return fmt.Errorf("unknown risk status value %q", int(*what))
 }

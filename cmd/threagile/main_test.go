@@ -4,13 +4,16 @@ import (
 	"encoding/json"
 	"github.com/akedrou/textdiff"
 	"github.com/threagile/threagile/pkg/input"
+	"github.com/threagile/threagile/pkg/model"
+	"log"
+	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 	"testing"
 )
 
-func TestParseModel(t *testing.T) {
+func TestParseModelYaml(t *testing.T) {
 	flatModelFile := filepath.Join("..", "..", "test", "all.yaml")
 	flatModel := *new(input.ModelInput).Defaults()
 	flatLoadError := flatModel.Load(flatModelFile)
@@ -48,6 +51,28 @@ func TestParseModel(t *testing.T) {
 
 	if string(flatData) != string(splitData) {
 		t.Errorf("parsing split model files is broken; diff: %v", textdiff.Unified(flatModelFile, splitModelFile, string(flatData), string(splitData)))
+		return
+	}
+}
+
+func TestParseModelJson(t *testing.T) {
+	modelFile := filepath.Join("..", "..", "test", "all.json")
+	modelJson, readError := os.ReadFile(modelFile)
+	if readError != nil {
+		t.Error("Unable to read model file: ", readError)
+		return
+	}
+
+	var modelStruct model.ParsedModel
+	unmarshalError := json.Unmarshal(modelJson, &modelStruct)
+	if unmarshalError != nil {
+		log.Fatal("Unable to parse model json: ", unmarshalError)
+		return
+	}
+
+	_, marshalError := json.Marshal(&modelStruct)
+	if marshalError != nil {
+		log.Fatal("Unable to print model json: ", marshalError)
 		return
 	}
 }

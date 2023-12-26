@@ -6,6 +6,7 @@ package types
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
 )
 
@@ -59,4 +60,15 @@ func (what RiskFunction) Title() string {
 
 func (what RiskFunction) MarshalJSON() ([]byte, error) {
 	return json.Marshal(what.String())
+}
+
+func (what *RiskFunction) UnmarshalJSON([]byte) error {
+	for index, description := range RiskFunctionTypeDescription {
+		if strings.ToLower(what.String()) == strings.ToLower(description.Name) {
+			*what = RiskFunction(index)
+			return nil
+		}
+	}
+
+	return fmt.Errorf("unknown risk function %q", int(*what))
 }

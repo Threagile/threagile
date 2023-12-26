@@ -4,7 +4,9 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package types
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
 )
 
@@ -68,4 +70,19 @@ func (what TrustBoundaryType) IsNetworkBoundary() bool {
 
 func (what TrustBoundaryType) IsWithinCloud() bool {
 	return what == NetworkCloudProvider || what == NetworkCloudSecurityGroup
+}
+
+func (what TrustBoundaryType) MarshalJSON() ([]byte, error) {
+	return json.Marshal(what.String())
+}
+
+func (what *TrustBoundaryType) UnmarshalJSON([]byte) error {
+	for index, description := range TrustBoundaryTypeDescription {
+		if strings.ToLower(what.String()) == strings.ToLower(description.Name) {
+			*what = TrustBoundaryType(index)
+			return nil
+		}
+	}
+
+	return fmt.Errorf("unknown trust boundary type value %q", int(*what))
 }

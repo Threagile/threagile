@@ -1,0 +1,2608 @@
+{
+  "author": {
+    "name": "John Doe",
+    "homepage": "www.example.com"
+  },
+  "title": "Some Example Application",
+  "date": "2020-07-01T00:00:00Z",
+  "management_summary_comment": "Just some \u003cb\u003emore\u003c/b\u003e custom summary possible here...\n",
+  "business_overview": {
+    "description": "Some more \u003ci\u003edemo text\u003c/i\u003e here and even images...",
+    "images": null
+  },
+  "technical_overview": {
+    "description": "Some more \u003ci\u003edemo text\u003c/i\u003e here and even images...",
+    "images": null
+  },
+  "business_criticality": 2,
+  "security_requirements": {
+    "EU-DSGVO": "Mandatory EU-Datenschutzgrundverordnung",
+    "Input Validation": "Strict input validation is required to reduce the overall attack surface.",
+    "Securing Administrative Access": "Administrative access must be secured with strong encryption and multi-factor authentication."
+  },
+  "questions": {
+    "How are the admin clients managed/protected against compromise?": "",
+    "How are the build pipeline components managed/protected against compromise?": "Managed by XYZ\n",
+    "How are the development clients managed/protected against compromise?": "Managed by XYZ\n"
+  },
+  "abuse_cases": {
+    "CPU-Cycle Theft": "As a hacker I want to steal CPU cycles in order to transform them into money via installed crypto currency miners.\n",
+    "Contract Filesystem Compromise": "As a hacker I want to access the filesystem storing the contract PDFs in order to steal/modify contract data.\n",
+    "Cross-Site Scripting Attacks": "As a hacker I want to execute Cross-Site Scripting (XSS) and similar attacks in order to takeover victim sessions and cause reputational damage.\n",
+    "Database Compromise": "As a hacker I want to access the database backend of the ERP-System in order to steal/modify sensitive business data.\n",
+    "Denial-of-Service": "As a hacker I want to disturb the functionality of the backend system in order to cause indirect financial damage via unusable features.\n",
+    "Denial-of-Service of ERP/DB Functionality": "As a hacker I want to disturb the functionality of the ERP system and/or it's database in order to cause indirect financial damage via unusable internal ERP features (not related to customer portal).\n",
+    "Denial-of-Service of Enduser Functionality": "As a hacker I want to disturb the functionality of the enduser parts of the application in order to cause direct financial damage (lower sales).\n",
+    "ERP-System Compromise": "As a hacker I want to access the ERP-System in order to steal/modify sensitive business data.\n",
+    "Identity Theft": "As a hacker I want to steal identity data in order to reuse credentials and/or keys on other targets of the same company or outside.\n",
+    "PII Theft": "As a hacker I want to steal PII (Personally Identifiable Information) data in order to blackmail the company and/or damage their repudiation by publishing them.\n",
+    "Ransomware": "As a hacker I want to encrypt the storage and file systems in order to demand ransom.\n"
+  },
+  "tags_available": [
+    "linux",
+    "apache",
+    "mysql",
+    "jboss",
+    "keycloak",
+    "jenkins",
+    "git",
+    "oracle",
+    "some-erp",
+    "vmware",
+    "aws",
+    "aws:ec2",
+    "aws:s3"
+  ],
+  "data_assets": {
+    "build-job-config": {
+      "id": "build-job-config",
+      "title": "Build Job Config",
+      "description": "Data for customizing of the build job system.",
+      "usage": 1,
+      "tags": [],
+      "origin": "Company XYZ",
+      "owner": "Company XYZ",
+      "quantity": 0,
+      "confidentiality": 2,
+      "integrity": 3,
+      "availability": 1,
+      "justification_cia_rating": "Data for customizing of the build job system.\n"
+    },
+    "client-application-code": {
+      "id": "client-application-code",
+      "title": "Client Application Code",
+      "description": "Angular and other client-side code delivered by the application.",
+      "usage": 1,
+      "tags": [],
+      "origin": "Company ABC",
+      "owner": "Company ABC",
+      "quantity": 0,
+      "confidentiality": 0,
+      "integrity": 3,
+      "availability": 2,
+      "justification_cia_rating": "The integrity of the public data is critical to avoid reputational damage and the availability is important on the long-term scale (but not critical) to keep the growth rate of the customer base steady.\n"
+    },
+    "contract-summaries": {
+      "id": "contract-summaries",
+      "title": "Customer Contract Summaries",
+      "description": "Customer Contract Summaries",
+      "usage": 0,
+      "tags": [],
+      "origin": "Customer",
+      "owner": "Company XYZ",
+      "quantity": 0,
+      "confidentiality": 2,
+      "integrity": 1,
+      "availability": 1,
+      "justification_cia_rating": "Just some summaries.\n"
+    },
+    "customer-accounts": {
+      "id": "customer-accounts",
+      "title": "Customer Accounts",
+      "description": "Customer Accounts (including transient credentials when entered for checking them)",
+      "usage": 0,
+      "tags": [],
+      "origin": "Customer",
+      "owner": "Company XYZ",
+      "quantity": 2,
+      "confidentiality": 4,
+      "integrity": 3,
+      "availability": 3,
+      "justification_cia_rating": "Customer account data for using the portal are required to be available to offer the portal functionality.\n"
+    },
+    "customer-contracts": {
+      "id": "customer-contracts",
+      "title": "Customer Contracts",
+      "description": "Customer Contracts (PDF)",
+      "usage": 0,
+      "tags": [],
+      "origin": "Customer",
+      "owner": "Company XYZ",
+      "quantity": 2,
+      "confidentiality": 3,
+      "integrity": 3,
+      "availability": 1,
+      "justification_cia_rating": "Contract data might contain financial data as well as personally identifiable information (PII). The integrity and availability of contract data is required for clearing payment disputes.\n"
+    },
+    "customer-operational-data": {
+      "id": "customer-operational-data",
+      "title": "Customer Operational Data",
+      "description": "Customer Operational Data",
+      "usage": 0,
+      "tags": [],
+      "origin": "Customer",
+      "owner": "Company XYZ",
+      "quantity": 2,
+      "confidentiality": 3,
+      "integrity": 3,
+      "availability": 3,
+      "justification_cia_rating": "Customer operational data for using the portal are required to be available to offer the portal functionality and are used in the backend transactions.\n"
+    },
+    "db-dumps": {
+      "id": "db-dumps",
+      "title": "Database Customizing and Dumps",
+      "description": "Data for customizing of the DB system, which might include full database dumps.",
+      "usage": 1,
+      "tags": [
+        "oracle"
+      ],
+      "origin": "Company XYZ",
+      "owner": "Company XYZ",
+      "quantity": 0,
+      "confidentiality": 4,
+      "integrity": 3,
+      "availability": 3,
+      "justification_cia_rating": "Data for customizing of the DB system, which might include full database dumps.\n"
+    },
+    "erp-customizing": {
+      "id": "erp-customizing",
+      "title": "ERP Customizing Data",
+      "description": "Data for customizing of the ERP system.",
+      "usage": 1,
+      "tags": [],
+      "origin": "Company XYZ",
+      "owner": "Company XYZ",
+      "quantity": 0,
+      "confidentiality": 3,
+      "integrity": 3,
+      "availability": 3,
+      "justification_cia_rating": "Data for customizing of the ERP system.\n"
+    },
+    "erp-logs": {
+      "id": "erp-logs",
+      "title": "ERP Logs",
+      "description": "Logs generated by the ERP system.",
+      "usage": 1,
+      "tags": [],
+      "origin": "Company XYZ",
+      "owner": "Company XYZ",
+      "quantity": 2,
+      "confidentiality": 2,
+      "integrity": 0,
+      "availability": 0,
+      "justification_cia_rating": "Logs should not contain PII data and are only required for failure analysis, i.e. they are not considered as hard transactional logs.\n"
+    },
+    "internal-business-data": {
+      "id": "internal-business-data",
+      "title": "Some Internal Business Data",
+      "description": "Internal business data of the ERP system used unrelated to the customer-facing processes.",
+      "usage": 0,
+      "tags": [],
+      "origin": "Company XYZ",
+      "owner": "Company XYZ",
+      "quantity": 1,
+      "confidentiality": 4,
+      "integrity": 3,
+      "availability": 3,
+      "justification_cia_rating": "Data used and/or generated during unrelated other usecases of the ERP-system (when used also by Company XYZ for internal non-customer-portal-related stuff).\n"
+    },
+    "marketing-material": {
+      "id": "marketing-material",
+      "title": "Marketing Material",
+      "description": "Website and marketing data to inform potential customers and generate new leads.",
+      "usage": 1,
+      "tags": [],
+      "origin": "Company ABC",
+      "owner": "Company ABC",
+      "quantity": 0,
+      "confidentiality": 0,
+      "integrity": 2,
+      "availability": 2,
+      "justification_cia_rating": "The integrity of the public data is critical to avoid reputational damage and the availability is important on the long-term scale (but not critical) to keep the growth rate of the customer base steady.\n"
+    },
+    "server-application-code": {
+      "id": "server-application-code",
+      "title": "Server Application Code",
+      "description": "API and other server-side code of the application.",
+      "usage": 1,
+      "tags": [],
+      "origin": "Company ABC",
+      "owner": "Company ABC",
+      "quantity": 0,
+      "confidentiality": 1,
+      "integrity": 4,
+      "availability": 2,
+      "justification_cia_rating": "The integrity of the API code is critical to avoid reputational damage and the availability is important on the long-term scale (but not critical) to keep the growth rate of the customer base steady.\n"
+    }
+  },
+  "technical_assets": {
+    "apache-webserver": {
+      "Id": "apache-webserver",
+      "Title": "Apache Webserver",
+      "Description": "Apache Webserver hosting the API code and client-side code",
+      "Usage": 0,
+      "Type": 1,
+      "Size": 2,
+      "Technology": 6,
+      "Machine": 2,
+      "Internet": false,
+      "MultiTenant": false,
+      "Redundant": false,
+      "CustomDevelopedParts": true,
+      "OutOfScope": false,
+      "UsedAsClientByHuman": false,
+      "Encryption": 0,
+      "JustificationOutOfScope": "",
+      "Owner": "Company ABC",
+      "Confidentiality": 1,
+      "Integrity": 3,
+      "Availability": 3,
+      "JustificationCiaRating": "The correct configuration and reachability of the web server is mandatory for all customer usages of the portal.\n",
+      "Tags": [
+        "linux",
+        "apache",
+        "aws:ec2"
+      ],
+      "DataAssetsProcessed": [
+        "customer-accounts",
+        "customer-operational-data",
+        "customer-contracts",
+        "internal-business-data",
+        "client-application-code",
+        "server-application-code"
+      ],
+      "DataAssetsStored": [
+        "client-application-code",
+        "server-application-code"
+      ],
+      "DataFormatsAccepted": [
+        0,
+        3
+      ],
+      "CommunicationLinks": [
+        {
+          "Id": "apache-webserver\u003eerp-system-traffic",
+          "SourceId": "apache-webserver",
+          "TargetId": "erp-system",
+          "Title": "ERP System Traffic",
+          "Description": "Link to the ERP system",
+          "Protocol": 2,
+          "Tags": [],
+          "VPN": false,
+          "IpFiltered": false,
+          "Readonly": false,
+          "Authentication": 3,
+          "Authorization": 1,
+          "Usage": 0,
+          "DataAssetsSent": [
+            "customer-accounts",
+            "customer-operational-data",
+            "internal-business-data"
+          ],
+          "DataAssetsReceived": [
+            "customer-accounts",
+            "customer-operational-data",
+            "customer-contracts",
+            "internal-business-data"
+          ],
+          "DiagramTweakWeight": 1,
+          "DiagramTweakConstraint": true
+        },
+        {
+          "Id": "apache-webserver\u003eauth-credential-check-traffic",
+          "SourceId": "apache-webserver",
+          "TargetId": "identity-provider",
+          "Title": "Auth Credential Check Traffic",
+          "Description": "Link to the identity provider server",
+          "Protocol": 2,
+          "Tags": [],
+          "VPN": false,
+          "IpFiltered": false,
+          "Readonly": false,
+          "Authentication": 1,
+          "Authorization": 1,
+          "Usage": 0,
+          "DataAssetsSent": [
+            "customer-accounts"
+          ],
+          "DataAssetsReceived": null,
+          "DiagramTweakWeight": 1,
+          "DiagramTweakConstraint": true
+        }
+      ],
+      "DiagramTweakOrder": 0,
+      "RAA": 0
+    },
+    "backend-admin-client": {
+      "Id": "backend-admin-client",
+      "Title": "Backend Admin Client",
+      "Description": "Backend admin client",
+      "Usage": 1,
+      "Type": 0,
+      "Size": 3,
+      "Technology": 2,
+      "Machine": 0,
+      "Internet": false,
+      "MultiTenant": false,
+      "Redundant": false,
+      "CustomDevelopedParts": false,
+      "OutOfScope": true,
+      "UsedAsClientByHuman": true,
+      "Encryption": 0,
+      "JustificationOutOfScope": "Owned and managed by ops provider",
+      "Owner": "Company XYZ",
+      "Confidentiality": 1,
+      "Integrity": 1,
+      "Availability": 1,
+      "JustificationCiaRating": "The client used by Company XYZ to administer the system.\n",
+      "Tags": [],
+      "DataAssetsProcessed": [
+        "erp-logs"
+      ],
+      "DataAssetsStored": [],
+      "DataFormatsAccepted": [],
+      "CommunicationLinks": [
+        {
+          "Id": "backend-admin-client\u003edb-update-access",
+          "SourceId": "backend-admin-client",
+          "TargetId": "sql-database",
+          "Title": "DB Update Access",
+          "Description": "Link to the database (JDBC tunneled via SSH)",
+          "Protocol": 20,
+          "Tags": [],
+          "VPN": false,
+          "IpFiltered": false,
+          "Readonly": false,
+          "Authentication": 4,
+          "Authorization": 1,
+          "Usage": 1,
+          "DataAssetsSent": [
+            "db-dumps"
+          ],
+          "DataAssetsReceived": [
+            "db-dumps",
+            "erp-logs",
+            "customer-accounts",
+            "customer-operational-data"
+          ],
+          "DiagramTweakWeight": 1,
+          "DiagramTweakConstraint": true
+        },
+        {
+          "Id": "backend-admin-client\u003euser-management-access",
+          "SourceId": "backend-admin-client",
+          "TargetId": "ldap-auth-server",
+          "Title": "User Management Access",
+          "Description": "Link to the LDAP auth server for managing users",
+          "Protocol": 33,
+          "Tags": [],
+          "VPN": false,
+          "IpFiltered": false,
+          "Readonly": false,
+          "Authentication": 1,
+          "Authorization": 1,
+          "Usage": 1,
+          "DataAssetsSent": [
+            "customer-accounts"
+          ],
+          "DataAssetsReceived": [
+            "customer-accounts"
+          ],
+          "DiagramTweakWeight": 1,
+          "DiagramTweakConstraint": true
+        },
+        {
+          "Id": "backend-admin-client\u003eerp-web-access",
+          "SourceId": "backend-admin-client",
+          "TargetId": "erp-system",
+          "Title": "ERP Web Access",
+          "Description": "Link to the ERP system (Web)",
+          "Protocol": 2,
+          "Tags": [],
+          "VPN": false,
+          "IpFiltered": false,
+          "Readonly": false,
+          "Authentication": 3,
+          "Authorization": 1,
+          "Usage": 1,
+          "DataAssetsSent": [
+            "erp-customizing"
+          ],
+          "DataAssetsReceived": [
+            "erp-logs"
+          ],
+          "DiagramTweakWeight": 1,
+          "DiagramTweakConstraint": true
+        }
+      ],
+      "DiagramTweakOrder": 0,
+      "RAA": 0
+    },
+    "backoffice-client": {
+      "Id": "backoffice-client",
+      "Title": "Backoffice Client",
+      "Description": "Backoffice client",
+      "Usage": 0,
+      "Type": 0,
+      "Size": 3,
+      "Technology": 3,
+      "Machine": 0,
+      "Internet": false,
+      "MultiTenant": false,
+      "Redundant": false,
+      "CustomDevelopedParts": false,
+      "OutOfScope": true,
+      "UsedAsClientByHuman": true,
+      "Encryption": 0,
+      "JustificationOutOfScope": "Owned and managed by Company XYZ company",
+      "Owner": "Company XYZ",
+      "Confidentiality": 3,
+      "Integrity": 2,
+      "Availability": 2,
+      "JustificationCiaRating": "The client used by Company XYZ to administer and use the system.\n",
+      "Tags": [],
+      "DataAssetsProcessed": [
+        "customer-contracts",
+        "internal-business-data",
+        "erp-logs"
+      ],
+      "DataAssetsStored": [],
+      "DataFormatsAccepted": [],
+      "CommunicationLinks": [
+        {
+          "Id": "backoffice-client\u003eerp-internal-access",
+          "SourceId": "backoffice-client",
+          "TargetId": "erp-system",
+          "Title": "ERP Internal Access",
+          "Description": "Link to the ERP system",
+          "Protocol": 2,
+          "Tags": [
+            "some-erp"
+          ],
+          "VPN": true,
+          "IpFiltered": false,
+          "Readonly": false,
+          "Authentication": 3,
+          "Authorization": 2,
+          "Usage": 0,
+          "DataAssetsSent": [
+            "internal-business-data"
+          ],
+          "DataAssetsReceived": [
+            "customer-contracts",
+            "internal-business-data"
+          ],
+          "DiagramTweakWeight": 1,
+          "DiagramTweakConstraint": true
+        },
+        {
+          "Id": "backoffice-client\u003emarketing-cms-editing",
+          "SourceId": "backoffice-client",
+          "TargetId": "marketing-cms",
+          "Title": "Marketing CMS Editing",
+          "Description": "Link to the CMS for editing content",
+          "Protocol": 2,
+          "Tags": [],
+          "VPN": true,
+          "IpFiltered": false,
+          "Readonly": false,
+          "Authentication": 3,
+          "Authorization": 2,
+          "Usage": 0,
+          "DataAssetsSent": [
+            "marketing-material"
+          ],
+          "DataAssetsReceived": [
+            "marketing-material"
+          ],
+          "DiagramTweakWeight": 1,
+          "DiagramTweakConstraint": true
+        }
+      ],
+      "DiagramTweakOrder": 0,
+      "RAA": 0
+    },
+    "contract-fileserver": {
+      "Id": "contract-fileserver",
+      "Title": "Contract Fileserver",
+      "Description": "NFS Filesystem for storing the contract PDFs",
+      "Usage": 0,
+      "Type": 2,
+      "Size": 3,
+      "Technology": 10,
+      "Machine": 1,
+      "Internet": false,
+      "MultiTenant": false,
+      "Redundant": false,
+      "CustomDevelopedParts": false,
+      "OutOfScope": false,
+      "UsedAsClientByHuman": false,
+      "Encryption": 0,
+      "JustificationOutOfScope": "",
+      "Owner": "Company ABC",
+      "Confidentiality": 3,
+      "Integrity": 3,
+      "Availability": 2,
+      "JustificationCiaRating": "Contract data might contain financial data as well as personally identifiable information (PII). The integrity and availability of contract data is required for clearing payment disputes. The filesystem is also required to be available for storing new contracts of freshly generated customers.\n",
+      "Tags": [
+        "linux",
+        "aws:s3"
+      ],
+      "DataAssetsProcessed": [],
+      "DataAssetsStored": [
+        "customer-contracts",
+        "contract-summaries"
+      ],
+      "DataFormatsAccepted": [
+        3
+      ],
+      "CommunicationLinks": [],
+      "DiagramTweakOrder": 0,
+      "RAA": 0
+    },
+    "customer-client": {
+      "Id": "customer-client",
+      "Title": "Customer Web Client",
+      "Description": "Customer Web Client",
+      "Usage": 0,
+      "Type": 0,
+      "Size": 3,
+      "Technology": 2,
+      "Machine": 0,
+      "Internet": true,
+      "MultiTenant": false,
+      "Redundant": false,
+      "CustomDevelopedParts": false,
+      "OutOfScope": true,
+      "UsedAsClientByHuman": true,
+      "Encryption": 0,
+      "JustificationOutOfScope": "Owned and managed by enduser customer",
+      "Owner": "Customer",
+      "Confidentiality": 1,
+      "Integrity": 1,
+      "Availability": 1,
+      "JustificationCiaRating": "The client used by the customer to access the system.\n",
+      "Tags": [],
+      "DataAssetsProcessed": [
+        "customer-accounts",
+        "customer-operational-data",
+        "customer-contracts",
+        "client-application-code",
+        "marketing-material"
+      ],
+      "DataAssetsStored": [],
+      "DataFormatsAccepted": [],
+      "CommunicationLinks": [
+        {
+          "Id": "customer-client\u003ecustomer-traffic",
+          "SourceId": "customer-client",
+          "TargetId": "load-balancer",
+          "Title": "Customer Traffic",
+          "Description": "Link to the load balancer",
+          "Protocol": 2,
+          "Tags": [],
+          "VPN": false,
+          "IpFiltered": false,
+          "Readonly": false,
+          "Authentication": 2,
+          "Authorization": 2,
+          "Usage": 0,
+          "DataAssetsSent": [
+            "customer-accounts",
+            "customer-operational-data"
+          ],
+          "DataAssetsReceived": [
+            "customer-accounts",
+            "customer-operational-data",
+            "customer-contracts",
+            "client-application-code",
+            "marketing-material"
+          ],
+          "DiagramTweakWeight": 1,
+          "DiagramTweakConstraint": true
+        }
+      ],
+      "DiagramTweakOrder": 0,
+      "RAA": 0
+    },
+    "erp-system": {
+      "Id": "erp-system",
+      "Title": "Backoffice ERP System",
+      "Description": "ERP system",
+      "Usage": 0,
+      "Type": 1,
+      "Size": 0,
+      "Technology": 12,
+      "Machine": 1,
+      "Internet": false,
+      "MultiTenant": false,
+      "Redundant": true,
+      "CustomDevelopedParts": false,
+      "OutOfScope": false,
+      "UsedAsClientByHuman": false,
+      "Encryption": 0,
+      "JustificationOutOfScope": "",
+      "Owner": "Company ABC",
+      "Confidentiality": 4,
+      "Integrity": 4,
+      "Availability": 4,
+      "JustificationCiaRating": "The ERP system contains business-relevant sensitive data for the leasing processes and eventually also for other Company XYZ internal processes.\n",
+      "Tags": [
+        "linux"
+      ],
+      "DataAssetsProcessed": [
+        "customer-accounts",
+        "customer-operational-data",
+        "customer-contracts",
+        "internal-business-data",
+        "erp-customizing"
+      ],
+      "DataAssetsStored": [
+        "erp-logs"
+      ],
+      "DataFormatsAccepted": [
+        1,
+        3,
+        2
+      ],
+      "CommunicationLinks": [
+        {
+          "Id": "erp-system\u003enfs-filesystem-access",
+          "SourceId": "erp-system",
+          "TargetId": "contract-fileserver",
+          "Title": "NFS Filesystem Access",
+          "Description": "Link to the file system",
+          "Protocol": 35,
+          "Tags": [],
+          "VPN": false,
+          "IpFiltered": false,
+          "Readonly": false,
+          "Authentication": 0,
+          "Authorization": 0,
+          "Usage": 0,
+          "DataAssetsSent": [
+            "customer-contracts"
+          ],
+          "DataAssetsReceived": [
+            "customer-contracts"
+          ],
+          "DiagramTweakWeight": 1,
+          "DiagramTweakConstraint": true
+        },
+        {
+          "Id": "erp-system\u003edatabase-traffic",
+          "SourceId": "erp-system",
+          "TargetId": "sql-database",
+          "Title": "Database Traffic",
+          "Description": "Link to the DB system",
+          "Protocol": 8,
+          "Tags": [],
+          "VPN": false,
+          "IpFiltered": false,
+          "Readonly": false,
+          "Authentication": 1,
+          "Authorization": 1,
+          "Usage": 0,
+          "DataAssetsSent": [
+            "customer-accounts",
+            "customer-operational-data",
+            "internal-business-data"
+          ],
+          "DataAssetsReceived": [
+            "customer-accounts",
+            "customer-operational-data",
+            "internal-business-data"
+          ],
+          "DiagramTweakWeight": 1,
+          "DiagramTweakConstraint": true
+        }
+      ],
+      "DiagramTweakOrder": 0,
+      "RAA": 0
+    },
+    "external-dev-client": {
+      "Id": "external-dev-client",
+      "Title": "External Development Client",
+      "Description": "External developer client",
+      "Usage": 1,
+      "Type": 0,
+      "Size": 0,
+      "Technology": 5,
+      "Machine": 0,
+      "Internet": true,
+      "MultiTenant": true,
+      "Redundant": false,
+      "CustomDevelopedParts": false,
+      "OutOfScope": true,
+      "UsedAsClientByHuman": true,
+      "Encryption": 0,
+      "JustificationOutOfScope": "Owned and managed by external developers",
+      "Owner": "External Developers",
+      "Confidentiality": 3,
+      "Integrity": 3,
+      "Availability": 1,
+      "JustificationCiaRating": "The clients used by external developers to create parts of the application code.\n",
+      "Tags": [
+        "linux"
+      ],
+      "DataAssetsProcessed": [
+        "client-application-code",
+        "server-application-code"
+      ],
+      "DataAssetsStored": [
+        "client-application-code",
+        "server-application-code"
+      ],
+      "DataFormatsAccepted": [
+        3
+      ],
+      "CommunicationLinks": [
+        {
+          "Id": "external-dev-client\u003ejenkins-web-ui-access",
+          "SourceId": "external-dev-client",
+          "TargetId": "jenkins-buildserver",
+          "Title": "Jenkins Web-UI Access",
+          "Description": "Link to the Jenkins build server",
+          "Protocol": 2,
+          "Tags": [],
+          "VPN": false,
+          "IpFiltered": false,
+          "Readonly": false,
+          "Authentication": 1,
+          "Authorization": 1,
+          "Usage": 1,
+          "DataAssetsSent": [
+            "build-job-config"
+          ],
+          "DataAssetsReceived": [
+            "build-job-config"
+          ],
+          "DiagramTweakWeight": 1,
+          "DiagramTweakConstraint": true
+        },
+        {
+          "Id": "external-dev-client\u003egit-repo-code-write-access",
+          "SourceId": "external-dev-client",
+          "TargetId": "git-repo",
+          "Title": "Git-Repo Code Write Access",
+          "Description": "Link to the Git repo",
+          "Protocol": 20,
+          "Tags": [],
+          "VPN": false,
+          "IpFiltered": false,
+          "Readonly": false,
+          "Authentication": 4,
+          "Authorization": 1,
+          "Usage": 1,
+          "DataAssetsSent": [
+            "client-application-code",
+            "server-application-code"
+          ],
+          "DataAssetsReceived": [
+            "client-application-code",
+            "server-application-code"
+          ],
+          "DiagramTweakWeight": 1,
+          "DiagramTweakConstraint": true
+        },
+        {
+          "Id": "external-dev-client\u003egit-repo-web-ui-access",
+          "SourceId": "external-dev-client",
+          "TargetId": "git-repo",
+          "Title": "Git-Repo Web-UI Access",
+          "Description": "Link to the Git repo",
+          "Protocol": 2,
+          "Tags": [],
+          "VPN": false,
+          "IpFiltered": false,
+          "Readonly": false,
+          "Authentication": 3,
+          "Authorization": 1,
+          "Usage": 1,
+          "DataAssetsSent": [
+            "client-application-code",
+            "server-application-code"
+          ],
+          "DataAssetsReceived": [
+            "client-application-code",
+            "server-application-code"
+          ],
+          "DiagramTweakWeight": 1,
+          "DiagramTweakConstraint": true
+        }
+      ],
+      "DiagramTweakOrder": 0,
+      "RAA": 0
+    },
+    "git-repo": {
+      "Id": "git-repo",
+      "Title": "Git Repository",
+      "Description": "Git repository server",
+      "Usage": 1,
+      "Type": 1,
+      "Size": 0,
+      "Technology": 23,
+      "Machine": 1,
+      "Internet": false,
+      "MultiTenant": true,
+      "Redundant": false,
+      "CustomDevelopedParts": false,
+      "OutOfScope": false,
+      "UsedAsClientByHuman": false,
+      "Encryption": 0,
+      "JustificationOutOfScope": "",
+      "Owner": "Company ABC",
+      "Confidentiality": 3,
+      "Integrity": 2,
+      "Availability": 2,
+      "JustificationCiaRating": "The code repo pipeline might contain sensitive configuration values like backend credentials, certificates etc. and is therefore rated as confidential.\n",
+      "Tags": [
+        "linux",
+        "git"
+      ],
+      "DataAssetsProcessed": [
+        "client-application-code",
+        "server-application-code"
+      ],
+      "DataAssetsStored": [
+        "client-application-code",
+        "server-application-code"
+      ],
+      "DataFormatsAccepted": [
+        3
+      ],
+      "CommunicationLinks": [],
+      "DiagramTweakOrder": 0,
+      "RAA": 0
+    },
+    "identity-provider": {
+      "Id": "identity-provider",
+      "Title": "Identity Provider",
+      "Description": "Identity provider server",
+      "Usage": 0,
+      "Type": 1,
+      "Size": 3,
+      "Technology": 31,
+      "Machine": 1,
+      "Internet": false,
+      "MultiTenant": false,
+      "Redundant": false,
+      "CustomDevelopedParts": false,
+      "OutOfScope": false,
+      "UsedAsClientByHuman": false,
+      "Encryption": 0,
+      "JustificationOutOfScope": "",
+      "Owner": "Company ABC",
+      "Confidentiality": 3,
+      "Integrity": 3,
+      "Availability": 3,
+      "JustificationCiaRating": "The auth data of the application\n",
+      "Tags": [
+        "linux",
+        "jboss",
+        "keycloak"
+      ],
+      "DataAssetsProcessed": [
+        "customer-accounts"
+      ],
+      "DataAssetsStored": [],
+      "DataFormatsAccepted": [],
+      "CommunicationLinks": [
+        {
+          "Id": "identity-provider\u003eldap-credential-check-traffic",
+          "SourceId": "identity-provider",
+          "TargetId": "ldap-auth-server",
+          "Title": "LDAP Credential Check Traffic",
+          "Description": "Link to the LDAP server",
+          "Protocol": 33,
+          "Tags": [],
+          "VPN": false,
+          "IpFiltered": false,
+          "Readonly": false,
+          "Authentication": 1,
+          "Authorization": 1,
+          "Usage": 0,
+          "DataAssetsSent": [
+            "customer-accounts"
+          ],
+          "DataAssetsReceived": null,
+          "DiagramTweakWeight": 1,
+          "DiagramTweakConstraint": true
+        }
+      ],
+      "DiagramTweakOrder": 0,
+      "RAA": 0
+    },
+    "jenkins-buildserver": {
+      "Id": "jenkins-buildserver",
+      "Title": "Jenkins Buildserver",
+      "Description": "Jenkins buildserver",
+      "Usage": 1,
+      "Type": 1,
+      "Size": 0,
+      "Technology": 22,
+      "Machine": 1,
+      "Internet": false,
+      "MultiTenant": true,
+      "Redundant": false,
+      "CustomDevelopedParts": false,
+      "OutOfScope": false,
+      "UsedAsClientByHuman": false,
+      "Encryption": 0,
+      "JustificationOutOfScope": "",
+      "Owner": "Company ABC",
+      "Confidentiality": 3,
+      "Integrity": 3,
+      "Availability": 2,
+      "JustificationCiaRating": "The build pipeline might contain sensitive configuration values like backend credentials, certificates etc. and is therefore rated as confidential. The integrity and availability is rated as critical and important due to the risk of reputation damage and application update unavailability when the build pipeline is compromised.\n",
+      "Tags": [
+        "linux",
+        "jenkins"
+      ],
+      "DataAssetsProcessed": [
+        "build-job-config",
+        "client-application-code",
+        "server-application-code",
+        "marketing-material"
+      ],
+      "DataAssetsStored": [
+        "build-job-config",
+        "client-application-code",
+        "server-application-code",
+        "marketing-material"
+      ],
+      "DataFormatsAccepted": [
+        3,
+        2
+      ],
+      "CommunicationLinks": [
+        {
+          "Id": "jenkins-buildserver\u003egit-repo-code-read-access",
+          "SourceId": "jenkins-buildserver",
+          "TargetId": "git-repo",
+          "Title": "Git Repo Code Read Access",
+          "Description": "Link to the Git repository server",
+          "Protocol": 20,
+          "Tags": [],
+          "VPN": false,
+          "IpFiltered": false,
+          "Readonly": true,
+          "Authentication": 4,
+          "Authorization": 1,
+          "Usage": 1,
+          "DataAssetsSent": null,
+          "DataAssetsReceived": [
+            "client-application-code",
+            "server-application-code"
+          ],
+          "DiagramTweakWeight": 1,
+          "DiagramTweakConstraint": true
+        },
+        {
+          "Id": "jenkins-buildserver\u003eapplication-deployment",
+          "SourceId": "jenkins-buildserver",
+          "TargetId": "apache-webserver",
+          "Title": "Application Deployment",
+          "Description": "Link to the Apache webserver",
+          "Protocol": 20,
+          "Tags": [],
+          "VPN": false,
+          "IpFiltered": false,
+          "Readonly": false,
+          "Authentication": 4,
+          "Authorization": 1,
+          "Usage": 1,
+          "DataAssetsSent": [
+            "client-application-code",
+            "server-application-code"
+          ],
+          "DataAssetsReceived": null,
+          "DiagramTweakWeight": 1,
+          "DiagramTweakConstraint": true
+        },
+        {
+          "Id": "jenkins-buildserver\u003ecms-updates",
+          "SourceId": "jenkins-buildserver",
+          "TargetId": "marketing-cms",
+          "Title": "CMS Updates",
+          "Description": "Link to the CMS",
+          "Protocol": 20,
+          "Tags": [],
+          "VPN": false,
+          "IpFiltered": false,
+          "Readonly": false,
+          "Authentication": 4,
+          "Authorization": 1,
+          "Usage": 1,
+          "DataAssetsSent": [
+            "marketing-material"
+          ],
+          "DataAssetsReceived": null,
+          "DiagramTweakWeight": 1,
+          "DiagramTweakConstraint": true
+        }
+      ],
+      "DiagramTweakOrder": 0,
+      "RAA": 0
+    },
+    "ldap-auth-server": {
+      "Id": "ldap-auth-server",
+      "Title": "LDAP Auth Server",
+      "Description": "LDAP authentication server",
+      "Usage": 0,
+      "Type": 2,
+      "Size": 3,
+      "Technology": 32,
+      "Machine": 0,
+      "Internet": false,
+      "MultiTenant": false,
+      "Redundant": false,
+      "CustomDevelopedParts": false,
+      "OutOfScope": false,
+      "UsedAsClientByHuman": false,
+      "Encryption": 1,
+      "JustificationOutOfScope": "",
+      "Owner": "Company ABC",
+      "Confidentiality": 3,
+      "Integrity": 3,
+      "Availability": 3,
+      "JustificationCiaRating": "The auth data of the application\n",
+      "Tags": [
+        "linux"
+      ],
+      "DataAssetsProcessed": [
+        "customer-accounts"
+      ],
+      "DataAssetsStored": [
+        "customer-accounts"
+      ],
+      "DataFormatsAccepted": [],
+      "CommunicationLinks": [],
+      "DiagramTweakOrder": 0,
+      "RAA": 0
+    },
+    "load-balancer": {
+      "Id": "load-balancer",
+      "Title": "Load Balancer",
+      "Description": "Load Balancer (HA-Proxy)",
+      "Usage": 0,
+      "Type": 1,
+      "Size": 3,
+      "Technology": 21,
+      "Machine": 0,
+      "Internet": false,
+      "MultiTenant": false,
+      "Redundant": false,
+      "CustomDevelopedParts": false,
+      "OutOfScope": false,
+      "UsedAsClientByHuman": false,
+      "Encryption": 0,
+      "JustificationOutOfScope": "",
+      "Owner": "Company ABC",
+      "Confidentiality": 1,
+      "Integrity": 4,
+      "Availability": 4,
+      "JustificationCiaRating": "The correct configuration and reachability of the load balancer is mandatory for all customer and Company XYZ usages of the portal and ERP system.\n",
+      "Tags": [],
+      "DataAssetsProcessed": [
+        "customer-accounts",
+        "customer-operational-data",
+        "customer-contracts",
+        "internal-business-data",
+        "client-application-code",
+        "marketing-material"
+      ],
+      "DataAssetsStored": [],
+      "DataFormatsAccepted": [],
+      "CommunicationLinks": [
+        {
+          "Id": "load-balancer\u003ecms-content-traffic",
+          "SourceId": "load-balancer",
+          "TargetId": "marketing-cms",
+          "Title": "CMS Content Traffic",
+          "Description": "Link to the CMS server",
+          "Protocol": 1,
+          "Tags": [],
+          "VPN": false,
+          "IpFiltered": false,
+          "Readonly": true,
+          "Authentication": 0,
+          "Authorization": 0,
+          "Usage": 0,
+          "DataAssetsSent": null,
+          "DataAssetsReceived": [
+            "marketing-material"
+          ],
+          "DiagramTweakWeight": 1,
+          "DiagramTweakConstraint": true
+        },
+        {
+          "Id": "load-balancer\u003eweb-application-traffic",
+          "SourceId": "load-balancer",
+          "TargetId": "apache-webserver",
+          "Title": "Web Application Traffic",
+          "Description": "Link to the web server",
+          "Protocol": 1,
+          "Tags": [],
+          "VPN": false,
+          "IpFiltered": false,
+          "Readonly": false,
+          "Authentication": 2,
+          "Authorization": 2,
+          "Usage": 0,
+          "DataAssetsSent": [
+            "customer-accounts",
+            "customer-operational-data"
+          ],
+          "DataAssetsReceived": [
+            "customer-accounts",
+            "customer-operational-data",
+            "customer-contracts",
+            "client-application-code"
+          ],
+          "DiagramTweakWeight": 1,
+          "DiagramTweakConstraint": true
+        }
+      ],
+      "DiagramTweakOrder": 0,
+      "RAA": 0
+    },
+    "marketing-cms": {
+      "Id": "marketing-cms",
+      "Title": "Marketing CMS",
+      "Description": "CMS for the marketing content",
+      "Usage": 0,
+      "Type": 1,
+      "Size": 2,
+      "Technology": 13,
+      "Machine": 2,
+      "Internet": false,
+      "MultiTenant": false,
+      "Redundant": false,
+      "CustomDevelopedParts": true,
+      "OutOfScope": false,
+      "UsedAsClientByHuman": false,
+      "Encryption": 0,
+      "JustificationOutOfScope": "",
+      "Owner": "Company ABC",
+      "Confidentiality": 1,
+      "Integrity": 2,
+      "Availability": 2,
+      "JustificationCiaRating": "The correct configuration and reachability of the web server is mandatory for all customer usages of the portal.\n",
+      "Tags": [
+        "linux"
+      ],
+      "DataAssetsProcessed": [
+        "marketing-material",
+        "customer-accounts"
+      ],
+      "DataAssetsStored": [
+        "marketing-material"
+      ],
+      "DataFormatsAccepted": [],
+      "CommunicationLinks": [
+        {
+          "Id": "marketing-cms\u003eauth-traffic",
+          "SourceId": "marketing-cms",
+          "TargetId": "ldap-auth-server",
+          "Title": "Auth Traffic",
+          "Description": "Link to the LDAP auth server",
+          "Protocol": 32,
+          "Tags": [],
+          "VPN": false,
+          "IpFiltered": false,
+          "Readonly": true,
+          "Authentication": 1,
+          "Authorization": 1,
+          "Usage": 0,
+          "DataAssetsSent": [
+            "customer-accounts"
+          ],
+          "DataAssetsReceived": [
+            "customer-accounts"
+          ],
+          "DiagramTweakWeight": 1,
+          "DiagramTweakConstraint": true
+        }
+      ],
+      "DiagramTweakOrder": 0,
+      "RAA": 0
+    },
+    "sql-database": {
+      "Id": "sql-database",
+      "Title": "Customer Contract Database",
+      "Description": "The database behind the ERP system",
+      "Usage": 0,
+      "Type": 2,
+      "Size": 3,
+      "Technology": 9,
+      "Machine": 1,
+      "Internet": false,
+      "MultiTenant": false,
+      "Redundant": false,
+      "CustomDevelopedParts": false,
+      "OutOfScope": false,
+      "UsedAsClientByHuman": false,
+      "Encryption": 2,
+      "JustificationOutOfScope": "",
+      "Owner": "Company ABC",
+      "Confidentiality": 4,
+      "Integrity": 4,
+      "Availability": 4,
+      "JustificationCiaRating": "The ERP system's database contains business-relevant sensitive data for the leasing processes and eventually also for other Company XYZ internal processes.\n",
+      "Tags": [
+        "linux",
+        "mysql"
+      ],
+      "DataAssetsProcessed": [
+        "db-dumps"
+      ],
+      "DataAssetsStored": [
+        "customer-accounts",
+        "customer-operational-data",
+        "internal-business-data"
+      ],
+      "DataFormatsAccepted": [],
+      "CommunicationLinks": [],
+      "DiagramTweakOrder": 0,
+      "RAA": 0
+    }
+  },
+  "trust_boundaries": {
+    "application-network": {
+      "Id": "application-network",
+      "Title": "Application Network",
+      "Description": "Application Network",
+      "Type": 3,
+      "Tags": [
+        "aws"
+      ],
+      "TechnicalAssetsInside": [
+        "load-balancer"
+      ],
+      "TrustBoundariesNested": [
+        "web-dmz",
+        "erp-dmz",
+        "auth-env"
+      ]
+    },
+    "auth-env": {
+      "Id": "auth-env",
+      "Title": "Auth Handling Environment",
+      "Description": "Auth Handling Environment",
+      "Type": 6,
+      "Tags": [],
+      "TechnicalAssetsInside": [
+        "identity-provider",
+        "ldap-auth-server"
+      ],
+      "TrustBoundariesNested": []
+    },
+    "dev-network": {
+      "Id": "dev-network",
+      "Title": "Dev Network",
+      "Description": "Development Network",
+      "Type": 0,
+      "Tags": [],
+      "TechnicalAssetsInside": [
+        "jenkins-buildserver",
+        "git-repo",
+        "backend-admin-client",
+        "backoffice-client"
+      ],
+      "TrustBoundariesNested": []
+    },
+    "erp-dmz": {
+      "Id": "erp-dmz",
+      "Title": "ERP DMZ",
+      "Description": "ERP DMZ",
+      "Type": 4,
+      "Tags": [
+        "some-erp"
+      ],
+      "TechnicalAssetsInside": [
+        "erp-system",
+        "contract-fileserver",
+        "sql-database"
+      ],
+      "TrustBoundariesNested": []
+    },
+    "web-dmz": {
+      "Id": "web-dmz",
+      "Title": "Web DMZ",
+      "Description": "Web DMZ",
+      "Type": 4,
+      "Tags": [],
+      "TechnicalAssetsInside": [
+        "apache-webserver",
+        "marketing-cms"
+      ],
+      "TrustBoundariesNested": []
+    }
+  },
+  "shared_runtimes": {
+    "webapp-virtualization": {
+      "Id": "webapp-virtualization",
+      "Title": "WebApp and Backoffice Virtualization",
+      "Description": "WebApp Virtualization",
+      "Tags": [
+        "vmware"
+      ],
+      "TechnicalAssetsRunning": [
+        "apache-webserver",
+        "marketing-cms",
+        "erp-system",
+        "contract-fileserver",
+        "sql-database"
+      ]
+    }
+  },
+  "individual_risk_categories": {
+    "something-strange": {
+      "Id": "something-strange",
+      "Title": "Some Individual Risk Example",
+      "Description": "Some text describing the risk category...",
+      "Impact": "Some text describing the impact...",
+      "ASVS": "V0 - Something Strange",
+      "CheatSheet": "https://example.com",
+      "Action": "Some text describing the action...",
+      "Mitigation": "Some text describing the mitigation...",
+      "Check": "Check if XYZ...",
+      "DetectionLogic": "Some text describing the detection logic...",
+      "RiskAssessment": "Some text describing the risk assessment...",
+      "FalsePositives": "Some text describing the most common types of false positives...",
+      "Function": "business-side",
+      "STRIDE": "repudiation",
+      "ModelFailurePossibleReason": false,
+      "CWE": 693
+    }
+  },
+  "risk_tracking": {
+    "dos-risky-access-across-trust-boundary@*@*@*": {
+      "SyntheticRiskId": "dos-risky-access-across-trust-boundary@*@*@*",
+      "Justification": "The hardening measures are being implemented and checked",
+      "Ticket": "XYZ-1234",
+      "CheckedBy": "John Doe",
+      "Status": "in-progress",
+      "Date": "2020-01-04T00:00:00Z"
+    },
+    "ldap-injection@*@ldap-auth-server@*": {
+      "SyntheticRiskId": "ldap-injection@*@ldap-auth-server@*",
+      "Justification": "The hardening measures were implemented and checked",
+      "Ticket": "XYZ-5678",
+      "CheckedBy": "John Doe",
+      "Status": "mitigated",
+      "Date": "2020-01-05T00:00:00Z"
+    },
+    "missing-authentication-second-factor@*@*@*": {
+      "SyntheticRiskId": "missing-authentication-second-factor@*@*@*",
+      "Justification": "The hardening measures were implemented and checked",
+      "Ticket": "XYZ-1234",
+      "CheckedBy": "John Doe",
+      "Status": "mitigated",
+      "Date": "2020-01-04T00:00:00Z"
+    },
+    "missing-hardening@*": {
+      "SyntheticRiskId": "missing-hardening@*",
+      "Justification": "The hardening measures were implemented and checked",
+      "Ticket": "XYZ-1234",
+      "CheckedBy": "John Doe",
+      "Status": "mitigated",
+      "Date": "2020-01-04T00:00:00Z"
+    },
+    "unencrypted-asset@*": {
+      "SyntheticRiskId": "unencrypted-asset@*",
+      "Justification": "The hardening measures were implemented and checked",
+      "Ticket": "XYZ-1234",
+      "CheckedBy": "John Doe",
+      "Status": "mitigated",
+      "Date": "2020-01-04T00:00:00Z"
+    },
+    "untrusted-deserialization@erp-system": {
+      "SyntheticRiskId": "untrusted-deserialization@erp-system",
+      "Justification": "Risk accepted as tolerable",
+      "Ticket": "XYZ-1234",
+      "CheckedBy": "John Doe",
+      "Status": "accepted",
+      "Date": "2020-01-04T00:00:00Z"
+    }
+  },
+  "communication_links": {
+    "apache-webserver\u003eauth-credential-check-traffic": {
+      "Id": "apache-webserver\u003eauth-credential-check-traffic",
+      "SourceId": "apache-webserver",
+      "TargetId": "identity-provider",
+      "Title": "Auth Credential Check Traffic",
+      "Description": "Link to the identity provider server",
+      "Protocol": 2,
+      "Tags": [],
+      "VPN": false,
+      "IpFiltered": false,
+      "Readonly": false,
+      "Authentication": 1,
+      "Authorization": 1,
+      "Usage": 0,
+      "DataAssetsSent": [
+        "customer-accounts"
+      ],
+      "DataAssetsReceived": null,
+      "DiagramTweakWeight": 1,
+      "DiagramTweakConstraint": true
+    },
+    "apache-webserver\u003eerp-system-traffic": {
+      "Id": "apache-webserver\u003eerp-system-traffic",
+      "SourceId": "apache-webserver",
+      "TargetId": "erp-system",
+      "Title": "ERP System Traffic",
+      "Description": "Link to the ERP system",
+      "Protocol": 2,
+      "Tags": [],
+      "VPN": false,
+      "IpFiltered": false,
+      "Readonly": false,
+      "Authentication": 3,
+      "Authorization": 1,
+      "Usage": 0,
+      "DataAssetsSent": [
+        "customer-accounts",
+        "customer-operational-data",
+        "internal-business-data"
+      ],
+      "DataAssetsReceived": [
+        "customer-accounts",
+        "customer-operational-data",
+        "customer-contracts",
+        "internal-business-data"
+      ],
+      "DiagramTweakWeight": 1,
+      "DiagramTweakConstraint": true
+    },
+    "backend-admin-client\u003edb-update-access": {
+      "Id": "backend-admin-client\u003edb-update-access",
+      "SourceId": "backend-admin-client",
+      "TargetId": "sql-database",
+      "Title": "DB Update Access",
+      "Description": "Link to the database (JDBC tunneled via SSH)",
+      "Protocol": 20,
+      "Tags": [],
+      "VPN": false,
+      "IpFiltered": false,
+      "Readonly": false,
+      "Authentication": 4,
+      "Authorization": 1,
+      "Usage": 1,
+      "DataAssetsSent": [
+        "db-dumps"
+      ],
+      "DataAssetsReceived": [
+        "db-dumps",
+        "erp-logs",
+        "customer-accounts",
+        "customer-operational-data"
+      ],
+      "DiagramTweakWeight": 1,
+      "DiagramTweakConstraint": true
+    },
+    "backend-admin-client\u003eerp-web-access": {
+      "Id": "backend-admin-client\u003eerp-web-access",
+      "SourceId": "backend-admin-client",
+      "TargetId": "erp-system",
+      "Title": "ERP Web Access",
+      "Description": "Link to the ERP system (Web)",
+      "Protocol": 2,
+      "Tags": [],
+      "VPN": false,
+      "IpFiltered": false,
+      "Readonly": false,
+      "Authentication": 3,
+      "Authorization": 1,
+      "Usage": 1,
+      "DataAssetsSent": [
+        "erp-customizing"
+      ],
+      "DataAssetsReceived": [
+        "erp-logs"
+      ],
+      "DiagramTweakWeight": 1,
+      "DiagramTweakConstraint": true
+    },
+    "backend-admin-client\u003euser-management-access": {
+      "Id": "backend-admin-client\u003euser-management-access",
+      "SourceId": "backend-admin-client",
+      "TargetId": "ldap-auth-server",
+      "Title": "User Management Access",
+      "Description": "Link to the LDAP auth server for managing users",
+      "Protocol": 33,
+      "Tags": [],
+      "VPN": false,
+      "IpFiltered": false,
+      "Readonly": false,
+      "Authentication": 1,
+      "Authorization": 1,
+      "Usage": 1,
+      "DataAssetsSent": [
+        "customer-accounts"
+      ],
+      "DataAssetsReceived": [
+        "customer-accounts"
+      ],
+      "DiagramTweakWeight": 1,
+      "DiagramTweakConstraint": true
+    },
+    "backoffice-client\u003eerp-internal-access": {
+      "Id": "backoffice-client\u003eerp-internal-access",
+      "SourceId": "backoffice-client",
+      "TargetId": "erp-system",
+      "Title": "ERP Internal Access",
+      "Description": "Link to the ERP system",
+      "Protocol": 2,
+      "Tags": [
+        "some-erp"
+      ],
+      "VPN": true,
+      "IpFiltered": false,
+      "Readonly": false,
+      "Authentication": 3,
+      "Authorization": 2,
+      "Usage": 0,
+      "DataAssetsSent": [
+        "internal-business-data"
+      ],
+      "DataAssetsReceived": [
+        "customer-contracts",
+        "internal-business-data"
+      ],
+      "DiagramTweakWeight": 1,
+      "DiagramTweakConstraint": true
+    },
+    "backoffice-client\u003emarketing-cms-editing": {
+      "Id": "backoffice-client\u003emarketing-cms-editing",
+      "SourceId": "backoffice-client",
+      "TargetId": "marketing-cms",
+      "Title": "Marketing CMS Editing",
+      "Description": "Link to the CMS for editing content",
+      "Protocol": 2,
+      "Tags": [],
+      "VPN": true,
+      "IpFiltered": false,
+      "Readonly": false,
+      "Authentication": 3,
+      "Authorization": 2,
+      "Usage": 0,
+      "DataAssetsSent": [
+        "marketing-material"
+      ],
+      "DataAssetsReceived": [
+        "marketing-material"
+      ],
+      "DiagramTweakWeight": 1,
+      "DiagramTweakConstraint": true
+    },
+    "customer-client\u003ecustomer-traffic": {
+      "Id": "customer-client\u003ecustomer-traffic",
+      "SourceId": "customer-client",
+      "TargetId": "load-balancer",
+      "Title": "Customer Traffic",
+      "Description": "Link to the load balancer",
+      "Protocol": 2,
+      "Tags": [],
+      "VPN": false,
+      "IpFiltered": false,
+      "Readonly": false,
+      "Authentication": 2,
+      "Authorization": 2,
+      "Usage": 0,
+      "DataAssetsSent": [
+        "customer-accounts",
+        "customer-operational-data"
+      ],
+      "DataAssetsReceived": [
+        "customer-accounts",
+        "customer-operational-data",
+        "customer-contracts",
+        "client-application-code",
+        "marketing-material"
+      ],
+      "DiagramTweakWeight": 1,
+      "DiagramTweakConstraint": true
+    },
+    "erp-system\u003edatabase-traffic": {
+      "Id": "erp-system\u003edatabase-traffic",
+      "SourceId": "erp-system",
+      "TargetId": "sql-database",
+      "Title": "Database Traffic",
+      "Description": "Link to the DB system",
+      "Protocol": 8,
+      "Tags": [],
+      "VPN": false,
+      "IpFiltered": false,
+      "Readonly": false,
+      "Authentication": 1,
+      "Authorization": 1,
+      "Usage": 0,
+      "DataAssetsSent": [
+        "customer-accounts",
+        "customer-operational-data",
+        "internal-business-data"
+      ],
+      "DataAssetsReceived": [
+        "customer-accounts",
+        "customer-operational-data",
+        "internal-business-data"
+      ],
+      "DiagramTweakWeight": 1,
+      "DiagramTweakConstraint": true
+    },
+    "erp-system\u003enfs-filesystem-access": {
+      "Id": "erp-system\u003enfs-filesystem-access",
+      "SourceId": "erp-system",
+      "TargetId": "contract-fileserver",
+      "Title": "NFS Filesystem Access",
+      "Description": "Link to the file system",
+      "Protocol": 35,
+      "Tags": [],
+      "VPN": false,
+      "IpFiltered": false,
+      "Readonly": false,
+      "Authentication": 0,
+      "Authorization": 0,
+      "Usage": 0,
+      "DataAssetsSent": [
+        "customer-contracts"
+      ],
+      "DataAssetsReceived": [
+        "customer-contracts"
+      ],
+      "DiagramTweakWeight": 1,
+      "DiagramTweakConstraint": true
+    },
+    "external-dev-client\u003egit-repo-code-write-access": {
+      "Id": "external-dev-client\u003egit-repo-code-write-access",
+      "SourceId": "external-dev-client",
+      "TargetId": "git-repo",
+      "Title": "Git-Repo Code Write Access",
+      "Description": "Link to the Git repo",
+      "Protocol": 20,
+      "Tags": [],
+      "VPN": false,
+      "IpFiltered": false,
+      "Readonly": false,
+      "Authentication": 4,
+      "Authorization": 1,
+      "Usage": 1,
+      "DataAssetsSent": [
+        "client-application-code",
+        "server-application-code"
+      ],
+      "DataAssetsReceived": [
+        "client-application-code",
+        "server-application-code"
+      ],
+      "DiagramTweakWeight": 1,
+      "DiagramTweakConstraint": true
+    },
+    "external-dev-client\u003egit-repo-web-ui-access": {
+      "Id": "external-dev-client\u003egit-repo-web-ui-access",
+      "SourceId": "external-dev-client",
+      "TargetId": "git-repo",
+      "Title": "Git-Repo Web-UI Access",
+      "Description": "Link to the Git repo",
+      "Protocol": 2,
+      "Tags": [],
+      "VPN": false,
+      "IpFiltered": false,
+      "Readonly": false,
+      "Authentication": 3,
+      "Authorization": 1,
+      "Usage": 1,
+      "DataAssetsSent": [
+        "client-application-code",
+        "server-application-code"
+      ],
+      "DataAssetsReceived": [
+        "client-application-code",
+        "server-application-code"
+      ],
+      "DiagramTweakWeight": 1,
+      "DiagramTweakConstraint": true
+    },
+    "external-dev-client\u003ejenkins-web-ui-access": {
+      "Id": "external-dev-client\u003ejenkins-web-ui-access",
+      "SourceId": "external-dev-client",
+      "TargetId": "jenkins-buildserver",
+      "Title": "Jenkins Web-UI Access",
+      "Description": "Link to the Jenkins build server",
+      "Protocol": 2,
+      "Tags": [],
+      "VPN": false,
+      "IpFiltered": false,
+      "Readonly": false,
+      "Authentication": 1,
+      "Authorization": 1,
+      "Usage": 1,
+      "DataAssetsSent": [
+        "build-job-config"
+      ],
+      "DataAssetsReceived": [
+        "build-job-config"
+      ],
+      "DiagramTweakWeight": 1,
+      "DiagramTweakConstraint": true
+    },
+    "identity-provider\u003eldap-credential-check-traffic": {
+      "Id": "identity-provider\u003eldap-credential-check-traffic",
+      "SourceId": "identity-provider",
+      "TargetId": "ldap-auth-server",
+      "Title": "LDAP Credential Check Traffic",
+      "Description": "Link to the LDAP server",
+      "Protocol": 33,
+      "Tags": [],
+      "VPN": false,
+      "IpFiltered": false,
+      "Readonly": false,
+      "Authentication": 1,
+      "Authorization": 1,
+      "Usage": 0,
+      "DataAssetsSent": [
+        "customer-accounts"
+      ],
+      "DataAssetsReceived": null,
+      "DiagramTweakWeight": 1,
+      "DiagramTweakConstraint": true
+    },
+    "jenkins-buildserver\u003eapplication-deployment": {
+      "Id": "jenkins-buildserver\u003eapplication-deployment",
+      "SourceId": "jenkins-buildserver",
+      "TargetId": "apache-webserver",
+      "Title": "Application Deployment",
+      "Description": "Link to the Apache webserver",
+      "Protocol": 20,
+      "Tags": [],
+      "VPN": false,
+      "IpFiltered": false,
+      "Readonly": false,
+      "Authentication": 4,
+      "Authorization": 1,
+      "Usage": 1,
+      "DataAssetsSent": [
+        "client-application-code",
+        "server-application-code"
+      ],
+      "DataAssetsReceived": null,
+      "DiagramTweakWeight": 1,
+      "DiagramTweakConstraint": true
+    },
+    "jenkins-buildserver\u003ecms-updates": {
+      "Id": "jenkins-buildserver\u003ecms-updates",
+      "SourceId": "jenkins-buildserver",
+      "TargetId": "marketing-cms",
+      "Title": "CMS Updates",
+      "Description": "Link to the CMS",
+      "Protocol": 20,
+      "Tags": [],
+      "VPN": false,
+      "IpFiltered": false,
+      "Readonly": false,
+      "Authentication": 4,
+      "Authorization": 1,
+      "Usage": 1,
+      "DataAssetsSent": [
+        "marketing-material"
+      ],
+      "DataAssetsReceived": null,
+      "DiagramTweakWeight": 1,
+      "DiagramTweakConstraint": true
+    },
+    "jenkins-buildserver\u003egit-repo-code-read-access": {
+      "Id": "jenkins-buildserver\u003egit-repo-code-read-access",
+      "SourceId": "jenkins-buildserver",
+      "TargetId": "git-repo",
+      "Title": "Git Repo Code Read Access",
+      "Description": "Link to the Git repository server",
+      "Protocol": 20,
+      "Tags": [],
+      "VPN": false,
+      "IpFiltered": false,
+      "Readonly": true,
+      "Authentication": 4,
+      "Authorization": 1,
+      "Usage": 1,
+      "DataAssetsSent": null,
+      "DataAssetsReceived": [
+        "client-application-code",
+        "server-application-code"
+      ],
+      "DiagramTweakWeight": 1,
+      "DiagramTweakConstraint": true
+    },
+    "load-balancer\u003ecms-content-traffic": {
+      "Id": "load-balancer\u003ecms-content-traffic",
+      "SourceId": "load-balancer",
+      "TargetId": "marketing-cms",
+      "Title": "CMS Content Traffic",
+      "Description": "Link to the CMS server",
+      "Protocol": 1,
+      "Tags": [],
+      "VPN": false,
+      "IpFiltered": false,
+      "Readonly": true,
+      "Authentication": 0,
+      "Authorization": 0,
+      "Usage": 0,
+      "DataAssetsSent": null,
+      "DataAssetsReceived": [
+        "marketing-material"
+      ],
+      "DiagramTweakWeight": 1,
+      "DiagramTweakConstraint": true
+    },
+    "load-balancer\u003eweb-application-traffic": {
+      "Id": "load-balancer\u003eweb-application-traffic",
+      "SourceId": "load-balancer",
+      "TargetId": "apache-webserver",
+      "Title": "Web Application Traffic",
+      "Description": "Link to the web server",
+      "Protocol": 1,
+      "Tags": [],
+      "VPN": false,
+      "IpFiltered": false,
+      "Readonly": false,
+      "Authentication": 2,
+      "Authorization": 2,
+      "Usage": 0,
+      "DataAssetsSent": [
+        "customer-accounts",
+        "customer-operational-data"
+      ],
+      "DataAssetsReceived": [
+        "customer-accounts",
+        "customer-operational-data",
+        "customer-contracts",
+        "client-application-code"
+      ],
+      "DiagramTweakWeight": 1,
+      "DiagramTweakConstraint": true
+    },
+    "marketing-cms\u003eauth-traffic": {
+      "Id": "marketing-cms\u003eauth-traffic",
+      "SourceId": "marketing-cms",
+      "TargetId": "ldap-auth-server",
+      "Title": "Auth Traffic",
+      "Description": "Link to the LDAP auth server",
+      "Protocol": 32,
+      "Tags": [],
+      "VPN": false,
+      "IpFiltered": false,
+      "Readonly": true,
+      "Authentication": 1,
+      "Authorization": 1,
+      "Usage": 0,
+      "DataAssetsSent": [
+        "customer-accounts"
+      ],
+      "DataAssetsReceived": [
+        "customer-accounts"
+      ],
+      "DiagramTweakWeight": 1,
+      "DiagramTweakConstraint": true
+    }
+  },
+  "diagram_tweak_nodesep": 2,
+  "diagram_tweak_ranksep": 2,
+  "incoming_technical_communication_links_mapped_by_target_id": {
+    "apache-webserver": [
+      {
+        "Id": "jenkins-buildserver\u003eapplication-deployment",
+        "SourceId": "jenkins-buildserver",
+        "TargetId": "apache-webserver",
+        "Title": "Application Deployment",
+        "Description": "Link to the Apache webserver",
+        "Protocol": 20,
+        "Tags": [],
+        "VPN": false,
+        "IpFiltered": false,
+        "Readonly": false,
+        "Authentication": 4,
+        "Authorization": 1,
+        "Usage": 1,
+        "DataAssetsSent": [
+          "client-application-code",
+          "server-application-code"
+        ],
+        "DataAssetsReceived": null,
+        "DiagramTweakWeight": 1,
+        "DiagramTweakConstraint": true
+      },
+      {
+        "Id": "load-balancer\u003eweb-application-traffic",
+        "SourceId": "load-balancer",
+        "TargetId": "apache-webserver",
+        "Title": "Web Application Traffic",
+        "Description": "Link to the web server",
+        "Protocol": 1,
+        "Tags": [],
+        "VPN": false,
+        "IpFiltered": false,
+        "Readonly": false,
+        "Authentication": 2,
+        "Authorization": 2,
+        "Usage": 0,
+        "DataAssetsSent": [
+          "customer-accounts",
+          "customer-operational-data"
+        ],
+        "DataAssetsReceived": [
+          "customer-accounts",
+          "customer-operational-data",
+          "customer-contracts",
+          "client-application-code"
+        ],
+        "DiagramTweakWeight": 1,
+        "DiagramTweakConstraint": true
+      }
+    ],
+    "contract-fileserver": [
+      {
+        "Id": "erp-system\u003enfs-filesystem-access",
+        "SourceId": "erp-system",
+        "TargetId": "contract-fileserver",
+        "Title": "NFS Filesystem Access",
+        "Description": "Link to the file system",
+        "Protocol": 35,
+        "Tags": [],
+        "VPN": false,
+        "IpFiltered": false,
+        "Readonly": false,
+        "Authentication": 0,
+        "Authorization": 0,
+        "Usage": 0,
+        "DataAssetsSent": [
+          "customer-contracts"
+        ],
+        "DataAssetsReceived": [
+          "customer-contracts"
+        ],
+        "DiagramTweakWeight": 1,
+        "DiagramTweakConstraint": true
+      }
+    ],
+    "erp-system": [
+      {
+        "Id": "backoffice-client\u003eerp-internal-access",
+        "SourceId": "backoffice-client",
+        "TargetId": "erp-system",
+        "Title": "ERP Internal Access",
+        "Description": "Link to the ERP system",
+        "Protocol": 2,
+        "Tags": [
+          "some-erp"
+        ],
+        "VPN": true,
+        "IpFiltered": false,
+        "Readonly": false,
+        "Authentication": 3,
+        "Authorization": 2,
+        "Usage": 0,
+        "DataAssetsSent": [
+          "internal-business-data"
+        ],
+        "DataAssetsReceived": [
+          "customer-contracts",
+          "internal-business-data"
+        ],
+        "DiagramTweakWeight": 1,
+        "DiagramTweakConstraint": true
+      },
+      {
+        "Id": "backend-admin-client\u003eerp-web-access",
+        "SourceId": "backend-admin-client",
+        "TargetId": "erp-system",
+        "Title": "ERP Web Access",
+        "Description": "Link to the ERP system (Web)",
+        "Protocol": 2,
+        "Tags": [],
+        "VPN": false,
+        "IpFiltered": false,
+        "Readonly": false,
+        "Authentication": 3,
+        "Authorization": 1,
+        "Usage": 1,
+        "DataAssetsSent": [
+          "erp-customizing"
+        ],
+        "DataAssetsReceived": [
+          "erp-logs"
+        ],
+        "DiagramTweakWeight": 1,
+        "DiagramTweakConstraint": true
+      },
+      {
+        "Id": "apache-webserver\u003eerp-system-traffic",
+        "SourceId": "apache-webserver",
+        "TargetId": "erp-system",
+        "Title": "ERP System Traffic",
+        "Description": "Link to the ERP system",
+        "Protocol": 2,
+        "Tags": [],
+        "VPN": false,
+        "IpFiltered": false,
+        "Readonly": false,
+        "Authentication": 3,
+        "Authorization": 1,
+        "Usage": 0,
+        "DataAssetsSent": [
+          "customer-accounts",
+          "customer-operational-data",
+          "internal-business-data"
+        ],
+        "DataAssetsReceived": [
+          "customer-accounts",
+          "customer-operational-data",
+          "customer-contracts",
+          "internal-business-data"
+        ],
+        "DiagramTweakWeight": 1,
+        "DiagramTweakConstraint": true
+      }
+    ],
+    "git-repo": [
+      {
+        "Id": "external-dev-client\u003egit-repo-code-write-access",
+        "SourceId": "external-dev-client",
+        "TargetId": "git-repo",
+        "Title": "Git-Repo Code Write Access",
+        "Description": "Link to the Git repo",
+        "Protocol": 20,
+        "Tags": [],
+        "VPN": false,
+        "IpFiltered": false,
+        "Readonly": false,
+        "Authentication": 4,
+        "Authorization": 1,
+        "Usage": 1,
+        "DataAssetsSent": [
+          "client-application-code",
+          "server-application-code"
+        ],
+        "DataAssetsReceived": [
+          "client-application-code",
+          "server-application-code"
+        ],
+        "DiagramTweakWeight": 1,
+        "DiagramTweakConstraint": true
+      },
+      {
+        "Id": "external-dev-client\u003egit-repo-web-ui-access",
+        "SourceId": "external-dev-client",
+        "TargetId": "git-repo",
+        "Title": "Git-Repo Web-UI Access",
+        "Description": "Link to the Git repo",
+        "Protocol": 2,
+        "Tags": [],
+        "VPN": false,
+        "IpFiltered": false,
+        "Readonly": false,
+        "Authentication": 3,
+        "Authorization": 1,
+        "Usage": 1,
+        "DataAssetsSent": [
+          "client-application-code",
+          "server-application-code"
+        ],
+        "DataAssetsReceived": [
+          "client-application-code",
+          "server-application-code"
+        ],
+        "DiagramTweakWeight": 1,
+        "DiagramTweakConstraint": true
+      },
+      {
+        "Id": "jenkins-buildserver\u003egit-repo-code-read-access",
+        "SourceId": "jenkins-buildserver",
+        "TargetId": "git-repo",
+        "Title": "Git Repo Code Read Access",
+        "Description": "Link to the Git repository server",
+        "Protocol": 20,
+        "Tags": [],
+        "VPN": false,
+        "IpFiltered": false,
+        "Readonly": true,
+        "Authentication": 4,
+        "Authorization": 1,
+        "Usage": 1,
+        "DataAssetsSent": null,
+        "DataAssetsReceived": [
+          "client-application-code",
+          "server-application-code"
+        ],
+        "DiagramTweakWeight": 1,
+        "DiagramTweakConstraint": true
+      }
+    ],
+    "identity-provider": [
+      {
+        "Id": "apache-webserver\u003eauth-credential-check-traffic",
+        "SourceId": "apache-webserver",
+        "TargetId": "identity-provider",
+        "Title": "Auth Credential Check Traffic",
+        "Description": "Link to the identity provider server",
+        "Protocol": 2,
+        "Tags": [],
+        "VPN": false,
+        "IpFiltered": false,
+        "Readonly": false,
+        "Authentication": 1,
+        "Authorization": 1,
+        "Usage": 0,
+        "DataAssetsSent": [
+          "customer-accounts"
+        ],
+        "DataAssetsReceived": null,
+        "DiagramTweakWeight": 1,
+        "DiagramTweakConstraint": true
+      }
+    ],
+    "jenkins-buildserver": [
+      {
+        "Id": "external-dev-client\u003ejenkins-web-ui-access",
+        "SourceId": "external-dev-client",
+        "TargetId": "jenkins-buildserver",
+        "Title": "Jenkins Web-UI Access",
+        "Description": "Link to the Jenkins build server",
+        "Protocol": 2,
+        "Tags": [],
+        "VPN": false,
+        "IpFiltered": false,
+        "Readonly": false,
+        "Authentication": 1,
+        "Authorization": 1,
+        "Usage": 1,
+        "DataAssetsSent": [
+          "build-job-config"
+        ],
+        "DataAssetsReceived": [
+          "build-job-config"
+        ],
+        "DiagramTweakWeight": 1,
+        "DiagramTweakConstraint": true
+      }
+    ],
+    "ldap-auth-server": [
+      {
+        "Id": "marketing-cms\u003eauth-traffic",
+        "SourceId": "marketing-cms",
+        "TargetId": "ldap-auth-server",
+        "Title": "Auth Traffic",
+        "Description": "Link to the LDAP auth server",
+        "Protocol": 32,
+        "Tags": [],
+        "VPN": false,
+        "IpFiltered": false,
+        "Readonly": true,
+        "Authentication": 1,
+        "Authorization": 1,
+        "Usage": 0,
+        "DataAssetsSent": [
+          "customer-accounts"
+        ],
+        "DataAssetsReceived": [
+          "customer-accounts"
+        ],
+        "DiagramTweakWeight": 1,
+        "DiagramTweakConstraint": true
+      },
+      {
+        "Id": "backend-admin-client\u003euser-management-access",
+        "SourceId": "backend-admin-client",
+        "TargetId": "ldap-auth-server",
+        "Title": "User Management Access",
+        "Description": "Link to the LDAP auth server for managing users",
+        "Protocol": 33,
+        "Tags": [],
+        "VPN": false,
+        "IpFiltered": false,
+        "Readonly": false,
+        "Authentication": 1,
+        "Authorization": 1,
+        "Usage": 1,
+        "DataAssetsSent": [
+          "customer-accounts"
+        ],
+        "DataAssetsReceived": [
+          "customer-accounts"
+        ],
+        "DiagramTweakWeight": 1,
+        "DiagramTweakConstraint": true
+      },
+      {
+        "Id": "identity-provider\u003eldap-credential-check-traffic",
+        "SourceId": "identity-provider",
+        "TargetId": "ldap-auth-server",
+        "Title": "LDAP Credential Check Traffic",
+        "Description": "Link to the LDAP server",
+        "Protocol": 33,
+        "Tags": [],
+        "VPN": false,
+        "IpFiltered": false,
+        "Readonly": false,
+        "Authentication": 1,
+        "Authorization": 1,
+        "Usage": 0,
+        "DataAssetsSent": [
+          "customer-accounts"
+        ],
+        "DataAssetsReceived": null,
+        "DiagramTweakWeight": 1,
+        "DiagramTweakConstraint": true
+      }
+    ],
+    "load-balancer": [
+      {
+        "Id": "customer-client\u003ecustomer-traffic",
+        "SourceId": "customer-client",
+        "TargetId": "load-balancer",
+        "Title": "Customer Traffic",
+        "Description": "Link to the load balancer",
+        "Protocol": 2,
+        "Tags": [],
+        "VPN": false,
+        "IpFiltered": false,
+        "Readonly": false,
+        "Authentication": 2,
+        "Authorization": 2,
+        "Usage": 0,
+        "DataAssetsSent": [
+          "customer-accounts",
+          "customer-operational-data"
+        ],
+        "DataAssetsReceived": [
+          "customer-accounts",
+          "customer-operational-data",
+          "customer-contracts",
+          "client-application-code",
+          "marketing-material"
+        ],
+        "DiagramTweakWeight": 1,
+        "DiagramTweakConstraint": true
+      }
+    ],
+    "marketing-cms": [
+      {
+        "Id": "jenkins-buildserver\u003ecms-updates",
+        "SourceId": "jenkins-buildserver",
+        "TargetId": "marketing-cms",
+        "Title": "CMS Updates",
+        "Description": "Link to the CMS",
+        "Protocol": 20,
+        "Tags": [],
+        "VPN": false,
+        "IpFiltered": false,
+        "Readonly": false,
+        "Authentication": 4,
+        "Authorization": 1,
+        "Usage": 1,
+        "DataAssetsSent": [
+          "marketing-material"
+        ],
+        "DataAssetsReceived": null,
+        "DiagramTweakWeight": 1,
+        "DiagramTweakConstraint": true
+      },
+      {
+        "Id": "backoffice-client\u003emarketing-cms-editing",
+        "SourceId": "backoffice-client",
+        "TargetId": "marketing-cms",
+        "Title": "Marketing CMS Editing",
+        "Description": "Link to the CMS for editing content",
+        "Protocol": 2,
+        "Tags": [],
+        "VPN": true,
+        "IpFiltered": false,
+        "Readonly": false,
+        "Authentication": 3,
+        "Authorization": 2,
+        "Usage": 0,
+        "DataAssetsSent": [
+          "marketing-material"
+        ],
+        "DataAssetsReceived": [
+          "marketing-material"
+        ],
+        "DiagramTweakWeight": 1,
+        "DiagramTweakConstraint": true
+      },
+      {
+        "Id": "load-balancer\u003ecms-content-traffic",
+        "SourceId": "load-balancer",
+        "TargetId": "marketing-cms",
+        "Title": "CMS Content Traffic",
+        "Description": "Link to the CMS server",
+        "Protocol": 1,
+        "Tags": [],
+        "VPN": false,
+        "IpFiltered": false,
+        "Readonly": true,
+        "Authentication": 0,
+        "Authorization": 0,
+        "Usage": 0,
+        "DataAssetsSent": null,
+        "DataAssetsReceived": [
+          "marketing-material"
+        ],
+        "DiagramTweakWeight": 1,
+        "DiagramTweakConstraint": true
+      }
+    ],
+    "sql-database": [
+      {
+        "Id": "backend-admin-client\u003edb-update-access",
+        "SourceId": "backend-admin-client",
+        "TargetId": "sql-database",
+        "Title": "DB Update Access",
+        "Description": "Link to the database (JDBC tunneled via SSH)",
+        "Protocol": 20,
+        "Tags": [],
+        "VPN": false,
+        "IpFiltered": false,
+        "Readonly": false,
+        "Authentication": 4,
+        "Authorization": 1,
+        "Usage": 1,
+        "DataAssetsSent": [
+          "db-dumps"
+        ],
+        "DataAssetsReceived": [
+          "db-dumps",
+          "erp-logs",
+          "customer-accounts",
+          "customer-operational-data"
+        ],
+        "DiagramTweakWeight": 1,
+        "DiagramTweakConstraint": true
+      },
+      {
+        "Id": "erp-system\u003edatabase-traffic",
+        "SourceId": "erp-system",
+        "TargetId": "sql-database",
+        "Title": "Database Traffic",
+        "Description": "Link to the DB system",
+        "Protocol": 8,
+        "Tags": [],
+        "VPN": false,
+        "IpFiltered": false,
+        "Readonly": false,
+        "Authentication": 1,
+        "Authorization": 1,
+        "Usage": 0,
+        "DataAssetsSent": [
+          "customer-accounts",
+          "customer-operational-data",
+          "internal-business-data"
+        ],
+        "DataAssetsReceived": [
+          "customer-accounts",
+          "customer-operational-data",
+          "internal-business-data"
+        ],
+        "DiagramTweakWeight": 1,
+        "DiagramTweakConstraint": true
+      }
+    ]
+  },
+  "direct_containing_trust_boundary_mapped_by_technical_asset_id": {
+    "apache-webserver": {
+      "Id": "web-dmz",
+      "Title": "Web DMZ",
+      "Description": "Web DMZ",
+      "Type": 4,
+      "Tags": [],
+      "TechnicalAssetsInside": [
+        "apache-webserver",
+        "marketing-cms"
+      ],
+      "TrustBoundariesNested": []
+    },
+    "backend-admin-client": {
+      "Id": "dev-network",
+      "Title": "Dev Network",
+      "Description": "Development Network",
+      "Type": 0,
+      "Tags": [],
+      "TechnicalAssetsInside": [
+        "jenkins-buildserver",
+        "git-repo",
+        "backend-admin-client",
+        "backoffice-client"
+      ],
+      "TrustBoundariesNested": []
+    },
+    "backoffice-client": {
+      "Id": "dev-network",
+      "Title": "Dev Network",
+      "Description": "Development Network",
+      "Type": 0,
+      "Tags": [],
+      "TechnicalAssetsInside": [
+        "jenkins-buildserver",
+        "git-repo",
+        "backend-admin-client",
+        "backoffice-client"
+      ],
+      "TrustBoundariesNested": []
+    },
+    "contract-fileserver": {
+      "Id": "erp-dmz",
+      "Title": "ERP DMZ",
+      "Description": "ERP DMZ",
+      "Type": 4,
+      "Tags": [
+        "some-erp"
+      ],
+      "TechnicalAssetsInside": [
+        "erp-system",
+        "contract-fileserver",
+        "sql-database"
+      ],
+      "TrustBoundariesNested": []
+    },
+    "erp-system": {
+      "Id": "erp-dmz",
+      "Title": "ERP DMZ",
+      "Description": "ERP DMZ",
+      "Type": 4,
+      "Tags": [
+        "some-erp"
+      ],
+      "TechnicalAssetsInside": [
+        "erp-system",
+        "contract-fileserver",
+        "sql-database"
+      ],
+      "TrustBoundariesNested": []
+    },
+    "git-repo": {
+      "Id": "dev-network",
+      "Title": "Dev Network",
+      "Description": "Development Network",
+      "Type": 0,
+      "Tags": [],
+      "TechnicalAssetsInside": [
+        "jenkins-buildserver",
+        "git-repo",
+        "backend-admin-client",
+        "backoffice-client"
+      ],
+      "TrustBoundariesNested": []
+    },
+    "identity-provider": {
+      "Id": "auth-env",
+      "Title": "Auth Handling Environment",
+      "Description": "Auth Handling Environment",
+      "Type": 6,
+      "Tags": [],
+      "TechnicalAssetsInside": [
+        "identity-provider",
+        "ldap-auth-server"
+      ],
+      "TrustBoundariesNested": []
+    },
+    "jenkins-buildserver": {
+      "Id": "dev-network",
+      "Title": "Dev Network",
+      "Description": "Development Network",
+      "Type": 0,
+      "Tags": [],
+      "TechnicalAssetsInside": [
+        "jenkins-buildserver",
+        "git-repo",
+        "backend-admin-client",
+        "backoffice-client"
+      ],
+      "TrustBoundariesNested": []
+    },
+    "ldap-auth-server": {
+      "Id": "auth-env",
+      "Title": "Auth Handling Environment",
+      "Description": "Auth Handling Environment",
+      "Type": 6,
+      "Tags": [],
+      "TechnicalAssetsInside": [
+        "identity-provider",
+        "ldap-auth-server"
+      ],
+      "TrustBoundariesNested": []
+    },
+    "load-balancer": {
+      "Id": "application-network",
+      "Title": "Application Network",
+      "Description": "Application Network",
+      "Type": 3,
+      "Tags": [
+        "aws"
+      ],
+      "TechnicalAssetsInside": [
+        "load-balancer"
+      ],
+      "TrustBoundariesNested": [
+        "web-dmz",
+        "erp-dmz",
+        "auth-env"
+      ]
+    },
+    "marketing-cms": {
+      "Id": "web-dmz",
+      "Title": "Web DMZ",
+      "Description": "Web DMZ",
+      "Type": 4,
+      "Tags": [],
+      "TechnicalAssetsInside": [
+        "apache-webserver",
+        "marketing-cms"
+      ],
+      "TrustBoundariesNested": []
+    },
+    "sql-database": {
+      "Id": "erp-dmz",
+      "Title": "ERP DMZ",
+      "Description": "ERP DMZ",
+      "Type": 4,
+      "Tags": [
+        "some-erp"
+      ],
+      "TechnicalAssetsInside": [
+        "erp-system",
+        "contract-fileserver",
+        "sql-database"
+      ],
+      "TrustBoundariesNested": []
+    }
+  },
+  "generated_risks_by_category": {
+    "something-strange": [
+      {
+        "category": "",
+        "risk_status": "unchecked",
+        "severity": "critical",
+        "exploitation_likelihood": "likely",
+        "exploitation_impact": "medium",
+        "title": "\u003cb\u003eExample Individual Risk\u003c/b\u003e at \u003cb\u003eDatabase\u003c/b\u003e",
+        "synthetic_id": "something-strange@sql-database",
+        "most_relevant_data_asset": "",
+        "most_relevant_technical_asset": "sql-database",
+        "most_relevant_trust_boundary": "",
+        "most_relevant_shared_runtime": "",
+        "most_relevant_communication_link": "",
+        "data_breach_probability": "probable",
+        "data_breach_technical_assets": [
+          "sql-database"
+        ]
+      },
+      {
+        "category": "",
+        "risk_status": "unchecked",
+        "severity": "medium",
+        "exploitation_likelihood": "frequent",
+        "exploitation_impact": "very-high",
+        "title": "\u003cb\u003eExample Individual Risk\u003c/b\u003e at \u003cb\u003eContract Filesystem\u003c/b\u003e",
+        "synthetic_id": "something-strange@contract-fileserver",
+        "most_relevant_data_asset": "",
+        "most_relevant_technical_asset": "contract-fileserver",
+        "most_relevant_trust_boundary": "",
+        "most_relevant_shared_runtime": "",
+        "most_relevant_communication_link": "",
+        "data_breach_probability": "improbable",
+        "data_breach_technical_assets": null
+      }
+    ]
+  }
+}

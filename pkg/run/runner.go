@@ -71,6 +71,8 @@ func (p *Runner) Run(in any, out any, parameters ...string) error {
 		return inError
 	}
 
+	_ = os.WriteFile("../../all.json", inData, 0644)
+
 	_, writeError := stdin.Write(inData)
 	if writeError != nil {
 		return writeError

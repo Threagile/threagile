@@ -4,7 +4,9 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package types
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
 )
 
@@ -57,4 +59,19 @@ func (what EncryptionStyle) Explain() string {
 
 func (what EncryptionStyle) Title() string {
 	return [...]string{"None", "Transparent", "Data with Symmetric Shared Key", "Data with Asymmetric Shared Key", "Data with End-User Individual Key"}[what]
+}
+
+func (what EncryptionStyle) MarshalJSON() ([]byte, error) {
+	return json.Marshal(what.String())
+}
+
+func (what *EncryptionStyle) UnmarshalJSON([]byte) error {
+	for index, description := range EncryptionStyleTypeDescription {
+		if strings.ToLower(what.String()) == strings.ToLower(description.Name) {
+			*what = EncryptionStyle(index)
+			return nil
+		}
+	}
+
+	return fmt.Errorf("unknown encryption style value %q", int(*what))
 }
