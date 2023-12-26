@@ -6,6 +6,7 @@ package types
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
 )
 
@@ -60,4 +61,15 @@ func (what DataBreachProbability) Title() string {
 
 func (what DataBreachProbability) MarshalJSON() ([]byte, error) {
 	return json.Marshal(what.String())
+}
+
+func (what *DataBreachProbability) UnmarshalJSON([]byte) error {
+	for index, description := range DataBreachProbabilityTypeDescription {
+		if strings.ToLower(what.String()) == strings.ToLower(description.Name) {
+			*what = DataBreachProbability(index)
+			return nil
+		}
+	}
+
+	return fmt.Errorf("unknown data breach probability value %q", int(*what))
 }

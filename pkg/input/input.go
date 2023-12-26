@@ -142,7 +142,7 @@ type InputRiskTracking struct {
 }
 
 type ModelInput struct { // TODO: Eventually remove this and directly use ParsedModelRoot? But then the error messages for model errors are not quite as good anymore...
-	Includes                                      []string                               `yaml:"includes" json:"includes"`
+	Includes                                      []string                               `yaml:"includes,omitempty" json:"includes,omitempty"`
 	ThreagileVersion                              string                                 `yaml:"threagile_version" json:"threagile_version"`
 	Title                                         string                                 `yaml:"title" json:"title"`
 	Author                                        Author                                 `yaml:"author" json:"author"`
@@ -154,7 +154,7 @@ type ModelInput struct { // TODO: Eventually remove this and directly use Parsed
 	Questions                                     map[string]string                      `yaml:"questions" json:"questions"`
 	AbuseCases                                    map[string]string                      `yaml:"abuse_cases" json:"abuse_cases"`
 	SecurityRequirements                          map[string]string                      `yaml:"security_requirements" json:"security_requirements"`
-	TagsAvailable                                 []string                               `yaml:"tags_available" json:"tags_available"`
+	TagsAvailable                                 []string                               `yaml:"tags_available,omitempty" json:"tags_available,omitempty"`
 	DataAssets                                    map[string]InputDataAsset              `yaml:"data_assets" json:"data_assets"`
 	TechnicalAssets                               map[string]InputTechnicalAsset         `yaml:"technical_assets" json:"technical_assets"`
 	TrustBoundaries                               map[string]InputTrustBoundary          `yaml:"trust_boundaries" json:"trust_boundaries"`
@@ -166,8 +166,8 @@ type ModelInput struct { // TODO: Eventually remove this and directly use Parsed
 	DiagramTweakEdgeLayout                        string                                 `yaml:"diagram_tweak_edge_layout" json:"diagram_tweak_edge_layout"`
 	DiagramTweakSuppressEdgeLabels                bool                                   `yaml:"diagram_tweak_suppress_edge_labels" json:"diagram_tweak_suppress_edge_labels"`
 	DiagramTweakLayoutLeftToRight                 bool                                   `yaml:"diagram_tweak_layout_left_to_right" json:"diagram_tweak_layout_left_to_right"`
-	DiagramTweakInvisibleConnectionsBetweenAssets []string                               `yaml:"diagram_tweak_invisible_connections_between_assets" json:"diagram_tweak_invisible_connections_between_assets"`
-	DiagramTweakSameRankAssets                    []string                               `yaml:"diagram_tweak_same_rank_assets" json:"diagram_tweak_same_rank_assets"`
+	DiagramTweakInvisibleConnectionsBetweenAssets []string                               `yaml:"diagram_tweak_invisible_connections_between_assets,omitempty" json:"diagram_tweak_invisible_connections_between_assets,omitempty"`
+	DiagramTweakSameRankAssets                    []string                               `yaml:"diagram_tweak_same_rank_assets,omitempty" json:"diagram_tweak_same_rank_assets,omitempty"`
 }
 
 func (model *ModelInput) Defaults() *ModelInput {

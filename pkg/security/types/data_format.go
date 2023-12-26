@@ -4,7 +4,9 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package types
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
 )
 
@@ -62,6 +64,21 @@ func (what DataFormat) Title() string {
 func (what DataFormat) Description() string {
 	return [...]string{"JSON marshalled object data", "XML structured data", "Serialization-based object graphs",
 		"File input/uploads", "CSV tabular data"}[what]
+}
+
+func (what DataFormat) MarshalJSON() ([]byte, error) {
+	return json.Marshal(what.String())
+}
+
+func (what *DataFormat) UnmarshalJSON([]byte) error {
+	for index, description := range DataFormatTypeDescription {
+		if strings.ToLower(what.String()) == strings.ToLower(description.Name) {
+			*what = DataFormat(index)
+			return nil
+		}
+	}
+
+	return fmt.Errorf("unknown data format value %q", int(*what))
 }
 
 type ByDataFormatAcceptedSort []DataFormat

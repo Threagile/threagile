@@ -4,7 +4,9 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package types
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
 )
 
@@ -204,4 +206,19 @@ func (what Protocol) IsPotentialDatabaseAccessProtocol(includingLaxDatabaseProto
 
 func (what Protocol) IsPotentialWebAccessProtocol() bool {
 	return what == HTTP || what == HTTPS || what == WS || what == WSS || what == ReverseProxyWebProtocol || what == ReverseProxyWebProtocolEncrypted
+}
+
+func (what Protocol) MarshalJSON() ([]byte, error) {
+	return json.Marshal(what.String())
+}
+
+func (what *Protocol) UnmarshalJSON([]byte) error {
+	for index, description := range ProtocolTypeDescription {
+		if strings.ToLower(what.String()) == strings.ToLower(description.Name) {
+			*what = Protocol(index)
+			return nil
+		}
+	}
+
+	return fmt.Errorf("unknown protocol value %q", int(*what))
 }

@@ -4,7 +4,9 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package types
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
 )
 
@@ -87,4 +89,19 @@ func (what Confidentiality) RatingStringInScale() string {
 	}
 	result += " in scale of 5)"
 	return result
+}
+
+func (what Confidentiality) MarshalJSON() ([]byte, error) {
+	return json.Marshal(what.String())
+}
+
+func (what *Confidentiality) UnmarshalJSON([]byte) error {
+	for index, description := range ConfidentialityTypeDescription {
+		if strings.ToLower(what.String()) == strings.ToLower(description.Name) {
+			*what = Confidentiality(index)
+			return nil
+		}
+	}
+
+	return fmt.Errorf("unknown confidentiality value %q", int(*what))
 }

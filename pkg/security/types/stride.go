@@ -6,6 +6,7 @@ package types
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
 )
 
@@ -65,4 +66,15 @@ func (what STRIDE) Title() string {
 
 func (what STRIDE) MarshalJSON() ([]byte, error) {
 	return json.Marshal(what.String())
+}
+
+func (what *STRIDE) UnmarshalJSON([]byte) error {
+	for index, description := range StrideTypeDescription {
+		if strings.ToLower(what.String()) == strings.ToLower(description.Name) {
+			*what = STRIDE(index)
+			return nil
+		}
+	}
+
+	return fmt.Errorf("unknown STRIDE value %q", int(*what))
 }

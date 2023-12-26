@@ -4,7 +4,9 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package types
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
 )
 
@@ -59,4 +61,19 @@ func (what Quantity) Title() string {
 func (what Quantity) QuantityFactor() float64 {
 	// fibonacci starting at 1
 	return [...]float64{1, 2, 3, 5}[what]
+}
+
+func (what Quantity) MarshalJSON() ([]byte, error) {
+	return json.Marshal(what.String())
+}
+
+func (what *Quantity) UnmarshalJSON([]byte) error {
+	for index, description := range QuantityTypeDescription {
+		if strings.ToLower(what.String()) == strings.ToLower(description.Name) {
+			*what = Quantity(index)
+			return nil
+		}
+	}
+
+	return fmt.Errorf("unknown quantity value %q", int(*what))
 }

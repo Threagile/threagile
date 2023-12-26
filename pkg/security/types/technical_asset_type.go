@@ -4,7 +4,9 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package types
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
 )
 
@@ -47,4 +49,19 @@ func ParseTechnicalAssetType(value string) (technicalAssetType TechnicalAssetTyp
 		}
 	}
 	return technicalAssetType, errors.New("Unable to parse into type: " + value)
+}
+
+func (what TechnicalAssetType) MarshalJSON() ([]byte, error) {
+	return json.Marshal(what.String())
+}
+
+func (what *TechnicalAssetType) UnmarshalJSON([]byte) error {
+	for index, description := range TechnicalAssetTypeDescription {
+		if strings.ToLower(what.String()) == strings.ToLower(description.Name) {
+			*what = TechnicalAssetType(index)
+			return nil
+		}
+	}
+
+	return fmt.Errorf("unknown technical asset type value %q", int(*what))
 }

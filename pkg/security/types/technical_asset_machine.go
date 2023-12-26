@@ -4,7 +4,9 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package types
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
 )
 
@@ -49,4 +51,19 @@ func (what TechnicalAssetMachine) String() string {
 
 func (what TechnicalAssetMachine) Explain() string {
 	return TechnicalAssetMachineTypeDescription[what].Description
+}
+
+func (what TechnicalAssetMachine) MarshalJSON() ([]byte, error) {
+	return json.Marshal(what.String())
+}
+
+func (what *TechnicalAssetMachine) UnmarshalJSON([]byte) error {
+	for index, description := range TechnicalAssetMachineTypeDescription {
+		if strings.ToLower(what.String()) == strings.ToLower(description.Name) {
+			*what = TechnicalAssetMachine(index)
+			return nil
+		}
+	}
+
+	return fmt.Errorf("unknown technical asset machine value %q", int(*what))
 }

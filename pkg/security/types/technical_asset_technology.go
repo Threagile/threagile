@@ -4,7 +4,9 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package types
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
 )
 
@@ -288,4 +290,19 @@ func (what TechnicalAssetTechnology) IsTrafficForwarding() bool {
 
 func (what TechnicalAssetTechnology) IsEmbeddedComponent() bool {
 	return what == Library
+}
+
+func (what TechnicalAssetTechnology) MarshalJSON() ([]byte, error) {
+	return json.Marshal(what.String())
+}
+
+func (what *TechnicalAssetTechnology) UnmarshalJSON([]byte) error {
+	for index, description := range TechnicalAssetTechnologyTypeDescription {
+		if strings.ToLower(what.String()) == strings.ToLower(description.Name) {
+			*what = TechnicalAssetTechnology(index)
+			return nil
+		}
+	}
+
+	return fmt.Errorf("unknown technical asset technology value %q", int(*what))
 }

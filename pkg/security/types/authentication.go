@@ -4,7 +4,9 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package types
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
 )
 
@@ -60,4 +62,19 @@ func (what Authentication) String() string {
 
 func (what Authentication) Explain() string {
 	return AuthenticationTypeDescription[what].Description
+}
+
+func (what Authentication) MarshalJSON() ([]byte, error) {
+	return json.Marshal(what.String())
+}
+
+func (what *Authentication) UnmarshalJSON([]byte) error {
+	for index, description := range AuthenticationTypeDescription {
+		if strings.ToLower(what.String()) == strings.ToLower(description.Name) {
+			*what = Authentication(index)
+			return nil
+		}
+	}
+
+	return fmt.Errorf("unknown authentication value %q", int(*what))
 }
