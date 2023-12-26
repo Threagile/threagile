@@ -106,6 +106,22 @@ func (what Risk) IsRiskTracked(model *ParsedModel) bool {
 	return false
 }
 
+func GetRiskCategories(parsedModel *ParsedModel, categoryIDs []string) []RiskCategory {
+	categoryMap := make(map[string]RiskCategory)
+	for _, categoryId := range categoryIDs {
+		if len(parsedModel.GeneratedRisksByCategory[categoryId]) > 0 {
+			categoryMap[categoryId] = parsedModel.GeneratedRisksByCategory[categoryId][0].Category
+		}
+	}
+
+	categories := make([]RiskCategory, 0)
+	for categoryId := range categoryMap {
+		categories = append(categories, categoryMap[categoryId])
+	}
+
+	return categories
+}
+
 func AllRisks(parsedModel *ParsedModel) []Risk {
 	result := make([]Risk, 0)
 	for _, risks := range parsedModel.GeneratedRisksByCategory {
@@ -174,8 +190,8 @@ func (what ByRiskCategoryTitleSort) Less(i, j int) bool {
 
 func SortByRiskCategoryHighestContainingRiskSeveritySortStillAtRisk(parsedModel *ParsedModel, riskCategories []RiskCategory) {
 	sort.Slice(riskCategories, func(i, j int) bool {
-		risksLeft := ReduceToOnlyStillAtRisk(parsedModel, parsedModel.GeneratedRisksByCategory[riskCategories[i]])
-		risksRight := ReduceToOnlyStillAtRisk(parsedModel, parsedModel.GeneratedRisksByCategory[riskCategories[j]])
+		risksLeft := ReduceToOnlyStillAtRisk(parsedModel, parsedModel.GeneratedRisksByCategory[riskCategories[i].Id])
+		risksRight := ReduceToOnlyStillAtRisk(parsedModel, parsedModel.GeneratedRisksByCategory[riskCategories[j].Id])
 		highestLeft := HighestSeverityStillAtRisk(parsedModel, risksLeft)
 		highestRight := HighestSeverityStillAtRisk(parsedModel, risksRight)
 		if highestLeft == highestRight {
@@ -248,21 +264,29 @@ type RiskRule interface {
 // as in Go ranging over map is random order, range over them in sorted (hence reproducible) way:
 
 func SortedRiskCategories(parsedModel *ParsedModel) []RiskCategory {
-	categories := make([]RiskCategory, 0)
-	for k := range parsedModel.GeneratedRisksByCategory {
-		categories = append(categories, k)
+	categoryMap := make(map[string]RiskCategory)
+	for categoryId, risks := range parsedModel.GeneratedRisksByCategory {
+		for _, risk := range risks {
+			categoryMap[categoryId] = risk.Category
+		}
 	}
+
+	categories := make([]RiskCategory, 0)
+	for categoryId := range categoryMap {
+		categories = append(categories, categoryMap[categoryId])
+	}
+
 	SortByRiskCategoryHighestContainingRiskSeveritySortStillAtRisk(parsedModel, categories)
 	return categories
 }
 
 func SortedRisksOfCategory(parsedModel *ParsedModel, category RiskCategory) []Risk {
-	risks := parsedModel.GeneratedRisksByCategory[category]
+	risks := parsedModel.GeneratedRisksByCategory[category.Id]
 	SortByRiskSeverity(risks, parsedModel)
 	return risks
 }
 
-func CountRisks(risksByCategory map[RiskCategory][]Risk) int {
+func CountRisks(risksByCategory map[string][]Risk) int {
 	result := 0
 	for _, risks := range risksByCategory {
 		result += len(risks)
@@ -270,149 +294,149 @@ func CountRisks(risksByCategory map[RiskCategory][]Risk) int {
 	return result
 }
 
-func RisksOfOnlySTRIDESpoofing(risksByCategory map[RiskCategory][]Risk) map[RiskCategory][]Risk {
-	result := make(map[RiskCategory][]Risk)
+func RisksOfOnlySTRIDESpoofing(risksByCategory map[string][]Risk) map[string][]Risk {
+	result := make(map[string][]Risk)
 	for _, risks := range risksByCategory {
 		for _, risk := range risks {
 			if risk.Category.STRIDE == types.Spoofing {
-				result[risk.Category] = append(result[risk.Category], risk)
+				result[risk.Category.Id] = append(result[risk.Category.Id], risk)
 			}
 		}
 	}
 	return result
 }
 
-func RisksOfOnlySTRIDETampering(risksByCategory map[RiskCategory][]Risk) map[RiskCategory][]Risk {
-	result := make(map[RiskCategory][]Risk)
+func RisksOfOnlySTRIDETampering(risksByCategory map[string][]Risk) map[string][]Risk {
+	result := make(map[string][]Risk)
 	for _, risks := range risksByCategory {
 		for _, risk := range risks {
 			if risk.Category.STRIDE == types.Tampering {
-				result[risk.Category] = append(result[risk.Category], risk)
+				result[risk.Category.Id] = append(result[risk.Category.Id], risk)
 			}
 		}
 	}
 	return result
 }
 
-func RisksOfOnlySTRIDERepudiation(risksByCategory map[RiskCategory][]Risk) map[RiskCategory][]Risk {
-	result := make(map[RiskCategory][]Risk)
+func RisksOfOnlySTRIDERepudiation(risksByCategory map[string][]Risk) map[string][]Risk {
+	result := make(map[string][]Risk)
 	for _, risks := range risksByCategory {
 		for _, risk := range risks {
 			if risk.Category.STRIDE == types.Repudiation {
-				result[risk.Category] = append(result[risk.Category], risk)
+				result[risk.Category.Id] = append(result[risk.Category.Id], risk)
 			}
 		}
 	}
 	return result
 }
 
-func RisksOfOnlySTRIDEInformationDisclosure(risksByCategory map[RiskCategory][]Risk) map[RiskCategory][]Risk {
-	result := make(map[RiskCategory][]Risk)
+func RisksOfOnlySTRIDEInformationDisclosure(risksByCategory map[string][]Risk) map[string][]Risk {
+	result := make(map[string][]Risk)
 	for _, risks := range risksByCategory {
 		for _, risk := range risks {
 			if risk.Category.STRIDE == types.InformationDisclosure {
-				result[risk.Category] = append(result[risk.Category], risk)
+				result[risk.Category.Id] = append(result[risk.Category.Id], risk)
 			}
 		}
 	}
 	return result
 }
 
-func RisksOfOnlySTRIDEDenialOfService(risksByCategory map[RiskCategory][]Risk) map[RiskCategory][]Risk {
-	result := make(map[RiskCategory][]Risk)
+func RisksOfOnlySTRIDEDenialOfService(risksByCategory map[string][]Risk) map[string][]Risk {
+	result := make(map[string][]Risk)
 	for _, risks := range risksByCategory {
 		for _, risk := range risks {
 			if risk.Category.STRIDE == types.DenialOfService {
-				result[risk.Category] = append(result[risk.Category], risk)
+				result[risk.Category.Id] = append(result[risk.Category.Id], risk)
 			}
 		}
 	}
 	return result
 }
 
-func RisksOfOnlySTRIDEElevationOfPrivilege(risksByCategory map[RiskCategory][]Risk) map[RiskCategory][]Risk {
-	result := make(map[RiskCategory][]Risk)
+func RisksOfOnlySTRIDEElevationOfPrivilege(risksByCategory map[string][]Risk) map[string][]Risk {
+	result := make(map[string][]Risk)
 	for _, risks := range risksByCategory {
 		for _, risk := range risks {
 			if risk.Category.STRIDE == types.ElevationOfPrivilege {
-				result[risk.Category] = append(result[risk.Category], risk)
+				result[risk.Category.Id] = append(result[risk.Category.Id], risk)
 			}
 		}
 	}
 	return result
 }
 
-func RisksOfOnlyBusinessSide(risksByCategory map[RiskCategory][]Risk) map[RiskCategory][]Risk {
-	result := make(map[RiskCategory][]Risk)
+func RisksOfOnlyBusinessSide(risksByCategory map[string][]Risk) map[string][]Risk {
+	result := make(map[string][]Risk)
 	for _, risks := range risksByCategory {
 		for _, risk := range risks {
 			if risk.Category.Function == types.BusinessSide {
-				result[risk.Category] = append(result[risk.Category], risk)
+				result[risk.Category.Id] = append(result[risk.Category.Id], risk)
 			}
 		}
 	}
 	return result
 }
 
-func RisksOfOnlyArchitecture(risksByCategory map[RiskCategory][]Risk) map[RiskCategory][]Risk {
-	result := make(map[RiskCategory][]Risk)
+func RisksOfOnlyArchitecture(risksByCategory map[string][]Risk) map[string][]Risk {
+	result := make(map[string][]Risk)
 	for _, risks := range risksByCategory {
 		for _, risk := range risks {
 			if risk.Category.Function == types.Architecture {
-				result[risk.Category] = append(result[risk.Category], risk)
+				result[risk.Category.Id] = append(result[risk.Category.Id], risk)
 			}
 		}
 	}
 	return result
 }
 
-func RisksOfOnlyDevelopment(risksByCategory map[RiskCategory][]Risk) map[RiskCategory][]Risk {
-	result := make(map[RiskCategory][]Risk)
+func RisksOfOnlyDevelopment(risksByCategory map[string][]Risk) map[string][]Risk {
+	result := make(map[string][]Risk)
 	for _, risks := range risksByCategory {
 		for _, risk := range risks {
 			if risk.Category.Function == types.Development {
-				result[risk.Category] = append(result[risk.Category], risk)
+				result[risk.Category.Id] = append(result[risk.Category.Id], risk)
 			}
 		}
 	}
 	return result
 }
 
-func RisksOfOnlyOperation(risksByCategory map[RiskCategory][]Risk) map[RiskCategory][]Risk {
-	result := make(map[RiskCategory][]Risk)
+func RisksOfOnlyOperation(risksByCategory map[string][]Risk) map[string][]Risk {
+	result := make(map[string][]Risk)
 	for _, risks := range risksByCategory {
 		for _, risk := range risks {
 			if risk.Category.Function == types.Operations {
-				result[risk.Category] = append(result[risk.Category], risk)
+				result[risk.Category.Id] = append(result[risk.Category.Id], risk)
 			}
 		}
 	}
 	return result
 }
 
-func CategoriesOfOnlyRisksStillAtRisk(parsedModel *ParsedModel, risksByCategory map[RiskCategory][]Risk) []RiskCategory {
-	categories := make(map[RiskCategory]struct{}) // Go's trick of unique elements is a map
+func CategoriesOfOnlyRisksStillAtRisk(parsedModel *ParsedModel, risksByCategory map[string][]Risk) []string {
+	categories := make(map[string]struct{}) // Go's trick of unique elements is a map
 	for _, risks := range risksByCategory {
 		for _, risk := range risks {
 			if !risk.GetRiskTrackingStatusDefaultingUnchecked(parsedModel).IsStillAtRisk() {
 				continue
 			}
-			categories[risk.Category] = struct{}{}
+			categories[risk.Category.Id] = struct{}{}
 		}
 	}
 	// return as slice (of now unique values)
 	return keysAsSlice(categories)
 }
 
-func CategoriesOfOnlyCriticalRisks(parsedModel *ParsedModel, risksByCategory map[RiskCategory][]Risk, initialRisks bool) []RiskCategory {
-	categories := make(map[RiskCategory]struct{}) // Go's trick of unique elements is a map
+func CategoriesOfOnlyCriticalRisks(parsedModel *ParsedModel, risksByCategory map[string][]Risk, initialRisks bool) []string {
+	categories := make(map[string]struct{}) // Go's trick of unique elements is a map
 	for _, risks := range risksByCategory {
 		for _, risk := range risks {
 			if !initialRisks && !risk.GetRiskTrackingStatusDefaultingUnchecked(parsedModel).IsStillAtRisk() {
 				continue
 			}
 			if risk.Severity == types.CriticalSeverity {
-				categories[risk.Category] = struct{}{}
+				categories[risk.Category.Id] = struct{}{}
 			}
 		}
 	}
@@ -420,19 +444,19 @@ func CategoriesOfOnlyCriticalRisks(parsedModel *ParsedModel, risksByCategory map
 	return keysAsSlice(categories)
 }
 
-func CategoriesOfOnlyHighRisks(parsedModel *ParsedModel, risksByCategory map[RiskCategory][]Risk, initialRisks bool) []RiskCategory {
-	categories := make(map[RiskCategory]struct{}) // Go's trick of unique elements is a map
+func CategoriesOfOnlyHighRisks(parsedModel *ParsedModel, risksByCategory map[string][]Risk, initialRisks bool) []string {
+	categories := make(map[string]struct{}) // Go's trick of unique elements is a map
 	for _, risks := range risksByCategory {
 		for _, risk := range risks {
 			if !initialRisks && !risk.GetRiskTrackingStatusDefaultingUnchecked(parsedModel).IsStillAtRisk() {
 				continue
 			}
-			highest := HighestSeverity(parsedModel.GeneratedRisksByCategory[risk.Category])
+			highest := HighestSeverity(parsedModel.GeneratedRisksByCategory[risk.Category.Id])
 			if !initialRisks {
-				highest = HighestSeverityStillAtRisk(parsedModel, parsedModel.GeneratedRisksByCategory[risk.Category])
+				highest = HighestSeverityStillAtRisk(parsedModel, parsedModel.GeneratedRisksByCategory[risk.Category.Id])
 			}
 			if risk.Severity == types.HighSeverity && highest < types.CriticalSeverity {
-				categories[risk.Category] = struct{}{}
+				categories[risk.Category.Id] = struct{}{}
 			}
 		}
 	}
@@ -440,19 +464,19 @@ func CategoriesOfOnlyHighRisks(parsedModel *ParsedModel, risksByCategory map[Ris
 	return keysAsSlice(categories)
 }
 
-func CategoriesOfOnlyElevatedRisks(parsedModel *ParsedModel, risksByCategory map[RiskCategory][]Risk, initialRisks bool) []RiskCategory {
-	categories := make(map[RiskCategory]struct{}) // Go's trick of unique elements is a map
+func CategoriesOfOnlyElevatedRisks(parsedModel *ParsedModel, risksByCategory map[string][]Risk, initialRisks bool) []string {
+	categories := make(map[string]struct{}) // Go's trick of unique elements is a map
 	for _, risks := range risksByCategory {
 		for _, risk := range risks {
 			if !initialRisks && !risk.GetRiskTrackingStatusDefaultingUnchecked(parsedModel).IsStillAtRisk() {
 				continue
 			}
-			highest := HighestSeverity(parsedModel.GeneratedRisksByCategory[risk.Category])
+			highest := HighestSeverity(parsedModel.GeneratedRisksByCategory[risk.Category.Id])
 			if !initialRisks {
-				highest = HighestSeverityStillAtRisk(parsedModel, parsedModel.GeneratedRisksByCategory[risk.Category])
+				highest = HighestSeverityStillAtRisk(parsedModel, parsedModel.GeneratedRisksByCategory[risk.Category.Id])
 			}
 			if risk.Severity == types.ElevatedSeverity && highest < types.HighSeverity {
-				categories[risk.Category] = struct{}{}
+				categories[risk.Category.Id] = struct{}{}
 			}
 		}
 	}
@@ -460,19 +484,19 @@ func CategoriesOfOnlyElevatedRisks(parsedModel *ParsedModel, risksByCategory map
 	return keysAsSlice(categories)
 }
 
-func CategoriesOfOnlyMediumRisks(parsedModel *ParsedModel, risksByCategory map[RiskCategory][]Risk, initialRisks bool) []RiskCategory {
-	categories := make(map[RiskCategory]struct{}) // Go's trick of unique elements is a map
+func CategoriesOfOnlyMediumRisks(parsedModel *ParsedModel, risksByCategory map[string][]Risk, initialRisks bool) []string {
+	categories := make(map[string]struct{}) // Go's trick of unique elements is a map
 	for _, risks := range risksByCategory {
 		for _, risk := range risks {
 			if !initialRisks && !risk.GetRiskTrackingStatusDefaultingUnchecked(parsedModel).IsStillAtRisk() {
 				continue
 			}
-			highest := HighestSeverity(parsedModel.GeneratedRisksByCategory[risk.Category])
+			highest := HighestSeverity(parsedModel.GeneratedRisksByCategory[risk.Category.Id])
 			if !initialRisks {
-				highest = HighestSeverityStillAtRisk(parsedModel, parsedModel.GeneratedRisksByCategory[risk.Category])
+				highest = HighestSeverityStillAtRisk(parsedModel, parsedModel.GeneratedRisksByCategory[risk.Category.Id])
 			}
 			if risk.Severity == types.MediumSeverity && highest < types.ElevatedSeverity {
-				categories[risk.Category] = struct{}{}
+				categories[risk.Category.Id] = struct{}{}
 			}
 		}
 	}
@@ -480,19 +504,19 @@ func CategoriesOfOnlyMediumRisks(parsedModel *ParsedModel, risksByCategory map[R
 	return keysAsSlice(categories)
 }
 
-func CategoriesOfOnlyLowRisks(parsedModel *ParsedModel, risksByCategory map[RiskCategory][]Risk, initialRisks bool) []RiskCategory {
-	categories := make(map[RiskCategory]struct{}) // Go's trick of unique elements is a map
+func CategoriesOfOnlyLowRisks(parsedModel *ParsedModel, risksByCategory map[string][]Risk, initialRisks bool) []string {
+	categories := make(map[string]struct{}) // Go's trick of unique elements is a map
 	for _, risks := range risksByCategory {
 		for _, risk := range risks {
 			if !initialRisks && !risk.GetRiskTrackingStatusDefaultingUnchecked(parsedModel).IsStillAtRisk() {
 				continue
 			}
-			highest := HighestSeverity(parsedModel.GeneratedRisksByCategory[risk.Category])
+			highest := HighestSeverity(parsedModel.GeneratedRisksByCategory[risk.Category.Id])
 			if !initialRisks {
-				highest = HighestSeverityStillAtRisk(parsedModel, parsedModel.GeneratedRisksByCategory[risk.Category])
+				highest = HighestSeverityStillAtRisk(parsedModel, parsedModel.GeneratedRisksByCategory[risk.Category.Id])
 			}
 			if risk.Severity == types.LowSeverity && highest < types.MediumSeverity {
-				categories[risk.Category] = struct{}{}
+				categories[risk.Category.Id] = struct{}{}
 			}
 		}
 	}
@@ -510,8 +534,8 @@ func HighestSeverity(risks []Risk) types.RiskSeverity {
 	return result
 }
 
-func keysAsSlice(categories map[RiskCategory]struct{}) []RiskCategory {
-	result := make([]RiskCategory, 0, len(categories))
+func keysAsSlice(categories map[string]struct{}) []string {
+	result := make([]string, 0, len(categories))
 	for k := range categories {
 		result = append(result, k)
 	}
@@ -626,17 +650,20 @@ func FilteredByOnlyLowRisks(parsedModel *ParsedModel) []Risk {
 	return filteredRisks
 }
 
-func FilterByModelFailures(risksByCat map[RiskCategory][]Risk) map[RiskCategory][]Risk {
-	result := make(map[RiskCategory][]Risk)
-	for riskCat, risks := range risksByCat {
-		if riskCat.ModelFailurePossibleReason {
-			result[riskCat] = risks
+func FilterByModelFailures(risksByCat map[string][]Risk) map[string][]Risk {
+	result := make(map[string][]Risk)
+	for categoryId, risks := range risksByCat {
+		for _, risk := range risks {
+			if risk.Category.ModelFailurePossibleReason {
+				result[categoryId] = risks
+			}
 		}
 	}
+
 	return result
 }
 
-func FlattenRiskSlice(risksByCat map[RiskCategory][]Risk) []Risk {
+func FlattenRiskSlice(risksByCat map[string][]Risk) []Risk {
 	result := make([]Risk, 0)
 	for _, risks := range risksByCat {
 		result = append(result, risks...)
