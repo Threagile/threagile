@@ -1333,15 +1333,15 @@ func renderImpactAnalysis(parsedModel *model.ParsedModel, initialRisks bool) {
 	html.Write(5, "Risk finding paragraphs are clickable and link to the corresponding chapter.")
 	pdf.SetFont("Helvetica", "", fontSizeBody)
 
-	addCategories(parsedModel, model.CategoriesOfOnlyCriticalRisks(parsedModel, parsedModel.GeneratedRisksByCategory, initialRisks),
+	addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyCriticalRisks(parsedModel, parsedModel.GeneratedRisksByCategory, initialRisks)),
 		types.CriticalSeverity, false, initialRisks, true, false)
-	addCategories(parsedModel, model.CategoriesOfOnlyHighRisks(parsedModel, parsedModel.GeneratedRisksByCategory, initialRisks),
+	addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyHighRisks(parsedModel, parsedModel.GeneratedRisksByCategory, initialRisks)),
 		types.HighSeverity, false, initialRisks, true, false)
-	addCategories(parsedModel, model.CategoriesOfOnlyElevatedRisks(parsedModel, parsedModel.GeneratedRisksByCategory, initialRisks),
+	addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyElevatedRisks(parsedModel, parsedModel.GeneratedRisksByCategory, initialRisks)),
 		types.ElevatedSeverity, false, initialRisks, true, false)
-	addCategories(parsedModel, model.CategoriesOfOnlyMediumRisks(parsedModel, parsedModel.GeneratedRisksByCategory, initialRisks),
+	addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyMediumRisks(parsedModel, parsedModel.GeneratedRisksByCategory, initialRisks)),
 		types.MediumSeverity, false, initialRisks, true, false)
-	addCategories(parsedModel, model.CategoriesOfOnlyLowRisks(parsedModel, parsedModel.GeneratedRisksByCategory, initialRisks),
+	addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyLowRisks(parsedModel, parsedModel.GeneratedRisksByCategory, initialRisks)),
 		types.LowSeverity, false, initialRisks, true, false)
 
 	pdf.SetDrawColor(0, 0, 0)
@@ -1455,15 +1455,15 @@ func createModelFailures(parsedModel *model.ParsedModel) {
 		pdfColorGray()
 		html.Write(5, "<br><br>No potential model failures have been identified.")
 	} else {
-		addCategories(parsedModel, model.CategoriesOfOnlyCriticalRisks(parsedModel, modelFailuresByCategory, true),
+		addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyCriticalRisks(parsedModel, modelFailuresByCategory, true)),
 			types.CriticalSeverity, true, true, false, true)
-		addCategories(parsedModel, model.CategoriesOfOnlyHighRisks(parsedModel, modelFailuresByCategory, true),
+		addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyHighRisks(parsedModel, modelFailuresByCategory, true)),
 			types.HighSeverity, true, true, false, true)
-		addCategories(parsedModel, model.CategoriesOfOnlyElevatedRisks(parsedModel, modelFailuresByCategory, true),
+		addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyElevatedRisks(parsedModel, modelFailuresByCategory, true)),
 			types.ElevatedSeverity, true, true, false, true)
-		addCategories(parsedModel, model.CategoriesOfOnlyMediumRisks(parsedModel, modelFailuresByCategory, true),
+		addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyMediumRisks(parsedModel, modelFailuresByCategory, true)),
 			types.MediumSeverity, true, true, false, true)
-		addCategories(parsedModel, model.CategoriesOfOnlyLowRisks(parsedModel, modelFailuresByCategory, true),
+		addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyLowRisks(parsedModel, modelFailuresByCategory, true)),
 			types.LowSeverity, true, true, false, true)
 	}
 
@@ -1622,7 +1622,7 @@ func addCategories(parsedModel *model.ParsedModel, riskCategories []model.RiskCa
 	var strBuilder strings.Builder
 	sort.Sort(model.ByRiskCategoryTitleSort(riskCategories))
 	for _, riskCategory := range riskCategories {
-		risksStr := parsedModel.GeneratedRisksByCategory[riskCategory]
+		risksStr := parsedModel.GeneratedRisksByCategory[riskCategory.Id]
 		if !initialRisks {
 			risksStr = model.ReduceToOnlyStillAtRisk(parsedModel, risksStr)
 		}
@@ -1770,15 +1770,15 @@ func createAssignmentByFunction(parsedModel *model.ParsedModel) {
 		pdf.SetTextColor(150, 150, 150)
 		html.Write(5, "<br><br>n/a")
 	} else {
-		addCategories(parsedModel, model.CategoriesOfOnlyCriticalRisks(parsedModel, risksBusinessSideFunction, true),
+		addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyCriticalRisks(parsedModel, risksBusinessSideFunction, true)),
 			types.CriticalSeverity, true, true, false, false)
-		addCategories(parsedModel, model.CategoriesOfOnlyHighRisks(parsedModel, risksBusinessSideFunction, true),
+		addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyHighRisks(parsedModel, risksBusinessSideFunction, true)),
 			types.HighSeverity, true, true, false, false)
-		addCategories(parsedModel, model.CategoriesOfOnlyElevatedRisks(parsedModel, risksBusinessSideFunction, true),
+		addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyElevatedRisks(parsedModel, risksBusinessSideFunction, true)),
 			types.ElevatedSeverity, true, true, false, false)
-		addCategories(parsedModel, model.CategoriesOfOnlyMediumRisks(parsedModel, risksBusinessSideFunction, true),
+		addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyMediumRisks(parsedModel, risksBusinessSideFunction, true)),
 			types.MediumSeverity, true, true, false, false)
-		addCategories(parsedModel, model.CategoriesOfOnlyLowRisks(parsedModel, risksBusinessSideFunction, true),
+		addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyLowRisks(parsedModel, risksBusinessSideFunction, true)),
 			types.LowSeverity, true, true, false, false)
 	}
 	pdf.SetLeftMargin(oldLeft)
@@ -1797,15 +1797,15 @@ func createAssignmentByFunction(parsedModel *model.ParsedModel) {
 		pdf.SetTextColor(150, 150, 150)
 		html.Write(5, "<br><br>n/a")
 	} else {
-		addCategories(parsedModel, model.CategoriesOfOnlyCriticalRisks(parsedModel, risksArchitectureFunction, true),
+		addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyCriticalRisks(parsedModel, risksArchitectureFunction, true)),
 			types.CriticalSeverity, true, true, false, false)
-		addCategories(parsedModel, model.CategoriesOfOnlyHighRisks(parsedModel, risksArchitectureFunction, true),
+		addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyHighRisks(parsedModel, risksArchitectureFunction, true)),
 			types.HighSeverity, true, true, false, false)
-		addCategories(parsedModel, model.CategoriesOfOnlyElevatedRisks(parsedModel, risksArchitectureFunction, true),
+		addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyElevatedRisks(parsedModel, risksArchitectureFunction, true)),
 			types.ElevatedSeverity, true, true, false, false)
-		addCategories(parsedModel, model.CategoriesOfOnlyMediumRisks(parsedModel, risksArchitectureFunction, true),
+		addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyMediumRisks(parsedModel, risksArchitectureFunction, true)),
 			types.MediumSeverity, true, true, false, false)
-		addCategories(parsedModel, model.CategoriesOfOnlyLowRisks(parsedModel, risksArchitectureFunction, true),
+		addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyLowRisks(parsedModel, risksArchitectureFunction, true)),
 			types.LowSeverity, true, true, false, false)
 	}
 	pdf.SetLeftMargin(oldLeft)
@@ -1824,15 +1824,15 @@ func createAssignmentByFunction(parsedModel *model.ParsedModel) {
 		pdf.SetTextColor(150, 150, 150)
 		html.Write(5, "<br><br>n/a")
 	} else {
-		addCategories(parsedModel, model.CategoriesOfOnlyCriticalRisks(parsedModel, risksDevelopmentFunction, true),
+		addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyCriticalRisks(parsedModel, risksDevelopmentFunction, true)),
 			types.CriticalSeverity, true, true, false, false)
-		addCategories(parsedModel, model.CategoriesOfOnlyHighRisks(parsedModel, risksDevelopmentFunction, true),
+		addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyHighRisks(parsedModel, risksDevelopmentFunction, true)),
 			types.HighSeverity, true, true, false, false)
-		addCategories(parsedModel, model.CategoriesOfOnlyElevatedRisks(parsedModel, risksDevelopmentFunction, true),
+		addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyElevatedRisks(parsedModel, risksDevelopmentFunction, true)),
 			types.ElevatedSeverity, true, true, false, false)
-		addCategories(parsedModel, model.CategoriesOfOnlyMediumRisks(parsedModel, risksDevelopmentFunction, true),
+		addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyMediumRisks(parsedModel, risksDevelopmentFunction, true)),
 			types.MediumSeverity, true, true, false, false)
-		addCategories(parsedModel, model.CategoriesOfOnlyLowRisks(parsedModel, risksDevelopmentFunction, true),
+		addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyLowRisks(parsedModel, risksDevelopmentFunction, true)),
 			types.LowSeverity, true, true, false, false)
 	}
 	pdf.SetLeftMargin(oldLeft)
@@ -1851,15 +1851,15 @@ func createAssignmentByFunction(parsedModel *model.ParsedModel) {
 		pdf.SetTextColor(150, 150, 150)
 		html.Write(5, "<br><br>n/a")
 	} else {
-		addCategories(parsedModel, model.CategoriesOfOnlyCriticalRisks(parsedModel, risksOperationFunction, true),
+		addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyCriticalRisks(parsedModel, risksOperationFunction, true)),
 			types.CriticalSeverity, true, true, false, false)
-		addCategories(parsedModel, model.CategoriesOfOnlyHighRisks(parsedModel, risksOperationFunction, true),
+		addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyHighRisks(parsedModel, risksOperationFunction, true)),
 			types.HighSeverity, true, true, false, false)
-		addCategories(parsedModel, model.CategoriesOfOnlyElevatedRisks(parsedModel, risksOperationFunction, true),
+		addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyElevatedRisks(parsedModel, risksOperationFunction, true)),
 			types.ElevatedSeverity, true, true, false, false)
-		addCategories(parsedModel, model.CategoriesOfOnlyMediumRisks(parsedModel, risksOperationFunction, true),
+		addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyMediumRisks(parsedModel, risksOperationFunction, true)),
 			types.MediumSeverity, true, true, false, false)
-		addCategories(parsedModel, model.CategoriesOfOnlyLowRisks(parsedModel, risksOperationFunction, true),
+		addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyLowRisks(parsedModel, risksOperationFunction, true)),
 			types.LowSeverity, true, true, false, false)
 	}
 	pdf.SetLeftMargin(oldLeft)
@@ -1921,15 +1921,15 @@ func createSTRIDE(parsedModel *model.ParsedModel) {
 		pdf.SetTextColor(150, 150, 150)
 		html.Write(5, "<br><br>n/a")
 	} else {
-		addCategories(parsedModel, model.CategoriesOfOnlyCriticalRisks(parsedModel, risksSTRIDESpoofing, true),
+		addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyCriticalRisks(parsedModel, risksSTRIDESpoofing, true)),
 			types.CriticalSeverity, true, true, false, true)
-		addCategories(parsedModel, model.CategoriesOfOnlyHighRisks(parsedModel, risksSTRIDESpoofing, true),
+		addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyHighRisks(parsedModel, risksSTRIDESpoofing, true)),
 			types.HighSeverity, true, true, false, true)
-		addCategories(parsedModel, model.CategoriesOfOnlyElevatedRisks(parsedModel, risksSTRIDESpoofing, true),
+		addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyElevatedRisks(parsedModel, risksSTRIDESpoofing, true)),
 			types.ElevatedSeverity, true, true, false, true)
-		addCategories(parsedModel, model.CategoriesOfOnlyMediumRisks(parsedModel, risksSTRIDESpoofing, true),
+		addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyMediumRisks(parsedModel, risksSTRIDESpoofing, true)),
 			types.MediumSeverity, true, true, false, true)
-		addCategories(parsedModel, model.CategoriesOfOnlyLowRisks(parsedModel, risksSTRIDESpoofing, true),
+		addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyLowRisks(parsedModel, risksSTRIDESpoofing, true)),
 			types.LowSeverity, true, true, false, true)
 	}
 	pdf.SetLeftMargin(oldLeft)
@@ -1948,15 +1948,15 @@ func createSTRIDE(parsedModel *model.ParsedModel) {
 		pdf.SetTextColor(150, 150, 150)
 		html.Write(5, "<br><br>n/a")
 	} else {
-		addCategories(parsedModel, model.CategoriesOfOnlyCriticalRisks(parsedModel, risksSTRIDETampering, true),
+		addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyCriticalRisks(parsedModel, risksSTRIDETampering, true)),
 			types.CriticalSeverity, true, true, false, true)
-		addCategories(parsedModel, model.CategoriesOfOnlyHighRisks(parsedModel, risksSTRIDETampering, true),
+		addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyHighRisks(parsedModel, risksSTRIDETampering, true)),
 			types.HighSeverity, true, true, false, true)
-		addCategories(parsedModel, model.CategoriesOfOnlyElevatedRisks(parsedModel, risksSTRIDETampering, true),
+		addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyElevatedRisks(parsedModel, risksSTRIDETampering, true)),
 			types.ElevatedSeverity, true, true, false, true)
-		addCategories(parsedModel, model.CategoriesOfOnlyMediumRisks(parsedModel, risksSTRIDETampering, true),
+		addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyMediumRisks(parsedModel, risksSTRIDETampering, true)),
 			types.MediumSeverity, true, true, false, true)
-		addCategories(parsedModel, model.CategoriesOfOnlyLowRisks(parsedModel, risksSTRIDETampering, true),
+		addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyLowRisks(parsedModel, risksSTRIDETampering, true)),
 			types.LowSeverity, true, true, false, true)
 	}
 	pdf.SetLeftMargin(oldLeft)
@@ -1975,15 +1975,15 @@ func createSTRIDE(parsedModel *model.ParsedModel) {
 		pdf.SetTextColor(150, 150, 150)
 		html.Write(5, "<br><br>n/a")
 	} else {
-		addCategories(parsedModel, model.CategoriesOfOnlyCriticalRisks(parsedModel, risksSTRIDERepudiation, true),
+		addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyCriticalRisks(parsedModel, risksSTRIDERepudiation, true)),
 			types.CriticalSeverity, true, true, false, true)
-		addCategories(parsedModel, model.CategoriesOfOnlyHighRisks(parsedModel, risksSTRIDERepudiation, true),
+		addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyHighRisks(parsedModel, risksSTRIDERepudiation, true)),
 			types.HighSeverity, true, true, false, true)
-		addCategories(parsedModel, model.CategoriesOfOnlyElevatedRisks(parsedModel, risksSTRIDERepudiation, true),
+		addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyElevatedRisks(parsedModel, risksSTRIDERepudiation, true)),
 			types.ElevatedSeverity, true, true, false, true)
-		addCategories(parsedModel, model.CategoriesOfOnlyMediumRisks(parsedModel, risksSTRIDERepudiation, true),
+		addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyMediumRisks(parsedModel, risksSTRIDERepudiation, true)),
 			types.MediumSeverity, true, true, false, true)
-		addCategories(parsedModel, model.CategoriesOfOnlyLowRisks(parsedModel, risksSTRIDERepudiation, true),
+		addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyLowRisks(parsedModel, risksSTRIDERepudiation, true)),
 			types.LowSeverity, true, true, false, true)
 	}
 	pdf.SetLeftMargin(oldLeft)
@@ -2002,15 +2002,15 @@ func createSTRIDE(parsedModel *model.ParsedModel) {
 		pdf.SetTextColor(150, 150, 150)
 		html.Write(5, "<br><br>n/a")
 	} else {
-		addCategories(parsedModel, model.CategoriesOfOnlyCriticalRisks(parsedModel, risksSTRIDEInformationDisclosure, true),
+		addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyCriticalRisks(parsedModel, risksSTRIDEInformationDisclosure, true)),
 			types.CriticalSeverity, true, true, false, true)
-		addCategories(parsedModel, model.CategoriesOfOnlyHighRisks(parsedModel, risksSTRIDEInformationDisclosure, true),
+		addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyHighRisks(parsedModel, risksSTRIDEInformationDisclosure, true)),
 			types.HighSeverity, true, true, false, true)
-		addCategories(parsedModel, model.CategoriesOfOnlyElevatedRisks(parsedModel, risksSTRIDEInformationDisclosure, true),
+		addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyElevatedRisks(parsedModel, risksSTRIDEInformationDisclosure, true)),
 			types.ElevatedSeverity, true, true, false, true)
-		addCategories(parsedModel, model.CategoriesOfOnlyMediumRisks(parsedModel, risksSTRIDEInformationDisclosure, true),
+		addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyMediumRisks(parsedModel, risksSTRIDEInformationDisclosure, true)),
 			types.MediumSeverity, true, true, false, true)
-		addCategories(parsedModel, model.CategoriesOfOnlyLowRisks(parsedModel, risksSTRIDEInformationDisclosure, true),
+		addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyLowRisks(parsedModel, risksSTRIDEInformationDisclosure, true)),
 			types.LowSeverity, true, true, false, true)
 	}
 	pdf.SetLeftMargin(oldLeft)
@@ -2029,15 +2029,15 @@ func createSTRIDE(parsedModel *model.ParsedModel) {
 		pdf.SetTextColor(150, 150, 150)
 		html.Write(5, "<br><br>n/a")
 	} else {
-		addCategories(parsedModel, model.CategoriesOfOnlyCriticalRisks(parsedModel, risksSTRIDEDenialOfService, true),
+		addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyCriticalRisks(parsedModel, risksSTRIDEDenialOfService, true)),
 			types.CriticalSeverity, true, true, false, true)
-		addCategories(parsedModel, model.CategoriesOfOnlyHighRisks(parsedModel, risksSTRIDEDenialOfService, true),
+		addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyHighRisks(parsedModel, risksSTRIDEDenialOfService, true)),
 			types.HighSeverity, true, true, false, true)
-		addCategories(parsedModel, model.CategoriesOfOnlyElevatedRisks(parsedModel, risksSTRIDEDenialOfService, true),
+		addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyElevatedRisks(parsedModel, risksSTRIDEDenialOfService, true)),
 			types.ElevatedSeverity, true, true, false, true)
-		addCategories(parsedModel, model.CategoriesOfOnlyMediumRisks(parsedModel, risksSTRIDEDenialOfService, true),
+		addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyMediumRisks(parsedModel, risksSTRIDEDenialOfService, true)),
 			types.MediumSeverity, true, true, false, true)
-		addCategories(parsedModel, model.CategoriesOfOnlyLowRisks(parsedModel, risksSTRIDEDenialOfService, true),
+		addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyLowRisks(parsedModel, risksSTRIDEDenialOfService, true)),
 			types.LowSeverity, true, true, false, true)
 	}
 	pdf.SetLeftMargin(oldLeft)
@@ -2056,15 +2056,15 @@ func createSTRIDE(parsedModel *model.ParsedModel) {
 		pdf.SetTextColor(150, 150, 150)
 		html.Write(5, "<br><br>n/a")
 	} else {
-		addCategories(parsedModel, model.CategoriesOfOnlyCriticalRisks(parsedModel, risksSTRIDEElevationOfPrivilege, true),
+		addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyCriticalRisks(parsedModel, risksSTRIDEElevationOfPrivilege, true)),
 			types.CriticalSeverity, true, true, false, true)
-		addCategories(parsedModel, model.CategoriesOfOnlyHighRisks(parsedModel, risksSTRIDEElevationOfPrivilege, true),
+		addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyHighRisks(parsedModel, risksSTRIDEElevationOfPrivilege, true)),
 			types.HighSeverity, true, true, false, true)
-		addCategories(parsedModel, model.CategoriesOfOnlyElevatedRisks(parsedModel, risksSTRIDEElevationOfPrivilege, true),
+		addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyElevatedRisks(parsedModel, risksSTRIDEElevationOfPrivilege, true)),
 			types.ElevatedSeverity, true, true, false, true)
-		addCategories(parsedModel, model.CategoriesOfOnlyMediumRisks(parsedModel, risksSTRIDEElevationOfPrivilege, true),
+		addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyMediumRisks(parsedModel, risksSTRIDEElevationOfPrivilege, true)),
 			types.MediumSeverity, true, true, false, true)
-		addCategories(parsedModel, model.CategoriesOfOnlyLowRisks(parsedModel, risksSTRIDEElevationOfPrivilege, true),
+		addCategories(parsedModel, model.GetRiskCategories(parsedModel, model.CategoriesOfOnlyLowRisks(parsedModel, risksSTRIDEElevationOfPrivilege, true)),
 			types.LowSeverity, true, true, false, true)
 	}
 	pdf.SetLeftMargin(oldLeft)

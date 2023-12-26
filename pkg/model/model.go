@@ -46,7 +46,7 @@ type ParsedModel struct {
 	// TODO: those are generated based on items above and needs to be private
 	IncomingTechnicalCommunicationLinksMappedByTargetId   map[string][]CommunicationLink
 	DirectContainingTrustBoundaryMappedByTechnicalAssetId map[string]TrustBoundary
-	GeneratedRisksByCategory                              map[RiskCategory][]Risk
+	GeneratedRisksByCategory                              map[string][]Risk
 	GeneratedRisksBySyntheticId                           map[string]Risk
 }
 

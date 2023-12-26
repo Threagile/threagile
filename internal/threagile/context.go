@@ -145,7 +145,7 @@ func (context *Context) checkRiskTracking() {
 	// save also the risk-category-id and risk-status directly in the risk for better JSON marshalling
 	for category := range context.parsedModel.GeneratedRisksByCategory {
 		for i := range context.parsedModel.GeneratedRisksByCategory[category] {
-			context.parsedModel.GeneratedRisksByCategory[category][i].CategoryId = category.Id
+			context.parsedModel.GeneratedRisksByCategory[category][i].CategoryId = category
 			context.parsedModel.GeneratedRisksByCategory[category][i].RiskStatus = context.parsedModel.GeneratedRisksByCategory[category][i].GetRiskTrackingStatusDefaultingUnchecked(&context.parsedModel)
 		}
 	}
@@ -202,7 +202,7 @@ func (context *Context) applyRisk(rule model.CustomRiskRule, skippedRules *map[s
 		generatedRisks := rule.GenerateRisks(&context.parsedModel)
 		if generatedRisks != nil {
 			if len(generatedRisks) > 0 {
-				context.parsedModel.GeneratedRisksByCategory[rule.Category()] = generatedRisks
+				context.parsedModel.GeneratedRisksByCategory[rule.Category().Id] = generatedRisks
 			}
 		} else {
 			fmt.Printf("Failed to generate risks for %q\n", id)
@@ -241,7 +241,7 @@ func (context *Context) applyRiskGeneration() {
 			context.addToListOfSupportedTags(customRule.Tags)
 			customRisks := customRule.GenerateRisks(&context.parsedModel)
 			if len(customRisks) > 0 {
-				context.parsedModel.GeneratedRisksByCategory[customRule.Category] = customRisks
+				context.parsedModel.GeneratedRisksByCategory[customRule.Category.Id] = customRisks
 			}
 
 			if *context.verbose {
