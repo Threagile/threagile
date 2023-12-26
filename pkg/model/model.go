@@ -1,6 +1,7 @@
 /*
 Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 */
+
 package model
 
 import (
@@ -89,7 +90,7 @@ func ParseModel(modelInput *input.ModelInput) (*ParsedModel, error) {
 	parsedModel.CommunicationLinks = make(map[string]CommunicationLink)
 	parsedModel.IncomingTechnicalCommunicationLinksMappedByTargetId = make(map[string][]CommunicationLink)
 	parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId = make(map[string]TrustBoundary)
-	parsedModel.GeneratedRisksByCategory = make(map[RiskCategory][]Risk)
+	parsedModel.GeneratedRisksByCategory = make(map[string][]Risk)
 	parsedModel.GeneratedRisksBySyntheticId = make(map[string]Risk)
 	parsedModel.AllSupportedTags = make(map[string]bool)
 
@@ -605,7 +606,7 @@ func ParseModel(modelInput *input.ModelInput) (*ParsedModel, error) {
 					DataBreachProbability:           dataBreachProbability,
 					DataBreachTechnicalAssetIDs:     dataBreachTechnicalAssetIDs,
 				}
-				parsedModel.GeneratedRisksByCategory[cat] = append(parsedModel.GeneratedRisksByCategory[cat], individualRiskInstance)
+				parsedModel.GeneratedRisksByCategory[cat.Id] = append(parsedModel.GeneratedRisksByCategory[cat.Id], individualRiskInstance)
 			}
 		}
 	}
@@ -809,9 +810,9 @@ func CalculateSeverity(likelihood types.RiskExploitationLikelihood, impact types
 	return types.CriticalSeverity
 }
 
-func (model *ParsedModel) InScopeTechnicalAssets() []TechnicalAsset {
+func (parsedModel *ParsedModel) InScopeTechnicalAssets() []TechnicalAsset {
 	result := make([]TechnicalAsset, 0)
-	for _, asset := range model.TechnicalAssets {
+	for _, asset := range parsedModel.TechnicalAssets {
 		if !asset.OutOfScope {
 			result = append(result, asset)
 		}
@@ -819,32 +820,32 @@ func (model *ParsedModel) InScopeTechnicalAssets() []TechnicalAsset {
 	return result
 }
 
-func (what *ParsedModel) SortedTechnicalAssetIDs() []string {
+func (parsedModel *ParsedModel) SortedTechnicalAssetIDs() []string {
 	res := make([]string, 0)
-	for id := range what.TechnicalAssets {
+	for id := range parsedModel.TechnicalAssets {
 		res = append(res, id)
 	}
 	sort.Strings(res)
 	return res
 }
 
-func (what *ParsedModel) TagsActuallyUsed() []string {
+func (parsedModel *ParsedModel) TagsActuallyUsed() []string {
 	result := make([]string, 0)
-	for _, tag := range what.TagsAvailable {
-		if len(what.TechnicalAssetsTaggedWithAny(tag)) > 0 ||
-			len(what.CommunicationLinksTaggedWithAny(tag)) > 0 ||
-			len(what.DataAssetsTaggedWithAny(tag)) > 0 ||
-			len(what.TrustBoundariesTaggedWithAny(tag)) > 0 ||
-			len(what.SharedRuntimesTaggedWithAny(tag)) > 0 {
+	for _, tag := range parsedModel.TagsAvailable {
+		if len(parsedModel.TechnicalAssetsTaggedWithAny(tag)) > 0 ||
+			len(parsedModel.CommunicationLinksTaggedWithAny(tag)) > 0 ||
+			len(parsedModel.DataAssetsTaggedWithAny(tag)) > 0 ||
+			len(parsedModel.TrustBoundariesTaggedWithAny(tag)) > 0 ||
+			len(parsedModel.SharedRuntimesTaggedWithAny(tag)) > 0 {
 			result = append(result, tag)
 		}
 	}
 	return result
 }
 
-func (what *ParsedModel) TechnicalAssetsTaggedWithAny(tags ...string) []TechnicalAsset {
+func (parsedModel *ParsedModel) TechnicalAssetsTaggedWithAny(tags ...string) []TechnicalAsset {
 	result := make([]TechnicalAsset, 0)
-	for _, candidate := range what.TechnicalAssets {
+	for _, candidate := range parsedModel.TechnicalAssets {
 		if candidate.IsTaggedWithAny(tags...) {
 			result = append(result, candidate)
 		}
@@ -852,9 +853,9 @@ func (what *ParsedModel) TechnicalAssetsTaggedWithAny(tags ...string) []Technica
 	return result
 }
 
-func (what *ParsedModel) CommunicationLinksTaggedWithAny(tags ...string) []CommunicationLink {
+func (parsedModel *ParsedModel) CommunicationLinksTaggedWithAny(tags ...string) []CommunicationLink {
 	result := make([]CommunicationLink, 0)
-	for _, asset := range what.TechnicalAssets {
+	for _, asset := range parsedModel.TechnicalAssets {
 		for _, candidate := range asset.CommunicationLinks {
 			if candidate.IsTaggedWithAny(tags...) {
 				result = append(result, candidate)
@@ -864,9 +865,9 @@ func (what *ParsedModel) CommunicationLinksTaggedWithAny(tags ...string) []Commu
 	return result
 }
 
-func (what *ParsedModel) DataAssetsTaggedWithAny(tags ...string) []DataAsset {
+func (parsedModel *ParsedModel) DataAssetsTaggedWithAny(tags ...string) []DataAsset {
 	result := make([]DataAsset, 0)
-	for _, candidate := range what.DataAssets {
+	for _, candidate := range parsedModel.DataAssets {
 		if candidate.IsTaggedWithAny(tags...) {
 			result = append(result, candidate)
 		}
@@ -874,9 +875,9 @@ func (what *ParsedModel) DataAssetsTaggedWithAny(tags ...string) []DataAsset {
 	return result
 }
 
-func (what *ParsedModel) TrustBoundariesTaggedWithAny(tags ...string) []TrustBoundary {
+func (parsedModel *ParsedModel) TrustBoundariesTaggedWithAny(tags ...string) []TrustBoundary {
 	result := make([]TrustBoundary, 0)
-	for _, candidate := range what.TrustBoundaries {
+	for _, candidate := range parsedModel.TrustBoundaries {
 		if candidate.IsTaggedWithAny(tags...) {
 			result = append(result, candidate)
 		}
@@ -884,9 +885,9 @@ func (what *ParsedModel) TrustBoundariesTaggedWithAny(tags ...string) []TrustBou
 	return result
 }
 
-func (what *ParsedModel) SharedRuntimesTaggedWithAny(tags ...string) []SharedRuntime {
+func (parsedModel *ParsedModel) SharedRuntimesTaggedWithAny(tags ...string) []SharedRuntime {
 	result := make([]SharedRuntime, 0)
-	for _, candidate := range what.SharedRuntimes {
+	for _, candidate := range parsedModel.SharedRuntimes {
 		if candidate.IsTaggedWithAny(tags...) {
 			result = append(result, candidate)
 		}
@@ -894,9 +895,9 @@ func (what *ParsedModel) SharedRuntimesTaggedWithAny(tags ...string) []SharedRun
 	return result
 }
 
-func (what *ParsedModel) OutOfScopeTechnicalAssets() []TechnicalAsset {
+func (parsedModel *ParsedModel) OutOfScopeTechnicalAssets() []TechnicalAsset {
 	assets := make([]TechnicalAsset, 0)
-	for _, asset := range what.TechnicalAssets {
+	for _, asset := range parsedModel.TechnicalAssets {
 		if asset.OutOfScope {
 			assets = append(assets, asset)
 		}
