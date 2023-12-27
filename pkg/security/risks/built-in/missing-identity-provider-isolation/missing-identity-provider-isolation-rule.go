@@ -1,20 +1,19 @@
 package missing_identity_provider_isolation
 
 import (
-	"github.com/threagile/threagile/pkg/model"
 	"github.com/threagile/threagile/pkg/security/types"
 )
 
-func Rule() model.CustomRiskRule {
-	return model.CustomRiskRule{
+func Rule() types.RiskRule {
+	return types.RiskRule{
 		Category:      Category,
 		SupportedTags: SupportedTags,
 		GenerateRisks: GenerateRisks,
 	}
 }
 
-func Category() model.RiskCategory {
-	return model.RiskCategory{
+func Category() types.RiskCategory {
+	return types.RiskCategory{
 		Id:    "missing-identity-provider-isolation",
 		Title: "Missing Identity Provider Isolation",
 		Description: "Highly sensitive identity provider assets and their identity data stores should be isolated from other assets " +
@@ -44,8 +43,8 @@ func SupportedTags() []string {
 	return []string{}
 }
 
-func GenerateRisks(input *model.ParsedModel) []model.Risk {
-	risks := make([]model.Risk, 0)
+func GenerateRisks(input *types.ParsedModel) []types.Risk {
+	risks := make([]types.Risk, 0)
 	for _, technicalAsset := range input.TechnicalAssets {
 		if !technicalAsset.OutOfScope && technicalAsset.Technology.IsIdentityRelated() {
 			moreImpact := technicalAsset.Confidentiality == types.StrictlyConfidential ||
@@ -75,7 +74,7 @@ func GenerateRisks(input *model.ParsedModel) []model.Risk {
 	return risks
 }
 
-func createRisk(techAsset model.TechnicalAsset, moreImpact bool, sameExecutionEnv bool) model.Risk {
+func createRisk(techAsset types.TechnicalAsset, moreImpact bool, sameExecutionEnv bool) types.Risk {
 	impact := types.HighImpact
 	likelihood := types.Unlikely
 	others := "<b>in the same network segment</b>"
@@ -86,9 +85,9 @@ func createRisk(techAsset model.TechnicalAsset, moreImpact bool, sameExecutionEn
 		likelihood = types.Likely
 		others = "<b>in the same execution environment</b>"
 	}
-	risk := model.Risk{
-		Category:               Category(),
-		Severity:               model.CalculateSeverity(likelihood, impact),
+	risk := types.Risk{
+		CategoryId:             Category().Id,
+		Severity:               types.CalculateSeverity(likelihood, impact),
 		ExploitationLikelihood: likelihood,
 		ExploitationImpact:     impact,
 		Title: "<b>Missing Identity Provider Isolation</b> to further encapsulate and protect identity-related asset <b>" + techAsset.Title + "</b> against unrelated " +
@@ -97,6 +96,6 @@ func createRisk(techAsset model.TechnicalAsset, moreImpact bool, sameExecutionEn
 		DataBreachProbability:        types.Improbable,
 		DataBreachTechnicalAssetIDs:  []string{techAsset.Id},
 	}
-	risk.SyntheticId = risk.Category.Id + "@" + techAsset.Id
+	risk.SyntheticId = risk.CategoryId + "@" + techAsset.Id
 	return risk
 }

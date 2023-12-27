@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"github.com/akedrou/textdiff"
 	"github.com/threagile/threagile/pkg/input"
-	"github.com/threagile/threagile/pkg/model"
+	"github.com/threagile/threagile/pkg/security/types"
 	"log"
 	"os"
 	"path/filepath"
@@ -63,7 +63,7 @@ func TestParseModelJson(t *testing.T) {
 		return
 	}
 
-	var modelStruct model.ParsedModel
+	var modelStruct types.ParsedModel
 	unmarshalError := json.Unmarshal(modelJson, &modelStruct)
 	if unmarshalError != nil {
 		log.Fatal("Unable to parse model json: ", unmarshalError)

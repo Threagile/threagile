@@ -7,7 +7,6 @@ import (
 
 	"github.com/threagile/threagile/pkg/input"
 	"github.com/threagile/threagile/pkg/macros"
-	"github.com/threagile/threagile/pkg/model"
 	"github.com/threagile/threagile/pkg/security/types"
 )
 
@@ -33,7 +32,7 @@ var pushOrPull = []string{
 
 // TODO add question for type of machine (either physical, virtual, container, etc.)
 
-func GetNextQuestion(model *model.ParsedModel) (nextQuestion macros.MacroQuestion, err error) {
+func GetNextQuestion(model *types.ParsedModel) (nextQuestion macros.MacroQuestion, err error) {
 	counter := len(questionsAnswered)
 	if counter > 3 && !codeInspectionUsed {
 		counter++
@@ -249,19 +248,19 @@ func GoBack() (message string, validResult bool, err error) {
 	return "Undo successful", true, nil
 }
 
-func GetFinalChangeImpact(modelInput *input.ModelInput, model *model.ParsedModel) (changes []string, message string, validResult bool, err error) {
+func GetFinalChangeImpact(modelInput *input.ModelInput, model *types.ParsedModel) (changes []string, message string, validResult bool, err error) {
 	changeLogCollector := make([]string, 0)
 	message, validResult, err = applyChange(modelInput, model, &changeLogCollector, true)
 	return changeLogCollector, message, validResult, err
 }
 
-func Execute(modelInput *input.ModelInput, model *model.ParsedModel) (message string, validResult bool, err error) {
+func Execute(modelInput *input.ModelInput, model *types.ParsedModel) (message string, validResult bool, err error) {
 	changeLogCollector := make([]string, 0)
 	message, validResult, err = applyChange(modelInput, model, &changeLogCollector, false)
 	return message, validResult, err
 }
 
-func applyChange(modelInput *input.ModelInput, parsedModel *model.ParsedModel, changeLogCollector *[]string, dryRun bool) (message string, validResult bool, err error) {
+func applyChange(modelInput *input.ModelInput, parsedModel *types.ParsedModel, changeLogCollector *[]string, dryRun bool) (message string, validResult bool, err error) {
 	var serverSideTechAssets = make([]string, 0)
 	// ################################################
 	input.AddTagToModelInput(modelInput, macroState["source-repository"][0], dryRun, changeLogCollector)
@@ -275,18 +274,18 @@ func applyChange(modelInput *input.ModelInput, parsedModel *model.ParsedModel, c
 		input.AddTagToModelInput(modelInput, macroState["code-inspection-platform"][0], dryRun, changeLogCollector)
 	}
 
-	sourceRepoID := model.MakeID(macroState["source-repository"][0]) + "-sourcecode-repository"
-	buildPipelineID := model.MakeID(macroState["build-pipeline"][0]) + "-build-pipeline"
-	artifactRegistryID := model.MakeID(macroState["artifact-registry"][0]) + "-artifact-registry"
+	sourceRepoID := types.MakeID(macroState["source-repository"][0]) + "-sourcecode-repository"
+	buildPipelineID := types.MakeID(macroState["build-pipeline"][0]) + "-build-pipeline"
+	artifactRegistryID := types.MakeID(macroState["artifact-registry"][0]) + "-artifact-registry"
 	containerRepoID, containerPlatformID, containerSharedRuntimeID := "", "", ""
 	if containerTechUsed {
-		containerRepoID = model.MakeID(macroState["container-registry"][0]) + "-container-registry"
-		containerPlatformID = model.MakeID(macroState["container-platform"][0]) + "-container-platform"
-		containerSharedRuntimeID = model.MakeID(macroState["container-platform"][0]) + "-container-runtime"
+		containerRepoID = types.MakeID(macroState["container-registry"][0]) + "-container-registry"
+		containerPlatformID = types.MakeID(macroState["container-platform"][0]) + "-container-platform"
+		containerSharedRuntimeID = types.MakeID(macroState["container-platform"][0]) + "-container-runtime"
 	}
 	codeInspectionPlatformID := ""
 	if codeInspectionUsed {
-		codeInspectionPlatformID = model.MakeID(macroState["code-inspection-platform"][0]) + "-code-inspection-platform"
+		codeInspectionPlatformID = types.MakeID(macroState["code-inspection-platform"][0]) + "-code-inspection-platform"
 	}
 	owner := macroState["owner"][0]
 

@@ -15,6 +15,8 @@ import (
 	"errors"
 	"flag"
 	"fmt" // TODO: no fmt.Println here
+	"github.com/threagile/threagile/pkg/model"
+	"github.com/threagile/threagile/pkg/security/risks"
 	"hash/fnv"
 	"io"
 	"log"
@@ -48,10 +50,8 @@ import (
 	"github.com/threagile/threagile/pkg/docs"
 	"github.com/threagile/threagile/pkg/input"
 	"github.com/threagile/threagile/pkg/macros"
-	"github.com/threagile/threagile/pkg/model"
 	"github.com/threagile/threagile/pkg/report"
 	"github.com/threagile/threagile/pkg/run"
-	"github.com/threagile/threagile/pkg/security/risks"
 	"github.com/threagile/threagile/pkg/security/types"
 )
 
@@ -74,14 +74,15 @@ type Context struct {
 
 	// TODO: remove refactoring note below
 	// moved from types.go
-	parsedModel model.ParsedModel
+	parsedModel types.ParsedModel
 
 	modelFilename, templateFilename                                                                   *string
 	verbose, ignoreOrphanedRiskTracking                                                               *bool
 	generateDataFlowDiagram, generateDataAssetDiagram, generateRisksJSON, generateTechnicalAssetsJSON *bool
 	generateStatsJSON, generateRisksExcel, generateTagsExcel, generateReportPDF                       *bool
 	outputDir, raaPlugin, skipRiskRules, riskRulesPlugins, executeModelMacro                          *string
-	customRiskRules                                                                                   map[string]*model.CustomRisk
+	customRiskRules                                                                                   map[string]*types.CustomRisk
+	builtinRiskRules                                                                                  map[string]types.RiskRule
 	diagramDPI, serverPort                                                                            *int
 	addModelTitle                                                                                     bool
 	keepDiagramSourceFiles                                                                            bool
@@ -145,7 +146,7 @@ func (context *Context) checkRiskTracking() {
 	// save also the risk-category-id and risk-status directly in the risk for better JSON marshalling
 	for category := range context.parsedModel.GeneratedRisksByCategory {
 		for i := range context.parsedModel.GeneratedRisksByCategory[category] {
-			context.parsedModel.GeneratedRisksByCategory[category][i].CategoryId = category
+			//			context.parsedModel.GeneratedRisksByCategory[category][i].CategoryId = category
 			context.parsedModel.GeneratedRisksByCategory[category][i].RiskStatus = context.parsedModel.GeneratedRisksByCategory[category][i].GetRiskTrackingStatusDefaultingUnchecked(&context.parsedModel)
 		}
 	}
@@ -156,7 +157,7 @@ func (context *Context) Init(buildTimestamp string) *Context {
 		keepDiagramSourceFiles: false,
 		addModelTitle:          false,
 		buildTimestamp:         buildTimestamp,
-		customRiskRules:        make(map[string]*model.CustomRisk),
+		customRiskRules:        make(map[string]*types.CustomRisk),
 		drawSpaceLinesForLayoutUnfortunatelyFurtherSeparatesAllRanks: true,
 	}
 
@@ -190,7 +191,7 @@ func (context *Context) Defaults(buildTimestamp string) *Context {
 	return context
 }
 
-func (context *Context) applyRisk(rule model.CustomRiskRule, skippedRules *map[string]bool) {
+func (context *Context) applyRisk(rule types.RiskRule, skippedRules *map[string]bool) {
 	id := rule.Category().Id
 	_, ok := (*skippedRules)[id]
 
@@ -222,13 +223,13 @@ func (context *Context) applyRiskGeneration() {
 		}
 	}
 
-	for _, rule := range risks.GetBuiltInRiskRules() {
+	for _, rule := range context.builtinRiskRules {
 		context.applyRisk(rule, &skippedRules)
 	}
 
 	// NOW THE CUSTOM RISK RULES (if any)
 	for id, customRule := range context.customRiskRules {
-		_, ok := skippedRules[customRule.ID]
+		_, ok := skippedRules[id]
 		if ok {
 			if *context.verbose {
 				fmt.Println("Skipping custom risk rule:", id)
@@ -261,8 +262,8 @@ func (context *Context) applyRiskGeneration() {
 	}
 
 	// save also in map keyed by synthetic risk-id
-	for _, category := range model.SortedRiskCategories(&context.parsedModel) {
-		someRisks := model.SortedRisksOfCategory(&context.parsedModel, category)
+	for _, category := range types.SortedRiskCategories(&context.parsedModel) {
+		someRisks := types.SortedRisksOfCategory(&context.parsedModel, category)
 		for _, risk := range someRisks {
 			context.parsedModel.GeneratedRisksBySyntheticId[strings.ToLower(risk.SyntheticId)] = risk
 		}
@@ -638,11 +639,11 @@ func (context *Context) writeDataFlowDiagramGraphvizDOT(diagramFilenameDOT strin
 	// first create them in memory (see the link replacement below for nested trust boundaries) - otherwise in Go ranging over map is random order
 	// range over them in sorted (hence re-producible) way:
 	// Convert map to slice of values:
-	var techAssets []model.TechnicalAsset
+	var techAssets []types.TechnicalAsset
 	for _, techAsset := range context.parsedModel.TechnicalAssets {
 		techAssets = append(techAssets, techAsset)
 	}
-	sort.Sort(model.ByOrderAndIdSort(techAssets))
+	sort.Sort(types.ByOrderAndIdSort(techAssets))
 	for _, technicalAsset := range techAssets {
 		dotContent.WriteString(context.makeTechAssetNode(technicalAsset, false))
 		dotContent.WriteString("\n")
@@ -768,22 +769,24 @@ func (context *Context) DoIt() {
 	context.modelInput = *new(input.ModelInput).Defaults()
 	loadError := context.modelInput.Load(*context.modelFilename)
 	if loadError != nil {
-		log.Fatal("Unable to parse model yaml: ", loadError)
+		log.Fatal("Unable to load model yaml: ", loadError)
 	}
 
-	//	data, _ := json.MarshalIndent(context.modelInput, "", "  ")
-	//	fmt.Printf("%v\n", string(data))
+	context.builtinRiskRules = make(map[string]types.RiskRule)
+	for _, rule := range risks.GetBuiltInRiskRules() {
+		context.builtinRiskRules[rule.Category().Id] = rule
+	}
+	context.customRiskRules = types.LoadCustomRiskRules(strings.Split(*context.riskRulesPlugins, ","), context.progressReporter)
 
-	parsedModel, err := model.ParseModel(&context.modelInput)
-	if err != nil {
-		panic(err)
+	parsedModel, parseError := model.ParseModel(&context.modelInput, context.builtinRiskRules, context.customRiskRules)
+	if parseError != nil {
+		log.Fatal("Unable to parse model yaml: ", parseError)
 	}
 
 	context.parsedModel = *parsedModel
 
 	introTextRAA := context.applyRAA()
 
-	context.customRiskRules = risks.LoadCustomRiskRules(strings.Split(*context.riskRulesPlugins, ","), context.progressReporter)
 	context.applyRiskGeneration()
 	context.applyWildcardRiskTrackingEvaluation()
 	context.checkRiskTracking()
@@ -1567,7 +1570,7 @@ func (context *Context) addSupportedTags(input []byte) []byte {
 		}
 	}
 
-	for _, rule := range risks.GetBuiltInRiskRules() {
+	for _, rule := range context.builtinRiskRules {
 		for _, tag := range rule.SupportedTags() {
 			supportedTags[strings.ToLower(tag)] = true
 		}
@@ -3468,7 +3471,7 @@ func (context *Context) applyWildcardRiskTrackingEvaluation() {
 		for syntheticRiskId := range context.parsedModel.GeneratedRisksBySyntheticId {
 			if matchingRiskIdExpression.Match([]byte(syntheticRiskId)) && context.hasNotYetAnyDirectNonWildcardRiskTracking(syntheticRiskId) {
 				foundSome = true
-				context.parsedModel.RiskTracking[syntheticRiskId] = model.RiskTracking{
+				context.parsedModel.RiskTracking[syntheticRiskId] = types.RiskTracking{
 					SyntheticRiskId: strings.TrimSpace(syntheticRiskId),
 					Justification:   riskTracking.Justification,
 					CheckedBy:       riskTracking.CheckedBy,
@@ -3489,8 +3492,8 @@ func (context *Context) applyWildcardRiskTrackingEvaluation() {
 	}
 }
 
-func (context *Context) getDeferredRiskTrackingDueToWildcardMatching() map[string]model.RiskTracking {
-	deferredRiskTrackingDueToWildcardMatching := make(map[string]model.RiskTracking)
+func (context *Context) getDeferredRiskTrackingDueToWildcardMatching() map[string]types.RiskTracking {
+	deferredRiskTrackingDueToWildcardMatching := make(map[string]types.RiskTracking)
 	for syntheticRiskId, riskTracking := range context.parsedModel.RiskTracking {
 		if strings.Contains(syntheticRiskId, "*") { // contains a wildcard char
 			deferredRiskTrackingDueToWildcardMatching[syntheticRiskId] = riskTracking
@@ -3539,11 +3542,11 @@ func (context *Context) writeDataAssetDiagramGraphvizDOT(diagramFilenameDOT stri
 `)
 
 	// Technical Assets ===============================================================================
-	techAssets := make([]model.TechnicalAsset, 0)
+	techAssets := make([]types.TechnicalAsset, 0)
 	for _, techAsset := range context.parsedModel.TechnicalAssets {
 		techAssets = append(techAssets, techAsset)
 	}
-	sort.Sort(model.ByOrderAndIdSort(techAssets))
+	sort.Sort(types.ByOrderAndIdSort(techAssets))
 	for _, technicalAsset := range techAssets {
 		if len(technicalAsset.DataAssetsStored) > 0 || len(technicalAsset.DataAssetsProcessed) > 0 {
 			dotContent.WriteString(context.makeTechAssetNode(technicalAsset, true))
@@ -3552,12 +3555,12 @@ func (context *Context) writeDataAssetDiagramGraphvizDOT(diagramFilenameDOT stri
 	}
 
 	// Data Assets ===============================================================================
-	dataAssets := make([]model.DataAsset, 0)
+	dataAssets := make([]types.DataAsset, 0)
 	for _, dataAsset := range context.parsedModel.DataAssets {
 		dataAssets = append(dataAssets, dataAsset)
 	}
 
-	model.SortByDataAssetDataBreachProbabilityAndTitle(&context.parsedModel, dataAssets)
+	types.SortByDataAssetDataBreachProbabilityAndTitle(&context.parsedModel, dataAssets)
 	for _, dataAsset := range dataAssets {
 		dotContent.WriteString(context.makeDataAssetNode(dataAsset))
 		dotContent.WriteString("\n")
@@ -3594,12 +3597,12 @@ func (context *Context) writeDataAssetDiagramGraphvizDOT(diagramFilenameDOT stri
 	return file
 }
 
-func (context *Context) makeTechAssetNode(technicalAsset model.TechnicalAsset, simplified bool) string {
+func (context *Context) makeTechAssetNode(technicalAsset types.TechnicalAsset, simplified bool) string {
 	if simplified {
 		color := colors.RgbHexColorOutOfScope()
 		if !technicalAsset.OutOfScope {
 			generatedRisks := technicalAsset.GeneratedRisks(&context.parsedModel)
-			switch model.HighestSeverityStillAtRisk(&context.parsedModel, generatedRisks) {
+			switch types.HighestSeverityStillAtRisk(&context.parsedModel, generatedRisks) {
 			case types.CriticalSeverity:
 				color = colors.RgbHexColorCriticalRisk()
 			case types.HighSeverity:
@@ -3613,7 +3616,7 @@ func (context *Context) makeTechAssetNode(technicalAsset model.TechnicalAsset, s
 			default:
 				color = "#444444" // since black is too dark here as fill color
 			}
-			if len(model.ReduceToOnlyStillAtRisk(&context.parsedModel, generatedRisks)) == 0 {
+			if len(types.ReduceToOnlyStillAtRisk(&context.parsedModel, generatedRisks)) == 0 {
 				color = "#444444" // since black is too dark here as fill color
 			}
 		}
@@ -3664,7 +3667,7 @@ func (context *Context) makeTechAssetNode(technicalAsset model.TechnicalAsset, s
 	}
 }
 
-func (context *Context) makeDataAssetNode(dataAsset model.DataAsset) string {
+func (context *Context) makeDataAssetNode(dataAsset types.DataAsset) string {
 	var color string
 	switch dataAsset.IdentifiedDataBreachProbabilityStillAtRisk(&context.parsedModel) {
 	case types.Probable:

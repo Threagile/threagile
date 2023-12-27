@@ -1,36 +1,46 @@
 /*
 Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 */
-package model
+
+package types
 
 import (
 	"fmt"
 	"sort"
 
 	"github.com/threagile/threagile/pkg/colors"
-	"github.com/threagile/threagile/pkg/security/types"
 )
 
 type TechnicalAsset struct {
-	Id, Title, Description                                                                  string
-	Usage                                                                                   types.Usage
-	Type                                                                                    types.TechnicalAssetType
-	Size                                                                                    types.TechnicalAssetSize
-	Technology                                                                              types.TechnicalAssetTechnology
-	Machine                                                                                 types.TechnicalAssetMachine
-	Internet, MultiTenant, Redundant, CustomDevelopedParts, OutOfScope, UsedAsClientByHuman bool
-	Encryption                                                                              types.EncryptionStyle
-	JustificationOutOfScope                                                                 string
-	Owner                                                                                   string
-	Confidentiality                                                                         types.Confidentiality
-	Integrity, Availability                                                                 types.Criticality
-	JustificationCiaRating                                                                  string
-	Tags, DataAssetsProcessed, DataAssetsStored                                             []string
-	DataFormatsAccepted                                                                     []types.DataFormat
-	CommunicationLinks                                                                      []CommunicationLink
-	DiagramTweakOrder                                                                       int
+	Id                      string                   `json:"id,omitempty"`
+	Title                   string                   `json:"title,omitempty"`
+	Description             string                   `json:"description,omitempty"`
+	Usage                   Usage                    `json:"usage,omitempty"`
+	Type                    TechnicalAssetType       `json:"type,omitempty"`
+	Size                    TechnicalAssetSize       `json:"size,omitempty"`
+	Technology              TechnicalAssetTechnology `json:"technology,omitempty"`
+	Machine                 TechnicalAssetMachine    `json:"machine,omitempty"`
+	Internet                bool                     `json:"internet,omitempty"`
+	MultiTenant             bool                     `json:"multi_tenant,omitempty"`
+	Redundant               bool                     `json:"redundant,omitempty"`
+	CustomDevelopedParts    bool                     `json:"custom_developed_parts,omitempty"`
+	OutOfScope              bool                     `json:"out_of_scope,omitempty"`
+	UsedAsClientByHuman     bool                     `json:"used_as_client_by_human,omitempty"`
+	Encryption              EncryptionStyle          `json:"encryption,omitempty"`
+	JustificationOutOfScope string                   `json:"justification_out_of_scope,omitempty"`
+	Owner                   string                   `json:"owner,omitempty"`
+	Confidentiality         Confidentiality          `json:"confidentiality,omitempty"`
+	Integrity               Criticality              `json:"integrity,omitempty"`
+	Availability            Criticality              `json:"availability,omitempty"`
+	JustificationCiaRating  string                   `json:"justification_cia_rating,omitempty"`
+	Tags                    []string                 `json:"tags,omitempty"`
+	DataAssetsProcessed     []string                 `json:"data_assets_processed,omitempty"`
+	DataAssetsStored        []string                 `json:"data_assets_stored,omitempty"`
+	DataFormatsAccepted     []DataFormat             `json:"data_formats_accepted,omitempty"`
+	CommunicationLinks      []CommunicationLink      `json:"communication_links,omitempty"`
+	DiagramTweakOrder       int                      `json:"diagram_tweak_order,omitempty"`
 	// will be set by separate calculation step:
-	RAA float64
+	RAA float64 `json:"raa,omitempty"`
 }
 
 func (what TechnicalAsset) IsTaggedWithAny(tags ...string) bool {
@@ -70,7 +80,7 @@ func (what TechnicalAsset) IsSameTrustBoundary(parsedModel *ParsedModel, otherAs
 func (what TechnicalAsset) IsSameExecutionEnvironment(parsedModel *ParsedModel, otherAssetId string) bool {
 	trustBoundaryOfMyAsset := parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[what.Id]
 	trustBoundaryOfOtherAsset := parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[otherAssetId]
-	if trustBoundaryOfMyAsset.Type == types.ExecutionEnvironment && trustBoundaryOfOtherAsset.Type == types.ExecutionEnvironment {
+	if trustBoundaryOfMyAsset.Type == ExecutionEnvironment && trustBoundaryOfOtherAsset.Type == ExecutionEnvironment {
 		return trustBoundaryOfMyAsset.Id == trustBoundaryOfOtherAsset.Id
 	}
 	return false
@@ -94,7 +104,7 @@ func (what TechnicalAsset) HighestSensitivityScore() float64 {
 		what.Availability.AttackerAttractivenessForAsset()
 }
 
-func (what TechnicalAsset) HighestConfidentiality(parsedModel *ParsedModel) types.Confidentiality {
+func (what TechnicalAsset) HighestConfidentiality(parsedModel *ParsedModel) Confidentiality {
 	highest := what.Confidentiality
 	for _, dataId := range what.DataAssetsProcessed {
 		dataAsset := parsedModel.DataAssets[dataId]
@@ -129,12 +139,12 @@ func (what TechnicalAsset) DataAssetsStoredSorted(parsedModel *ParsedModel) []Da
 	return result
 }
 
-func (what TechnicalAsset) DataFormatsAcceptedSorted() []types.DataFormat {
-	result := make([]types.DataFormat, 0)
+func (what TechnicalAsset) DataFormatsAcceptedSorted() []DataFormat {
+	result := make([]DataFormat, 0)
 	for _, format := range what.DataFormatsAccepted {
 		result = append(result, format)
 	}
-	sort.Sort(types.ByDataFormatAcceptedSort(result))
+	sort.Sort(ByDataFormatAcceptedSort(result))
 	return result
 }
 
@@ -147,7 +157,7 @@ func (what TechnicalAsset) CommunicationLinksSorted() []CommunicationLink {
 	return result
 }
 
-func (what TechnicalAsset) HighestIntegrity(model *ParsedModel) types.Criticality {
+func (what TechnicalAsset) HighestIntegrity(model *ParsedModel) Criticality {
 	highest := what.Integrity
 	for _, dataId := range what.DataAssetsProcessed {
 		dataAsset := model.DataAssets[dataId]
@@ -164,7 +174,7 @@ func (what TechnicalAsset) HighestIntegrity(model *ParsedModel) types.Criticalit
 	return highest
 }
 
-func (what TechnicalAsset) HighestAvailability(model *ParsedModel) types.Criticality {
+func (what TechnicalAsset) HighestAvailability(model *ParsedModel) Criticality {
 	highest := what.Availability
 	for _, dataId := range what.DataAssetsProcessed {
 		dataAsset := model.DataAssets[dataId]
@@ -244,30 +254,30 @@ func (what TechnicalAsset) ProcessesOrStoresDataAsset(dataAssetId string) bool {
 func (what TechnicalAsset) DetermineLabelColor(model *ParsedModel) string {
 	// TODO: Just move into main.go and let the generated risk determine the color, don't duplicate the logic here
 	// Check for red
-	if what.Integrity == types.MissionCritical {
+	if what.Integrity == MissionCritical {
 		return colors.Red
 	}
 	for _, storedDataAsset := range what.DataAssetsStored {
-		if model.DataAssets[storedDataAsset].Integrity == types.MissionCritical {
+		if model.DataAssets[storedDataAsset].Integrity == MissionCritical {
 			return colors.Red
 		}
 	}
 	for _, processedDataAsset := range what.DataAssetsProcessed {
-		if model.DataAssets[processedDataAsset].Integrity == types.MissionCritical {
+		if model.DataAssets[processedDataAsset].Integrity == MissionCritical {
 			return colors.Red
 		}
 	}
 	// Check for amber
-	if what.Integrity == types.Critical {
+	if what.Integrity == Critical {
 		return colors.Amber
 	}
 	for _, storedDataAsset := range what.DataAssetsStored {
-		if model.DataAssets[storedDataAsset].Integrity == types.Critical {
+		if model.DataAssets[storedDataAsset].Integrity == Critical {
 			return colors.Amber
 		}
 	}
 	for _, processedDataAsset := range what.DataAssetsProcessed {
-		if model.DataAssets[processedDataAsset].Integrity == types.Critical {
+		if model.DataAssets[processedDataAsset].Integrity == Critical {
 			return colors.Amber
 		}
 	}
@@ -304,30 +314,30 @@ func (what TechnicalAsset) DetermineLabelColor(model *ParsedModel) string {
 func (what TechnicalAsset) DetermineShapeBorderColor(parsedModel *ParsedModel) string {
 	// TODO: Just move into main.go and let the generated risk determine the color, don't duplicate the logic here
 	// Check for red
-	if what.Confidentiality == types.StrictlyConfidential {
+	if what.Confidentiality == StrictlyConfidential {
 		return colors.Red
 	}
 	for _, storedDataAsset := range what.DataAssetsStored {
-		if parsedModel.DataAssets[storedDataAsset].Confidentiality == types.StrictlyConfidential {
+		if parsedModel.DataAssets[storedDataAsset].Confidentiality == StrictlyConfidential {
 			return colors.Red
 		}
 	}
 	for _, processedDataAsset := range what.DataAssetsProcessed {
-		if parsedModel.DataAssets[processedDataAsset].Confidentiality == types.StrictlyConfidential {
+		if parsedModel.DataAssets[processedDataAsset].Confidentiality == StrictlyConfidential {
 			return colors.Red
 		}
 	}
 	// Check for amber
-	if what.Confidentiality == types.Confidential {
+	if what.Confidentiality == Confidential {
 		return colors.Amber
 	}
 	for _, storedDataAsset := range what.DataAssetsStored {
-		if parsedModel.DataAssets[storedDataAsset].Confidentiality == types.Confidential {
+		if parsedModel.DataAssets[storedDataAsset].Confidentiality == Confidential {
 			return colors.Amber
 		}
 	}
 	for _, processedDataAsset := range what.DataAssetsProcessed {
-		if parsedModel.DataAssets[processedDataAsset].Confidentiality == types.Confidential {
+		if parsedModel.DataAssets[processedDataAsset].Confidentiality == Confidential {
 			return colors.Amber
 		}
 	}
@@ -434,7 +444,7 @@ func (what TechnicalAsset) GetTrustBoundaryId(model *ParsedModel) string {
 func (what TechnicalAsset) DetermineShapeFillColor(parsedModel *ParsedModel) string {
 	fillColor := colors.VeryLightGray
 	if len(what.DataAssetsProcessed) == 0 && len(what.DataAssetsStored) == 0 ||
-		what.Technology == types.UnknownTechnology {
+		what.Technology == UnknownTechnology {
 		fillColor = colors.LightPink // lightPink, because it's strange when too many technical assets process no data... some ok, but many in a diagram ist a sign of model forgery...
 	} else if len(what.CommunicationLinks) == 0 && len(parsedModel.IncomingTechnicalCommunicationLinksMappedByTargetId[what.Id]) == 0 {
 		fillColor = colors.LightPink
@@ -446,13 +456,13 @@ func (what TechnicalAsset) DetermineShapeFillColor(parsedModel *ParsedModel) str
 		fillColor = colors.CustomDevelopedParts
 	}
 	switch what.Machine {
-	case types.Physical:
+	case Physical:
 		fillColor = colors.DarkenHexColor(fillColor)
-	case types.Container:
+	case Container:
 		fillColor = colors.BrightenHexColor(fillColor)
-	case types.Serverless:
+	case Serverless:
 		fillColor = colors.BrightenHexColor(colors.BrightenHexColor(fillColor))
-	case types.Virtual:
+	case Virtual:
 	}
 	return fillColor
 }

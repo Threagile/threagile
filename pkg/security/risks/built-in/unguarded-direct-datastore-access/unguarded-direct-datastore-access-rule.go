@@ -1,20 +1,19 @@
 package unguarded_direct_datastore_access
 
 import (
-	"github.com/threagile/threagile/pkg/model"
 	"github.com/threagile/threagile/pkg/security/types"
 )
 
-func Rule() model.CustomRiskRule {
-	return model.CustomRiskRule{
+func Rule() types.RiskRule {
+	return types.RiskRule{
 		Category:      Category,
 		SupportedTags: SupportedTags,
 		GenerateRisks: GenerateRisks,
 	}
 }
 
-func Category() model.RiskCategory {
-	return model.RiskCategory{
+func Category() types.RiskCategory {
+	return types.RiskCategory{
 		Id:          "unguarded-direct-datastore-access",
 		Title:       "Unguarded Direct Datastore Access",
 		Description: "Data stores accessed across trust boundaries must be guarded by some protecting service or application.",
@@ -45,8 +44,8 @@ func SupportedTags() []string {
 
 // check for data stores that should not be accessed directly across trust boundaries
 
-func GenerateRisks(input *model.ParsedModel) []model.Risk {
-	risks := make([]model.Risk, 0)
+func GenerateRisks(input *types.ParsedModel) []types.Risk {
+	risks := make([]types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
 		if !technicalAsset.OutOfScope && technicalAsset.Type == types.Datastore {
@@ -71,7 +70,7 @@ func GenerateRisks(input *model.ParsedModel) []model.Risk {
 	return risks
 }
 
-func isSharingSameParentTrustBoundary(input *model.ParsedModel, left, right model.TechnicalAsset) bool {
+func isSharingSameParentTrustBoundary(input *types.ParsedModel, left, right types.TechnicalAsset) bool {
 	tbIDLeft, tbIDRight := left.GetTrustBoundaryId(input), right.GetTrustBoundaryId(input)
 	if len(tbIDLeft) == 0 && len(tbIDRight) > 0 {
 		return false
@@ -97,19 +96,19 @@ func isSharingSameParentTrustBoundary(input *model.ParsedModel, left, right mode
 	return false
 }
 
-func FileServerAccessViaFTP(technicalAsset model.TechnicalAsset, incomingAccess model.CommunicationLink) bool {
+func FileServerAccessViaFTP(technicalAsset types.TechnicalAsset, incomingAccess types.CommunicationLink) bool {
 	return technicalAsset.Technology == types.FileServer &&
 		(incomingAccess.Protocol == types.FTP || incomingAccess.Protocol == types.FTPS || incomingAccess.Protocol == types.SFTP)
 }
 
-func createRisk(dataStore model.TechnicalAsset, dataFlow model.CommunicationLink, clientOutsideTrustBoundary model.TechnicalAsset, moreRisky bool) model.Risk {
+func createRisk(dataStore types.TechnicalAsset, dataFlow types.CommunicationLink, clientOutsideTrustBoundary types.TechnicalAsset, moreRisky bool) types.Risk {
 	impact := types.LowImpact
 	if moreRisky || dataStore.RAA > 40 {
 		impact = types.MediumImpact
 	}
-	risk := model.Risk{
-		Category:               Category(),
-		Severity:               model.CalculateSeverity(types.Likely, impact),
+	risk := types.Risk{
+		CategoryId:             Category().Id,
+		Severity:               types.CalculateSeverity(types.Likely, impact),
 		ExploitationLikelihood: types.Likely,
 		ExploitationImpact:     impact,
 		Title: "<b>Unguarded Direct Datastore Access</b> of <b>" + dataStore.Title + "</b> by <b>" +
@@ -119,6 +118,6 @@ func createRisk(dataStore model.TechnicalAsset, dataFlow model.CommunicationLink
 		DataBreachProbability:           types.Improbable,
 		DataBreachTechnicalAssetIDs:     []string{dataStore.Id},
 	}
-	risk.SyntheticId = risk.Category.Id + "@" + dataFlow.Id + "@" + clientOutsideTrustBoundary.Id + "@" + dataStore.Id
+	risk.SyntheticId = risk.CategoryId + "@" + dataFlow.Id + "@" + clientOutsideTrustBoundary.Id + "@" + dataStore.Id
 	return risk
 }

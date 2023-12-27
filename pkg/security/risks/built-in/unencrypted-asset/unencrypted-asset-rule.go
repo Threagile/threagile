@@ -1,20 +1,19 @@
 package unencrypted_asset
 
 import (
-	"github.com/threagile/threagile/pkg/model"
 	"github.com/threagile/threagile/pkg/security/types"
 )
 
-func Rule() model.CustomRiskRule {
-	return model.CustomRiskRule{
+func Rule() types.RiskRule {
+	return types.RiskRule{
 		Category:      Category,
 		SupportedTags: SupportedTags,
 		GenerateRisks: GenerateRisks,
 	}
 }
 
-func Category() model.RiskCategory {
-	return model.RiskCategory{
+func Category() types.RiskCategory {
+	return types.RiskCategory{
 		Id:    "unencrypted-asset",
 		Title: "Unencrypted Technical Assets",
 		Description: "Due to the confidentiality rating of the technical asset itself and/or the processed data assets " +
@@ -46,8 +45,8 @@ func SupportedTags() []string {
 
 // check for technical assets that should be encrypted due to their confidentiality
 
-func GenerateRisks(input *model.ParsedModel) []model.Risk {
-	risks := make([]model.Risk, 0)
+func GenerateRisks(input *types.ParsedModel) []types.Risk {
+	risks := make([]types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
 		if !technicalAsset.OutOfScope && !IsEncryptionWaiver(technicalAsset) &&
@@ -74,20 +73,20 @@ func GenerateRisks(input *model.ParsedModel) []model.Risk {
 // Simple routing assets like 'Reverse Proxy' or 'Load Balancer' usually don't have their own storage and thus have no
 // encryption requirement for the asset itself (though for the communication, but that's a different rule)
 
-func IsEncryptionWaiver(asset model.TechnicalAsset) bool {
+func IsEncryptionWaiver(asset types.TechnicalAsset) bool {
 	return asset.Technology == types.ReverseProxy || asset.Technology == types.LoadBalancer ||
 		asset.Technology == types.WAF || asset.Technology == types.IDS || asset.Technology == types.IPS ||
 		asset.Technology.IsEmbeddedComponent()
 }
 
-func createRisk(technicalAsset model.TechnicalAsset, impact types.RiskExploitationImpact, requiresEndUserKey bool) model.Risk {
+func createRisk(technicalAsset types.TechnicalAsset, impact types.RiskExploitationImpact, requiresEndUserKey bool) types.Risk {
 	title := "<b>Unencrypted Technical Asset</b> named <b>" + technicalAsset.Title + "</b>"
 	if requiresEndUserKey {
 		title += " missing end user individual encryption with " + types.DataWithEndUserIndividualKey.String()
 	}
-	risk := model.Risk{
-		Category:                     Category(),
-		Severity:                     model.CalculateSeverity(types.Unlikely, impact),
+	risk := types.Risk{
+		CategoryId:                   Category().Id,
+		Severity:                     types.CalculateSeverity(types.Unlikely, impact),
 		ExploitationLikelihood:       types.Unlikely,
 		ExploitationImpact:           impact,
 		Title:                        title,
@@ -95,6 +94,6 @@ func createRisk(technicalAsset model.TechnicalAsset, impact types.RiskExploitati
 		DataBreachProbability:        types.Improbable,
 		DataBreachTechnicalAssetIDs:  []string{technicalAsset.Id},
 	}
-	risk.SyntheticId = risk.Category.Id + "@" + technicalAsset.Id
+	risk.SyntheticId = risk.CategoryId + "@" + technicalAsset.Id
 	return risk
 }

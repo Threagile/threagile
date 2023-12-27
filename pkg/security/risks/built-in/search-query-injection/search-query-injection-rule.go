@@ -1,20 +1,19 @@
 package search_query_injection
 
 import (
-	"github.com/threagile/threagile/pkg/model"
 	"github.com/threagile/threagile/pkg/security/types"
 )
 
-func Rule() model.CustomRiskRule {
-	return model.CustomRiskRule{
+func Rule() types.RiskRule {
+	return types.RiskRule{
 		Category:      Category,
 		SupportedTags: SupportedTags,
 		GenerateRisks: GenerateRisks,
 	}
 }
 
-func Category() model.RiskCategory {
-	return model.RiskCategory{
+func Category() types.RiskCategory {
+	return types.RiskCategory{
 		Id:    "search-query-injection",
 		Title: "Search-Query Injection",
 		Description: "When a search engine server is accessed Search-Query Injection risks might arise." +
@@ -41,8 +40,8 @@ func Category() model.RiskCategory {
 	}
 }
 
-func GenerateRisks(input *model.ParsedModel) []model.Risk {
-	risks := make([]model.Risk, 0)
+func GenerateRisks(input *types.ParsedModel) []types.Risk {
+	risks := make([]types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
 		if technicalAsset.Technology == types.SearchEngine || technicalAsset.Technology == types.SearchIndex {
@@ -69,7 +68,7 @@ func SupportedTags() []string {
 	return []string{}
 }
 
-func createRisk(input *model.ParsedModel, technicalAsset model.TechnicalAsset, incomingFlow model.CommunicationLink, likelihood types.RiskExploitationLikelihood) model.Risk {
+func createRisk(input *types.ParsedModel, technicalAsset types.TechnicalAsset, incomingFlow types.CommunicationLink, likelihood types.RiskExploitationLikelihood) types.Risk {
 	caller := input.TechnicalAssets[incomingFlow.SourceId]
 	title := "<b>Search Query Injection</b> risk at <b>" + caller.Title + "</b> against search engine server <b>" + technicalAsset.Title + "</b>" +
 		" via <b>" + incomingFlow.Title + "</b>"
@@ -79,9 +78,9 @@ func createRisk(input *model.ParsedModel, technicalAsset model.TechnicalAsset, i
 	} else if technicalAsset.HighestConfidentiality(input) <= types.Internal && technicalAsset.HighestIntegrity(input) == types.Operational {
 		impact = types.LowImpact
 	}
-	risk := model.Risk{
-		Category:                        Category(),
-		Severity:                        model.CalculateSeverity(likelihood, impact),
+	risk := types.Risk{
+		CategoryId:                      Category().Id,
+		Severity:                        types.CalculateSeverity(likelihood, impact),
 		ExploitationLikelihood:          likelihood,
 		ExploitationImpact:              impact,
 		Title:                           title,
@@ -90,6 +89,6 @@ func createRisk(input *model.ParsedModel, technicalAsset model.TechnicalAsset, i
 		DataBreachProbability:           types.Probable,
 		DataBreachTechnicalAssetIDs:     []string{technicalAsset.Id},
 	}
-	risk.SyntheticId = risk.Category.Id + "@" + caller.Id + "@" + technicalAsset.Id + "@" + incomingFlow.Id
+	risk.SyntheticId = risk.CategoryId + "@" + caller.Id + "@" + technicalAsset.Id + "@" + incomingFlow.Id
 	return risk
 }

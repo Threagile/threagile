@@ -1,20 +1,19 @@
 package missing_waf
 
 import (
-	"github.com/threagile/threagile/pkg/model"
 	"github.com/threagile/threagile/pkg/security/types"
 )
 
-func Rule() model.CustomRiskRule {
-	return model.CustomRiskRule{
+func Rule() types.RiskRule {
+	return types.RiskRule{
 		Category:      Category,
 		SupportedTags: SupportedTags,
 		GenerateRisks: GenerateRisks,
 	}
 }
 
-func Category() model.RiskCategory {
-	return model.RiskCategory{
+func Category() types.RiskCategory {
+	return types.RiskCategory{
 		Id:    "missing-waf",
 		Title: "Missing Web Application Firewall (WAF)",
 		Description: "To have a first line of filtering defense, security architectures with web-services or web-applications should include a WAF in front of them. " +
@@ -42,8 +41,8 @@ func SupportedTags() []string {
 	return []string{}
 }
 
-func GenerateRisks(input *model.ParsedModel) []model.Risk {
-	risks := make([]model.Risk, 0)
+func GenerateRisks(input *types.ParsedModel) []types.Risk {
+	risks := make([]types.Risk, 0)
 	for _, technicalAsset := range input.TechnicalAssets {
 		if !technicalAsset.OutOfScope &&
 			(technicalAsset.Technology.IsWebApplication() || technicalAsset.Technology.IsWebService()) {
@@ -60,7 +59,7 @@ func GenerateRisks(input *model.ParsedModel) []model.Risk {
 	return risks
 }
 
-func createRisk(input *model.ParsedModel, technicalAsset model.TechnicalAsset) model.Risk {
+func createRisk(input *types.ParsedModel, technicalAsset types.TechnicalAsset) types.Risk {
 	title := "<b>Missing Web Application Firewall (WAF)</b> risk at <b>" + technicalAsset.Title + "</b>"
 	likelihood := types.Unlikely
 	impact := types.LowImpact
@@ -69,9 +68,9 @@ func createRisk(input *model.ParsedModel, technicalAsset model.TechnicalAsset) m
 		technicalAsset.HighestAvailability(input) == types.MissionCritical {
 		impact = types.MediumImpact
 	}
-	risk := model.Risk{
-		Category:                     Category(),
-		Severity:                     model.CalculateSeverity(likelihood, impact),
+	risk := types.Risk{
+		CategoryId:                   Category().Id,
+		Severity:                     types.CalculateSeverity(likelihood, impact),
 		ExploitationLikelihood:       likelihood,
 		ExploitationImpact:           impact,
 		Title:                        title,
@@ -79,6 +78,6 @@ func createRisk(input *model.ParsedModel, technicalAsset model.TechnicalAsset) m
 		DataBreachProbability:        types.Improbable,
 		DataBreachTechnicalAssetIDs:  []string{technicalAsset.Id},
 	}
-	risk.SyntheticId = risk.Category.Id + "@" + technicalAsset.Id
+	risk.SyntheticId = risk.CategoryId + "@" + technicalAsset.Id
 	return risk
 }

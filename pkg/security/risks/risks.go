@@ -1,12 +1,6 @@
-/*
-Copyright © 2023 NAME HERE <EMAIL ADDRESS>
-*/
 package risks
 
 import (
-	"github.com/threagile/threagile/pkg/model"
-	"github.com/threagile/threagile/pkg/run"
-
 	accidentalsecretleak "github.com/threagile/threagile/pkg/security/risks/built-in/accidental-secret-leak"
 	codebackdooring "github.com/threagile/threagile/pkg/security/risks/built-in/code-backdooring"
 	containerbaseimagebackdooring "github.com/threagile/threagile/pkg/security/risks/built-in/container-baseimage-backdooring"
@@ -49,45 +43,11 @@ import (
 	wrongcommunicationlinkcontent "github.com/threagile/threagile/pkg/security/risks/built-in/wrong-communication-link-content"
 	wrongtrustboundarycontent "github.com/threagile/threagile/pkg/security/risks/built-in/wrong-trust-boundary-content"
 	xmlexternalentity "github.com/threagile/threagile/pkg/security/risks/built-in/xml-external-entity"
+	"github.com/threagile/threagile/pkg/security/types"
 )
 
-type progressReporter interface {
-	Println(a ...any) (n int, err error)
-	Fatalf(format string, v ...any)
-}
-
-func LoadCustomRiskRules(pluginFiles []string, reporter progressReporter) map[string]*model.CustomRisk {
-	customRiskRules := make(map[string]*model.CustomRisk)
-	if len(pluginFiles) > 0 {
-		reporter.Println("Loading custom risk rules:", pluginFiles)
-
-		for _, pluginFile := range pluginFiles {
-			if len(pluginFile) > 0 {
-				runner, loadError := new(run.Runner).Load(pluginFile)
-				if loadError != nil {
-					reporter.Fatalf("WARNING: Custom risk rule %q not loaded: %v\n", pluginFile, loadError)
-				}
-
-				risk := new(model.CustomRisk)
-				runError := runner.Run(nil, &risk, "-get-info")
-				if runError != nil {
-					reporter.Fatalf("WARNING: Failed to get ID for custom risk rule %q: %v\n", pluginFile, runError)
-				}
-
-				risk.Runner = runner
-				customRiskRules[risk.ID] = risk
-				reporter.Println("Custom risk rule loaded:", risk.ID)
-			}
-		}
-
-		reporter.Println("Loaded custom risk rules:", customRiskRules)
-	}
-
-	return customRiskRules
-}
-
-func GetBuiltInRiskRules() []model.CustomRiskRule {
-	return []model.CustomRiskRule{
+func GetBuiltInRiskRules() []types.RiskRule {
+	return []types.RiskRule{
 		accidentalsecretleak.Rule(),
 		codebackdooring.Rule(),
 		containerbaseimagebackdooring.Rule(),

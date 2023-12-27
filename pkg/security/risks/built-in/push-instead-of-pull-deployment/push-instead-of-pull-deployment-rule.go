@@ -1,20 +1,19 @@
 package push_instead_of_pull_deployment
 
 import (
-	"github.com/threagile/threagile/pkg/model"
 	"github.com/threagile/threagile/pkg/security/types"
 )
 
-func Rule() model.CustomRiskRule {
-	return model.CustomRiskRule{
+func Rule() types.RiskRule {
+	return types.RiskRule{
 		Category:      Category,
 		SupportedTags: SupportedTags,
 		GenerateRisks: GenerateRisks,
 	}
 }
 
-func Category() model.RiskCategory {
-	return model.RiskCategory{
+func Category() types.RiskCategory {
+	return types.RiskCategory{
 		Id:    "push-instead-of-pull-deployment",
 		Title: "Push instead of Pull Deployment",
 		Description: "When comparing push-based vs. pull-based deployments from a security perspective, pull-based " +
@@ -44,8 +43,8 @@ func SupportedTags() []string {
 	return []string{}
 }
 
-func GenerateRisks(input *model.ParsedModel) []model.Risk {
-	risks := make([]model.Risk, 0)
+func GenerateRisks(input *types.ParsedModel) []types.Risk {
+	risks := make([]types.Risk, 0)
 	impact := types.LowImpact
 	for _, buildPipeline := range input.TechnicalAssets {
 		if buildPipeline.Technology == types.BuildPipeline {
@@ -66,11 +65,11 @@ func GenerateRisks(input *model.ParsedModel) []model.Risk {
 	return risks
 }
 
-func createRisk(buildPipeline model.TechnicalAsset, deploymentTarget model.TechnicalAsset, deploymentCommLink model.CommunicationLink, impact types.RiskExploitationImpact) model.Risk {
+func createRisk(buildPipeline types.TechnicalAsset, deploymentTarget types.TechnicalAsset, deploymentCommLink types.CommunicationLink, impact types.RiskExploitationImpact) types.Risk {
 	title := "<b>Push instead of Pull Deployment</b> at <b>" + deploymentTarget.Title + "</b> via build pipeline asset <b>" + buildPipeline.Title + "</b>"
-	risk := model.Risk{
-		Category:                        Category(),
-		Severity:                        model.CalculateSeverity(types.Unlikely, impact),
+	risk := types.Risk{
+		CategoryId:                      Category().Id,
+		Severity:                        types.CalculateSeverity(types.Unlikely, impact),
 		ExploitationLikelihood:          types.Unlikely,
 		ExploitationImpact:              impact,
 		Title:                           title,
@@ -79,6 +78,6 @@ func createRisk(buildPipeline model.TechnicalAsset, deploymentTarget model.Techn
 		DataBreachProbability:           types.Improbable,
 		DataBreachTechnicalAssetIDs:     []string{deploymentTarget.Id},
 	}
-	risk.SyntheticId = risk.Category.Id + "@" + buildPipeline.Id
+	risk.SyntheticId = risk.CategoryId + "@" + buildPipeline.Id
 	return risk
 }

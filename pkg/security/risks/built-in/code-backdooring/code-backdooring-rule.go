@@ -1,20 +1,19 @@
 package code_backdooring
 
 import (
-	"github.com/threagile/threagile/pkg/model"
 	"github.com/threagile/threagile/pkg/security/types"
 )
 
-func Rule() model.CustomRiskRule {
-	return model.CustomRiskRule{
+func Rule() types.RiskRule {
+	return types.RiskRule{
 		Category:      Category,
 		SupportedTags: SupportedTags,
 		GenerateRisks: GenerateRisks,
 	}
 }
 
-func Category() model.RiskCategory {
-	return model.RiskCategory{
+func Category() types.RiskCategory {
+	return types.RiskCategory{
 		Id:    "code-backdooring",
 		Title: "Code Backdooring",
 		Description: "For each build-pipeline component Code Backdooring risks might arise where attackers compromise the build-pipeline " +
@@ -49,8 +48,8 @@ func SupportedTags() []string {
 	return []string{}
 }
 
-func GenerateRisks(parsedModel *model.ParsedModel) []model.Risk {
-	risks := make([]model.Risk, 0)
+func GenerateRisks(parsedModel *types.ParsedModel) []types.Risk {
+	risks := make([]types.Risk, 0)
 	for _, id := range parsedModel.SortedTechnicalAssetIDs() {
 		technicalAsset := parsedModel.TechnicalAssets[id]
 		if !technicalAsset.OutOfScope && technicalAsset.Technology.IsDevelopmentRelevant() {
@@ -75,7 +74,7 @@ func GenerateRisks(parsedModel *model.ParsedModel) []model.Risk {
 	return risks
 }
 
-func createRisk(input *model.ParsedModel, technicalAsset model.TechnicalAsset, elevatedRisk bool) model.Risk {
+func createRisk(input *types.ParsedModel, technicalAsset types.TechnicalAsset, elevatedRisk bool) types.Risk {
 	title := "<b>Code Backdooring</b> risk at <b>" + technicalAsset.Title + "</b>"
 	impact := types.LowImpact
 	if technicalAsset.Technology != types.CodeInspectionPlatform {
@@ -109,9 +108,9 @@ func createRisk(input *model.ParsedModel, technicalAsset model.TechnicalAsset, e
 		dataBreachTechnicalAssetIDs = append(dataBreachTechnicalAssetIDs, key)
 	}
 	// create risk
-	risk := model.Risk{
-		Category:                     Category(),
-		Severity:                     model.CalculateSeverity(types.Unlikely, impact),
+	risk := types.Risk{
+		CategoryId:                   Category().Id,
+		Severity:                     types.CalculateSeverity(types.Unlikely, impact),
 		ExploitationLikelihood:       types.Unlikely,
 		ExploitationImpact:           impact,
 		Title:                        title,
@@ -119,6 +118,6 @@ func createRisk(input *model.ParsedModel, technicalAsset model.TechnicalAsset, e
 		DataBreachProbability:        types.Probable,
 		DataBreachTechnicalAssetIDs:  dataBreachTechnicalAssetIDs,
 	}
-	risk.SyntheticId = risk.Category.Id + "@" + technicalAsset.Id
+	risk.SyntheticId = risk.CategoryId + "@" + technicalAsset.Id
 	return risk
 }

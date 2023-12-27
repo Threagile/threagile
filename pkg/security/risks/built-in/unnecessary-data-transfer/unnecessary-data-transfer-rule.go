@@ -3,20 +3,19 @@ package unnecessary_data_transfer
 import (
 	"sort"
 
-	"github.com/threagile/threagile/pkg/model"
 	"github.com/threagile/threagile/pkg/security/types"
 )
 
-func Rule() model.CustomRiskRule {
-	return model.CustomRiskRule{
+func Rule() types.RiskRule {
+	return types.RiskRule{
 		Category:      Category,
 		SupportedTags: SupportedTags,
 		GenerateRisks: GenerateRisks,
 	}
 }
 
-func Category() model.RiskCategory {
-	return model.RiskCategory{
+func Category() types.RiskCategory {
+	return types.RiskCategory{
 		Id:    "unnecessary-data-transfer",
 		Title: "Unnecessary Data Transfer",
 		Description: "When a technical asset sends or receives data assets, which it neither processes or stores this is " +
@@ -48,8 +47,8 @@ func SupportedTags() []string {
 	return []string{}
 }
 
-func GenerateRisks(input *model.ParsedModel) []model.Risk {
-	risks := make([]model.Risk, 0)
+func GenerateRisks(input *types.ParsedModel) []types.Risk {
+	risks := make([]types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
 		if technicalAsset.OutOfScope {
@@ -65,7 +64,7 @@ func GenerateRisks(input *model.ParsedModel) []model.Risk {
 		}
 		// incoming data flows
 		commLinks := input.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id]
-		sort.Sort(model.ByTechnicalCommunicationLinkIdSort(commLinks))
+		sort.Sort(types.ByTechnicalCommunicationLinkIdSort(commLinks))
 		for _, incomingDataFlow := range commLinks {
 			targetAsset := input.TechnicalAssets[incomingDataFlow.SourceId]
 			if targetAsset.Technology.IsUnnecessaryDataTolerated() {
@@ -77,8 +76,8 @@ func GenerateRisks(input *model.ParsedModel) []model.Risk {
 	return risks
 }
 
-func checkRisksAgainstTechnicalAsset(input *model.ParsedModel, risks []model.Risk, technicalAsset model.TechnicalAsset,
-	dataFlow model.CommunicationLink, inverseDirection bool) []model.Risk {
+func checkRisksAgainstTechnicalAsset(input *types.ParsedModel, risks []types.Risk, technicalAsset types.TechnicalAsset,
+	dataFlow types.CommunicationLink, inverseDirection bool) []types.Risk {
 	for _, transferredDataAssetId := range dataFlow.DataAssetsSent {
 		if !technicalAsset.ProcessesOrStoresDataAsset(transferredDataAssetId) {
 			transferredDataAsset := input.DataAssets[transferredDataAssetId]
@@ -116,7 +115,7 @@ func checkRisksAgainstTechnicalAsset(input *model.ParsedModel, risks []model.Ris
 	return risks
 }
 
-func isNewRisk(risks []model.Risk, risk model.Risk) bool {
+func isNewRisk(risks []types.Risk, risk types.Risk) bool {
 	for _, check := range risks {
 		if check.SyntheticId == risk.SyntheticId {
 			return false
@@ -125,7 +124,7 @@ func isNewRisk(risks []model.Risk, risk model.Risk) bool {
 	return true
 }
 
-func createRisk(technicalAsset model.TechnicalAsset, dataAssetTransferred model.DataAsset, commPartnerAsset model.TechnicalAsset) model.Risk {
+func createRisk(technicalAsset types.TechnicalAsset, dataAssetTransferred types.DataAsset, commPartnerAsset types.TechnicalAsset) types.Risk {
 	moreRisky := dataAssetTransferred.Confidentiality == types.StrictlyConfidential || dataAssetTransferred.Integrity == types.MissionCritical
 
 	impact := types.LowImpact
@@ -135,9 +134,9 @@ func createRisk(technicalAsset model.TechnicalAsset, dataAssetTransferred model.
 
 	title := "<b>Unnecessary Data Transfer</b> of <b>" + dataAssetTransferred.Title + "</b> data at <b>" + technicalAsset.Title + "</b> " +
 		"from/to <b>" + commPartnerAsset.Title + "</b>"
-	risk := model.Risk{
-		Category:                     Category(),
-		Severity:                     model.CalculateSeverity(types.Unlikely, impact),
+	risk := types.Risk{
+		CategoryId:                   Category().Id,
+		Severity:                     types.CalculateSeverity(types.Unlikely, impact),
 		ExploitationLikelihood:       types.Unlikely,
 		ExploitationImpact:           impact,
 		Title:                        title,
@@ -146,6 +145,6 @@ func createRisk(technicalAsset model.TechnicalAsset, dataAssetTransferred model.
 		DataBreachProbability:        types.Improbable,
 		DataBreachTechnicalAssetIDs:  []string{technicalAsset.Id},
 	}
-	risk.SyntheticId = risk.Category.Id + "@" + dataAssetTransferred.Id + "@" + technicalAsset.Id + "@" + commPartnerAsset.Id
+	risk.SyntheticId = risk.CategoryId + "@" + dataAssetTransferred.Id + "@" + technicalAsset.Id + "@" + commPartnerAsset.Id
 	return risk
 }

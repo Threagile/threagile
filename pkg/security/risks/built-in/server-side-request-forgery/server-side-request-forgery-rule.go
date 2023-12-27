@@ -1,20 +1,19 @@
 package server_side_request_forgery
 
 import (
-	"github.com/threagile/threagile/pkg/model"
 	"github.com/threagile/threagile/pkg/security/types"
 )
 
-func Rule() model.CustomRiskRule {
-	return model.CustomRiskRule{
+func Rule() types.RiskRule {
+	return types.RiskRule{
 		Category:      Category,
 		SupportedTags: SupportedTags,
 		GenerateRisks: GenerateRisks,
 	}
 }
 
-func Category() model.RiskCategory {
-	return model.RiskCategory{
+func Category() types.RiskCategory {
+	return types.RiskCategory{
 		Id:    "server-side-request-forgery",
 		Title: "Server-Side Request Forgery (SSRF)",
 		Description: "When a server system (i.e. not a client) is accessing other server systems via typical web protocols " +
@@ -44,8 +43,8 @@ func SupportedTags() []string {
 	return []string{}
 }
 
-func GenerateRisks(input *model.ParsedModel) []model.Risk {
-	risks := make([]model.Risk, 0)
+func GenerateRisks(input *types.ParsedModel) []types.Risk {
+	risks := make([]types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
 		if technicalAsset.OutOfScope || technicalAsset.Technology.IsClient() || technicalAsset.Technology == types.LoadBalancer {
@@ -60,7 +59,7 @@ func GenerateRisks(input *model.ParsedModel) []model.Risk {
 	return risks
 }
 
-func createRisk(input *model.ParsedModel, technicalAsset model.TechnicalAsset, outgoingFlow model.CommunicationLink) model.Risk {
+func createRisk(input *types.ParsedModel, technicalAsset types.TechnicalAsset, outgoingFlow types.CommunicationLink) types.Risk {
 	target := input.TechnicalAssets[outgoingFlow.TargetId]
 	title := "<b>Server-Side Request Forgery (SSRF)</b> risk at <b>" + technicalAsset.Title + "</b> server-side web-requesting " +
 		"the target <b>" + target.Title + "</b> via <b>" + outgoingFlow.Title + "</b>"
@@ -96,9 +95,9 @@ func createRisk(input *model.ParsedModel, technicalAsset model.TechnicalAsset, o
 	if outgoingFlow.Usage == types.DevOps {
 		likelihood = types.Unlikely
 	}
-	risk := model.Risk{
-		Category:                        Category(),
-		Severity:                        model.CalculateSeverity(likelihood, impact),
+	risk := types.Risk{
+		CategoryId:                      Category().Id,
+		Severity:                        types.CalculateSeverity(likelihood, impact),
 		ExploitationLikelihood:          likelihood,
 		ExploitationImpact:              impact,
 		Title:                           title,
@@ -107,6 +106,6 @@ func createRisk(input *model.ParsedModel, technicalAsset model.TechnicalAsset, o
 		DataBreachProbability:           types.Possible,
 		DataBreachTechnicalAssetIDs:     dataBreachTechnicalAssetIDs,
 	}
-	risk.SyntheticId = risk.Category.Id + "@" + technicalAsset.Id + "@" + target.Id + "@" + outgoingFlow.Id
+	risk.SyntheticId = risk.CategoryId + "@" + technicalAsset.Id + "@" + target.Id + "@" + outgoingFlow.Id
 	return risk
 }

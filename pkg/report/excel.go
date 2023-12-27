@@ -6,14 +6,13 @@ import (
 	"strings"
 
 	"github.com/threagile/threagile/pkg/colors"
-	"github.com/threagile/threagile/pkg/model"
 	"github.com/threagile/threagile/pkg/security/types"
 	"github.com/xuri/excelize/v2"
 )
 
 var excelRow int
 
-func WriteRisksExcelToFile(parsedModel *model.ParsedModel, filename string) {
+func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string) {
 	excelRow = 0
 	excel := excelize.NewFile()
 	sheetName := parsedModel.Title
@@ -339,8 +338,8 @@ func WriteRisksExcelToFile(parsedModel *model.ParsedModel, filename string) {
 	})
 
 	excelRow++ // as we have a header line
-	for _, category := range model.SortedRiskCategories(parsedModel) {
-		risks := model.SortedRisksOfCategory(parsedModel, category)
+	for _, category := range types.SortedRiskCategories(parsedModel) {
+		risks := types.SortedRisksOfCategory(parsedModel, category)
 		for _, risk := range risks {
 			excelRow++
 			techAsset := parsedModel.TechnicalAssets[risk.MostRelevantTechnicalAssetId]
@@ -350,17 +349,17 @@ func WriteRisksExcelToFile(parsedModel *model.ParsedModel, filename string) {
 			err := excel.SetCellValue(sheetName, "A"+strconv.Itoa(excelRow), risk.Severity.Title())
 			err = excel.SetCellValue(sheetName, "B"+strconv.Itoa(excelRow), risk.ExploitationLikelihood.Title())
 			err = excel.SetCellValue(sheetName, "C"+strconv.Itoa(excelRow), risk.ExploitationImpact.Title())
-			err = excel.SetCellValue(sheetName, "D"+strconv.Itoa(excelRow), risk.Category.STRIDE.Title())
-			err = excel.SetCellValue(sheetName, "E"+strconv.Itoa(excelRow), risk.Category.Function.Title())
-			err = excel.SetCellValue(sheetName, "F"+strconv.Itoa(excelRow), "CWE-"+strconv.Itoa(risk.Category.CWE))
-			err = excel.SetCellValue(sheetName, "G"+strconv.Itoa(excelRow), risk.Category.Title)
+			err = excel.SetCellValue(sheetName, "D"+strconv.Itoa(excelRow), category.STRIDE.Title())
+			err = excel.SetCellValue(sheetName, "E"+strconv.Itoa(excelRow), category.Function.Title())
+			err = excel.SetCellValue(sheetName, "F"+strconv.Itoa(excelRow), "CWE-"+strconv.Itoa(category.CWE))
+			err = excel.SetCellValue(sheetName, "G"+strconv.Itoa(excelRow), category.Title)
 			err = excel.SetCellValue(sheetName, "H"+strconv.Itoa(excelRow), techAsset.Title)
 			err = excel.SetCellValue(sheetName, "I"+strconv.Itoa(excelRow), commLink.Title)
 			err = excel.SetCellFloat(sheetName, "J"+strconv.Itoa(excelRow), techAsset.RAA, 0, 32)
 			err = excel.SetCellValue(sheetName, "K"+strconv.Itoa(excelRow), removeFormattingTags(risk.Title))
-			err = excel.SetCellValue(sheetName, "L"+strconv.Itoa(excelRow), risk.Category.Action)
-			err = excel.SetCellValue(sheetName, "M"+strconv.Itoa(excelRow), risk.Category.Mitigation)
-			err = excel.SetCellValue(sheetName, "N"+strconv.Itoa(excelRow), risk.Category.Check)
+			err = excel.SetCellValue(sheetName, "L"+strconv.Itoa(excelRow), category.Action)
+			err = excel.SetCellValue(sheetName, "M"+strconv.Itoa(excelRow), category.Mitigation)
+			err = excel.SetCellValue(sheetName, "N"+strconv.Itoa(excelRow), category.Check)
 			err = excel.SetCellValue(sheetName, "O"+strconv.Itoa(excelRow), risk.SyntheticId)
 			err = excel.SetCellValue(sheetName, "P"+strconv.Itoa(excelRow), riskTrackingStatus.Title())
 			if riskTrackingStatus != types.Unchecked {
@@ -456,7 +455,7 @@ func WriteRisksExcelToFile(parsedModel *model.ParsedModel, filename string) {
 	checkErr(err)
 }
 
-func WriteTagsExcelToFile(parsedModel *model.ParsedModel, filename string) { // TODO: eventually when len(sortedTagsAvailable) == 0 is: write a hint in the Excel that no tags are used
+func WriteTagsExcelToFile(parsedModel *types.ParsedModel, filename string) { // TODO: eventually when len(sortedTagsAvailable) == 0 is: write a hint in the Excel that no tags are used
 	excelRow = 0
 	excel := excelize.NewFile()
 	sheetName := parsedModel.Title
@@ -600,21 +599,21 @@ func WriteTagsExcelToFile(parsedModel *model.ParsedModel, filename string) { // 
 	checkErr(err)
 }
 
-func sortedTrustBoundariesByTitle(parsedModel *model.ParsedModel) []model.TrustBoundary {
-	boundaries := make([]model.TrustBoundary, 0)
+func sortedTrustBoundariesByTitle(parsedModel *types.ParsedModel) []types.TrustBoundary {
+	boundaries := make([]types.TrustBoundary, 0)
 	for _, boundary := range parsedModel.TrustBoundaries {
 		boundaries = append(boundaries, boundary)
 	}
-	sort.Sort(model.ByTrustBoundaryTitleSort(boundaries))
+	sort.Sort(types.ByTrustBoundaryTitleSort(boundaries))
 	return boundaries
 }
 
-func sortedDataAssetsByTitle(parsedModel *model.ParsedModel) []model.DataAsset {
-	assets := make([]model.DataAsset, 0)
+func sortedDataAssetsByTitle(parsedModel *types.ParsedModel) []types.DataAsset {
+	assets := make([]types.DataAsset, 0)
 	for _, asset := range parsedModel.DataAssets {
 		assets = append(assets, asset)
 	}
-	sort.Sort(model.ByDataAssetTitleSort(assets))
+	sort.Sort(types.ByDataAssetTitleSort(assets))
 	return assets
 }
 

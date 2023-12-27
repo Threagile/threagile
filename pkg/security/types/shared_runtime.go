@@ -1,18 +1,19 @@
 /*
 Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 */
-package model
+
+package types
 
 import (
 	"sort"
-
-	"github.com/threagile/threagile/pkg/security/types"
 )
 
 type SharedRuntime struct {
-	Id, Title, Description string
-	Tags                   []string
-	TechnicalAssetsRunning []string
+	Id                     string   `json:"id,omitempty"`
+	Title                  string   `json:"title,omitempty"`
+	Description            string   `json:"description,omitempty"`
+	Tags                   []string `json:"tags,omitempty"`
+	TechnicalAssetsRunning []string `json:"technical_assets_running,omitempty"`
 }
 
 func (what SharedRuntime) IsTaggedWithAny(tags ...string) bool {
@@ -23,8 +24,8 @@ func (what SharedRuntime) IsTaggedWithBaseTag(baseTag string) bool {
 	return IsTaggedWithBaseTag(what.Tags, baseTag)
 }
 
-func (what SharedRuntime) HighestConfidentiality(model *ParsedModel) types.Confidentiality {
-	highest := types.Public
+func (what SharedRuntime) HighestConfidentiality(model *ParsedModel) Confidentiality {
+	highest := Public
 	for _, id := range what.TechnicalAssetsRunning {
 		techAsset := model.TechnicalAssets[id]
 		if techAsset.HighestConfidentiality(model) > highest {
@@ -34,8 +35,8 @@ func (what SharedRuntime) HighestConfidentiality(model *ParsedModel) types.Confi
 	return highest
 }
 
-func (what SharedRuntime) HighestIntegrity(model *ParsedModel) types.Criticality {
-	highest := types.Archive
+func (what SharedRuntime) HighestIntegrity(model *ParsedModel) Criticality {
+	highest := Archive
 	for _, id := range what.TechnicalAssetsRunning {
 		techAsset := model.TechnicalAssets[id]
 		if techAsset.HighestIntegrity(model) > highest {
@@ -45,8 +46,8 @@ func (what SharedRuntime) HighestIntegrity(model *ParsedModel) types.Criticality
 	return highest
 }
 
-func (what SharedRuntime) HighestAvailability(model *ParsedModel) types.Criticality {
-	highest := types.Archive
+func (what SharedRuntime) HighestAvailability(model *ParsedModel) Criticality {
+	highest := Archive
 	for _, id := range what.TechnicalAssetsRunning {
 		techAsset := model.TechnicalAssets[id]
 		if techAsset.HighestAvailability(model) > highest {

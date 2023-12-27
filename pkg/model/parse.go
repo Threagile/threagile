@@ -1,58 +1,17 @@
-/*
-Copyright © 2023 NAME HERE <EMAIL ADDRESS>
-*/
-
 package model
 
 import (
 	"errors"
 	"fmt"
-	"path/filepath"
-	"regexp"
-	"sort"
-	"strings"
-	"time"
-
 	"github.com/threagile/threagile/pkg/input"
 	"github.com/threagile/threagile/pkg/security/types"
+	"path/filepath"
+	"regexp"
+	"strings"
+	"time"
 )
 
-type ParsedModel struct {
-	Author                                        input.Author                 `json:"author" yaml:"author"`
-	Title                                         string                       `json:"title,omitempty" yaml:"title"`
-	Date                                          time.Time                    `json:"date" yaml:"date"`
-	ManagementSummaryComment                      string                       `json:"management_summary_comment,omitempty" yaml:"management_summary_comment"`
-	BusinessOverview                              input.Overview               `json:"business_overview" yaml:"business_overview"`
-	TechnicalOverview                             input.Overview               `json:"technical_overview" yaml:"technical_overview"`
-	BusinessCriticality                           types.Criticality            `json:"business_criticality,omitempty" yaml:"business_criticality"`
-	SecurityRequirements                          map[string]string            `json:"security_requirements,omitempty" yaml:"security_requirements"`
-	Questions                                     map[string]string            `json:"questions,omitempty" yaml:"questions"`
-	AbuseCases                                    map[string]string            `json:"abuse_cases,omitempty" yaml:"abuse_cases"`
-	TagsAvailable                                 []string                     `json:"tags_available,omitempty" yaml:"tags_available"`
-	DataAssets                                    map[string]DataAsset         `json:"data_assets,omitempty" yaml:"data_assets"`
-	TechnicalAssets                               map[string]TechnicalAsset    `json:"technical_assets,omitempty" yaml:"technical_assets"`
-	TrustBoundaries                               map[string]TrustBoundary     `json:"trust_boundaries,omitempty" yaml:"trust_boundaries"`
-	SharedRuntimes                                map[string]SharedRuntime     `json:"shared_runtimes,omitempty" yaml:"shared_runtimes"`
-	IndividualRiskCategories                      map[string]RiskCategory      `json:"individual_risk_categories,omitempty" yaml:"individual_risk_categories"`
-	RiskTracking                                  map[string]RiskTracking      `json:"risk_tracking,omitempty" yaml:"risk_tracking"`
-	CommunicationLinks                            map[string]CommunicationLink `json:"communication_links,omitempty" yaml:"communication_links"`
-	AllSupportedTags                              map[string]bool              `json:"all_supported_tags,omitempty" yaml:"all_supported_tags"`
-	DiagramTweakNodesep                           int                          `json:"diagram_tweak_nodesep,omitempty" yaml:"diagram_tweak_nodesep"`
-	DiagramTweakRanksep                           int                          `json:"diagram_tweak_ranksep,omitempty" yaml:"diagram_tweak_ranksep"`
-	DiagramTweakEdgeLayout                        string                       `json:"diagram_tweak_edge_layout,omitempty" yaml:"diagram_tweak_edge_layout"`
-	DiagramTweakSuppressEdgeLabels                bool                         `json:"diagram_tweak_suppress_edge_labels,omitempty" yaml:"diagram_tweak_suppress_edge_labels"`
-	DiagramTweakLayoutLeftToRight                 bool                         `json:"diagram_tweak_layout_left_to_right,omitempty" yaml:"diagram_tweak_layout_left_to_right"`
-	DiagramTweakInvisibleConnectionsBetweenAssets []string                     `json:"diagram_tweak_invisible_connections_between_assets,omitempty" yaml:"diagram_tweak_invisible_connections_between_assets"`
-	DiagramTweakSameRankAssets                    []string                     `json:"diagram_tweak_same_rank_assets,omitempty" yaml:"diagram_tweak_same_rank_assets"`
-
-	// TODO: those are generated based on items above and needs to be private
-	IncomingTechnicalCommunicationLinksMappedByTargetId   map[string][]CommunicationLink `json:"incoming_technical_communication_links_mapped_by_target_id,omitempty" yaml:"incoming_technical_communication_links_mapped_by_target_id"`
-	DirectContainingTrustBoundaryMappedByTechnicalAssetId map[string]TrustBoundary       `json:"direct_containing_trust_boundary_mapped_by_technical_asset_id,omitempty" yaml:"direct_containing_trust_boundary_mapped_by_technical_asset_id"`
-	GeneratedRisksByCategory                              map[string][]Risk              `json:"generated_risks_by_category,omitempty" yaml:"generated_risks_by_category"`
-	GeneratedRisksBySyntheticId                           map[string]Risk                `json:"generated_risks_by_synthetic_id,omitempty" yaml:"generated_risks_by_synthetic_id"`
-}
-
-func ParseModel(modelInput *input.ModelInput) (*ParsedModel, error) {
+func ParseModel(modelInput *input.ModelInput, builtinRiskRules map[string]types.RiskRule, customRiskRules map[string]*types.CustomRisk) (*types.ParsedModel, error) {
 	businessCriticality, err := types.ParseCriticality(modelInput.BusinessCriticality)
 	if err != nil {
 		return nil, errors.New("unknown 'business_criticality' value of application: " + modelInput.BusinessCriticality)
@@ -67,7 +26,7 @@ func ParseModel(modelInput *input.ModelInput) (*ParsedModel, error) {
 		}
 	}
 
-	parsedModel := ParsedModel{
+	parsedModel := types.ParsedModel{
 		Author:                         modelInput.Author,
 		Title:                          modelInput.Title,
 		Date:                           reportDate,
@@ -88,11 +47,11 @@ func ParseModel(modelInput *input.ModelInput) (*ParsedModel, error) {
 		DiagramTweakSameRankAssets:                    modelInput.DiagramTweakSameRankAssets,
 	}
 
-	parsedModel.CommunicationLinks = make(map[string]CommunicationLink)
-	parsedModel.IncomingTechnicalCommunicationLinksMappedByTargetId = make(map[string][]CommunicationLink)
-	parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId = make(map[string]TrustBoundary)
-	parsedModel.GeneratedRisksByCategory = make(map[string][]Risk)
-	parsedModel.GeneratedRisksBySyntheticId = make(map[string]Risk)
+	parsedModel.CommunicationLinks = make(map[string]types.CommunicationLink)
+	parsedModel.IncomingTechnicalCommunicationLinksMappedByTargetId = make(map[string][]types.CommunicationLink)
+	parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId = make(map[string]types.TrustBoundary)
+	parsedModel.GeneratedRisksByCategory = make(map[string][]types.Risk)
+	parsedModel.GeneratedRisksBySyntheticId = make(map[string]types.Risk)
 	parsedModel.AllSupportedTags = make(map[string]bool)
 
 	if parsedModel.DiagramTweakNodesep == 0 {
@@ -103,7 +62,7 @@ func ParseModel(modelInput *input.ModelInput) (*ParsedModel, error) {
 	}
 
 	// Data Assets ===============================================================================
-	parsedModel.DataAssets = make(map[string]DataAsset)
+	parsedModel.DataAssets = make(map[string]types.DataAsset)
 	for title, asset := range modelInput.DataAssets {
 		id := fmt.Sprintf("%v", asset.ID)
 
@@ -135,11 +94,11 @@ func ParseModel(modelInput *input.ModelInput) (*ParsedModel, error) {
 		if _, exists := parsedModel.DataAssets[id]; exists {
 			return nil, errors.New("duplicate id used: " + id)
 		}
-		tags, err := parsedModel.checkTags(lowerCaseAndTrim(asset.Tags), "data asset '"+title+"'")
+		tags, err := parsedModel.CheckTags(lowerCaseAndTrim(asset.Tags), "data asset '"+title+"'")
 		if err != nil {
 			return nil, err
 		}
-		parsedModel.DataAssets[id] = DataAsset{
+		parsedModel.DataAssets[id] = types.DataAsset{
 			Id:                     id,
 			Title:                  title,
 			Usage:                  usage,
@@ -156,7 +115,7 @@ func ParseModel(modelInput *input.ModelInput) (*ParsedModel, error) {
 	}
 
 	// Technical Assets ===============================================================================
-	parsedModel.TechnicalAssets = make(map[string]TechnicalAsset)
+	parsedModel.TechnicalAssets = make(map[string]types.TechnicalAsset)
 	for title, asset := range modelInput.TechnicalAssets {
 		id := fmt.Sprintf("%v", asset.ID)
 
@@ -170,7 +129,7 @@ func ParseModel(modelInput *input.ModelInput) (*ParsedModel, error) {
 			dataAssetsProcessed = make([]string, len(asset.DataAssetsProcessed))
 			for i, parsedProcessedAsset := range asset.DataAssetsProcessed {
 				referencedAsset := fmt.Sprintf("%v", parsedProcessedAsset)
-				err := parsedModel.checkDataAssetTargetExists(referencedAsset, "technical asset '"+title+"'")
+				err := parsedModel.CheckDataAssetTargetExists(referencedAsset, "technical asset '"+title+"'")
 				if err != nil {
 					return nil, err
 				}
@@ -183,7 +142,7 @@ func ParseModel(modelInput *input.ModelInput) (*ParsedModel, error) {
 			dataAssetsStored = make([]string, len(asset.DataAssetsStored))
 			for i, parsedStoredAssets := range asset.DataAssetsStored {
 				referencedAsset := fmt.Sprintf("%v", parsedStoredAssets)
-				err := parsedModel.checkDataAssetTargetExists(referencedAsset, "technical asset '"+title+"'")
+				err := parsedModel.CheckDataAssetTargetExists(referencedAsset, "technical asset '"+title+"'")
 				if err != nil {
 					return nil, err
 				}
@@ -235,7 +194,7 @@ func ParseModel(modelInput *input.ModelInput) (*ParsedModel, error) {
 			}
 		}
 
-		communicationLinks := make([]CommunicationLink, 0)
+		communicationLinks := make([]types.CommunicationLink, 0)
 		if asset.CommunicationLinks != nil {
 			for commLinkTitle, commLink := range asset.CommunicationLinks {
 				constraint := true
@@ -263,7 +222,7 @@ func ParseModel(modelInput *input.ModelInput) (*ParsedModel, error) {
 				if commLink.DataAssetsSent != nil {
 					for _, dataAssetSent := range commLink.DataAssetsSent {
 						referencedAsset := fmt.Sprintf("%v", dataAssetSent)
-						err := parsedModel.checkDataAssetTargetExists(referencedAsset, "communication link '"+commLinkTitle+"' of technical asset '"+title+"'")
+						err := parsedModel.CheckDataAssetTargetExists(referencedAsset, "communication link '"+commLinkTitle+"' of technical asset '"+title+"'")
 						if err != nil {
 							return nil, err
 						}
@@ -274,7 +233,7 @@ func ParseModel(modelInput *input.ModelInput) (*ParsedModel, error) {
 				if commLink.DataAssetsReceived != nil {
 					for _, dataAssetReceived := range commLink.DataAssetsReceived {
 						referencedAsset := fmt.Sprintf("%v", dataAssetReceived)
-						err := parsedModel.checkDataAssetTargetExists(referencedAsset, "communication link '"+commLinkTitle+"' of technical asset '"+title+"'")
+						err := parsedModel.CheckDataAssetTargetExists(referencedAsset, "communication link '"+commLinkTitle+"' of technical asset '"+title+"'")
 						if err != nil {
 							return nil, err
 						}
@@ -296,11 +255,11 @@ func ParseModel(modelInput *input.ModelInput) (*ParsedModel, error) {
 				if err != nil {
 					return nil, err
 				}
-				tags, err := parsedModel.checkTags(lowerCaseAndTrim(commLink.Tags), "communication link '"+commLinkTitle+"' of technical asset '"+title+"'")
+				tags, err := parsedModel.CheckTags(lowerCaseAndTrim(commLink.Tags), "communication link '"+commLinkTitle+"' of technical asset '"+title+"'")
 				if err != nil {
 					return nil, err
 				}
-				commLink := CommunicationLink{
+				commLink := types.CommunicationLink{
 					Id:                     commLinkId,
 					SourceId:               id,
 					TargetId:               commLink.Target,
@@ -335,11 +294,11 @@ func ParseModel(modelInput *input.ModelInput) (*ParsedModel, error) {
 		if _, exists := parsedModel.TechnicalAssets[id]; exists {
 			return nil, errors.New("duplicate id used: " + id)
 		}
-		tags, err := parsedModel.checkTags(lowerCaseAndTrim(asset.Tags), "technical asset '"+title+"'")
+		tags, err := parsedModel.CheckTags(lowerCaseAndTrim(asset.Tags), "technical asset '"+title+"'")
 		if err != nil {
 			return nil, err
 		}
-		parsedModel.TechnicalAssets[id] = TechnicalAsset{
+		parsedModel.TechnicalAssets[id] = types.TechnicalAsset{
 			Id:                      id,
 			Usage:                   usage,
 			Title:                   title, //fmt.Sprintf("%v", asset["title"]),
@@ -372,7 +331,7 @@ func ParseModel(modelInput *input.ModelInput) (*ParsedModel, error) {
 
 	// Trust Boundaries ===============================================================================
 	checklistToAvoidAssetBeingModeledInMultipleTrustBoundaries := make(map[string]bool)
-	parsedModel.TrustBoundaries = make(map[string]TrustBoundary)
+	parsedModel.TrustBoundaries = make(map[string]types.TrustBoundary)
 	for title, boundary := range modelInput.TrustBoundaries {
 		id := fmt.Sprintf("%v", boundary.ID)
 
@@ -407,8 +366,8 @@ func ParseModel(modelInput *input.ModelInput) (*ParsedModel, error) {
 		if err != nil {
 			return nil, errors.New("unknown 'type' of trust boundary '" + title + "': " + fmt.Sprintf("%v", boundary.Type))
 		}
-		tags, err := parsedModel.checkTags(lowerCaseAndTrim(boundary.Tags), "trust boundary '"+title+"'")
-		trustBoundary := TrustBoundary{
+		tags, err := parsedModel.CheckTags(lowerCaseAndTrim(boundary.Tags), "trust boundary '"+title+"'")
+		trustBoundary := types.TrustBoundary{
 			Id:                    id,
 			Title:                 title, //fmt.Sprintf("%v", boundary["title"]),
 			Description:           withDefault(fmt.Sprintf("%v", boundary.Description), title),
@@ -430,13 +389,13 @@ func ParseModel(modelInput *input.ModelInput) (*ParsedModel, error) {
 			//fmt.Println("Asset "+technicalAsset+" is directly in trust boundary "+trustBoundary.Id)
 		}
 	}
-	err = parsedModel.checkNestedTrustBoundariesExisting()
+	err = parsedModel.CheckNestedTrustBoundariesExisting()
 	if err != nil {
 		return nil, err
 	}
 
 	// Shared Runtime ===============================================================================
-	parsedModel.SharedRuntimes = make(map[string]SharedRuntime)
+	parsedModel.SharedRuntimes = make(map[string]types.SharedRuntime)
 	for title, inputRuntime := range modelInput.SharedRuntimes {
 		id := fmt.Sprintf("%v", inputRuntime.ID)
 
@@ -453,11 +412,11 @@ func ParseModel(modelInput *input.ModelInput) (*ParsedModel, error) {
 				technicalAssetsRunning[i] = assetId
 			}
 		}
-		tags, err := parsedModel.checkTags(lowerCaseAndTrim(inputRuntime.Tags), "shared runtime '"+title+"'")
+		tags, err := parsedModel.CheckTags(lowerCaseAndTrim(inputRuntime.Tags), "shared runtime '"+title+"'")
 		if err != nil {
 			return nil, err
 		}
-		sharedRuntime := SharedRuntime{
+		sharedRuntime := types.SharedRuntime{
 			Id:                     id,
 			Title:                  title, //fmt.Sprintf("%v", boundary["title"]),
 			Description:            withDefault(fmt.Sprintf("%v", inputRuntime.Description), title),
@@ -474,8 +433,19 @@ func ParseModel(modelInput *input.ModelInput) (*ParsedModel, error) {
 		parsedModel.SharedRuntimes[id] = sharedRuntime
 	}
 
+	parsedModel.BuiltInRiskCategories = make(map[string]types.RiskCategory)
+	for _, rule := range builtinRiskRules {
+		category := rule.Category()
+		parsedModel.BuiltInRiskCategories[category.Id] = category
+	}
+
+	parsedModel.IndividualRiskCategories = make(map[string]types.RiskCategory)
+	for _, rule := range customRiskRules {
+		parsedModel.IndividualRiskCategories[rule.Category.Id] = rule.Category
+	}
+
 	// Individual Risk Categories (just used as regular risk categories) ===============================================================================
-	parsedModel.IndividualRiskCategories = make(map[string]RiskCategory)
+	parsedModel.IndividualRiskCategories = make(map[string]types.RiskCategory)
 	for title, individualCategory := range modelInput.IndividualRiskCategories {
 		id := fmt.Sprintf("%v", individualCategory.ID)
 
@@ -488,7 +458,7 @@ func ParseModel(modelInput *input.ModelInput) (*ParsedModel, error) {
 			return nil, errors.New("unknown 'stride' value of individual risk category '" + title + "': " + fmt.Sprintf("%v", individualCategory.STRIDE))
 		}
 
-		cat := RiskCategory{
+		cat := types.RiskCategory{
 			Id:                         id,
 			Title:                      title,
 			Description:                withDefault(fmt.Sprintf("%v", individualCategory.Description), title),
@@ -537,7 +507,7 @@ func ParseModel(modelInput *input.ModelInput) (*ParsedModel, error) {
 
 				if len(individualRiskInstance.MostRelevantDataAsset) > 0 {
 					mostRelevantDataAssetId = fmt.Sprintf("%v", individualRiskInstance.MostRelevantDataAsset)
-					err := parsedModel.checkDataAssetTargetExists(mostRelevantDataAssetId, "individual risk '"+title+"'")
+					err := parsedModel.CheckDataAssetTargetExists(mostRelevantDataAssetId, "individual risk '"+title+"'")
 					if err != nil {
 						return nil, err
 					}
@@ -553,7 +523,7 @@ func ParseModel(modelInput *input.ModelInput) (*ParsedModel, error) {
 
 				if len(individualRiskInstance.MostRelevantCommunicationLink) > 0 {
 					mostRelevantCommunicationLinkId = fmt.Sprintf("%v", individualRiskInstance.MostRelevantCommunicationLink)
-					err := parsedModel.checkCommunicationLinkExists(mostRelevantCommunicationLinkId, "individual risk '"+title+"'")
+					err := parsedModel.CheckCommunicationLinkExists(mostRelevantCommunicationLinkId, "individual risk '"+title+"'")
 					if err != nil {
 						return nil, err
 					}
@@ -561,7 +531,7 @@ func ParseModel(modelInput *input.ModelInput) (*ParsedModel, error) {
 
 				if len(individualRiskInstance.MostRelevantTrustBoundary) > 0 {
 					mostRelevantTrustBoundaryId = fmt.Sprintf("%v", individualRiskInstance.MostRelevantTrustBoundary)
-					err := parsedModel.checkTrustBoundaryExists(mostRelevantTrustBoundaryId, "individual risk '"+title+"'")
+					err := parsedModel.CheckTrustBoundaryExists(mostRelevantTrustBoundaryId, "individual risk '"+title+"'")
 					if err != nil {
 						return nil, err
 					}
@@ -569,7 +539,7 @@ func ParseModel(modelInput *input.ModelInput) (*ParsedModel, error) {
 
 				if len(individualRiskInstance.MostRelevantSharedRuntime) > 0 {
 					mostRelevantSharedRuntimeId = fmt.Sprintf("%v", individualRiskInstance.MostRelevantSharedRuntime)
-					err := parsedModel.checkSharedRuntimeExists(mostRelevantSharedRuntimeId, "individual risk '"+title+"'")
+					err := parsedModel.CheckSharedRuntimeExists(mostRelevantSharedRuntimeId, "individual risk '"+title+"'")
 					if err != nil {
 						return nil, err
 					}
@@ -592,10 +562,10 @@ func ParseModel(modelInput *input.ModelInput) (*ParsedModel, error) {
 					}
 				}
 
-				individualRiskInstance := Risk{
+				individualRiskInstance := types.Risk{
 					SyntheticId:                     createSyntheticId(cat.Id, mostRelevantDataAssetId, mostRelevantTechnicalAssetId, mostRelevantCommunicationLinkId, mostRelevantTrustBoundaryId, mostRelevantSharedRuntimeId),
 					Title:                           fmt.Sprintf("%v", title),
-					Category:                        cat,
+					CategoryId:                      cat.Id,
 					Severity:                        severity,
 					ExploitationLikelihood:          exploitationLikelihood,
 					ExploitationImpact:              exploitationImpact,
@@ -613,7 +583,7 @@ func ParseModel(modelInput *input.ModelInput) (*ParsedModel, error) {
 	}
 
 	// Risk Tracking ===============================================================================
-	parsedModel.RiskTracking = make(map[string]RiskTracking)
+	parsedModel.RiskTracking = make(map[string]types.RiskTracking)
 	for syntheticRiskId, riskTracking := range modelInput.RiskTracking {
 		justification := fmt.Sprintf("%v", riskTracking.Justification)
 		checkedBy := fmt.Sprintf("%v", riskTracking.CheckedBy)
@@ -632,7 +602,7 @@ func ParseModel(modelInput *input.ModelInput) (*ParsedModel, error) {
 			return nil, errors.New("unknown 'status' value of risk tracking '" + syntheticRiskId + "': " + riskTracking.Status)
 		}
 
-		tracking := RiskTracking{
+		tracking := types.RiskTracking{
 			SyntheticRiskId: strings.TrimSpace(syntheticRiskId),
 			Justification:   justification,
 			CheckedBy:       checkedBy,
@@ -663,6 +633,14 @@ func checkIdSyntax(id string) error {
 		return errors.New("invalid id syntax used (only letters, numbers, and hyphen allowed): " + id)
 	}
 	return nil
+}
+
+func createDataFlowId(sourceAssetId, title string) (string, error) {
+	reg, err := regexp.Compile("[^A-Za-z0-9]+")
+	if err != nil {
+		return "", err
+	}
+	return sourceAssetId + ">" + strings.Trim(reg.ReplaceAllString(strings.ToLower(title), "-"), "- "), nil
 }
 
 func createSyntheticId(categoryId string,
@@ -711,198 +689,4 @@ func lowerCaseAndTrim(tags []string) []string {
 		tags[i] = strings.ToLower(strings.TrimSpace(tags[i]))
 	}
 	return tags
-}
-
-func (parsedModel *ParsedModel) checkTags(tags []string, where string) ([]string, error) {
-	var tagsUsed = make([]string, 0)
-	if tags != nil {
-		tagsUsed = make([]string, len(tags))
-		for i, parsedEntry := range tags {
-			referencedTag := fmt.Sprintf("%v", parsedEntry)
-			err := parsedModel.checkTagExists(referencedTag, where)
-			if err != nil {
-				return nil, err
-			}
-			tagsUsed[i] = referencedTag
-		}
-	}
-	return tagsUsed, nil
-}
-
-func (parsedModel *ParsedModel) checkTagExists(referencedTag, where string) error {
-	if !contains(parsedModel.TagsAvailable, referencedTag) {
-		return errors.New("missing referenced tag in overall tag list at " + where + ": " + referencedTag)
-	}
-	return nil
-}
-
-func createDataFlowId(sourceAssetId, title string) (string, error) {
-	reg, err := regexp.Compile("[^A-Za-z0-9]+")
-	if err != nil {
-		return "", err
-	}
-	return sourceAssetId + ">" + strings.Trim(reg.ReplaceAllString(strings.ToLower(title), "-"), "- "), nil
-}
-
-func (parsedModel *ParsedModel) checkDataAssetTargetExists(referencedAsset, where string) error {
-	if _, ok := parsedModel.DataAssets[referencedAsset]; !ok {
-		return errors.New("missing referenced data asset target at " + where + ": " + referencedAsset)
-	}
-	return nil
-}
-
-func (parsedModel *ParsedModel) checkTrustBoundaryExists(referencedId, where string) error {
-	if _, ok := parsedModel.TrustBoundaries[referencedId]; !ok {
-		return errors.New("missing referenced trust boundary at " + where + ": " + referencedId)
-	}
-	return nil
-}
-
-func (parsedModel *ParsedModel) checkSharedRuntimeExists(referencedId, where string) error {
-	if _, ok := parsedModel.SharedRuntimes[referencedId]; !ok {
-		return errors.New("missing referenced shared runtime at " + where + ": " + referencedId)
-	}
-	return nil
-}
-
-func (parsedModel *ParsedModel) checkCommunicationLinkExists(referencedId, where string) error {
-	if _, ok := parsedModel.CommunicationLinks[referencedId]; !ok {
-		return errors.New("missing referenced communication link at " + where + ": " + referencedId)
-	}
-	return nil
-}
-
-func (parsedModel *ParsedModel) CheckTechnicalAssetExists(referencedAsset, where string, onlyForTweak bool) error {
-	if _, ok := parsedModel.TechnicalAssets[referencedAsset]; !ok {
-		suffix := ""
-		if onlyForTweak {
-			suffix = " (only referenced in diagram tweak)"
-		}
-		return errors.New("missing referenced technical asset target" + suffix + " at " + where + ": " + referencedAsset)
-	}
-	return nil
-}
-
-func (parsedModel *ParsedModel) checkNestedTrustBoundariesExisting() error {
-	for _, trustBoundary := range parsedModel.TrustBoundaries {
-		for _, nestedId := range trustBoundary.TrustBoundariesNested {
-			if _, ok := parsedModel.TrustBoundaries[nestedId]; !ok {
-				return errors.New("missing referenced nested trust boundary: " + nestedId)
-			}
-		}
-	}
-	return nil
-}
-
-func CalculateSeverity(likelihood types.RiskExploitationLikelihood, impact types.RiskExploitationImpact) types.RiskSeverity {
-	result := likelihood.Weight() * impact.Weight()
-	if result <= 1 {
-		return types.LowSeverity
-	}
-	if result <= 3 {
-		return types.MediumSeverity
-	}
-	if result <= 8 {
-		return types.ElevatedSeverity
-	}
-	if result <= 12 {
-		return types.HighSeverity
-	}
-	return types.CriticalSeverity
-}
-
-func (parsedModel *ParsedModel) InScopeTechnicalAssets() []TechnicalAsset {
-	result := make([]TechnicalAsset, 0)
-	for _, asset := range parsedModel.TechnicalAssets {
-		if !asset.OutOfScope {
-			result = append(result, asset)
-		}
-	}
-	return result
-}
-
-func (parsedModel *ParsedModel) SortedTechnicalAssetIDs() []string {
-	res := make([]string, 0)
-	for id := range parsedModel.TechnicalAssets {
-		res = append(res, id)
-	}
-	sort.Strings(res)
-	return res
-}
-
-func (parsedModel *ParsedModel) TagsActuallyUsed() []string {
-	result := make([]string, 0)
-	for _, tag := range parsedModel.TagsAvailable {
-		if len(parsedModel.TechnicalAssetsTaggedWithAny(tag)) > 0 ||
-			len(parsedModel.CommunicationLinksTaggedWithAny(tag)) > 0 ||
-			len(parsedModel.DataAssetsTaggedWithAny(tag)) > 0 ||
-			len(parsedModel.TrustBoundariesTaggedWithAny(tag)) > 0 ||
-			len(parsedModel.SharedRuntimesTaggedWithAny(tag)) > 0 {
-			result = append(result, tag)
-		}
-	}
-	return result
-}
-
-func (parsedModel *ParsedModel) TechnicalAssetsTaggedWithAny(tags ...string) []TechnicalAsset {
-	result := make([]TechnicalAsset, 0)
-	for _, candidate := range parsedModel.TechnicalAssets {
-		if candidate.IsTaggedWithAny(tags...) {
-			result = append(result, candidate)
-		}
-	}
-	return result
-}
-
-func (parsedModel *ParsedModel) CommunicationLinksTaggedWithAny(tags ...string) []CommunicationLink {
-	result := make([]CommunicationLink, 0)
-	for _, asset := range parsedModel.TechnicalAssets {
-		for _, candidate := range asset.CommunicationLinks {
-			if candidate.IsTaggedWithAny(tags...) {
-				result = append(result, candidate)
-			}
-		}
-	}
-	return result
-}
-
-func (parsedModel *ParsedModel) DataAssetsTaggedWithAny(tags ...string) []DataAsset {
-	result := make([]DataAsset, 0)
-	for _, candidate := range parsedModel.DataAssets {
-		if candidate.IsTaggedWithAny(tags...) {
-			result = append(result, candidate)
-		}
-	}
-	return result
-}
-
-func (parsedModel *ParsedModel) TrustBoundariesTaggedWithAny(tags ...string) []TrustBoundary {
-	result := make([]TrustBoundary, 0)
-	for _, candidate := range parsedModel.TrustBoundaries {
-		if candidate.IsTaggedWithAny(tags...) {
-			result = append(result, candidate)
-		}
-	}
-	return result
-}
-
-func (parsedModel *ParsedModel) SharedRuntimesTaggedWithAny(tags ...string) []SharedRuntime {
-	result := make([]SharedRuntime, 0)
-	for _, candidate := range parsedModel.SharedRuntimes {
-		if candidate.IsTaggedWithAny(tags...) {
-			result = append(result, candidate)
-		}
-	}
-	return result
-}
-
-func (parsedModel *ParsedModel) OutOfScopeTechnicalAssets() []TechnicalAsset {
-	assets := make([]TechnicalAsset, 0)
-	for _, asset := range parsedModel.TechnicalAssets {
-		if asset.OutOfScope {
-			assets = append(assets, asset)
-		}
-	}
-	sort.Sort(ByTechnicalAssetTitleSort(assets))
-	return assets
 }

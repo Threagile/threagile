@@ -1,20 +1,19 @@
 package untrusted_deserialization
 
 import (
-	"github.com/threagile/threagile/pkg/model"
 	"github.com/threagile/threagile/pkg/security/types"
 )
 
-func Rule() model.CustomRiskRule {
-	return model.CustomRiskRule{
+func Rule() types.RiskRule {
+	return types.RiskRule{
 		Category:      Category,
 		SupportedTags: SupportedTags,
 		GenerateRisks: GenerateRisks,
 	}
 }
 
-func Category() model.RiskCategory {
-	return model.RiskCategory{
+func Category() types.RiskCategory {
+	return types.RiskCategory{
 		Id:    "untrusted-deserialization",
 		Title: "Untrusted Deserialization",
 		Description: "When a technical asset accepts data in a specific serialized form (like Java or .NET serialization), " +
@@ -45,8 +44,8 @@ func SupportedTags() []string {
 	return []string{}
 }
 
-func GenerateRisks(input *model.ParsedModel) []model.Risk {
-	risks := make([]model.Risk, 0)
+func GenerateRisks(input *types.ParsedModel) []types.Risk {
+	risks := make([]types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
 		if technicalAsset.OutOfScope {
@@ -80,7 +79,7 @@ func GenerateRisks(input *model.ParsedModel) []model.Risk {
 	return risks
 }
 
-func createRisk(parsedModel *model.ParsedModel, technicalAsset model.TechnicalAsset, acrossTrustBoundary bool, commLinkTitle string) model.Risk {
+func createRisk(parsedModel *types.ParsedModel, technicalAsset types.TechnicalAsset, acrossTrustBoundary bool, commLinkTitle string) types.Risk {
 	title := "<b>Untrusted Deserialization</b> risk at <b>" + technicalAsset.Title + "</b>"
 	impact := types.HighImpact
 	likelihood := types.Likely
@@ -93,9 +92,9 @@ func createRisk(parsedModel *model.ParsedModel, technicalAsset model.TechnicalAs
 		technicalAsset.HighestAvailability(parsedModel) == types.MissionCritical {
 		impact = types.VeryHighImpact
 	}
-	risk := model.Risk{
-		Category:                     Category(),
-		Severity:                     model.CalculateSeverity(likelihood, impact),
+	risk := types.Risk{
+		CategoryId:                   Category().Id,
+		Severity:                     types.CalculateSeverity(likelihood, impact),
 		ExploitationLikelihood:       likelihood,
 		ExploitationImpact:           impact,
 		Title:                        title,
@@ -103,6 +102,6 @@ func createRisk(parsedModel *model.ParsedModel, technicalAsset model.TechnicalAs
 		DataBreachProbability:        types.Probable,
 		DataBreachTechnicalAssetIDs:  []string{technicalAsset.Id},
 	}
-	risk.SyntheticId = risk.Category.Id + "@" + technicalAsset.Id
+	risk.SyntheticId = risk.CategoryId + "@" + technicalAsset.Id
 	return risk
 }

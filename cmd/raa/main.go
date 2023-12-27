@@ -1,49 +1,40 @@
 package main
 
 import (
-	"bufio"
 	"encoding/json"
 	"fmt"
-	"io"
 	"os"
 	"sort"
 
-	"github.com/threagile/threagile/pkg/model"
 	"github.com/threagile/threagile/pkg/security/types"
 )
 
 // used from run caller:
 
 func main() {
-	reader := bufio.NewReader(os.Stdin)
-	inData, outError := io.ReadAll(reader)
-	if outError != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "failed to read model data from stdin\n")
-		os.Exit(-2)
-	}
-
-	var input model.ParsedModel
-	inError := json.Unmarshal(inData, &input)
+	var input types.ParsedModel
+	decoder := json.NewDecoder(os.Stdin)
+	inError := decoder.Decode(&input)
 	if inError != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "failed to parse model: %v\n", inError)
-		_, _ = fmt.Fprint(os.Stderr, string(inData))
 		_, _ = fmt.Fprintf(os.Stderr, "\n")
 		os.Exit(-2)
 	}
 
 	text := CalculateRAA(&input)
-	outData, marshalError := json.Marshal(input)
+	outData, marshalError := json.MarshalIndent(input, "", "  ")
 	if marshalError != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "failed to print model: %v\n", marshalError)
 		os.Exit(-2)
 	}
 
 	_, _ = fmt.Fprint(os.Stdout, string(outData))
-	_, _ = fmt.Fprint(os.Stderr, text)
+	_ = text
+	//	_, _ = fmt.Fprint(os.Stderr, text)
 	os.Exit(0)
 }
 
-func CalculateRAA(input *model.ParsedModel) string {
+func CalculateRAA(input *types.ParsedModel) string {
 	for techAssetID, techAsset := range input.TechnicalAssets {
 		aa := calculateAttackerAttractiveness(input, techAsset)
 		aa += calculatePivotingNeighbourEffectAdjustment(input, techAsset)
@@ -63,7 +54,7 @@ func CalculateRAA(input *model.ParsedModel) string {
 var attackerAttractivenessMinimum, attackerAttractivenessMaximum, spread float64 = 0, 0, 0
 
 // set the concrete value in relation to the minimum and maximum of all
-func calculateRelativeAttackerAttractiveness(input *model.ParsedModel, attractiveness float64) float64 {
+func calculateRelativeAttackerAttractiveness(input *types.ParsedModel, attractiveness float64) float64 {
 	if attackerAttractivenessMinimum == 0 || attackerAttractivenessMaximum == 0 {
 		attackerAttractivenessMinimum, attackerAttractivenessMaximum = 9223372036854775807, -9223372036854775808
 		// determine (only one time required) the min/max of all
@@ -98,7 +89,7 @@ func calculateRelativeAttackerAttractiveness(input *model.ParsedModel, attractiv
 }
 
 // increase the RAA (relative attacker attractiveness) by one third (1/3) of the delta to the highest outgoing neighbour (if positive delta)
-func calculatePivotingNeighbourEffectAdjustment(input *model.ParsedModel, techAsset model.TechnicalAsset) float64 {
+func calculatePivotingNeighbourEffectAdjustment(input *types.ParsedModel, techAsset types.TechnicalAsset) float64 {
 	if techAsset.OutOfScope {
 		return 0
 	}
@@ -121,7 +112,7 @@ func calculatePivotingNeighbourEffectAdjustment(input *model.ParsedModel, techAs
 
 // The sum of all CIAs of the asset itself (fibonacci scale) plus the sum of the comm-links' transferred CIAs
 // Multiplied by the quantity values of the data asset for C and I (not A)
-func calculateAttackerAttractiveness(input *model.ParsedModel, techAsset model.TechnicalAsset) float64 {
+func calculateAttackerAttractiveness(input *types.ParsedModel, techAsset types.TechnicalAsset) float64 {
 	if techAsset.OutOfScope {
 		return 0
 	}

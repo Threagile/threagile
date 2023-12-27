@@ -1,12 +1,12 @@
 package seed_tags
 
 import (
+	"github.com/threagile/threagile/pkg/security/types"
 	"sort"
 	"strconv"
 
 	"github.com/threagile/threagile/pkg/input"
 	"github.com/threagile/threagile/pkg/macros"
-	"github.com/threagile/threagile/pkg/model"
 )
 
 func GetMacroDetails() macros.MacroDetails {
@@ -33,7 +33,7 @@ func GetFinalChangeImpact(_ *input.ModelInput) (changes []string, message string
 	return []string{"seed the model file with supported tags from all risk rules"}, "Changeset valid", true, err
 }
 
-func Execute(modelInput *input.ModelInput, parsedModel *model.ParsedModel) (message string, validResult bool, err error) {
+func Execute(modelInput *input.ModelInput, parsedModel *types.ParsedModel) (message string, validResult bool, err error) {
 	tagMap := make(map[string]bool)
 	for k, v := range parsedModel.AllSupportedTags {
 		tagMap[k] = v

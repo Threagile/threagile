@@ -1,12 +1,12 @@
 package remove_unused_tags
 
 import (
+	"github.com/threagile/threagile/pkg/security/types"
 	"sort"
 	"strconv"
 
 	"github.com/threagile/threagile/pkg/input"
 	"github.com/threagile/threagile/pkg/macros"
-	"github.com/threagile/threagile/pkg/model"
 )
 
 func GetMacroDetails() macros.MacroDetails {
@@ -33,7 +33,7 @@ func GetFinalChangeImpact(_ *input.ModelInput) (changes []string, message string
 	return []string{"remove unused tags from the model file"}, "Changeset valid", true, err
 }
 
-func Execute(modelInput *input.ModelInput, parsedModel *model.ParsedModel) (message string, validResult bool, err error) {
+func Execute(modelInput *input.ModelInput, parsedModel *types.ParsedModel) (message string, validResult bool, err error) {
 	tagUsageMap := make(map[string]bool)
 	for _, tag := range parsedModel.TagsAvailable {
 		tagUsageMap[tag] = false // false = tag is not used
