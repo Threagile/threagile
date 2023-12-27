@@ -1,7 +1,6 @@
 package threagile
 
 import (
-	"archive/zip"
 	"bufio"
 	"bytes"
 	"compress/gzip"
@@ -15,8 +14,11 @@ import (
 	"errors"
 	"flag"
 	"fmt" // TODO: no fmt.Println here
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/threagile/threagile/pkg/model"
 	"github.com/threagile/threagile/pkg/security/risks"
+	"golang.org/x/crypto/argon2"
 	"hash/fnv"
 	"io"
 	"log"
@@ -41,11 +43,8 @@ import (
 	seedrisktracking "github.com/threagile/threagile/pkg/macros/built-in/seed-risk-tracking"
 	seedtags "github.com/threagile/threagile/pkg/macros/built-in/seed-tags"
 
-	"golang.org/x/crypto/argon2"
 	"gopkg.in/yaml.v3"
 
-	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/threagile/threagile/pkg/colors"
 	"github.com/threagile/threagile/pkg/docs"
 	"github.com/threagile/threagile/pkg/input"
@@ -69,7 +68,6 @@ type Context struct {
 	drawSpaceLinesForLayoutUnfortunatelyFurtherSeparatesAllRanks bool
 	buildTimestamp                                               string
 
-	globalLock sync.Mutex
 	modelInput input.ModelInput
 
 	// TODO: remove refactoring note below
@@ -268,196 +266,6 @@ func (context *Context) applyRiskGeneration() {
 			context.parsedModel.GeneratedRisksBySyntheticId[strings.ToLower(risk.SyntheticId)] = risk
 		}
 	}
-}
-
-// Unzip will decompress a zip archive, moving all files and folders
-// within the zip file (parameter 1) to an output directory (parameter 2).
-func (context *Context) unzip(src string, dest string) ([]string, error) {
-	var filenames []string
-
-	r, err := zip.OpenReader(src)
-	if err != nil {
-		return filenames, err
-	}
-	defer func() { _ = r.Close() }()
-
-	for _, f := range r.File {
-		// Store filename/path for returning and using later on
-		path := filepath.Join(dest, f.Name)
-		// Check for ZipSlip. More Info: http://bit.ly/2MsjAWE
-		if !strings.HasPrefix(path, filepath.Clean(dest)+string(os.PathSeparator)) {
-			return filenames, fmt.Errorf("%s: illegal file path", path)
-		}
-		filenames = append(filenames, path)
-		if f.FileInfo().IsDir() {
-			// Make Folder
-			_ = os.MkdirAll(path, os.ModePerm)
-			continue
-		}
-		// Make File
-		if err = os.MkdirAll(filepath.Dir(path), os.ModePerm); err != nil {
-			return filenames, err
-		}
-		if path != filepath.Clean(path) {
-			return filenames, fmt.Errorf("weird file path %v", path)
-		}
-		outFile, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
-		if err != nil {
-			return filenames, err
-		}
-		rc, err := f.Open()
-		if err != nil {
-			return filenames, err
-		}
-		_, err = io.Copy(outFile, rc)
-		// Close the file without defer to close before next iteration of loop
-		_ = outFile.Close()
-		_ = rc.Close()
-		if err != nil {
-			return filenames, err
-		}
-	}
-	return filenames, nil
-}
-
-// ZipFiles compresses one or many files into a single zip archive file.
-// Param 1: filename is the output zip file's name.
-// Param 2: files is a list of files to add to the zip.
-func (context *Context) zipFiles(filename string, files []string) error {
-	newZipFile, err := os.Create(filename)
-	if err != nil {
-		return err
-	}
-	defer func() { _ = newZipFile.Close() }()
-
-	zipWriter := zip.NewWriter(newZipFile)
-	defer func() { _ = zipWriter.Close() }()
-
-	// Add files to zip
-	for _, file := range files {
-		if err = context.addFileToZip(zipWriter, file); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (context *Context) addFileToZip(zipWriter *zip.Writer, filename string) error {
-	fileToZip, err := os.Open(filename)
-	if err != nil {
-		return err
-	}
-	defer func() { _ = fileToZip.Close() }()
-
-	// Get the file information
-	info, err := fileToZip.Stat()
-	if err != nil {
-		return err
-	}
-
-	header, err := zip.FileInfoHeader(info)
-	if err != nil {
-		return err
-	}
-
-	// Using FileInfoHeader() above only uses the basename of the file. If we want
-	// to preserve the folder structure we can overwrite this with the full path.
-	//header.Name = filename
-
-	// Change to deflate to gain better compression
-	// see http://golang.org/pkg/archive/zip/#pkg-constants
-	header.Method = zip.Deflate
-
-	writer, err := zipWriter.CreateHeader(header)
-	if err != nil {
-		return err
-	}
-	_, err = io.Copy(writer, fileToZip)
-	return err
-}
-
-func (context *Context) analyzeModelOnServerDirectly(ginContext *gin.Context) {
-	folderNameOfKey, key, ok := context.checkTokenToFolderName(ginContext)
-	if !ok {
-		return
-	}
-	context.lockFolder(folderNameOfKey)
-	defer func() {
-		context.unlockFolder(folderNameOfKey)
-		var err error
-		if r := recover(); r != nil {
-			err = r.(error)
-			if *context.verbose {
-				log.Println(err)
-			}
-			log.Println(err)
-			ginContext.JSON(http.StatusBadRequest, gin.H{
-				"error": strings.TrimSpace(err.Error()),
-			})
-			ok = false
-		}
-	}()
-
-	dpi, err := strconv.Atoi(ginContext.DefaultQuery("dpi", strconv.Itoa(context.DefaultGraphvizDPI)))
-	if err != nil {
-		handleErrorInServiceCall(err, ginContext)
-		return
-	}
-
-	_, yamlText, ok := context.readModel(ginContext, ginContext.Param("model-id"), key, folderNameOfKey)
-	if !ok {
-		return
-	}
-	tmpModelFile, err := os.CreateTemp(*context.tempFolder, "threagile-direct-analyze-*")
-	if err != nil {
-		handleErrorInServiceCall(err, ginContext)
-		return
-	}
-	defer func() { _ = os.Remove(tmpModelFile.Name()) }()
-	tmpOutputDir, err := os.MkdirTemp(*context.tempFolder, "threagile-direct-analyze-")
-	if err != nil {
-		handleErrorInServiceCall(err, ginContext)
-		return
-	}
-	defer func() { _ = os.RemoveAll(tmpOutputDir) }()
-	tmpResultFile, err := os.CreateTemp(*context.tempFolder, "threagile-result-*.zip")
-	checkErr(err)
-	defer func() { _ = os.Remove(tmpResultFile.Name()) }()
-
-	err = os.WriteFile(tmpModelFile.Name(), []byte(yamlText), 0400)
-
-	context.doItViaRuntimeCall(tmpModelFile.Name(), tmpOutputDir, true, true, true, true, true, true, true, true, dpi)
-	if err != nil {
-		handleErrorInServiceCall(err, ginContext)
-		return
-	}
-	err = os.WriteFile(filepath.Join(tmpOutputDir, context.inputFile), []byte(yamlText), 0400)
-	if err != nil {
-		handleErrorInServiceCall(err, ginContext)
-		return
-	}
-
-	files := []string{
-		filepath.Join(tmpOutputDir, context.inputFile),
-		filepath.Join(tmpOutputDir, context.dataFlowDiagramFilenamePNG),
-		filepath.Join(tmpOutputDir, context.dataAssetDiagramFilenamePNG),
-		filepath.Join(tmpOutputDir, context.reportFilename),
-		filepath.Join(tmpOutputDir, context.excelRisksFilename),
-		filepath.Join(tmpOutputDir, context.excelTagsFilename),
-		filepath.Join(tmpOutputDir, context.jsonRisksFilename),
-		filepath.Join(tmpOutputDir, context.jsonTechnicalAssetsFilename),
-		filepath.Join(tmpOutputDir, context.jsonStatsFilename),
-	}
-	if context.keepDiagramSourceFiles {
-		files = append(files, filepath.Join(tmpOutputDir, context.dataFlowDiagramFilenameDOT))
-		files = append(files, filepath.Join(tmpOutputDir, context.dataAssetDiagramFilenameDOT))
-	}
-	err = context.zipFiles(tmpResultFile.Name(), files)
-	checkErr(err)
-	if *context.verbose {
-		fmt.Println("Streaming back result file: " + tmpResultFile.Name())
-	}
-	ginContext.FileAttachment(tmpResultFile.Name(), "threagile-result.zip")
 }
 
 func (context *Context) writeDataFlowDiagramGraphvizDOT(diagramFilenameDOT string, dpi int) *os.File {
@@ -1237,183 +1045,6 @@ func (context *Context) applyRAA() string {
 	}
 
 	return runner.ErrorOutput
-}
-
-func (context *Context) analyze(ginContext *gin.Context) {
-	context.execute(ginContext, false)
-}
-
-func (context *Context) check(ginContext *gin.Context) {
-	_, ok := context.execute(ginContext, true)
-	if ok {
-		ginContext.JSON(http.StatusOK, gin.H{
-			"message": "model is ok",
-		})
-	}
-}
-
-func (context *Context) execute(ginContext *gin.Context, dryRun bool) (yamlContent []byte, ok bool) {
-	defer func() {
-		var err error
-		if r := recover(); r != nil {
-			context.errorCount++
-			err = r.(error)
-			log.Println(err)
-			ginContext.JSON(http.StatusBadRequest, gin.H{
-				"error": strings.TrimSpace(err.Error()),
-			})
-			ok = false
-		}
-	}()
-
-	dpi, err := strconv.Atoi(ginContext.DefaultQuery("dpi", strconv.Itoa(context.DefaultGraphvizDPI)))
-	checkErr(err)
-
-	fileUploaded, header, err := ginContext.Request.FormFile("file")
-	checkErr(err)
-
-	if header.Size > 50000000 {
-		msg := "maximum model upload file size exceeded (denial-of-service protection)"
-		log.Println(msg)
-		ginContext.JSON(http.StatusRequestEntityTooLarge, gin.H{
-			"error": msg,
-		})
-		return yamlContent, false
-	}
-
-	filenameUploaded := strings.TrimSpace(header.Filename)
-
-	tmpInputDir, err := os.MkdirTemp(*context.tempFolder, "threagile-input-")
-	checkErr(err)
-	defer func() { _ = os.RemoveAll(tmpInputDir) }()
-
-	tmpModelFile, err := os.CreateTemp(tmpInputDir, "threagile-model-*")
-	checkErr(err)
-	defer func() { _ = os.Remove(tmpModelFile.Name()) }()
-	_, err = io.Copy(tmpModelFile, fileUploaded)
-	checkErr(err)
-
-	yamlFile := tmpModelFile.Name()
-
-	if strings.ToLower(filepath.Ext(filenameUploaded)) == ".zip" {
-		// unzip first (including the resources like images etc.)
-		if *context.verbose {
-			fmt.Println("Decompressing uploaded archive")
-		}
-		filenamesUnzipped, err := context.unzip(tmpModelFile.Name(), tmpInputDir)
-		checkErr(err)
-		found := false
-		for _, name := range filenamesUnzipped {
-			if strings.ToLower(filepath.Ext(name)) == ".yaml" {
-				yamlFile = name
-				found = true
-				break
-			}
-		}
-		if !found {
-			panic(errors.New("no yaml file found in uploaded archive"))
-		}
-	}
-
-	tmpOutputDir, err := os.MkdirTemp(*context.tempFolder, "threagile-output-")
-	checkErr(err)
-	defer func() { _ = os.RemoveAll(tmpOutputDir) }()
-
-	tmpResultFile, err := os.CreateTemp(*context.tempFolder, "threagile-result-*.zip")
-	checkErr(err)
-	defer func() { _ = os.Remove(tmpResultFile.Name()) }()
-
-	if dryRun {
-		context.doItViaRuntimeCall(yamlFile, tmpOutputDir, false, false, false, false, false, true, true, true, 40)
-	} else {
-		context.doItViaRuntimeCall(yamlFile, tmpOutputDir, true, true, true, true, true, true, true, true, dpi)
-	}
-	checkErr(err)
-
-	yamlContent, err = os.ReadFile(yamlFile)
-	checkErr(err)
-	err = os.WriteFile(filepath.Join(tmpOutputDir, context.inputFile), yamlContent, 0400)
-	checkErr(err)
-
-	if !dryRun {
-		files := []string{
-			filepath.Join(tmpOutputDir, context.inputFile),
-			filepath.Join(tmpOutputDir, context.dataFlowDiagramFilenamePNG),
-			filepath.Join(tmpOutputDir, context.dataAssetDiagramFilenamePNG),
-			filepath.Join(tmpOutputDir, context.reportFilename),
-			filepath.Join(tmpOutputDir, context.excelRisksFilename),
-			filepath.Join(tmpOutputDir, context.excelTagsFilename),
-			filepath.Join(tmpOutputDir, context.jsonRisksFilename),
-			filepath.Join(tmpOutputDir, context.jsonTechnicalAssetsFilename),
-			filepath.Join(tmpOutputDir, context.jsonStatsFilename),
-		}
-		if context.keepDiagramSourceFiles {
-			files = append(files, filepath.Join(tmpOutputDir, context.dataFlowDiagramFilenameDOT))
-			files = append(files, filepath.Join(tmpOutputDir, context.dataAssetDiagramFilenameDOT))
-		}
-		err = context.zipFiles(tmpResultFile.Name(), files)
-		checkErr(err)
-		if *context.verbose {
-			log.Println("Streaming back result file: " + tmpResultFile.Name())
-		}
-		ginContext.FileAttachment(tmpResultFile.Name(), "threagile-result.zip")
-	}
-	context.successCount++
-	return yamlContent, true
-}
-
-// ultimately to avoid any in-process memory and/or data leaks by the used third party libs like PDF generation: exec and quit
-func (context *Context) doItViaRuntimeCall(modelFile string, outputDir string,
-	generateDataFlowDiagram, generateDataAssetDiagram, generateReportPdf, generateRisksExcel, generateTagsExcel, generateRisksJSON, generateTechnicalAssetsJSON, generateStatsJSON bool,
-	dpi int) {
-	// Remember to also add the same args to the exec based sub-process calls!
-	var cmd *exec.Cmd
-	args := []string{"-model", modelFile, "-output", outputDir, "-execute-model-macro", *context.executeModelMacro, "-raa-run", *context.raaPlugin, "-custom-risk-rules-plugins", *context.riskRulesPlugins, "-skip-risk-rules", *context.skipRiskRules, "-diagram-dpi", strconv.Itoa(dpi)}
-	if *context.verbose {
-		args = append(args, "-verbose")
-	}
-	if *context.ignoreOrphanedRiskTracking { // TODO why add all them as arguments, when they are also variables on outer level?
-		args = append(args, "-ignore-orphaned-risk-tracking")
-	}
-	if generateDataFlowDiagram {
-		args = append(args, "-generate-data-flow-diagram")
-	}
-	if generateDataAssetDiagram {
-		args = append(args, "-generate-data-asset-diagram")
-	}
-	if generateReportPdf {
-		args = append(args, "-generate-report-pdf")
-	}
-	if generateRisksExcel {
-		args = append(args, "-generate-risks-excel")
-	}
-	if generateTagsExcel {
-		args = append(args, "-generate-tags-excel")
-	}
-	if generateRisksJSON {
-		args = append(args, "-generate-risks-json")
-	}
-	if generateTechnicalAssetsJSON {
-		args = append(args, "-generate-technical-assets-json")
-	}
-	if generateStatsJSON {
-		args = append(args, "-generate-stats-json")
-	}
-	self, nameError := os.Executable()
-	if nameError != nil {
-		panic(nameError)
-	}
-	cmd = exec.Command(self, args...)
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		panic(errors.New(string(out)))
-	} else {
-		if *context.verbose && len(out) > 0 {
-			fmt.Println("---")
-			fmt.Print(string(out))
-			fmt.Println("---")
-		}
-	}
 }
 
 func (context *Context) StartServer() {
