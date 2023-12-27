@@ -17,10 +17,9 @@ func main() {
 
 	// TODO: remove below as soon as refactoring is finished - everything will go through rootCmd.Execute
 	// for now it's fine to have as frequently uncommented to see the actual behaviour
-	context := new(threagile.Context).Defaults(buildTimestamp)
-	context.ParseCommandlineArgs()
+	context := new(threagile.Context).Defaults(buildTimestamp).ParseCommandlineArgs()
 	if context.ServerMode {
-		server.RunServer(server.Configuration{})
+		server.RunServer(context.Config)
 	} else {
 		context.DoIt()
 	}
