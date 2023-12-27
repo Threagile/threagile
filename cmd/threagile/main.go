@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/threagile/threagile/internal/threagile"
+	"github.com/threagile/threagile/pkg/server"
 )
 
 const (
@@ -19,7 +20,7 @@ func main() {
 	context := new(threagile.Context).Defaults(buildTimestamp)
 	context.ParseCommandlineArgs()
 	if context.ServerMode {
-		context.StartServer()
+		server.RunServer(server.Configuration{})
 	} else {
 		context.DoIt()
 	}

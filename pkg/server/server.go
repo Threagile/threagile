@@ -21,7 +21,7 @@ import (
 )
 
 type server struct {
-	configuration                  ServerConfiguration
+	configuration                  Configuration
 	successCount                   int
 	errorCount                     int
 	globalLock                     sync.Mutex
@@ -33,7 +33,7 @@ type server struct {
 	locksByFolderName              map[string]*sync.Mutex
 }
 
-type ServerConfiguration struct {
+type Configuration struct {
 	ServerFolder                string
 	AppDir                      string
 	BuildTimestamp              string
@@ -63,7 +63,7 @@ type ServerConfiguration struct {
 	BackupHistoryFilesToKeep    int
 }
 
-func RunServer(serverConfiguration ServerConfiguration) {
+func RunServer(serverConfiguration Configuration) {
 	server := &server{
 		configuration:                  serverConfiguration,
 		createdObjectsThrottler:        make(map[string][]int64),
