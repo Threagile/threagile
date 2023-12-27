@@ -1,10 +1,12 @@
 /*
 Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 */
+
 package server
 
 import (
 	"fmt"
+	"github.com/threagile/threagile/pkg/common"
 	"log"
 	"net/http"
 	"os"
@@ -21,7 +23,7 @@ import (
 )
 
 type server struct {
-	configuration                  Configuration
+	config                         common.Config
 	successCount                   int
 	errorCount                     int
 	globalLock                     sync.Mutex
@@ -31,41 +33,12 @@ type server struct {
 	mapFolderNameToTokenHash       map[string]string
 	extremeShortTimeoutsForTesting bool
 	locksByFolderName              map[string]*sync.Mutex
+	customRiskRules                map[string]*types.CustomRisk
 }
 
-type Configuration struct {
-	ServerFolder                string
-	AppDir                      string
-	BuildTimestamp              string
-	KeyDir                      string
-	InputFile                   string
-	ExecuteModelMacro           string
-	ServerPort                  int
-	Verbose                     bool
-	IgnoreOrphanedRiskTracking  bool
-	KeepDiagramSourceFiles      bool
-	CustomRiskRules             map[string]*types.CustomRisk
-	DefaultGraphvizDPI          int
-	TempFolder                  string
-	DataFlowDiagramFilenamePNG  string
-	DataAssetDiagramFilenamePNG string
-	DataFlowDiagramFilenameDOT  string
-	DataAssetDiagramFilenameDOT string
-	ReportFilename              string
-	ExcelRisksFilename          string
-	ExcelTagsFilename           string
-	JsonRisksFilename           string
-	JsonTechnicalAssetsFilename string
-	JsonStatsFilename           string
-	CustomRiskRulesPlugins      string
-	RaaPlugin                   string
-	SkipRiskRules               string
-	BackupHistoryFilesToKeep    int
-}
-
-func RunServer(serverConfiguration Configuration) {
-	server := &server{
-		configuration:                  serverConfiguration,
+func RunServer(config common.Config) {
+	s := &server{
+		config:                         config,
 		createdObjectsThrottler:        make(map[string][]int64),
 		mapTokenHashToTimeoutStruct:    make(map[string]timeoutStruct),
 		mapFolderNameToTokenHash:       make(map[string]string),
@@ -73,35 +46,35 @@ func RunServer(serverConfiguration Configuration) {
 		locksByFolderName:              make(map[string]*sync.Mutex),
 	}
 	router := gin.Default()
-	router.LoadHTMLGlob(filepath.Join(server.configuration.ServerFolder, "server/static/*.html")) // <==
+	router.LoadHTMLGlob(filepath.Join(s.config.ServerFolder, "s", "static", "*.html")) // <==
 	router.GET("/", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "index.html", gin.H{})
 	})
 	router.HEAD("/", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "index.html", gin.H{})
 	})
-	router.StaticFile("/threagile.png", filepath.Join(server.configuration.ServerFolder, "server/static/threagile.png")) // <==
-	router.StaticFile("/site.webmanifest", filepath.Join(server.configuration.ServerFolder, "server/static/site.webmanifest"))
-	router.StaticFile("/favicon.ico", filepath.Join(server.configuration.ServerFolder, "server/static/favicon.ico"))
-	router.StaticFile("/favicon-32x32.png", filepath.Join(server.configuration.ServerFolder, "server/static/favicon-32x32.png"))
-	router.StaticFile("/favicon-16x16.png", filepath.Join(server.configuration.ServerFolder, "server/static/favicon-16x16.png"))
-	router.StaticFile("/apple-touch-icon.png", filepath.Join(server.configuration.ServerFolder, "server/static/apple-touch-icon.png"))
-	router.StaticFile("/android-chrome-512x512.png", filepath.Join(server.configuration.ServerFolder, "server/static/android-chrome-512x512.png"))
-	router.StaticFile("/android-chrome-192x192.png", filepath.Join(server.configuration.ServerFolder, "server/static/android-chrome-192x192.png"))
+	router.StaticFile("/threagile.png", filepath.Join(s.config.ServerFolder, "s", "static", "threagile.png")) // <==
+	router.StaticFile("/site.webmanifest", filepath.Join(s.config.ServerFolder, "s", "static", "site.webmanifest"))
+	router.StaticFile("/favicon.ico", filepath.Join(s.config.ServerFolder, "s", "static", "favicon.ico"))
+	router.StaticFile("/favicon-32x32.png", filepath.Join(s.config.ServerFolder, "s", "static", "favicon-32x32.png"))
+	router.StaticFile("/favicon-16x16.png", filepath.Join(s.config.ServerFolder, "s", "static", "favicon-16x16.png"))
+	router.StaticFile("/apple-touch-icon.png", filepath.Join(s.config.ServerFolder, "s", "static", "apple-touch-icon.png"))
+	router.StaticFile("/android-chrome-512x512.png", filepath.Join(s.config.ServerFolder, "s", "static", "android-chrome-512x512.png"))
+	router.StaticFile("/android-chrome-192x192.png", filepath.Join(s.config.ServerFolder, "s", "static", "android-chrome-192x192.png"))
 
-	router.StaticFile("/schema.json", filepath.Join(server.configuration.AppDir, "schema.json"))
-	router.StaticFile("/live-templates.txt", filepath.Join(server.configuration.AppDir, "live-templates.txt"))
-	router.StaticFile("/openapi.yaml", filepath.Join(server.configuration.AppDir, "openapi.yaml"))
-	router.StaticFile("/swagger-ui/", filepath.Join(server.configuration.ServerFolder, "server/static/swagger-ui/index.html"))
-	router.StaticFile("/swagger-ui/index.html", filepath.Join(server.configuration.ServerFolder, "server/static/swagger-ui/index.html"))
-	router.StaticFile("/swagger-ui/oauth2-redirect.html", filepath.Join(server.configuration.ServerFolder, "server/static/swagger-ui/oauth2-redirect.html"))
-	router.StaticFile("/swagger-ui/swagger-ui.css", filepath.Join(server.configuration.ServerFolder, "server/static/swagger-ui/swagger-ui.css"))
-	router.StaticFile("/swagger-ui/swagger-ui.js", filepath.Join(server.configuration.ServerFolder, "server/static/swagger-ui/swagger-ui.js"))
-	router.StaticFile("/swagger-ui/swagger-ui-bundle.js", filepath.Join(server.configuration.ServerFolder, "server/static/swagger-ui/swagger-ui-bundle.js"))
-	router.StaticFile("/swagger-ui/swagger-ui-standalone-preset.js", filepath.Join(server.configuration.ServerFolder, "server/static/swagger-ui/swagger-ui-standalone-preset.js")) // <==
+	router.StaticFile("/schema.json", filepath.Join(s.config.AppFolder, "schema.json"))
+	router.StaticFile("/live-templates.txt", filepath.Join(s.config.AppFolder, "live-templates.txt"))
+	router.StaticFile("/openapi.yaml", filepath.Join(s.config.AppFolder, "openapi.yaml"))
+	router.StaticFile("/swagger-ui/", filepath.Join(s.config.ServerFolder, "s", "static", "swagger-ui/index.html"))
+	router.StaticFile("/swagger-ui/index.html", filepath.Join(s.config.ServerFolder, "s", "static", "swagger-ui/index.html"))
+	router.StaticFile("/swagger-ui/oauth2-redirect.html", filepath.Join(s.config.ServerFolder, "s", "static", "swagger-ui/oauth2-redirect.html"))
+	router.StaticFile("/swagger-ui/swagger-ui.css", filepath.Join(s.config.ServerFolder, "s", "static", "swagger-ui/swagger-ui.css"))
+	router.StaticFile("/swagger-ui/swagger-ui.js", filepath.Join(s.config.ServerFolder, "s", "static", "swagger-ui/swagger-ui.js"))
+	router.StaticFile("/swagger-ui/swagger-ui-bundle.js", filepath.Join(s.config.ServerFolder, "s", "static", "swagger-ui/swagger-ui-bundle.js"))
+	router.StaticFile("/swagger-ui/swagger-ui-standalone-preset.js", filepath.Join(s.config.ServerFolder, "s", "static", "swagger-ui/swagger-ui-standalone-preset.js")) // <==
 
-	router.GET("/threagile-example-model.yaml", server.exampleFile)
-	router.GET("/threagile-stub-model.yaml", server.stubFile)
+	router.GET("/threagile-example-model.yaml", s.exampleFile)
+	router.GET("/threagile-stub-model.yaml", s.stubFile)
 
 	router.GET("/meta/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{
@@ -111,7 +84,7 @@ func RunServer(serverConfiguration Configuration) {
 	router.GET("/meta/version", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"version":         docs.ThreagileVersion,
-			"build_timestamp": server.configuration.BuildTimestamp,
+			"build_timestamp": s.config.BuildTimestamp,
 		})
 	})
 	router.GET("/meta/types", func(c *gin.Context) {
@@ -143,69 +116,71 @@ func RunServer(serverConfiguration Configuration) {
 	// TODO router.GET("/meta/risk-rules", listRiskRules)
 	// TODO router.GET("/meta/model-macros", listModelMacros)
 
-	router.GET("/meta/stats", server.stats)
+	router.GET("/meta/stats", s.stats)
 
-	router.POST("/direct/analyze", server.analyze)
-	router.POST("/direct/check", server.check)
-	router.GET("/direct/stub", server.stubFile)
+	router.POST("/direct/analyze", s.analyze)
+	router.POST("/direct/check", s.check)
+	router.GET("/direct/stub", s.stubFile)
 
-	router.POST("/auth/keys", server.createKey)
-	router.DELETE("/auth/keys", server.deleteKey)
-	router.POST("/auth/tokens", server.createToken)
-	router.DELETE("/auth/tokens", server.deleteToken)
+	router.POST("/auth/keys", s.createKey)
+	router.DELETE("/auth/keys", s.deleteKey)
+	router.POST("/auth/tokens", s.createToken)
+	router.DELETE("/auth/tokens", s.deleteToken)
 
-	router.POST("/models", server.createNewModel)
-	router.GET("/models", server.listModels)
-	router.DELETE("/models/:model-id", server.deleteModel)
-	router.GET("/models/:model-id", server.getModel)
-	router.PUT("/models/:model-id", server.importModel)
-	router.GET("/models/:model-id/data-flow-diagram", server.streamDataFlowDiagram)
-	router.GET("/models/:model-id/data-asset-diagram", server.streamDataAssetDiagram)
-	router.GET("/models/:model-id/report-pdf", server.streamReportPDF)
-	router.GET("/models/:model-id/risks-excel", server.streamRisksExcel)
-	router.GET("/models/:model-id/tags-excel", server.streamTagsExcel)
-	router.GET("/models/:model-id/risks", server.streamRisksJSON)
-	router.GET("/models/:model-id/technical-assets", server.streamTechnicalAssetsJSON)
-	router.GET("/models/:model-id/stats", server.streamStatsJSON)
-	router.GET("/models/:model-id/analysis", server.analyzeModelOnServerDirectly)
+	router.POST("/models", s.createNewModel)
+	router.GET("/models", s.listModels)
+	router.DELETE("/models/:model-id", s.deleteModel)
+	router.GET("/models/:model-id", s.getModel)
+	router.PUT("/models/:model-id", s.importModel)
+	router.GET("/models/:model-id/data-flow-diagram", s.streamDataFlowDiagram)
+	router.GET("/models/:model-id/data-asset-diagram", s.streamDataAssetDiagram)
+	router.GET("/models/:model-id/report-pdf", s.streamReportPDF)
+	router.GET("/models/:model-id/risks-excel", s.streamRisksExcel)
+	router.GET("/models/:model-id/tags-excel", s.streamTagsExcel)
+	router.GET("/models/:model-id/risks", s.streamRisksJSON)
+	router.GET("/models/:model-id/technical-assets", s.streamTechnicalAssetsJSON)
+	router.GET("/models/:model-id/stats", s.streamStatsJSON)
+	router.GET("/models/:model-id/analysis", s.analyzeModelOnServerDirectly)
 
-	router.GET("/models/:model-id/cover", server.getCover)
-	router.PUT("/models/:model-id/cover", server.setCover)
-	router.GET("/models/:model-id/overview", server.getOverview)
-	router.PUT("/models/:model-id/overview", server.setOverview)
+	router.GET("/models/:model-id/cover", s.getCover)
+	router.PUT("/models/:model-id/cover", s.setCover)
+	router.GET("/models/:model-id/overview", s.getOverview)
+	router.PUT("/models/:model-id/overview", s.setOverview)
 	//router.GET("/models/:model-id/questions", getQuestions)
 	//router.PUT("/models/:model-id/questions", setQuestions)
-	router.GET("/models/:model-id/abuse-cases", server.getAbuseCases)
-	router.PUT("/models/:model-id/abuse-cases", server.setAbuseCases)
-	router.GET("/models/:model-id/security-requirements", server.getSecurityRequirements)
-	router.PUT("/models/:model-id/security-requirements", server.setSecurityRequirements)
+	router.GET("/models/:model-id/abuse-cases", s.getAbuseCases)
+	router.PUT("/models/:model-id/abuse-cases", s.setAbuseCases)
+	router.GET("/models/:model-id/security-requirements", s.getSecurityRequirements)
+	router.PUT("/models/:model-id/security-requirements", s.setSecurityRequirements)
 	//router.GET("/models/:model-id/tags", getTags)
 	//router.PUT("/models/:model-id/tags", setTags)
 
-	router.GET("/models/:model-id/data-assets", server.getDataAssets)
-	router.POST("/models/:model-id/data-assets", server.createNewDataAsset)
-	router.GET("/models/:model-id/data-assets/:data-asset-id", server.getDataAsset)
-	router.PUT("/models/:model-id/data-assets/:data-asset-id", server.setDataAsset)
-	router.DELETE("/models/:model-id/data-assets/:data-asset-id", server.deleteDataAsset)
+	router.GET("/models/:model-id/data-assets", s.getDataAssets)
+	router.POST("/models/:model-id/data-assets", s.createNewDataAsset)
+	router.GET("/models/:model-id/data-assets/:data-asset-id", s.getDataAsset)
+	router.PUT("/models/:model-id/data-assets/:data-asset-id", s.setDataAsset)
+	router.DELETE("/models/:model-id/data-assets/:data-asset-id", s.deleteDataAsset)
 
-	router.GET("/models/:model-id/trust-boundaries", server.getTrustBoundaries)
+	router.GET("/models/:model-id/trust-boundaries", s.getTrustBoundaries)
 	//	router.POST("/models/:model-id/trust-boundaries", createNewTrustBoundary)
 	//	router.GET("/models/:model-id/trust-boundaries/:trust-boundary-id", getTrustBoundary)
 	//	router.PUT("/models/:model-id/trust-boundaries/:trust-boundary-id", setTrustBoundary)
 	//	router.DELETE("/models/:model-id/trust-boundaries/:trust-boundary-id", deleteTrustBoundary)
 
-	router.GET("/models/:model-id/shared-runtimes", server.getSharedRuntimes)
-	router.POST("/models/:model-id/shared-runtimes", server.createNewSharedRuntime)
-	router.GET("/models/:model-id/shared-runtimes/:shared-runtime-id", server.getSharedRuntime)
-	router.PUT("/models/:model-id/shared-runtimes/:shared-runtime-id", server.setSharedRuntime)
-	router.DELETE("/models/:model-id/shared-runtimes/:shared-runtime-id", server.deleteSharedRuntime)
+	router.GET("/models/:model-id/shared-runtimes", s.getSharedRuntimes)
+	router.POST("/models/:model-id/shared-runtimes", s.createNewSharedRuntime)
+	router.GET("/models/:model-id/shared-runtimes/:shared-runtime-id", s.getSharedRuntime)
+	router.PUT("/models/:model-id/shared-runtimes/:shared-runtime-id", s.setSharedRuntime)
+	router.DELETE("/models/:model-id/shared-runtimes/:shared-runtime-id", s.deleteSharedRuntime)
 
-	fmt.Println("Threagile server running...")
-	_ = router.Run(":" + strconv.Itoa(server.configuration.ServerPort)) // listen and serve on 0.0.0.0:8080 or whatever port was specified
+	s.customRiskRules = types.LoadCustomRiskRules(s.config.RiskRulesPlugins, common.CommandLineProgressReporter{})
+
+	fmt.Println("Threagile s running...")
+	_ = router.Run(":" + strconv.Itoa(s.config.ServerPort)) // listen and serve on 0.0.0.0:8080 or whatever port was specified
 }
 
 func (s *server) exampleFile(ginContext *gin.Context) {
-	example, err := os.ReadFile(filepath.Join(s.configuration.AppDir, "threagile-example-model.yaml"))
+	example, err := os.ReadFile(filepath.Join(s.config.AppFolder, "threagile-example-model.yaml"))
 	if err != nil {
 		handleErrorInServiceCall(err, ginContext)
 		return
@@ -214,7 +189,7 @@ func (s *server) exampleFile(ginContext *gin.Context) {
 }
 
 func (s *server) stubFile(ginContext *gin.Context) {
-	stub, err := os.ReadFile(filepath.Join(s.configuration.AppDir, "threagile-stub-model.yaml"))
+	stub, err := os.ReadFile(filepath.Join(s.config.AppFolder, "threagile-stub-model.yaml"))
 	if err != nil {
 		handleErrorInServiceCall(err, ginContext)
 		return
@@ -225,7 +200,7 @@ func (s *server) stubFile(ginContext *gin.Context) {
 func (s *server) addSupportedTags(input []byte) []byte {
 	// add distinct tags as "tags_available"
 	supportedTags := make(map[string]bool)
-	for _, customRule := range s.configuration.CustomRiskRules {
+	for _, customRule := range s.customRiskRules {
 		for _, tag := range customRule.Tags {
 			supportedTags[strings.ToLower(tag)] = true
 		}
@@ -245,7 +220,7 @@ func (s *server) addSupportedTags(input []byte) []byte {
 		return input
 	}
 	sort.Strings(tags)
-	if s.configuration.Verbose {
+	if s.config.Verbose {
 		fmt.Print("Supported tags of all risk rules: ")
 		for i, tag := range tags {
 			if i > 0 {
@@ -272,7 +247,7 @@ func arrayOfStringValues(values []types.TypeEnum) []string {
 
 func (s *server) stats(ginContext *gin.Context) {
 	keyCount, modelCount := 0, 0
-	keyFolders, err := os.ReadDir(filepath.Join(s.configuration.ServerFolder, s.configuration.KeyDir))
+	keyFolders, err := os.ReadDir(filepath.Join(s.config.ServerFolder, s.config.KeyFolder))
 	if err != nil {
 		log.Println(err)
 		ginContext.JSON(http.StatusInternalServerError, gin.H{
@@ -289,7 +264,7 @@ func (s *server) stats(ginContext *gin.Context) {
 				})
 				return
 			}
-			modelFolders, err := os.ReadDir(filepath.Join(s.configuration.ServerFolder, s.configuration.KeyDir, keyFolder.Name()))
+			modelFolders, err := os.ReadDir(filepath.Join(s.config.ServerFolder, s.config.KeyFolder, keyFolder.Name()))
 			if err != nil {
 				log.Println(err)
 				ginContext.JSON(http.StatusInternalServerError, gin.H{

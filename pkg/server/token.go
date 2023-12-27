@@ -263,7 +263,7 @@ func (s *server) checkTokenToFolderName(ginContext *gin.Context) (folderNameOfKe
 
 func (s *server) folderNameFromKey(key []byte) string {
 	sha512Hash := hashSHA256(key)
-	return filepath.Join(s.configuration.ServerFolder, s.configuration.KeyDir, sha512Hash)
+	return filepath.Join(s.config.ServerFolder, s.config.KeyFolder, sha512Hash)
 }
 
 func (s *server) housekeepingTokenMaps() {

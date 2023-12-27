@@ -5,6 +5,7 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package threagile
 
 import (
+	"github.com/threagile/threagile/pkg/common"
 	"github.com/threagile/threagile/pkg/security/risks"
 	"github.com/threagile/threagile/pkg/security/types"
 	"strings"
@@ -30,7 +31,7 @@ var listRiskRules = &cobra.Command{
 		cmd.Println("----------------------")
 		cmd.Println("Custom risk rules:")
 		cmd.Println("----------------------")
-		customRiskRules := types.LoadCustomRiskRules(strings.Split(plugins, ","), getProgressReporter(cmd))
+		customRiskRules := types.LoadCustomRiskRules(strings.Split(plugins, ","), common.GetProgressReporter(cmd))
 		for id, customRule := range customRiskRules {
 			cmd.Println(id, "-->", customRule.Category.Title, "--> with tags:", customRule.Tags)
 		}
@@ -63,7 +64,7 @@ var explainRiskRules = &cobra.Command{
 		cmd.Println("----------------------")
 		cmd.Println("Custom risk rules:")
 		cmd.Println("----------------------")
-		customRiskRules := types.LoadCustomRiskRules(strings.Split(plugins, ","), getProgressReporter(cmd))
+		customRiskRules := types.LoadCustomRiskRules(strings.Split(plugins, ","), common.GetProgressReporter(cmd))
 		for _, customRule := range customRiskRules {
 			cmd.Printf("%v: %v\n", customRule.Category.Id, customRule.Category.Description)
 		}

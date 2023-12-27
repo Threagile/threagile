@@ -54,10 +54,6 @@ import (
 	"github.com/threagile/threagile/pkg/security/types"
 )
 
-const (
-	defaultGraphvizDPI, maxGraphvizDPI = 120, 240
-)
-
 type Context struct {
 	common.Config
 
@@ -66,51 +62,17 @@ type Context struct {
 	successCount                                                 int
 	errorCount                                                   int
 	drawSpaceLinesForLayoutUnfortunatelyFurtherSeparatesAllRanks bool
-	buildTimestamp                                               string
 
-	modelInput input.ModelInput
-
-	// TODO: remove refactoring note below
-	// moved from types.go
+	modelInput  input.ModelInput
 	parsedModel types.ParsedModel
 
-	modelFilename, templateFilename                                                                   *string
-	verbose, ignoreOrphanedRiskTracking                                                               *bool
-	generateDataFlowDiagram, generateDataAssetDiagram, generateRisksJSON, generateTechnicalAssetsJSON *bool
-	generateStatsJSON, generateRisksExcel, generateTagsExcel, generateReportPDF                       *bool
-	outputDir, raaPlugin, skipRiskRules, riskRulesPlugins, executeModelMacro                          *string
-	customRiskRules                                                                                   map[string]*types.CustomRisk
-	builtinRiskRules                                                                                  map[string]types.RiskRule
-	diagramDPI, serverPort                                                                            *int
-	addModelTitle                                                                                     bool
-	keepDiagramSourceFiles                                                                            bool
-	appFolder                                                                                         *string
-	binFolder                                                                                         *string
-	serverFolder                                                                                      *string
-	tempFolder                                                                                        *string
+	generateDataFlowDiagram, generateDataAssetDiagram, generateRisksJSON, generateTechnicalAssetsJSON bool
+	generateStatsJSON, generateRisksExcel, generateTagsExcel, generateReportPDF                       bool
 
-	backupHistoryFilesToKeep int
+	customRiskRules  map[string]*types.CustomRisk
+	builtinRiskRules map[string]types.RiskRule
 
-	tempDir                                string
-	binDir                                 string
-	appDir                                 string
-	dataDir                                string
-	keyDir                                 string
-	reportFilename                         string
-	excelRisksFilename                     string
-	excelTagsFilename                      string
-	jsonRisksFilename                      string
-	jsonTechnicalAssetsFilename            string
-	jsonStatsFilename                      string
-	dataFlowDiagramFilenameDOT             string
-	dataFlowDiagramFilenamePNG             string
-	dataAssetDiagramFilenameDOT            string
-	dataAssetDiagramFilenamePNG            string
-	graphvizDataFlowDiagramConversionCall  string
-	graphvizDataAssetDiagramConversionCall string
-	inputFile                              string
-
-	progressReporter ProgressReporter
+	progressReporter common.ProgressReporter
 }
 
 func (context *Context) addToListOfSupportedTags(tags []string) {
@@ -120,12 +82,12 @@ func (context *Context) addToListOfSupportedTags(tags []string) {
 }
 
 func (context *Context) checkRiskTracking() {
-	if *context.verbose {
+	if context.Config.Verbose {
 		fmt.Println("Checking risk tracking")
 	}
 	for _, tracking := range context.parsedModel.RiskTracking {
 		if _, ok := context.parsedModel.GeneratedRisksBySyntheticId[tracking.SyntheticRiskId]; !ok {
-			if *context.ignoreOrphanedRiskTracking {
+			if context.Config.IgnoreOrphanedRiskTracking {
 				fmt.Println("Risk tracking references unknown risk (risk id not found): " + tracking.SyntheticRiskId)
 			} else {
 				panic(errors.New("Risk tracking references unknown risk (risk id not found) - you might want to use the option -ignore-orphaned-risk-tracking: " + tracking.SyntheticRiskId +
@@ -150,12 +112,10 @@ func (context *Context) checkRiskTracking() {
 	}
 }
 
-func (context *Context) Init(buildTimestamp string) *Context {
+func (context *Context) Init() *Context {
 	*context = Context{
-		keepDiagramSourceFiles: false,
-		addModelTitle:          false,
-		buildTimestamp:         buildTimestamp,
-		customRiskRules:        make(map[string]*types.CustomRisk),
+		customRiskRules:  make(map[string]*types.CustomRisk),
+		builtinRiskRules: make(map[string]types.RiskRule),
 		drawSpaceLinesForLayoutUnfortunatelyFurtherSeparatesAllRanks: true,
 	}
 
@@ -163,28 +123,8 @@ func (context *Context) Init(buildTimestamp string) *Context {
 }
 
 func (context *Context) Defaults(buildTimestamp string) *Context {
-	*context = *new(Context).Init(buildTimestamp)
-	context.backupHistoryFilesToKeep = 50
-	context.tempDir = common.TempDir
-	context.binDir = common.BinDir
-	context.appDir = common.AppDir
-	context.dataDir = common.DataDir
-	context.keyDir = common.KeyDir
-	context.reportFilename = common.ReportFilename
-	context.excelRisksFilename = common.ExcelRisksFilename
-	context.excelTagsFilename = common.ExcelTagsFilename
-	context.jsonRisksFilename = common.JsonRisksFilename
-	context.jsonTechnicalAssetsFilename = common.JsonTechnicalAssetsFilename
-	context.jsonStatsFilename = common.JsonStatsFilename
-	context.dataFlowDiagramFilenameDOT = common.DataFlowDiagramFilenameDOT
-	context.dataFlowDiagramFilenamePNG = common.DataFlowDiagramFilenamePNG
-	context.dataAssetDiagramFilenameDOT = common.DataAssetDiagramFilenameDOT
-	context.dataAssetDiagramFilenamePNG = common.DataAssetDiagramFilenamePNG
-	context.graphvizDataFlowDiagramConversionCall = common.GraphvizDataFlowDiagramConversionCall
-	context.graphvizDataAssetDiagramConversionCall = common.GraphvizDataAssetDiagramConversionCall
-	context.inputFile = common.InputFile
-
-	context.Config.Defaults()
+	*context = *new(Context).Init()
+	context.Config.Defaults(buildTimestamp)
 
 	return context
 }
@@ -210,13 +150,13 @@ func (context *Context) applyRisk(rule types.RiskRule, skippedRules *map[string]
 }
 
 func (context *Context) applyRiskGeneration() {
-	if *context.verbose {
+	if context.Config.Verbose {
 		fmt.Println("Applying risk generation")
 	}
 
 	skippedRules := make(map[string]bool)
-	if len(*context.skipRiskRules) > 0 {
-		for _, id := range strings.Split(*context.skipRiskRules, ",") {
+	if len(context.Config.SkipRiskRules) > 0 {
+		for _, id := range strings.Split(context.Config.SkipRiskRules, ",") {
 			skippedRules[id] = true
 		}
 	}
@@ -229,12 +169,12 @@ func (context *Context) applyRiskGeneration() {
 	for id, customRule := range context.customRiskRules {
 		_, ok := skippedRules[id]
 		if ok {
-			if *context.verbose {
+			if context.Config.Verbose {
 				fmt.Println("Skipping custom risk rule:", id)
 			}
 			delete(skippedRules, id)
 		} else {
-			if *context.verbose {
+			if context.Config.Verbose {
 				fmt.Println("Executing custom risk rule:", id)
 			}
 			context.addToListOfSupportedTags(customRule.Tags)
@@ -243,7 +183,7 @@ func (context *Context) applyRiskGeneration() {
 				context.parsedModel.GeneratedRisksByCategory[customRule.Category.Id] = customRisks
 			}
 
-			if *context.verbose {
+			if context.Config.Verbose {
 				fmt.Println("Added custom risks:", len(customRisks))
 			}
 		}
@@ -269,7 +209,7 @@ func (context *Context) applyRiskGeneration() {
 }
 
 func (context *Context) writeDataFlowDiagramGraphvizDOT(diagramFilenameDOT string, dpi int) *os.File {
-	if *context.verbose {
+	if context.Config.Verbose {
 		fmt.Println("Writing data flow diagram input")
 	}
 	var dotContent strings.Builder
@@ -312,7 +252,7 @@ func (context *Context) writeDataFlowDiagramGraphvizDOT(diagramFilenameDOT strin
 		rankdir = "LR"
 	}
 	modelTitle := ""
-	if context.addModelTitle {
+	if context.Config.AddModelTitle {
 		modelTitle = `label="` + context.parsedModel.Title + `"`
 	}
 	dotContent.WriteString(`	graph [ ` + modelTitle + `
@@ -555,27 +495,27 @@ func (context *Context) DoIt() {
 		var err error
 		if r := recover(); r != nil {
 			err = r.(error)
-			if *context.verbose {
+			if context.Config.Verbose {
 				log.Println(err)
 			}
 			_, _ = os.Stderr.WriteString(err.Error() + "\n")
 			os.Exit(2)
 		}
 	}()
-	if len(*context.executeModelMacro) > 0 {
+	if len(context.Config.ExecuteModelMacro) > 0 {
 		fmt.Println(docs.Logo + "\n\n" + docs.VersionText)
 	} else {
-		if *context.verbose {
-			fmt.Println("Writing into output directory:", *context.outputDir)
+		if context.Config.Verbose {
+			fmt.Println("Writing into output directory:", context.Config.OutputFolder)
 		}
 	}
 
-	if *context.verbose {
-		fmt.Println("Parsing model:", *context.modelFilename)
+	if context.Config.Verbose {
+		fmt.Println("Parsing model:", context.Config.InputFile)
 	}
 
 	context.modelInput = *new(input.ModelInput).Defaults()
-	loadError := context.modelInput.Load(*context.modelFilename)
+	loadError := context.modelInput.Load(context.Config.InputFile)
 	if loadError != nil {
 		log.Fatal("Unable to load model yaml: ", loadError)
 	}
@@ -584,7 +524,7 @@ func (context *Context) DoIt() {
 	for _, rule := range risks.GetBuiltInRiskRules() {
 		context.builtinRiskRules[rule.Category().Id] = rule
 	}
-	context.customRiskRules = types.LoadCustomRiskRules(strings.Split(*context.riskRulesPlugins, ","), context.progressReporter)
+	context.customRiskRules = types.LoadCustomRiskRules(context.Config.RiskRulesPlugins, context.progressReporter)
 
 	parsedModel, parseError := model.ParseModel(&context.modelInput, context.builtinRiskRules, context.customRiskRules)
 	if parseError != nil {
@@ -599,9 +539,9 @@ func (context *Context) DoIt() {
 	context.applyWildcardRiskTrackingEvaluation()
 	context.checkRiskTracking()
 
-	if len(*context.executeModelMacro) > 0 {
+	if len(context.Config.ExecuteModelMacro) > 0 {
 		var macroDetails macros.MacroDetails
-		switch *context.executeModelMacro {
+		switch context.Config.ExecuteModelMacro {
 		case addbuildpipeline.GetMacroDetails().ID:
 			macroDetails = addbuildpipeline.GetMacroDetails()
 		case addvault.GetMacroDetails().ID:
@@ -615,7 +555,7 @@ func (context *Context) DoIt() {
 		case seedtags.GetMacroDetails().ID:
 			macroDetails = seedtags.GetMacroDetails()
 		default:
-			log.Fatal("Unknown model macro: ", *context.executeModelMacro)
+			log.Fatal("Unknown model macro: ", context.Config.ExecuteModelMacro)
 		}
 		fmt.Println("Executing model macro:", macroDetails.ID)
 		fmt.Println()
@@ -863,9 +803,9 @@ func (context *Context) DoIt() {
 				}
 				fmt.Println(message)
 				fmt.Println()
-				backupFilename := *context.modelFilename + ".backup"
+				backupFilename := context.Config.InputFile + ".backup"
 				fmt.Println("Creating backup model file:", backupFilename) // TODO add random files in /dev/shm space?
-				_, err = copyFile(*context.modelFilename, backupFilename)
+				_, err = copyFile(context.Config.InputFile, backupFilename)
 				checkErr(err)
 				fmt.Println("Updating model")
 				yamlBytes, err := yaml.Marshal(context.modelInput)
@@ -873,8 +813,8 @@ func (context *Context) DoIt() {
 				/*
 					yamlBytes = model.ReformatYAML(yamlBytes)
 				*/
-				fmt.Println("Writing model file:", *context.modelFilename)
-				err = os.WriteFile(*context.modelFilename, yamlBytes, 0400)
+				fmt.Println("Writing model file:", context.Config.InputFile)
+				err = os.WriteFile(context.Config.InputFile, yamlBytes, 0400)
 				checkErr(err)
 				fmt.Println("Model file successfully updated")
 				return
@@ -885,86 +825,79 @@ func (context *Context) DoIt() {
 		}
 	}
 
-	renderDataFlowDiagram := *context.generateDataFlowDiagram
-	renderDataAssetDiagram := *context.generateDataAssetDiagram
-	renderRisksJSON := *context.generateRisksJSON
-	renderTechnicalAssetsJSON := *context.generateTechnicalAssetsJSON
-	renderStatsJSON := *context.generateStatsJSON
-	renderRisksExcel := *context.generateRisksExcel
-	renderTagsExcel := *context.generateTagsExcel
-	renderPDF := *context.generateReportPDF
+	renderPDF := context.generateReportPDF
 	if renderPDF { // as the PDF report includes both diagrams
-		renderDataFlowDiagram, renderDataAssetDiagram = true, true
+		context.generateDataFlowDiagram, context.generateDataAssetDiagram = true, true
 	}
 
 	// Data-flow Diagram rendering
-	if renderDataFlowDiagram {
-		gvFile := filepath.Join(*context.outputDir, context.dataFlowDiagramFilenameDOT)
-		if !context.keepDiagramSourceFiles {
-			tmpFileGV, err := os.CreateTemp(*context.tempFolder, context.dataFlowDiagramFilenameDOT)
+	if context.generateDataFlowDiagram {
+		gvFile := filepath.Join(context.Config.OutputFolder, context.Config.DataFlowDiagramFilenameDOT)
+		if !context.Config.KeepDiagramSourceFiles {
+			tmpFileGV, err := os.CreateTemp(context.Config.TempFolder, context.Config.DataFlowDiagramFilenameDOT)
 			checkErr(err)
 			gvFile = tmpFileGV.Name()
 			defer func() { _ = os.Remove(gvFile) }()
 		}
-		dotFile := context.writeDataFlowDiagramGraphvizDOT(gvFile, *context.diagramDPI)
-		context.renderDataFlowDiagramGraphvizImage(dotFile, *context.outputDir)
+		dotFile := context.writeDataFlowDiagramGraphvizDOT(gvFile, context.Config.DiagramDPI)
+		context.generateDataFlowDiagramGraphvizImage(dotFile, context.Config.OutputFolder)
 	}
 	// Data Asset Diagram rendering
-	if renderDataAssetDiagram {
-		gvFile := filepath.Join(*context.outputDir, context.dataAssetDiagramFilenameDOT)
-		if !context.keepDiagramSourceFiles {
-			tmpFile, err := os.CreateTemp(*context.tempFolder, context.dataAssetDiagramFilenameDOT)
+	if context.generateDataAssetDiagram {
+		gvFile := filepath.Join(context.Config.OutputFolder, context.Config.DataAssetDiagramFilenameDOT)
+		if !context.Config.KeepDiagramSourceFiles {
+			tmpFile, err := os.CreateTemp(context.Config.TempFolder, context.Config.DataAssetDiagramFilenameDOT)
 			checkErr(err)
 			gvFile = tmpFile.Name()
 			defer func() { _ = os.Remove(gvFile) }()
 		}
-		dotFile := context.writeDataAssetDiagramGraphvizDOT(gvFile, *context.diagramDPI)
-		context.renderDataAssetDiagramGraphvizImage(dotFile, *context.outputDir)
+		dotFile := context.writeDataAssetDiagramGraphvizDOT(gvFile, context.Config.DiagramDPI)
+		context.generateDataAssetDiagramGraphvizImage(dotFile, context.Config.OutputFolder)
 	}
 
 	// risks as risks json
-	if renderRisksJSON {
-		if *context.verbose {
+	if context.generateRisksJSON {
+		if context.Config.Verbose {
 			fmt.Println("Writing risks json")
 		}
-		report.WriteRisksJSON(&context.parsedModel, filepath.Join(*context.outputDir, context.jsonRisksFilename))
+		report.WriteRisksJSON(&context.parsedModel, filepath.Join(context.Config.OutputFolder, context.Config.JsonRisksFilename))
 	}
 
 	// technical assets json
-	if renderTechnicalAssetsJSON {
-		if *context.verbose {
+	if context.generateTechnicalAssetsJSON {
+		if context.Config.Verbose {
 			fmt.Println("Writing technical assets json")
 		}
-		report.WriteTechnicalAssetsJSON(&context.parsedModel, filepath.Join(*context.outputDir, context.jsonTechnicalAssetsFilename))
+		report.WriteTechnicalAssetsJSON(&context.parsedModel, filepath.Join(context.Config.OutputFolder, context.Config.JsonTechnicalAssetsFilename))
 	}
 
 	// risks as risks json
-	if renderStatsJSON {
-		if *context.verbose {
+	if context.generateStatsJSON {
+		if context.Config.Verbose {
 			fmt.Println("Writing stats json")
 		}
-		report.WriteStatsJSON(&context.parsedModel, filepath.Join(*context.outputDir, context.jsonStatsFilename))
+		report.WriteStatsJSON(&context.parsedModel, filepath.Join(context.Config.OutputFolder, context.Config.JsonStatsFilename))
 	}
 
 	// risks Excel
-	if renderRisksExcel {
-		if *context.verbose {
+	if context.generateRisksExcel {
+		if context.Config.Verbose {
 			fmt.Println("Writing risks excel")
 		}
-		report.WriteRisksExcelToFile(&context.parsedModel, filepath.Join(*context.outputDir, context.excelRisksFilename))
+		report.WriteRisksExcelToFile(&context.parsedModel, filepath.Join(context.Config.OutputFolder, context.Config.ExcelRisksFilename))
 	}
 
 	// tags Excel
-	if renderTagsExcel {
-		if *context.verbose {
+	if context.generateTagsExcel {
+		if context.Config.Verbose {
 			fmt.Println("Writing tags excel")
 		}
-		report.WriteTagsExcelToFile(&context.parsedModel, filepath.Join(*context.outputDir, context.excelTagsFilename))
+		report.WriteTagsExcelToFile(&context.parsedModel, filepath.Join(context.Config.OutputFolder, context.Config.ExcelTagsFilename))
 	}
 
 	if renderPDF {
 		// hash the YAML input file
-		f, err := os.Open(*context.modelFilename)
+		f, err := os.Open(context.Config.InputFile)
 		checkErr(err)
 		defer func() { _ = f.Close() }()
 		hasher := sha256.New()
@@ -973,20 +906,20 @@ func (context *Context) DoIt() {
 		}
 		modelHash := hex.EncodeToString(hasher.Sum(nil))
 		// report PDF
-		if *context.verbose {
+		if context.Config.Verbose {
 			fmt.Println("Writing report pdf")
 		}
-		report.WriteReportPDF(filepath.Join(*context.outputDir, context.reportFilename),
-			filepath.Join(*context.appFolder, *context.templateFilename),
-			filepath.Join(*context.outputDir, context.dataFlowDiagramFilenamePNG),
-			filepath.Join(*context.outputDir, context.dataAssetDiagramFilenamePNG),
-			*context.modelFilename,
-			*context.skipRiskRules,
-			context.buildTimestamp,
+		report.WriteReportPDF(filepath.Join(context.Config.OutputFolder, context.Config.ReportFilename),
+			filepath.Join(context.Config.AppFolder, context.Config.TemplateFilename),
+			filepath.Join(context.Config.OutputFolder, context.Config.DataFlowDiagramFilenamePNG),
+			filepath.Join(context.Config.OutputFolder, context.Config.DataAssetDiagramFilenamePNG),
+			context.Config.InputFile,
+			context.Config.SkipRiskRules,
+			context.Config.BuildTimestamp,
 			modelHash,
 			introTextRAA,
 			context.customRiskRules,
-			*context.tempFolder,
+			context.Config.TempFolder,
 			&context.parsedModel)
 	}
 }
@@ -1028,19 +961,19 @@ func (context *Context) printBorder(length int, bold bool) {
 }
 
 func (context *Context) applyRAA() string {
-	if *context.verbose {
-		fmt.Println("Applying RAA calculation:", *context.raaPlugin)
+	if context.Config.Verbose {
+		fmt.Println("Applying RAA calculation:", context.Config.RAAPlugin)
 	}
 
-	runner, loadError := new(run.Runner).Load(filepath.Join(*context.binFolder, *context.raaPlugin))
+	runner, loadError := new(run.Runner).Load(filepath.Join(context.Config.BinFolder, context.Config.RAAPlugin))
 	if loadError != nil {
-		fmt.Printf("WARNING: raa %q not loaded: %v\n", *context.raaPlugin, loadError)
+		fmt.Printf("WARNING: raa %q not loaded: %v\n", context.Config.RAAPlugin, loadError)
 		return ""
 	}
 
 	runError := runner.Run(context.parsedModel, &context.parsedModel)
 	if runError != nil {
-		fmt.Printf("WARNING: raa %q not applied: %v\n", *context.raaPlugin, runError)
+		fmt.Printf("WARNING: raa %q not applied: %v\n", context.Config.RAAPlugin, runError)
 		return ""
 	}
 
@@ -1048,13 +981,13 @@ func (context *Context) applyRAA() string {
 }
 
 func (context *Context) exampleFile(ginContext *gin.Context) {
-	example, err := os.ReadFile(filepath.Join(*context.appFolder, "threagile-example-model.yaml"))
+	example, err := os.ReadFile(filepath.Join(context.Config.AppFolder, "threagile-example-model.yaml"))
 	checkErr(err)
 	ginContext.Data(http.StatusOK, gin.MIMEYAML, example)
 }
 
 func (context *Context) stubFile(ginContext *gin.Context) {
-	stub, err := os.ReadFile(filepath.Join(*context.appFolder, "threagile-stub-model.yaml"))
+	stub, err := os.ReadFile(filepath.Join(context.Config.AppFolder, "threagile-stub-model.yaml"))
 	checkErr(err)
 	ginContext.Data(http.StatusOK, gin.MIMEYAML, context.addSupportedTags(stub)) // TODO use also the MIMEYAML way of serving YAML in model export?
 }
@@ -1082,7 +1015,7 @@ func (context *Context) addSupportedTags(input []byte) []byte {
 		return input
 	}
 	sort.Strings(tags)
-	if *context.verbose {
+	if context.Config.Verbose {
 		fmt.Print("Supported tags of all risk rules: ")
 		for i, tag := range tags {
 			if i > 0 {
@@ -1103,7 +1036,7 @@ const keySize = 32
 
 func (context *Context) stats(ginContext *gin.Context) {
 	keyCount, modelCount := 0, 0
-	keyFolders, err := os.ReadDir(filepath.Join(*context.serverFolder, context.keyDir))
+	keyFolders, err := os.ReadDir(filepath.Join(context.Config.ServerFolder, context.Config.KeyFolder))
 	if err != nil {
 		log.Println(err)
 		ginContext.JSON(http.StatusInternalServerError, gin.H{
@@ -1120,7 +1053,7 @@ func (context *Context) stats(ginContext *gin.Context) {
 				})
 				return
 			}
-			modelFolders, err := os.ReadDir(filepath.Join(*context.serverFolder, context.keyDir, keyFolder.Name()))
+			modelFolders, err := os.ReadDir(filepath.Join(context.Config.ServerFolder, context.Config.KeyFolder, keyFolder.Name()))
 			if err != nil {
 				log.Println(err)
 				ginContext.JSON(http.StatusInternalServerError, gin.H{
@@ -1265,7 +1198,7 @@ func (context *Context) readModel(ginContext *gin.Context, modelUUID string, key
 		return modelInputResult, yamlText, false
 	}
 
-	fileBytes, err := os.ReadFile(filepath.Join(modelFolder, context.inputFile))
+	fileBytes, err := os.ReadFile(filepath.Join(modelFolder, context.Config.InputFile))
 	if err != nil {
 		log.Println(err)
 		ginContext.JSON(http.StatusInternalServerError, gin.H{
@@ -1329,7 +1262,7 @@ func (context *Context) writeModel(ginContext *gin.Context, key []byte, folderNa
 }
 
 func (context *Context) writeModelYAML(ginContext *gin.Context, yaml string, key []byte, modelFolder string, changeReasonForHistory string, skipBackup bool) (ok bool) {
-	if *context.verbose {
+	if context.Config.Verbose {
 		fmt.Println("about to write " + strconv.Itoa(len(yaml)) + " bytes of yaml into model folder: " + modelFolder)
 	}
 	var b bytes.Buffer
@@ -1374,7 +1307,7 @@ func (context *Context) writeModelYAML(ginContext *gin.Context, yaml string, key
 			return false
 		}
 	}
-	f, err := os.Create(filepath.Join(modelFolder, context.inputFile))
+	f, err := os.Create(filepath.Join(modelFolder, context.Config.InputFile))
 	if err != nil {
 		log.Println(err)
 		ginContext.JSON(http.StatusInternalServerError, gin.H{
@@ -1396,7 +1329,7 @@ func (context *Context) backupModelToHistory(modelFolder string, changeReasonFor
 			return err
 		}
 	}
-	inputModel, err := os.ReadFile(filepath.Join(modelFolder, context.inputFile))
+	inputModel, err := os.ReadFile(filepath.Join(modelFolder, context.Config.InputFile))
 	if err != nil {
 		return err
 	}
@@ -1410,8 +1343,8 @@ func (context *Context) backupModelToHistory(modelFolder string, changeReasonFor
 	if err != nil {
 		return err
 	}
-	if len(files) > context.backupHistoryFilesToKeep {
-		requiredToDelete := len(files) - context.backupHistoryFilesToKeep
+	if len(files) > context.Config.BackupHistoryFilesToKeep {
+		requiredToDelete := len(files) - context.Config.BackupHistoryFilesToKeep
 		sort.Slice(files, func(i, j int) bool {
 			return files[i].Name() < files[j].Name()
 		})
@@ -1508,7 +1441,7 @@ func (context *Context) checkObjectCreationThrottler(ginContext *gin.Context, ty
 
 func (context *Context) folderNameFromKey(key []byte) string {
 	sha512Hash := hashSHA256(key)
-	return filepath.Join(*context.serverFolder, context.keyDir, sha512Hash)
+	return filepath.Join(context.Config.ServerFolder, context.Config.KeyFolder, sha512Hash)
 }
 
 func hashSHA256(key []byte) string {
@@ -1565,7 +1498,7 @@ func (context *Context) userHomeDir() string {
 	}
 }
 
-func (context *Context) expandPath(path string) *string {
+func (context *Context) expandPath(path string) string {
 	home := context.userHomeDir()
 	if strings.HasPrefix(path, "~") {
 		path = strings.Replace(path, "~", home, 1)
@@ -1575,39 +1508,47 @@ func (context *Context) expandPath(path string) *string {
 		path = strings.Replace(path, "$HOME", home, -1)
 	}
 
-	return &path
+	return path
 }
 
-func (context *Context) ParseCommandlineArgs() { // folders
-	context.appFolder = flag.String("app-dir", common.AppDir, "app folder (default: "+common.AppDir+")")
-	context.serverFolder = flag.String("server-dir", common.DataDir, "base folder for server mode (default: "+common.DataDir+")")
-	context.tempFolder = flag.String("temp-dir", common.TempDir, "temporary folder location")
-	context.binFolder = flag.String("bin-dir", common.BinDir, "binary folder location")
-	context.outputDir = flag.String("output", ".", "output directory")
+func (context *Context) ParseCommandlineArgs() *Context {
+	configFile := flag.String("config", "", "config file")
+	configError := context.Config.Load(*configFile)
+	if configError != nil {
+		fmt.Printf("WARNING: failed to load config file %q: %v\n", *configFile, configError)
+	}
+
+	// folders
+	flag.StringVar(&context.Config.AppFolder, "app-dir", common.AppDir, "app folder (default: "+common.AppDir+")")
+	flag.StringVar(&context.Config.ServerFolder, "server-dir", common.DataDir, "base folder for server mode (default: "+common.DataDir+")")
+	flag.StringVar(&context.Config.TempFolder, "temp-dir", common.TempDir, "temporary folder location")
+	flag.StringVar(&context.Config.BinFolder, "bin-dir", common.BinDir, "binary folder location")
+	flag.StringVar(&context.Config.OutputFolder, "output", ".", "output directory")
 
 	// files
-	context.modelFilename = flag.String("model", common.InputFile, "input model yaml file")
-	context.raaPlugin = flag.String("raa-run", "raa_calc", "RAA calculation run file name")
+	flag.StringVar(&context.Config.InputFile, "model", common.InputFile, "input model yaml file")
+	flag.StringVar(&context.RAAPlugin, "raa-run", "raa_calc", "RAA calculation run file name")
 
-	// flags
-	context.verbose = flag.Bool("verbose", false, "verbose output")
-	context.diagramDPI = flag.Int("diagram-dpi", defaultGraphvizDPI, "DPI used to render: maximum is "+strconv.Itoa(maxGraphvizDPI)+"")
-	context.skipRiskRules = flag.String("skip-risk-rules", "", "comma-separated list of risk rules (by their ID) to skip")
-	context.riskRulesPlugins = flag.String("custom-risk-rules-plugins", "", "comma-separated list of plugins file names with custom risk rules to load")
-	context.ignoreOrphanedRiskTracking = flag.Bool("ignore-orphaned-risk-tracking", false, "ignore orphaned risk tracking (just log them) not matching a concrete risk")
+	// flags / parameters
+	flag.BoolVar(&context.Config.Verbose, "verbose", false, "verbose output")
+	flag.IntVar(&context.Config.DiagramDPI, "diagram-dpi", context.Config.DiagramDPI, "DPI used to render: maximum is "+strconv.Itoa(context.Config.MaxGraphvizDPI)+"")
+	flag.StringVar(&context.Config.SkipRiskRules, "skip-risk-rules", "", "comma-separated list of risk rules (by their ID) to skip")
+	flag.BoolVar(&context.Config.IgnoreOrphanedRiskTracking, "ignore-orphaned-risk-tracking", false, "ignore orphaned risk tracking (just log them) not matching a concrete risk")
+	flag.IntVar(&context.Config.ServerPort, "server", 0, "start a server (instead of commandline execution) on the given port")
+	flag.StringVar(&context.Config.ExecuteModelMacro, "execute-model-macro", "", "Execute model macro (by ID)")
+	flag.StringVar(&context.Config.TemplateFilename, "background", "background.pdf", "background pdf file")
+	riskRulesPlugins := flag.String("custom-risk-rules-plugins", "", "comma-separated list of plugins file names with custom risk rules to load")
+	context.Config.RiskRulesPlugins = strings.Split(*riskRulesPlugins, ",")
 
 	// commands
-	context.serverPort = flag.Int("server", 0, "start a server (instead of commandline execution) on the given port")
-	context.executeModelMacro = flag.String("execute-model-macro", "", "Execute model macro (by ID)")
-	context.templateFilename = flag.String("background", "background.pdf", "background pdf file")
-	context.generateDataFlowDiagram = flag.Bool("generate-data-flow-diagram", true, "generate data-flow diagram")
-	context.generateDataAssetDiagram = flag.Bool("generate-data-asset-diagram", true, "generate data asset diagram")
-	context.generateRisksJSON = flag.Bool("generate-risks-json", true, "generate risks json")
-	context.generateStatsJSON = flag.Bool("generate-stats-json", true, "generate stats json")
-	context.generateTechnicalAssetsJSON = flag.Bool("generate-technical-assets-json", true, "generate technical assets json")
-	context.generateRisksExcel = flag.Bool("generate-risks-excel", true, "generate risks excel")
-	context.generateTagsExcel = flag.Bool("generate-tags-excel", true, "generate tags excel")
-	context.generateReportPDF = flag.Bool("generate-report-pdf", true, "generate report pdf, including diagrams")
+	flag.BoolVar(&context.generateDataFlowDiagram, "generate-data-flow-diagram", true, "generate data-flow diagram")
+	flag.BoolVar(&context.generateDataAssetDiagram, "generate-data-asset-diagram", true, "generate data asset diagram")
+	flag.BoolVar(&context.generateRisksJSON, "generate-risks-json", true, "generate risks json")
+	flag.BoolVar(&context.generateStatsJSON, "generate-stats-json", true, "generate stats json")
+	flag.BoolVar(&context.generateTechnicalAssetsJSON, "generate-technical-assets-json", true, "generate technical assets json")
+	flag.BoolVar(&context.generateRisksExcel, "generate-risks-excel", true, "generate risks excel")
+	flag.BoolVar(&context.generateTagsExcel, "generate-tags-excel", true, "generate tags excel")
+	flag.BoolVar(&context.generateReportPDF, "generate-report-pdf", true, "generate report pdf, including diagrams")
 
 	flag.Usage = func() {
 		fmt.Println(docs.Logo + "\n\n" + docs.VersionText)
@@ -1616,33 +1557,35 @@ func (context *Context) ParseCommandlineArgs() { // folders
 	}
 	flag.Parse()
 
-	context.modelFilename = context.expandPath(*context.modelFilename)
-	context.appFolder = context.expandPath(*context.appFolder)
-	context.serverFolder = context.expandPath(*context.serverFolder)
-	context.tempFolder = context.expandPath(*context.tempFolder)
-	context.binFolder = context.expandPath(*context.binFolder)
-	context.outputDir = context.expandPath(*context.outputDir)
+	context.Config.InputFile = context.expandPath(context.Config.InputFile)
+	context.Config.AppFolder = context.expandPath(context.Config.AppFolder)
+	context.Config.ServerFolder = context.expandPath(context.Config.ServerFolder)
+	context.Config.TempFolder = context.expandPath(context.Config.TempFolder)
+	context.Config.BinFolder = context.expandPath(context.Config.BinFolder)
+	context.Config.OutputFolder = context.expandPath(context.Config.OutputFolder)
 
-	if *context.diagramDPI < 20 {
-		*context.diagramDPI = 20
-	} else if *context.diagramDPI > context.MaxGraphvizDPI {
-		*context.diagramDPI = 300
+	if context.Config.DiagramDPI < common.MinGraphvizDPI {
+		context.Config.DiagramDPI = common.MinGraphvizDPI
+	} else if context.Config.DiagramDPI > common.MaxGraphvizDPI {
+		context.Config.DiagramDPI = common.MaxGraphvizDPI
 	}
 
-	context.progressReporter = SilentProgressReporter{}
-	if *context.verbose {
-		context.progressReporter = CommandLineProgressReporter{}
+	context.progressReporter = common.SilentProgressReporter{}
+	if context.Config.Verbose {
+		context.progressReporter = common.CommandLineProgressReporter{}
 	}
 
-	context.ServerMode = *context.serverPort > 0
+	context.ServerMode = context.Config.ServerPort > 0
+
+	return context
 }
 
 func (context *Context) applyWildcardRiskTrackingEvaluation() {
-	if *context.verbose {
+	if context.Config.Verbose {
 		fmt.Println("Executing risk tracking evaluation")
 	}
 	for syntheticRiskIdPattern, riskTracking := range context.getDeferredRiskTrackingDueToWildcardMatching() {
-		if *context.verbose {
+		if context.Config.Verbose {
 			fmt.Println("Applying wildcard risk tracking for risk id: " + syntheticRiskIdPattern)
 		}
 
@@ -1663,7 +1606,7 @@ func (context *Context) applyWildcardRiskTrackingEvaluation() {
 		}
 
 		if !foundSome {
-			if *context.ignoreOrphanedRiskTracking {
+			if context.Config.IgnoreOrphanedRiskTracking {
 				fmt.Println("WARNING: Wildcard risk tracking does not match any risk id: " + syntheticRiskIdPattern)
 			} else {
 				panic(errors.New("wildcard risk tracking does not match any risk id: " + syntheticRiskIdPattern))
@@ -1691,7 +1634,7 @@ func (context *Context) hasNotYetAnyDirectNonWildcardRiskTracking(syntheticRiskI
 }
 
 func (context *Context) writeDataAssetDiagramGraphvizDOT(diagramFilenameDOT string, dpi int) *os.File {
-	if *context.verbose {
+	if context.Config.Verbose {
 		fmt.Println("Writing data asset diagram input")
 	}
 	var dotContent strings.Builder
@@ -1865,16 +1808,16 @@ func (context *Context) makeDataAssetNode(dataAsset types.DataAsset) string {
 	return "  " + hash(dataAsset.Id) + ` [ label=<<b>` + encode(dataAsset.Title) + `</b>> penwidth="3.0" style="filled" fillcolor="` + color + `" color="` + color + "\"\n  ]; "
 }
 
-func (context *Context) renderDataFlowDiagramGraphvizImage(dotFile *os.File, targetDir string) {
-	if *context.verbose {
+func (context *Context) generateDataFlowDiagramGraphvizImage(dotFile *os.File, targetDir string) {
+	if context.Config.Verbose {
 		fmt.Println("Rendering data flow diagram input")
 	}
 	// tmp files
-	tmpFileDOT, err := os.CreateTemp(*context.tempFolder, "diagram-*-.gv")
+	tmpFileDOT, err := os.CreateTemp(context.Config.TempFolder, "diagram-*-.gv")
 	checkErr(err)
 	defer func() { _ = os.Remove(tmpFileDOT.Name()) }()
 
-	tmpFilePNG, err := os.CreateTemp(*context.tempFolder, "diagram-*-.png")
+	tmpFilePNG, err := os.CreateTemp(context.Config.TempFolder, "diagram-*-.png")
 	checkErr(err)
 	defer func() { _ = os.Remove(tmpFilePNG.Name()) }()
 
@@ -1892,7 +1835,7 @@ func (context *Context) renderDataFlowDiagramGraphvizImage(dotFile *os.File, tar
 	}
 
 	// exec
-	cmd := exec.Command(filepath.Join(*context.binFolder, context.graphvizDataFlowDiagramConversionCall), tmpFileDOT.Name(), tmpFilePNG.Name())
+	cmd := exec.Command(filepath.Join(context.Config.BinFolder, common.GraphvizDataFlowDiagramConversionCall), tmpFileDOT.Name(), tmpFilePNG.Name())
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
@@ -1905,24 +1848,24 @@ func (context *Context) renderDataFlowDiagramGraphvizImage(dotFile *os.File, tar
 		fmt.Println(err)
 		return
 	}
-	err = os.WriteFile(filepath.Join(targetDir, context.dataFlowDiagramFilenamePNG), inputPNG, 0644)
+	err = os.WriteFile(filepath.Join(targetDir, context.Config.DataFlowDiagramFilenamePNG), inputPNG, 0644)
 	if err != nil {
-		fmt.Println("Error creating", context.dataFlowDiagramFilenamePNG)
+		fmt.Println("Error creating", context.Config.DataFlowDiagramFilenamePNG)
 		fmt.Println(err)
 		return
 	}
 }
 
-func (context *Context) renderDataAssetDiagramGraphvizImage(dotFile *os.File, targetDir string) { // TODO dedupe with other render...() method here
-	if *context.verbose {
+func (context *Context) generateDataAssetDiagramGraphvizImage(dotFile *os.File, targetDir string) { // TODO dedupe with other render...() method here
+	if context.Config.Verbose {
 		fmt.Println("Rendering data asset diagram input")
 	}
 	// tmp files
-	tmpFileDOT, err := os.CreateTemp(*context.tempFolder, "diagram-*-.gv")
+	tmpFileDOT, err := os.CreateTemp(context.Config.TempFolder, "diagram-*-.gv")
 	checkErr(err)
 	defer func() { _ = os.Remove(tmpFileDOT.Name()) }()
 
-	tmpFilePNG, err := os.CreateTemp(*context.tempFolder, "diagram-*-.png")
+	tmpFilePNG, err := os.CreateTemp(context.Config.TempFolder, "diagram-*-.png")
 	checkErr(err)
 	defer func() { _ = os.Remove(tmpFilePNG.Name()) }()
 
@@ -1940,7 +1883,7 @@ func (context *Context) renderDataAssetDiagramGraphvizImage(dotFile *os.File, ta
 	}
 
 	// exec
-	cmd := exec.Command(filepath.Join(*context.binFolder, context.graphvizDataAssetDiagramConversionCall), tmpFileDOT.Name(), tmpFilePNG.Name())
+	cmd := exec.Command(filepath.Join(context.Config.BinFolder, common.GraphvizDataAssetDiagramConversionCall), tmpFileDOT.Name(), tmpFilePNG.Name())
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
@@ -1953,9 +1896,9 @@ func (context *Context) renderDataAssetDiagramGraphvizImage(dotFile *os.File, ta
 		fmt.Println(err)
 		return
 	}
-	err = os.WriteFile(filepath.Join(targetDir, context.dataAssetDiagramFilenamePNG), inputPNG, 0644)
+	err = os.WriteFile(filepath.Join(targetDir, context.Config.DataAssetDiagramFilenamePNG), inputPNG, 0644)
 	if err != nil {
-		fmt.Println("Error creating", context.dataAssetDiagramFilenamePNG)
+		fmt.Println("Error creating", context.Config.DataAssetDiagramFilenamePNG)
 		fmt.Println(err)
 		return
 	}

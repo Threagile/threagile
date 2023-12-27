@@ -2,7 +2,7 @@
 Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 */
 
-package threagile
+package common
 
 import (
 	"fmt"
@@ -34,7 +34,7 @@ func (CommandLineProgressReporter) Fatalf(format string, v ...any) {
 	log.Fatalf(format, v...)
 }
 
-func getProgressReporter(cobraCmd *cobra.Command) ProgressReporter {
+func GetProgressReporter(cobraCmd *cobra.Command) ProgressReporter {
 	if cobraCmd == nil {
 		return CommandLineProgressReporter{}
 	}

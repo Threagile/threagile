@@ -119,7 +119,7 @@ func (s *server) listModels(ginContext *gin.Context) { // TODO currently returns
 	}
 	for _, dirEntry := range modelFolders {
 		if dirEntry.IsDir() {
-			modelStat, err := os.Stat(filepath.Join(folderNameOfKey, dirEntry.Name(), s.configuration.InputFile))
+			modelStat, err := os.Stat(filepath.Join(folderNameOfKey, dirEntry.Name(), s.config.InputFile))
 			if err != nil {
 				log.Println(err)
 				ginContext.JSON(http.StatusNotFound, gin.H{
@@ -994,7 +994,7 @@ func (s *server) readModel(ginContext *gin.Context, modelUUID string, key []byte
 		return modelInputResult, yamlText, false
 	}
 
-	fileBytes, err := os.ReadFile(filepath.Join(modelFolder, s.configuration.InputFile))
+	fileBytes, err := os.ReadFile(filepath.Join(modelFolder, s.config.InputFile))
 	if err != nil {
 		log.Println(err)
 		ginContext.JSON(http.StatusInternalServerError, gin.H{
@@ -1084,7 +1084,7 @@ func (s *server) getModel(ginContext *gin.Context) {
 	defer s.unlockFolder(folderNameOfKey)
 	_, yamlText, ok := s.readModel(ginContext, ginContext.Param("model-id"), key, folderNameOfKey)
 	if ok {
-		tmpResultFile, err := os.CreateTemp(s.configuration.TempFolder, "threagile-*.yaml")
+		tmpResultFile, err := os.CreateTemp(s.config.TempFolder, "threagile-*.yaml")
 		if err != nil {
 			handleErrorInServiceCall(err, ginContext)
 			return
@@ -1098,7 +1098,7 @@ func (s *server) getModel(ginContext *gin.Context) {
 			return
 		}
 		defer func() { _ = os.Remove(tmpResultFile.Name()) }()
-		ginContext.FileAttachment(tmpResultFile.Name(), s.configuration.InputFile)
+		ginContext.FileAttachment(tmpResultFile.Name(), s.config.InputFile)
 	}
 }
 
@@ -1139,7 +1139,7 @@ func (s *server) analyzeModelOnServerDirectly(ginContext *gin.Context) {
 		var err error
 		if r := recover(); r != nil {
 			err = r.(error)
-			if s.configuration.Verbose {
+			if s.config.Verbose {
 				log.Println(err)
 			}
 			log.Println(err)
@@ -1150,7 +1150,7 @@ func (s *server) analyzeModelOnServerDirectly(ginContext *gin.Context) {
 		}
 	}()
 
-	dpi, err := strconv.Atoi(ginContext.DefaultQuery("dpi", strconv.Itoa(s.configuration.DefaultGraphvizDPI)))
+	dpi, err := strconv.Atoi(ginContext.DefaultQuery("dpi", strconv.Itoa(s.config.GraphvizDPI)))
 	if err != nil {
 		handleErrorInServiceCall(err, ginContext)
 		return
@@ -1160,19 +1160,19 @@ func (s *server) analyzeModelOnServerDirectly(ginContext *gin.Context) {
 	if !ok {
 		return
 	}
-	tmpModelFile, err := os.CreateTemp(s.configuration.TempFolder, "threagile-direct-analyze-*")
+	tmpModelFile, err := os.CreateTemp(s.config.TempFolder, "threagile-direct-analyze-*")
 	if err != nil {
 		handleErrorInServiceCall(err, ginContext)
 		return
 	}
 	defer func() { _ = os.Remove(tmpModelFile.Name()) }()
-	tmpOutputDir, err := os.MkdirTemp(s.configuration.TempFolder, "threagile-direct-analyze-")
+	tmpOutputDir, err := os.MkdirTemp(s.config.TempFolder, "threagile-direct-analyze-")
 	if err != nil {
 		handleErrorInServiceCall(err, ginContext)
 		return
 	}
 	defer func() { _ = os.RemoveAll(tmpOutputDir) }()
-	tmpResultFile, err := os.CreateTemp(s.configuration.TempFolder, "threagile-result-*.zip")
+	tmpResultFile, err := os.CreateTemp(s.config.TempFolder, "threagile-result-*.zip")
 	if err != nil {
 		handleErrorInServiceCall(err, ginContext)
 		return
@@ -1186,40 +1186,40 @@ func (s *server) analyzeModelOnServerDirectly(ginContext *gin.Context) {
 		handleErrorInServiceCall(err, ginContext)
 		return
 	}
-	err = os.WriteFile(filepath.Join(tmpOutputDir, s.configuration.InputFile), []byte(yamlText), 0400)
+	err = os.WriteFile(filepath.Join(tmpOutputDir, s.config.InputFile), []byte(yamlText), 0400)
 	if err != nil {
 		handleErrorInServiceCall(err, ginContext)
 		return
 	}
 
 	files := []string{
-		filepath.Join(tmpOutputDir, s.configuration.InputFile),
-		filepath.Join(tmpOutputDir, s.configuration.DataFlowDiagramFilenamePNG),
-		filepath.Join(tmpOutputDir, s.configuration.DataAssetDiagramFilenamePNG),
-		filepath.Join(tmpOutputDir, s.configuration.ReportFilename),
-		filepath.Join(tmpOutputDir, s.configuration.ExcelRisksFilename),
-		filepath.Join(tmpOutputDir, s.configuration.ExcelTagsFilename),
-		filepath.Join(tmpOutputDir, s.configuration.JsonRisksFilename),
-		filepath.Join(tmpOutputDir, s.configuration.JsonTechnicalAssetsFilename),
-		filepath.Join(tmpOutputDir, s.configuration.JsonStatsFilename),
+		filepath.Join(tmpOutputDir, s.config.InputFile),
+		filepath.Join(tmpOutputDir, s.config.DataFlowDiagramFilenamePNG),
+		filepath.Join(tmpOutputDir, s.config.DataAssetDiagramFilenamePNG),
+		filepath.Join(tmpOutputDir, s.config.ReportFilename),
+		filepath.Join(tmpOutputDir, s.config.ExcelRisksFilename),
+		filepath.Join(tmpOutputDir, s.config.ExcelTagsFilename),
+		filepath.Join(tmpOutputDir, s.config.JsonRisksFilename),
+		filepath.Join(tmpOutputDir, s.config.JsonTechnicalAssetsFilename),
+		filepath.Join(tmpOutputDir, s.config.JsonStatsFilename),
 	}
-	if s.configuration.KeepDiagramSourceFiles {
-		files = append(files, filepath.Join(tmpOutputDir, s.configuration.DataFlowDiagramFilenameDOT))
-		files = append(files, filepath.Join(tmpOutputDir, s.configuration.DataAssetDiagramFilenameDOT))
+	if s.config.KeepDiagramSourceFiles {
+		files = append(files, filepath.Join(tmpOutputDir, s.config.DataFlowDiagramFilenameDOT))
+		files = append(files, filepath.Join(tmpOutputDir, s.config.DataAssetDiagramFilenameDOT))
 	}
 	err = zipFiles(tmpResultFile.Name(), files)
 	if err != nil {
 		handleErrorInServiceCall(err, ginContext)
 		return
 	}
-	if s.configuration.Verbose {
+	if s.config.Verbose {
 		fmt.Println("Streaming back result file: " + tmpResultFile.Name())
 	}
 	ginContext.FileAttachment(tmpResultFile.Name(), "threagile-result.zip")
 }
 
 func (s *server) writeModelYAML(ginContext *gin.Context, yaml string, key []byte, modelFolder string, changeReasonForHistory string, skipBackup bool) (ok bool) {
-	if s.configuration.Verbose {
+	if s.config.Verbose {
 		fmt.Println("about to write " + strconv.Itoa(len(yaml)) + " bytes of yaml into model folder: " + modelFolder)
 	}
 	var b bytes.Buffer
@@ -1264,7 +1264,7 @@ func (s *server) writeModelYAML(ginContext *gin.Context, yaml string, key []byte
 			return false
 		}
 	}
-	f, err := os.Create(filepath.Join(modelFolder, s.configuration.InputFile))
+	f, err := os.Create(filepath.Join(modelFolder, s.config.InputFile))
 	if err != nil {
 		log.Println(err)
 		ginContext.JSON(http.StatusInternalServerError, gin.H{
@@ -1303,7 +1303,7 @@ func (s *server) backupModelToHistory(modelFolder string, changeReasonForHistory
 			return err
 		}
 	}
-	inputModel, err := os.ReadFile(filepath.Join(modelFolder, s.configuration.InputFile))
+	inputModel, err := os.ReadFile(filepath.Join(modelFolder, s.config.InputFile))
 	if err != nil {
 		return err
 	}
@@ -1317,8 +1317,8 @@ func (s *server) backupModelToHistory(modelFolder string, changeReasonForHistory
 	if err != nil {
 		return err
 	}
-	if len(files) > s.configuration.BackupHistoryFilesToKeep {
-		requiredToDelete := len(files) - s.configuration.BackupHistoryFilesToKeep
+	if len(files) > s.config.BackupHistoryFilesToKeep {
+		requiredToDelete := len(files) - s.config.BackupHistoryFilesToKeep
 		sort.Slice(files, func(i, j int) bool {
 			return files[i].Name() < files[j].Name()
 		})
