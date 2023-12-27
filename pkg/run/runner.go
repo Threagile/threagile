@@ -2,9 +2,9 @@
 package run
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"os"
 	"os/exec"
 )
@@ -49,17 +49,11 @@ func (p *Runner) Run(in any, out any, parameters ...string) error {
 	}
 	defer func() { _ = stdin.Close() }()
 
-	stdout, stdoutError := plugin.StdoutPipe()
-	if stdoutError != nil {
-		return stdoutError
-	}
-	defer func() { _ = stdout.Close() }()
+	var stdoutBuf bytes.Buffer
+	plugin.Stdout = &stdoutBuf
 
-	stderr, stderrError := plugin.StderrPipe()
-	if stderrError != nil {
-		return stderrError
-	}
-	defer func() { _ = stderr.Close() }()
+	var stderrBuf bytes.Buffer
+	plugin.Stderr = &stderrBuf
 
 	startError := plugin.Start()
 	if startError != nil {
@@ -71,8 +65,6 @@ func (p *Runner) Run(in any, out any, parameters ...string) error {
 		return inError
 	}
 
-	_ = os.WriteFile("../../all.json", inData, 0644)
-
 	_, writeError := stdin.Write(inData)
 	if writeError != nil {
 		return writeError
@@ -83,23 +75,15 @@ func (p *Runner) Run(in any, out any, parameters ...string) error {
 		return inCloseError
 	}
 
-	errData, errError := io.ReadAll(stderr)
-	if errError != nil {
-		return errError
-	}
-	p.ErrorOutput = string(errData)
-
-	outData, outError := io.ReadAll(stdout)
-	if outError != nil {
-		return outError
-	}
-
 	waitError := plugin.Wait()
 	if waitError != nil {
 		return fmt.Errorf("%v: %v", waitError, p.ErrorOutput)
 	}
 
-	unmarshalError := json.Unmarshal(outData, &p.Out)
+	p.ErrorOutput = stderrBuf.String()
+	stdout := stdoutBuf.Bytes()
+
+	unmarshalError := json.Unmarshal(stdout, &p.Out)
 	if unmarshalError != nil {
 		return unmarshalError
 	}

@@ -1,27 +1,26 @@
 /*
 Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 */
-package model
+
+package types
 
 import (
 	"sort"
-
-	"github.com/threagile/threagile/pkg/security/types"
 )
 
 type DataAsset struct {
-	Id                     string                `yaml:"id" json:"id"`                   // TODO: tag here still required?
-	Title                  string                `yaml:"title" json:"title"`             // TODO: tag here still required?
-	Description            string                `yaml:"description" json:"description"` // TODO: tag here still required?
-	Usage                  types.Usage           `yaml:"usage" json:"usage"`
-	Tags                   []string              `yaml:"tags" json:"tags"`
-	Origin                 string                `yaml:"origin" json:"origin"`
-	Owner                  string                `yaml:"owner" json:"owner"`
-	Quantity               types.Quantity        `yaml:"quantity" json:"quantity"`
-	Confidentiality        types.Confidentiality `yaml:"confidentiality" json:"confidentiality"`
-	Integrity              types.Criticality     `yaml:"integrity" json:"integrity"`
-	Availability           types.Criticality     `yaml:"availability" json:"availability"`
-	JustificationCiaRating string                `yaml:"justification_cia_rating" json:"justification_cia_rating"`
+	Id                     string          `yaml:"id" json:"id"`                   // TODO: tag here still required?
+	Title                  string          `yaml:"title" json:"title"`             // TODO: tag here still required?
+	Description            string          `yaml:"description" json:"description"` // TODO: tag here still required?
+	Usage                  Usage           `yaml:"usage" json:"usage"`
+	Tags                   []string        `yaml:"tags" json:"tags"`
+	Origin                 string          `yaml:"origin" json:"origin"`
+	Owner                  string          `yaml:"owner" json:"owner"`
+	Quantity               Quantity        `yaml:"quantity" json:"quantity"`
+	Confidentiality        Confidentiality `yaml:"confidentiality" json:"confidentiality"`
+	Integrity              Criticality     `yaml:"integrity" json:"integrity"`
+	Availability           Criticality     `yaml:"availability" json:"availability"`
+	JustificationCiaRating string          `yaml:"justification_cia_rating" json:"justification_cia_rating"`
 }
 
 func (what DataAsset) IsTaggedWithAny(tags ...string) bool {
@@ -101,8 +100,8 @@ func (what DataAsset) IsDataBreachPotentialStillAtRisk(parsedModel *ParsedModel)
 	return false
 }
 
-func (what DataAsset) IdentifiedDataBreachProbability(parsedModel *ParsedModel) types.DataBreachProbability {
-	highestProbability := types.Improbable
+func (what DataAsset) IdentifiedDataBreachProbability(parsedModel *ParsedModel) DataBreachProbability {
+	highestProbability := Improbable
 	for _, risk := range AllRisks(parsedModel) {
 		for _, techAsset := range risk.DataBreachTechnicalAssetIDs {
 			if contains(parsedModel.TechnicalAssets[techAsset].DataAssetsProcessed, what.Id) {
@@ -122,8 +121,8 @@ func (what DataAsset) IdentifiedDataBreachProbability(parsedModel *ParsedModel) 
 	return highestProbability
 }
 
-func (what DataAsset) IdentifiedDataBreachProbabilityStillAtRisk(parsedModel *ParsedModel) types.DataBreachProbability {
-	highestProbability := types.Improbable
+func (what DataAsset) IdentifiedDataBreachProbabilityStillAtRisk(parsedModel *ParsedModel) DataBreachProbability {
+	highestProbability := Improbable
 	for _, risk := range FilteredByStillAtRisk(parsedModel) {
 		for _, techAsset := range risk.DataBreachTechnicalAssetIDs {
 			if contains(parsedModel.TechnicalAssets[techAsset].DataAssetsProcessed, what.Id) {

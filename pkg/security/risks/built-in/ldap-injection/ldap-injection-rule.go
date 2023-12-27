@@ -1,20 +1,19 @@
 package ldap_injection
 
 import (
-	"github.com/threagile/threagile/pkg/model"
 	"github.com/threagile/threagile/pkg/security/types"
 )
 
-func Rule() model.CustomRiskRule {
-	return model.CustomRiskRule{
+func Rule() types.RiskRule {
+	return types.RiskRule{
 		Category:      Category,
 		SupportedTags: SupportedTags,
 		GenerateRisks: GenerateRisks,
 	}
 }
 
-func Category() model.RiskCategory {
-	return model.RiskCategory{
+func Category() types.RiskCategory {
+	return types.RiskCategory{
 		Id:    "ldap-injection",
 		Title: "LDAP-Injection",
 		Description: "When an LDAP server is accessed LDAP-Injection risks might arise. " +
@@ -38,8 +37,8 @@ func Category() model.RiskCategory {
 	}
 }
 
-func GenerateRisks(input *model.ParsedModel) []model.Risk {
-	risks := make([]model.Risk, 0)
+func GenerateRisks(input *types.ParsedModel) []types.Risk {
+	risks := make([]types.Risk, 0)
 	for _, technicalAsset := range input.TechnicalAssets {
 		incomingFlows := input.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id]
 		for _, incomingFlow := range incomingFlows {
@@ -62,7 +61,7 @@ func SupportedTags() []string {
 	return []string{}
 }
 
-func createRisk(input *model.ParsedModel, technicalAsset model.TechnicalAsset, incomingFlow model.CommunicationLink, likelihood types.RiskExploitationLikelihood) model.Risk {
+func createRisk(input *types.ParsedModel, technicalAsset types.TechnicalAsset, incomingFlow types.CommunicationLink, likelihood types.RiskExploitationLikelihood) types.Risk {
 	caller := input.TechnicalAssets[incomingFlow.SourceId]
 	title := "<b>LDAP-Injection</b> risk at <b>" + caller.Title + "</b> against LDAP server <b>" + technicalAsset.Title + "</b>" +
 		" via <b>" + incomingFlow.Title + "</b>"
@@ -70,9 +69,9 @@ func createRisk(input *model.ParsedModel, technicalAsset model.TechnicalAsset, i
 	if technicalAsset.HighestConfidentiality(input) == types.StrictlyConfidential || technicalAsset.HighestIntegrity(input) == types.MissionCritical {
 		impact = types.HighImpact
 	}
-	risk := model.Risk{
-		Category:                        Category(),
-		Severity:                        model.CalculateSeverity(likelihood, impact),
+	risk := types.Risk{
+		CategoryId:                      Category().Id,
+		Severity:                        types.CalculateSeverity(likelihood, impact),
 		ExploitationLikelihood:          likelihood,
 		ExploitationImpact:              impact,
 		Title:                           title,
@@ -81,6 +80,6 @@ func createRisk(input *model.ParsedModel, technicalAsset model.TechnicalAsset, i
 		DataBreachProbability:           types.Probable,
 		DataBreachTechnicalAssetIDs:     []string{technicalAsset.Id},
 	}
-	risk.SyntheticId = risk.Category.Id + "@" + caller.Id + "@" + technicalAsset.Id + "@" + incomingFlow.Id
+	risk.SyntheticId = risk.CategoryId + "@" + caller.Id + "@" + technicalAsset.Id + "@" + incomingFlow.Id
 	return risk
 }

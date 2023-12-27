@@ -7,7 +7,6 @@ import (
 
 	"github.com/threagile/threagile/pkg/input"
 	"github.com/threagile/threagile/pkg/macros"
-	"github.com/threagile/threagile/pkg/model"
 	"github.com/threagile/threagile/pkg/security/types"
 )
 
@@ -41,7 +40,7 @@ var authenticationTypes = []string{
 	"Credentials (username/password, API-key, secret token, etc.)",
 }
 
-func GetNextQuestion(parsedModel *model.ParsedModel) (nextQuestion macros.MacroQuestion, err error) {
+func GetNextQuestion(parsedModel *types.ParsedModel) (nextQuestion macros.MacroQuestion, err error) {
 	counter := len(questionsAnswered)
 	if counter > 5 && !withinTrustBoundary {
 		counter++
@@ -166,19 +165,19 @@ func GoBack() (message string, validResult bool, err error) {
 	return "Undo successful", true, nil
 }
 
-func GetFinalChangeImpact(modelInput *input.ModelInput, parsedModel *model.ParsedModel) (changes []string, message string, validResult bool, err error) {
+func GetFinalChangeImpact(modelInput *input.ModelInput, parsedModel *types.ParsedModel) (changes []string, message string, validResult bool, err error) {
 	changeLogCollector := make([]string, 0)
 	message, validResult, err = applyChange(modelInput, parsedModel, &changeLogCollector, true)
 	return changeLogCollector, message, validResult, err
 }
 
-func Execute(modelInput *input.ModelInput, parsedModel *model.ParsedModel) (message string, validResult bool, err error) {
+func Execute(modelInput *input.ModelInput, parsedModel *types.ParsedModel) (message string, validResult bool, err error) {
 	changeLogCollector := make([]string, 0)
 	message, validResult, err = applyChange(modelInput, parsedModel, &changeLogCollector, false)
 	return message, validResult, err
 }
 
-func applyChange(modelInput *input.ModelInput, parsedModel *model.ParsedModel, changeLogCollector *[]string, dryRun bool) (message string, validResult bool, err error) {
+func applyChange(modelInput *input.ModelInput, parsedModel *types.ParsedModel, changeLogCollector *[]string, dryRun bool) (message string, validResult bool, err error) {
 	input.AddTagToModelInput(modelInput, macroState["vault-name"][0], dryRun, changeLogCollector)
 
 	var serverSideTechAssets = make([]string, 0)
@@ -250,7 +249,7 @@ func applyChange(modelInput *input.ModelInput, parsedModel *model.ParsedModel, c
 		}
 	}
 
-	vaultID := model.MakeID(macroState["vault-name"][0]) + "-vault"
+	vaultID := types.MakeID(macroState["vault-name"][0]) + "-vault"
 
 	if _, exists := parsedModel.TechnicalAssets[vaultID]; !exists {
 		serverSideTechAssets = append(serverSideTechAssets, vaultID)

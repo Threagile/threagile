@@ -1,20 +1,19 @@
 package xml_external_entity
 
 import (
-	"github.com/threagile/threagile/pkg/model"
 	"github.com/threagile/threagile/pkg/security/types"
 )
 
-func Rule() model.CustomRiskRule {
-	return model.CustomRiskRule{
+func Rule() types.RiskRule {
+	return types.RiskRule{
 		Category:      Category,
 		SupportedTags: SupportedTags,
 		GenerateRisks: GenerateRisks,
 	}
 }
 
-func Category() model.RiskCategory {
-	return model.RiskCategory{
+func Category() types.RiskCategory {
+	return types.RiskCategory{
 		Id:          "xml-external-entity",
 		Title:       "XML External Entity (XXE)",
 		Description: "When a technical asset accepts data in XML format, XML External Entity (XXE) risks might arise.",
@@ -43,8 +42,8 @@ func SupportedTags() []string {
 	return []string{}
 }
 
-func GenerateRisks(input *model.ParsedModel) []model.Risk {
-	risks := make([]model.Risk, 0)
+func GenerateRisks(input *types.ParsedModel) []types.Risk {
+	risks := make([]types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
 		if technicalAsset.OutOfScope {
@@ -59,7 +58,7 @@ func GenerateRisks(input *model.ParsedModel) []model.Risk {
 	return risks
 }
 
-func createRisk(parsedModel *model.ParsedModel, technicalAsset model.TechnicalAsset) model.Risk {
+func createRisk(parsedModel *types.ParsedModel, technicalAsset types.TechnicalAsset) types.Risk {
 	title := "<b>XML External Entity (XXE)</b> risk at <b>" + technicalAsset.Title + "</b>"
 	impact := types.MediumImpact
 	if technicalAsset.HighestConfidentiality(parsedModel) == types.StrictlyConfidential ||
@@ -67,9 +66,9 @@ func createRisk(parsedModel *model.ParsedModel, technicalAsset model.TechnicalAs
 		technicalAsset.HighestAvailability(parsedModel) == types.MissionCritical {
 		impact = types.HighImpact
 	}
-	risk := model.Risk{
-		Category:                     Category(),
-		Severity:                     model.CalculateSeverity(types.VeryLikely, impact),
+	risk := types.Risk{
+		CategoryId:                   Category().Id,
+		Severity:                     types.CalculateSeverity(types.VeryLikely, impact),
 		ExploitationLikelihood:       types.VeryLikely,
 		ExploitationImpact:           impact,
 		Title:                        title,
@@ -77,6 +76,6 @@ func createRisk(parsedModel *model.ParsedModel, technicalAsset model.TechnicalAs
 		DataBreachProbability:        types.Probable,
 		DataBreachTechnicalAssetIDs:  []string{technicalAsset.Id}, // TODO: use the same logic here as for SSRF rule, as XXE is also SSRF ;)
 	}
-	risk.SyntheticId = risk.Category.Id + "@" + technicalAsset.Id
+	risk.SyntheticId = risk.CategoryId + "@" + technicalAsset.Id
 	return risk
 }

@@ -1,20 +1,19 @@
 package dos_risky_access_across_trust_boundary
 
 import (
-	"github.com/threagile/threagile/pkg/model"
 	"github.com/threagile/threagile/pkg/security/types"
 )
 
-func Rule() model.CustomRiskRule {
-	return model.CustomRiskRule{
+func Rule() types.RiskRule {
+	return types.RiskRule{
 		Category:      Category,
 		SupportedTags: SupportedTags,
 		GenerateRisks: GenerateRisks,
 	}
 }
 
-func Category() model.RiskCategory {
-	return model.RiskCategory{
+func Category() types.RiskCategory {
+	return types.RiskCategory{
 		Id:    "dos-risky-access-across-trust-boundary",
 		Title: "DoS-risky Access Across Trust-Boundary",
 		Description: "Assets accessed across trust boundaries with critical or mission-critical availability rating " +
@@ -47,8 +46,8 @@ func SupportedTags() []string {
 	return []string{}
 }
 
-func GenerateRisks(input *model.ParsedModel) []model.Risk {
-	risks := make([]model.Risk, 0)
+func GenerateRisks(input *types.ParsedModel) []types.Risk {
+	risks := make([]types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
 		if !technicalAsset.OutOfScope && technicalAsset.Technology != types.LoadBalancer &&
@@ -70,7 +69,7 @@ func GenerateRisks(input *model.ParsedModel) []model.Risk {
 	return risks
 }
 
-func checkRisk(input *model.ParsedModel, technicalAsset model.TechnicalAsset, incomingAccess model.CommunicationLink, hopBetween string, risks []model.Risk) []model.Risk {
+func checkRisk(input *types.ParsedModel, technicalAsset types.TechnicalAsset, incomingAccess types.CommunicationLink, hopBetween string, risks []types.Risk) []types.Risk {
 	if incomingAccess.IsAcrossTrustBoundaryNetworkOnly(input) &&
 		!incomingAccess.Protocol.IsProcessLocal() && incomingAccess.Usage != types.DevOps {
 		highRisk := technicalAsset.Availability == types.MissionCritical &&
@@ -81,8 +80,8 @@ func checkRisk(input *model.ParsedModel, technicalAsset model.TechnicalAsset, in
 	return risks
 }
 
-func createRisk(techAsset model.TechnicalAsset, dataFlow model.CommunicationLink, hopBetween string,
-	clientOutsideTrustBoundary model.TechnicalAsset, moreRisky bool) model.Risk {
+func createRisk(techAsset types.TechnicalAsset, dataFlow types.CommunicationLink, hopBetween string,
+	clientOutsideTrustBoundary types.TechnicalAsset, moreRisky bool) types.Risk {
 	impact := types.LowImpact
 	if moreRisky {
 		impact = types.MediumImpact
@@ -90,9 +89,9 @@ func createRisk(techAsset model.TechnicalAsset, dataFlow model.CommunicationLink
 	if len(hopBetween) > 0 {
 		hopBetween = " forwarded via <b>" + hopBetween + "</b>"
 	}
-	risk := model.Risk{
-		Category:               Category(),
-		Severity:               model.CalculateSeverity(types.Unlikely, impact),
+	risk := types.Risk{
+		CategoryId:             Category().Id,
+		Severity:               types.CalculateSeverity(types.Unlikely, impact),
 		ExploitationLikelihood: types.Unlikely,
 		ExploitationImpact:     impact,
 		Title: "<b>Denial-of-Service</b> risky access of <b>" + techAsset.Title + "</b> by <b>" + clientOutsideTrustBoundary.Title +
@@ -102,6 +101,6 @@ func createRisk(techAsset model.TechnicalAsset, dataFlow model.CommunicationLink
 		DataBreachProbability:           types.Improbable,
 		DataBreachTechnicalAssetIDs:     []string{},
 	}
-	risk.SyntheticId = risk.Category.Id + "@" + techAsset.Id + "@" + clientOutsideTrustBoundary.Id + "@" + dataFlow.Id
+	risk.SyntheticId = risk.CategoryId + "@" + techAsset.Id + "@" + clientOutsideTrustBoundary.Id + "@" + dataFlow.Id
 	return risk
 }

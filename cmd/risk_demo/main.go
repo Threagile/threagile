@@ -8,13 +8,12 @@ import (
 	"io"
 	"os"
 
-	"github.com/threagile/threagile/pkg/model"
 	"github.com/threagile/threagile/pkg/security/types"
 )
 
 type customRiskRule string
 
-// exported as symbol (here simply as variable to interface to bundle many functions under one symbol) named "CustomRiskRule"
+// exported as symbol (here simply as variable to interface to bundle many functions under one symbol) named "RiskRule"
 
 var CustomRiskRule customRiskRule
 
@@ -26,7 +25,7 @@ func main() {
 	if *getInfo {
 		rule := new(customRiskRule)
 		category := rule.Category()
-		riskData, marshalError := json.Marshal(model.CustomRisk{
+		riskData, marshalError := json.Marshal(types.CustomRisk{
 			ID:       category.Id,
 			Category: category,
 			Tags:     rule.SupportedTags(),
@@ -49,7 +48,7 @@ func main() {
 			os.Exit(-2)
 		}
 
-		var input model.ParsedModel
+		var input types.ParsedModel
 		inError := json.Unmarshal(inData, &input)
 		if inError != nil {
 			_, _ = fmt.Fprintf(os.Stderr, "failed to parse model: %v\n", inError)
@@ -71,8 +70,8 @@ func main() {
 	os.Exit(-2)
 }
 
-func (r customRiskRule) Category() model.RiskCategory {
-	return model.RiskCategory{
+func (r customRiskRule) Category() types.RiskCategory {
+	return types.RiskCategory{
 		Id:                         "demo",
 		Title:                      "Just a Demo",
 		Description:                "Demo Description",
@@ -96,18 +95,18 @@ func (r customRiskRule) SupportedTags() []string {
 	return []string{"demo tag"}
 }
 
-func (r customRiskRule) GenerateRisks(parsedModel *model.ParsedModel) []model.Risk {
-	generatedRisks := make([]model.Risk, 0)
+func (r customRiskRule) GenerateRisks(parsedModel *types.ParsedModel) []types.Risk {
+	generatedRisks := make([]types.Risk, 0)
 	for _, techAsset := range parsedModel.TechnicalAssets {
 		generatedRisks = append(generatedRisks, createRisk(techAsset))
 	}
 	return generatedRisks
 }
 
-func createRisk(technicalAsset model.TechnicalAsset) model.Risk {
-	risk := model.Risk{
-		Category:                     CustomRiskRule.Category(),
-		Severity:                     model.CalculateSeverity(types.VeryLikely, types.MediumImpact),
+func createRisk(technicalAsset types.TechnicalAsset) types.Risk {
+	risk := types.Risk{
+		CategoryId:                   CustomRiskRule.Category().Id,
+		Severity:                     types.CalculateSeverity(types.VeryLikely, types.MediumImpact),
 		ExploitationLikelihood:       types.VeryLikely,
 		ExploitationImpact:           types.MediumImpact,
 		Title:                        "<b>Demo</b> risk at <b>" + technicalAsset.Title + "</b>",
@@ -115,6 +114,6 @@ func createRisk(technicalAsset model.TechnicalAsset) model.Risk {
 		DataBreachProbability:        types.Possible,
 		DataBreachTechnicalAssetIDs:  []string{technicalAsset.Id},
 	}
-	risk.SyntheticId = risk.Category.Id + "@" + technicalAsset.Id
+	risk.SyntheticId = risk.CategoryId + "@" + technicalAsset.Id
 	return risk
 }

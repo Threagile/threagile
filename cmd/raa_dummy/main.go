@@ -4,11 +4,10 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"github.com/threagile/threagile/pkg/security/types"
 	"io"
 	"math/rand"
 	"os"
-
-	"github.com/threagile/threagile/pkg/model"
 )
 
 // JUST A DUMMY TO HAVE AN ALTERNATIVE PLUGIN TO USE/TEST
@@ -22,7 +21,7 @@ func main() {
 		os.Exit(-2)
 	}
 
-	var input model.ParsedModel
+	var input types.ParsedModel
 	inError := json.Unmarshal(inData, &input)
 	if inError != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "failed to parse model: %v\n", inError)
@@ -43,7 +42,7 @@ func main() {
 
 // used from run caller:
 
-func CalculateRAA(input *model.ParsedModel) string {
+func CalculateRAA(input *types.ParsedModel) string {
 	for techAssetID, techAsset := range input.TechnicalAssets {
 		techAsset.RAA = float64(rand.Intn(100))
 		fmt.Println("Using dummy RAA random calculation (just to test the usage of other shared object files as plugins)")

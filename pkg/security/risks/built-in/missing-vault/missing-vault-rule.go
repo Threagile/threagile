@@ -1,20 +1,19 @@
 package missing_vault
 
 import (
-	"github.com/threagile/threagile/pkg/model"
 	"github.com/threagile/threagile/pkg/security/types"
 )
 
-func Rule() model.CustomRiskRule {
-	return model.CustomRiskRule{
+func Rule() types.RiskRule {
+	return types.RiskRule{
 		Category:      Category,
 		SupportedTags: SupportedTags,
 		GenerateRisks: GenerateRisks,
 	}
 }
 
-func Category() model.RiskCategory {
-	return model.RiskCategory{
+func Category() types.RiskCategory {
+	return types.RiskCategory{
 		Id:    "missing-vault",
 		Title: "Missing Vault (Secret Storage)",
 		Description: "In order to avoid the risk of secret leakage via config files (when attacked through vulnerabilities being able to " +
@@ -43,10 +42,10 @@ func SupportedTags() []string {
 	return []string{}
 }
 
-func GenerateRisks(input *model.ParsedModel) []model.Risk {
-	risks := make([]model.Risk, 0)
+func GenerateRisks(input *types.ParsedModel) []types.Risk {
+	risks := make([]types.Risk, 0)
 	hasVault := false
-	var mostRelevantAsset model.TechnicalAsset
+	var mostRelevantAsset types.TechnicalAsset
 	impact := types.LowImpact
 	for _, id := range input.SortedTechnicalAssetIDs() { // use the sorted one to always get the same tech asset with the highest sensitivity as example asset
 		techAsset := input.TechnicalAssets[id]
@@ -74,11 +73,11 @@ func GenerateRisks(input *model.ParsedModel) []model.Risk {
 	return risks
 }
 
-func createRisk(technicalAsset model.TechnicalAsset, impact types.RiskExploitationImpact) model.Risk {
+func createRisk(technicalAsset types.TechnicalAsset, impact types.RiskExploitationImpact) types.Risk {
 	title := "<b>Missing Vault (Secret Storage)</b> in the threat model (referencing asset <b>" + technicalAsset.Title + "</b> as an example)"
-	risk := model.Risk{
-		Category:                     Category(),
-		Severity:                     model.CalculateSeverity(types.Unlikely, impact),
+	risk := types.Risk{
+		CategoryId:                   Category().Id,
+		Severity:                     types.CalculateSeverity(types.Unlikely, impact),
 		ExploitationLikelihood:       types.Unlikely,
 		ExploitationImpact:           impact,
 		Title:                        title,
@@ -86,6 +85,6 @@ func createRisk(technicalAsset model.TechnicalAsset, impact types.RiskExploitati
 		DataBreachProbability:        types.Improbable,
 		DataBreachTechnicalAssetIDs:  []string{},
 	}
-	risk.SyntheticId = risk.Category.Id + "@" + technicalAsset.Id
+	risk.SyntheticId = risk.CategoryId + "@" + technicalAsset.Id
 	return risk
 }

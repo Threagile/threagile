@@ -3,20 +3,19 @@ package missing_cloud_hardening
 import (
 	"sort"
 
-	"github.com/threagile/threagile/pkg/model"
 	"github.com/threagile/threagile/pkg/security/types"
 )
 
-func Rule() model.CustomRiskRule {
-	return model.CustomRiskRule{
+func Rule() types.RiskRule {
+	return types.RiskRule{
 		Category:      Category,
 		SupportedTags: SupportedTags,
 		GenerateRisks: GenerateRisks,
 	}
 }
 
-func Category() model.RiskCategory {
-	return model.RiskCategory{
+func Category() types.RiskCategory {
+	return types.RiskCategory{
 		Id:    "missing-cloud-hardening",
 		Title: "Missing Cloud Hardening",
 		Description: "Cloud components should be hardened according to the cloud vendor best practices. This affects their " +
@@ -59,8 +58,8 @@ func SupportedTags() []string {
 	return res
 }
 
-func GenerateRisks(input *model.ParsedModel) []model.Risk {
-	risks := make([]model.Risk, 0)
+func GenerateRisks(input *types.ParsedModel) []types.Risk {
+	risks := make([]types.Risk, 0)
 
 	sharedRuntimesWithUnspecificCloudRisks := make(map[string]bool)
 	trustBoundariesWithUnspecificCloudRisks := make(map[string]bool)
@@ -279,7 +278,7 @@ func GenerateRisks(input *model.ParsedModel) []model.Risk {
 	return risks
 }
 
-func addTrustBoundaryAccordingToBaseTag(trustBoundary model.TrustBoundary,
+func addTrustBoundaryAccordingToBaseTag(trustBoundary types.TrustBoundary,
 	trustBoundariesWithUnspecificCloudRisks map[string]bool,
 	trustBoundaryIDsAWS map[string]bool,
 	trustBoundaryIDsAzure map[string]bool,
@@ -303,7 +302,7 @@ func addTrustBoundaryAccordingToBaseTag(trustBoundary model.TrustBoundary,
 	}
 }
 
-func addSharedRuntimeAccordingToBaseTag(sharedRuntime model.SharedRuntime,
+func addSharedRuntimeAccordingToBaseTag(sharedRuntime types.SharedRuntime,
 	sharedRuntimesWithUnspecificCloudRisks map[string]bool,
 	sharedRuntimeIDsAWS map[string]bool,
 	sharedRuntimeIDsAzure map[string]bool,
@@ -327,7 +326,7 @@ func addSharedRuntimeAccordingToBaseTag(sharedRuntime model.SharedRuntime,
 	}
 }
 
-func addAccordingToBaseTag(techAsset model.TechnicalAsset, tags []string,
+func addAccordingToBaseTag(techAsset types.TechnicalAsset, tags []string,
 	techAssetIDsWithTagSpecificCloudRisks map[string]bool,
 	techAssetIDsAWS map[string]bool,
 	techAssetIDsAzure map[string]bool,
@@ -336,22 +335,22 @@ func addAccordingToBaseTag(techAsset model.TechnicalAsset, tags []string,
 	if techAsset.IsTaggedWithAny(specificSubTagsAWS...) {
 		techAssetIDsWithTagSpecificCloudRisks[techAsset.Id] = true
 	}
-	if model.IsTaggedWithBaseTag(tags, "aws") {
+	if types.IsTaggedWithBaseTag(tags, "aws") {
 		techAssetIDsAWS[techAsset.Id] = true
 	}
-	if model.IsTaggedWithBaseTag(tags, "azure") {
+	if types.IsTaggedWithBaseTag(tags, "azure") {
 		techAssetIDsAzure[techAsset.Id] = true
 	}
-	if model.IsTaggedWithBaseTag(tags, "gcp") {
+	if types.IsTaggedWithBaseTag(tags, "gcp") {
 		techAssetIDsGCP[techAsset.Id] = true
 	}
-	if model.IsTaggedWithBaseTag(tags, "ocp") {
+	if types.IsTaggedWithBaseTag(tags, "ocp") {
 		techAssetIDsOCP[techAsset.Id] = true
 	}
 }
 
-func findMostSensitiveTechnicalAsset(input *model.ParsedModel, techAssets map[string]bool) model.TechnicalAsset {
-	var mostRelevantAsset model.TechnicalAsset
+func findMostSensitiveTechnicalAsset(input *types.ParsedModel, techAssets map[string]bool) types.TechnicalAsset {
+	var mostRelevantAsset types.TechnicalAsset
 	keys := make([]string, 0, len(techAssets))
 	for k := range techAssets {
 		keys = append(keys, k)
@@ -366,7 +365,7 @@ func findMostSensitiveTechnicalAsset(input *model.ParsedModel, techAssets map[st
 	return mostRelevantAsset
 }
 
-func createRiskForSharedRuntime(input *model.ParsedModel, sharedRuntime model.SharedRuntime, prefix, details string) model.Risk {
+func createRiskForSharedRuntime(input *types.ParsedModel, sharedRuntime types.SharedRuntime, prefix, details string) types.Risk {
 	if len(prefix) > 0 {
 		prefix = " (" + prefix + ")"
 	}
@@ -386,9 +385,9 @@ func createRiskForSharedRuntime(input *model.ParsedModel, sharedRuntime model.Sh
 		impact = types.VeryHighImpact
 	}
 	// create risk
-	risk := model.Risk{
-		Category:                    Category(),
-		Severity:                    model.CalculateSeverity(types.Unlikely, impact),
+	risk := types.Risk{
+		CategoryId:                  Category().Id,
+		Severity:                    types.CalculateSeverity(types.Unlikely, impact),
 		ExploitationLikelihood:      types.Unlikely,
 		ExploitationImpact:          impact,
 		Title:                       title,
@@ -396,11 +395,11 @@ func createRiskForSharedRuntime(input *model.ParsedModel, sharedRuntime model.Sh
 		DataBreachProbability:       types.Probable,
 		DataBreachTechnicalAssetIDs: sharedRuntime.TechnicalAssetsRunning,
 	}
-	risk.SyntheticId = risk.Category.Id + "@" + sharedRuntime.Id
+	risk.SyntheticId = risk.CategoryId + "@" + sharedRuntime.Id
 	return risk
 }
 
-func createRiskForTrustBoundary(parsedModel *model.ParsedModel, trustBoundary model.TrustBoundary, prefix, details string) model.Risk {
+func createRiskForTrustBoundary(parsedModel *types.ParsedModel, trustBoundary types.TrustBoundary, prefix, details string) types.Risk {
 	if len(prefix) > 0 {
 		prefix = " (" + prefix + ")"
 	}
@@ -420,9 +419,9 @@ func createRiskForTrustBoundary(parsedModel *model.ParsedModel, trustBoundary mo
 		impact = types.VeryHighImpact
 	}
 	// create risk
-	risk := model.Risk{
-		Category:                    Category(),
-		Severity:                    model.CalculateSeverity(types.Unlikely, impact),
+	risk := types.Risk{
+		CategoryId:                  Category().Id,
+		Severity:                    types.CalculateSeverity(types.Unlikely, impact),
 		ExploitationLikelihood:      types.Unlikely,
 		ExploitationImpact:          impact,
 		Title:                       title,
@@ -430,11 +429,11 @@ func createRiskForTrustBoundary(parsedModel *model.ParsedModel, trustBoundary mo
 		DataBreachProbability:       types.Probable,
 		DataBreachTechnicalAssetIDs: trustBoundary.RecursivelyAllTechnicalAssetIDsInside(parsedModel),
 	}
-	risk.SyntheticId = risk.Category.Id + "@" + trustBoundary.Id
+	risk.SyntheticId = risk.CategoryId + "@" + trustBoundary.Id
 	return risk
 }
 
-func createRiskForTechnicalAsset(parsedModel *model.ParsedModel, technicalAsset model.TechnicalAsset, prefix, details string) model.Risk {
+func createRiskForTechnicalAsset(parsedModel *types.ParsedModel, technicalAsset types.TechnicalAsset, prefix, details string) types.Risk {
 	if len(prefix) > 0 {
 		prefix = " (" + prefix + ")"
 	}
@@ -454,9 +453,9 @@ func createRiskForTechnicalAsset(parsedModel *model.ParsedModel, technicalAsset 
 		impact = types.VeryHighImpact
 	}
 	// create risk
-	risk := model.Risk{
-		Category:                     Category(),
-		Severity:                     model.CalculateSeverity(types.Unlikely, impact),
+	risk := types.Risk{
+		CategoryId:                   Category().Id,
+		Severity:                     types.CalculateSeverity(types.Unlikely, impact),
 		ExploitationLikelihood:       types.Unlikely,
 		ExploitationImpact:           impact,
 		Title:                        title,
@@ -464,6 +463,6 @@ func createRiskForTechnicalAsset(parsedModel *model.ParsedModel, technicalAsset 
 		DataBreachProbability:        types.Probable,
 		DataBreachTechnicalAssetIDs:  []string{technicalAsset.Id},
 	}
-	risk.SyntheticId = risk.Category.Id + "@" + technicalAsset.Id
+	risk.SyntheticId = risk.CategoryId + "@" + technicalAsset.Id
 	return risk
 }

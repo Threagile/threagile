@@ -1,20 +1,19 @@
 package unencrypted_communication
 
 import (
-	"github.com/threagile/threagile/pkg/model"
 	"github.com/threagile/threagile/pkg/security/types"
 )
 
-func Rule() model.CustomRiskRule {
-	return model.CustomRiskRule{
+func Rule() types.RiskRule {
+	return types.RiskRule{
 		Category:      Category,
 		SupportedTags: SupportedTags,
 		GenerateRisks: GenerateRisks,
 	}
 }
 
-func Category() model.RiskCategory {
-	return model.RiskCategory{
+func Category() types.RiskCategory {
+	return types.RiskCategory{
 		Id:    "unencrypted-communication",
 		Title: "Unencrypted Communication",
 		Description: "Due to the confidentiality and/or integrity rating of the data assets transferred over the " +
@@ -43,8 +42,8 @@ func SupportedTags() []string {
 
 // check for communication links that should be encrypted due to their confidentiality and/or integrity
 
-func GenerateRisks(input *model.ParsedModel) []model.Risk {
-	risks := make([]model.Risk, 0)
+func GenerateRisks(input *types.ParsedModel) []types.Risk {
+	risks := make([]types.Risk, 0)
 	for _, technicalAsset := range input.TechnicalAssets {
 		for _, dataFlow := range technicalAsset.CommunicationLinks {
 			transferringAuthData := dataFlow.Authentication != types.NoneAuthentication
@@ -86,7 +85,7 @@ func GenerateRisks(input *model.ParsedModel) []model.Risk {
 	return risks
 }
 
-func createRisk(input *model.ParsedModel, technicalAsset model.TechnicalAsset, dataFlow model.CommunicationLink, highRisk bool, transferringAuthData bool) model.Risk {
+func createRisk(input *types.ParsedModel, technicalAsset types.TechnicalAsset, dataFlow types.CommunicationLink, highRisk bool, transferringAuthData bool) types.Risk {
 	impact := types.MediumImpact
 	if highRisk {
 		impact = types.HighImpact
@@ -104,9 +103,9 @@ func createRisk(input *model.ParsedModel, technicalAsset model.TechnicalAsset, d
 	if dataFlow.IsAcrossTrustBoundaryNetworkOnly(input) {
 		likelihood = types.Likely
 	}
-	risk := model.Risk{
-		Category:                        Category(),
-		Severity:                        model.CalculateSeverity(likelihood, impact),
+	risk := types.Risk{
+		CategoryId:                      Category().Id,
+		Severity:                        types.CalculateSeverity(likelihood, impact),
 		ExploitationLikelihood:          likelihood,
 		ExploitationImpact:              impact,
 		Title:                           title,
@@ -115,14 +114,14 @@ func createRisk(input *model.ParsedModel, technicalAsset model.TechnicalAsset, d
 		DataBreachProbability:           types.Possible,
 		DataBreachTechnicalAssetIDs:     []string{target.Id},
 	}
-	risk.SyntheticId = risk.Category.Id + "@" + dataFlow.Id + "@" + technicalAsset.Id + "@" + target.Id
+	risk.SyntheticId = risk.CategoryId + "@" + dataFlow.Id + "@" + technicalAsset.Id + "@" + target.Id
 	return risk
 }
 
-func isHighSensitivity(dataAsset model.DataAsset) bool {
+func isHighSensitivity(dataAsset types.DataAsset) bool {
 	return dataAsset.Confidentiality == types.StrictlyConfidential || dataAsset.Integrity == types.MissionCritical
 }
 
-func isMediumSensitivity(dataAsset model.DataAsset) bool {
+func isMediumSensitivity(dataAsset types.DataAsset) bool {
 	return dataAsset.Confidentiality == types.Confidential || dataAsset.Integrity == types.Critical
 }

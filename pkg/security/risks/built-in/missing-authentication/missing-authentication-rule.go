@@ -1,20 +1,19 @@
 package missing_authentication
 
 import (
-	"github.com/threagile/threagile/pkg/model"
 	"github.com/threagile/threagile/pkg/security/types"
 )
 
-func Rule() model.CustomRiskRule {
-	return model.CustomRiskRule{
+func Rule() types.RiskRule {
+	return types.RiskRule{
 		Category:      Category,
 		SupportedTags: SupportedTags,
 		GenerateRisks: GenerateRisks,
 	}
 }
 
-func Category() model.RiskCategory {
-	return model.RiskCategory{
+func Category() types.RiskCategory {
+	return types.RiskCategory{
 		Id:          "missing-authentication",
 		Title:       "Missing Authentication",
 		Description: "Technical assets (especially multi-tenant systems) should authenticate incoming requests when the asset processes or stores sensitive data. ",
@@ -42,8 +41,8 @@ func SupportedTags() []string {
 	return []string{}
 }
 
-func GenerateRisks(input *model.ParsedModel) []model.Risk {
-	risks := make([]model.Risk, 0)
+func GenerateRisks(input *types.ParsedModel) []types.Risk {
+	risks := make([]types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
 		if technicalAsset.OutOfScope || technicalAsset.Technology == types.LoadBalancer ||
@@ -80,8 +79,8 @@ func GenerateRisks(input *model.ParsedModel) []model.Risk {
 	return risks
 }
 
-func CreateRisk(input *model.ParsedModel, technicalAsset model.TechnicalAsset, incomingAccess, incomingAccessOrigin model.CommunicationLink, hopBetween string,
-	impact types.RiskExploitationImpact, likelihood types.RiskExploitationLikelihood, twoFactor bool, category model.RiskCategory) model.Risk {
+func CreateRisk(input *types.ParsedModel, technicalAsset types.TechnicalAsset, incomingAccess, incomingAccessOrigin types.CommunicationLink, hopBetween string,
+	impact types.RiskExploitationImpact, likelihood types.RiskExploitationLikelihood, twoFactor bool, category types.RiskCategory) types.Risk {
 	factorString := ""
 	if twoFactor {
 		factorString = "Two-Factor "
@@ -89,9 +88,9 @@ func CreateRisk(input *model.ParsedModel, technicalAsset model.TechnicalAsset, i
 	if len(hopBetween) > 0 {
 		hopBetween = "forwarded via <b>" + hopBetween + "</b> "
 	}
-	risk := model.Risk{
-		Category:               category,
-		Severity:               model.CalculateSeverity(likelihood, impact),
+	risk := types.Risk{
+		CategoryId:             Category().Id,
+		Severity:               types.CalculateSeverity(likelihood, impact),
 		ExploitationLikelihood: likelihood,
 		ExploitationImpact:     impact,
 		Title: "<b>Missing " + factorString + "Authentication</b> covering communication link <b>" + incomingAccess.Title + "</b> " +
@@ -102,6 +101,6 @@ func CreateRisk(input *model.ParsedModel, technicalAsset model.TechnicalAsset, i
 		DataBreachProbability:           types.Possible,
 		DataBreachTechnicalAssetIDs:     []string{technicalAsset.Id},
 	}
-	risk.SyntheticId = risk.Category.Id + "@" + incomingAccess.Id + "@" + input.TechnicalAssets[incomingAccess.SourceId].Id + "@" + technicalAsset.Id
+	risk.SyntheticId = risk.CategoryId + "@" + incomingAccess.Id + "@" + input.TechnicalAssets[incomingAccess.SourceId].Id + "@" + technicalAsset.Id
 	return risk
 }

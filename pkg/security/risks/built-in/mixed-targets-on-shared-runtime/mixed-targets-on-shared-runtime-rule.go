@@ -3,20 +3,19 @@ package mixed_targets_on_shared_runtime
 import (
 	"sort"
 
-	"github.com/threagile/threagile/pkg/model"
 	"github.com/threagile/threagile/pkg/security/types"
 )
 
-func Rule() model.CustomRiskRule {
-	return model.CustomRiskRule{
+func Rule() types.RiskRule {
+	return types.RiskRule{
 		Category:      Category,
 		SupportedTags: SupportedTags,
 		GenerateRisks: GenerateRisks,
 	}
 }
 
-func Category() model.RiskCategory {
-	return model.RiskCategory{
+func Category() types.RiskCategory {
+	return types.RiskCategory{
 		Id:    "mixed-targets-on-shared-runtime",
 		Title: "Mixed Targets on Shared Runtime",
 		Description: "Different attacker targets (like frontend and backend/datastore components) should not be running on the same " +
@@ -47,8 +46,8 @@ func SupportedTags() []string {
 	return []string{}
 }
 
-func GenerateRisks(input *model.ParsedModel) []model.Risk {
-	risks := make([]model.Risk, 0)
+func GenerateRisks(input *types.ParsedModel) []types.Risk {
+	risks := make([]types.Risk, 0)
 	// as in Go ranging over map is random order, range over them in sorted (hence reproducible) way:
 	keys := make([]string, 0)
 	for k := range input.SharedRuntimes {
@@ -82,14 +81,14 @@ func GenerateRisks(input *model.ParsedModel) []model.Risk {
 	return risks
 }
 
-func createRisk(input *model.ParsedModel, sharedRuntime model.SharedRuntime) model.Risk {
+func createRisk(input *types.ParsedModel, sharedRuntime types.SharedRuntime) types.Risk {
 	impact := types.LowImpact
 	if isMoreRisky(input, sharedRuntime) {
 		impact = types.MediumImpact
 	}
-	risk := model.Risk{
-		Category:               Category(),
-		Severity:               model.CalculateSeverity(types.Unlikely, impact),
+	risk := types.Risk{
+		CategoryId:             Category().Id,
+		Severity:               types.CalculateSeverity(types.Unlikely, impact),
 		ExploitationLikelihood: types.Unlikely,
 		ExploitationImpact:     impact,
 		Title: "<b>Mixed Targets on Shared Runtime</b> named <b>" + sharedRuntime.Title + "</b> might enable attackers moving from one less " +
@@ -98,11 +97,11 @@ func createRisk(input *model.ParsedModel, sharedRuntime model.SharedRuntime) mod
 		DataBreachProbability:       types.Improbable,
 		DataBreachTechnicalAssetIDs: sharedRuntime.TechnicalAssetsRunning,
 	}
-	risk.SyntheticId = risk.Category.Id + "@" + sharedRuntime.Id
+	risk.SyntheticId = risk.CategoryId + "@" + sharedRuntime.Id
 	return risk
 }
 
-func isMoreRisky(input *model.ParsedModel, sharedRuntime model.SharedRuntime) bool {
+func isMoreRisky(input *types.ParsedModel, sharedRuntime types.SharedRuntime) bool {
 	for _, techAssetId := range sharedRuntime.TechnicalAssetsRunning {
 		techAsset := input.TechnicalAssets[techAssetId]
 		if techAsset.Confidentiality == types.StrictlyConfidential || techAsset.Integrity == types.MissionCritical ||

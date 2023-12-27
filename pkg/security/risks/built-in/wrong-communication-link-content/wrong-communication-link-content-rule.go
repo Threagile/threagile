@@ -1,20 +1,19 @@
 package wrong_communication_link_content
 
 import (
-	"github.com/threagile/threagile/pkg/model"
 	"github.com/threagile/threagile/pkg/security/types"
 )
 
-func Rule() model.CustomRiskRule {
-	return model.CustomRiskRule{
+func Rule() types.RiskRule {
+	return types.RiskRule{
 		Category:      Category,
 		SupportedTags: SupportedTags,
 		GenerateRisks: GenerateRisks,
 	}
 }
 
-func Category() model.RiskCategory {
-	return model.RiskCategory{
+func Category() types.RiskCategory {
+	return types.RiskCategory{
 		Id:    "wrong-communication-link-content",
 		Title: "Wrong Communication Link Content",
 		Description: "When a communication link is defined as readonly, but does not receive any data asset, " +
@@ -40,8 +39,8 @@ func SupportedTags() []string {
 	return []string{}
 }
 
-func GenerateRisks(input *model.ParsedModel) []model.Risk {
-	risks := make([]model.Risk, 0)
+func GenerateRisks(input *types.ParsedModel) []types.Risk {
+	risks := make([]types.Risk, 0)
 	for _, techAsset := range input.TechnicalAssets {
 		for _, commLink := range techAsset.CommunicationLinks {
 			// check readonly consistency
@@ -75,12 +74,12 @@ func GenerateRisks(input *model.ParsedModel) []model.Risk {
 	return risks
 }
 
-func createRisk(technicalAsset model.TechnicalAsset, commLink model.CommunicationLink, reason string) model.Risk {
+func createRisk(technicalAsset types.TechnicalAsset, commLink types.CommunicationLink, reason string) types.Risk {
 	title := "<b>Wrong Communication Link Content</b> " + reason + " at <b>" + technicalAsset.Title + "</b> " +
 		"regarding communication link <b>" + commLink.Title + "</b>"
-	risk := model.Risk{
-		Category:                        Category(),
-		Severity:                        model.CalculateSeverity(types.Unlikely, types.LowImpact),
+	risk := types.Risk{
+		CategoryId:                      Category().Id,
+		Severity:                        types.CalculateSeverity(types.Unlikely, types.LowImpact),
 		ExploitationLikelihood:          types.Unlikely,
 		ExploitationImpact:              types.LowImpact,
 		Title:                           title,
@@ -89,6 +88,6 @@ func createRisk(technicalAsset model.TechnicalAsset, commLink model.Communicatio
 		DataBreachProbability:           types.Improbable,
 		DataBreachTechnicalAssetIDs:     []string{},
 	}
-	risk.SyntheticId = risk.Category.Id + "@" + technicalAsset.Id + "@" + commLink.Id
+	risk.SyntheticId = risk.CategoryId + "@" + technicalAsset.Id + "@" + commLink.Id
 	return risk
 }

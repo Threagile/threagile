@@ -1,21 +1,20 @@
 package missing_authentication_second_factor
 
 import (
-	"github.com/threagile/threagile/pkg/model"
 	missing_authentication "github.com/threagile/threagile/pkg/security/risks/built-in/missing-authentication"
 	"github.com/threagile/threagile/pkg/security/types"
 )
 
-func Rule() model.CustomRiskRule {
-	return model.CustomRiskRule{
+func Rule() types.RiskRule {
+	return types.RiskRule{
 		Category:      Category,
 		SupportedTags: SupportedTags,
 		GenerateRisks: GenerateRisks,
 	}
 }
 
-func Category() model.RiskCategory {
-	return model.RiskCategory{
+func Category() types.RiskCategory {
+	return types.RiskCategory{
 		Id:    "missing-authentication-second-factor",
 		Title: "Missing Two-Factor Authentication (2FA)",
 		Description: "Technical assets (especially multi-tenant systems) should authenticate incoming requests with " +
@@ -43,8 +42,8 @@ func SupportedTags() []string {
 	return []string{}
 }
 
-func GenerateRisks(input *model.ParsedModel) []model.Risk {
-	risks := make([]model.Risk, 0)
+func GenerateRisks(input *types.ParsedModel) []types.Risk {
+	risks := make([]types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
 		if technicalAsset.OutOfScope ||

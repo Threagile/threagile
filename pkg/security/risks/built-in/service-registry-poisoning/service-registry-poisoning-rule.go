@@ -1,20 +1,19 @@
 package service_registry_poisoning
 
 import (
-	"github.com/threagile/threagile/pkg/model"
 	"github.com/threagile/threagile/pkg/security/types"
 )
 
-func Rule() model.CustomRiskRule {
-	return model.CustomRiskRule{
+func Rule() types.RiskRule {
+	return types.RiskRule{
 		Category:      Category,
 		SupportedTags: SupportedTags,
 		GenerateRisks: GenerateRisks,
 	}
 }
 
-func Category() model.RiskCategory {
-	return model.RiskCategory{
+func Category() types.RiskCategory {
+	return types.RiskCategory{
 		Id:          "service-registry-poisoning",
 		Title:       "Service Registry Poisoning",
 		Description: "When a service registry used for discovery of trusted service endpoints Service Registry Poisoning risks might arise.",
@@ -41,8 +40,8 @@ func SupportedTags() []string {
 	return []string{}
 }
 
-func GenerateRisks(input *model.ParsedModel) []model.Risk {
-	risks := make([]model.Risk, 0)
+func GenerateRisks(input *types.ParsedModel) []types.Risk {
+	risks := make([]types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
 		if !technicalAsset.OutOfScope && technicalAsset.Technology == types.ServiceRegistry {
@@ -53,7 +52,7 @@ func GenerateRisks(input *model.ParsedModel) []model.Risk {
 	return risks
 }
 
-func createRisk(input *model.ParsedModel, technicalAsset model.TechnicalAsset, incomingFlows []model.CommunicationLink) model.Risk {
+func createRisk(input *types.ParsedModel, technicalAsset types.TechnicalAsset, incomingFlows []types.CommunicationLink) types.Risk {
 	title := "<b>Service Registry Poisoning</b> risk at <b>" + technicalAsset.Title + "</b>"
 	impact := types.LowImpact
 
@@ -67,9 +66,9 @@ func createRisk(input *model.ParsedModel, technicalAsset model.TechnicalAsset, i
 		}
 	}
 
-	risk := model.Risk{
-		Category:                     Category(),
-		Severity:                     model.CalculateSeverity(types.Unlikely, impact),
+	risk := types.Risk{
+		CategoryId:                   Category().Id,
+		Severity:                     types.CalculateSeverity(types.Unlikely, impact),
 		ExploitationLikelihood:       types.Unlikely,
 		ExploitationImpact:           impact,
 		Title:                        title,
@@ -77,6 +76,6 @@ func createRisk(input *model.ParsedModel, technicalAsset model.TechnicalAsset, i
 		DataBreachProbability:        types.Improbable,
 		DataBreachTechnicalAssetIDs:  []string{technicalAsset.Id}, // TODO: find all service-lookup-using tech assets, which then might use spoofed lookups?
 	}
-	risk.SyntheticId = risk.Category.Id + "@" + technicalAsset.Id
+	risk.SyntheticId = risk.CategoryId + "@" + technicalAsset.Id
 	return risk
 }

@@ -1,20 +1,19 @@
 package wrong_trust_boundary_content
 
 import (
-	"github.com/threagile/threagile/pkg/model"
 	"github.com/threagile/threagile/pkg/security/types"
 )
 
-func Rule() model.CustomRiskRule {
-	return model.CustomRiskRule{
+func Rule() types.RiskRule {
+	return types.RiskRule{
 		Category:      Category,
 		SupportedTags: SupportedTags,
 		GenerateRisks: GenerateRisks,
 	}
 }
 
-func Category() model.RiskCategory {
-	return model.RiskCategory{
+func Category() types.RiskCategory {
+	return types.RiskCategory{
 		Id:    "wrong-trust-boundary-content",
 		Title: "Wrong Trust Boundary Content",
 		Description: "When a trust boundary of type " + types.NetworkPolicyNamespaceIsolation.String() + " contains " +
@@ -39,8 +38,8 @@ func SupportedTags() []string {
 	return []string{}
 }
 
-func GenerateRisks(input *model.ParsedModel) []model.Risk {
-	risks := make([]model.Risk, 0)
+func GenerateRisks(input *types.ParsedModel) []types.Risk {
+	risks := make([]types.Risk, 0)
 	for _, trustBoundary := range input.TrustBoundaries {
 		if trustBoundary.Type == types.NetworkPolicyNamespaceIsolation {
 			for _, techAssetID := range trustBoundary.TechnicalAssetsInside {
@@ -54,11 +53,11 @@ func GenerateRisks(input *model.ParsedModel) []model.Risk {
 	return risks
 }
 
-func createRisk(technicalAsset model.TechnicalAsset) model.Risk {
+func createRisk(technicalAsset types.TechnicalAsset) types.Risk {
 	title := "<b>Wrong Trust Boundary Content</b> (non-container asset inside container trust boundary) at <b>" + technicalAsset.Title + "</b>"
-	risk := model.Risk{
-		Category:                     Category(),
-		Severity:                     model.CalculateSeverity(types.Unlikely, types.LowImpact),
+	risk := types.Risk{
+		CategoryId:                   Category().Id,
+		Severity:                     types.CalculateSeverity(types.Unlikely, types.LowImpact),
 		ExploitationLikelihood:       types.Unlikely,
 		ExploitationImpact:           types.LowImpact,
 		Title:                        title,
@@ -66,6 +65,6 @@ func createRisk(technicalAsset model.TechnicalAsset) model.Risk {
 		DataBreachProbability:        types.Improbable,
 		DataBreachTechnicalAssetIDs:  []string{technicalAsset.Id},
 	}
-	risk.SyntheticId = risk.Category.Id + "@" + technicalAsset.Id
+	risk.SyntheticId = risk.CategoryId + "@" + technicalAsset.Id
 	return risk
 }

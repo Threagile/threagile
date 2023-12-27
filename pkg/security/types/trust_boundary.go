@@ -1,88 +1,128 @@
 /*
 Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 */
+
 package types
 
 import (
-	"encoding/json"
-	"errors"
-	"fmt"
-	"strings"
+	"sort"
 )
 
-type TrustBoundaryType int
+type TrustBoundary struct {
+	Id                    string            `json:"id,omitempty"`
+	Title                 string            `json:"title,omitempty"`
+	Description           string            `json:"description,omitempty"`
+	Type                  TrustBoundaryType `json:"type,omitempty"`
+	Tags                  []string          `json:"tags,omitempty"`
+	TechnicalAssetsInside []string          `json:"technical_assets_inside,omitempty"`
+	TrustBoundariesNested []string          `json:"trust_boundaries_nested,omitempty"`
+}
 
-const (
-	NetworkOnPrem TrustBoundaryType = iota
-	NetworkDedicatedHoster
-	NetworkVirtualLAN
-	NetworkCloudProvider
-	NetworkCloudSecurityGroup
-	NetworkPolicyNamespaceIsolation
-	ExecutionEnvironment
-)
+func (what TrustBoundary) RecursivelyAllTechnicalAssetIDsInside(model *ParsedModel) []string {
+	result := make([]string, 0)
+	what.addAssetIDsRecursively(model, &result)
+	return result
+}
 
-func TrustBoundaryTypeValues() []TypeEnum {
-	return []TypeEnum{
-		NetworkOnPrem,
-		NetworkDedicatedHoster,
-		NetworkVirtualLAN,
-		NetworkCloudProvider,
-		NetworkCloudSecurityGroup,
-		NetworkPolicyNamespaceIsolation,
-		ExecutionEnvironment,
+func (what TrustBoundary) IsTaggedWithAny(tags ...string) bool {
+	return containsCaseInsensitiveAny(what.Tags, tags...)
+}
+
+func (what TrustBoundary) IsTaggedWithBaseTag(baseTag string) bool {
+	return IsTaggedWithBaseTag(what.Tags, baseTag)
+}
+
+func (what TrustBoundary) IsTaggedWithAnyTraversingUp(model *ParsedModel, tags ...string) bool {
+	if what.IsTaggedWithAny(tags...) {
+		return true
 	}
+	parentID := what.ParentTrustBoundaryID(model)
+	if len(parentID) > 0 && model.TrustBoundaries[parentID].IsTaggedWithAnyTraversingUp(model, tags...) {
+		return true
+	}
+	return false
 }
 
-var TrustBoundaryTypeDescription = [...]TypeDescription{
-	{"network-on-prem", "The whole network is on prem"},
-	{"network-dedicated-hoster", "The network is at a dedicated hoster"},
-	{"network-virtual-lan", "Network is a VLAN"},
-	{"network-cloud-provider", "Network is at a cloud provider"},
-	{"network-cloud-security-group", "Cloud rules controlling network traffic"},
-	{"network-policy-namespace-isolation", "Segregation in a Kubernetes cluster"},
-	{"execution-environment", "Logical group of items (not a protective network boundary in that sense). More like a namespace or another logical group of items"},
-}
-
-func ParseTrustBoundary(value string) (trustBoundary TrustBoundaryType, err error) {
-	value = strings.TrimSpace(value)
-	for _, candidate := range TrustBoundaryTypeValues() {
-		if candidate.String() == value {
-			return candidate.(TrustBoundaryType), err
+func (what TrustBoundary) ParentTrustBoundaryID(model *ParsedModel) string {
+	var result string
+	for _, candidate := range model.TrustBoundaries {
+		if contains(candidate.TrustBoundariesNested, what.Id) {
+			result = candidate.Id
+			return result
 		}
 	}
-	return trustBoundary, errors.New("Unable to parse into type: " + value)
+	return result
 }
 
-func (what TrustBoundaryType) String() string {
-	// NOTE: maintain list also in schema.json for validation in IDEs
-	return TrustBoundaryTypeDescription[what].Name
-}
-
-func (what TrustBoundaryType) Explain() string {
-	return TrustBoundaryTypeDescription[what].Description
-}
-
-func (what TrustBoundaryType) IsNetworkBoundary() bool {
-	return what == NetworkOnPrem || what == NetworkDedicatedHoster || what == NetworkVirtualLAN ||
-		what == NetworkCloudProvider || what == NetworkCloudSecurityGroup || what == NetworkPolicyNamespaceIsolation
-}
-
-func (what TrustBoundaryType) IsWithinCloud() bool {
-	return what == NetworkCloudProvider || what == NetworkCloudSecurityGroup
-}
-
-func (what TrustBoundaryType) MarshalJSON() ([]byte, error) {
-	return json.Marshal(what.String())
-}
-
-func (what *TrustBoundaryType) UnmarshalJSON([]byte) error {
-	for index, description := range TrustBoundaryTypeDescription {
-		if strings.ToLower(what.String()) == strings.ToLower(description.Name) {
-			*what = TrustBoundaryType(index)
-			return nil
+func (what TrustBoundary) HighestConfidentiality(model *ParsedModel) Confidentiality {
+	highest := Public
+	for _, id := range what.RecursivelyAllTechnicalAssetIDsInside(model) {
+		techAsset := model.TechnicalAssets[id]
+		if techAsset.HighestConfidentiality(model) > highest {
+			highest = techAsset.HighestConfidentiality(model)
 		}
 	}
+	return highest
+}
 
-	return fmt.Errorf("unknown trust boundary type value %q", int(*what))
+func (what TrustBoundary) HighestIntegrity(model *ParsedModel) Criticality {
+	highest := Archive
+	for _, id := range what.RecursivelyAllTechnicalAssetIDsInside(model) {
+		techAsset := model.TechnicalAssets[id]
+		if techAsset.HighestIntegrity(model) > highest {
+			highest = techAsset.HighestIntegrity(model)
+		}
+	}
+	return highest
+}
+
+func (what TrustBoundary) HighestAvailability(model *ParsedModel) Criticality {
+	highest := Archive
+	for _, id := range what.RecursivelyAllTechnicalAssetIDsInside(model) {
+		techAsset := model.TechnicalAssets[id]
+		if techAsset.HighestAvailability(model) > highest {
+			highest = techAsset.HighestAvailability(model)
+		}
+	}
+	return highest
+}
+
+func (what TrustBoundary) AllParentTrustBoundaryIDs(model *ParsedModel) []string {
+	result := make([]string, 0)
+	what.addTrustBoundaryIDsRecursively(model, &result)
+	return result
+}
+
+func (what TrustBoundary) addAssetIDsRecursively(model *ParsedModel, result *[]string) {
+	*result = append(*result, what.TechnicalAssetsInside...)
+	for _, nestedBoundaryID := range what.TrustBoundariesNested {
+		model.TrustBoundaries[nestedBoundaryID].addAssetIDsRecursively(model, result)
+	}
+}
+
+// TODO: pass ParsedModelRoot as parameter instead of using global variable
+func (what TrustBoundary) addTrustBoundaryIDsRecursively(model *ParsedModel, result *[]string) {
+	*result = append(*result, what.Id)
+	parentID := what.ParentTrustBoundaryID(model)
+	if len(parentID) > 0 {
+		model.TrustBoundaries[parentID].addTrustBoundaryIDsRecursively(model, result)
+	}
+}
+
+// as in Go ranging over map is random order, range over them in sorted (hence reproducible) way:
+func SortedKeysOfTrustBoundaries(model *ParsedModel) []string {
+	keys := make([]string, 0)
+	for k := range model.TrustBoundaries {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
+}
+
+type ByTrustBoundaryTitleSort []TrustBoundary
+
+func (what ByTrustBoundaryTitleSort) Len() int      { return len(what) }
+func (what ByTrustBoundaryTitleSort) Swap(i, j int) { what[i], what[j] = what[j], what[i] }
+func (what ByTrustBoundaryTitleSort) Less(i, j int) bool {
+	return what[i].Title < what[j].Title
 }
