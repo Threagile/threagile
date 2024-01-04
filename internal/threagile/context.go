@@ -47,8 +47,6 @@ type Context struct {
 
 	ServerMode bool
 
-	successCount                                                 int
-	errorCount                                                   int
 	drawSpaceLinesForLayoutUnfortunatelyFurtherSeparatesAllRanks bool
 
 	modelInput  input.ModelInput
