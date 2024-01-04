@@ -49,6 +49,12 @@ type ParsedModel struct {
 	GeneratedRisksBySyntheticId                           map[string]Risk                `json:"generated_risks_by_synthetic_id,omitempty" yaml:"generated_risks_by_synthetic_id"`
 }
 
+func (parsedModel *ParsedModel) AddToListOfSupportedTags(tags []string) {
+	for _, tag := range tags {
+		parsedModel.AllSupportedTags[tag] = true
+	}
+}
+
 func (parsedModel *ParsedModel) CheckTags(tags []string, where string) ([]string, error) {
 	var tagsUsed = make([]string, 0)
 	if tags != nil {
