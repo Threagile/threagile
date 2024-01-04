@@ -49,7 +49,6 @@ type Context struct {
 
 	drawSpaceLinesForLayoutUnfortunatelyFurtherSeparatesAllRanks bool
 
-	modelInput  input.ModelInput
 	parsedModel types.ParsedModel
 
 	generateDataFlowDiagram, generateDataAssetDiagram, generateRisksJSON, generateTechnicalAssetsJSON bool
@@ -500,8 +499,8 @@ func (context *Context) DoIt() {
 		fmt.Println("Parsing model:", context.Config.InputFile)
 	}
 
-	context.modelInput = *new(input.ModelInput).Defaults()
-	loadError := context.modelInput.Load(context.Config.InputFile)
+	modelInput := *new(input.ModelInput).Defaults()
+	loadError := modelInput.Load(context.Config.InputFile)
 	if loadError != nil {
 		log.Fatal("Unable to load model yaml: ", loadError)
 	}
@@ -512,7 +511,7 @@ func (context *Context) DoIt() {
 	}
 	context.customRiskRules = types.LoadCustomRiskRules(context.Config.RiskRulesPlugins, context.progressReporter)
 
-	parsedModel, parseError := model.ParseModel(&context.modelInput, context.builtinRiskRules, context.customRiskRules)
+	parsedModel, parseError := model.ParseModel(&modelInput, context.builtinRiskRules, context.customRiskRules)
 	if parseError != nil {
 		log.Fatal("Unable to parse model yaml: ", parseError)
 	}
@@ -734,17 +733,17 @@ func (context *Context) DoIt() {
 			var err error
 			switch macroDetails.ID {
 			case addbuildpipeline.GetMacroDetails().ID:
-				changes, message, validResult, err = addbuildpipeline.GetFinalChangeImpact(&context.modelInput, &context.parsedModel)
+				changes, message, validResult, err = addbuildpipeline.GetFinalChangeImpact(&modelInput, &context.parsedModel)
 			case addvault.GetMacroDetails().ID:
-				changes, message, validResult, err = addvault.GetFinalChangeImpact(&context.modelInput, &context.parsedModel)
+				changes, message, validResult, err = addvault.GetFinalChangeImpact(&modelInput, &context.parsedModel)
 			case prettyprint.GetMacroDetails().ID:
-				changes, message, validResult, err = prettyprint.GetFinalChangeImpact(&context.modelInput)
+				changes, message, validResult, err = prettyprint.GetFinalChangeImpact(&modelInput)
 			case removeunusedtags.GetMacroDetails().ID:
-				changes, message, validResult, err = removeunusedtags.GetFinalChangeImpact(&context.modelInput)
+				changes, message, validResult, err = removeunusedtags.GetFinalChangeImpact(&modelInput)
 			case seedrisktracking.GetMacroDetails().ID:
-				changes, message, validResult, err = seedrisktracking.GetFinalChangeImpact(&context.modelInput)
+				changes, message, validResult, err = seedrisktracking.GetFinalChangeImpact(&modelInput)
 			case seedtags.GetMacroDetails().ID:
-				changes, message, validResult, err = seedtags.GetFinalChangeImpact(&context.modelInput)
+				changes, message, validResult, err = seedtags.GetFinalChangeImpact(&modelInput)
 			}
 			checkErr(err)
 			for _, change := range changes {
@@ -770,17 +769,17 @@ func (context *Context) DoIt() {
 				var err error
 				switch macroDetails.ID {
 				case addbuildpipeline.GetMacroDetails().ID:
-					message, validResult, err = addbuildpipeline.Execute(&context.modelInput, &context.parsedModel)
+					message, validResult, err = addbuildpipeline.Execute(&modelInput, &context.parsedModel)
 				case addvault.GetMacroDetails().ID:
-					message, validResult, err = addvault.Execute(&context.modelInput, &context.parsedModel)
+					message, validResult, err = addvault.Execute(&modelInput, &context.parsedModel)
 				case prettyprint.GetMacroDetails().ID:
-					message, validResult, err = prettyprint.Execute(&context.modelInput)
+					message, validResult, err = prettyprint.Execute(&modelInput)
 				case removeunusedtags.GetMacroDetails().ID:
-					message, validResult, err = removeunusedtags.Execute(&context.modelInput, &context.parsedModel)
+					message, validResult, err = removeunusedtags.Execute(&modelInput, &context.parsedModel)
 				case seedrisktracking.GetMacroDetails().ID:
-					message, validResult, err = seedrisktracking.Execute(&context.parsedModel, &context.modelInput)
+					message, validResult, err = seedrisktracking.Execute(&context.parsedModel, &modelInput)
 				case seedtags.GetMacroDetails().ID:
-					message, validResult, err = seedtags.Execute(&context.modelInput, &context.parsedModel)
+					message, validResult, err = seedtags.Execute(&modelInput, &context.parsedModel)
 				}
 				checkErr(err)
 				if !validResult {
@@ -794,7 +793,7 @@ func (context *Context) DoIt() {
 				_, err = copyFile(context.Config.InputFile, backupFilename)
 				checkErr(err)
 				fmt.Println("Updating model")
-				yamlBytes, err := yaml.Marshal(context.modelInput)
+				yamlBytes, err := yaml.Marshal(modelInput)
 				checkErr(err)
 				/*
 					yamlBytes = model.ReformatYAML(yamlBytes)
