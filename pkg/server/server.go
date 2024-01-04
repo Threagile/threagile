@@ -6,7 +6,6 @@ package server
 
 import (
 	"fmt"
-	"github.com/threagile/threagile/pkg/common"
 	"log"
 	"net/http"
 	"os"
@@ -15,6 +14,8 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/threagile/threagile/pkg/common"
 
 	"github.com/gin-gonic/gin"
 	"github.com/threagile/threagile/pkg/docs"
@@ -173,7 +174,8 @@ func RunServer(config common.Config) {
 	router.PUT("/models/:model-id/shared-runtimes/:shared-runtime-id", s.setSharedRuntime)
 	router.DELETE("/models/:model-id/shared-runtimes/:shared-runtime-id", s.deleteSharedRuntime)
 
-	s.customRiskRules = types.LoadCustomRiskRules(s.config.RiskRulesPlugins, common.CommandLineProgressReporter{})
+	reporter := common.DefaultProgressReporter{Verbose: s.config.Verbose}
+	s.customRiskRules = types.LoadCustomRiskRules(s.config.RiskRulesPlugins, reporter)
 
 	fmt.Println("Threagile s running...")
 	_ = router.Run(":" + strconv.Itoa(s.config.ServerPort)) // listen and serve on 0.0.0.0:8080 or whatever port was specified
