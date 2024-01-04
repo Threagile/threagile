@@ -9,6 +9,8 @@ const (
 	ServerDir = "/server"
 	KeyDir    = "keys"
 
+	DefaultServerPort = 8080
+
 	InputFile                              = "threagile.yaml"
 	ReportFilename                         = "report.pdf"
 	ExcelRisksFilename                     = "risks.xlsx"
