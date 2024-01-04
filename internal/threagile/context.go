@@ -74,15 +74,6 @@ type Context struct {
 	ServerMode bool
 
 	parsedModel types.ParsedModel
-
-	customRiskRules  map[string]*types.CustomRisk
-	builtinRiskRules map[string]types.RiskRule
-}
-
-func (context *Context) addToListOfSupportedTags(tags []string) {
-	for _, tag := range tags {
-		context.parsedModel.AllSupportedTags[tag] = true
-	}
 }
 
 func (context *Context) checkRiskTracking() {
@@ -118,8 +109,6 @@ func (context *Context) checkRiskTracking() {
 
 func (context *Context) Init() *Context {
 	*context = Context{
-		customRiskRules:  make(map[string]*types.CustomRisk),
-		builtinRiskRules: make(map[string]types.RiskRule),
 		GenerateCommands: &GenerateCommands{},
 	}
 
@@ -142,7 +131,7 @@ func (context *Context) applyRisk(rule types.RiskRule, skippedRules *map[string]
 		fmt.Printf("Skipping risk rule %q\n", rule.Category().Id)
 		delete(*skippedRules, rule.Category().Id)
 	} else {
-		context.addToListOfSupportedTags(rule.SupportedTags())
+		context.parsedModel.AddToListOfSupportedTags(rule.SupportedTags())
 		generatedRisks := rule.GenerateRisks(&context.parsedModel)
 		if generatedRisks != nil {
 			if len(generatedRisks) > 0 {
@@ -154,7 +143,7 @@ func (context *Context) applyRisk(rule types.RiskRule, skippedRules *map[string]
 	}
 }
 
-func (context *Context) applyRiskGeneration() {
+func (context *Context) applyRiskGeneration(customRiskRules map[string]*types.CustomRisk, builtinRiskRules map[string]types.RiskRule) {
 	if context.Config.Verbose {
 		fmt.Println("Applying risk generation")
 	}
@@ -166,12 +155,12 @@ func (context *Context) applyRiskGeneration() {
 		}
 	}
 
-	for _, rule := range context.builtinRiskRules {
+	for _, rule := range builtinRiskRules {
 		context.applyRisk(rule, &skippedRules)
 	}
 
 	// NOW THE CUSTOM RISK RULES (if any)
-	for id, customRule := range context.customRiskRules {
+	for id, customRule := range customRiskRules {
 		_, ok := skippedRules[id]
 		if ok {
 			if context.Config.Verbose {
@@ -182,7 +171,7 @@ func (context *Context) applyRiskGeneration() {
 			if context.Config.Verbose {
 				fmt.Println("Executing custom risk rule:", id)
 			}
-			context.addToListOfSupportedTags(customRule.Tags)
+			context.parsedModel.AddToListOfSupportedTags(customRule.Tags)
 			customRisks := customRule.GenerateRisks(&context.parsedModel)
 			if len(customRisks) > 0 {
 				context.parsedModel.GeneratedRisksByCategory[customRule.Category.Id] = customRisks
@@ -531,13 +520,13 @@ func (context *Context) DoIt() {
 		log.Fatal("Unable to load model yaml: ", loadError)
 	}
 
-	context.builtinRiskRules = make(map[string]types.RiskRule)
+	builtinRiskRules := make(map[string]types.RiskRule)
 	for _, rule := range risks.GetBuiltInRiskRules() {
-		context.builtinRiskRules[rule.Category().Id] = rule
+		builtinRiskRules[rule.Category().Id] = rule
 	}
-	context.customRiskRules = types.LoadCustomRiskRules(context.Config.RiskRulesPlugins, progressReporter)
+	customRiskRules := types.LoadCustomRiskRules(context.Config.RiskRulesPlugins, progressReporter)
 
-	parsedModel, parseError := model.ParseModel(&modelInput, context.builtinRiskRules, context.customRiskRules)
+	parsedModel, parseError := model.ParseModel(&modelInput, builtinRiskRules, customRiskRules)
 	if parseError != nil {
 		log.Fatal("Unable to parse model yaml: ", parseError)
 	}
@@ -546,7 +535,7 @@ func (context *Context) DoIt() {
 
 	introTextRAA := context.applyRAA()
 
-	context.applyRiskGeneration()
+	context.applyRiskGeneration(customRiskRules, builtinRiskRules)
 	context.applyWildcardRiskTrackingEvaluation()
 	context.checkRiskTracking()
 
@@ -935,7 +924,7 @@ func (context *Context) DoIt() {
 			context.Config.BuildTimestamp,
 			modelHash,
 			introTextRAA,
-			context.customRiskRules,
+			customRiskRules,
 			context.Config.TempFolder,
 			&context.parsedModel)
 	}
