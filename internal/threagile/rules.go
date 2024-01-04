@@ -26,7 +26,7 @@ var listRiskRules = &cobra.Command{
 		cmd.Println("----------------------")
 		cmd.Println("Custom risk rules:")
 		cmd.Println("----------------------")
-		customRiskRules := types.LoadCustomRiskRules(strings.Split(*customRiskRulesPluginFlag, ","), common.GetProgressReporter(cmd))
+		customRiskRules := types.LoadCustomRiskRules(strings.Split(*customRiskRulesPluginFlag, ","), common.DefaultProgressReporter{Verbose: *verboseFlag})
 		for id, customRule := range customRiskRules {
 			cmd.Println(id, "-->", customRule.Category.Title, "--> with tags:", customRule.Tags)
 		}
@@ -53,7 +53,7 @@ var explainRiskRules = &cobra.Command{
 		cmd.Println("----------------------")
 		cmd.Println("Custom risk rules:")
 		cmd.Println("----------------------")
-		customRiskRules := types.LoadCustomRiskRules(strings.Split(*customRiskRulesPluginFlag, ","), common.GetProgressReporter(cmd))
+		customRiskRules := types.LoadCustomRiskRules(strings.Split(*customRiskRulesPluginFlag, ","), common.DefaultProgressReporter{Verbose: *verboseFlag})
 		for _, customRule := range customRiskRules {
 			cmd.Printf("%v: %v\n", customRule.Category.Id, customRule.Category.Description)
 		}

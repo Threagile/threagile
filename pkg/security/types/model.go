@@ -7,12 +7,17 @@ package types
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/threagile/threagile/pkg/input"
 )
 
+// TODO: move model out of types package and
+// rename parsedModel to model or something like this to emphasize that it's just a model
+// maybe
 type ParsedModel struct {
 	Author                                        input.Author                 `json:"author" yaml:"author"`
 	Title                                         string                       `json:"title,omitempty" yaml:"title"`
@@ -55,6 +60,44 @@ func (parsedModel *ParsedModel) AddToListOfSupportedTags(tags []string) {
 	}
 }
 
+func (parsedModel *ParsedModel) GetDeferredRiskTrackingDueToWildcardMatching() map[string]RiskTracking {
+	deferredRiskTrackingDueToWildcardMatching := make(map[string]RiskTracking)
+	for syntheticRiskId, riskTracking := range parsedModel.RiskTracking {
+		if strings.Contains(syntheticRiskId, "*") { // contains a wildcard char
+			deferredRiskTrackingDueToWildcardMatching[syntheticRiskId] = riskTracking
+		}
+	}
+
+	return deferredRiskTrackingDueToWildcardMatching
+}
+
+func (parsedModel *ParsedModel) HasNotYetAnyDirectNonWildcardRiskTracking(syntheticRiskId string) bool {
+	if _, ok := parsedModel.RiskTracking[syntheticRiskId]; ok {
+		return false
+	}
+	return true
+}
+
+func (parsedModel *ParsedModel) ApplyRisk(rule RiskRule, skippedRules *map[string]bool) {
+	id := rule.Category().Id
+	_, ok := (*skippedRules)[id]
+
+	if ok {
+		fmt.Printf("Skipping risk rule %q\n", rule.Category().Id)
+		delete(*skippedRules, rule.Category().Id)
+	} else {
+		parsedModel.AddToListOfSupportedTags(rule.SupportedTags())
+		generatedRisks := rule.GenerateRisks(parsedModel)
+		if generatedRisks != nil {
+			if len(generatedRisks) > 0 {
+				parsedModel.GeneratedRisksByCategory[rule.Category().Id] = generatedRisks
+			}
+		} else {
+			fmt.Printf("Failed to generate risks for %q\n", id)
+		}
+	}
+}
+
 func (parsedModel *ParsedModel) CheckTags(tags []string, where string) ([]string, error) {
 	var tagsUsed = make([]string, 0)
 	if tags != nil {
@@ -69,6 +112,123 @@ func (parsedModel *ParsedModel) CheckTags(tags []string, where string) ([]string
 		}
 	}
 	return tagsUsed, nil
+}
+
+// TODO: refactor skipRiskRules to be a string array instead of a comma-separated string
+func (parsedModel *ParsedModel) ApplyRiskGeneration(customRiskRules map[string]*CustomRisk,
+	builtinRiskRules map[string]RiskRule,
+	skipRiskRules string,
+	progressReporter progressReporter) {
+	progressReporter.Info("Applying risk generation")
+
+	skippedRules := make(map[string]bool)
+	if len(skipRiskRules) > 0 {
+		for _, id := range strings.Split(skipRiskRules, ",") {
+			skippedRules[id] = true
+		}
+	}
+
+	for _, rule := range builtinRiskRules {
+		parsedModel.ApplyRisk(rule, &skippedRules)
+	}
+
+	// NOW THE CUSTOM RISK RULES (if any)
+	for id, customRule := range customRiskRules {
+		_, ok := skippedRules[id]
+		if ok {
+			progressReporter.Info("Skipping custom risk rule:", id)
+			delete(skippedRules, id)
+		} else {
+			progressReporter.Info("Executing custom risk rule:", id)
+			parsedModel.AddToListOfSupportedTags(customRule.Tags)
+			customRisks := customRule.GenerateRisks(parsedModel)
+			if len(customRisks) > 0 {
+				parsedModel.GeneratedRisksByCategory[customRule.Category.Id] = customRisks
+			}
+
+			progressReporter.Info("Added custom risks:", len(customRisks))
+		}
+	}
+
+	if len(skippedRules) > 0 {
+		keys := make([]string, 0)
+		for k := range skippedRules {
+			keys = append(keys, k)
+		}
+		if len(keys) > 0 {
+			progressReporter.Info("Unknown risk rules to skip:", keys)
+		}
+	}
+
+	// save also in map keyed by synthetic risk-id
+	for _, category := range SortedRiskCategories(parsedModel) {
+		someRisks := SortedRisksOfCategory(parsedModel, category)
+		for _, risk := range someRisks {
+			parsedModel.GeneratedRisksBySyntheticId[strings.ToLower(risk.SyntheticId)] = risk
+		}
+	}
+}
+
+func (parsedModel *ParsedModel) ApplyWildcardRiskTrackingEvaluation(ignoreOrphanedRiskTracking bool, progressReporter progressReporter) error {
+	progressReporter.Info("Executing risk tracking evaluation")
+	for syntheticRiskIdPattern, riskTracking := range parsedModel.GetDeferredRiskTrackingDueToWildcardMatching() {
+		progressReporter.Info("Applying wildcard risk tracking for risk id: " + syntheticRiskIdPattern)
+
+		foundSome := false
+		var matchingRiskIdExpression = regexp.MustCompile(strings.ReplaceAll(regexp.QuoteMeta(syntheticRiskIdPattern), `\*`, `[^@]+`))
+		for syntheticRiskId := range parsedModel.GeneratedRisksBySyntheticId {
+			if matchingRiskIdExpression.Match([]byte(syntheticRiskId)) && parsedModel.HasNotYetAnyDirectNonWildcardRiskTracking(syntheticRiskId) {
+				foundSome = true
+				parsedModel.RiskTracking[syntheticRiskId] = RiskTracking{
+					SyntheticRiskId: strings.TrimSpace(syntheticRiskId),
+					Justification:   riskTracking.Justification,
+					CheckedBy:       riskTracking.CheckedBy,
+					Ticket:          riskTracking.Ticket,
+					Status:          riskTracking.Status,
+					Date:            riskTracking.Date,
+				}
+			}
+		}
+
+		if !foundSome {
+			if ignoreOrphanedRiskTracking {
+				progressReporter.Warn("WARNING: Wildcard risk tracking does not match any risk id: " + syntheticRiskIdPattern)
+			} else {
+				return errors.New("wildcard risk tracking does not match any risk id: " + syntheticRiskIdPattern)
+			}
+		}
+	}
+	return nil
+}
+
+func (parsedModel *ParsedModel) CheckRiskTracking(ignoreOrphanedRiskTracking bool, progressReporter progressReporter) error {
+	progressReporter.Info("Checking risk tracking")
+	for _, tracking := range parsedModel.RiskTracking {
+		if _, ok := parsedModel.GeneratedRisksBySyntheticId[tracking.SyntheticRiskId]; !ok {
+			if ignoreOrphanedRiskTracking {
+				progressReporter.Info("Risk tracking references unknown risk (risk id not found): " + tracking.SyntheticRiskId)
+			} else {
+				return errors.New("Risk tracking references unknown risk (risk id not found) - you might want to use the option -ignore-orphaned-risk-tracking: " + tracking.SyntheticRiskId +
+					"\n\nNOTE: For risk tracking each risk-id needs to be defined (the string with the @ sign in it). " +
+					"These unique risk IDs are visible in the PDF report (the small grey string under each risk), " +
+					"the Excel (column \"ID\"), as well as the JSON responses. Some risk IDs have only one @ sign in them, " +
+					"while others multiple. The idea is to allow for unique but still speaking IDs. Therefore each risk instance " +
+					"creates its individual ID by taking all affected elements causing the risk to be within an @-delimited part. " +
+					"Using wildcards (the * sign) for parts delimited by @ signs allows to handle groups of certain risks at once. " +
+					"Best is to lookup the IDs to use in the created Excel file. Alternatively a model macro \"seed-risk-tracking\" " +
+					"is available that helps in initially seeding the risk tracking part here based on already identified and not yet handled risks.")
+			}
+		}
+	}
+
+	// save also the risk-category-id and risk-status directly in the risk for better JSON marshalling
+	for category := range parsedModel.GeneratedRisksByCategory {
+		for i := range parsedModel.GeneratedRisksByCategory[category] {
+			//			context.parsedModel.GeneratedRisksByCategory[category][i].CategoryId = category
+			parsedModel.GeneratedRisksByCategory[category][i].RiskStatus = parsedModel.GeneratedRisksByCategory[category][i].GetRiskTrackingStatusDefaultingUnchecked(parsedModel)
+		}
+	}
+	return nil
 }
 
 func (parsedModel *ParsedModel) CheckTagExists(referencedTag, where string) error {
@@ -330,4 +490,10 @@ func (parsedModel *ParsedModel) RisksOfOnlyOperation(risksByCategory map[string]
 		}
 	}
 	return result
+}
+
+type progressReporter interface {
+	Info(a ...any)
+	Warn(a ...any)
+	Error(a ...any)
 }

@@ -7,39 +7,27 @@ package common
 import (
 	"fmt"
 	"log"
-
-	"github.com/spf13/cobra"
 )
 
-type ProgressReporter interface {
-	Println(a ...any) (n int, err error)
-	Fatalf(format string, v ...any)
+type DefaultProgressReporter struct {
+	Verbose       bool
+	SuppressError bool
 }
 
-type SilentProgressReporter struct{}
-
-func (SilentProgressReporter) Println(a ...any) (n int, err error) {
-	return 0, nil
-}
-
-func (SilentProgressReporter) Fatalf(format string, v ...any) {
-}
-
-type CommandLineProgressReporter struct{}
-
-func (CommandLineProgressReporter) Println(a ...any) (n int, err error) {
-	return fmt.Println(a...)
-}
-func (CommandLineProgressReporter) Fatalf(format string, v ...any) {
-	log.Fatalf(format, v...)
-}
-
-func GetProgressReporter(cobraCmd *cobra.Command) ProgressReporter {
-	if cobraCmd == nil {
-		return CommandLineProgressReporter{}
+func (r DefaultProgressReporter) Info(a ...any) {
+	if r.Verbose {
+		fmt.Println(a...)
 	}
-	if cobraCmd.Flags().Lookup("verbose") != nil && cobraCmd.Flags().Lookup("verbose").Changed {
-		return SilentProgressReporter{}
+}
+
+func (DefaultProgressReporter) Warn(a ...any) {
+	fmt.Println(a...)
+}
+
+func (r DefaultProgressReporter) Error(v ...any) {
+	if r.SuppressError {
+		r.Warn(v...)
+		return
 	}
-	return CommandLineProgressReporter{}
+	log.Fatal(v...)
 }

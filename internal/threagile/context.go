@@ -4,18 +4,13 @@ import (
 	"bufio"
 	"crypto/sha256"
 	"encoding/hex"
-	"errors"
 	"flag"
 	"fmt" // TODO: no fmt.Println here
-	"hash/fnv"
 	"io"
 	"log"
 	"os"
-	"os/exec"
 	"path/filepath"
-	"regexp"
 	"runtime"
-	"sort"
 	"strconv"
 	"strings"
 
@@ -33,7 +28,6 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/threagile/threagile/pkg/colors"
 	"github.com/threagile/threagile/pkg/docs"
 	"github.com/threagile/threagile/pkg/input"
 	"github.com/threagile/threagile/pkg/macros"
@@ -76,37 +70,6 @@ type Context struct {
 	parsedModel types.ParsedModel
 }
 
-func (context *Context) checkRiskTracking() {
-	if context.Config.Verbose {
-		fmt.Println("Checking risk tracking")
-	}
-	for _, tracking := range context.parsedModel.RiskTracking {
-		if _, ok := context.parsedModel.GeneratedRisksBySyntheticId[tracking.SyntheticRiskId]; !ok {
-			if context.Config.IgnoreOrphanedRiskTracking {
-				fmt.Println("Risk tracking references unknown risk (risk id not found): " + tracking.SyntheticRiskId)
-			} else {
-				panic(errors.New("Risk tracking references unknown risk (risk id not found) - you might want to use the option -ignore-orphaned-risk-tracking: " + tracking.SyntheticRiskId +
-					"\n\nNOTE: For risk tracking each risk-id needs to be defined (the string with the @ sign in it). " +
-					"These unique risk IDs are visible in the PDF report (the small grey string under each risk), " +
-					"the Excel (column \"ID\"), as well as the JSON responses. Some risk IDs have only one @ sign in them, " +
-					"while others multiple. The idea is to allow for unique but still speaking IDs. Therefore each risk instance " +
-					"creates its individual ID by taking all affected elements causing the risk to be within an @-delimited part. " +
-					"Using wildcards (the * sign) for parts delimited by @ signs allows to handle groups of certain risks at once. " +
-					"Best is to lookup the IDs to use in the created Excel file. Alternatively a model macro \"seed-risk-tracking\" " +
-					"is available that helps in initially seeding the risk tracking part here based on already identified and not yet handled risks."))
-			}
-		}
-	}
-
-	// save also the risk-category-id and risk-status directly in the risk for better JSON marshalling
-	for category := range context.parsedModel.GeneratedRisksByCategory {
-		for i := range context.parsedModel.GeneratedRisksByCategory[category] {
-			//			context.parsedModel.GeneratedRisksByCategory[category][i].CategoryId = category
-			context.parsedModel.GeneratedRisksByCategory[category][i].RiskStatus = context.parsedModel.GeneratedRisksByCategory[category][i].GetRiskTrackingStatusDefaultingUnchecked(&context.parsedModel)
-		}
-	}
-}
-
 func (context *Context) Init() *Context {
 	*context = Context{
 		GenerateCommands: &GenerateCommands{},
@@ -123,367 +86,6 @@ func (context *Context) Defaults(buildTimestamp string) *Context {
 	return context
 }
 
-func (context *Context) applyRisk(rule types.RiskRule, skippedRules *map[string]bool) {
-	id := rule.Category().Id
-	_, ok := (*skippedRules)[id]
-
-	if ok {
-		fmt.Printf("Skipping risk rule %q\n", rule.Category().Id)
-		delete(*skippedRules, rule.Category().Id)
-	} else {
-		context.parsedModel.AddToListOfSupportedTags(rule.SupportedTags())
-		generatedRisks := rule.GenerateRisks(&context.parsedModel)
-		if generatedRisks != nil {
-			if len(generatedRisks) > 0 {
-				context.parsedModel.GeneratedRisksByCategory[rule.Category().Id] = generatedRisks
-			}
-		} else {
-			fmt.Printf("Failed to generate risks for %q\n", id)
-		}
-	}
-}
-
-func (context *Context) applyRiskGeneration(customRiskRules map[string]*types.CustomRisk, builtinRiskRules map[string]types.RiskRule) {
-	if context.Config.Verbose {
-		fmt.Println("Applying risk generation")
-	}
-
-	skippedRules := make(map[string]bool)
-	if len(context.Config.SkipRiskRules) > 0 {
-		for _, id := range strings.Split(context.Config.SkipRiskRules, ",") {
-			skippedRules[id] = true
-		}
-	}
-
-	for _, rule := range builtinRiskRules {
-		context.applyRisk(rule, &skippedRules)
-	}
-
-	// NOW THE CUSTOM RISK RULES (if any)
-	for id, customRule := range customRiskRules {
-		_, ok := skippedRules[id]
-		if ok {
-			if context.Config.Verbose {
-				fmt.Println("Skipping custom risk rule:", id)
-			}
-			delete(skippedRules, id)
-		} else {
-			if context.Config.Verbose {
-				fmt.Println("Executing custom risk rule:", id)
-			}
-			context.parsedModel.AddToListOfSupportedTags(customRule.Tags)
-			customRisks := customRule.GenerateRisks(&context.parsedModel)
-			if len(customRisks) > 0 {
-				context.parsedModel.GeneratedRisksByCategory[customRule.Category.Id] = customRisks
-			}
-
-			if context.Config.Verbose {
-				fmt.Println("Added custom risks:", len(customRisks))
-			}
-		}
-	}
-
-	if len(skippedRules) > 0 {
-		keys := make([]string, 0)
-		for k := range skippedRules {
-			keys = append(keys, k)
-		}
-		if len(keys) > 0 {
-			log.Println("Unknown risk rules to skip:", keys)
-		}
-	}
-
-	// save also in map keyed by synthetic risk-id
-	for _, category := range types.SortedRiskCategories(&context.parsedModel) {
-		someRisks := types.SortedRisksOfCategory(&context.parsedModel, category)
-		for _, risk := range someRisks {
-			context.parsedModel.GeneratedRisksBySyntheticId[strings.ToLower(risk.SyntheticId)] = risk
-		}
-	}
-}
-
-func (context *Context) writeDataFlowDiagramGraphvizDOT(diagramFilenameDOT string, dpi int) *os.File {
-	if context.Config.Verbose {
-		fmt.Println("Writing data flow diagram input")
-	}
-	var dotContent strings.Builder
-	dotContent.WriteString("digraph generatedModel { concentrate=false \n")
-
-	// Metadata init ===============================================================================
-	tweaks := ""
-	if context.parsedModel.DiagramTweakNodesep > 0 {
-		tweaks += "\n		nodesep=\"" + strconv.Itoa(context.parsedModel.DiagramTweakNodesep) + "\""
-	}
-	if context.parsedModel.DiagramTweakRanksep > 0 {
-		tweaks += "\n		ranksep=\"" + strconv.Itoa(context.parsedModel.DiagramTweakRanksep) + "\""
-	}
-	suppressBidirectionalArrows := true
-	drawSpaceLinesForLayoutUnfortunatelyFurtherSeparatesAllRanks := true
-	splines := "ortho"
-	if len(context.parsedModel.DiagramTweakEdgeLayout) > 0 {
-		switch context.parsedModel.DiagramTweakEdgeLayout {
-		case "spline":
-			splines = "spline"
-			drawSpaceLinesForLayoutUnfortunatelyFurtherSeparatesAllRanks = false
-		case "polyline":
-			splines = "polyline"
-			drawSpaceLinesForLayoutUnfortunatelyFurtherSeparatesAllRanks = false
-		case "ortho":
-			splines = "ortho"
-			suppressBidirectionalArrows = true
-		case "curved":
-			splines = "curved"
-			drawSpaceLinesForLayoutUnfortunatelyFurtherSeparatesAllRanks = false
-		case "false":
-			splines = "false"
-			drawSpaceLinesForLayoutUnfortunatelyFurtherSeparatesAllRanks = false
-		default:
-			panic(errors.New("unknown value for diagram_tweak_suppress_edge_labels (spline, polyline, ortho, curved, false): " +
-				context.parsedModel.DiagramTweakEdgeLayout))
-		}
-	}
-	rankdir := "TB"
-	if context.parsedModel.DiagramTweakLayoutLeftToRight {
-		rankdir = "LR"
-	}
-	modelTitle := ""
-	if context.Config.AddModelTitle {
-		modelTitle = `label="` + context.parsedModel.Title + `"`
-	}
-	dotContent.WriteString(`	graph [ ` + modelTitle + `
-		labelloc=t
-		fontname="Verdana"
-		fontsize=40
-        outputorder="nodesfirst"
-		dpi=` + strconv.Itoa(dpi) + `
-		splines=` + splines + `
-		rankdir="` + rankdir + `"
-` + tweaks + `
-	];
-	node [
-		fontname="Verdana"
-		fontsize="20"
-	];
-	edge [
-		shape="none"
-		fontname="Verdana"
-		fontsize="18"
-	];
-`)
-
-	// Trust Boundaries ===============================================================================
-	var subgraphSnippetsById = make(map[string]string)
-	// first create them in memory (see the link replacement below for nested trust boundaries) - otherwise in Go ranging over map is random order
-	// range over them in sorted (hence re-producible) way:
-	keys := make([]string, 0)
-	for k := range context.parsedModel.TrustBoundaries {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	for _, key := range keys {
-		trustBoundary := context.parsedModel.TrustBoundaries[key]
-		var snippet strings.Builder
-		if len(trustBoundary.TechnicalAssetsInside) > 0 || len(trustBoundary.TrustBoundariesNested) > 0 {
-			if drawSpaceLinesForLayoutUnfortunatelyFurtherSeparatesAllRanks {
-				// see https://stackoverflow.com/questions/17247455/how-do-i-add-extra-space-between-clusters?noredirect=1&lq=1
-				snippet.WriteString("\n subgraph cluster_space_boundary_for_layout_only_1" + hash(trustBoundary.Id) + " {\n")
-				snippet.WriteString(`	graph [
-                                              dpi=` + strconv.Itoa(dpi) + `
-											  label=<<table border="0" cellborder="0" cellpadding="0" bgcolor="#FFFFFF55"><tr><td><b> </b></td></tr></table>>
-											  fontsize="21"
-											  style="invis"
-											  color="green"
-											  fontcolor="green"
-											  margin="50.0"
-											  penwidth="6.5"
-                                              outputorder="nodesfirst"
-											];`)
-			}
-			snippet.WriteString("\n subgraph cluster_" + hash(trustBoundary.Id) + " {\n")
-			color, fontColor, bgColor, style, fontname := colors.RgbHexColorTwilight(), colors.RgbHexColorTwilight() /*"#550E0C"*/, "#FAFAFA", "dashed", "Verdana"
-			penWidth := 4.5
-			if len(trustBoundary.TrustBoundariesNested) > 0 {
-				//color, fontColor, style, fontname = colors.Blue, colors.Blue, "dashed", "Verdana"
-				penWidth = 5.5
-			}
-			if len(trustBoundary.ParentTrustBoundaryID(&context.parsedModel)) > 0 {
-				bgColor = "#F1F1F1"
-			}
-			if trustBoundary.Type == types.NetworkPolicyNamespaceIsolation {
-				fontColor, bgColor = "#222222", "#DFF4FF"
-			}
-			if trustBoundary.Type == types.ExecutionEnvironment {
-				fontColor, bgColor, style = "#555555", "#FFFFF0", "dotted"
-			}
-			snippet.WriteString(`	graph [
-      dpi=` + strconv.Itoa(dpi) + `
-      label=<<table border="0" cellborder="0" cellpadding="0"><tr><td><b>` + trustBoundary.Title + `</b> (` + trustBoundary.Type.String() + `)</td></tr></table>>
-      fontsize="21"
-      style="` + style + `"
-      color="` + color + `"
-      bgcolor="` + bgColor + `"
-      fontcolor="` + fontColor + `"
-      fontname="` + fontname + `"
-      penwidth="` + fmt.Sprintf("%f", penWidth) + `"
-      forcelabels=true
-      outputorder="nodesfirst"
-	  margin="50.0"
-    ];`)
-			snippet.WriteString("\n")
-			keys := trustBoundary.TechnicalAssetsInside
-			sort.Strings(keys)
-			for _, technicalAssetInside := range keys {
-				//log.Println("About to add technical asset link to trust boundary: ", technicalAssetInside)
-				technicalAsset := context.parsedModel.TechnicalAssets[technicalAssetInside]
-				snippet.WriteString(hash(technicalAsset.Id))
-				snippet.WriteString(";\n")
-			}
-			keys = trustBoundary.TrustBoundariesNested
-			sort.Strings(keys)
-			for _, trustBoundaryNested := range keys {
-				//log.Println("About to add nested trust boundary to trust boundary: ", trustBoundaryNested)
-				trustBoundaryNested := context.parsedModel.TrustBoundaries[trustBoundaryNested]
-				snippet.WriteString("LINK-NEEDS-REPLACED-BY-cluster_" + hash(trustBoundaryNested.Id))
-				snippet.WriteString(";\n")
-			}
-			snippet.WriteString(" }\n\n")
-			if drawSpaceLinesForLayoutUnfortunatelyFurtherSeparatesAllRanks {
-				snippet.WriteString(" }\n\n")
-			}
-		}
-		subgraphSnippetsById[hash(trustBoundary.Id)] = snippet.String()
-	}
-	// here replace links and remove from map after replacement (i.e. move snippet into nested)
-	for i := range subgraphSnippetsById {
-		re := regexp.MustCompile(`LINK-NEEDS-REPLACED-BY-cluster_([0-9]*);`)
-		for {
-			matches := re.FindStringSubmatch(subgraphSnippetsById[i])
-			if len(matches) > 0 {
-				embeddedSnippet := " //nested:" + subgraphSnippetsById[matches[1]]
-				subgraphSnippetsById[i] = strings.ReplaceAll(subgraphSnippetsById[i], matches[0], embeddedSnippet)
-				subgraphSnippetsById[matches[1]] = "" // to something like remove it
-			} else {
-				break
-			}
-		}
-	}
-	// now write them all
-	keys = make([]string, 0)
-	for k := range subgraphSnippetsById {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	for _, key := range keys {
-		snippet := subgraphSnippetsById[key]
-		dotContent.WriteString(snippet)
-	}
-
-	// Technical Assets ===============================================================================
-	// first create them in memory (see the link replacement below for nested trust boundaries) - otherwise in Go ranging over map is random order
-	// range over them in sorted (hence re-producible) way:
-	// Convert map to slice of values:
-	var techAssets []types.TechnicalAsset
-	for _, techAsset := range context.parsedModel.TechnicalAssets {
-		techAssets = append(techAssets, techAsset)
-	}
-	sort.Sort(types.ByOrderAndIdSort(techAssets))
-	for _, technicalAsset := range techAssets {
-		dotContent.WriteString(context.makeTechAssetNode(technicalAsset, false))
-		dotContent.WriteString("\n")
-	}
-
-	// Data Flows (Technical Communication Links) ===============================================================================
-	for _, technicalAsset := range techAssets {
-		for _, dataFlow := range technicalAsset.CommunicationLinks {
-			sourceId := technicalAsset.Id
-			targetId := dataFlow.TargetId
-			//log.Println("About to add link from", sourceId, "to", targetId, "with id", dataFlow.Id)
-			var arrowStyle, arrowColor, readOrWriteHead, readOrWriteTail string
-			if dataFlow.Readonly {
-				readOrWriteHead = "empty"
-				readOrWriteTail = "odot"
-			} else {
-				readOrWriteHead = "normal"
-				readOrWriteTail = "dot"
-			}
-			dir := "forward"
-			if dataFlow.IsBidirectional() {
-				if !suppressBidirectionalArrows { // as it does not work as bug in graphviz with ortho: https://gitlab.com/graphviz/graphviz/issues/144
-					dir = "both"
-				}
-			}
-			arrowStyle = ` style="` + dataFlow.DetermineArrowLineStyle() + `" penwidth="` + dataFlow.DetermineArrowPenWidth(&context.parsedModel) + `" arrowtail="` + readOrWriteTail + `" arrowhead="` + readOrWriteHead + `" dir="` + dir + `" arrowsize="2.0" `
-			arrowColor = ` color="` + dataFlow.DetermineArrowColor(&context.parsedModel) + `"`
-			tweaks := ""
-			if dataFlow.DiagramTweakWeight > 0 {
-				tweaks += " weight=\"" + strconv.Itoa(dataFlow.DiagramTweakWeight) + "\" "
-			}
-
-			dotContent.WriteString("\n")
-			dotContent.WriteString("  " + hash(sourceId) + " -> " + hash(targetId) +
-				` [` + arrowColor + ` ` + arrowStyle + tweaks + ` constraint=` + strconv.FormatBool(dataFlow.DiagramTweakConstraint) + ` `)
-			if !context.parsedModel.DiagramTweakSuppressEdgeLabels {
-				dotContent.WriteString(` xlabel="` + encode(dataFlow.Protocol.String()) + `" fontcolor="` + dataFlow.DetermineLabelColor(&context.parsedModel) + `" `)
-			}
-			dotContent.WriteString(" ];\n")
-		}
-	}
-
-	dotContent.WriteString(context.makeDiagramInvisibleConnectionsTweaks())
-	dotContent.WriteString(context.makeDiagramSameRankNodeTweaks())
-
-	dotContent.WriteString("}")
-
-	//fmt.Println(dotContent.String())
-
-	// Write the DOT file
-	file, err := os.Create(diagramFilenameDOT)
-	checkErr(err)
-	defer func() { _ = file.Close() }()
-	_, err = fmt.Fprintln(file, dotContent.String())
-	checkErr(err)
-	return file
-}
-
-func (context *Context) makeDiagramSameRankNodeTweaks() string {
-	// see https://stackoverflow.com/questions/25734244/how-do-i-place-nodes-on-the-same-level-in-dot
-	tweak := ""
-	if len(context.parsedModel.DiagramTweakSameRankAssets) > 0 {
-		for _, sameRank := range context.parsedModel.DiagramTweakSameRankAssets {
-			assetIDs := strings.Split(sameRank, ":")
-			if len(assetIDs) > 0 {
-				tweak += "{ rank=same; "
-				for _, id := range assetIDs {
-					checkErr(context.parsedModel.CheckTechnicalAssetExists(id, "diagram tweak same-rank", true))
-					if len(context.parsedModel.TechnicalAssets[id].GetTrustBoundaryId(&context.parsedModel)) > 0 {
-						panic(errors.New("technical assets (referenced in same rank diagram tweak) are inside trust boundaries: " +
-							fmt.Sprintf("%v", context.parsedModel.DiagramTweakSameRankAssets)))
-					}
-					tweak += " " + hash(id) + "; "
-				}
-				tweak += " }"
-			}
-		}
-	}
-	return tweak
-}
-
-func (context *Context) makeDiagramInvisibleConnectionsTweaks() string {
-	// see https://stackoverflow.com/questions/2476575/how-to-control-node-placement-in-graphviz-i-e-avoid-edge-crossings
-	tweak := ""
-	if len(context.parsedModel.DiagramTweakInvisibleConnectionsBetweenAssets) > 0 {
-		for _, invisibleConnections := range context.parsedModel.DiagramTweakInvisibleConnectionsBetweenAssets {
-			assetIDs := strings.Split(invisibleConnections, ":")
-			if len(assetIDs) == 2 {
-				checkErr(context.parsedModel.CheckTechnicalAssetExists(assetIDs[0], "diagram tweak connections", true))
-				checkErr(context.parsedModel.CheckTechnicalAssetExists(assetIDs[1], "diagram tweak connections", true))
-				tweak += "\n" + hash(assetIDs[0]) + " -> " + hash(assetIDs[1]) + " [style=invis]; \n"
-			}
-		}
-	}
-	return tweak
-}
-
 func (context *Context) DoIt() {
 	defer func() {
 		var err error
@@ -497,10 +99,7 @@ func (context *Context) DoIt() {
 		}
 	}()
 
-	var progressReporter common.ProgressReporter = common.SilentProgressReporter{}
-	if context.Config.Verbose {
-		progressReporter = common.CommandLineProgressReporter{}
-	}
+	progressReporter := common.DefaultProgressReporter{Verbose: context.Config.Verbose}
 
 	if len(context.Config.ExecuteModelMacro) > 0 {
 		fmt.Println(docs.Logo + "\n\n" + docs.VersionText)
@@ -535,9 +134,19 @@ func (context *Context) DoIt() {
 
 	introTextRAA := context.applyRAA()
 
-	context.applyRiskGeneration(customRiskRules, builtinRiskRules)
-	context.applyWildcardRiskTrackingEvaluation()
-	context.checkRiskTracking()
+	context.parsedModel.ApplyRiskGeneration(customRiskRules, builtinRiskRules,
+		context.Config.SkipRiskRules, progressReporter)
+	err := context.parsedModel.ApplyWildcardRiskTrackingEvaluation(context.Config.IgnoreOrphanedRiskTracking, progressReporter)
+	if err != nil {
+		// TODO: do not panic and gracefully handle the error
+		panic(err)
+	}
+
+	err = context.parsedModel.CheckRiskTracking(context.Config.IgnoreOrphanedRiskTracking, progressReporter)
+	if err != nil {
+		// TODO: do not panic and gracefully handle the error
+		panic(err)
+	}
 
 	if len(context.Config.ExecuteModelMacro) > 0 {
 		var macroDetails macros.MacroDetails
@@ -845,8 +454,13 @@ func (context *Context) DoIt() {
 			gvFile = tmpFileGV.Name()
 			defer func() { _ = os.Remove(gvFile) }()
 		}
-		dotFile := context.writeDataFlowDiagramGraphvizDOT(gvFile, diagramDPI)
-		context.generateDataFlowDiagramGraphvizImage(dotFile, context.Config.OutputFolder)
+		dotFile := report.WriteDataFlowDiagramGraphvizDOT(&context.parsedModel, gvFile, diagramDPI, context.Config.AddModelTitle, progressReporter)
+
+		err := report.GenerateDataFlowDiagramGraphvizImage(dotFile, context.Config.OutputFolder,
+			context.Config.TempFolder, context.Config.BinFolder, context.Config.DataFlowDiagramFilenamePNG, progressReporter)
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 	// Data Asset Diagram rendering
 	if context.GenerateCommands.DataAssetDiagram {
@@ -857,8 +471,12 @@ func (context *Context) DoIt() {
 			gvFile = tmpFile.Name()
 			defer func() { _ = os.Remove(gvFile) }()
 		}
-		dotFile := context.writeDataAssetDiagramGraphvizDOT(gvFile, diagramDPI)
-		context.generateDataAssetDiagramGraphvizImage(dotFile, context.Config.OutputFolder)
+		dotFile := report.WriteDataAssetDiagramGraphvizDOT(&context.parsedModel, gvFile, diagramDPI, progressReporter)
+		err := report.GenerateDataAssetDiagramGraphvizImage(dotFile, context.Config.OutputFolder,
+			context.Config.TempFolder, context.Config.BinFolder, context.Config.DataAssetDiagramFilenamePNG, progressReporter)
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 
 	// risks as risks json
@@ -986,353 +604,10 @@ func (context *Context) applyRAA() string {
 	return runner.ErrorOutput
 }
 
-func (context *Context) applyWildcardRiskTrackingEvaluation() {
-	if context.Config.Verbose {
-		fmt.Println("Executing risk tracking evaluation")
-	}
-	for syntheticRiskIdPattern, riskTracking := range context.getDeferredRiskTrackingDueToWildcardMatching() {
-		if context.Config.Verbose {
-			fmt.Println("Applying wildcard risk tracking for risk id: " + syntheticRiskIdPattern)
-		}
-
-		foundSome := false
-		var matchingRiskIdExpression = regexp.MustCompile(strings.ReplaceAll(regexp.QuoteMeta(syntheticRiskIdPattern), `\*`, `[^@]+`))
-		for syntheticRiskId := range context.parsedModel.GeneratedRisksBySyntheticId {
-			if matchingRiskIdExpression.Match([]byte(syntheticRiskId)) && context.hasNotYetAnyDirectNonWildcardRiskTracking(syntheticRiskId) {
-				foundSome = true
-				context.parsedModel.RiskTracking[syntheticRiskId] = types.RiskTracking{
-					SyntheticRiskId: strings.TrimSpace(syntheticRiskId),
-					Justification:   riskTracking.Justification,
-					CheckedBy:       riskTracking.CheckedBy,
-					Ticket:          riskTracking.Ticket,
-					Status:          riskTracking.Status,
-					Date:            riskTracking.Date,
-				}
-			}
-		}
-
-		if !foundSome {
-			if context.Config.IgnoreOrphanedRiskTracking {
-				fmt.Println("WARNING: Wildcard risk tracking does not match any risk id: " + syntheticRiskIdPattern)
-			} else {
-				panic(errors.New("wildcard risk tracking does not match any risk id: " + syntheticRiskIdPattern))
-			}
-		}
-	}
-}
-
-func (context *Context) getDeferredRiskTrackingDueToWildcardMatching() map[string]types.RiskTracking {
-	deferredRiskTrackingDueToWildcardMatching := make(map[string]types.RiskTracking)
-	for syntheticRiskId, riskTracking := range context.parsedModel.RiskTracking {
-		if strings.Contains(syntheticRiskId, "*") { // contains a wildcard char
-			deferredRiskTrackingDueToWildcardMatching[syntheticRiskId] = riskTracking
-		}
-	}
-
-	return deferredRiskTrackingDueToWildcardMatching
-}
-
-func (context *Context) hasNotYetAnyDirectNonWildcardRiskTracking(syntheticRiskId string) bool {
-	if _, ok := context.parsedModel.RiskTracking[syntheticRiskId]; ok {
-		return false
-	}
-	return true
-}
-
-func (context *Context) writeDataAssetDiagramGraphvizDOT(diagramFilenameDOT string, dpi int) *os.File {
-	if context.Config.Verbose {
-		fmt.Println("Writing data asset diagram input")
-	}
-	var dotContent strings.Builder
-	dotContent.WriteString("digraph generatedModel { concentrate=true \n")
-
-	// Metadata init ===============================================================================
-	dotContent.WriteString(`	graph [
-		dpi=` + strconv.Itoa(dpi) + `
-		fontname="Verdana"
-		labelloc="c"
-		fontsize="20"
-		splines=false
-		rankdir="LR"
-		nodesep=1.0
-		ranksep=3.0
-        outputorder="nodesfirst"
-	];
-	node [
-		fontcolor="white"
-		fontname="Verdana"
-		fontsize="20"
-	];
-	edge [
-		shape="none"
-		fontname="Verdana"
-		fontsize="18"
-	];
-`)
-
-	// Technical Assets ===============================================================================
-	techAssets := make([]types.TechnicalAsset, 0)
-	for _, techAsset := range context.parsedModel.TechnicalAssets {
-		techAssets = append(techAssets, techAsset)
-	}
-	sort.Sort(types.ByOrderAndIdSort(techAssets))
-	for _, technicalAsset := range techAssets {
-		if len(technicalAsset.DataAssetsStored) > 0 || len(technicalAsset.DataAssetsProcessed) > 0 {
-			dotContent.WriteString(context.makeTechAssetNode(technicalAsset, true))
-			dotContent.WriteString("\n")
-		}
-	}
-
-	// Data Assets ===============================================================================
-	dataAssets := make([]types.DataAsset, 0)
-	for _, dataAsset := range context.parsedModel.DataAssets {
-		dataAssets = append(dataAssets, dataAsset)
-	}
-
-	types.SortByDataAssetDataBreachProbabilityAndTitle(&context.parsedModel, dataAssets)
-	for _, dataAsset := range dataAssets {
-		dotContent.WriteString(context.makeDataAssetNode(dataAsset))
-		dotContent.WriteString("\n")
-	}
-
-	// Data Asset to Tech Asset links ===============================================================================
-	for _, technicalAsset := range techAssets {
-		for _, sourceId := range technicalAsset.DataAssetsStored {
-			targetId := technicalAsset.Id
-			dotContent.WriteString("\n")
-			dotContent.WriteString(hash(sourceId) + " -> " + hash(targetId) +
-				` [ color="blue" style="solid" ];`)
-			dotContent.WriteString("\n")
-		}
-		for _, sourceId := range technicalAsset.DataAssetsProcessed {
-			if !contains(technicalAsset.DataAssetsStored, sourceId) { // here only if not already drawn above
-				targetId := technicalAsset.Id
-				dotContent.WriteString("\n")
-				dotContent.WriteString(hash(sourceId) + " -> " + hash(targetId) +
-					` [ color="#666666" style="dashed" ];`)
-				dotContent.WriteString("\n")
-			}
-		}
-	}
-
-	dotContent.WriteString("}")
-
-	// Write the DOT file
-	file, err := os.Create(diagramFilenameDOT)
-	checkErr(err)
-	defer func() { _ = file.Close() }()
-	_, err = fmt.Fprintln(file, dotContent.String())
-	checkErr(err)
-	return file
-}
-
-func (context *Context) makeTechAssetNode(technicalAsset types.TechnicalAsset, simplified bool) string {
-	if simplified {
-		color := colors.RgbHexColorOutOfScope()
-		if !technicalAsset.OutOfScope {
-			generatedRisks := technicalAsset.GeneratedRisks(&context.parsedModel)
-			switch types.HighestSeverityStillAtRisk(&context.parsedModel, generatedRisks) {
-			case types.CriticalSeverity:
-				color = colors.RgbHexColorCriticalRisk()
-			case types.HighSeverity:
-				color = colors.RgbHexColorHighRisk()
-			case types.ElevatedSeverity:
-				color = colors.RgbHexColorElevatedRisk()
-			case types.MediumSeverity:
-				color = colors.RgbHexColorMediumRisk()
-			case types.LowSeverity:
-				color = colors.RgbHexColorLowRisk()
-			default:
-				color = "#444444" // since black is too dark here as fill color
-			}
-			if len(types.ReduceToOnlyStillAtRisk(&context.parsedModel, generatedRisks)) == 0 {
-				color = "#444444" // since black is too dark here as fill color
-			}
-		}
-		return "  " + hash(technicalAsset.Id) + ` [ shape="box" style="filled" fillcolor="` + color + `"
-				label=<<b>` + encode(technicalAsset.Title) + `</b>> penwidth="3.0" color="` + color + `" ];
-				`
-	} else {
-		var shape, title string
-		var lineBreak = ""
-		switch technicalAsset.Type {
-		case types.ExternalEntity:
-			shape = "box"
-			title = technicalAsset.Title
-		case types.Process:
-			shape = "ellipse"
-			title = technicalAsset.Title
-		case types.Datastore:
-			shape = "cylinder"
-			title = technicalAsset.Title
-			if technicalAsset.Redundant {
-				lineBreak = "<br/>"
-			}
-		}
-
-		if technicalAsset.UsedAsClientByHuman {
-			shape = "octagon"
-		}
-
-		// RAA = Relative Attacker Attractiveness
-		raa := technicalAsset.RAA
-		var attackerAttractivenessLabel string
-		if technicalAsset.OutOfScope {
-			attackerAttractivenessLabel = "<font point-size=\"15\" color=\"#603112\">RAA: out of scope</font>"
-		} else {
-			attackerAttractivenessLabel = "<font point-size=\"15\" color=\"#603112\">RAA: " + fmt.Sprintf("%.0f", raa) + " %</font>"
-		}
-
-		compartmentBorder := "0"
-		if technicalAsset.MultiTenant {
-			compartmentBorder = "1"
-		}
-
-		return "  " + hash(technicalAsset.Id) + ` [
-	label=<<table border="0" cellborder="` + compartmentBorder + `" cellpadding="2" cellspacing="0"><tr><td><font point-size="15" color="` + colors.DarkBlue + `">` + lineBreak + technicalAsset.Technology.String() + `</font><br/><font point-size="15" color="` + colors.LightGray + `">` + technicalAsset.Size.String() + `</font></td></tr><tr><td><b><font color="` + technicalAsset.DetermineLabelColor(&context.parsedModel) + `">` + encode(title) + `</font></b><br/></td></tr><tr><td>` + attackerAttractivenessLabel + `</td></tr></table>>
-	shape=` + shape + ` style="` + technicalAsset.DetermineShapeBorderLineStyle() + `,` + technicalAsset.DetermineShapeStyle() + `" penwidth="` + technicalAsset.DetermineShapeBorderPenWidth(&context.parsedModel) + `" fillcolor="` + technicalAsset.DetermineShapeFillColor(&context.parsedModel) + `"
-	peripheries=` + strconv.Itoa(technicalAsset.DetermineShapePeripheries()) + `
-	color="` + technicalAsset.DetermineShapeBorderColor(&context.parsedModel) + "\"\n  ]; "
-	}
-}
-
-func (context *Context) makeDataAssetNode(dataAsset types.DataAsset) string {
-	var color string
-	switch dataAsset.IdentifiedDataBreachProbabilityStillAtRisk(&context.parsedModel) {
-	case types.Probable:
-		color = colors.RgbHexColorHighRisk()
-	case types.Possible:
-		color = colors.RgbHexColorMediumRisk()
-	case types.Improbable:
-		color = colors.RgbHexColorLowRisk()
-	default:
-		color = "#444444" // since black is too dark here as fill color
-	}
-	if !dataAsset.IsDataBreachPotentialStillAtRisk(&context.parsedModel) {
-		color = "#444444" // since black is too dark here as fill color
-	}
-	return "  " + hash(dataAsset.Id) + ` [ label=<<b>` + encode(dataAsset.Title) + `</b>> penwidth="3.0" style="filled" fillcolor="` + color + `" color="` + color + "\"\n  ]; "
-}
-
-func (context *Context) generateDataFlowDiagramGraphvizImage(dotFile *os.File, targetDir string) {
-	if context.Config.Verbose {
-		fmt.Println("Rendering data flow diagram input")
-	}
-	// tmp files
-	tmpFileDOT, err := os.CreateTemp(context.Config.TempFolder, "diagram-*-.gv")
-	checkErr(err)
-	defer func() { _ = os.Remove(tmpFileDOT.Name()) }()
-
-	tmpFilePNG, err := os.CreateTemp(context.Config.TempFolder, "diagram-*-.png")
-	checkErr(err)
-	defer func() { _ = os.Remove(tmpFilePNG.Name()) }()
-
-	// copy into tmp file as input
-	inputDOT, err := os.ReadFile(dotFile.Name())
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	err = os.WriteFile(tmpFileDOT.Name(), inputDOT, 0644)
-	if err != nil {
-		fmt.Println("Error creating", tmpFileDOT.Name())
-		fmt.Println(err)
-		return
-	}
-
-	// exec
-	cmd := exec.Command(filepath.Join(context.Config.BinFolder, common.GraphvizDataFlowDiagramConversionCall), tmpFileDOT.Name(), tmpFilePNG.Name())
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err = cmd.Run()
-	if err != nil {
-		panic(errors.New("graph rendering call failed with error:" + err.Error()))
-	}
-	// copy into resulting file
-	inputPNG, err := os.ReadFile(tmpFilePNG.Name())
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	err = os.WriteFile(filepath.Join(targetDir, context.Config.DataFlowDiagramFilenamePNG), inputPNG, 0644)
-	if err != nil {
-		fmt.Println("Error creating", context.Config.DataFlowDiagramFilenamePNG)
-		fmt.Println(err)
-		return
-	}
-}
-
-func (context *Context) generateDataAssetDiagramGraphvizImage(dotFile *os.File, targetDir string) { // TODO dedupe with other render...() method here
-	if context.Config.Verbose {
-		fmt.Println("Rendering data asset diagram input")
-	}
-	// tmp files
-	tmpFileDOT, err := os.CreateTemp(context.Config.TempFolder, "diagram-*-.gv")
-	checkErr(err)
-	defer func() { _ = os.Remove(tmpFileDOT.Name()) }()
-
-	tmpFilePNG, err := os.CreateTemp(context.Config.TempFolder, "diagram-*-.png")
-	checkErr(err)
-	defer func() { _ = os.Remove(tmpFilePNG.Name()) }()
-
-	// copy into tmp file as input
-	inputDOT, err := os.ReadFile(dotFile.Name())
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	err = os.WriteFile(tmpFileDOT.Name(), inputDOT, 0644)
-	if err != nil {
-		fmt.Println("Error creating", tmpFileDOT.Name())
-		fmt.Println(err)
-		return
-	}
-
-	// exec
-	cmd := exec.Command(filepath.Join(context.Config.BinFolder, common.GraphvizDataAssetDiagramConversionCall), tmpFileDOT.Name(), tmpFilePNG.Name())
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err = cmd.Run()
-	if err != nil {
-		panic(errors.New("graph rendering call failed with error: " + err.Error()))
-	}
-	// copy into resulting file
-	inputPNG, err := os.ReadFile(tmpFilePNG.Name())
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	err = os.WriteFile(filepath.Join(targetDir, context.Config.DataAssetDiagramFilenamePNG), inputPNG, 0644)
-	if err != nil {
-		fmt.Println("Error creating", context.Config.DataAssetDiagramFilenamePNG)
-		fmt.Println(err)
-		return
-	}
-}
-
 func checkErr(err error) {
 	if err != nil {
 		panic(err)
 	}
-}
-
-func contains(a []string, x string) bool {
-	for _, n := range a {
-		if x == n {
-			return true
-		}
-	}
-	return false
-}
-
-func hash(s string) string {
-	h := fnv.New32a()
-	_, _ = h.Write([]byte(s))
-	return fmt.Sprintf("%v", h.Sum32())
-}
-
-func encode(value string) string {
-	return strings.ReplaceAll(value, "&", "&amp;")
 }
 
 // TODO: remove from here as soon as moved to cobra, here is only for a backward compatibility
