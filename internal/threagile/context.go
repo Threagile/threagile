@@ -47,8 +47,6 @@ type Context struct {
 
 	ServerMode bool
 
-	drawSpaceLinesForLayoutUnfortunatelyFurtherSeparatesAllRanks bool
-
 	parsedModel types.ParsedModel
 
 	generateDataFlowDiagram, generateDataAssetDiagram, generateRisksJSON, generateTechnicalAssetsJSON bool
@@ -101,7 +99,6 @@ func (context *Context) Init() *Context {
 	*context = Context{
 		customRiskRules:  make(map[string]*types.CustomRisk),
 		builtinRiskRules: make(map[string]types.RiskRule),
-		drawSpaceLinesForLayoutUnfortunatelyFurtherSeparatesAllRanks: true,
 	}
 
 	return context
@@ -209,24 +206,25 @@ func (context *Context) writeDataFlowDiagramGraphvizDOT(diagramFilenameDOT strin
 		tweaks += "\n		ranksep=\"" + strconv.Itoa(context.parsedModel.DiagramTweakRanksep) + "\""
 	}
 	suppressBidirectionalArrows := true
+	drawSpaceLinesForLayoutUnfortunatelyFurtherSeparatesAllRanks := true
 	splines := "ortho"
 	if len(context.parsedModel.DiagramTweakEdgeLayout) > 0 {
 		switch context.parsedModel.DiagramTweakEdgeLayout {
 		case "spline":
 			splines = "spline"
-			context.drawSpaceLinesForLayoutUnfortunatelyFurtherSeparatesAllRanks = false
+			drawSpaceLinesForLayoutUnfortunatelyFurtherSeparatesAllRanks = false
 		case "polyline":
 			splines = "polyline"
-			context.drawSpaceLinesForLayoutUnfortunatelyFurtherSeparatesAllRanks = false
+			drawSpaceLinesForLayoutUnfortunatelyFurtherSeparatesAllRanks = false
 		case "ortho":
 			splines = "ortho"
 			suppressBidirectionalArrows = true
 		case "curved":
 			splines = "curved"
-			context.drawSpaceLinesForLayoutUnfortunatelyFurtherSeparatesAllRanks = false
+			drawSpaceLinesForLayoutUnfortunatelyFurtherSeparatesAllRanks = false
 		case "false":
 			splines = "false"
-			context.drawSpaceLinesForLayoutUnfortunatelyFurtherSeparatesAllRanks = false
+			drawSpaceLinesForLayoutUnfortunatelyFurtherSeparatesAllRanks = false
 		default:
 			panic(errors.New("unknown value for diagram_tweak_suppress_edge_labels (spline, polyline, ortho, curved, false): " +
 				context.parsedModel.DiagramTweakEdgeLayout))
@@ -274,7 +272,7 @@ func (context *Context) writeDataFlowDiagramGraphvizDOT(diagramFilenameDOT strin
 		trustBoundary := context.parsedModel.TrustBoundaries[key]
 		var snippet strings.Builder
 		if len(trustBoundary.TechnicalAssetsInside) > 0 || len(trustBoundary.TrustBoundariesNested) > 0 {
-			if context.drawSpaceLinesForLayoutUnfortunatelyFurtherSeparatesAllRanks {
+			if drawSpaceLinesForLayoutUnfortunatelyFurtherSeparatesAllRanks {
 				// see https://stackoverflow.com/questions/17247455/how-do-i-add-extra-space-between-clusters?noredirect=1&lq=1
 				snippet.WriteString("\n subgraph cluster_space_boundary_for_layout_only_1" + hash(trustBoundary.Id) + " {\n")
 				snippet.WriteString(`	graph [
@@ -337,7 +335,7 @@ func (context *Context) writeDataFlowDiagramGraphvizDOT(diagramFilenameDOT strin
 				snippet.WriteString(";\n")
 			}
 			snippet.WriteString(" }\n\n")
-			if context.drawSpaceLinesForLayoutUnfortunatelyFurtherSeparatesAllRanks {
+			if drawSpaceLinesForLayoutUnfortunatelyFurtherSeparatesAllRanks {
 				snippet.WriteString(" }\n\n")
 			}
 		}
@@ -659,17 +657,17 @@ func (context *Context) DoIt() {
 				} else if strings.ToLower(answer) == "back" {
 					switch macroDetails.ID {
 					case addbuildpipeline.GetMacroDetails().ID:
-						message, validResult, err = addbuildpipeline.GoBack()
+						message, validResult, _ = addbuildpipeline.GoBack()
 					case addvault.GetMacroDetails().ID:
-						message, validResult, err = addvault.GoBack()
+						message, validResult, _ = addvault.GoBack()
 					case prettyprint.GetMacroDetails().ID:
-						message, validResult, err = prettyprint.GoBack()
+						message, validResult, _ = prettyprint.GoBack()
 					case removeunusedtags.GetMacroDetails().ID:
-						message, validResult, err = removeunusedtags.GoBack()
+						message, validResult, _ = removeunusedtags.GoBack()
 					case seedrisktracking.GetMacroDetails().ID:
-						message, validResult, err = seedrisktracking.GoBack()
+						message, validResult, _ = seedrisktracking.GoBack()
 					case seedtags.GetMacroDetails().ID:
-						message, validResult, err = seedtags.GoBack()
+						message, validResult, _ = seedtags.GoBack()
 					}
 				} else if len(answer) > 0 { // individual answer
 					if nextQuestion.IsValueConstrained() {
@@ -682,17 +680,17 @@ func (context *Context) DoIt() {
 					}
 					switch macroDetails.ID {
 					case addbuildpipeline.GetMacroDetails().ID:
-						message, validResult, err = addbuildpipeline.ApplyAnswer(nextQuestion.ID, answer)
+						message, validResult, _ = addbuildpipeline.ApplyAnswer(nextQuestion.ID, answer)
 					case addvault.GetMacroDetails().ID:
-						message, validResult, err = addvault.ApplyAnswer(nextQuestion.ID, answer)
+						message, validResult, _ = addvault.ApplyAnswer(nextQuestion.ID, answer)
 					case prettyprint.GetMacroDetails().ID:
-						message, validResult, err = prettyprint.ApplyAnswer(nextQuestion.ID, answer)
+						message, validResult, _ = prettyprint.ApplyAnswer(nextQuestion.ID, answer)
 					case removeunusedtags.GetMacroDetails().ID:
-						message, validResult, err = removeunusedtags.ApplyAnswer(nextQuestion.ID, answer)
+						message, validResult, _ = removeunusedtags.ApplyAnswer(nextQuestion.ID, answer)
 					case seedrisktracking.GetMacroDetails().ID:
-						message, validResult, err = seedrisktracking.ApplyAnswer(nextQuestion.ID, answer)
+						message, validResult, _ = seedrisktracking.ApplyAnswer(nextQuestion.ID, answer)
 					case seedtags.GetMacroDetails().ID:
-						message, validResult, err = seedtags.ApplyAnswer(nextQuestion.ID, answer)
+						message, validResult, _ = seedtags.ApplyAnswer(nextQuestion.ID, answer)
 					}
 				}
 			} else {
@@ -963,22 +961,6 @@ func (context *Context) applyRAA() string {
 	}
 
 	return runner.ErrorOutput
-}
-
-func (context *Context) checkTechnicalAssetsExisting(modelInput input.ModelInput, techAssetIDs []string) (ok bool) {
-	for _, techAssetID := range techAssetIDs {
-		exists := false
-		for _, val := range modelInput.TechnicalAssets {
-			if val.ID == techAssetID {
-				exists = true
-				break
-			}
-		}
-		if !exists {
-			return false
-		}
-	}
-	return true
 }
 
 func (context *Context) userHomeDir() string {
@@ -1405,13 +1387,6 @@ func checkErr(err error) {
 	if err != nil {
 		panic(err)
 	}
-}
-
-func lowerCaseAndTrim(tags []string) []string {
-	for i := range tags {
-		tags[i] = strings.ToLower(strings.TrimSpace(tags[i]))
-	}
-	return tags
 }
 
 func contains(a []string, x string) bool {
