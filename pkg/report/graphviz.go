@@ -572,7 +572,3 @@ func hash(s string) string {
 func encode(value string) string {
 	return strings.ReplaceAll(value, "&", "&amp;")
 }
-
-type progressReporter interface {
-	Info(a ...any)
-}

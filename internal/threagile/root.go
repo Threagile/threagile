@@ -12,6 +12,7 @@ import (
 
 	"github.com/threagile/threagile/pkg/common"
 	"github.com/threagile/threagile/pkg/docs"
+	"github.com/threagile/threagile/pkg/report"
 	"github.com/threagile/threagile/pkg/server"
 )
 
@@ -97,8 +98,8 @@ func readConfig(buildTimestamp string) *common.Config {
 	return cfg
 }
 
-func readCommands() *GenerateCommands {
-	commands := new(GenerateCommands).Defaults()
+func readCommands() *report.GenerateCommands {
+	commands := new(report.GenerateCommands).Defaults()
 	commands.DataFlowDiagram = *generateDataFlowDiagramFlag
 	commands.DataAssetDiagram = *generateDataAssetDiagramFlag
 	commands.RisksJSON = *generateRisksJSONFlag
