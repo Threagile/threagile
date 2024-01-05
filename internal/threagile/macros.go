@@ -8,8 +8,10 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/threagile/threagile/pkg/common"
 	"github.com/threagile/threagile/pkg/docs"
 	"github.com/threagile/threagile/pkg/macros"
+	"github.com/threagile/threagile/pkg/model"
 )
 
 var listMacrosCmd = &cobra.Command{
@@ -69,7 +71,19 @@ var executeModelMacrosCmd = &cobra.Command{
 	Use:  "execute-model-macro",
 	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		fmt.Println("execute-model-macro called with args:", args)
+		cfg := readConfig("buildTimestamp")
+		progressReporter := common.DefaultProgressReporter{Verbose: cfg.Verbose}
+
+		r, err := model.ReadAndAnalyzeModel(*cfg, progressReporter)
+		if err != nil {
+			return fmt.Errorf("unable to read and analyze model: %v", err)
+		}
+
+		macrosId := args[0]
+		err = macros.ExecuteModelMacro(r.ModelInput, cfg.InputFile, r.ParsedModel, macrosId)
+		if err != nil {
+			return fmt.Errorf("unable to execute model macro: %v", err)
+		}
 		return nil
 	},
 }

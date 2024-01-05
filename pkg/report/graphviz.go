@@ -19,7 +19,7 @@ import (
 
 func WriteDataFlowDiagramGraphvizDOT(parsedModel *types.ParsedModel,
 	diagramFilenameDOT string, dpi int, addModelTitle bool,
-	progressReporter progressReporter) *os.File {
+	progressReporter progressReporter) (*os.File, error) {
 	progressReporter.Info("Writing data flow diagram input")
 
 	var dotContent strings.Builder
@@ -54,8 +54,7 @@ func WriteDataFlowDiagramGraphvizDOT(parsedModel *types.ParsedModel,
 			splines = "false"
 			drawSpaceLinesForLayoutUnfortunatelyFurtherSeparatesAllRanks = false
 		default:
-			panic(errors.New("unknown value for diagram_tweak_suppress_edge_labels (spline, polyline, ortho, curved, false): " +
-				parsedModel.DiagramTweakEdgeLayout))
+			return nil, fmt.Errorf("unknown value for diagram_tweak_suppress_edge_labels (spline, polyline, ortho, curved, false): %s", parsedModel.DiagramTweakEdgeLayout)
 		}
 	}
 	rankdir := "TB"
@@ -245,8 +244,17 @@ func WriteDataFlowDiagramGraphvizDOT(parsedModel *types.ParsedModel,
 		}
 	}
 
-	dotContent.WriteString(makeDiagramInvisibleConnectionsTweaks(parsedModel))
-	dotContent.WriteString(makeDiagramSameRankNodeTweaks(parsedModel))
+	diagramInvisibleConnectionsTweaks, err := makeDiagramInvisibleConnectionsTweaks(parsedModel)
+	if err != nil {
+		return nil, fmt.Errorf("error while making diagram invisible connections tweaks: %s", err)
+	}
+	dotContent.WriteString(diagramInvisibleConnectionsTweaks)
+
+	diagramSameRankNodeTweaks, err := makeDiagramSameRankNodeTweaks(parsedModel)
+	if err != nil {
+		return nil, fmt.Errorf("error while making diagram same-rank node tweaks: %s", err)
+	}
+	dotContent.WriteString(diagramSameRankNodeTweaks)
 
 	dotContent.WriteString("}")
 
@@ -254,11 +262,15 @@ func WriteDataFlowDiagramGraphvizDOT(parsedModel *types.ParsedModel,
 
 	// Write the DOT file
 	file, err := os.Create(diagramFilenameDOT)
-	checkErr(err)
+	if err != nil {
+		return nil, fmt.Errorf("Error creating %s: %v", diagramFilenameDOT, err)
+	}
 	defer func() { _ = file.Close() }()
 	_, err = fmt.Fprintln(file, dotContent.String())
-	checkErr(err)
-	return file
+	if err != nil {
+		return nil, fmt.Errorf("Error writing %s: %v", diagramFilenameDOT, err)
+	}
+	return file, nil
 }
 
 func GenerateDataFlowDiagramGraphvizImage(dotFile *os.File, targetDir string,
@@ -266,11 +278,15 @@ func GenerateDataFlowDiagramGraphvizImage(dotFile *os.File, targetDir string,
 	progressReporter.Info("Rendering data flow diagram input")
 	// tmp files
 	tmpFileDOT, err := os.CreateTemp(tempFolder, "diagram-*-.gv")
-	checkErr(err)
+	if err != nil {
+		return fmt.Errorf("Error creating temp file: %v", err)
+	}
 	defer func() { _ = os.Remove(tmpFileDOT.Name()) }()
 
 	tmpFilePNG, err := os.CreateTemp(tempFolder, "diagram-*-.png")
-	checkErr(err)
+	if err != nil {
+		return fmt.Errorf("Error creating temp file: %v", err)
+	}
 	defer func() { _ = os.Remove(tmpFilePNG.Name()) }()
 
 	// copy into tmp file as input
@@ -289,7 +305,7 @@ func GenerateDataFlowDiagramGraphvizImage(dotFile *os.File, targetDir string,
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
 	if err != nil {
-		panic(errors.New("graph rendering call failed with error:" + err.Error()))
+		return errors.New("graph rendering call failed with error: " + err.Error())
 	}
 	// copy into resulting file
 	inputPNG, err := os.ReadFile(tmpFilePNG.Name())
@@ -303,7 +319,7 @@ func GenerateDataFlowDiagramGraphvizImage(dotFile *os.File, targetDir string,
 	return nil
 }
 
-func makeDiagramSameRankNodeTweaks(parsedModel *types.ParsedModel) string {
+func makeDiagramSameRankNodeTweaks(parsedModel *types.ParsedModel) (string, error) {
 	// see https://stackoverflow.com/questions/25734244/how-do-i-place-nodes-on-the-same-level-in-dot
 	tweak := ""
 	if len(parsedModel.DiagramTweakSameRankAssets) > 0 {
@@ -312,10 +328,13 @@ func makeDiagramSameRankNodeTweaks(parsedModel *types.ParsedModel) string {
 			if len(assetIDs) > 0 {
 				tweak += "{ rank=same; "
 				for _, id := range assetIDs {
-					checkErr(parsedModel.CheckTechnicalAssetExists(id, "diagram tweak same-rank", true))
+					err := parsedModel.CheckTechnicalAssetExists(id, "diagram tweak same-rank", true)
+					if err != nil {
+						return "", fmt.Errorf("error while checking technical asset existence: %s", err)
+					}
 					if len(parsedModel.TechnicalAssets[id].GetTrustBoundaryId(parsedModel)) > 0 {
-						panic(errors.New("technical assets (referenced in same rank diagram tweak) are inside trust boundaries: " +
-							fmt.Sprintf("%v", parsedModel.DiagramTweakSameRankAssets)))
+						return "", fmt.Errorf("technical assets (referenced in same rank diagram tweak) are inside trust boundaries: " +
+							fmt.Sprintf("%v", parsedModel.DiagramTweakSameRankAssets))
 					}
 					tweak += " " + hash(id) + "; "
 				}
@@ -323,27 +342,34 @@ func makeDiagramSameRankNodeTweaks(parsedModel *types.ParsedModel) string {
 			}
 		}
 	}
-	return tweak
+	return tweak, nil
 }
 
-func makeDiagramInvisibleConnectionsTweaks(parsedModel *types.ParsedModel) string {
+func makeDiagramInvisibleConnectionsTweaks(parsedModel *types.ParsedModel) (string, error) {
 	// see https://stackoverflow.com/questions/2476575/how-to-control-node-placement-in-graphviz-i-e-avoid-edge-crossings
 	tweak := ""
 	if len(parsedModel.DiagramTweakInvisibleConnectionsBetweenAssets) > 0 {
 		for _, invisibleConnections := range parsedModel.DiagramTweakInvisibleConnectionsBetweenAssets {
 			assetIDs := strings.Split(invisibleConnections, ":")
 			if len(assetIDs) == 2 {
-				checkErr(parsedModel.CheckTechnicalAssetExists(assetIDs[0], "diagram tweak connections", true))
-				checkErr(parsedModel.CheckTechnicalAssetExists(assetIDs[1], "diagram tweak connections", true))
+				err := parsedModel.CheckTechnicalAssetExists(assetIDs[0], "diagram tweak connections", true)
+				if err != nil {
+					return "", fmt.Errorf("error while checking technical asset existence: %s", err)
+				}
+				err = parsedModel.CheckTechnicalAssetExists(assetIDs[1], "diagram tweak connections", true)
+				if err != nil {
+					return "", fmt.Errorf("error while checking technical asset existence: %s", err)
+				}
+
 				tweak += "\n" + hash(assetIDs[0]) + " -> " + hash(assetIDs[1]) + " [style=invis]; \n"
 			}
 		}
 	}
-	return tweak
+	return tweak, nil
 }
 
 func WriteDataAssetDiagramGraphvizDOT(parsedModel *types.ParsedModel, diagramFilenameDOT string, dpi int,
-	progressReporter progressReporter) *os.File {
+	progressReporter progressReporter) (*os.File, error) {
 	progressReporter.Info("Writing data asset diagram input")
 
 	var dotContent strings.Builder
@@ -422,11 +448,15 @@ func WriteDataAssetDiagramGraphvizDOT(parsedModel *types.ParsedModel, diagramFil
 
 	// Write the DOT file
 	file, err := os.Create(diagramFilenameDOT)
-	checkErr(err)
+	if err != nil {
+		return nil, fmt.Errorf("Error creating %s: %v", diagramFilenameDOT, err)
+	}
 	defer func() { _ = file.Close() }()
 	_, err = fmt.Fprintln(file, dotContent.String())
-	checkErr(err)
-	return file
+	if err != nil {
+		return nil, fmt.Errorf("Error writing %s: %v", diagramFilenameDOT, err)
+	}
+	return file, nil
 }
 
 func makeDataAssetNode(parsedModel *types.ParsedModel, dataAsset types.DataAsset) string {
