@@ -1,7 +1,6 @@
 package threagile
 
 import (
-	"bufio"
 	"crypto/sha256"
 	"encoding/hex"
 	"flag"
@@ -18,15 +17,6 @@ import (
 	"github.com/threagile/threagile/pkg/security/risks"
 
 	"github.com/threagile/threagile/pkg/common"
-
-	addbuildpipeline "github.com/threagile/threagile/pkg/macros/built-in/add-build-pipeline"
-	addvault "github.com/threagile/threagile/pkg/macros/built-in/add-vault"
-	prettyprint "github.com/threagile/threagile/pkg/macros/built-in/pretty-print"
-	removeunusedtags "github.com/threagile/threagile/pkg/macros/built-in/remove-unused-tags"
-	seedrisktracking "github.com/threagile/threagile/pkg/macros/built-in/seed-risk-tracking"
-	seedtags "github.com/threagile/threagile/pkg/macros/built-in/seed-tags"
-
-	"gopkg.in/yaml.v3"
 
 	"github.com/threagile/threagile/pkg/docs"
 	"github.com/threagile/threagile/pkg/input"
@@ -102,17 +92,17 @@ func (context *Context) DoIt() {
 	progressReporter.Info("Writing into output directory:", context.Config.OutputFolder)
 	progressReporter.Info("Parsing model:", context.Config.InputFile)
 
-	modelInput := *new(input.ModelInput).Defaults()
-	loadError := modelInput.Load(context.Config.InputFile)
-	if loadError != nil {
-		log.Fatal("Unable to load model yaml: ", loadError)
-	}
-
 	builtinRiskRules := make(map[string]types.RiskRule)
 	for _, rule := range risks.GetBuiltInRiskRules() {
 		builtinRiskRules[rule.Category().Id] = rule
 	}
 	customRiskRules := types.LoadCustomRiskRules(context.Config.RiskRulesPlugins, progressReporter)
+
+	modelInput := *new(input.ModelInput).Defaults()
+	loadError := modelInput.Load(context.Config.InputFile)
+	if loadError != nil {
+		log.Fatal("Unable to load model yaml: ", loadError)
+	}
 
 	parsedModel, parseError := model.ParseModel(&modelInput, builtinRiskRules, customRiskRules)
 	if parseError != nil {
@@ -135,289 +125,11 @@ func (context *Context) DoIt() {
 	}
 
 	if len(context.Config.ExecuteModelMacro) > 0 {
-		var macroDetails macros.MacroDetails
-		switch context.Config.ExecuteModelMacro {
-		case addbuildpipeline.GetMacroDetails().ID:
-			macroDetails = addbuildpipeline.GetMacroDetails()
-		case addvault.GetMacroDetails().ID:
-			macroDetails = addvault.GetMacroDetails()
-		case prettyprint.GetMacroDetails().ID:
-			macroDetails = prettyprint.GetMacroDetails()
-		case removeunusedtags.GetMacroDetails().ID:
-			macroDetails = removeunusedtags.GetMacroDetails()
-		case seedrisktracking.GetMacroDetails().ID:
-			macroDetails = seedrisktracking.GetMacroDetails()
-		case seedtags.GetMacroDetails().ID:
-			macroDetails = seedtags.GetMacroDetails()
-		default:
-			log.Fatal("Unknown model macro: ", context.Config.ExecuteModelMacro)
+		err := macros.ExecuteModelMacro(&modelInput, context.Config.InputFile, parsedModel, context.Config.ExecuteModelMacro)
+		if err != nil {
+			log.Fatal("Unable to execute model macro: ", err)
 		}
-		fmt.Println("Executing model macro:", macroDetails.ID)
-		fmt.Println()
-		fmt.Println()
-		context.printBorder(len(macroDetails.Title), true)
-		fmt.Println(macroDetails.Title)
-		context.printBorder(len(macroDetails.Title), true)
-		if len(macroDetails.Description) > 0 {
-			fmt.Println(macroDetails.Description)
-		}
-		fmt.Println()
-		reader := bufio.NewReader(os.Stdin)
-		var err error
-		var nextQuestion macros.MacroQuestion
-		for {
-			switch macroDetails.ID {
-			case addbuildpipeline.GetMacroDetails().ID:
-				nextQuestion, err = addbuildpipeline.GetNextQuestion(parsedModel)
-			case addvault.GetMacroDetails().ID:
-				nextQuestion, err = addvault.GetNextQuestion(parsedModel)
-			case prettyprint.GetMacroDetails().ID:
-				nextQuestion, err = prettyprint.GetNextQuestion()
-			case removeunusedtags.GetMacroDetails().ID:
-				nextQuestion, err = removeunusedtags.GetNextQuestion()
-			case seedrisktracking.GetMacroDetails().ID:
-				nextQuestion, err = seedrisktracking.GetNextQuestion()
-			case seedtags.GetMacroDetails().ID:
-				nextQuestion, err = seedtags.GetNextQuestion()
-			}
-			checkErr(err)
-			if nextQuestion.NoMoreQuestions() {
-				break
-			}
-			fmt.Println()
-			context.printBorder(len(nextQuestion.Title), false)
-			fmt.Println(nextQuestion.Title)
-			context.printBorder(len(nextQuestion.Title), false)
-			if len(nextQuestion.Description) > 0 {
-				fmt.Println(nextQuestion.Description)
-			}
-			resultingMultiValueSelection := make([]string, 0)
-			if nextQuestion.IsValueConstrained() {
-				if nextQuestion.MultiSelect {
-					selectedValues := make(map[string]bool)
-					for {
-						fmt.Println("Please select (multiple executions possible) from the following values (use number to select/deselect):")
-						fmt.Println("    0:", "SELECTION PROCESS FINISHED: CONTINUE TO NEXT QUESTION")
-						for i, val := range nextQuestion.PossibleAnswers {
-							number := i + 1
-							padding, selected := "", " "
-							if number < 10 {
-								padding = " "
-							}
-							if val, exists := selectedValues[val]; exists && val {
-								selected = "*"
-							}
-							fmt.Println(" "+selected+" "+padding+strconv.Itoa(number)+":", val)
-						}
-						fmt.Println()
-						fmt.Print("Enter number to select/deselect (or 0 when finished): ")
-						answer, err := reader.ReadString('\n')
-						// convert CRLF to LF
-						answer = strings.TrimSpace(strings.Replace(answer, "\n", "", -1))
-						checkErr(err)
-						if val, err := strconv.Atoi(answer); err == nil { // flip selection
-							if val == 0 {
-								for key, selected := range selectedValues {
-									if selected {
-										resultingMultiValueSelection = append(resultingMultiValueSelection, key)
-									}
-								}
-								break
-							} else if val > 0 && val <= len(nextQuestion.PossibleAnswers) {
-								selectedValues[nextQuestion.PossibleAnswers[val-1]] = !selectedValues[nextQuestion.PossibleAnswers[val-1]]
-							}
-						}
-					}
-				} else {
-					fmt.Println("Please choose from the following values (enter value directly or use number):")
-					for i, val := range nextQuestion.PossibleAnswers {
-						number := i + 1
-						padding := ""
-						if number < 10 {
-							padding = " "
-						}
-						fmt.Println("   "+padding+strconv.Itoa(number)+":", val)
-					}
-				}
-			}
-			message := ""
-			validResult := true
-			if !nextQuestion.IsValueConstrained() || !nextQuestion.MultiSelect {
-				fmt.Println()
-				fmt.Println("Enter your answer (use 'BACK' to go one step back or 'QUIT' to quit without executing the model macro)")
-				fmt.Print("Answer")
-				if len(nextQuestion.DefaultAnswer) > 0 {
-					fmt.Print(" (default '" + nextQuestion.DefaultAnswer + "')")
-				}
-				fmt.Print(": ")
-				answer, err := reader.ReadString('\n')
-				// convert CRLF to LF
-				answer = strings.TrimSpace(strings.Replace(answer, "\n", "", -1))
-				checkErr(err)
-				if len(answer) == 0 && len(nextQuestion.DefaultAnswer) > 0 { // accepting the default
-					answer = nextQuestion.DefaultAnswer
-				} else if nextQuestion.IsValueConstrained() { // convert number to value
-					if val, err := strconv.Atoi(answer); err == nil {
-						if val > 0 && val <= len(nextQuestion.PossibleAnswers) {
-							answer = nextQuestion.PossibleAnswers[val-1]
-						}
-					}
-				}
-				if strings.ToLower(answer) == "quit" {
-					fmt.Println("Quitting without executing the model macro")
-					return
-				} else if strings.ToLower(answer) == "back" {
-					switch macroDetails.ID {
-					case addbuildpipeline.GetMacroDetails().ID:
-						message, validResult, _ = addbuildpipeline.GoBack()
-					case addvault.GetMacroDetails().ID:
-						message, validResult, _ = addvault.GoBack()
-					case prettyprint.GetMacroDetails().ID:
-						message, validResult, _ = prettyprint.GoBack()
-					case removeunusedtags.GetMacroDetails().ID:
-						message, validResult, _ = removeunusedtags.GoBack()
-					case seedrisktracking.GetMacroDetails().ID:
-						message, validResult, _ = seedrisktracking.GoBack()
-					case seedtags.GetMacroDetails().ID:
-						message, validResult, _ = seedtags.GoBack()
-					}
-				} else if len(answer) > 0 { // individual answer
-					if nextQuestion.IsValueConstrained() {
-						if !nextQuestion.IsMatchingValueConstraint(answer) {
-							fmt.Println()
-							fmt.Println(">>> INVALID <<<")
-							fmt.Println("Answer does not match any allowed value. Please try again:")
-							continue
-						}
-					}
-					switch macroDetails.ID {
-					case addbuildpipeline.GetMacroDetails().ID:
-						message, validResult, _ = addbuildpipeline.ApplyAnswer(nextQuestion.ID, answer)
-					case addvault.GetMacroDetails().ID:
-						message, validResult, _ = addvault.ApplyAnswer(nextQuestion.ID, answer)
-					case prettyprint.GetMacroDetails().ID:
-						message, validResult, _ = prettyprint.ApplyAnswer(nextQuestion.ID, answer)
-					case removeunusedtags.GetMacroDetails().ID:
-						message, validResult, _ = removeunusedtags.ApplyAnswer(nextQuestion.ID, answer)
-					case seedrisktracking.GetMacroDetails().ID:
-						message, validResult, _ = seedrisktracking.ApplyAnswer(nextQuestion.ID, answer)
-					case seedtags.GetMacroDetails().ID:
-						message, validResult, _ = seedtags.ApplyAnswer(nextQuestion.ID, answer)
-					}
-				}
-			} else {
-				switch macroDetails.ID {
-				case addbuildpipeline.GetMacroDetails().ID:
-					message, validResult, err = addbuildpipeline.ApplyAnswer(nextQuestion.ID, resultingMultiValueSelection...)
-				case addvault.GetMacroDetails().ID:
-					message, validResult, err = addvault.ApplyAnswer(nextQuestion.ID, resultingMultiValueSelection...)
-				case prettyprint.GetMacroDetails().ID:
-					message, validResult, err = prettyprint.ApplyAnswer(nextQuestion.ID, resultingMultiValueSelection...)
-				case removeunusedtags.GetMacroDetails().ID:
-					message, validResult, err = removeunusedtags.ApplyAnswer(nextQuestion.ID, resultingMultiValueSelection...)
-				case seedrisktracking.GetMacroDetails().ID:
-					message, validResult, err = seedrisktracking.ApplyAnswer(nextQuestion.ID, resultingMultiValueSelection...)
-				case seedtags.GetMacroDetails().ID:
-					message, validResult, err = seedtags.ApplyAnswer(nextQuestion.ID, resultingMultiValueSelection...)
-				}
-			}
-			checkErr(err)
-			if !validResult {
-				fmt.Println()
-				fmt.Println(">>> INVALID <<<")
-			}
-			fmt.Println(message)
-			fmt.Println()
-		}
-		for {
-			fmt.Println()
-			fmt.Println()
-			fmt.Println("#################################################################")
-			fmt.Println("Do you want to execute the model macro (updating the model file)?")
-			fmt.Println("#################################################################")
-			fmt.Println()
-			fmt.Println("The following changes will be applied:")
-			var changes []string
-			message := ""
-			validResult := true
-			var err error
-			switch macroDetails.ID {
-			case addbuildpipeline.GetMacroDetails().ID:
-				changes, message, validResult, err = addbuildpipeline.GetFinalChangeImpact(&modelInput, parsedModel)
-			case addvault.GetMacroDetails().ID:
-				changes, message, validResult, err = addvault.GetFinalChangeImpact(&modelInput, parsedModel)
-			case prettyprint.GetMacroDetails().ID:
-				changes, message, validResult, err = prettyprint.GetFinalChangeImpact(&modelInput)
-			case removeunusedtags.GetMacroDetails().ID:
-				changes, message, validResult, err = removeunusedtags.GetFinalChangeImpact(&modelInput)
-			case seedrisktracking.GetMacroDetails().ID:
-				changes, message, validResult, err = seedrisktracking.GetFinalChangeImpact(&modelInput)
-			case seedtags.GetMacroDetails().ID:
-				changes, message, validResult, err = seedtags.GetFinalChangeImpact(&modelInput)
-			}
-			checkErr(err)
-			for _, change := range changes {
-				fmt.Println(" -", change)
-			}
-			if !validResult {
-				fmt.Println()
-				fmt.Println(">>> INVALID <<<")
-			}
-			fmt.Println()
-			fmt.Println(message)
-			fmt.Println()
-			fmt.Print("Apply these changes to the model file?\nType Yes or No: ")
-			answer, err := reader.ReadString('\n')
-			// convert CRLF to LF
-			answer = strings.TrimSpace(strings.Replace(answer, "\n", "", -1))
-			checkErr(err)
-			answer = strings.ToLower(answer)
-			fmt.Println()
-			if answer == "yes" || answer == "y" {
-				message := ""
-				validResult := true
-				var err error
-				switch macroDetails.ID {
-				case addbuildpipeline.GetMacroDetails().ID:
-					message, validResult, err = addbuildpipeline.Execute(&modelInput, parsedModel)
-				case addvault.GetMacroDetails().ID:
-					message, validResult, err = addvault.Execute(&modelInput, parsedModel)
-				case prettyprint.GetMacroDetails().ID:
-					message, validResult, err = prettyprint.Execute(&modelInput)
-				case removeunusedtags.GetMacroDetails().ID:
-					message, validResult, err = removeunusedtags.Execute(&modelInput, parsedModel)
-				case seedrisktracking.GetMacroDetails().ID:
-					message, validResult, err = seedrisktracking.Execute(parsedModel, &modelInput)
-				case seedtags.GetMacroDetails().ID:
-					message, validResult, err = seedtags.Execute(&modelInput, parsedModel)
-				}
-				checkErr(err)
-				if !validResult {
-					fmt.Println()
-					fmt.Println(">>> INVALID <<<")
-				}
-				fmt.Println(message)
-				fmt.Println()
-				backupFilename := context.Config.InputFile + ".backup"
-				fmt.Println("Creating backup model file:", backupFilename) // TODO add random files in /dev/shm space?
-				_, err = copyFile(context.Config.InputFile, backupFilename)
-				checkErr(err)
-				fmt.Println("Updating model")
-				yamlBytes, err := yaml.Marshal(modelInput)
-				checkErr(err)
-				/*
-					yamlBytes = model.ReformatYAML(yamlBytes)
-				*/
-				fmt.Println("Writing model file:", context.Config.InputFile)
-				err = os.WriteFile(context.Config.InputFile, yamlBytes, 0400)
-				checkErr(err)
-				fmt.Println("Model file successfully updated")
-				return
-			} else if answer == "no" || answer == "n" {
-				fmt.Println("Quitting without executing the model macro")
-				return
-			}
-		}
+		return
 	}
 
 	if context.GenerateCommands.ReportPDF { // as the PDF report includes both diagrams
@@ -532,42 +244,6 @@ func (context *Context) DoIt() {
 			context.Config.TempFolder,
 			parsedModel)
 	}
-}
-
-func copyFile(src, dst string) (int64, error) {
-	sourceFileStat, err := os.Stat(src)
-	if err != nil {
-		return 0, err
-	}
-
-	if !sourceFileStat.Mode().IsRegular() {
-		return 0, fmt.Errorf("%s is not a regular file", src)
-	}
-
-	source, err := os.Open(src)
-	if err != nil {
-		return 0, err
-	}
-	defer func() { _ = source.Close() }()
-
-	destination, err := os.Create(dst)
-	if err != nil {
-		return 0, err
-	}
-	defer func() { _ = destination.Close() }()
-	nBytes, err := io.Copy(destination, source)
-	return nBytes, err
-}
-
-func (context *Context) printBorder(length int, bold bool) {
-	char := "-"
-	if bold {
-		char = "="
-	}
-	for i := 1; i <= length; i++ {
-		fmt.Print(char)
-	}
-	fmt.Println()
 }
 
 func applyRAA(parsedModel *types.ParsedModel, binFolder, raaPlugin string, progressReporter common.DefaultProgressReporter) string {

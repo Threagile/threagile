@@ -1,39 +1,45 @@
-package remove_unused_tags
+package macros
 
 import (
-	"github.com/threagile/threagile/pkg/security/types"
 	"sort"
 	"strconv"
 
 	"github.com/threagile/threagile/pkg/input"
-	"github.com/threagile/threagile/pkg/macros"
+	"github.com/threagile/threagile/pkg/security/types"
 )
 
-func GetMacroDetails() macros.MacroDetails {
-	return macros.MacroDetails{
+type removeUnusedTagsMacro struct {
+}
+
+func NewRemoveUnusedTags() Macros {
+	return &removeUnusedTagsMacro{}
+}
+
+func (*removeUnusedTagsMacro) GetMacroDetails() MacroDetails {
+	return MacroDetails{
 		ID:          "remove-unused-tags",
 		Title:       "Remove Unused Tags",
 		Description: "This model macro simply removes all unused tags from the model file.",
 	}
 }
 
-func GetNextQuestion() (nextQuestion macros.MacroQuestion, err error) {
-	return macros.NoMoreQuestions(), nil
+func (*removeUnusedTagsMacro) GetNextQuestion(*types.ParsedModel) (nextQuestion MacroQuestion, err error) {
+	return NoMoreQuestions(), nil
 }
 
-func ApplyAnswer(_ string, _ ...string) (message string, validResult bool, err error) {
+func (*removeUnusedTagsMacro) ApplyAnswer(_ string, _ ...string) (message string, validResult bool, err error) {
 	return "Answer processed", true, nil
 }
 
-func GoBack() (message string, validResult bool, err error) {
+func (*removeUnusedTagsMacro) GoBack() (message string, validResult bool, err error) {
 	return "Cannot go back further", false, nil
 }
 
-func GetFinalChangeImpact(_ *input.ModelInput) (changes []string, message string, validResult bool, err error) {
+func (*removeUnusedTagsMacro) GetFinalChangeImpact(_ *input.ModelInput, _ *types.ParsedModel) (changes []string, message string, validResult bool, err error) {
 	return []string{"remove unused tags from the model file"}, "Changeset valid", true, err
 }
 
-func Execute(modelInput *input.ModelInput, parsedModel *types.ParsedModel) (message string, validResult bool, err error) {
+func (*removeUnusedTagsMacro) Execute(modelInput *input.ModelInput, parsedModel *types.ParsedModel) (message string, validResult bool, err error) {
 	tagUsageMap := make(map[string]bool)
 	for _, tag := range parsedModel.TagsAvailable {
 		tagUsageMap[tag] = false // false = tag is not used
