@@ -41,6 +41,9 @@ var rootCmd = &cobra.Command{
 		}
 		return nil
 	},
+	CompletionOptions: cobra.CompletionOptions{
+		DisableDefaultCmd: true,
+	},
 }
 
 var serverCmd = &cobra.Command{

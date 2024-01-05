@@ -12,7 +12,7 @@ threagile_version: 1.0.0
 
 
 # This is only a stub for simple quick editing and is not complete.
-# For a complete usable example model see the "-create-example-model" option.
+# For a complete usable example model see the "create-example-model" option.
 
 
 title: Model Stub
