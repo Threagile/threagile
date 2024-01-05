@@ -68,8 +68,9 @@ var explainMacrosCmd = &cobra.Command{
 }
 
 var executeModelMacrosCmd = &cobra.Command{
-	Use:  "execute-model-macro",
-	Args: cobra.ExactArgs(1),
+	Use:   "execute-model-macro",
+	Short: "Execute model macro",
+	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg := readConfig("buildTimestamp")
 		progressReporter := common.DefaultProgressReporter{Verbose: cfg.Verbose}
