@@ -1,55 +1,22 @@
 package threagile
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"flag"
-	"fmt" // TODO: no fmt.Println here
-	"io"
+	"fmt"
 	"log"
 	"os"
-	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
 
 	"github.com/threagile/threagile/pkg/common"
 	"github.com/threagile/threagile/pkg/docs"
-	"github.com/threagile/threagile/pkg/input"
 	"github.com/threagile/threagile/pkg/macros"
 	"github.com/threagile/threagile/pkg/model"
 	"github.com/threagile/threagile/pkg/report"
-	"github.com/threagile/threagile/pkg/run"
-	"github.com/threagile/threagile/pkg/security/risks"
-	"github.com/threagile/threagile/pkg/security/types"
 )
 
-type GenerateCommands struct {
-	DataFlowDiagram     bool
-	DataAssetDiagram    bool
-	RisksJSON           bool
-	TechnicalAssetsJSON bool
-	StatsJSON           bool
-	RisksExcel          bool
-	TagsExcel           bool
-	ReportPDF           bool
-}
-
-func (c *GenerateCommands) Defaults() *GenerateCommands {
-	*c = GenerateCommands{
-		DataFlowDiagram:     true,
-		DataAssetDiagram:    true,
-		RisksJSON:           true,
-		TechnicalAssetsJSON: true,
-		StatsJSON:           true,
-		RisksExcel:          true,
-		TagsExcel:           true,
-		ReportPDF:           true,
-	}
-	return c
-}
-
-func DoIt(config *common.Config, commands *GenerateCommands) {
+func DoIt(config *common.Config, commands *report.GenerateCommands) {
 	progressReporter := common.DefaultProgressReporter{Verbose: config.Verbose}
 	defer func() {
 		var err error
@@ -61,177 +28,24 @@ func DoIt(config *common.Config, commands *GenerateCommands) {
 		}
 	}()
 
-	if len(config.ExecuteModelMacro) > 0 {
-		fmt.Println(docs.Logo + "\n\n" + docs.VersionText)
-	}
-	progressReporter.Info("Writing into output directory:", config.OutputFolder)
-	progressReporter.Info("Parsing model:", config.InputFile)
-
-	builtinRiskRules := make(map[string]types.RiskRule)
-	for _, rule := range risks.GetBuiltInRiskRules() {
-		builtinRiskRules[rule.Category().Id] = rule
-	}
-	customRiskRules := types.LoadCustomRiskRules(config.RiskRulesPlugins, progressReporter)
-
-	modelInput := *new(input.ModelInput).Defaults()
-	loadError := modelInput.Load(config.InputFile)
-	if loadError != nil {
-		log.Fatal("Unable to load model yaml: ", loadError)
-	}
-
-	parsedModel, parseError := model.ParseModel(&modelInput, builtinRiskRules, customRiskRules)
-	if parseError != nil {
-		log.Fatal("Unable to parse model yaml: ", parseError)
-	}
-	introTextRAA := applyRAA(parsedModel, config.BinFolder, config.RAAPlugin, progressReporter)
-
-	parsedModel.ApplyRiskGeneration(customRiskRules, builtinRiskRules,
-		config.SkipRiskRules, progressReporter)
-	err := parsedModel.ApplyWildcardRiskTrackingEvaluation(config.IgnoreOrphanedRiskTracking, progressReporter)
+	r, err := model.ReadAndAnalyzeModel(*config, progressReporter)
 	if err != nil {
-		// TODO: do not panic and gracefully handle the error
-		panic(err)
-	}
-
-	err = parsedModel.CheckRiskTracking(config.IgnoreOrphanedRiskTracking, progressReporter)
-	if err != nil {
-		// TODO: do not panic and gracefully handle the error
-		panic(err)
+		log.Fatal(err)
+		return
 	}
 
 	if len(config.ExecuteModelMacro) > 0 {
-		err := macros.ExecuteModelMacro(&modelInput, config.InputFile, parsedModel, config.ExecuteModelMacro)
+		err := macros.ExecuteModelMacro(r.ModelInput, config.InputFile, r.ParsedModel, config.ExecuteModelMacro)
 		if err != nil {
 			log.Fatal("Unable to execute model macro: ", err)
 		}
 		return
 	}
 
-	generateDataFlowDiagram := commands.DataFlowDiagram
-	generateDataAssetsDiagram := commands.DataAssetDiagram
-	if commands.ReportPDF { // as the PDF report includes both diagrams
-		generateDataFlowDiagram = true
-		generateDataAssetsDiagram = true
-	}
-
-	diagramDPI := config.DiagramDPI
-	if diagramDPI < common.MinGraphvizDPI {
-		diagramDPI = common.MinGraphvizDPI
-	} else if diagramDPI > common.MaxGraphvizDPI {
-		diagramDPI = common.MaxGraphvizDPI
-	}
-	// Data-flow Diagram rendering
-	if generateDataFlowDiagram {
-		gvFile := filepath.Join(config.OutputFolder, config.DataFlowDiagramFilenameDOT)
-		if !config.KeepDiagramSourceFiles {
-			tmpFileGV, err := os.CreateTemp(config.TempFolder, config.DataFlowDiagramFilenameDOT)
-			checkErr(err)
-			gvFile = tmpFileGV.Name()
-			defer func() { _ = os.Remove(gvFile) }()
-		}
-		dotFile := report.WriteDataFlowDiagramGraphvizDOT(parsedModel, gvFile, diagramDPI, config.AddModelTitle, progressReporter)
-
-		err := report.GenerateDataFlowDiagramGraphvizImage(dotFile, config.OutputFolder,
-			config.TempFolder, config.BinFolder, config.DataFlowDiagramFilenamePNG, progressReporter)
-		if err != nil {
-			fmt.Println(err)
-		}
-	}
-	// Data Asset Diagram rendering
-	if generateDataAssetsDiagram {
-		gvFile := filepath.Join(config.OutputFolder, config.DataAssetDiagramFilenameDOT)
-		if !config.KeepDiagramSourceFiles {
-			tmpFile, err := os.CreateTemp(config.TempFolder, config.DataAssetDiagramFilenameDOT)
-			checkErr(err)
-			gvFile = tmpFile.Name()
-			defer func() { _ = os.Remove(gvFile) }()
-		}
-		dotFile := report.WriteDataAssetDiagramGraphvizDOT(parsedModel, gvFile, diagramDPI, progressReporter)
-		err := report.GenerateDataAssetDiagramGraphvizImage(dotFile, config.OutputFolder,
-			config.TempFolder, config.BinFolder, config.DataAssetDiagramFilenamePNG, progressReporter)
-		if err != nil {
-			fmt.Println(err)
-		}
-	}
-
-	// risks as risks json
-	if commands.RisksJSON {
-		progressReporter.Info("Writing risks json")
-		report.WriteRisksJSON(parsedModel, filepath.Join(config.OutputFolder, config.JsonRisksFilename))
-	}
-
-	// technical assets json
-	if commands.TechnicalAssetsJSON {
-		progressReporter.Info("Writing technical assets json")
-		report.WriteTechnicalAssetsJSON(parsedModel, filepath.Join(config.OutputFolder, config.JsonTechnicalAssetsFilename))
-	}
-
-	// risks as risks json
-	if commands.StatsJSON {
-		progressReporter.Info("Writing stats json")
-		report.WriteStatsJSON(parsedModel, filepath.Join(config.OutputFolder, config.JsonStatsFilename))
-	}
-
-	// risks Excel
-	if commands.RisksExcel {
-		progressReporter.Info("Writing risks excel")
-		report.WriteRisksExcelToFile(parsedModel, filepath.Join(config.OutputFolder, config.ExcelRisksFilename))
-	}
-
-	// tags Excel
-	if commands.TagsExcel {
-		progressReporter.Info("Writing tags excel")
-		report.WriteTagsExcelToFile(parsedModel, filepath.Join(config.OutputFolder, config.ExcelTagsFilename))
-	}
-
-	if commands.ReportPDF {
-		// hash the YAML input file
-		f, err := os.Open(config.InputFile)
-		checkErr(err)
-		defer func() { _ = f.Close() }()
-		hasher := sha256.New()
-		if _, err := io.Copy(hasher, f); err != nil {
-			panic(err)
-		}
-		modelHash := hex.EncodeToString(hasher.Sum(nil))
-		// report PDF
-		progressReporter.Info("Writing report pdf")
-		report.WriteReportPDF(filepath.Join(config.OutputFolder, config.ReportFilename),
-			filepath.Join(config.AppFolder, config.TemplateFilename),
-			filepath.Join(config.OutputFolder, config.DataFlowDiagramFilenamePNG),
-			filepath.Join(config.OutputFolder, config.DataAssetDiagramFilenamePNG),
-			config.InputFile,
-			config.SkipRiskRules,
-			config.BuildTimestamp,
-			modelHash,
-			introTextRAA,
-			customRiskRules,
-			config.TempFolder,
-			parsedModel)
-	}
-}
-
-func applyRAA(parsedModel *types.ParsedModel, binFolder, raaPlugin string, progressReporter common.DefaultProgressReporter) string {
-	progressReporter.Info("Applying RAA calculation:", raaPlugin)
-
-	runner, loadError := new(run.Runner).Load(filepath.Join(binFolder, raaPlugin))
-	if loadError != nil {
-		progressReporter.Warn(fmt.Sprintf("WARNING: raa %q not loaded: %v\n", raaPlugin, loadError))
-		return ""
-	}
-
-	runError := runner.Run(parsedModel, parsedModel)
-	if runError != nil {
-		progressReporter.Warn(fmt.Sprintf("WARNING: raa %q not applied: %v\n", raaPlugin, runError))
-		return ""
-	}
-
-	return runner.ErrorOutput
-}
-
-func checkErr(err error) {
+	err = report.Generate(config, r, commands, progressReporter)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
+		return
 	}
 }
 
@@ -264,7 +78,7 @@ func expandPath(path string) string {
 	return path
 }
 
-func ParseCommandlineArgs(buildTimestamp string) (common.Config, GenerateCommands) {
+func ParseCommandlineArgs(buildTimestamp string) (common.Config, report.GenerateCommands) {
 	configFile := flag.String("config", "", "config file")
 	config := new(common.Config).Defaults(buildTimestamp)
 	configError := config.Load(*configFile)
@@ -295,7 +109,7 @@ func ParseCommandlineArgs(buildTimestamp string) (common.Config, GenerateCommand
 	config.RiskRulesPlugins = strings.Split(*riskRulesPlugins, ",")
 
 	// commands
-	commands := new(GenerateCommands).Defaults()
+	commands := new(report.GenerateCommands).Defaults()
 	flag.BoolVar(&commands.DataFlowDiagram, "generate-data-flow-diagram", true, "generate data-flow diagram")
 	flag.BoolVar(&commands.DataAssetDiagram, "generate-data-asset-diagram", true, "generate data asset diagram")
 	flag.BoolVar(&commands.RisksJSON, "generate-risks-json", true, "generate risks json")
