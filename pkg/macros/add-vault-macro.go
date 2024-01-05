@@ -1,4 +1,4 @@
-package add_vault
+package macros
 
 import (
 	"fmt"
@@ -6,21 +6,15 @@ import (
 	"strings"
 
 	"github.com/threagile/threagile/pkg/input"
-	"github.com/threagile/threagile/pkg/macros"
 	"github.com/threagile/threagile/pkg/security/types"
 )
 
-func GetMacroDetails() macros.MacroDetails {
-	return macros.MacroDetails{
-		ID:          "add-vault",
-		Title:       "Add Vault",
-		Description: "This model macro adds a vault (secret storage) to the model.",
-	}
+type addVaultMacro struct {
+	macroState             map[string][]string
+	questionsAnswered      []string
+	withinTrustBoundary    bool
+	createNewTrustBoundary bool
 }
-
-var macroState = make(map[string][]string)
-var questionsAnswered = make([]string, 0)
-var withinTrustBoundary, createNewTrustBoundary bool
 
 const createNewTrustBoundaryLabel = "CREATE NEW TRUST BOUNDARY"
 
@@ -32,7 +26,6 @@ var storageTypes = []string{
 	"In-Memory (no persistent storage of secrets)",
 	"Service Registry", // TODO let user choose which technical asset the registry is (for comm link)
 }
-
 var authenticationTypes = []string{
 	"Certificate",
 	"Cloud Provider (relying on cloud provider instance authentication)",
@@ -40,17 +33,32 @@ var authenticationTypes = []string{
 	"Credentials (username/password, API-key, secret token, etc.)",
 }
 
-func GetNextQuestion(parsedModel *types.ParsedModel) (nextQuestion macros.MacroQuestion, err error) {
-	counter := len(questionsAnswered)
-	if counter > 5 && !withinTrustBoundary {
+func NewAddVault() Macros {
+	return &addVaultMacro{
+		macroState:        make(map[string][]string),
+		questionsAnswered: make([]string, 0),
+	}
+}
+
+func (m *addVaultMacro) GetMacroDetails() MacroDetails {
+	return MacroDetails{
+		ID:          "add-vault",
+		Title:       "Add Vault",
+		Description: "This model macro adds a vault (secret storage) to the model.",
+	}
+}
+
+func (m *addVaultMacro) GetNextQuestion(parsedModel *types.ParsedModel) (nextQuestion MacroQuestion, err error) {
+	counter := len(m.questionsAnswered)
+	if counter > 5 && !m.withinTrustBoundary {
 		counter++
 	}
-	if counter > 6 && !createNewTrustBoundary {
+	if counter > 6 && !m.createNewTrustBoundary {
 		counter++
 	}
 	switch counter {
 	case 0:
-		return macros.MacroQuestion{
+		return MacroQuestion{
 			ID:              "vault-name",
 			Title:           "What product is used as the vault?",
 			Description:     "This name affects the technical asset's title and ID plus also the tags used.",
@@ -59,7 +67,7 @@ func GetNextQuestion(parsedModel *types.ParsedModel) (nextQuestion macros.MacroQ
 			DefaultAnswer:   "",
 		}, nil
 	case 1:
-		return macros.MacroQuestion{
+		return MacroQuestion{
 			ID:              "storage-type",
 			Title:           "What type of storage is used for the vault?",
 			Description:     "This selection affects the type of technical asset for the persistence.",
@@ -68,7 +76,7 @@ func GetNextQuestion(parsedModel *types.ParsedModel) (nextQuestion macros.MacroQ
 			DefaultAnswer:   "",
 		}, nil
 	case 2:
-		return macros.MacroQuestion{
+		return MacroQuestion{
 			ID:              "authentication-type",
 			Title:           "What type of authentication is used for accessing the vault?",
 			Description:     "This selection affects the type of communication links.",
@@ -77,7 +85,7 @@ func GetNextQuestion(parsedModel *types.ParsedModel) (nextQuestion macros.MacroQ
 			DefaultAnswer:   "",
 		}, nil
 	case 3:
-		return macros.MacroQuestion{
+		return MacroQuestion{
 			ID:              "multi-tenant",
 			Title:           "Is the vault used by multiple tenants?",
 			Description:     "",
@@ -92,7 +100,7 @@ func GetNextQuestion(parsedModel *types.ParsedModel) (nextQuestion macros.MacroQ
 		}
 		sort.Strings(possibleAnswers)
 		if len(possibleAnswers) > 0 {
-			return macros.MacroQuestion{
+			return MacroQuestion{
 				ID:              "clients",
 				Title:           "Select all technical assets that make use of the vault and access it:",
 				Description:     "This affects the communication links being generated.",
@@ -102,7 +110,7 @@ func GetNextQuestion(parsedModel *types.ParsedModel) (nextQuestion macros.MacroQ
 			}, nil
 		}
 	case 5:
-		return macros.MacroQuestion{
+		return MacroQuestion{
 			ID:              "within-trust-boundary",
 			Title:           "Is the vault placed within a network trust boundary?",
 			Description:     "",
@@ -118,7 +126,7 @@ func GetNextQuestion(parsedModel *types.ParsedModel) (nextQuestion macros.MacroQ
 			}
 		}
 		sort.Strings(possibleAnswers)
-		return macros.MacroQuestion{
+		return MacroQuestion{
 			ID:              "selected-trust-boundary",
 			Title:           "Choose from the list of existing network trust boundaries or create a new one?",
 			Description:     "",
@@ -127,7 +135,7 @@ func GetNextQuestion(parsedModel *types.ParsedModel) (nextQuestion macros.MacroQ
 			DefaultAnswer:   "",
 		}, nil
 	case 7:
-		return macros.MacroQuestion{
+		return MacroQuestion{
 			ID:          "new-trust-boundary-type",
 			Title:       "Of which type shall the new trust boundary be?",
 			Description: "",
@@ -141,44 +149,44 @@ func GetNextQuestion(parsedModel *types.ParsedModel) (nextQuestion macros.MacroQ
 			DefaultAnswer: types.NetworkOnPrem.String(),
 		}, nil
 	}
-	return macros.NoMoreQuestions(), nil
+	return NoMoreQuestions(), nil
 }
 
-func ApplyAnswer(questionID string, answer ...string) (message string, validResult bool, err error) {
-	macroState[questionID] = answer
-	questionsAnswered = append(questionsAnswered, questionID)
+func (m *addVaultMacro) ApplyAnswer(questionID string, answer ...string) (message string, validResult bool, err error) {
+	m.macroState[questionID] = answer
+	m.questionsAnswered = append(m.questionsAnswered, questionID)
 	if questionID == "within-trust-boundary" {
-		withinTrustBoundary = strings.ToLower(macroState["within-trust-boundary"][0]) == "yes"
+		m.withinTrustBoundary = strings.ToLower(m.macroState["within-trust-boundary"][0]) == "yes"
 	} else if questionID == "selected-trust-boundary" {
-		createNewTrustBoundary = strings.ToLower(macroState["selected-trust-boundary"][0]) == strings.ToLower(createNewTrustBoundaryLabel)
+		m.createNewTrustBoundary = strings.ToLower(m.macroState["selected-trust-boundary"][0]) == strings.ToLower(createNewTrustBoundaryLabel)
 	}
 	return "Answer processed", true, nil
 }
 
-func GoBack() (message string, validResult bool, err error) {
-	if len(questionsAnswered) == 0 {
+func (m *addVaultMacro) GoBack() (message string, validResult bool, err error) {
+	if len(m.questionsAnswered) == 0 {
 		return "Cannot go back further", false, nil
 	}
-	lastQuestionID := questionsAnswered[len(questionsAnswered)-1]
-	questionsAnswered = questionsAnswered[:len(questionsAnswered)-1]
-	delete(macroState, lastQuestionID)
+	lastQuestionID := m.questionsAnswered[len(m.questionsAnswered)-1]
+	m.questionsAnswered = m.questionsAnswered[:len(m.questionsAnswered)-1]
+	delete(m.macroState, lastQuestionID)
 	return "Undo successful", true, nil
 }
 
-func GetFinalChangeImpact(modelInput *input.ModelInput, parsedModel *types.ParsedModel) (changes []string, message string, validResult bool, err error) {
+func (m *addVaultMacro) GetFinalChangeImpact(modelInput *input.ModelInput, parsedModel *types.ParsedModel) (changes []string, message string, validResult bool, err error) {
 	changeLogCollector := make([]string, 0)
-	message, validResult, err = applyChange(modelInput, parsedModel, &changeLogCollector, true)
+	message, validResult, err = m.applyChange(modelInput, parsedModel, &changeLogCollector, true)
 	return changeLogCollector, message, validResult, err
 }
 
-func Execute(modelInput *input.ModelInput, parsedModel *types.ParsedModel) (message string, validResult bool, err error) {
+func (m *addVaultMacro) Execute(modelInput *input.ModelInput, parsedModel *types.ParsedModel) (message string, validResult bool, err error) {
 	changeLogCollector := make([]string, 0)
-	message, validResult, err = applyChange(modelInput, parsedModel, &changeLogCollector, false)
+	message, validResult, err = m.applyChange(modelInput, parsedModel, &changeLogCollector, false)
 	return message, validResult, err
 }
 
-func applyChange(modelInput *input.ModelInput, parsedModel *types.ParsedModel, changeLogCollector *[]string, dryRun bool) (message string, validResult bool, err error) {
-	input.AddTagToModelInput(modelInput, macroState["vault-name"][0], dryRun, changeLogCollector)
+func (m *addVaultMacro) applyChange(modelInput *input.ModelInput, parsedModel *types.ParsedModel, changeLogCollector *[]string, dryRun bool) (message string, validResult bool, err error) {
+	input.AddTagToModelInput(modelInput, m.macroState["vault-name"][0], dryRun, changeLogCollector)
 
 	var serverSideTechAssets = make([]string, 0)
 
@@ -202,9 +210,9 @@ func applyChange(modelInput *input.ModelInput, parsedModel *types.ParsedModel, c
 		}
 	}
 
-	databaseUsed := macroState["storage-type"][0] == storageTypes[2]
-	filesystemUsed := macroState["storage-type"][0] == storageTypes[3]
-	inMemoryUsed := macroState["storage-type"][0] == storageTypes[4]
+	databaseUsed := m.macroState["storage-type"][0] == storageTypes[2]
+	filesystemUsed := m.macroState["storage-type"][0] == storageTypes[3]
+	inMemoryUsed := m.macroState["storage-type"][0] == storageTypes[4]
 
 	storageID := "vault-storage"
 
@@ -234,7 +242,7 @@ func applyChange(modelInput *input.ModelInput, parsedModel *types.ParsedModel, c
 				Integrity:               types.Critical.String(),
 				Availability:            types.Critical.String(),
 				JustificationCiaRating:  "Vault components are only rated as 'confidential' as vaults usually apply a trust barrier to encrypt all data-at-rest with a vault key.",
-				MultiTenant:             strings.ToLower(macroState["multi-tenant"][0]) == "yes",
+				MultiTenant:             strings.ToLower(m.macroState["multi-tenant"][0]) == "yes",
 				Redundant:               false,
 				CustomDevelopedParts:    false,
 				DataAssetsProcessed:     nil,
@@ -249,7 +257,7 @@ func applyChange(modelInput *input.ModelInput, parsedModel *types.ParsedModel, c
 		}
 	}
 
-	vaultID := types.MakeID(macroState["vault-name"][0]) + "-vault"
+	vaultID := types.MakeID(m.macroState["vault-name"][0]) + "-vault"
 
 	if _, exists := parsedModel.TechnicalAssets[vaultID]; !exists {
 		serverSideTechAssets = append(serverSideTechAssets, vaultID)
@@ -279,16 +287,16 @@ func applyChange(modelInput *input.ModelInput, parsedModel *types.ParsedModel, c
 		}
 
 		authentication := types.NoneAuthentication.String()
-		if macroState["authentication-type"][0] == authenticationTypes[0] {
+		if m.macroState["authentication-type"][0] == authenticationTypes[0] {
 			authentication = types.ClientCertificate.String()
-		} else if macroState["authentication-type"][0] == authenticationTypes[1] {
+		} else if m.macroState["authentication-type"][0] == authenticationTypes[1] {
 			authentication = types.Externalized.String()
-		} else if macroState["authentication-type"][0] == authenticationTypes[2] {
+		} else if m.macroState["authentication-type"][0] == authenticationTypes[2] {
 			authentication = types.Externalized.String()
-		} else if macroState["authentication-type"][0] == authenticationTypes[3] {
+		} else if m.macroState["authentication-type"][0] == authenticationTypes[3] {
 			authentication = types.Credentials.String()
 		}
-		for _, clientID := range macroState["clients"] { // add a connection from each client
+		for _, clientID := range m.macroState["clients"] { // add a connection from each client
 			clientAccessCommLink := input.InputCommunicationLink{
 				Target:                 vaultID,
 				Description:            "Vault Access Traffic (by " + clientID + ")",
@@ -332,7 +340,7 @@ func applyChange(modelInput *input.ModelInput, parsedModel *types.ParsedModel, c
 
 		techAsset := input.InputTechnicalAsset{
 			ID:                      vaultID,
-			Description:             macroState["vault-name"][0] + " Vault",
+			Description:             m.macroState["vault-name"][0] + " Vault",
 			Type:                    types.Process.String(),
 			Usage:                   types.DevOps.String(),
 			UsedAsClientByHuman:     false,
@@ -340,7 +348,7 @@ func applyChange(modelInput *input.ModelInput, parsedModel *types.ParsedModel, c
 			JustificationOutOfScope: "",
 			Size:                    types.Service.String(),
 			Technology:              types.Vault.String(),
-			Tags:                    []string{input.NormalizeTag(macroState["vault-name"][0])},
+			Tags:                    []string{input.NormalizeTag(m.macroState["vault-name"][0])},
 			Internet:                false,
 			Machine:                 types.Virtual.String(),
 			Encryption:              types.Transparent.String(),
@@ -349,7 +357,7 @@ func applyChange(modelInput *input.ModelInput, parsedModel *types.ParsedModel, c
 			Integrity:               types.Critical.String(),
 			Availability:            types.Critical.String(),
 			JustificationCiaRating:  "Vault components are rated as 'strictly-confidential'.",
-			MultiTenant:             strings.ToLower(macroState["multi-tenant"][0]) == "yes",
+			MultiTenant:             strings.ToLower(m.macroState["multi-tenant"][0]) == "yes",
 			Redundant:               false,
 			CustomDevelopedParts:    false,
 			DataAssetsProcessed:     []string{"configuration-secrets"},
@@ -362,7 +370,7 @@ func applyChange(modelInput *input.ModelInput, parsedModel *types.ParsedModel, c
 		}
 		*changeLogCollector = append(*changeLogCollector, "adding technical asset (including communication links): "+vaultID)
 		if !dryRun {
-			modelInput.TechnicalAssets[macroState["vault-name"][0]+" Vault"] = techAsset
+			modelInput.TechnicalAssets[m.macroState["vault-name"][0]+" Vault"] = techAsset
 		}
 	}
 
@@ -383,9 +391,9 @@ func applyChange(modelInput *input.ModelInput, parsedModel *types.ParsedModel, c
 		}
 	}
 
-	if withinTrustBoundary {
-		if createNewTrustBoundary {
-			trustBoundaryType := macroState["new-trust-boundary-type"][0]
+	if m.withinTrustBoundary {
+		if m.createNewTrustBoundary {
+			trustBoundaryType := m.macroState["new-trust-boundary-type"][0]
 			title := "Vault Network"
 			trustBoundary := input.InputTrustBoundary{
 				ID:          "vault-network",
@@ -403,7 +411,7 @@ func applyChange(modelInput *input.ModelInput, parsedModel *types.ParsedModel, c
 				modelInput.TrustBoundaries[title] = trustBoundary
 			}
 		} else { // adding to existing trust boundary
-			existingTrustBoundaryToAddTo := macroState["selected-trust-boundary"][0]
+			existingTrustBoundaryToAddTo := m.macroState["selected-trust-boundary"][0]
 			title := parsedModel.TrustBoundaries[existingTrustBoundaryToAddTo].Title
 
 			if filesystemUsed { // ---------------------- nest as execution-environment trust boundary ----------------------
