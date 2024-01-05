@@ -13,9 +13,6 @@ BIN				= 							\
 	raa_dummy 								\
 	risk_demo_rule 							\
 	threagile
-SCRIPTS			= 							\
-	support/render-data-asset-diagram.sh 	\
-	support/render-data-flow-diagram.sh
 
 # Commands and Flags
 GOFLAGS	= -a -ldflags="-s -w -X main.buildTimestamp=$(date '+%Y%m%d%H%M%S')"
@@ -51,14 +48,12 @@ tidy: clean
 install: all
 	mkdir -p $(BIN_DIR) $(ASSET_DIR)
 	$(CP) $(addprefix bin/,$(BIN)) $(BIN_DIR)
-	$(CP) $(SCRIPTS) $(BIN_DIR)
 	$(CP) $(ASSETS) $(ASSET_DIR)
 	$(CP) demo/example/threagile.yaml $(ASSET_DIR)/threagile-example-model.yaml
 	$(CP) demo/stub/threagile.yaml $(ASSET_DIR)/threagile-stub-model.yaml
 
 uninstall:
 	$(RM) $(addprefix $(BIN_DIR)/,$(BIN))
-	$(RM) $(addprefix $(BIN_DIR)/,$(notdir $(SCRIPTS)))
 	$(RM) $(ASSET_DIR)
 
 bin/raa_calc: cmd/raa/main.go

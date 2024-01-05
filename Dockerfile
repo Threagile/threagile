@@ -69,8 +69,6 @@ COPY --from=build --chown=1000:1000 /app/report/template/background.pdf /app/
 COPY --from=build --chown=1000:1000 /app/support/openapi.yaml /app/
 COPY --from=build --chown=1000:1000 /app/support/schema.json /app/
 COPY --from=build --chown=1000:1000 /app/support/live-templates.txt /app/
-COPY --from=build --chown=1000:1000 /app/support/render-data-asset-diagram.sh /app/
-COPY --from=build --chown=1000:1000 /app/support/render-data-flow-diagram.sh /app/
 COPY --from=build --chown=1000:1000 /app/demo/example/threagile-example-model.yaml /app/
 COPY --from=build --chown=1000:1000 /app/demo/stub/threagile-stub-model.yaml /app/
 COPY --from=build --chown=1000:1000 /app/server /app/server

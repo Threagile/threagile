@@ -13,7 +13,6 @@ import (
 	"strings"
 
 	"github.com/threagile/threagile/pkg/colors"
-	"github.com/threagile/threagile/pkg/common"
 	"github.com/threagile/threagile/pkg/security/types"
 )
 
@@ -300,7 +299,8 @@ func GenerateDataFlowDiagramGraphvizImage(dotFile *os.File, targetDir string,
 	}
 
 	// exec
-	cmd := exec.Command(filepath.Join(binFolder, common.GraphvizDataFlowDiagramConversionCall), tmpFileDOT.Name(), tmpFilePNG.Name())
+
+	cmd := exec.Command("dot", "-Tpng", tmpFileDOT.Name(), "-o", tmpFilePNG.Name())
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
@@ -574,7 +574,7 @@ func GenerateDataAssetDiagramGraphvizImage(dotFile *os.File, targetDir string,
 	}
 
 	// exec
-	cmd := exec.Command(filepath.Join(binFolder, common.GraphvizDataAssetDiagramConversionCall), tmpFileDOT.Name(), tmpFilePNG.Name())
+	cmd := exec.Command("dot", "-Tpng", tmpFileDOT.Name(), "-o", tmpFilePNG.Name())
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()

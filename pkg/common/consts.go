@@ -11,20 +11,18 @@ const (
 
 	DefaultServerPort = 8080
 
-	InputFile                              = "threagile.yaml"
-	ReportFilename                         = "report.pdf"
-	ExcelRisksFilename                     = "risks.xlsx"
-	ExcelTagsFilename                      = "tags.xlsx"
-	JsonRisksFilename                      = "risks.json"
-	JsonTechnicalAssetsFilename            = "technical-assets.json"
-	JsonStatsFilename                      = "stats.json"
-	TemplateFilename                       = "background.pdf"
-	DataFlowDiagramFilenameDOT             = "data-flow-diagram.gv"
-	DataFlowDiagramFilenamePNG             = "data-flow-diagram.png"
-	DataAssetDiagramFilenameDOT            = "data-asset-diagram.gv"
-	DataAssetDiagramFilenamePNG            = "data-asset-diagram.png"
-	GraphvizDataFlowDiagramConversionCall  = "render-data-flow-diagram.sh"
-	GraphvizDataAssetDiagramConversionCall = "render-data-asset-diagram.sh"
+	InputFile                   = "threagile.yaml"
+	ReportFilename              = "report.pdf"
+	ExcelRisksFilename          = "risks.xlsx"
+	ExcelTagsFilename           = "tags.xlsx"
+	JsonRisksFilename           = "risks.json"
+	JsonTechnicalAssetsFilename = "technical-assets.json"
+	JsonStatsFilename           = "stats.json"
+	TemplateFilename            = "background.pdf"
+	DataFlowDiagramFilenameDOT  = "data-flow-diagram.gv"
+	DataFlowDiagramFilenamePNG  = "data-flow-diagram.png"
+	DataAssetDiagramFilenameDOT = "data-asset-diagram.gv"
+	DataAssetDiagramFilenamePNG = "data-asset-diagram.png"
 
 	RAAPluginName = "raa_calc"
 
