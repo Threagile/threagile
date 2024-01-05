@@ -66,8 +66,6 @@ type Context struct {
 	*GenerateCommands
 
 	ServerMode bool
-
-	parsedModel types.ParsedModel
 }
 
 func (context *Context) Init() *Context {
@@ -87,31 +85,22 @@ func (context *Context) Defaults(buildTimestamp string) *Context {
 }
 
 func (context *Context) DoIt() {
+	progressReporter := common.DefaultProgressReporter{Verbose: context.Config.Verbose}
 	defer func() {
 		var err error
 		if r := recover(); r != nil {
 			err = r.(error)
-			if context.Config.Verbose {
-				log.Println(err)
-			}
+			progressReporter.Info("ERROR: " + err.Error())
 			_, _ = os.Stderr.WriteString(err.Error() + "\n")
 			os.Exit(2)
 		}
 	}()
 
-	progressReporter := common.DefaultProgressReporter{Verbose: context.Config.Verbose}
-
 	if len(context.Config.ExecuteModelMacro) > 0 {
 		fmt.Println(docs.Logo + "\n\n" + docs.VersionText)
-	} else {
-		if context.Config.Verbose {
-			fmt.Println("Writing into output directory:", context.Config.OutputFolder)
-		}
 	}
-
-	if context.Config.Verbose {
-		fmt.Println("Parsing model:", context.Config.InputFile)
-	}
+	progressReporter.Info("Writing into output directory:", context.Config.OutputFolder)
+	progressReporter.Info("Parsing model:", context.Config.InputFile)
 
 	modelInput := *new(input.ModelInput).Defaults()
 	loadError := modelInput.Load(context.Config.InputFile)
@@ -129,20 +118,17 @@ func (context *Context) DoIt() {
 	if parseError != nil {
 		log.Fatal("Unable to parse model yaml: ", parseError)
 	}
+	introTextRAA := applyRAA(parsedModel, context.Config.BinFolder, context.RAAPlugin, progressReporter)
 
-	context.parsedModel = *parsedModel
-
-	introTextRAA := context.applyRAA()
-
-	context.parsedModel.ApplyRiskGeneration(customRiskRules, builtinRiskRules,
+	parsedModel.ApplyRiskGeneration(customRiskRules, builtinRiskRules,
 		context.Config.SkipRiskRules, progressReporter)
-	err := context.parsedModel.ApplyWildcardRiskTrackingEvaluation(context.Config.IgnoreOrphanedRiskTracking, progressReporter)
+	err := parsedModel.ApplyWildcardRiskTrackingEvaluation(context.Config.IgnoreOrphanedRiskTracking, progressReporter)
 	if err != nil {
 		// TODO: do not panic and gracefully handle the error
 		panic(err)
 	}
 
-	err = context.parsedModel.CheckRiskTracking(context.Config.IgnoreOrphanedRiskTracking, progressReporter)
+	err = parsedModel.CheckRiskTracking(context.Config.IgnoreOrphanedRiskTracking, progressReporter)
 	if err != nil {
 		// TODO: do not panic and gracefully handle the error
 		panic(err)
@@ -182,9 +168,9 @@ func (context *Context) DoIt() {
 		for {
 			switch macroDetails.ID {
 			case addbuildpipeline.GetMacroDetails().ID:
-				nextQuestion, err = addbuildpipeline.GetNextQuestion(&context.parsedModel)
+				nextQuestion, err = addbuildpipeline.GetNextQuestion(parsedModel)
 			case addvault.GetMacroDetails().ID:
-				nextQuestion, err = addvault.GetNextQuestion(&context.parsedModel)
+				nextQuestion, err = addvault.GetNextQuestion(parsedModel)
 			case prettyprint.GetMacroDetails().ID:
 				nextQuestion, err = prettyprint.GetNextQuestion()
 			case removeunusedtags.GetMacroDetails().ID:
@@ -357,9 +343,9 @@ func (context *Context) DoIt() {
 			var err error
 			switch macroDetails.ID {
 			case addbuildpipeline.GetMacroDetails().ID:
-				changes, message, validResult, err = addbuildpipeline.GetFinalChangeImpact(&modelInput, &context.parsedModel)
+				changes, message, validResult, err = addbuildpipeline.GetFinalChangeImpact(&modelInput, parsedModel)
 			case addvault.GetMacroDetails().ID:
-				changes, message, validResult, err = addvault.GetFinalChangeImpact(&modelInput, &context.parsedModel)
+				changes, message, validResult, err = addvault.GetFinalChangeImpact(&modelInput, parsedModel)
 			case prettyprint.GetMacroDetails().ID:
 				changes, message, validResult, err = prettyprint.GetFinalChangeImpact(&modelInput)
 			case removeunusedtags.GetMacroDetails().ID:
@@ -393,17 +379,17 @@ func (context *Context) DoIt() {
 				var err error
 				switch macroDetails.ID {
 				case addbuildpipeline.GetMacroDetails().ID:
-					message, validResult, err = addbuildpipeline.Execute(&modelInput, &context.parsedModel)
+					message, validResult, err = addbuildpipeline.Execute(&modelInput, parsedModel)
 				case addvault.GetMacroDetails().ID:
-					message, validResult, err = addvault.Execute(&modelInput, &context.parsedModel)
+					message, validResult, err = addvault.Execute(&modelInput, parsedModel)
 				case prettyprint.GetMacroDetails().ID:
 					message, validResult, err = prettyprint.Execute(&modelInput)
 				case removeunusedtags.GetMacroDetails().ID:
-					message, validResult, err = removeunusedtags.Execute(&modelInput, &context.parsedModel)
+					message, validResult, err = removeunusedtags.Execute(&modelInput, parsedModel)
 				case seedrisktracking.GetMacroDetails().ID:
-					message, validResult, err = seedrisktracking.Execute(&context.parsedModel, &modelInput)
+					message, validResult, err = seedrisktracking.Execute(parsedModel, &modelInput)
 				case seedtags.GetMacroDetails().ID:
-					message, validResult, err = seedtags.Execute(&modelInput, &context.parsedModel)
+					message, validResult, err = seedtags.Execute(&modelInput, parsedModel)
 				}
 				checkErr(err)
 				if !validResult {
@@ -454,7 +440,7 @@ func (context *Context) DoIt() {
 			gvFile = tmpFileGV.Name()
 			defer func() { _ = os.Remove(gvFile) }()
 		}
-		dotFile := report.WriteDataFlowDiagramGraphvizDOT(&context.parsedModel, gvFile, diagramDPI, context.Config.AddModelTitle, progressReporter)
+		dotFile := report.WriteDataFlowDiagramGraphvizDOT(parsedModel, gvFile, diagramDPI, context.Config.AddModelTitle, progressReporter)
 
 		err := report.GenerateDataFlowDiagramGraphvizImage(dotFile, context.Config.OutputFolder,
 			context.Config.TempFolder, context.Config.BinFolder, context.Config.DataFlowDiagramFilenamePNG, progressReporter)
@@ -471,7 +457,7 @@ func (context *Context) DoIt() {
 			gvFile = tmpFile.Name()
 			defer func() { _ = os.Remove(gvFile) }()
 		}
-		dotFile := report.WriteDataAssetDiagramGraphvizDOT(&context.parsedModel, gvFile, diagramDPI, progressReporter)
+		dotFile := report.WriteDataAssetDiagramGraphvizDOT(parsedModel, gvFile, diagramDPI, progressReporter)
 		err := report.GenerateDataAssetDiagramGraphvizImage(dotFile, context.Config.OutputFolder,
 			context.Config.TempFolder, context.Config.BinFolder, context.Config.DataAssetDiagramFilenamePNG, progressReporter)
 		if err != nil {
@@ -484,7 +470,7 @@ func (context *Context) DoIt() {
 		if context.Config.Verbose {
 			fmt.Println("Writing risks json")
 		}
-		report.WriteRisksJSON(&context.parsedModel, filepath.Join(context.Config.OutputFolder, context.Config.JsonRisksFilename))
+		report.WriteRisksJSON(parsedModel, filepath.Join(context.Config.OutputFolder, context.Config.JsonRisksFilename))
 	}
 
 	// technical assets json
@@ -492,7 +478,7 @@ func (context *Context) DoIt() {
 		if context.Config.Verbose {
 			fmt.Println("Writing technical assets json")
 		}
-		report.WriteTechnicalAssetsJSON(&context.parsedModel, filepath.Join(context.Config.OutputFolder, context.Config.JsonTechnicalAssetsFilename))
+		report.WriteTechnicalAssetsJSON(parsedModel, filepath.Join(context.Config.OutputFolder, context.Config.JsonTechnicalAssetsFilename))
 	}
 
 	// risks as risks json
@@ -500,7 +486,7 @@ func (context *Context) DoIt() {
 		if context.Config.Verbose {
 			fmt.Println("Writing stats json")
 		}
-		report.WriteStatsJSON(&context.parsedModel, filepath.Join(context.Config.OutputFolder, context.Config.JsonStatsFilename))
+		report.WriteStatsJSON(parsedModel, filepath.Join(context.Config.OutputFolder, context.Config.JsonStatsFilename))
 	}
 
 	// risks Excel
@@ -508,7 +494,7 @@ func (context *Context) DoIt() {
 		if context.Config.Verbose {
 			fmt.Println("Writing risks excel")
 		}
-		report.WriteRisksExcelToFile(&context.parsedModel, filepath.Join(context.Config.OutputFolder, context.Config.ExcelRisksFilename))
+		report.WriteRisksExcelToFile(parsedModel, filepath.Join(context.Config.OutputFolder, context.Config.ExcelRisksFilename))
 	}
 
 	// tags Excel
@@ -516,7 +502,7 @@ func (context *Context) DoIt() {
 		if context.Config.Verbose {
 			fmt.Println("Writing tags excel")
 		}
-		report.WriteTagsExcelToFile(&context.parsedModel, filepath.Join(context.Config.OutputFolder, context.Config.ExcelTagsFilename))
+		report.WriteTagsExcelToFile(parsedModel, filepath.Join(context.Config.OutputFolder, context.Config.ExcelTagsFilename))
 	}
 
 	if context.GenerateCommands.ReportPDF {
@@ -544,7 +530,7 @@ func (context *Context) DoIt() {
 			introTextRAA,
 			customRiskRules,
 			context.Config.TempFolder,
-			&context.parsedModel)
+			parsedModel)
 	}
 }
 
@@ -584,20 +570,18 @@ func (context *Context) printBorder(length int, bold bool) {
 	fmt.Println()
 }
 
-func (context *Context) applyRAA() string {
-	if context.Config.Verbose {
-		fmt.Println("Applying RAA calculation:", context.Config.RAAPlugin)
-	}
+func applyRAA(parsedModel *types.ParsedModel, binFolder, raaPlugin string, progressReporter common.DefaultProgressReporter) string {
+	progressReporter.Info("Applying RAA calculation:", raaPlugin)
 
-	runner, loadError := new(run.Runner).Load(filepath.Join(context.Config.BinFolder, context.Config.RAAPlugin))
+	runner, loadError := new(run.Runner).Load(filepath.Join(binFolder, raaPlugin))
 	if loadError != nil {
-		fmt.Printf("WARNING: raa %q not loaded: %v\n", context.Config.RAAPlugin, loadError)
+		progressReporter.Warn(fmt.Sprintf("WARNING: raa %q not loaded: %v\n", raaPlugin, loadError))
 		return ""
 	}
 
-	runError := runner.Run(context.parsedModel, &context.parsedModel)
+	runError := runner.Run(parsedModel, parsedModel)
 	if runError != nil {
-		fmt.Printf("WARNING: raa %q not applied: %v\n", context.Config.RAAPlugin, runError)
+		progressReporter.Warn(fmt.Sprintf("WARNING: raa %q not applied: %v\n", raaPlugin, runError))
 		return ""
 	}
 
