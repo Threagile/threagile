@@ -4,6 +4,8 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package threagile
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"github.com/threagile/threagile/pkg/docs"
@@ -63,7 +65,17 @@ var explainMacrosCmd = &cobra.Command{
 	},
 }
 
+var executeModelMacrosCmd = &cobra.Command{
+	Use:  "execute-model-macro",
+	Args: cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		fmt.Println("execute-model-macro called with args:", args)
+		return nil
+	},
+}
+
 func init() {
 	rootCmd.AddCommand(listMacrosCmd)
 	rootCmd.AddCommand(explainMacrosCmd)
+	rootCmd.AddCommand(executeModelMacrosCmd)
 }

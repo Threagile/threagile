@@ -20,10 +20,7 @@ var rootCmd = &cobra.Command{
 	Short: "\n" + docs.Logo,
 	Long:  "\n" + docs.Logo + "\n\n" + docs.VersionText + "\n\n" + docs.Examples,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		ctx := new(Context).Defaults("buildTimestamp")
-		ctx.Config = *readConfig("buildTimestamp")
-		ctx.GenerateCommands = readCommands()
-		ctx.DoIt()
+		DoIt(readConfig("buildTimestamp"), readCommands())
 		return nil
 	},
 }
@@ -33,7 +30,7 @@ var serverCmd = &cobra.Command{
 	Short: "Run server",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg := readConfig("buildTimestamp")
-		server.RunServer(*cfg)
+		server.RunServer(cfg)
 		return nil
 	},
 }

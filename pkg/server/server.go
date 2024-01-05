@@ -24,7 +24,7 @@ import (
 )
 
 type server struct {
-	config                         common.Config
+	config                         *common.Config
 	successCount                   int
 	errorCount                     int
 	globalLock                     sync.Mutex
@@ -37,7 +37,7 @@ type server struct {
 	customRiskRules                map[string]*types.CustomRisk
 }
 
-func RunServer(config common.Config) {
+func RunServer(config *common.Config) {
 	s := &server{
 		config:                         config,
 		createdObjectsThrottler:        make(map[string][]int64),
