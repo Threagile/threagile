@@ -6,12 +6,14 @@ package threagile
 import (
 	"fmt"
 	"os"
+	"runtime"
 	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/threagile/threagile/pkg/common"
 	"github.com/threagile/threagile/pkg/docs"
+	"github.com/threagile/threagile/pkg/model"
 	"github.com/threagile/threagile/pkg/report"
 	"github.com/threagile/threagile/pkg/server"
 )
@@ -21,7 +23,22 @@ var rootCmd = &cobra.Command{
 	Short: "\n" + docs.Logo,
 	Long:  "\n" + docs.Logo + "\n\n" + docs.VersionText + "\n\n" + docs.Examples,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		DoIt(readConfig("buildTimestamp"), readCommands())
+		cfg := readConfig("buildTimestamp")
+		commands := readCommands()
+		progressReporter := common.DefaultProgressReporter{Verbose: cfg.Verbose}
+
+		r, err := model.ReadAndAnalyzeModel(*cfg, progressReporter)
+		if err != nil {
+			cmd.Println("Failed to read and analyze model")
+			return err
+		}
+
+		err = report.Generate(cfg, r, commands, progressReporter)
+		if err != nil {
+			cmd.Println("Failed to generate reports")
+			cmd.PrintErr(err)
+			return err
+		}
 		return nil
 	},
 }
@@ -75,6 +92,19 @@ func init() {
 	rootCmd.AddCommand(serverCmd)
 }
 
+func readCommands() *report.GenerateCommands {
+	commands := new(report.GenerateCommands).Defaults()
+	commands.DataFlowDiagram = *generateDataFlowDiagramFlag
+	commands.DataAssetDiagram = *generateDataAssetDiagramFlag
+	commands.RisksJSON = *generateRisksJSONFlag
+	commands.StatsJSON = *generateStatsJSONFlag
+	commands.TechnicalAssetsJSON = *generateTechnicalAssetsJSONFlag
+	commands.RisksExcel = *generateRisksExcelFlag
+	commands.TagsExcel = *generateTagsExcelFlag
+	commands.ReportPDF = *generateReportPDFFlag
+	return commands
+}
+
 func readConfig(buildTimestamp string) *common.Config {
 	cfg := new(common.Config).Defaults(buildTimestamp)
 	cfg.ServerPort = *serverPortFlag
@@ -98,15 +128,29 @@ func readConfig(buildTimestamp string) *common.Config {
 	return cfg
 }
 
-func readCommands() *report.GenerateCommands {
-	commands := new(report.GenerateCommands).Defaults()
-	commands.DataFlowDiagram = *generateDataFlowDiagramFlag
-	commands.DataAssetDiagram = *generateDataAssetDiagramFlag
-	commands.RisksJSON = *generateRisksJSONFlag
-	commands.StatsJSON = *generateStatsJSONFlag
-	commands.TechnicalAssetsJSON = *generateTechnicalAssetsJSONFlag
-	commands.RisksExcel = *generateRisksExcelFlag
-	commands.TagsExcel = *generateTagsExcelFlag
-	commands.ReportPDF = *generateReportPDFFlag
-	return commands
+func expandPath(path string) string {
+	home := userHomeDir()
+	if strings.HasPrefix(path, "~") {
+		path = strings.Replace(path, "~", home, 1)
+	}
+
+	if strings.HasPrefix(path, "$HOME") {
+		path = strings.Replace(path, "$HOME", home, -1)
+	}
+
+	return path
+}
+
+func userHomeDir() string {
+	switch runtime.GOOS {
+	case "windows":
+		home := os.Getenv("HOMEDRIVE") + os.Getenv("HOMEPATH")
+		if home == "" {
+			home = os.Getenv("USERPROFILE")
+		}
+		return home
+
+	default:
+		return os.Getenv("HOME")
+	}
 }

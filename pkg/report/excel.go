@@ -1,6 +1,7 @@
 package report
 
 import (
+	"fmt"
 	"sort"
 	"strconv"
 	"strings"
@@ -10,10 +11,8 @@ import (
 	"github.com/xuri/excelize/v2"
 )
 
-var excelRow int
-
-func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string) {
-	excelRow = 0
+func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string) error {
+	excelRow := 0
 	excel := excelize.NewFile()
 	sheetName := parsedModel.Title
 	err := excel.SetDocProps(&excelize.DocProperties{
@@ -30,14 +29,18 @@ func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string) {
 		Language:       "en-US",
 		Version:        "1.0.0",
 	})
-	checkErr(err)
+	if err != nil {
+		return fmt.Errorf("unable to set doc properties: %w", err)
+	}
 
 	sheetIndex, _ := excel.NewSheet(sheetName)
 	_ = excel.DeleteSheet("Sheet1")
 	orientation := "landscape"
 	size := 9
 	err = excel.SetPageLayout(sheetName, &excelize.PageLayoutOptions{Orientation: &orientation, Size: &size}) // A4
-	checkErr(err)
+	if err != nil {
+		return fmt.Errorf("unable to set page layout: %w", err)
+	}
 
 	err = excel.SetHeaderFooter(sheetName, &excelize.HeaderFooterOptions{
 		DifferentFirst:   false,
@@ -48,7 +51,9 @@ func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string) {
 		EvenFooter:       "&L&D&R&T",
 		FirstHeader:      `&Threat Model &"-,` + parsedModel.Title + `"Bold&"-,Regular"Risks Summary+000A&D`,
 	})
-	checkErr(err)
+	if err != nil {
+		return fmt.Errorf("unable to set header/footer: %w", err)
+	}
 
 	err = excel.SetCellValue(sheetName, "A1", "Severity")
 	err = excel.SetCellValue(sheetName, "B1", "Likelihood")
@@ -91,7 +96,9 @@ func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string) {
 	err = excel.SetColWidth(sheetName, "R", "R", 18)
 	err = excel.SetColWidth(sheetName, "S", "S", 20)
 	err = excel.SetColWidth(sheetName, "T", "T", 20)
-	checkErr(err)
+	if err != nil {
+		return fmt.Errorf("unable to set column width: %w", err)
+	}
 
 	// styleSeverityCriticalBold, err := excel.NewStyle(`{"font":{"color":"` + colors.RgbHexColorCriticalRisk() + `","size":12,"bold":true}}`)
 	styleSeverityCriticalBold, err := excel.NewStyle(&excelize.Style{
@@ -422,7 +429,9 @@ func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string) {
 			err = excel.SetCellStyle(sheetName, "R"+strconv.Itoa(excelRow), "R"+strconv.Itoa(excelRow), styleBlackCenter)
 			err = excel.SetCellStyle(sheetName, "S"+strconv.Itoa(excelRow), "S"+strconv.Itoa(excelRow), styleBlackCenter)
 			err = excel.SetCellStyle(sheetName, "T"+strconv.Itoa(excelRow), "T"+strconv.Itoa(excelRow), styleBlackLeft)
-			checkErr(err)
+			if err != nil {
+				return fmt.Errorf("unable to set cell style: %w", err)
+			}
 		}
 	}
 
@@ -448,15 +457,20 @@ func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string) {
 	})
 
 	err = excel.SetCellStyle(sheetName, "A1", "T1", styleHeadCenter)
-	checkErr(err)
+	if err != nil {
+		return fmt.Errorf("unable to set cell style: %w", err)
+	}
 
 	excel.SetActiveSheet(sheetIndex)
 	err = excel.SaveAs(filename)
-	checkErr(err)
+	if err != nil {
+		return fmt.Errorf("unable to save excel file: %w", err)
+	}
+	return nil
 }
 
-func WriteTagsExcelToFile(parsedModel *types.ParsedModel, filename string) { // TODO: eventually when len(sortedTagsAvailable) == 0 is: write a hint in the Excel that no tags are used
-	excelRow = 0
+func WriteTagsExcelToFile(parsedModel *types.ParsedModel, filename string) error { // TODO: eventually when len(sortedTagsAvailable) == 0 is: write a hint in the Excel that no tags are used
+	excelRow := 0
 	excel := excelize.NewFile()
 	sheetName := parsedModel.Title
 	err := excel.SetDocProps(&excelize.DocProperties{
@@ -473,14 +487,18 @@ func WriteTagsExcelToFile(parsedModel *types.ParsedModel, filename string) { // 
 		Language:       "en-US",
 		Version:        "1.0.0",
 	})
-	checkErr(err)
+	if err != nil {
+		return err
+	}
 
 	sheetIndex, _ := excel.NewSheet(sheetName)
 	_ = excel.DeleteSheet("Sheet1")
 	orientation := "landscape"
 	size := 9
 	err = excel.SetPageLayout(sheetName, &excelize.PageLayoutOptions{Orientation: &orientation, Size: &size}) // A4
-	checkErr(err)
+	if err != nil {
+		return err
+	}
 
 	err = excel.SetHeaderFooter(sheetName, &excelize.HeaderFooterOptions{
 		DifferentFirst:   false,
@@ -491,7 +509,9 @@ func WriteTagsExcelToFile(parsedModel *types.ParsedModel, filename string) { // 
 		EvenFooter:       "&L&D&R&T",
 		FirstHeader:      `&Tag Matrix &"-,` + parsedModel.Title + `"Bold&"-,Regular"Summary+000A&D`,
 	})
-	checkErr(err)
+	if err != nil {
+		return err
+	}
 
 	err = excel.SetCellValue(sheetName, "A1", "Element") // TODO is "Element" the correct generic name when referencing assets, links, trust boundaries etc.? Eventually add separate column "type of element" like "technical asset" or "data asset"?
 	sortedTagsAvailable := parsedModel.TagsActuallyUsed()
@@ -503,10 +523,16 @@ func WriteTagsExcelToFile(parsedModel *types.ParsedModel, filename string) { // 
 	}
 
 	err = excel.SetColWidth(sheetName, "A", "A", 60)
+	if err != nil {
+		return err
+	}
+
 	if len(sortedTagsAvailable) > 0 {
 		err = excel.SetColWidth(sheetName, "B", axis, 35)
 	}
-	checkErr(err)
+	if err != nil {
+		return err
+	}
 
 	// styleBlackCenter, err := excel.NewStyle(`{"alignment":{"horizontal":"center","shrink_to_fit":true,"wrap_text":false},"font":{"color":"#000000","size":12}}`)
 	styleBlackCenter, err := excel.NewStyle(&excelize.Style{
@@ -537,19 +563,34 @@ func WriteTagsExcelToFile(parsedModel *types.ParsedModel, filename string) { // 
 	excelRow++ // as we have a header line
 	if len(sortedTagsAvailable) > 0 {
 		for _, techAsset := range sortedTechnicalAssetsByTitle(parsedModel) {
-			writeRow(excel, sheetName, axis, styleBlackLeftBold, styleBlackCenter, sortedTagsAvailable, techAsset.Title, techAsset.Tags)
+			err := writeRow(excel, &excelRow, sheetName, axis, styleBlackLeftBold, styleBlackCenter, sortedTagsAvailable, techAsset.Title, techAsset.Tags)
+			if err != nil {
+				return fmt.Errorf("unable to write row: %w", err)
+			}
 			for _, commLink := range techAsset.CommunicationLinksSorted() {
-				writeRow(excel, sheetName, axis, styleBlackLeftBold, styleBlackCenter, sortedTagsAvailable, commLink.Title, commLink.Tags)
+				err := writeRow(excel, &excelRow, sheetName, axis, styleBlackLeftBold, styleBlackCenter, sortedTagsAvailable, commLink.Title, commLink.Tags)
+				if err != nil {
+					return fmt.Errorf("unable to write row: %w", err)
+				}
 			}
 		}
 		for _, dataAsset := range sortedDataAssetsByTitle(parsedModel) {
-			writeRow(excel, sheetName, axis, styleBlackLeftBold, styleBlackCenter, sortedTagsAvailable, dataAsset.Title, dataAsset.Tags)
+			err := writeRow(excel, &excelRow, sheetName, axis, styleBlackLeftBold, styleBlackCenter, sortedTagsAvailable, dataAsset.Title, dataAsset.Tags)
+			if err != nil {
+				return fmt.Errorf("unable to write row: %w", err)
+			}
 		}
 		for _, trustBoundary := range sortedTrustBoundariesByTitle(parsedModel) {
-			writeRow(excel, sheetName, axis, styleBlackLeftBold, styleBlackCenter, sortedTagsAvailable, trustBoundary.Title, trustBoundary.Tags)
+			err := writeRow(excel, &excelRow, sheetName, axis, styleBlackLeftBold, styleBlackCenter, sortedTagsAvailable, trustBoundary.Title, trustBoundary.Tags)
+			if err != nil {
+				return fmt.Errorf("unable to write row: %w", err)
+			}
 		}
 		for _, sharedRuntime := range sortedSharedRuntimesByTitle(parsedModel) {
-			writeRow(excel, sheetName, axis, styleBlackLeftBold, styleBlackCenter, sortedTagsAvailable, sharedRuntime.Title, sharedRuntime.Tags)
+			err := writeRow(excel, &excelRow, sheetName, axis, styleBlackLeftBold, styleBlackCenter, sortedTagsAvailable, sharedRuntime.Title, sharedRuntime.Tags)
+			if err != nil {
+				return fmt.Errorf("unable to write row: %w", err)
+			}
 		}
 	}
 
@@ -570,6 +611,9 @@ func WriteTagsExcelToFile(parsedModel *types.ParsedModel, filename string) { // 
 			Pattern: 1,
 		},
 	})
+	if err != nil {
+		return fmt.Errorf("unable to set cell style: %w", err)
+	}
 	// styleHeadCenterBold, err := excel.NewStyle(`{"font":{"bold":true,"italic":false,"size":14,"color":"#000000"},"fill":{"type":"pattern","color":["#eeeeee"],"pattern":1},"alignment":{"horizontal":"center","shrink_to_fit":true,"wrap_text":false}}`)
 	styleHeadCenterBold, err := excel.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{
@@ -592,11 +636,16 @@ func WriteTagsExcelToFile(parsedModel *types.ParsedModel, filename string) { // 
 	if len(sortedTagsAvailable) > 0 {
 		err = excel.SetCellStyle(sheetName, "B1", axis+"1", styleHeadCenter)
 	}
-	checkErr(err)
+	if err != nil {
+		return fmt.Errorf("unable to set cell style: %w", err)
+	}
 
 	excel.SetActiveSheet(sheetIndex)
 	err = excel.SaveAs(filename)
-	checkErr(err)
+	if err != nil {
+		return fmt.Errorf("unable to save excel file: %w", err)
+	}
+	return nil
 }
 
 func sortedTrustBoundariesByTitle(parsedModel *types.ParsedModel) []types.TrustBoundary {
@@ -617,18 +666,27 @@ func sortedDataAssetsByTitle(parsedModel *types.ParsedModel) []types.DataAsset {
 	return assets
 }
 
-func writeRow(excel *excelize.File, sheetName string, axis string, styleBlackLeftBold int, styleBlackCenter int,
-	sortedTags []string, assetTitle string, tagsUsed []string) {
-	excelRow++
-	err := excel.SetCellValue(sheetName, "A"+strconv.Itoa(excelRow), assetTitle)
+func writeRow(excel *excelize.File, excelRow *int, sheetName string, axis string, styleBlackLeftBold int, styleBlackCenter int,
+	sortedTags []string, assetTitle string, tagsUsed []string) error {
+	*excelRow++
+	err := excel.SetCellValue(sheetName, "A"+strconv.Itoa(*excelRow), assetTitle)
+	if err != nil {
+		return fmt.Errorf("unable to write row: %w", err)
+	}
 	for i, tag := range sortedTags {
 		if contains(tagsUsed, tag) {
-			err = excel.SetCellValue(sheetName, determineColumnLetter(i)+strconv.Itoa(excelRow), "X")
+			err = excel.SetCellValue(sheetName, determineColumnLetter(i)+strconv.Itoa(*excelRow), "X")
+			if err != nil {
+				return fmt.Errorf("unable to write row: %w", err)
+			}
 		}
 	}
-	err = excel.SetCellStyle(sheetName, "A"+strconv.Itoa(excelRow), "A"+strconv.Itoa(excelRow), styleBlackLeftBold)
-	err = excel.SetCellStyle(sheetName, "B"+strconv.Itoa(excelRow), axis+strconv.Itoa(excelRow), styleBlackCenter)
-	checkErr(err)
+	err = excel.SetCellStyle(sheetName, "A"+strconv.Itoa(*excelRow), "A"+strconv.Itoa(*excelRow), styleBlackLeftBold)
+	err = excel.SetCellStyle(sheetName, "B"+strconv.Itoa(*excelRow), axis+strconv.Itoa(*excelRow), styleBlackCenter)
+	if err != nil {
+		return fmt.Errorf("unable to write row: %w", err)
+	}
+	return nil
 }
 
 var alphabet = []string{"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"}
