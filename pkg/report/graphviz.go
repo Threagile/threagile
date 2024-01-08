@@ -12,7 +12,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/threagile/threagile/pkg/colors"
 	"github.com/threagile/threagile/pkg/security/types"
 )
 
@@ -114,10 +113,10 @@ func WriteDataFlowDiagramGraphvizDOT(parsedModel *types.ParsedModel,
 											];`)
 			}
 			snippet.WriteString("\n subgraph cluster_" + hash(trustBoundary.Id) + " {\n")
-			color, fontColor, bgColor, style, fontname := colors.RgbHexColorTwilight(), colors.RgbHexColorTwilight() /*"#550E0C"*/, "#FAFAFA", "dashed", "Verdana"
+			color, fontColor, bgColor, style, fontname := RgbHexColorTwilight(), RgbHexColorTwilight() /*"#550E0C"*/, "#FAFAFA", "dashed", "Verdana"
 			penWidth := 4.5
 			if len(trustBoundary.TrustBoundariesNested) > 0 {
-				//color, fontColor, style, fontname = colors.Blue, colors.Blue, "dashed", "Verdana"
+				//color, fontColor, style, fontname = Blue, Blue, "dashed", "Verdana"
 				penWidth = 5.5
 			}
 			if len(trustBoundary.ParentTrustBoundaryID(parsedModel)) > 0 {
@@ -226,8 +225,8 @@ func WriteDataFlowDiagramGraphvizDOT(parsedModel *types.ParsedModel,
 					dir = "both"
 				}
 			}
-			arrowStyle = ` style="` + dataFlow.DetermineArrowLineStyle() + `" penwidth="` + dataFlow.DetermineArrowPenWidth(parsedModel) + `" arrowtail="` + readOrWriteTail + `" arrowhead="` + readOrWriteHead + `" dir="` + dir + `" arrowsize="2.0" `
-			arrowColor = ` color="` + dataFlow.DetermineArrowColor(parsedModel) + `"`
+			arrowStyle = ` style="` + determineArrowLineStyle(dataFlow) + `" penwidth="` + determineArrowPenWidth(dataFlow, parsedModel) + `" arrowtail="` + readOrWriteTail + `" arrowhead="` + readOrWriteHead + `" dir="` + dir + `" arrowsize="2.0" `
+			arrowColor = ` color="` + determineArrowColor(dataFlow, parsedModel) + `"`
 			tweaks := ""
 			if dataFlow.DiagramTweakWeight > 0 {
 				tweaks += " weight=\"" + strconv.Itoa(dataFlow.DiagramTweakWeight) + "\" "
@@ -237,7 +236,7 @@ func WriteDataFlowDiagramGraphvizDOT(parsedModel *types.ParsedModel,
 			dotContent.WriteString("  " + hash(sourceId) + " -> " + hash(targetId) +
 				` [` + arrowColor + ` ` + arrowStyle + tweaks + ` constraint=` + strconv.FormatBool(dataFlow.DiagramTweakConstraint) + ` `)
 			if !parsedModel.DiagramTweakSuppressEdgeLabels {
-				dotContent.WriteString(` xlabel="` + encode(dataFlow.Protocol.String()) + `" fontcolor="` + dataFlow.DetermineLabelColor(parsedModel) + `" `)
+				dotContent.WriteString(` xlabel="` + encode(dataFlow.Protocol.String()) + `" fontcolor="` + determineLabelColor(dataFlow, parsedModel) + `" `)
 			}
 			dotContent.WriteString(" ];\n")
 		}
@@ -463,11 +462,11 @@ func makeDataAssetNode(parsedModel *types.ParsedModel, dataAsset types.DataAsset
 	var color string
 	switch dataAsset.IdentifiedDataBreachProbabilityStillAtRisk(parsedModel) {
 	case types.Probable:
-		color = colors.RgbHexColorHighRisk()
+		color = RgbHexColorHighRisk()
 	case types.Possible:
-		color = colors.RgbHexColorMediumRisk()
+		color = RgbHexColorMediumRisk()
 	case types.Improbable:
-		color = colors.RgbHexColorLowRisk()
+		color = RgbHexColorLowRisk()
 	default:
 		color = "#444444" // since black is too dark here as fill color
 	}
@@ -479,20 +478,20 @@ func makeDataAssetNode(parsedModel *types.ParsedModel, dataAsset types.DataAsset
 
 func makeTechAssetNode(parsedModel *types.ParsedModel, technicalAsset types.TechnicalAsset, simplified bool) string {
 	if simplified {
-		color := colors.RgbHexColorOutOfScope()
+		color := RgbHexColorOutOfScope()
 		if !technicalAsset.OutOfScope {
 			generatedRisks := technicalAsset.GeneratedRisks(parsedModel)
 			switch types.HighestSeverityStillAtRisk(parsedModel, generatedRisks) {
 			case types.CriticalSeverity:
-				color = colors.RgbHexColorCriticalRisk()
+				color = RgbHexColorCriticalRisk()
 			case types.HighSeverity:
-				color = colors.RgbHexColorHighRisk()
+				color = RgbHexColorHighRisk()
 			case types.ElevatedSeverity:
-				color = colors.RgbHexColorElevatedRisk()
+				color = RgbHexColorElevatedRisk()
 			case types.MediumSeverity:
-				color = colors.RgbHexColorMediumRisk()
+				color = RgbHexColorMediumRisk()
 			case types.LowSeverity:
-				color = colors.RgbHexColorLowRisk()
+				color = RgbHexColorLowRisk()
 			default:
 				color = "#444444" // since black is too dark here as fill color
 			}
@@ -540,10 +539,10 @@ func makeTechAssetNode(parsedModel *types.ParsedModel, technicalAsset types.Tech
 		}
 
 		return "  " + hash(technicalAsset.Id) + ` [
-	label=<<table border="0" cellborder="` + compartmentBorder + `" cellpadding="2" cellspacing="0"><tr><td><font point-size="15" color="` + colors.DarkBlue + `">` + lineBreak + technicalAsset.Technology.String() + `</font><br/><font point-size="15" color="` + colors.LightGray + `">` + technicalAsset.Size.String() + `</font></td></tr><tr><td><b><font color="` + technicalAsset.DetermineLabelColor(parsedModel) + `">` + encode(title) + `</font></b><br/></td></tr><tr><td>` + attackerAttractivenessLabel + `</td></tr></table>>
-	shape=` + shape + ` style="` + technicalAsset.DetermineShapeBorderLineStyle() + `,` + technicalAsset.DetermineShapeStyle() + `" penwidth="` + technicalAsset.DetermineShapeBorderPenWidth(parsedModel) + `" fillcolor="` + technicalAsset.DetermineShapeFillColor(parsedModel) + `"
-	peripheries=` + strconv.Itoa(technicalAsset.DetermineShapePeripheries()) + `
-	color="` + technicalAsset.DetermineShapeBorderColor(parsedModel) + "\"\n  ]; "
+	label=<<table border="0" cellborder="` + compartmentBorder + `" cellpadding="2" cellspacing="0"><tr><td><font point-size="15" color="` + DarkBlue + `">` + lineBreak + technicalAsset.Technology.String() + `</font><br/><font point-size="15" color="` + LightGray + `">` + technicalAsset.Size.String() + `</font></td></tr><tr><td><b><font color="` + determineTechnicalAssetLabelColor(technicalAsset, parsedModel) + `">` + encode(title) + `</font></b><br/></td></tr><tr><td>` + attackerAttractivenessLabel + `</td></tr></table>>
+	shape=` + shape + ` style="` + determineShapeBorderLineStyle(technicalAsset) + `,` + determineShapeStyle(technicalAsset) + `" penwidth="` + determineShapeBorderPenWidth(technicalAsset, parsedModel) + `" fillcolor="` + determineShapeFillColor(technicalAsset, parsedModel) + `"
+	peripheries=` + strconv.Itoa(determineShapePeripheries(technicalAsset)) + `
+	color="` + determineShapeBorderColor(technicalAsset, parsedModel) + "\"\n  ]; "
 	}
 }
 

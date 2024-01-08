@@ -7,8 +7,6 @@ package types
 import (
 	"fmt"
 	"sort"
-
-	"github.com/threagile/threagile/pkg/colors"
 )
 
 type TechnicalAsset struct {
@@ -249,124 +247,6 @@ func (what TechnicalAsset) ProcessesOrStoresDataAsset(dataAssetId string) bool {
 	return false
 }
 
-// red when >= confidential data stored in unencrypted technical asset
-
-func (what TechnicalAsset) DetermineLabelColor(model *ParsedModel) string {
-	// TODO: Just move into main.go and let the generated risk determine the color, don't duplicate the logic here
-	// Check for red
-	if what.Integrity == MissionCritical {
-		return colors.Red
-	}
-	for _, storedDataAsset := range what.DataAssetsStored {
-		if model.DataAssets[storedDataAsset].Integrity == MissionCritical {
-			return colors.Red
-		}
-	}
-	for _, processedDataAsset := range what.DataAssetsProcessed {
-		if model.DataAssets[processedDataAsset].Integrity == MissionCritical {
-			return colors.Red
-		}
-	}
-	// Check for amber
-	if what.Integrity == Critical {
-		return colors.Amber
-	}
-	for _, storedDataAsset := range what.DataAssetsStored {
-		if model.DataAssets[storedDataAsset].Integrity == Critical {
-			return colors.Amber
-		}
-	}
-	for _, processedDataAsset := range what.DataAssetsProcessed {
-		if model.DataAssets[processedDataAsset].Integrity == Critical {
-			return colors.Amber
-		}
-	}
-	return colors.Black
-	/*
-		if what.Encrypted {
-			return colors.Black
-		} else {
-			if what.Confidentiality == StrictlyConfidential {
-				return colors.Red
-			}
-			for _, storedDataAsset := range what.DataAssetsStored {
-				if ParsedModelRoot.DataAssets[storedDataAsset].Confidentiality == StrictlyConfidential {
-					return colors.Red
-				}
-			}
-			if what.Confidentiality == Confidential {
-				return colors.Amber
-			}
-			for _, storedDataAsset := range what.DataAssetsStored {
-				if ParsedModelRoot.DataAssets[storedDataAsset].Confidentiality == Confidential {
-					return colors.Amber
-				}
-			}
-			return colors.Black
-		}
-	*/
-}
-
-// red when mission-critical integrity, but still unauthenticated (non-readonly) channels access it
-// amber when critical integrity, but still unauthenticated (non-readonly) channels access it
-// pink when model forgery attempt (i.e. nothing being processed or stored)
-
-func (what TechnicalAsset) DetermineShapeBorderColor(parsedModel *ParsedModel) string {
-	// TODO: Just move into main.go and let the generated risk determine the color, don't duplicate the logic here
-	// Check for red
-	if what.Confidentiality == StrictlyConfidential {
-		return colors.Red
-	}
-	for _, storedDataAsset := range what.DataAssetsStored {
-		if parsedModel.DataAssets[storedDataAsset].Confidentiality == StrictlyConfidential {
-			return colors.Red
-		}
-	}
-	for _, processedDataAsset := range what.DataAssetsProcessed {
-		if parsedModel.DataAssets[processedDataAsset].Confidentiality == StrictlyConfidential {
-			return colors.Red
-		}
-	}
-	// Check for amber
-	if what.Confidentiality == Confidential {
-		return colors.Amber
-	}
-	for _, storedDataAsset := range what.DataAssetsStored {
-		if parsedModel.DataAssets[storedDataAsset].Confidentiality == Confidential {
-			return colors.Amber
-		}
-	}
-	for _, processedDataAsset := range what.DataAssetsProcessed {
-		if parsedModel.DataAssets[processedDataAsset].Confidentiality == Confidential {
-			return colors.Amber
-		}
-	}
-	return colors.Black
-	/*
-		if what.Integrity == MissionCritical {
-			for _, dataFlow := range IncomingTechnicalCommunicationLinksMappedByTargetId[what.Id] {
-				if !dataFlow.Readonly && dataFlow.Authentication == NoneAuthentication {
-					return colors.Red
-				}
-			}
-		}
-
-		if what.Integrity == Critical {
-			for _, dataFlow := range IncomingTechnicalCommunicationLinksMappedByTargetId[what.Id] {
-				if !dataFlow.Readonly && dataFlow.Authentication == NoneAuthentication {
-					return colors.Amber
-				}
-			}
-		}
-
-		if len(what.DataAssetsProcessed) == 0 && len(what.DataAssetsStored) == 0 {
-			return colors.Pink // pink, because it's strange when too many technical assets process no data... some are ok, but many in a diagram is a sign of model forgery...
-		}
-
-		return colors.Black
-	*/
-}
-
 /*
 // Loops over all data assets (stored and processed by this technical asset) and determines for each
 // data asset, how many percentage of the data risk is reduced when this technical asset has all risks mitigated.
@@ -408,28 +288,6 @@ func (what TechnicalAsset) QuickWins() float64 {
 }
 */
 
-// dotted when model forgery attempt (i.e. nothing being processed or stored)
-
-func (what TechnicalAsset) DetermineShapeBorderLineStyle() string {
-	if len(what.DataAssetsProcessed) == 0 && len(what.DataAssetsStored) == 0 || what.OutOfScope {
-		return "dotted" // dotted, because it's strange when too many technical communication links transfer no data... some ok, but many in a diagram ist a sign of model forgery...
-	}
-	return "solid"
-}
-
-// 3 when redundant
-
-func (what TechnicalAsset) DetermineShapePeripheries() int {
-	if what.Redundant {
-		return 2
-	}
-	return 1
-}
-
-func (what TechnicalAsset) DetermineShapeStyle() string {
-	return "filled"
-}
-
 func (what TechnicalAsset) GetTrustBoundaryId(model *ParsedModel) string {
 	for _, trustBoundary := range model.TrustBoundaries {
 		for _, techAssetInside := range trustBoundary.TechnicalAssetsInside {
@@ -439,32 +297,6 @@ func (what TechnicalAsset) GetTrustBoundaryId(model *ParsedModel) string {
 		}
 	}
 	return ""
-}
-
-func (what TechnicalAsset) DetermineShapeFillColor(parsedModel *ParsedModel) string {
-	fillColor := colors.VeryLightGray
-	if len(what.DataAssetsProcessed) == 0 && len(what.DataAssetsStored) == 0 ||
-		what.Technology == UnknownTechnology {
-		fillColor = colors.LightPink // lightPink, because it's strange when too many technical assets process no data... some ok, but many in a diagram ist a sign of model forgery...
-	} else if len(what.CommunicationLinks) == 0 && len(parsedModel.IncomingTechnicalCommunicationLinksMappedByTargetId[what.Id]) == 0 {
-		fillColor = colors.LightPink
-	} else if what.Internet {
-		fillColor = colors.ExtremeLightBlue
-	} else if what.OutOfScope {
-		fillColor = colors.OutOfScopeFancy
-	} else if what.CustomDevelopedParts {
-		fillColor = colors.CustomDevelopedParts
-	}
-	switch what.Machine {
-	case Physical:
-		fillColor = colors.DarkenHexColor(fillColor)
-	case Container:
-		fillColor = colors.BrightenHexColor(fillColor)
-	case Serverless:
-		fillColor = colors.BrightenHexColor(colors.BrightenHexColor(fillColor))
-	case Virtual:
-	}
-	return fillColor
 }
 
 func SortByTechnicalAssetRiskSeverityAndTitleStillAtRisk(assets []TechnicalAsset, parsedModel *ParsedModel) {
@@ -494,16 +326,6 @@ func SortByTechnicalAssetRiskSeverityAndTitleStillAtRisk(assets []TechnicalAsset
 		}
 		return result
 	})
-}
-
-func (what TechnicalAsset) DetermineShapeBorderPenWidth(parsedModel *ParsedModel) string {
-	if what.DetermineShapeBorderColor(parsedModel) == colors.Pink {
-		return fmt.Sprintf("%f", 3.5)
-	}
-	if what.DetermineShapeBorderColor(parsedModel) != colors.Black {
-		return fmt.Sprintf("%f", 3.0)
-	}
-	return fmt.Sprintf("%f", 2.0)
 }
 
 type ByTechnicalAssetRAAAndTitleSort []TechnicalAsset
