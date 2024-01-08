@@ -72,7 +72,7 @@ var executeModelMacrosCmd = &cobra.Command{
 	Short: "Execute model macro",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		cfg := readConfig("buildTimestamp")
+		cfg := readConfig(cmd, "buildTimestamp")
 		progressReporter := common.DefaultProgressReporter{Verbose: cfg.Verbose}
 
 		r, err := model.ReadAndAnalyzeModel(*cfg, progressReporter)

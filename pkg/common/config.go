@@ -79,7 +79,7 @@ func (c *Config) Defaults(buildTimestamp string) *Config {
 		RiskRulesPlugins:            make([]string, 0),
 		SkipRiskRules:               "",
 		ExecuteModelMacro:           "",
-		ServerPort:                  0,
+		ServerPort:                  DefaultServerPort,
 
 		GraphvizDPI:              DefaultGraphvizDPI,
 		BackupHistoryFilesToKeep: DefaultBackupHistoryFilesToKeep,
