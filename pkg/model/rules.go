@@ -1,15 +1,33 @@
-/*
-Copyright © 2023 NAME HERE <EMAIL ADDRESS>
-*/
-
-package types
+package model
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
-	"github.com/threagile/threagile/pkg/run"
+	"github.com/threagile/threagile/pkg/security/types"
 )
+
+type CustomRisk struct {
+	ID       string
+	Category types.RiskCategory
+	Tags     []string
+	Runner   *runner
+}
+
+func (r *CustomRisk) GenerateRisks(m *types.ParsedModel) []types.Risk {
+	if r.Runner == nil {
+		return nil
+	}
+
+	risks := make([]types.Risk, 0)
+	runError := r.Runner.Run(m, &risks, "-generate-risks")
+	if runError != nil {
+		log.Fatalf("Failed to generate risks for custom risk rule %q: %v\n", r.Runner.Filename, runError)
+	}
+
+	return risks
+}
 
 func LoadCustomRiskRules(pluginFiles []string, reporter progressReporter) map[string]*CustomRisk {
 	customRiskRuleList := make([]string, 0)
@@ -19,7 +37,7 @@ func LoadCustomRiskRules(pluginFiles []string, reporter progressReporter) map[st
 
 		for _, pluginFile := range pluginFiles {
 			if len(pluginFile) > 0 {
-				runner, loadError := new(run.Runner).Load(pluginFile)
+				runner, loadError := new(runner).Load(pluginFile)
 				if loadError != nil {
 					reporter.Error(fmt.Sprintf("WARNING: Custom risk rule %q not loaded: %v\n", pluginFile, loadError))
 				}

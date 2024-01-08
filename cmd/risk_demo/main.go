@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/threagile/threagile/pkg/model"
 	"github.com/threagile/threagile/pkg/security/types"
 )
 
@@ -25,7 +26,7 @@ func main() {
 	if *getInfo {
 		rule := new(customRiskRule)
 		category := rule.Category()
-		riskData, marshalError := json.Marshal(types.CustomRisk{
+		riskData, marshalError := json.Marshal(model.CustomRisk{
 			ID:       category.Id,
 			Category: category,
 			Tags:     rule.SupportedTags(),

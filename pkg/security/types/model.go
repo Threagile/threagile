@@ -114,61 +114,6 @@ func (parsedModel *ParsedModel) CheckTags(tags []string, where string) ([]string
 	return tagsUsed, nil
 }
 
-// TODO: refactor skipRiskRules to be a string array instead of a comma-separated string
-func (parsedModel *ParsedModel) ApplyRiskGeneration(customRiskRules map[string]*CustomRisk,
-	builtinRiskRules map[string]RiskRule,
-	skipRiskRules string,
-	progressReporter progressReporter) {
-	progressReporter.Info("Applying risk generation")
-
-	skippedRules := make(map[string]bool)
-	if len(skipRiskRules) > 0 {
-		for _, id := range strings.Split(skipRiskRules, ",") {
-			skippedRules[id] = true
-		}
-	}
-
-	for _, rule := range builtinRiskRules {
-		parsedModel.ApplyRisk(rule, &skippedRules)
-	}
-
-	// NOW THE CUSTOM RISK RULES (if any)
-	for id, customRule := range customRiskRules {
-		_, ok := skippedRules[id]
-		if ok {
-			progressReporter.Info("Skipping custom risk rule:", id)
-			delete(skippedRules, id)
-		} else {
-			progressReporter.Info("Executing custom risk rule:", id)
-			parsedModel.AddToListOfSupportedTags(customRule.Tags)
-			customRisks := customRule.GenerateRisks(parsedModel)
-			if len(customRisks) > 0 {
-				parsedModel.GeneratedRisksByCategory[customRule.Category.Id] = customRisks
-			}
-
-			progressReporter.Info("Added custom risks:", len(customRisks))
-		}
-	}
-
-	if len(skippedRules) > 0 {
-		keys := make([]string, 0)
-		for k := range skippedRules {
-			keys = append(keys, k)
-		}
-		if len(keys) > 0 {
-			progressReporter.Info("Unknown risk rules to skip:", keys)
-		}
-	}
-
-	// save also in map keyed by synthetic risk-id
-	for _, category := range SortedRiskCategories(parsedModel) {
-		someRisks := SortedRisksOfCategory(parsedModel, category)
-		for _, risk := range someRisks {
-			parsedModel.GeneratedRisksBySyntheticId[strings.ToLower(risk.SyntheticId)] = risk
-		}
-	}
-}
-
 func (parsedModel *ParsedModel) ApplyWildcardRiskTrackingEvaluation(ignoreOrphanedRiskTracking bool, progressReporter progressReporter) error {
 	progressReporter.Info("Executing risk tracking evaluation")
 	for syntheticRiskIdPattern, riskTracking := range parsedModel.GetDeferredRiskTrackingDueToWildcardMatching() {

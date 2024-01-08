@@ -100,7 +100,6 @@ func (what TrustBoundary) addAssetIDsRecursively(model *ParsedModel, result *[]s
 	}
 }
 
-// TODO: pass ParsedModelRoot as parameter instead of using global variable
 func (what TrustBoundary) addTrustBoundaryIDsRecursively(model *ParsedModel, result *[]string) {
 	*result = append(*result, what.Id)
 	parentID := what.ParentTrustBoundaryID(model)
