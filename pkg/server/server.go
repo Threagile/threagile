@@ -16,6 +16,7 @@ import (
 	"sync"
 
 	"github.com/threagile/threagile/pkg/common"
+	"github.com/threagile/threagile/pkg/model"
 
 	"github.com/gin-gonic/gin"
 	"github.com/threagile/threagile/pkg/docs"
@@ -34,7 +35,7 @@ type server struct {
 	mapFolderNameToTokenHash       map[string]string
 	extremeShortTimeoutsForTesting bool
 	locksByFolderName              map[string]*sync.Mutex
-	customRiskRules                map[string]*types.CustomRisk
+	customRiskRules                map[string]*model.CustomRisk
 }
 
 func RunServer(config *common.Config) {
@@ -175,7 +176,7 @@ func RunServer(config *common.Config) {
 	router.DELETE("/models/:model-id/shared-runtimes/:shared-runtime-id", s.deleteSharedRuntime)
 
 	reporter := common.DefaultProgressReporter{Verbose: s.config.Verbose}
-	s.customRiskRules = types.LoadCustomRiskRules(s.config.RiskRulesPlugins, reporter)
+	s.customRiskRules = model.LoadCustomRiskRules(s.config.RiskRulesPlugins, reporter)
 
 	fmt.Println("Threagile s running...")
 	_ = router.Run(":" + strconv.Itoa(s.config.ServerPort)) // listen and serve on 0.0.0.0:8080 or whatever port was specified

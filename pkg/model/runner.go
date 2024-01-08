@@ -1,5 +1,5 @@
 // TODO: consider moving to internal
-package run
+package model
 
 import (
 	"bytes"
@@ -9,7 +9,7 @@ import (
 	"os/exec"
 )
 
-type Runner struct {
+type runner struct {
 	Filename    string
 	Parameters  []string
 	In          any
@@ -17,8 +17,8 @@ type Runner struct {
 	ErrorOutput string
 }
 
-func (p *Runner) Load(filename string) (*Runner, error) {
-	*p = Runner{
+func (p *runner) Load(filename string) (*runner, error) {
+	*p = runner{
 		Filename: filename,
 	}
 
@@ -34,8 +34,8 @@ func (p *Runner) Load(filename string) (*Runner, error) {
 	return p, nil
 }
 
-func (p *Runner) Run(in any, out any, parameters ...string) error {
-	*p = Runner{
+func (p *runner) Run(in any, out any, parameters ...string) error {
+	*p = runner{
 		Filename:   p.Filename,
 		Parameters: parameters,
 		In:         in,

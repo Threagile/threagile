@@ -16,6 +16,7 @@ import (
 	"github.com/jung-kurt/gofpdf"
 	"github.com/jung-kurt/gofpdf/contrib/gofpdi"
 	"github.com/threagile/threagile/pkg/docs"
+	"github.com/threagile/threagile/pkg/model"
 	accidental_secret_leak "github.com/threagile/threagile/pkg/security/risks/built-in/accidental-secret-leak"
 	code_backdooring "github.com/threagile/threagile/pkg/security/risks/built-in/code-backdooring"
 	container_baseimage_backdooring "github.com/threagile/threagile/pkg/security/risks/built-in/container-baseimage-backdooring"
@@ -98,7 +99,7 @@ func (r *pdfReporter) WriteReportPDF(reportFilename string,
 	buildTimestamp string,
 	modelHash string,
 	introTextRAA string,
-	customRiskRules map[string]*types.CustomRisk,
+	customRiskRules map[string]*model.CustomRisk,
 	tempFolder string,
 	model *types.ParsedModel) error {
 	r.initReport()
@@ -4035,7 +4036,7 @@ func (r *pdfReporter) createSharedRuntimes(parsedModel *types.ParsedModel) {
 	}
 }
 
-func (r *pdfReporter) createRiskRulesChecked(parsedModel *types.ParsedModel, modelFilename string, skipRiskRules string, buildTimestamp string, modelHash string, customRiskRules map[string]*types.CustomRisk) {
+func (r *pdfReporter) createRiskRulesChecked(parsedModel *types.ParsedModel, modelFilename string, skipRiskRules string, buildTimestamp string, modelHash string, customRiskRules map[string]*model.CustomRisk) {
 	r.pdf.SetTextColor(0, 0, 0)
 	title := "Risk Rules Checked by Threagile"
 	r.addHeadline(title, false)
