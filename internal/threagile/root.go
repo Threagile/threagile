@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 
 	"github.com/threagile/threagile/pkg/common"
 	"github.com/threagile/threagile/pkg/docs"
@@ -23,7 +24,7 @@ var rootCmd = &cobra.Command{
 	Short: "\n" + docs.Logo,
 	Long:  "\n" + docs.Logo + "\n\n" + docs.VersionText + "\n\n" + docs.Examples,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		cfg := readConfig("buildTimestamp")
+		cfg := readConfig(cmd, "buildTimestamp")
 		commands := readCommands()
 		progressReporter := common.DefaultProgressReporter{Verbose: cfg.Verbose}
 
@@ -50,7 +51,7 @@ var serverCmd = &cobra.Command{
 	Use:   "server",
 	Short: "Run server",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		cfg := readConfig("buildTimestamp")
+		cfg := readConfig(cmd, "buildTimestamp")
 		server.RunServer(cfg)
 		return nil
 	},
@@ -64,24 +65,27 @@ func Execute() {
 }
 
 func init() {
-	appDirFlag = rootCmd.PersistentFlags().String(appDirFlagName, common.AppDir, "app folder")
-	binDirFlag = rootCmd.PersistentFlags().String(binDirFlagName, common.BinDir, "binary folder location")
-	outputDirFlag = rootCmd.PersistentFlags().String(outputFlagName, common.OutputDir, "output directory")
-	tempDirFlag = rootCmd.PersistentFlags().String(tempDirFlagName, common.TempDir, "temporary folder location")
+	cfg := new(common.Config).Defaults("")
+	appDirFlag = rootCmd.PersistentFlags().String(appDirFlagName, cfg.AppFolder, "app folder")
+	binDirFlag = rootCmd.PersistentFlags().String(binDirFlagName, cfg.BinFolder, "binary folder location")
+	outputDirFlag = rootCmd.PersistentFlags().String(outputFlagName, cfg.OutputFolder, "output directory")
+	tempDirFlag = rootCmd.PersistentFlags().String(tempDirFlagName, cfg.TempFolder, "temporary folder location")
 
-	inputFileFlag = rootCmd.PersistentFlags().String(inputFileFlagName, common.InputFile, "input model yaml file")
-	raaPluginFlag = rootCmd.PersistentFlags().String(raaPluginFlagName, "raa_calc", "RAA calculation run file name")
+	inputFileFlag = rootCmd.PersistentFlags().String(inputFileFlagName, cfg.InputFile, "input model yaml file")
+	raaPluginFlag = rootCmd.PersistentFlags().String(raaPluginFlagName, cfg.RAAPlugin, "RAA calculation run file name")
 
-	serverPortFlag = serverCmd.PersistentFlags().Int(serverPortFlagName, common.DefaultServerPort, "the server port")
-	serverDirFlag = serverCmd.PersistentFlags().String(serverDirFlagName, common.DataDir, "base folder for server mode (default: "+common.DataDir+")")
+	serverPortFlag = serverCmd.PersistentFlags().Int(serverPortFlagName, cfg.ServerPort, "the server port")
+	serverDirFlag = serverCmd.PersistentFlags().String(serverDirFlagName, cfg.DataFolder, "base folder for server mode (default: "+common.DataDir+")")
 
-	verboseFlag = rootCmd.PersistentFlags().BoolP(verboseFlagName, verboseFlagShorthand, false, "verbose output")
+	verboseFlag = rootCmd.PersistentFlags().BoolP(verboseFlagName, verboseFlagShorthand, cfg.Verbose, "verbose output")
 
-	customRiskRulesPluginFlag = rootCmd.PersistentFlags().String(customRiskRulesPluginFlagName, "", "comma-separated list of plugins file names with custom risk rules to load")
-	diagramDpiFlag = rootCmd.PersistentFlags().Int(diagramDpiFlagName, 0, "DPI used to render: maximum is "+fmt.Sprintf("%d", common.MaxGraphvizDPI)+"")
-	skipRiskRulesFlag = rootCmd.PersistentFlags().String(skipRiskRulesFlagName, "", "comma-separated list of risk rules (by their ID) to skip")
-	ignoreOrphandedRiskTrackingFlag = rootCmd.PersistentFlags().Bool(ignoreOrphandedRiskTrackingFlagName, false, "ignore orphaned risk tracking (just log them) not matching a concrete risk")
-	templateFileNameFlag = rootCmd.PersistentFlags().String(templateFileNameFlagName, common.TemplateFilename, "background pdf file")
+	configFlag = rootCmd.PersistentFlags().String(configFlagName, "", "config file")
+
+	customRiskRulesPluginFlag = rootCmd.PersistentFlags().String(customRiskRulesPluginFlagName, strings.Join(cfg.RiskRulesPlugins, ","), "comma-separated list of plugins file names with custom risk rules to load")
+	diagramDpiFlag = rootCmd.PersistentFlags().Int(diagramDpiFlagName, cfg.DiagramDPI, "DPI used to render: maximum is "+fmt.Sprintf("%d", common.MaxGraphvizDPI)+"")
+	skipRiskRulesFlag = rootCmd.PersistentFlags().String(skipRiskRulesFlagName, cfg.SkipRiskRules, "comma-separated list of risk rules (by their ID) to skip")
+	ignoreOrphandedRiskTrackingFlag = rootCmd.PersistentFlags().Bool(ignoreOrphandedRiskTrackingFlagName, cfg.IgnoreOrphanedRiskTracking, "ignore orphaned risk tracking (just log them) not matching a concrete risk")
+	templateFileNameFlag = rootCmd.PersistentFlags().String(templateFileNameFlagName, cfg.TemplateFilename, "background pdf file")
 
 	generateDataFlowDiagramFlag = rootCmd.PersistentFlags().Bool(generateDataFlowDiagramFlagName, true, "generate data flow diagram")
 	generateDataAssetDiagramFlag = rootCmd.PersistentFlags().Bool(generateDataAssetDiagramFlagName, true, "generate data asset diagram")
@@ -108,27 +112,69 @@ func readCommands() *report.GenerateCommands {
 	return commands
 }
 
-func readConfig(buildTimestamp string) *common.Config {
+func readConfig(cmd *cobra.Command, buildTimestamp string) *common.Config {
 	cfg := new(common.Config).Defaults(buildTimestamp)
-	cfg.ServerPort = *serverPortFlag
-	cfg.ServerFolder = expandPath(*serverDirFlag)
+	configError := cfg.Load(*configFlag)
+	if configError != nil {
+		fmt.Printf("WARNING: failed to load config file %q: %v\n", *configFlag, configError)
+	}
 
-	cfg.AppFolder = expandPath(*appDirFlag)
-	cfg.BinFolder = expandPath(*binDirFlag)
-	cfg.OutputFolder = expandPath(*outputDirFlag)
-	cfg.TempFolder = expandPath(*tempDirFlag)
+	flags := cmd.Flags()
+	if isFlagOverriden(flags, serverPortFlagName) {
+		cfg.ServerPort = *serverPortFlag
+	}
+	if isFlagOverriden(flags, serverDirFlagName) {
+		cfg.ServerFolder = expandPath(*serverDirFlag)
+	}
 
-	cfg.Verbose = *verboseFlag
+	if isFlagOverriden(flags, appDirFlagName) {
+		cfg.AppFolder = expandPath(*appDirFlag)
+	}
+	if isFlagOverriden(flags, binDirFlagName) {
+		cfg.BinFolder = expandPath(*binDirFlag)
+	}
+	if isFlagOverriden(flags, outputFlagName) {
+		cfg.OutputFolder = expandPath(*outputDirFlag)
+	}
+	if isFlagOverriden(flags, tempDirFlagName) {
+		cfg.TempFolder = expandPath(*tempDirFlag)
+	}
 
-	cfg.InputFile = expandPath(*inputFileFlag)
-	cfg.RAAPlugin = *raaPluginFlag
+	if isFlagOverriden(flags, verboseFlagName) {
+		cfg.Verbose = *verboseFlag
+	}
 
-	cfg.RiskRulesPlugins = strings.Split(*customRiskRulesPluginFlag, ",")
-	cfg.SkipRiskRules = *skipRiskRulesFlag
-	cfg.IgnoreOrphanedRiskTracking = *ignoreOrphandedRiskTrackingFlag
-	cfg.DiagramDPI = *diagramDpiFlag
-	cfg.TemplateFilename = *templateFileNameFlag
+	if isFlagOverriden(flags, inputFileFlagName) {
+		cfg.InputFile = expandPath(*inputFileFlag)
+	}
+	if isFlagOverriden(flags, raaPluginFlagName) {
+		cfg.RAAPlugin = *raaPluginFlag
+	}
+
+	if isFlagOverriden(flags, customRiskRulesPluginFlagName) {
+		cfg.RiskRulesPlugins = strings.Split(*customRiskRulesPluginFlag, ",")
+	}
+	if isFlagOverriden(flags, skipRiskRulesFlagName) {
+		cfg.SkipRiskRules = *skipRiskRulesFlag
+	}
+	if isFlagOverriden(flags, ignoreOrphandedRiskTrackingFlagName) {
+		cfg.IgnoreOrphanedRiskTracking = *ignoreOrphandedRiskTrackingFlag
+	}
+	if isFlagOverriden(flags, diagramDpiFlagName) {
+		cfg.DiagramDPI = *diagramDpiFlag
+	}
+	if isFlagOverriden(flags, templateFileNameFlagName) {
+		cfg.TemplateFilename = *templateFileNameFlag
+	}
 	return cfg
+}
+
+func isFlagOverriden(flags *pflag.FlagSet, flagName string) bool {
+	flag := flags.Lookup(flagName)
+	if flag == nil {
+		return false
+	}
+	return flag.Changed
 }
 
 func expandPath(path string) string {

@@ -3,6 +3,8 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 */
 package threagile
 
+var configFlag *string
+
 var verboseFlag *bool
 var appDirFlag, binDirFlag, outputDirFlag, tempDirFlag *string
 var inputFileFlag, raaPluginFlag *string
@@ -17,6 +19,8 @@ var diagramDpiFlag *int
 var generateDataFlowDiagramFlag, generateDataAssetDiagramFlag, generateRisksJSONFlag,
 	generateTechnicalAssetsJSONFlag, generateStatsJSONFlag, generateRisksExcelFlag,
 	generateTagsExcelFlag, generateReportPDFFlag *bool
+
+const configFlagName = "config"
 
 const verboseFlagName = "verbose"
 const verboseFlagShorthand = "v"
