@@ -8,7 +8,7 @@ import (
 type prettyPrintMacro struct {
 }
 
-func NewPrettyPrint() Macros {
+func NewPrettyPrint() *prettyPrintMacro {
 	return &prettyPrintMacro{}
 }
 

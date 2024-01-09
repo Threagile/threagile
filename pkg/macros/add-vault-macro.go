@@ -33,7 +33,7 @@ var authenticationTypes = []string{
 	"Credentials (username/password, API-key, secret token, etc.)",
 }
 
-func NewAddVault() Macros {
+func NewAddVault() *addVaultMacro {
 	return &addVaultMacro{
 		macroState:        make(map[string][]string),
 		questionsAnswered: make([]string, 0),

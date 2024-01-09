@@ -78,26 +78,6 @@ func (parsedModel *ParsedModel) HasNotYetAnyDirectNonWildcardRiskTracking(synthe
 	return true
 }
 
-func (parsedModel *ParsedModel) ApplyRisk(rule RiskRule, skippedRules *map[string]bool) {
-	id := rule.Category().Id
-	_, ok := (*skippedRules)[id]
-
-	if ok {
-		fmt.Printf("Skipping risk rule %q\n", rule.Category().Id)
-		delete(*skippedRules, rule.Category().Id)
-	} else {
-		parsedModel.AddToListOfSupportedTags(rule.SupportedTags())
-		generatedRisks := rule.GenerateRisks(parsedModel)
-		if generatedRisks != nil {
-			if len(generatedRisks) > 0 {
-				parsedModel.GeneratedRisksByCategory[rule.Category().Id] = generatedRisks
-			}
-		} else {
-			fmt.Printf("Failed to generate risks for %q\n", id)
-		}
-	}
-}
-
 func (parsedModel *ParsedModel) CheckTags(tags []string, where string) ([]string, error) {
 	var tagsUsed = make([]string, 0)
 	if tags != nil {

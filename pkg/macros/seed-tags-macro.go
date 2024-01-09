@@ -11,7 +11,7 @@ import (
 type seedTagsMacro struct {
 }
 
-func NewSeedTags() Macros {
+func NewSeedTags() *seedTagsMacro {
 	return &seedTagsMacro{}
 }
 

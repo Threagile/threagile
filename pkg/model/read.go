@@ -21,7 +21,7 @@ type ReadResult struct {
 	ModelInput       *input.ModelInput
 	ParsedModel      *types.ParsedModel
 	IntroTextRAA     string
-	BuiltinRiskRules map[string]types.RiskRule
+	BuiltinRiskRules map[string]risks.RiskRule
 	CustomRiskRules  map[string]*CustomRisk
 }
 
@@ -30,7 +30,7 @@ func ReadAndAnalyzeModel(config common.Config, progressReporter progressReporter
 	progressReporter.Info("Writing into output directory:", config.OutputFolder)
 	progressReporter.Info("Parsing model:", config.InputFile)
 
-	builtinRiskRules := make(map[string]types.RiskRule)
+	builtinRiskRules := make(map[string]risks.RiskRule)
 	for _, rule := range risks.GetBuiltInRiskRules() {
 		builtinRiskRules[rule.Category().Id] = rule
 	}
@@ -70,9 +70,29 @@ func ReadAndAnalyzeModel(config common.Config, progressReporter progressReporter
 	}, nil
 }
 
+func applyRisk(parsedModel *types.ParsedModel, rule risks.RiskRule, skippedRules *map[string]bool) {
+	id := rule.Category().Id
+	_, ok := (*skippedRules)[id]
+
+	if ok {
+		fmt.Printf("Skipping risk rule %q\n", rule.Category().Id)
+		delete(*skippedRules, rule.Category().Id)
+	} else {
+		parsedModel.AddToListOfSupportedTags(rule.SupportedTags())
+		generatedRisks := rule.GenerateRisks(parsedModel)
+		if generatedRisks != nil {
+			if len(generatedRisks) > 0 {
+				parsedModel.GeneratedRisksByCategory[rule.Category().Id] = generatedRisks
+			}
+		} else {
+			fmt.Printf("Failed to generate risks for %q\n", id)
+		}
+	}
+}
+
 // TODO: refactor skipRiskRules to be a string array instead of a comma-separated string
 func applyRiskGeneration(parsedModel *types.ParsedModel, customRiskRules map[string]*CustomRisk,
-	builtinRiskRules map[string]types.RiskRule,
+	builtinRiskRules map[string]risks.RiskRule,
 	skipRiskRules string,
 	progressReporter progressReporter) {
 	progressReporter.Info("Applying risk generation")
@@ -85,7 +105,7 @@ func applyRiskGeneration(parsedModel *types.ParsedModel, customRiskRules map[str
 	}
 
 	for _, rule := range builtinRiskRules {
-		parsedModel.ApplyRisk(rule, &skippedRules)
+		applyRisk(parsedModel, rule, &skippedRules)
 	}
 
 	// NOW THE CUSTOM RISK RULES (if any)
