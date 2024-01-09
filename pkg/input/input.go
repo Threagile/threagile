@@ -1,6 +1,7 @@
 /*
 Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 */
+
 package input
 
 import (
@@ -17,6 +18,7 @@ import (
 
 type Author struct {
 	Name     string `yaml:"name" json:"name"`
+	Contact  string `yaml:"contact" json:"contact"`
 	Homepage string `yaml:"homepage" json:"homepage"`
 }
 
@@ -25,7 +27,7 @@ type Overview struct {
 	Images      []map[string]string `yaml:"images" json:"images"` // yes, array of map here, as array keeps the order of the image keys
 }
 
-type InputDataAsset struct {
+type DataAsset struct {
 	ID                     string   `yaml:"id" json:"id"`
 	Description            string   `yaml:"description" json:"description"`
 	Usage                  string   `yaml:"usage" json:"usage"`
@@ -39,36 +41,36 @@ type InputDataAsset struct {
 	JustificationCiaRating string   `yaml:"justification_cia_rating" json:"justification_cia_rating"`
 }
 
-type InputTechnicalAsset struct {
-	ID                      string                            `yaml:"id" json:"id"`
-	Description             string                            `yaml:"description" json:"description"`
-	Type                    string                            `yaml:"type" json:"type"`
-	Usage                   string                            `yaml:"usage" json:"usage"`
-	UsedAsClientByHuman     bool                              `yaml:"used_as_client_by_human" json:"used_as_client_by_human"`
-	OutOfScope              bool                              `yaml:"out_of_scope" json:"out_of_scope"`
-	JustificationOutOfScope string                            `yaml:"justification_out_of_scope" json:"justification_out_of_scope"`
-	Size                    string                            `yaml:"size" json:"size"`
-	Technology              string                            `yaml:"technology" json:"technology"`
-	Tags                    []string                          `yaml:"tags" json:"tags"`
-	Internet                bool                              `yaml:"internet" json:"internet"`
-	Machine                 string                            `yaml:"machine" json:"machine"`
-	Encryption              string                            `yaml:"encryption" json:"encryption"`
-	Owner                   string                            `yaml:"owner" json:"owner"`
-	Confidentiality         string                            `yaml:"confidentiality" json:"confidentiality"`
-	Integrity               string                            `yaml:"integrity" json:"integrity"`
-	Availability            string                            `yaml:"availability" json:"availability"`
-	JustificationCiaRating  string                            `yaml:"justification_cia_rating" json:"justification_cia_rating"`
-	MultiTenant             bool                              `yaml:"multi_tenant" json:"multi_tenant"`
-	Redundant               bool                              `yaml:"redundant" json:"redundant"`
-	CustomDevelopedParts    bool                              `yaml:"custom_developed_parts" json:"custom_developed_parts"`
-	DataAssetsProcessed     []string                          `yaml:"data_assets_processed" json:"data_assets_processed"`
-	DataAssetsStored        []string                          `yaml:"data_assets_stored" json:"data_assets_stored"`
-	DataFormatsAccepted     []string                          `yaml:"data_formats_accepted" json:"data_formats_accepted"`
-	DiagramTweakOrder       int                               `yaml:"diagram_tweak_order" json:"diagram_tweak_order"`
-	CommunicationLinks      map[string]InputCommunicationLink `yaml:"communication_links" json:"communication_links"`
+type TechnicalAsset struct {
+	ID                      string                       `yaml:"id" json:"id"`
+	Description             string                       `yaml:"description" json:"description"`
+	Type                    string                       `yaml:"type" json:"type"`
+	Usage                   string                       `yaml:"usage" json:"usage"`
+	UsedAsClientByHuman     bool                         `yaml:"used_as_client_by_human" json:"used_as_client_by_human"`
+	OutOfScope              bool                         `yaml:"out_of_scope" json:"out_of_scope"`
+	JustificationOutOfScope string                       `yaml:"justification_out_of_scope" json:"justification_out_of_scope"`
+	Size                    string                       `yaml:"size" json:"size"`
+	Technology              string                       `yaml:"technology" json:"technology"`
+	Tags                    []string                     `yaml:"tags" json:"tags"`
+	Internet                bool                         `yaml:"internet" json:"internet"`
+	Machine                 string                       `yaml:"machine" json:"machine"`
+	Encryption              string                       `yaml:"encryption" json:"encryption"`
+	Owner                   string                       `yaml:"owner" json:"owner"`
+	Confidentiality         string                       `yaml:"confidentiality" json:"confidentiality"`
+	Integrity               string                       `yaml:"integrity" json:"integrity"`
+	Availability            string                       `yaml:"availability" json:"availability"`
+	JustificationCiaRating  string                       `yaml:"justification_cia_rating" json:"justification_cia_rating"`
+	MultiTenant             bool                         `yaml:"multi_tenant" json:"multi_tenant"`
+	Redundant               bool                         `yaml:"redundant" json:"redundant"`
+	CustomDevelopedParts    bool                         `yaml:"custom_developed_parts" json:"custom_developed_parts"`
+	DataAssetsProcessed     []string                     `yaml:"data_assets_processed" json:"data_assets_processed"`
+	DataAssetsStored        []string                     `yaml:"data_assets_stored" json:"data_assets_stored"`
+	DataFormatsAccepted     []string                     `yaml:"data_formats_accepted" json:"data_formats_accepted"`
+	DiagramTweakOrder       int                          `yaml:"diagram_tweak_order" json:"diagram_tweak_order"`
+	CommunicationLinks      map[string]CommunicationLink `yaml:"communication_links" json:"communication_links"`
 }
 
-type InputCommunicationLink struct {
+type CommunicationLink struct {
 	Target                 string   `yaml:"target" json:"target"`
 	Description            string   `yaml:"description" json:"description"`
 	Protocol               string   `yaml:"protocol" json:"protocol"`
@@ -85,14 +87,14 @@ type InputCommunicationLink struct {
 	DiagramTweakConstraint bool     `yaml:"diagram_tweak_constraint" json:"diagram_tweak_constraint"`
 }
 
-type InputSharedRuntime struct {
+type SharedRuntime struct {
 	ID                     string   `yaml:"id" json:"id"`
 	Description            string   `yaml:"description" json:"description"`
 	Tags                   []string `yaml:"tags" json:"tags"`
 	TechnicalAssetsRunning []string `yaml:"technical_assets_running" json:"technical_assets_running"`
 }
 
-type InputTrustBoundary struct {
+type TrustBoundary struct {
 	ID                    string   `yaml:"id" json:"id"`
 	Description           string   `yaml:"description" json:"description"`
 	Type                  string   `yaml:"type" json:"type"`
@@ -101,26 +103,26 @@ type InputTrustBoundary struct {
 	TrustBoundariesNested []string `yaml:"trust_boundaries_nested" json:"trust_boundaries_nested"`
 }
 
-type InputIndividualRiskCategory struct {
-	ID                         string                         `yaml:"id" json:"id"`
-	Description                string                         `yaml:"description" json:"description"`
-	Impact                     string                         `yaml:"impact" json:"impact"`
-	ASVS                       string                         `yaml:"asvs" json:"asvs"`
-	CheatSheet                 string                         `yaml:"cheat_sheet" json:"cheat_sheet"`
-	Action                     string                         `yaml:"action" json:"action"`
-	Mitigation                 string                         `yaml:"mitigation" json:"mitigation"`
-	Check                      string                         `yaml:"check" json:"check"`
-	Function                   string                         `yaml:"function" json:"function"`
-	STRIDE                     string                         `yaml:"stride" json:"stride"`
-	DetectionLogic             string                         `yaml:"detection_logic" json:"detection_logic"`
-	RiskAssessment             string                         `yaml:"risk_assessment" json:"risk_assessment"`
-	FalsePositives             string                         `yaml:"false_positives" json:"false_positives"`
-	ModelFailurePossibleReason bool                           `yaml:"model_failure_possible_reason" json:"model_failure_possible_reason"`
-	CWE                        int                            `yaml:"cwe" json:"cwe"`
-	RisksIdentified            map[string]InputRiskIdentified `yaml:"risks_identified" json:"risks_identified"`
+type IndividualRiskCategory struct {
+	ID                         string                    `yaml:"id" json:"id"`
+	Description                string                    `yaml:"description" json:"description"`
+	Impact                     string                    `yaml:"impact" json:"impact"`
+	ASVS                       string                    `yaml:"asvs" json:"asvs"`
+	CheatSheet                 string                    `yaml:"cheat_sheet" json:"cheat_sheet"`
+	Action                     string                    `yaml:"action" json:"action"`
+	Mitigation                 string                    `yaml:"mitigation" json:"mitigation"`
+	Check                      string                    `yaml:"check" json:"check"`
+	Function                   string                    `yaml:"function" json:"function"`
+	STRIDE                     string                    `yaml:"stride" json:"stride"`
+	DetectionLogic             string                    `yaml:"detection_logic" json:"detection_logic"`
+	RiskAssessment             string                    `yaml:"risk_assessment" json:"risk_assessment"`
+	FalsePositives             string                    `yaml:"false_positives" json:"false_positives"`
+	ModelFailurePossibleReason bool                      `yaml:"model_failure_possible_reason" json:"model_failure_possible_reason"`
+	CWE                        int                       `yaml:"cwe" json:"cwe"`
+	RisksIdentified            map[string]RiskIdentified `yaml:"risks_identified" json:"risks_identified"`
 }
 
-type InputRiskIdentified struct {
+type RiskIdentified struct {
 	Severity                      string   `yaml:"severity" json:"severity"`
 	ExploitationLikelihood        string   `yaml:"exploitation_likelihood" json:"exploitation_likelihood"`
 	ExploitationImpact            string   `yaml:"exploitation_impact" json:"exploitation_impact"`
@@ -133,7 +135,7 @@ type InputRiskIdentified struct {
 	MostRelevantSharedRuntime     string   `yaml:"most_relevant_shared_runtime" json:"most_relevant_shared_runtime"`
 }
 
-type InputRiskTracking struct {
+type RiskTracking struct {
 	Status        string `yaml:"status" json:"status"`
 	Justification string `yaml:"justification" json:"justification"`
 	Ticket        string `yaml:"ticket" json:"ticket"`
@@ -141,52 +143,54 @@ type InputRiskTracking struct {
 	CheckedBy     string `yaml:"checked_by" json:"checked_by"`
 }
 
-type ModelInput struct { // TODO: Eventually remove this and directly use ParsedModelRoot? But then the error messages for model errors are not quite as good anymore...
-	Includes                                      []string                               `yaml:"includes,omitempty" json:"includes,omitempty"`
-	ThreagileVersion                              string                                 `yaml:"threagile_version" json:"threagile_version"`
-	Title                                         string                                 `yaml:"title" json:"title"`
-	Author                                        Author                                 `yaml:"author" json:"author"`
-	Date                                          string                                 `yaml:"date" json:"date"`
-	BusinessOverview                              Overview                               `yaml:"business_overview" json:"business_overview"`
-	TechnicalOverview                             Overview                               `yaml:"technical_overview" json:"technical_overview"`
-	BusinessCriticality                           string                                 `yaml:"business_criticality" json:"business_criticality"`
-	ManagementSummaryComment                      string                                 `yaml:"management_summary_comment" json:"management_summary_comment"`
-	Questions                                     map[string]string                      `yaml:"questions" json:"questions"`
-	AbuseCases                                    map[string]string                      `yaml:"abuse_cases" json:"abuse_cases"`
-	SecurityRequirements                          map[string]string                      `yaml:"security_requirements" json:"security_requirements"`
-	TagsAvailable                                 []string                               `yaml:"tags_available,omitempty" json:"tags_available,omitempty"`
-	DataAssets                                    map[string]InputDataAsset              `yaml:"data_assets" json:"data_assets"`
-	TechnicalAssets                               map[string]InputTechnicalAsset         `yaml:"technical_assets" json:"technical_assets"`
-	TrustBoundaries                               map[string]InputTrustBoundary          `yaml:"trust_boundaries" json:"trust_boundaries"`
-	SharedRuntimes                                map[string]InputSharedRuntime          `yaml:"shared_runtimes" json:"shared_runtimes"`
-	IndividualRiskCategories                      map[string]InputIndividualRiskCategory `yaml:"individual_risk_categories" json:"individual_risk_categories"`
-	RiskTracking                                  map[string]InputRiskTracking           `yaml:"risk_tracking" json:"risk_tracking"`
-	DiagramTweakNodesep                           int                                    `yaml:"diagram_tweak_nodesep" json:"diagram_tweak_nodesep"`
-	DiagramTweakRanksep                           int                                    `yaml:"diagram_tweak_ranksep" json:"diagram_tweak_ranksep"`
-	DiagramTweakEdgeLayout                        string                                 `yaml:"diagram_tweak_edge_layout" json:"diagram_tweak_edge_layout"`
-	DiagramTweakSuppressEdgeLabels                bool                                   `yaml:"diagram_tweak_suppress_edge_labels" json:"diagram_tweak_suppress_edge_labels"`
-	DiagramTweakLayoutLeftToRight                 bool                                   `yaml:"diagram_tweak_layout_left_to_right" json:"diagram_tweak_layout_left_to_right"`
-	DiagramTweakInvisibleConnectionsBetweenAssets []string                               `yaml:"diagram_tweak_invisible_connections_between_assets,omitempty" json:"diagram_tweak_invisible_connections_between_assets,omitempty"`
-	DiagramTweakSameRankAssets                    []string                               `yaml:"diagram_tweak_same_rank_assets,omitempty" json:"diagram_tweak_same_rank_assets,omitempty"`
+type Model struct { // TODO: Eventually remove this and directly use ParsedModelRoot? But then the error messages for model errors are not quite as good anymore...
+	Includes                                      []string                          `yaml:"includes,omitempty" json:"includes,omitempty"`
+	ThreagileVersion                              string                            `yaml:"threagile_version" json:"threagile_version"`
+	Title                                         string                            `yaml:"title" json:"title"`
+	Author                                        Author                            `yaml:"author" json:"author"`
+	Contributors                                  []Author                          `yaml:"contributors" json:"contributors"`
+	Date                                          string                            `yaml:"date" json:"date"`
+	AppDescription                                Overview                          `yaml:"application_description" json:"application_description"`
+	BusinessOverview                              Overview                          `yaml:"business_overview" json:"business_overview"`
+	TechnicalOverview                             Overview                          `yaml:"technical_overview" json:"technical_overview"`
+	BusinessCriticality                           string                            `yaml:"business_criticality" json:"business_criticality"`
+	ManagementSummaryComment                      string                            `yaml:"management_summary_comment" json:"management_summary_comment"`
+	Questions                                     map[string]string                 `yaml:"questions" json:"questions"`
+	AbuseCases                                    map[string]string                 `yaml:"abuse_cases" json:"abuse_cases"`
+	SecurityRequirements                          map[string]string                 `yaml:"security_requirements" json:"security_requirements"`
+	TagsAvailable                                 []string                          `yaml:"tags_available,omitempty" json:"tags_available,omitempty"`
+	DataAssets                                    map[string]DataAsset              `yaml:"data_assets" json:"data_assets"`
+	TechnicalAssets                               map[string]TechnicalAsset         `yaml:"technical_assets" json:"technical_assets"`
+	TrustBoundaries                               map[string]TrustBoundary          `yaml:"trust_boundaries" json:"trust_boundaries"`
+	SharedRuntimes                                map[string]SharedRuntime          `yaml:"shared_runtimes" json:"shared_runtimes"`
+	IndividualRiskCategories                      map[string]IndividualRiskCategory `yaml:"individual_risk_categories" json:"individual_risk_categories"`
+	RiskTracking                                  map[string]RiskTracking           `yaml:"risk_tracking" json:"risk_tracking"`
+	DiagramTweakNodesep                           int                               `yaml:"diagram_tweak_nodesep" json:"diagram_tweak_nodesep"`
+	DiagramTweakRanksep                           int                               `yaml:"diagram_tweak_ranksep" json:"diagram_tweak_ranksep"`
+	DiagramTweakEdgeLayout                        string                            `yaml:"diagram_tweak_edge_layout" json:"diagram_tweak_edge_layout"`
+	DiagramTweakSuppressEdgeLabels                bool                              `yaml:"diagram_tweak_suppress_edge_labels" json:"diagram_tweak_suppress_edge_labels"`
+	DiagramTweakLayoutLeftToRight                 bool                              `yaml:"diagram_tweak_layout_left_to_right" json:"diagram_tweak_layout_left_to_right"`
+	DiagramTweakInvisibleConnectionsBetweenAssets []string                          `yaml:"diagram_tweak_invisible_connections_between_assets,omitempty" json:"diagram_tweak_invisible_connections_between_assets,omitempty"`
+	DiagramTweakSameRankAssets                    []string                          `yaml:"diagram_tweak_same_rank_assets,omitempty" json:"diagram_tweak_same_rank_assets,omitempty"`
 }
 
-func (model *ModelInput) Defaults() *ModelInput {
-	*model = ModelInput{
+func (model *Model) Defaults() *Model {
+	*model = Model{
 		Questions:                make(map[string]string),
 		AbuseCases:               make(map[string]string),
 		SecurityRequirements:     make(map[string]string),
-		DataAssets:               make(map[string]InputDataAsset),
-		TechnicalAssets:          make(map[string]InputTechnicalAsset),
-		TrustBoundaries:          make(map[string]InputTrustBoundary),
-		SharedRuntimes:           make(map[string]InputSharedRuntime),
-		IndividualRiskCategories: make(map[string]InputIndividualRiskCategory),
-		RiskTracking:             make(map[string]InputRiskTracking),
+		DataAssets:               make(map[string]DataAsset),
+		TechnicalAssets:          make(map[string]TechnicalAsset),
+		TrustBoundaries:          make(map[string]TrustBoundary),
+		SharedRuntimes:           make(map[string]SharedRuntime),
+		IndividualRiskCategories: make(map[string]IndividualRiskCategory),
+		RiskTracking:             make(map[string]RiskTracking),
 	}
 
 	return model
 }
 
-func (model *ModelInput) Load(inputFilename string) error {
+func (model *Model) Load(inputFilename string) error {
 	modelYaml, readError := os.ReadFile(inputFilename)
 	if readError != nil {
 		log.Fatal("Unable to read model file: ", readError)
@@ -227,7 +231,7 @@ func (slice UniqueStringSlice) Merge(otherSlice []string) []string {
 	return valueSlice
 }
 
-func (model *ModelInput) Merge(dir string, includeFilename string) error {
+func (model *Model) Merge(dir string, includeFilename string) error {
 	modelYaml, readError := os.ReadFile(filepath.Join(dir, includeFilename))
 	if readError != nil {
 		return fmt.Errorf("unable to read model file: %v", readError)
@@ -239,7 +243,7 @@ func (model *ModelInput) Merge(dir string, includeFilename string) error {
 		return fmt.Errorf("unable to parse model structure: %v", unmarshalStructureError)
 	}
 
-	var includedModel ModelInput
+	var includedModel Model
 	unmarshalError := yaml.Unmarshal(modelYaml, &includedModel)
 	if unmarshalError != nil {
 		return fmt.Errorf("unable to parse model yaml: %v", unmarshalError)
@@ -378,7 +382,7 @@ func (model *ModelInput) Merge(dir string, includeFilename string) error {
 	return nil
 }
 
-func AddTagToModelInput(modelInput *ModelInput, tag string, dryRun bool, changes *[]string) {
+func AddTagToModelInput(modelInput *Model, tag string, dryRun bool, changes *[]string) {
 	tag = NormalizeTag(tag)
 	if !contains(modelInput.TagsAvailable, tag) {
 		*changes = append(*changes, "adding tag: "+tag)

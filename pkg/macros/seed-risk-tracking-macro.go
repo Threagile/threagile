@@ -35,11 +35,11 @@ func (*seedRiskTrackingMacro) GoBack() (message string, validResult bool, err er
 	return "Cannot go back further", false, nil
 }
 
-func (*seedRiskTrackingMacro) GetFinalChangeImpact(_ *input.ModelInput, _ *types.ParsedModel) (changes []string, message string, validResult bool, err error) {
+func (*seedRiskTrackingMacro) GetFinalChangeImpact(_ *input.Model, _ *types.ParsedModel) (changes []string, message string, validResult bool, err error) {
 	return []string{"seed the model file with with initial risk tracking entries for all untracked risks"}, "Changeset valid", true, err
 }
 
-func (*seedRiskTrackingMacro) Execute(modelInput *input.ModelInput, parsedModel *types.ParsedModel) (message string, validResult bool, err error) {
+func (*seedRiskTrackingMacro) Execute(modelInput *input.Model, parsedModel *types.ParsedModel) (message string, validResult bool, err error) {
 	syntheticRiskIDsToCreateTrackingFor := make([]string, 0)
 	for id, risk := range parsedModel.GeneratedRisksBySyntheticId {
 		if !risk.IsRiskTracked(parsedModel) {
@@ -48,10 +48,10 @@ func (*seedRiskTrackingMacro) Execute(modelInput *input.ModelInput, parsedModel 
 	}
 	sort.Strings(syntheticRiskIDsToCreateTrackingFor)
 	if modelInput.RiskTracking == nil {
-		modelInput.RiskTracking = make(map[string]input.InputRiskTracking)
+		modelInput.RiskTracking = make(map[string]input.RiskTracking)
 	}
 	for _, id := range syntheticRiskIDsToCreateTrackingFor {
-		modelInput.RiskTracking[id] = input.InputRiskTracking{
+		modelInput.RiskTracking[id] = input.RiskTracking{
 			Status:        types.Unchecked.String(),
 			Justification: "",
 			Ticket:        "",

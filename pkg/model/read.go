@@ -18,7 +18,7 @@ type progressReporter interface {
 }
 
 type ReadResult struct {
-	ModelInput       *input.ModelInput
+	ModelInput       *input.Model
 	ParsedModel      *types.ParsedModel
 	IntroTextRAA     string
 	BuiltinRiskRules map[string]risks.RiskRule
@@ -36,7 +36,7 @@ func ReadAndAnalyzeModel(config common.Config, progressReporter progressReporter
 	}
 	customRiskRules := LoadCustomRiskRules(config.RiskRulesPlugins, progressReporter)
 
-	modelInput := new(input.ModelInput).Defaults()
+	modelInput := new(input.Model).Defaults()
 	loadError := modelInput.Load(config.InputFile)
 	if loadError != nil {
 		return nil, fmt.Errorf("unable to load model yaml: %v", loadError)

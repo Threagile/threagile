@@ -257,19 +257,19 @@ func (m *addBuildPipeline) GoBack() (message string, validResult bool, err error
 	return "Undo successful", true, nil
 }
 
-func (m *addBuildPipeline) GetFinalChangeImpact(modelInput *input.ModelInput, model *types.ParsedModel) (changes []string, message string, validResult bool, err error) {
+func (m *addBuildPipeline) GetFinalChangeImpact(modelInput *input.Model, model *types.ParsedModel) (changes []string, message string, validResult bool, err error) {
 	changeLogCollector := make([]string, 0)
 	message, validResult, err = m.applyChange(modelInput, model, &changeLogCollector, true)
 	return changeLogCollector, message, validResult, err
 }
 
-func (m *addBuildPipeline) Execute(modelInput *input.ModelInput, model *types.ParsedModel) (message string, validResult bool, err error) {
+func (m *addBuildPipeline) Execute(modelInput *input.Model, model *types.ParsedModel) (message string, validResult bool, err error) {
 	changeLogCollector := make([]string, 0)
 	message, validResult, err = m.applyChange(modelInput, model, &changeLogCollector, false)
 	return message, validResult, err
 }
 
-func (m *addBuildPipeline) applyChange(modelInput *input.ModelInput, parsedModel *types.ParsedModel, changeLogCollector *[]string, dryRun bool) (message string, validResult bool, err error) {
+func (m *addBuildPipeline) applyChange(modelInput *input.Model, parsedModel *types.ParsedModel, changeLogCollector *[]string, dryRun bool) (message string, validResult bool, err error) {
 	var serverSideTechAssets = make([]string, 0)
 	// ################################################
 	input.AddTagToModelInput(modelInput, m.macroState["source-repository"][0], dryRun, changeLogCollector)
@@ -300,7 +300,7 @@ func (m *addBuildPipeline) applyChange(modelInput *input.ModelInput, parsedModel
 
 	if _, exists := parsedModel.DataAssets["Sourcecode"]; !exists {
 		//fmt.Println("Adding data asset:", "sourcecode") // ################################################
-		dataAsset := input.InputDataAsset{
+		dataAsset := input.DataAsset{
 			ID:              "sourcecode",
 			Description:     "Sourcecode to build the application components from",
 			Usage:           types.DevOps.String(),
@@ -322,7 +322,7 @@ func (m *addBuildPipeline) applyChange(modelInput *input.ModelInput, parsedModel
 
 	if _, exists := parsedModel.DataAssets["Deployment"]; !exists {
 		//fmt.Println("Adding data asset:", "deployment") // ################################################
-		dataAsset := input.InputDataAsset{
+		dataAsset := input.DataAsset{
 			ID:              "deployment",
 			Description:     "Deployment unit being installed/shipped",
 			Usage:           types.DevOps.String(),
@@ -350,8 +350,8 @@ func (m *addBuildPipeline) applyChange(modelInput *input.ModelInput, parsedModel
 			encryption = types.Transparent.String()
 		}
 
-		commLinks := make(map[string]input.InputCommunicationLink)
-		commLinks["Sourcecode Repository Traffic"] = input.InputCommunicationLink{
+		commLinks := make(map[string]input.CommunicationLink)
+		commLinks["Sourcecode Repository Traffic"] = input.CommunicationLink{
 			Target:                 sourceRepoID,
 			Description:            "Sourcecode Repository Traffic",
 			Protocol:               types.HTTPS.String(),
@@ -367,7 +367,7 @@ func (m *addBuildPipeline) applyChange(modelInput *input.ModelInput, parsedModel
 			DiagramTweakWeight:     0,
 			DiagramTweakConstraint: false,
 		}
-		commLinks["Build Pipeline Traffic"] = input.InputCommunicationLink{
+		commLinks["Build Pipeline Traffic"] = input.CommunicationLink{
 			Target:                 buildPipelineID,
 			Description:            "Build Pipeline Traffic",
 			Protocol:               types.HTTPS.String(),
@@ -383,7 +383,7 @@ func (m *addBuildPipeline) applyChange(modelInput *input.ModelInput, parsedModel
 			DiagramTweakWeight:     0,
 			DiagramTweakConstraint: false,
 		}
-		commLinks["Artifact Registry Traffic"] = input.InputCommunicationLink{
+		commLinks["Artifact Registry Traffic"] = input.CommunicationLink{
 			Target:                 artifactRegistryID,
 			Description:            "Artifact Registry Traffic",
 			Protocol:               types.HTTPS.String(),
@@ -400,7 +400,7 @@ func (m *addBuildPipeline) applyChange(modelInput *input.ModelInput, parsedModel
 			DiagramTweakConstraint: false,
 		}
 		if m.containerTechUsed {
-			commLinks["Container Registry Traffic"] = input.InputCommunicationLink{
+			commLinks["Container Registry Traffic"] = input.CommunicationLink{
 				Target:                 containerRepoID,
 				Description:            "Container Registry Traffic",
 				Protocol:               types.HTTPS.String(),
@@ -416,7 +416,7 @@ func (m *addBuildPipeline) applyChange(modelInput *input.ModelInput, parsedModel
 				DiagramTweakWeight:     0,
 				DiagramTweakConstraint: false,
 			}
-			commLinks["Container Platform Traffic"] = input.InputCommunicationLink{
+			commLinks["Container Platform Traffic"] = input.CommunicationLink{
 				Target:                 containerPlatformID,
 				Description:            "Container Platform Traffic",
 				Protocol:               types.HTTPS.String(),
@@ -434,7 +434,7 @@ func (m *addBuildPipeline) applyChange(modelInput *input.ModelInput, parsedModel
 			}
 		}
 		if m.codeInspectionUsed {
-			commLinks["Code Inspection Platform Traffic"] = input.InputCommunicationLink{
+			commLinks["Code Inspection Platform Traffic"] = input.CommunicationLink{
 				Target:                 codeInspectionPlatformID,
 				Description:            "Code Inspection Platform Traffic",
 				Protocol:               types.HTTPS.String(),
@@ -452,7 +452,7 @@ func (m *addBuildPipeline) applyChange(modelInput *input.ModelInput, parsedModel
 			}
 		}
 
-		techAsset := input.InputTechnicalAsset{
+		techAsset := input.TechnicalAsset{
 			ID:                      id,
 			Description:             "Development Client",
 			Type:                    types.ExternalEntity.String(),
@@ -494,7 +494,7 @@ func (m *addBuildPipeline) applyChange(modelInput *input.ModelInput, parsedModel
 		if strings.ToLower(m.macroState["encryption"][0]) == "yes" {
 			encryption = types.Transparent.String()
 		}
-		techAsset := input.InputTechnicalAsset{
+		techAsset := input.TechnicalAsset{
 			ID:                      id,
 			Description:             m.macroState["source-repository"][0] + " Sourcecode Repository",
 			Type:                    types.Process.String(),
@@ -537,7 +537,7 @@ func (m *addBuildPipeline) applyChange(modelInput *input.ModelInput, parsedModel
 			if strings.ToLower(m.macroState["encryption"][0]) == "yes" {
 				encryption = types.Transparent.String()
 			}
-			techAsset := input.InputTechnicalAsset{
+			techAsset := input.TechnicalAsset{
 				ID:                      id,
 				Description:             m.macroState["container-registry"][0] + " Container Registry",
 				Type:                    types.Process.String(),
@@ -579,7 +579,7 @@ func (m *addBuildPipeline) applyChange(modelInput *input.ModelInput, parsedModel
 			if strings.ToLower(m.macroState["encryption"][0]) == "yes" {
 				encryption = types.Transparent.String()
 			}
-			techAsset := input.InputTechnicalAsset{
+			techAsset := input.TechnicalAsset{
 				ID:                      id,
 				Description:             m.macroState["container-platform"][0] + " Container Platform",
 				Type:                    types.Process.String(),
@@ -623,8 +623,8 @@ func (m *addBuildPipeline) applyChange(modelInput *input.ModelInput, parsedModel
 			encryption = types.Transparent.String()
 		}
 
-		commLinks := make(map[string]input.InputCommunicationLink)
-		commLinks["Sourcecode Repository Traffic"] = input.InputCommunicationLink{
+		commLinks := make(map[string]input.CommunicationLink)
+		commLinks["Sourcecode Repository Traffic"] = input.CommunicationLink{
 			Target:                 sourceRepoID,
 			Description:            "Sourcecode Repository Traffic",
 			Protocol:               types.HTTPS.String(),
@@ -640,7 +640,7 @@ func (m *addBuildPipeline) applyChange(modelInput *input.ModelInput, parsedModel
 			DiagramTweakWeight:     0,
 			DiagramTweakConstraint: false,
 		}
-		commLinks["Artifact Registry Traffic"] = input.InputCommunicationLink{
+		commLinks["Artifact Registry Traffic"] = input.CommunicationLink{
 			Target:                 artifactRegistryID,
 			Description:            "Artifact Registry Traffic",
 			Protocol:               types.HTTPS.String(),
@@ -657,7 +657,7 @@ func (m *addBuildPipeline) applyChange(modelInput *input.ModelInput, parsedModel
 			DiagramTweakConstraint: false,
 		}
 		if m.containerTechUsed {
-			commLinks["Container Registry Traffic"] = input.InputCommunicationLink{
+			commLinks["Container Registry Traffic"] = input.CommunicationLink{
 				Target:                 containerRepoID,
 				Description:            "Container Registry Traffic",
 				Protocol:               types.HTTPS.String(),
@@ -674,7 +674,7 @@ func (m *addBuildPipeline) applyChange(modelInput *input.ModelInput, parsedModel
 				DiagramTweakConstraint: false,
 			}
 			if m.macroState["push-or-pull"][0] == pushOrPull[0] { // Push
-				commLinks["Container Platform Push"] = input.InputCommunicationLink{
+				commLinks["Container Platform Push"] = input.CommunicationLink{
 					Target:                 containerPlatformID,
 					Description:            "Container Platform Push",
 					Protocol:               types.HTTPS.String(),
@@ -691,7 +691,7 @@ func (m *addBuildPipeline) applyChange(modelInput *input.ModelInput, parsedModel
 					DiagramTweakConstraint: false,
 				}
 			} else { // Pull
-				commLinkPull := input.InputCommunicationLink{
+				commLinkPull := input.CommunicationLink{
 					Target:                 containerRepoID,
 					Description:            "Container Platform Pull",
 					Protocol:               types.HTTPS.String(),
@@ -711,7 +711,7 @@ func (m *addBuildPipeline) applyChange(modelInput *input.ModelInput, parsedModel
 					titleOfTargetAsset := m.macroState["container-platform"][0] + " Container Platform"
 					containerPlatform := modelInput.TechnicalAssets[titleOfTargetAsset]
 					if containerPlatform.CommunicationLinks == nil {
-						containerPlatform.CommunicationLinks = make(map[string]input.InputCommunicationLink)
+						containerPlatform.CommunicationLinks = make(map[string]input.CommunicationLink)
 					}
 					containerPlatform.CommunicationLinks["Container Platform Pull"] = commLinkPull
 					modelInput.TechnicalAssets[titleOfTargetAsset] = containerPlatform
@@ -719,7 +719,7 @@ func (m *addBuildPipeline) applyChange(modelInput *input.ModelInput, parsedModel
 			}
 		}
 		if m.codeInspectionUsed {
-			commLinks["Code Inspection Platform Traffic"] = input.InputCommunicationLink{
+			commLinks["Code Inspection Platform Traffic"] = input.CommunicationLink{
 				Target:                 codeInspectionPlatformID,
 				Description:            "Code Inspection Platform Traffic",
 				Protocol:               types.HTTPS.String(),
@@ -743,9 +743,9 @@ func (m *addBuildPipeline) applyChange(modelInput *input.ModelInput, parsedModel
 				if !dryRun {
 					containerPlatform := modelInput.TechnicalAssets[m.macroState["container-platform"][0]+" Container Platform"]
 					if containerPlatform.CommunicationLinks == nil {
-						containerPlatform.CommunicationLinks = make(map[string]input.InputCommunicationLink)
+						containerPlatform.CommunicationLinks = make(map[string]input.CommunicationLink)
 					}
-					containerPlatform.CommunicationLinks["Container Spawning ("+deployTargetID+")"] = input.InputCommunicationLink{
+					containerPlatform.CommunicationLinks["Container Spawning ("+deployTargetID+")"] = input.CommunicationLink{
 						Target:                 deployTargetID,
 						Description:            "Container Spawning " + deployTargetID,
 						Protocol:               types.ContainerSpawning.String(),
@@ -765,7 +765,7 @@ func (m *addBuildPipeline) applyChange(modelInput *input.ModelInput, parsedModel
 				}
 			} else { // No Containers used
 				if m.macroState["push-or-pull"][0] == pushOrPull[0] { // Push
-					commLinks["Deployment Push ("+deployTargetID+")"] = input.InputCommunicationLink{
+					commLinks["Deployment Push ("+deployTargetID+")"] = input.CommunicationLink{
 						Target:                 deployTargetID,
 						Description:            "Deployment Push to " + deployTargetID,
 						Protocol:               types.SSH.String(),
@@ -783,7 +783,7 @@ func (m *addBuildPipeline) applyChange(modelInput *input.ModelInput, parsedModel
 					}
 				} else { // Pull
 					pullFromWhere := artifactRegistryID
-					commLinkPull := input.InputCommunicationLink{
+					commLinkPull := input.CommunicationLink{
 						Target:                 pullFromWhere,
 						Description:            "Deployment Pull from " + deployTargetID,
 						Protocol:               types.HTTPS.String(),
@@ -804,7 +804,7 @@ func (m *addBuildPipeline) applyChange(modelInput *input.ModelInput, parsedModel
 						titleOfTargetAsset := parsedModel.TechnicalAssets[deployTargetID].Title
 						x := modelInput.TechnicalAssets[titleOfTargetAsset]
 						if x.CommunicationLinks == nil {
-							x.CommunicationLinks = make(map[string]input.InputCommunicationLink)
+							x.CommunicationLinks = make(map[string]input.CommunicationLink)
 						}
 						x.CommunicationLinks["Deployment Pull ("+deployTargetID+")"] = commLinkPull
 						modelInput.TechnicalAssets[titleOfTargetAsset] = x
@@ -832,7 +832,7 @@ func (m *addBuildPipeline) applyChange(modelInput *input.ModelInput, parsedModel
 			}
 		}
 
-		techAsset := input.InputTechnicalAsset{
+		techAsset := input.TechnicalAsset{
 			ID:                      id,
 			Description:             m.macroState["build-pipeline"][0] + " Build Pipeline",
 			Type:                    types.Process.String(),
@@ -874,7 +874,7 @@ func (m *addBuildPipeline) applyChange(modelInput *input.ModelInput, parsedModel
 		if strings.ToLower(m.macroState["encryption"][0]) == "yes" {
 			encryption = types.Transparent.String()
 		}
-		techAsset := input.InputTechnicalAsset{
+		techAsset := input.TechnicalAsset{
 			ID:                      id,
 			Description:             m.macroState["artifact-registry"][0] + " Artifact Registry",
 			Type:                    types.Process.String(),
@@ -917,7 +917,7 @@ func (m *addBuildPipeline) applyChange(modelInput *input.ModelInput, parsedModel
 			if strings.ToLower(m.macroState["encryption"][0]) == "yes" {
 				encryption = types.Transparent.String()
 			}
-			techAsset := input.InputTechnicalAsset{
+			techAsset := input.TechnicalAsset{
 				ID:                      id,
 				Description:             m.macroState["code-inspection-platform"][0] + " Code Inspection Platform",
 				Type:                    types.Process.String(),
@@ -957,7 +957,7 @@ func (m *addBuildPipeline) applyChange(modelInput *input.ModelInput, parsedModel
 			trustBoundaryType := m.macroState["new-trust-boundary-type"][0]
 			//fmt.Println("Adding new trust boundary of type:", trustBoundaryType)
 			title := "DevOps Network"
-			trustBoundary := input.InputTrustBoundary{
+			trustBoundary := input.TrustBoundary{
 				ID:                    "devops-network",
 				Description:           "DevOps Network",
 				Type:                  trustBoundaryType,
@@ -988,7 +988,7 @@ func (m *addBuildPipeline) applyChange(modelInput *input.ModelInput, parsedModel
 			*changeLogCollector = append(*changeLogCollector, "filling existing trust boundary: "+existingTrustBoundaryToAddTo)
 			if !dryRun {
 				if modelInput.TrustBoundaries == nil {
-					modelInput.TrustBoundaries = make(map[string]input.InputTrustBoundary)
+					modelInput.TrustBoundaries = make(map[string]input.TrustBoundary)
 				}
 				tb := modelInput.TrustBoundaries[title]
 				tb.TechnicalAssetsInside = mergedArrays
@@ -1004,7 +1004,7 @@ func (m *addBuildPipeline) applyChange(modelInput *input.ModelInput, parsedModel
 			assetsRunning = append(assetsRunning, deployTargetID)
 		}
 		title := m.macroState["container-platform"][0] + " Runtime"
-		sharedRuntime := input.InputSharedRuntime{
+		sharedRuntime := input.SharedRuntime{
 			ID:                     containerSharedRuntimeID,
 			Description:            title,
 			Tags:                   []string{input.NormalizeTag(m.macroState["container-platform"][0])},
@@ -1013,7 +1013,7 @@ func (m *addBuildPipeline) applyChange(modelInput *input.ModelInput, parsedModel
 		*changeLogCollector = append(*changeLogCollector, "adding shared runtime: "+containerSharedRuntimeID)
 		if !dryRun {
 			if modelInput.SharedRuntimes == nil {
-				modelInput.SharedRuntimes = make(map[string]input.InputSharedRuntime)
+				modelInput.SharedRuntimes = make(map[string]input.SharedRuntime)
 			}
 			modelInput.SharedRuntimes[title] = sharedRuntime
 		}
