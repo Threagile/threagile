@@ -13,7 +13,7 @@ import (
 	"github.com/threagile/threagile/pkg/security/types"
 )
 
-func ParseModel(modelInput *input.ModelInput, builtinRiskRules map[string]risks.RiskRule, customRiskRules map[string]*CustomRisk) (*types.ParsedModel, error) {
+func ParseModel(modelInput *input.Model, builtinRiskRules map[string]risks.RiskRule, customRiskRules map[string]*CustomRisk) (*types.ParsedModel, error) {
 	businessCriticality, err := types.ParseCriticality(modelInput.BusinessCriticality)
 	if err != nil {
 		return nil, errors.New("unknown 'business_criticality' value of application: " + modelInput.BusinessCriticality)

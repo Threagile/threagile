@@ -1,52 +1,66 @@
 /*
 Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 */
+
 package threagile
 
-var configFlag *string
+const (
+	configFlagName = "config"
 
-var verboseFlag *bool
-var appDirFlag, binDirFlag, outputDirFlag, tempDirFlag *string
-var inputFileFlag, raaPluginFlag *string
-var serverPortFlag *int
-var serverDirFlag *string
+	verboseFlagName      = "verbose"
+	verboseFlagShorthand = "v"
 
-var skipRiskRulesFlag, customRiskRulesPluginFlag *string
-var ignoreOrphandedRiskTrackingFlag *bool
-var templateFileNameFlag *string
-var diagramDpiFlag *int
+	appDirFlagName  = "app-dir"
+	binDirFlagName  = "bin-dir"
+	outputFlagName  = "output"
+	tempDirFlagName = "temp-dir"
 
-var generateDataFlowDiagramFlag, generateDataAssetDiagramFlag, generateRisksJSONFlag,
-	generateTechnicalAssetsJSONFlag, generateStatsJSONFlag, generateRisksExcelFlag,
-	generateTagsExcelFlag, generateReportPDFFlag *bool
+	serverDirFlagName  = "server-dir"
+	serverPortFlagName = "server-port"
 
-const configFlagName = "config"
+	inputFileFlagName = "model"
+	raaPluginFlagName = "raa-run"
 
-const verboseFlagName = "verbose"
-const verboseFlagShorthand = "v"
+	customRiskRulesPluginFlagName      = "custom-risk-rules-plugin"
+	diagramDpiFlagName                 = "diagram-dpi"
+	skipRiskRulesFlagName              = "skip-risk-rules"
+	ignoreOrphanedRiskTrackingFlagName = "ignore-orphaned-risk-tracking"
+	templateFileNameFlagName           = "background"
 
-const appDirFlagName = "app-dir"
-const binDirFlagName = "bin-dir"
-const outputFlagName = "output"
-const tempDirFlagName = "temp-dir"
+	generateDataFlowDiagramFlagName     = "generate-data-flow-diagram"
+	generateDataAssetDiagramFlagName    = "generate-data-asset-diagram"
+	generateRisksJSONFlagName           = "generate-risks-json"
+	generateTechnicalAssetsJSONFlagName = "generate-technical-assets-json"
+	generateStatsJSONFlagName           = "generate-stats-json"
+	generateRisksExcelFlagName          = "generate-risks-excel"
+	generateTagsExcelFlagName           = "generate-tags-excel"
+	generateReportPDFFlagName           = "generate-report-pdf"
+)
 
-const serverDirFlagName = "server-dir"
-const serverPortFlagName = "server-port"
+type Flags struct {
+	configFlag     string
+	verboseFlag    bool
+	appDirFlag     string
+	binDirFlag     string
+	outputDirFlag  string
+	tempDirFlag    string
+	inputFileFlag  string
+	raaPluginFlag  string
+	serverPortFlag int
+	serverDirFlag  string
 
-const inputFileFlagName = "model"
-const raaPluginFlagName = "raa-run"
+	skipRiskRulesFlag              string
+	customRiskRulesPluginFlag      string
+	ignoreOrphanedRiskTrackingFlag bool
+	templateFileNameFlag           string
+	diagramDpiFlag                 int
 
-const customRiskRulesPluginFlagName = "custom-risk-rules-plugin"
-const diagramDpiFlagName = "diagram-dpi"
-const skipRiskRulesFlagName = "skip-risk-rules"
-const ignoreOrphandedRiskTrackingFlagName = "ignore-orphaned-risk-tracking"
-const templateFileNameFlagName = "background"
-
-const generateDataFlowDiagramFlagName = "generate-data-flow-diagram"
-const generateDataAssetDiagramFlagName = "generate-data-asset-diagram"
-const generateRisksJSONFlagName = "generate-risks-json"
-const generateTechnicalAssetsJSONFlagName = "generate-technical-assets-json"
-const generateStatsJSONFlagName = "generate-stats-json"
-const generateRisksExcelFlagName = "generate-risks-excel"
-const generateTagsExcelFlagName = "generate-tags-excel"
-const generateReportPDFFlagName = "generate-report-pdf"
+	generateDataFlowDiagramFlag     bool
+	generateDataAssetDiagramFlag    bool
+	generateRisksJSONFlag           bool
+	generateTechnicalAssetsJSONFlag bool
+	generateStatsJSONFlag           bool
+	generateRisksExcelFlag          bool
+	generateTagsExcelFlag           bool
+	generateReportPDFFlag           bool
+}

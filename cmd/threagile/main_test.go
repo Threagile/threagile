@@ -15,7 +15,7 @@ import (
 
 func TestParseModelYaml(t *testing.T) {
 	flatModelFile := filepath.Join("..", "..", "test", "all.yaml")
-	flatModel := *new(input.ModelInput).Defaults()
+	flatModel := *new(input.Model).Defaults()
 	flatLoadError := flatModel.Load(flatModelFile)
 	if flatLoadError != nil {
 		t.Errorf("unable to parse model yaml %q: %v", flatModelFile, flatLoadError)
@@ -32,7 +32,7 @@ func TestParseModelYaml(t *testing.T) {
 	}
 
 	splitModelFile := filepath.Join("..", "..", "test", "main.yaml")
-	splitModel := *new(input.ModelInput).Defaults()
+	splitModel := *new(input.Model).Defaults()
 	splitLoadError := splitModel.Load(splitModelFile)
 	if splitLoadError != nil {
 		t.Errorf("unable to parse model yaml %q: %v", splitModelFile, splitLoadError)

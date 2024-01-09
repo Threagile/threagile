@@ -670,7 +670,7 @@ func (s *server) createNewDataAsset(ginContext *gin.Context) {
 			return
 		}
 		if modelInput.DataAssets == nil {
-			modelInput.DataAssets = make(map[string]input.InputDataAsset)
+			modelInput.DataAssets = make(map[string]input.DataAsset)
 		}
 		modelInput.DataAssets[payload.Title] = dataAssetInput
 		ok = s.writeModel(ginContext, key, folderNameOfKey, &modelInput, "Data Asset Creation")
@@ -683,7 +683,7 @@ func (s *server) createNewDataAsset(ginContext *gin.Context) {
 	}
 }
 
-func (s *server) populateDataAsset(ginContext *gin.Context, payload payloadDataAsset) (dataAssetInput input.InputDataAsset, ok bool) {
+func (s *server) populateDataAsset(ginContext *gin.Context, payload payloadDataAsset) (dataAssetInput input.DataAsset, ok bool) {
 	usage, err := types.ParseUsage(payload.Usage)
 	if err != nil {
 		handleErrorInServiceCall(err, ginContext)
@@ -709,7 +709,7 @@ func (s *server) populateDataAsset(ginContext *gin.Context, payload payloadDataA
 		handleErrorInServiceCall(err, ginContext)
 		return dataAssetInput, false
 	}
-	dataAssetInput = input.InputDataAsset{
+	dataAssetInput = input.DataAsset{
 		ID:                     payload.Id,
 		Description:            payload.Description,
 		Usage:                  usage.String(),
@@ -874,7 +874,7 @@ func (s *server) createNewSharedRuntime(ginContext *gin.Context) {
 			return
 		}
 		if modelInput.SharedRuntimes == nil {
-			modelInput.SharedRuntimes = make(map[string]input.InputSharedRuntime)
+			modelInput.SharedRuntimes = make(map[string]input.SharedRuntime)
 		}
 		modelInput.SharedRuntimes[payload.Title] = sharedRuntimeInput
 		ok = s.writeModel(ginContext, key, folderNameOfKey, &modelInput, "Shared Runtime Creation")
@@ -887,7 +887,7 @@ func (s *server) createNewSharedRuntime(ginContext *gin.Context) {
 	}
 }
 
-func checkTechnicalAssetsExisting(modelInput input.ModelInput, techAssetIDs []string) (ok bool) {
+func checkTechnicalAssetsExisting(modelInput input.Model, techAssetIDs []string) (ok bool) {
 	for _, techAssetID := range techAssetIDs {
 		exists := false
 		for _, val := range modelInput.TechnicalAssets {
@@ -903,8 +903,8 @@ func checkTechnicalAssetsExisting(modelInput input.ModelInput, techAssetIDs []st
 	return true
 }
 
-func populateSharedRuntime(_ *gin.Context, payload payloadSharedRuntime) (sharedRuntimeInput input.InputSharedRuntime, ok bool) {
-	sharedRuntimeInput = input.InputSharedRuntime{
+func populateSharedRuntime(_ *gin.Context, payload payloadSharedRuntime) (sharedRuntimeInput input.SharedRuntime, ok bool) {
+	sharedRuntimeInput = input.SharedRuntime{
 		ID:                     payload.Id,
 		Description:            payload.Description,
 		Tags:                   lowerCaseAndTrim(payload.Tags),
@@ -971,7 +971,7 @@ func (s *server) getSharedRuntimes(ginContext *gin.Context) {
 	}
 }
 
-func (s *server) readModel(ginContext *gin.Context, modelUUID string, key []byte, folderNameOfKey string) (modelInputResult input.ModelInput, yamlText string, ok bool) {
+func (s *server) readModel(ginContext *gin.Context, modelUUID string, key []byte, folderNameOfKey string) (modelInputResult input.Model, yamlText string, ok bool) {
 	modelFolder, ok := s.checkModelFolder(ginContext, modelUUID, folderNameOfKey)
 	if !ok {
 		return modelInputResult, yamlText, false
@@ -1024,7 +1024,7 @@ func (s *server) readModel(ginContext *gin.Context, modelUUID string, key []byte
 	}
 	buf := new(bytes.Buffer)
 	_, _ = buf.ReadFrom(r)
-	modelInput := new(input.ModelInput).Defaults()
+	modelInput := new(input.Model).Defaults()
 	yamlBytes := buf.Bytes()
 	err = yaml.Unmarshal(yamlBytes, &modelInput)
 	if err != nil {
@@ -1037,7 +1037,7 @@ func (s *server) readModel(ginContext *gin.Context, modelUUID string, key []byte
 	return *modelInput, string(yamlBytes), true
 }
 
-func (s *server) writeModel(ginContext *gin.Context, key []byte, folderNameOfKey string, modelInput *input.ModelInput, changeReasonForHistory string) (ok bool) {
+func (s *server) writeModel(ginContext *gin.Context, key []byte, folderNameOfKey string, modelInput *input.Model, changeReasonForHistory string) (ok bool) {
 	modelFolder, ok := s.checkModelFolder(ginContext, ginContext.Param("model-id"), folderNameOfKey)
 	if ok {
 		modelInput.ThreagileVersion = docs.ThreagileVersion

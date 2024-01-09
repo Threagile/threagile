@@ -9,5 +9,5 @@ const (
 )
 
 func main() {
-	threagile.Execute()
+	new(threagile.Threagile).Init().Execute()
 }

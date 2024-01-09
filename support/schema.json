@@ -32,6 +32,13 @@
             "null"
           ]
         },
+        "contact": {
+          "description": "Author contact info",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "homepage": {
           "description": "Author homepage",
           "type": [
@@ -43,6 +50,43 @@
       "required": [
         "name"
       ]
+    },
+    "contributors": {
+      "description": "Contributors to the model",
+      "type": [
+        "array",
+        "null"
+      ],
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "description": "Contributor name",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "contact": {
+            "description": "Contributor contact info",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "homepage": {
+            "description": "Contributor homepage",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "name"
+        ]
+      }
     },
     "management_summary_comment": {
       "description": "Individual management summary for the report",
@@ -61,6 +105,27 @@
         "critical",
         "mission-critical"
       ]
+    },
+    "application_description": {
+      "description": "General description of the application, its purpose and functionality.",
+      "type": "object",
+      "properties": {
+        "description": {
+          "description": "Application description for the report",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "images": {
+          "description": "Application images for the report",
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true
+        }
+      }
     },
     "business_overview": {
       "description": "Individual business overview for the report",
@@ -624,7 +689,7 @@
                   "description": "VPN",
                   "type": "boolean"
                 },
-                "ip_filtered": {
+                  "ip_filtered": {
                   "description": "IP filtered",
                   "type": "boolean"
                 },

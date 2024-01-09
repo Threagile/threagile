@@ -173,25 +173,25 @@ func (m *addVaultMacro) GoBack() (message string, validResult bool, err error) {
 	return "Undo successful", true, nil
 }
 
-func (m *addVaultMacro) GetFinalChangeImpact(modelInput *input.ModelInput, parsedModel *types.ParsedModel) (changes []string, message string, validResult bool, err error) {
+func (m *addVaultMacro) GetFinalChangeImpact(modelInput *input.Model, parsedModel *types.ParsedModel) (changes []string, message string, validResult bool, err error) {
 	changeLogCollector := make([]string, 0)
 	message, validResult, err = m.applyChange(modelInput, parsedModel, &changeLogCollector, true)
 	return changeLogCollector, message, validResult, err
 }
 
-func (m *addVaultMacro) Execute(modelInput *input.ModelInput, parsedModel *types.ParsedModel) (message string, validResult bool, err error) {
+func (m *addVaultMacro) Execute(modelInput *input.Model, parsedModel *types.ParsedModel) (message string, validResult bool, err error) {
 	changeLogCollector := make([]string, 0)
 	message, validResult, err = m.applyChange(modelInput, parsedModel, &changeLogCollector, false)
 	return message, validResult, err
 }
 
-func (m *addVaultMacro) applyChange(modelInput *input.ModelInput, parsedModel *types.ParsedModel, changeLogCollector *[]string, dryRun bool) (message string, validResult bool, err error) {
+func (m *addVaultMacro) applyChange(modelInput *input.Model, parsedModel *types.ParsedModel, changeLogCollector *[]string, dryRun bool) (message string, validResult bool, err error) {
 	input.AddTagToModelInput(modelInput, m.macroState["vault-name"][0], dryRun, changeLogCollector)
 
 	var serverSideTechAssets = make([]string, 0)
 
 	if _, exists := parsedModel.DataAssets["Configuration Secrets"]; !exists {
-		dataAsset := input.InputDataAsset{
+		dataAsset := input.DataAsset{
 			ID:                     "configuration-secrets",
 			Description:            "Configuration secrets (like credentials, keys, certificates, etc.) secured and managed by a vault",
 			Usage:                  types.DevOps.String(),
@@ -223,7 +223,7 @@ func (m *addVaultMacro) applyChange(modelInput *input.ModelInput, parsedModel *t
 		}
 		if _, exists := parsedModel.TechnicalAssets[storageID]; !exists {
 			serverSideTechAssets = append(serverSideTechAssets, storageID)
-			techAsset := input.InputTechnicalAsset{
+			techAsset := input.TechnicalAsset{
 				ID:                      storageID,
 				Description:             "Vault Storage",
 				Type:                    types.Datastore.String(),
@@ -261,10 +261,10 @@ func (m *addVaultMacro) applyChange(modelInput *input.ModelInput, parsedModel *t
 
 	if _, exists := parsedModel.TechnicalAssets[vaultID]; !exists {
 		serverSideTechAssets = append(serverSideTechAssets, vaultID)
-		commLinks := make(map[string]input.InputCommunicationLink)
+		commLinks := make(map[string]input.CommunicationLink)
 
 		if databaseUsed || filesystemUsed {
-			accessLink := input.InputCommunicationLink{
+			accessLink := input.CommunicationLink{
 				Target:                 storageID,
 				Description:            "Vault Storage Access",
 				Protocol:               types.LocalFileAccess.String(),
@@ -297,7 +297,7 @@ func (m *addVaultMacro) applyChange(modelInput *input.ModelInput, parsedModel *t
 			authentication = types.Credentials.String()
 		}
 		for _, clientID := range m.macroState["clients"] { // add a connection from each client
-			clientAccessCommLink := input.InputCommunicationLink{
+			clientAccessCommLink := input.CommunicationLink{
 				Target:                 vaultID,
 				Description:            "Vault Access Traffic (by " + clientID + ")",
 				Protocol:               types.HTTPS.String(),
@@ -338,7 +338,7 @@ func (m *addVaultMacro) applyChange(modelInput *input.ModelInput, parsedModel *t
 			}
 		}
 
-		techAsset := input.InputTechnicalAsset{
+		techAsset := input.TechnicalAsset{
 			ID:                      vaultID,
 			Description:             m.macroState["vault-name"][0] + " Vault",
 			Type:                    types.Process.String(),
@@ -377,7 +377,7 @@ func (m *addVaultMacro) applyChange(modelInput *input.ModelInput, parsedModel *t
 	vaultEnvID := "vault-environment"
 	if filesystemUsed {
 		title := "Vault Environment"
-		trustBoundary := input.InputTrustBoundary{
+		trustBoundary := input.TrustBoundary{
 			ID:                    vaultEnvID,
 			Description:           "Vault Environment",
 			Type:                  types.ExecutionEnvironment.String(),
@@ -395,7 +395,7 @@ func (m *addVaultMacro) applyChange(modelInput *input.ModelInput, parsedModel *t
 		if m.createNewTrustBoundary {
 			trustBoundaryType := m.macroState["new-trust-boundary-type"][0]
 			title := "Vault Network"
-			trustBoundary := input.InputTrustBoundary{
+			trustBoundary := input.TrustBoundary{
 				ID:          "vault-network",
 				Description: "Vault Network",
 				Type:        trustBoundaryType,
