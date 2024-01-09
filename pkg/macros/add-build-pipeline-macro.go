@@ -18,7 +18,7 @@ type addBuildPipeline struct {
 	createNewTrustBoundary bool
 }
 
-func NewBuildPipeline() Macros {
+func NewBuildPipeline() *addBuildPipeline {
 	return &addBuildPipeline{
 		macroState:        make(map[string][]string),
 		questionsAnswered: make([]string, 0),

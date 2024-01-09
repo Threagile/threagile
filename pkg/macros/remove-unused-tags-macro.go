@@ -11,7 +11,7 @@ import (
 type removeUnusedTagsMacro struct {
 }
 
-func NewRemoveUnusedTags() Macros {
+func NewRemoveUnusedTags() *removeUnusedTagsMacro {
 	return &removeUnusedTagsMacro{}
 }
 

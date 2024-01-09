@@ -11,7 +11,7 @@ import (
 type seedRiskTrackingMacro struct {
 }
 
-func NewSeedRiskTracking() Macros {
+func NewSeedRiskTracking() *seedRiskTrackingMacro {
 	return &seedRiskTrackingMacro{}
 }
 
