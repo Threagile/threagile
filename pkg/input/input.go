@@ -17,159 +17,159 @@ import (
 // === Model Type Stuff ======================================
 
 type Author struct {
-	Name     string `yaml:"name" json:"name"`
-	Contact  string `yaml:"contact" json:"contact"`
-	Homepage string `yaml:"homepage" json:"homepage"`
+	Name     string `yaml:"name,omitempty" json:"name,omitempty"`
+	Contact  string `yaml:"contact,omitempty" json:"contact,omitempty"`
+	Homepage string `yaml:"homepage,omitempty" json:"homepage,omitempty"`
 }
 
 type Overview struct {
-	Description string              `yaml:"description" json:"description"`
-	Images      []map[string]string `yaml:"images" json:"images"` // yes, array of map here, as array keeps the order of the image keys
+	Description string              `yaml:"description,omitempty" json:"description,omitempty"`
+	Images      []map[string]string `yaml:"images,omitempty" json:"images,omitempty"` // yes, array of map here, as array keeps the order of the image keys
 }
 
 type DataAsset struct {
-	ID                     string   `yaml:"id" json:"id"`
-	Description            string   `yaml:"description" json:"description"`
-	Usage                  string   `yaml:"usage" json:"usage"`
-	Tags                   []string `yaml:"tags" json:"tags"`
-	Origin                 string   `yaml:"origin" json:"origin"`
-	Owner                  string   `yaml:"owner" json:"owner"`
-	Quantity               string   `yaml:"quantity" json:"quantity"`
-	Confidentiality        string   `yaml:"confidentiality" json:"confidentiality"`
-	Integrity              string   `yaml:"integrity" json:"integrity"`
-	Availability           string   `yaml:"availability" json:"availability"`
-	JustificationCiaRating string   `yaml:"justification_cia_rating" json:"justification_cia_rating"`
+	ID                     string   `yaml:"id,omitempty" json:"id,omitempty"`
+	Description            string   `yaml:"description,omitempty" json:"description,omitempty"`
+	Usage                  string   `yaml:"usage,omitempty" json:"usage,omitempty"`
+	Tags                   []string `yaml:"tags,omitempty" json:"tags,omitempty"`
+	Origin                 string   `yaml:"origin,omitempty" json:"origin,omitempty"`
+	Owner                  string   `yaml:"owner,omitempty" json:"owner,omitempty"`
+	Quantity               string   `yaml:"quantity,omitempty" json:"quantity,omitempty"`
+	Confidentiality        string   `yaml:"confidentiality,omitempty" json:"confidentiality,omitempty"`
+	Integrity              string   `yaml:"integrity,omitempty" json:"integrity,omitempty"`
+	Availability           string   `yaml:"availability,omitempty" json:"availability,omitempty"`
+	JustificationCiaRating string   `yaml:"justification_cia_rating,omitempty" json:"justification_cia_rating,omitempty"`
 }
 
 type TechnicalAsset struct {
-	ID                      string                       `yaml:"id" json:"id"`
-	Description             string                       `yaml:"description" json:"description"`
-	Type                    string                       `yaml:"type" json:"type"`
-	Usage                   string                       `yaml:"usage" json:"usage"`
-	UsedAsClientByHuman     bool                         `yaml:"used_as_client_by_human" json:"used_as_client_by_human"`
-	OutOfScope              bool                         `yaml:"out_of_scope" json:"out_of_scope"`
-	JustificationOutOfScope string                       `yaml:"justification_out_of_scope" json:"justification_out_of_scope"`
-	Size                    string                       `yaml:"size" json:"size"`
-	Technology              string                       `yaml:"technology" json:"technology"`
-	Tags                    []string                     `yaml:"tags" json:"tags"`
-	Internet                bool                         `yaml:"internet" json:"internet"`
-	Machine                 string                       `yaml:"machine" json:"machine"`
-	Encryption              string                       `yaml:"encryption" json:"encryption"`
-	Owner                   string                       `yaml:"owner" json:"owner"`
-	Confidentiality         string                       `yaml:"confidentiality" json:"confidentiality"`
-	Integrity               string                       `yaml:"integrity" json:"integrity"`
-	Availability            string                       `yaml:"availability" json:"availability"`
-	JustificationCiaRating  string                       `yaml:"justification_cia_rating" json:"justification_cia_rating"`
-	MultiTenant             bool                         `yaml:"multi_tenant" json:"multi_tenant"`
-	Redundant               bool                         `yaml:"redundant" json:"redundant"`
-	CustomDevelopedParts    bool                         `yaml:"custom_developed_parts" json:"custom_developed_parts"`
-	DataAssetsProcessed     []string                     `yaml:"data_assets_processed" json:"data_assets_processed"`
-	DataAssetsStored        []string                     `yaml:"data_assets_stored" json:"data_assets_stored"`
-	DataFormatsAccepted     []string                     `yaml:"data_formats_accepted" json:"data_formats_accepted"`
-	DiagramTweakOrder       int                          `yaml:"diagram_tweak_order" json:"diagram_tweak_order"`
-	CommunicationLinks      map[string]CommunicationLink `yaml:"communication_links" json:"communication_links"`
+	ID                      string                       `yaml:"id,omitempty" json:"id,omitempty"`
+	Description             string                       `yaml:"description,omitempty" json:"description,omitempty"`
+	Type                    string                       `yaml:"type,omitempty" json:"type,omitempty"`
+	Usage                   string                       `yaml:"usage,omitempty" json:"usage,omitempty"`
+	UsedAsClientByHuman     bool                         `yaml:"used_as_client_by_human,omitempty" json:"used_as_client_by_human,omitempty"`
+	OutOfScope              bool                         `yaml:"out_of_scope,omitempty" json:"out_of_scope,omitempty"`
+	JustificationOutOfScope string                       `yaml:"justification_out_of_scope,omitempty" json:"justification_out_of_scope,omitempty"`
+	Size                    string                       `yaml:"size,omitempty" json:"size,omitempty"`
+	Technology              string                       `yaml:"technology,omitempty" json:"technology,omitempty"`
+	Tags                    []string                     `yaml:"tags,omitempty" json:"tags,omitempty"`
+	Internet                bool                         `yaml:"internet,omitempty" json:"internet,omitempty"`
+	Machine                 string                       `yaml:"machine,omitempty" json:"machine,omitempty"`
+	Encryption              string                       `yaml:"encryption,omitempty" json:"encryption,omitempty"`
+	Owner                   string                       `yaml:"owner,omitempty" json:"owner,omitempty"`
+	Confidentiality         string                       `yaml:"confidentiality,omitempty" json:"confidentiality,omitempty"`
+	Integrity               string                       `yaml:"integrity,omitempty" json:"integrity,omitempty"`
+	Availability            string                       `yaml:"availability,omitempty" json:"availability,omitempty"`
+	JustificationCiaRating  string                       `yaml:"justification_cia_rating,omitempty" json:"justification_cia_rating,omitempty"`
+	MultiTenant             bool                         `yaml:"multi_tenant,omitempty" json:"multi_tenant,omitempty"`
+	Redundant               bool                         `yaml:"redundant,omitempty" json:"redundant,omitempty"`
+	CustomDevelopedParts    bool                         `yaml:"custom_developed_parts,omitempty" json:"custom_developed_parts,omitempty"`
+	DataAssetsProcessed     []string                     `yaml:"data_assets_processed,omitempty" json:"data_assets_processed,omitempty"`
+	DataAssetsStored        []string                     `yaml:"data_assets_stored,omitempty" json:"data_assets_stored,omitempty"`
+	DataFormatsAccepted     []string                     `yaml:"data_formats_accepted,omitempty" json:"data_formats_accepted,omitempty"`
+	DiagramTweakOrder       int                          `yaml:"diagram_tweak_order,omitempty" json:"diagram_tweak_order,omitempty"`
+	CommunicationLinks      map[string]CommunicationLink `yaml:"communication_links,omitempty" json:"communication_links,omitempty"`
 }
 
 type CommunicationLink struct {
-	Target                 string   `yaml:"target" json:"target"`
-	Description            string   `yaml:"description" json:"description"`
-	Protocol               string   `yaml:"protocol" json:"protocol"`
-	Authentication         string   `yaml:"authentication" json:"authentication"`
-	Authorization          string   `yaml:"authorization" json:"authorization"`
-	Tags                   []string `yaml:"tags" json:"tags"`
-	VPN                    bool     `yaml:"vpn" json:"vpn"`
-	IpFiltered             bool     `yaml:"ip_filtered" json:"ip_filtered"`
-	Readonly               bool     `yaml:"readonly" json:"readonly"`
-	Usage                  string   `yaml:"usage" json:"usage"`
-	DataAssetsSent         []string `yaml:"data_assets_sent" json:"data_assets_sent"`
-	DataAssetsReceived     []string `yaml:"data_assets_received" json:"data_assets_received"`
-	DiagramTweakWeight     int      `yaml:"diagram_tweak_weight" json:"diagram_tweak_weight"`
-	DiagramTweakConstraint bool     `yaml:"diagram_tweak_constraint" json:"diagram_tweak_constraint"`
+	Target                 string   `yaml:"target,omitempty" json:"target,omitempty"`
+	Description            string   `yaml:"description,omitempty" json:"description,omitempty"`
+	Protocol               string   `yaml:"protocol,omitempty" json:"protocol,omitempty"`
+	Authentication         string   `yaml:"authentication,omitempty" json:"authentication,omitempty"`
+	Authorization          string   `yaml:"authorization,omitempty" json:"authorization,omitempty"`
+	Tags                   []string `yaml:"tags,omitempty" json:"tags,omitempty"`
+	VPN                    bool     `yaml:"vpn,omitempty" json:"vpn,omitempty"`
+	IpFiltered             bool     `yaml:"ip_filtered,omitempty" json:"ip_filtered,omitempty"`
+	Readonly               bool     `yaml:"readonly,omitempty" json:"readonly,omitempty"`
+	Usage                  string   `yaml:"usage,omitempty" json:"usage,omitempty"`
+	DataAssetsSent         []string `yaml:"data_assets_sent,omitempty" json:"data_assets_sent,omitempty"`
+	DataAssetsReceived     []string `yaml:"data_assets_received,omitempty" json:"data_assets_received,omitempty"`
+	DiagramTweakWeight     int      `yaml:"diagram_tweak_weight,omitempty" json:"diagram_tweak_weight,omitempty"`
+	DiagramTweakConstraint bool     `yaml:"diagram_tweak_constraint,omitempty" json:"diagram_tweak_constraint,omitempty"`
 }
 
 type SharedRuntime struct {
-	ID                     string   `yaml:"id" json:"id"`
-	Description            string   `yaml:"description" json:"description"`
-	Tags                   []string `yaml:"tags" json:"tags"`
-	TechnicalAssetsRunning []string `yaml:"technical_assets_running" json:"technical_assets_running"`
+	ID                     string   `yaml:"id,omitempty" json:"id,omitempty"`
+	Description            string   `yaml:"description,omitempty" json:"description,omitempty"`
+	Tags                   []string `yaml:"tags,omitempty" json:"tag,omitemptys"`
+	TechnicalAssetsRunning []string `yaml:"technical_assets_running,omitempty" json:"technical_assets_running,omitempty"`
 }
 
 type TrustBoundary struct {
-	ID                    string   `yaml:"id" json:"id"`
-	Description           string   `yaml:"description" json:"description"`
-	Type                  string   `yaml:"type" json:"type"`
-	Tags                  []string `yaml:"tags" json:"tags"`
-	TechnicalAssetsInside []string `yaml:"technical_assets_inside" json:"technical_assets_inside"`
-	TrustBoundariesNested []string `yaml:"trust_boundaries_nested" json:"trust_boundaries_nested"`
+	ID                    string   `yaml:"id,omitempty" json:"id,omitempty"`
+	Description           string   `yaml:"description,omitempty" json:"description,omitempty"`
+	Type                  string   `yaml:"type,omitempty" json:"type,omitempty"`
+	Tags                  []string `yaml:"tags,omitempty" json:"tags,omitempty"`
+	TechnicalAssetsInside []string `yaml:"technical_assets_inside,omitempty" json:"technical_assets_inside,omitempty"`
+	TrustBoundariesNested []string `yaml:"trust_boundaries_nested,omitempty" json:"trust_boundaries_nested,omitempty"`
 }
 
 type IndividualRiskCategory struct {
-	ID                         string                    `yaml:"id" json:"id"`
-	Description                string                    `yaml:"description" json:"description"`
-	Impact                     string                    `yaml:"impact" json:"impact"`
-	ASVS                       string                    `yaml:"asvs" json:"asvs"`
-	CheatSheet                 string                    `yaml:"cheat_sheet" json:"cheat_sheet"`
-	Action                     string                    `yaml:"action" json:"action"`
-	Mitigation                 string                    `yaml:"mitigation" json:"mitigation"`
-	Check                      string                    `yaml:"check" json:"check"`
-	Function                   string                    `yaml:"function" json:"function"`
-	STRIDE                     string                    `yaml:"stride" json:"stride"`
-	DetectionLogic             string                    `yaml:"detection_logic" json:"detection_logic"`
-	RiskAssessment             string                    `yaml:"risk_assessment" json:"risk_assessment"`
-	FalsePositives             string                    `yaml:"false_positives" json:"false_positives"`
-	ModelFailurePossibleReason bool                      `yaml:"model_failure_possible_reason" json:"model_failure_possible_reason"`
-	CWE                        int                       `yaml:"cwe" json:"cwe"`
-	RisksIdentified            map[string]RiskIdentified `yaml:"risks_identified" json:"risks_identified"`
+	ID                         string                    `yaml:"id,omitempty" json:"id,omitempty"`
+	Description                string                    `yaml:"description,omitempty" json:"description,omitempty"`
+	Impact                     string                    `yaml:"impact,omitempty" json:"impact,omitempty"`
+	ASVS                       string                    `yaml:"asvs,omitempty" json:"asvs,omitempty"`
+	CheatSheet                 string                    `yaml:"cheat_sheet,omitempty" json:"cheat_sheet,omitempty"`
+	Action                     string                    `yaml:"action,omitempty" json:"action,omitempty"`
+	Mitigation                 string                    `yaml:"mitigation,omitempty" json:"mitigation,omitempty"`
+	Check                      string                    `yaml:"check,omitempty" json:"check,omitempty"`
+	Function                   string                    `yaml:"function,omitempty" json:"function,omitempty"`
+	STRIDE                     string                    `yaml:"stride,omitempty" json:"stride,omitempty"`
+	DetectionLogic             string                    `yaml:"detection_logic,omitempty" json:"detection_logic,omitempty"`
+	RiskAssessment             string                    `yaml:"risk_assessment,omitempty" json:"risk_assessment,omitempty"`
+	FalsePositives             string                    `yaml:"false_positives,omitempty" json:"false_positives,omitempty"`
+	ModelFailurePossibleReason bool                      `yaml:"model_failure_possible_reason,omitempty" json:"model_failure_possible_reason,omitempty"`
+	CWE                        int                       `yaml:"cwe,omitempty" json:"cwe,omitempty"`
+	RisksIdentified            map[string]RiskIdentified `yaml:"risks_identified,omitempty" json:"risks_identified,omitempty"`
 }
 
 type RiskIdentified struct {
-	Severity                      string   `yaml:"severity" json:"severity"`
-	ExploitationLikelihood        string   `yaml:"exploitation_likelihood" json:"exploitation_likelihood"`
-	ExploitationImpact            string   `yaml:"exploitation_impact" json:"exploitation_impact"`
-	DataBreachProbability         string   `yaml:"data_breach_probability" json:"data_breach_probability"`
-	DataBreachTechnicalAssets     []string `yaml:"data_breach_technical_assets" json:"data_breach_technical_assets"`
-	MostRelevantDataAsset         string   `yaml:"most_relevant_data_asset" json:"most_relevant_data_asset"`
-	MostRelevantTechnicalAsset    string   `yaml:"most_relevant_technical_asset" json:"most_relevant_technical_asset"`
-	MostRelevantCommunicationLink string   `yaml:"most_relevant_communication_link" json:"most_relevant_communication_link"`
-	MostRelevantTrustBoundary     string   `yaml:"most_relevant_trust_boundary" json:"most_relevant_trust_boundary"`
-	MostRelevantSharedRuntime     string   `yaml:"most_relevant_shared_runtime" json:"most_relevant_shared_runtime"`
+	Severity                      string   `yaml:"severity,omitempty" json:"severity,omitempty"`
+	ExploitationLikelihood        string   `yaml:"exploitation_likelihood,omitempty" json:"exploitation_likelihood,omitempty"`
+	ExploitationImpact            string   `yaml:"exploitation_impact,omitempty" json:"exploitation_impact,omitempty"`
+	DataBreachProbability         string   `yaml:"data_breach_probability,omitempty" json:"data_breach_probability,omitempty"`
+	DataBreachTechnicalAssets     []string `yaml:"data_breach_technical_assets,omitempty" json:"data_breach_technical_assets,omitempty"`
+	MostRelevantDataAsset         string   `yaml:"most_relevant_data_asset,omitempty" json:"most_relevant_data_asset,omitempty"`
+	MostRelevantTechnicalAsset    string   `yaml:"most_relevant_technical_asset,omitempty" json:"most_relevant_technical_asset,omitempty"`
+	MostRelevantCommunicationLink string   `yaml:"most_relevant_communication_link,omitempty" json:"most_relevant_communication_link,omitempty"`
+	MostRelevantTrustBoundary     string   `yaml:"most_relevant_trust_boundary,omitempty" json:"most_relevant_trust_boundary,omitempty"`
+	MostRelevantSharedRuntime     string   `yaml:"most_relevant_shared_runtime,omitempty" json:"most_relevant_shared_runtime,omitempty"`
 }
 
 type RiskTracking struct {
-	Status        string `yaml:"status" json:"status"`
-	Justification string `yaml:"justification" json:"justification"`
-	Ticket        string `yaml:"ticket" json:"ticket"`
-	Date          string `yaml:"date" json:"date"`
-	CheckedBy     string `yaml:"checked_by" json:"checked_by"`
+	Status        string `yaml:"status,omitempty" json:"status,omitempty"`
+	Justification string `yaml:"justification,omitempty" json:"justification,omitempty"`
+	Ticket        string `yaml:"ticket,omitempty" json:"ticket,omitempty"`
+	Date          string `yaml:"date,omitempty" json:"date,omitempty"`
+	CheckedBy     string `yaml:"checked_by,omitempty" json:"checked_by,omitempty"`
 }
 
 type Model struct { // TODO: Eventually remove this and directly use ParsedModelRoot? But then the error messages for model errors are not quite as good anymore...
 	Includes                                      []string                          `yaml:"includes,omitempty" json:"includes,omitempty"`
-	ThreagileVersion                              string                            `yaml:"threagile_version" json:"threagile_version"`
-	Title                                         string                            `yaml:"title" json:"title"`
-	Author                                        Author                            `yaml:"author" json:"author"`
-	Contributors                                  []Author                          `yaml:"contributors" json:"contributors"`
-	Date                                          string                            `yaml:"date" json:"date"`
-	AppDescription                                Overview                          `yaml:"application_description" json:"application_description"`
-	BusinessOverview                              Overview                          `yaml:"business_overview" json:"business_overview"`
-	TechnicalOverview                             Overview                          `yaml:"technical_overview" json:"technical_overview"`
-	BusinessCriticality                           string                            `yaml:"business_criticality" json:"business_criticality"`
-	ManagementSummaryComment                      string                            `yaml:"management_summary_comment" json:"management_summary_comment"`
-	Questions                                     map[string]string                 `yaml:"questions" json:"questions"`
-	AbuseCases                                    map[string]string                 `yaml:"abuse_cases" json:"abuse_cases"`
-	SecurityRequirements                          map[string]string                 `yaml:"security_requirements" json:"security_requirements"`
+	ThreagileVersion                              string                            `yaml:"threagile_version,omitempty" json:"threagile_version,omitempty"`
+	Title                                         string                            `yaml:"title,omitempty" json:"title,omitempty"`
+	Author                                        Author                            `yaml:"author,omitempty" json:"author,omitempty"`
+	Contributors                                  []Author                          `yaml:"contributors,omitempty" json:"contributors,omitempty"`
+	Date                                          string                            `yaml:"date,omitempty" json:"date,omitempty"`
+	AppDescription                                Overview                          `yaml:"application_description,omitempty" json:"application_description,omitempty"`
+	BusinessOverview                              Overview                          `yaml:"business_overview,omitempty" json:"business_overview,omitempty"`
+	TechnicalOverview                             Overview                          `yaml:"technical_overview,omitempty" json:"technical_overview,omitempty"`
+	BusinessCriticality                           string                            `yaml:"business_criticality,omitempty" json:"business_criticality,omitempty"`
+	ManagementSummaryComment                      string                            `yaml:"management_summary_comment,omitempty" json:"management_summary_comment,omitempty"`
+	Questions                                     map[string]string                 `yaml:"questions,omitempty" json:"questions,omitempty"`
+	AbuseCases                                    map[string]string                 `yaml:"abuse_cases,omitempty" json:"abuse_cases,omitempty"`
+	SecurityRequirements                          map[string]string                 `yaml:"security_requirements,omitempty" json:"security_requirements,omitempty"`
 	TagsAvailable                                 []string                          `yaml:"tags_available,omitempty" json:"tags_available,omitempty"`
-	DataAssets                                    map[string]DataAsset              `yaml:"data_assets" json:"data_assets"`
-	TechnicalAssets                               map[string]TechnicalAsset         `yaml:"technical_assets" json:"technical_assets"`
-	TrustBoundaries                               map[string]TrustBoundary          `yaml:"trust_boundaries" json:"trust_boundaries"`
-	SharedRuntimes                                map[string]SharedRuntime          `yaml:"shared_runtimes" json:"shared_runtimes"`
-	IndividualRiskCategories                      map[string]IndividualRiskCategory `yaml:"individual_risk_categories" json:"individual_risk_categories"`
-	RiskTracking                                  map[string]RiskTracking           `yaml:"risk_tracking" json:"risk_tracking"`
-	DiagramTweakNodesep                           int                               `yaml:"diagram_tweak_nodesep" json:"diagram_tweak_nodesep"`
-	DiagramTweakRanksep                           int                               `yaml:"diagram_tweak_ranksep" json:"diagram_tweak_ranksep"`
-	DiagramTweakEdgeLayout                        string                            `yaml:"diagram_tweak_edge_layout" json:"diagram_tweak_edge_layout"`
-	DiagramTweakSuppressEdgeLabels                bool                              `yaml:"diagram_tweak_suppress_edge_labels" json:"diagram_tweak_suppress_edge_labels"`
-	DiagramTweakLayoutLeftToRight                 bool                              `yaml:"diagram_tweak_layout_left_to_right" json:"diagram_tweak_layout_left_to_right"`
+	DataAssets                                    map[string]DataAsset              `yaml:"data_assets,omitempty" json:"data_assets,omitempty"`
+	TechnicalAssets                               map[string]TechnicalAsset         `yaml:"technical_assets,omitempty" json:"technical_assets,omitempty"`
+	TrustBoundaries                               map[string]TrustBoundary          `yaml:"trust_boundaries,omitempty" json:"trust_boundaries,omitempty"`
+	SharedRuntimes                                map[string]SharedRuntime          `yaml:"shared_runtimes,omitempty" json:"shared_runtimes,omitempty"`
+	IndividualRiskCategories                      map[string]IndividualRiskCategory `yaml:"individual_risk_categories,omitempty" json:"individual_risk_categories,omitempty"`
+	RiskTracking                                  map[string]RiskTracking           `yaml:"risk_tracking,omitempty" json:"risk_tracking,omitempty"`
+	DiagramTweakNodesep                           int                               `yaml:"diagram_tweak_nodesep,omitempty" json:"diagram_tweak_nodesep,omitempty"`
+	DiagramTweakRanksep                           int                               `yaml:"diagram_tweak_ranksep,omitempty" json:"diagram_tweak_ranksep,omitempty"`
+	DiagramTweakEdgeLayout                        string                            `yaml:"diagram_tweak_edge_layout,omitempty" json:"diagram_tweak_edge_layout,omitempty"`
+	DiagramTweakSuppressEdgeLabels                bool                              `yaml:"diagram_tweak_suppress_edge_labels,omitempty" json:"diagram_tweak_suppress_edge_labels,omitempty"`
+	DiagramTweakLayoutLeftToRight                 bool                              `yaml:"diagram_tweak_layout_left_to_right,omitempty" json:"diagram_tweak_layout_left_to_right,omitempty"`
 	DiagramTweakInvisibleConnectionsBetweenAssets []string                          `yaml:"diagram_tweak_invisible_connections_between_assets,omitempty" json:"diagram_tweak_invisible_connections_between_assets,omitempty"`
 	DiagramTweakSameRankAssets                    []string                          `yaml:"diagram_tweak_same_rank_assets,omitempty" json:"diagram_tweak_same_rank_assets,omitempty"`
 }
