@@ -5,6 +5,7 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package threagile
 
 import (
+	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/threagile/threagile/pkg/docs"
 	"github.com/threagile/threagile/pkg/examples"
@@ -14,7 +15,7 @@ func (what *Threagile) initExamples() *Threagile {
 	what.rootCmd.AddCommand(&cobra.Command{
 		Use:   "create-example-model",
 		Short: "Create example threagile model",
-		Long:  "\n" + docs.Logo + "\n\n" + docs.VersionText + "\n\njust create an example model named threagile-example-model.yaml in the output directory",
+		Long:  "\n" + docs.Logo + "\n\n" + fmt.Sprintf(docs.VersionText, what.buildTimestamp) + "\n\njust create an example model named threagile-example-model.yaml in the output directory",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			appDir, err := cmd.Flags().GetString(appDirFlagName)
 			if err != nil {
@@ -33,7 +34,7 @@ func (what *Threagile) initExamples() *Threagile {
 				return err
 			}
 
-			cmd.Println(docs.Logo + "\n\n" + docs.VersionText)
+			cmd.Println(docs.Logo + "\n\n" + fmt.Sprintf(docs.VersionText, what.buildTimestamp))
 			cmd.Println("An example model was created named threagile-example-model.yaml in the output directory.")
 			cmd.Println()
 			cmd.Println(docs.Examples)
@@ -45,7 +46,7 @@ func (what *Threagile) initExamples() *Threagile {
 	what.rootCmd.AddCommand(&cobra.Command{
 		Use:   "create-stub-model",
 		Short: "Create stub threagile model",
-		Long:  "\n" + docs.Logo + "\n\n" + docs.VersionText + "\n\njust create a minimal stub model named threagile-stub-model.yaml in the output directory",
+		Long:  "\n" + docs.Logo + "\n\n" + fmt.Sprintf(docs.VersionText, what.buildTimestamp) + "\n\njust create a minimal stub model named threagile-stub-model.yaml in the output directory",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			appDir, err := cmd.Flags().GetString(appDirFlagName)
 			if err != nil {
@@ -64,7 +65,7 @@ func (what *Threagile) initExamples() *Threagile {
 				return err
 			}
 
-			cmd.Println(docs.Logo + "\n\n" + docs.VersionText)
+			cmd.Println(docs.Logo + "\n\n" + fmt.Sprintf(docs.VersionText, what.buildTimestamp))
 			cmd.Println("A minimal stub model was created named threagile-stub-model.yaml in the output directory.")
 			cmd.Println()
 			cmd.Println(docs.Examples)
@@ -76,7 +77,7 @@ func (what *Threagile) initExamples() *Threagile {
 	what.rootCmd.AddCommand(&cobra.Command{
 		Use:   "create-editing-support",
 		Short: "Create editing support",
-		Long:  "\n" + docs.Logo + "\n\n" + docs.VersionText + "\n\njust create some editing support stuff in the output directory",
+		Long:  "\n" + docs.Logo + "\n\n" + fmt.Sprintf(docs.VersionText, what.buildTimestamp) + "\n\njust create some editing support stuff in the output directory",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			appDir, err := cmd.Flags().GetString(appDirFlagName)
 			if err != nil {
@@ -95,7 +96,7 @@ func (what *Threagile) initExamples() *Threagile {
 				return err
 			}
 
-			cmd.Println(docs.Logo + "\n\n" + docs.VersionText)
+			cmd.Println(docs.Logo + "\n\n" + fmt.Sprintf(docs.VersionText, what.buildTimestamp))
 			cmd.Println("The following files were created in the output directory:")
 			cmd.Println(" - schema.json")
 			cmd.Println(" - live-templates.txt")

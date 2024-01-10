@@ -5,6 +5,7 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package threagile
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/threagile/threagile/pkg/common"
@@ -21,7 +22,7 @@ func (what *Threagile) initRules() *Threagile {
 		Use:   "list-risk-rules",
 		Short: "Print available risk rules",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cmd.Println(docs.Logo + "\n\n" + docs.VersionText)
+			cmd.Println(docs.Logo + "\n\n" + fmt.Sprintf(docs.VersionText, what.buildTimestamp))
 			cmd.Println("The following risk rules are available (can be extended via custom risk rules):")
 			cmd.Println()
 			cmd.Println("----------------------")
@@ -48,7 +49,7 @@ func (what *Threagile) initRules() *Threagile {
 		Use:   "explain-risk-rules",
 		Short: "Detailed explanation of all the risk rules",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cmd.Println(docs.Logo + "\n\n" + docs.VersionText)
+			cmd.Println(docs.Logo + "\n\n" + fmt.Sprintf(docs.VersionText, what.buildTimestamp))
 			cmd.Println("Explanation for risk rules:")
 			cmd.Println()
 			cmd.Println("----------------------")

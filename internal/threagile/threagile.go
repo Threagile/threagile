@@ -6,8 +6,9 @@ import (
 )
 
 type Threagile struct {
-	flags   Flags
-	rootCmd *cobra.Command
+	flags          Flags
+	rootCmd        *cobra.Command
+	buildTimestamp string
 }
 
 func (what *Threagile) Execute() {
@@ -17,6 +18,7 @@ func (what *Threagile) Execute() {
 	}
 }
 
-func (what *Threagile) Init() *Threagile {
+func (what *Threagile) Init(buildTimestamp string) *Threagile {
+	what.buildTimestamp = buildTimestamp
 	return what.initRoot().initAbout().initRules().initExamples().initMacros().initTypes()
 }

@@ -20,7 +20,7 @@ func (what *Threagile) initMacros() *Threagile {
 		Use:   "list-model-macros",
 		Short: "Print model macros",
 		Run: func(cmd *cobra.Command, args []string) {
-			cmd.Println(docs.Logo + "\n\n" + docs.VersionText)
+			cmd.Println(docs.Logo + "\n\n" + fmt.Sprintf(docs.VersionText, what.buildTimestamp))
 			cmd.Println("The following model macros are available (can be extended via custom model macros):")
 			cmd.Println()
 			/* TODO finish plugin stuff
@@ -46,7 +46,7 @@ func (what *Threagile) initMacros() *Threagile {
 		Use:   "explain-model-macros",
 		Short: "Explain model macros",
 		Run: func(cmd *cobra.Command, args []string) {
-			cmd.Println(docs.Logo + "\n\n" + docs.VersionText)
+			cmd.Println(docs.Logo + "\n\n" + fmt.Sprintf(docs.VersionText, what.buildTimestamp))
 			cmd.Println("Explanation for the model macros:")
 			cmd.Println()
 			/* TODO finish plugin stuff
@@ -74,7 +74,7 @@ func (what *Threagile) initMacros() *Threagile {
 		Short: "Execute model macro",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg := what.readConfig(cmd, "buildTimestamp")
+			cfg := what.readConfig(cmd, what.buildTimestamp)
 			progressReporter := common.DefaultProgressReporter{Verbose: cfg.Verbose}
 
 			r, err := model.ReadAndAnalyzeModel(*cfg, progressReporter)
