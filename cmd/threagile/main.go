@@ -1,7 +1,7 @@
 package main
 
 import (
-	threagile "github.com/threagile/threagile/internal/threagile"
+	"github.com/threagile/threagile/internal/threagile"
 )
 
 const (
@@ -9,5 +9,5 @@ const (
 )
 
 func main() {
-	new(threagile.Threagile).Init().Execute()
+	new(threagile.Threagile).Init(buildTimestamp).Execute()
 }

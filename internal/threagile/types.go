@@ -18,7 +18,7 @@ func (what *Threagile) initTypes() *Threagile {
 		Use:   "list-types",
 		Short: "Print type information (enum values to be used in models)",
 		Run: func(cmd *cobra.Command, args []string) {
-			cmd.Println(docs.Logo + "\n\n" + docs.VersionText)
+			cmd.Println(docs.Logo + "\n\n" + fmt.Sprintf(docs.VersionText, what.buildTimestamp))
 			cmd.Println()
 			cmd.Println()
 			cmd.Println("The following types are available (can be extended for custom rules):")
@@ -33,7 +33,7 @@ func (what *Threagile) initTypes() *Threagile {
 		Use:   "explain-types",
 		Short: "Print type information (enum values to be used in models)",
 		Run: func(cmd *cobra.Command, args []string) {
-			cmd.Println(docs.Logo + "\n\n" + docs.VersionText)
+			cmd.Println(docs.Logo + "\n\n" + fmt.Sprintf(docs.VersionText, what.buildTimestamp))
 			fmt.Println("Explanation for the types:")
 			cmd.Println()
 			cmd.Println("The following types are available (can be extended for custom rules):")

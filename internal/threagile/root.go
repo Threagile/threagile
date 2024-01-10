@@ -24,9 +24,9 @@ func (what *Threagile) initRoot() *Threagile {
 	what.rootCmd = &cobra.Command{
 		Use:   "threagile",
 		Short: "\n" + docs.Logo,
-		Long:  "\n" + docs.Logo + "\n\n" + docs.VersionText + "\n\n" + docs.Examples,
+		Long:  "\n" + docs.Logo + "\n\n" + fmt.Sprintf(docs.VersionText, what.buildTimestamp) + "\n\n" + docs.Examples,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg := what.readConfig(cmd, "buildTimestamp")
+			cfg := what.readConfig(cmd, what.buildTimestamp)
 			commands := what.readCommands()
 			progressReporter := common.DefaultProgressReporter{Verbose: cfg.Verbose}
 
@@ -53,7 +53,7 @@ func (what *Threagile) initRoot() *Threagile {
 		Use:   "server",
 		Short: "Run server",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg := what.readConfig(cmd, "buildTimestamp")
+			cfg := what.readConfig(cmd, what.buildTimestamp)
 			server.RunServer(cfg)
 			return nil
 		},

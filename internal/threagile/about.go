@@ -6,6 +6,7 @@ package threagile
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -18,13 +19,13 @@ func (what *Threagile) initAbout() *Threagile {
 	what.rootCmd.AddCommand(&cobra.Command{
 		Use:   "version",
 		Short: "Get version information",
-		Long:  "\n" + docs.Logo + "\n\n" + docs.VersionText,
+		Long:  "\n" + docs.Logo + "\n\n" + fmt.Sprintf(docs.VersionText, what.buildTimestamp),
 	})
 
 	what.rootCmd.AddCommand(&cobra.Command{
 		Use:   "print-3rd-party-licenses",
 		Short: "Print 3rd-party license information",
-		Long:  "\n" + docs.Logo + "\n\n" + docs.VersionText + "\n\n" + docs.ThirdPartyLicenses,
+		Long:  "\n" + docs.Logo + "\n\n" + fmt.Sprintf(docs.VersionText, what.buildTimestamp) + "\n\n" + docs.ThirdPartyLicenses,
 	})
 
 	what.rootCmd.AddCommand(&cobra.Command{
@@ -36,7 +37,7 @@ func (what *Threagile) initAbout() *Threagile {
 				cmd.Printf("Unable to read app-dir flag: %v", err)
 				return err
 			}
-			cmd.Println(docs.Logo + "\n\n" + docs.VersionText)
+			cmd.Println(docs.Logo + "\n\n" + fmt.Sprintf(docs.VersionText, what.buildTimestamp))
 			if appDir != filepath.Clean(appDir) {
 				// TODO: do we need this check here?
 				cmd.Printf("weird app folder %v", appDir)
