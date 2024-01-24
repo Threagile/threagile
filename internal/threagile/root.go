@@ -6,8 +6,6 @@ package threagile
 
 import (
 	"fmt"
-	"os"
-	"runtime"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -22,9 +20,11 @@ import (
 
 func (what *Threagile) initRoot() *Threagile {
 	what.rootCmd = &cobra.Command{
-		Use:   "threagile",
-		Short: "\n" + docs.Logo,
-		Long:  "\n" + docs.Logo + "\n\n" + fmt.Sprintf(docs.VersionText, what.buildTimestamp) + "\n\n" + docs.Examples,
+		Use:           "threagile",
+		Short:         "\n" + docs.Logo,
+		Long:          "\n" + docs.Logo + "\n\n" + fmt.Sprintf(docs.VersionText, what.buildTimestamp) + "\n\n" + docs.Examples,
+		SilenceErrors: true,
+		SilenceUsage:  true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cfg := what.readConfig(cmd, what.buildTimestamp)
 			commands := what.readCommands()
@@ -38,8 +38,7 @@ func (what *Threagile) initRoot() *Threagile {
 
 			err = report.Generate(cfg, r, commands, progressReporter)
 			if err != nil {
-				cmd.Println("Failed to generate reports")
-				cmd.PrintErr(err)
+				cmd.Printf("Failed to generate reports: %v \n", err)
 				return err
 			}
 			return nil
@@ -121,20 +120,20 @@ func (what *Threagile) readConfig(cmd *cobra.Command, buildTimestamp string) *co
 		cfg.ServerPort = what.flags.serverPortFlag
 	}
 	if isFlagOverridden(flags, serverDirFlagName) {
-		cfg.ServerFolder = expandPath(what.flags.serverDirFlag)
+		cfg.ServerFolder = cfg.CleanPath(what.flags.serverDirFlag)
 	}
 
 	if isFlagOverridden(flags, appDirFlagName) {
-		cfg.AppFolder = expandPath(what.flags.appDirFlag)
+		cfg.AppFolder = cfg.CleanPath(what.flags.appDirFlag)
 	}
 	if isFlagOverridden(flags, binDirFlagName) {
-		cfg.BinFolder = expandPath(what.flags.binDirFlag)
+		cfg.BinFolder = cfg.CleanPath(what.flags.binDirFlag)
 	}
 	if isFlagOverridden(flags, outputFlagName) {
-		cfg.OutputFolder = expandPath(what.flags.outputDirFlag)
+		cfg.OutputFolder = cfg.CleanPath(what.flags.outputDirFlag)
 	}
 	if isFlagOverridden(flags, tempDirFlagName) {
-		cfg.TempFolder = expandPath(what.flags.tempDirFlag)
+		cfg.TempFolder = cfg.CleanPath(what.flags.tempDirFlag)
 	}
 
 	if isFlagOverridden(flags, verboseFlagName) {
@@ -142,7 +141,7 @@ func (what *Threagile) readConfig(cmd *cobra.Command, buildTimestamp string) *co
 	}
 
 	if isFlagOverridden(flags, inputFileFlagName) {
-		cfg.InputFile = expandPath(what.flags.inputFileFlag)
+		cfg.InputFile = cfg.CleanPath(what.flags.inputFileFlag)
 	}
 	if isFlagOverridden(flags, raaPluginFlagName) {
 		cfg.RAAPlugin = what.flags.raaPluginFlag
@@ -172,31 +171,4 @@ func isFlagOverridden(flags *pflag.FlagSet, flagName string) bool {
 		return false
 	}
 	return flag.Changed
-}
-
-func expandPath(path string) string {
-	home := userHomeDir()
-	if strings.HasPrefix(path, "~") {
-		path = strings.Replace(path, "~", home, 1)
-	}
-
-	if strings.HasPrefix(path, "$HOME") {
-		path = strings.Replace(path, "$HOME", home, -1)
-	}
-
-	return path
-}
-
-func userHomeDir() string {
-	switch runtime.GOOS {
-	case "windows":
-		home := os.Getenv("HOMEDRIVE") + os.Getenv("HOMEPATH")
-		if home == "" {
-			home = os.Getenv("USERPROFILE")
-		}
-		return home
-
-	default:
-		return os.Getenv("HOME")
-	}
 }

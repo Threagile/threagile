@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
+	"runtime"
 	"strings"
 )
 
@@ -135,6 +137,49 @@ func (c *Config) Load(configFilename string) error {
 
 	c.Merge(config, values)
 
+	c.TempFolder = c.CleanPath(c.TempFolder)
+	tempDirError := os.MkdirAll(c.TempFolder, 0700)
+	if tempDirError != nil {
+		return fmt.Errorf("failed to create temp dir %q: %v", c.TempFolder, tempDirError)
+	}
+
+	c.OutputFolder = c.CleanPath(c.OutputFolder)
+	outDirError := os.MkdirAll(c.OutputFolder, 0700)
+	if outDirError != nil {
+		return fmt.Errorf("failed to create output dir %q: %v", c.OutputFolder, outDirError)
+	}
+
+	c.AppFolder = c.CleanPath(c.AppFolder)
+	appDirError := c.checkDir(c.AppFolder, "app")
+	if appDirError != nil {
+		return appDirError
+	}
+
+	c.BinFolder = c.CleanPath(c.BinFolder)
+	binDirError := c.checkDir(c.BinFolder, "bin")
+	if binDirError != nil {
+		return binDirError
+	}
+
+	c.DataFolder = c.CleanPath(c.DataFolder)
+	dataDirError := c.checkDir(c.DataFolder, "data")
+	if dataDirError != nil {
+		return dataDirError
+	}
+
+	if c.ServerPort > 0 {
+		c.ServerFolder = c.CleanPath(c.ServerFolder)
+		serverDirError := c.checkDir(c.ServerFolder, "server")
+		if serverDirError != nil {
+			return serverDirError
+		}
+
+		keyDirError := os.MkdirAll(filepath.Join(c.ServerFolder, c.KeyFolder), 0700)
+		if keyDirError != nil {
+			return fmt.Errorf("failed to create key dir %q: %v", filepath.Join(c.ServerFolder, c.KeyFolder), keyDirError)
+		}
+	}
+
 	return nil
 }
 
@@ -261,5 +306,49 @@ func (c *Config) Merge(config Config, values map[string]any) {
 			c.IgnoreOrphanedRiskTracking = config.IgnoreOrphanedRiskTracking
 			break
 		}
+	}
+}
+
+func (c *Config) CleanPath(path string) string {
+	return filepath.Clean(c.ExpandPath(path))
+}
+
+func (c *Config) checkDir(dir string, name string) error {
+	dirInfo, dirError := os.Stat(dir)
+	if dirError != nil {
+		return fmt.Errorf("%v folder %q not good: %v", name, dir, dirError)
+	}
+
+	if !dirInfo.IsDir() {
+		return fmt.Errorf("%v folder %q is not a folder", name, dir)
+	}
+
+	return nil
+}
+
+func (c *Config) ExpandPath(path string) string {
+	home := c.UserHomeDir()
+	if strings.HasPrefix(path, "~") {
+		path = strings.Replace(path, "~", home, 1)
+	}
+
+	if strings.HasPrefix(path, "$HOME") {
+		path = strings.Replace(path, "$HOME", home, -1)
+	}
+
+	return path
+}
+
+func (c *Config) UserHomeDir() string {
+	switch runtime.GOOS {
+	case "windows":
+		home := os.Getenv("HOMEDRIVE") + os.Getenv("HOMEPATH")
+		if home == "" {
+			home = os.Getenv("USERPROFILE")
+		}
+		return home
+
+	default:
+		return os.Getenv("HOME")
 	}
 }

@@ -29,3 +29,4 @@ bin/
 
 # IDE stuff
 .idea/
+/config.json
