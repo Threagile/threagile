@@ -59,13 +59,13 @@ func copyFile(src, dst string) (int64, error) {
 		return 0, fmt.Errorf("%s is not a regular file", src)
 	}
 
-	source, err := os.Open(src)
+	source, err := os.Open(filepath.Clean(src))
 	if err != nil {
 		return 0, err
 	}
 	defer func() { _ = source.Close() }()
 
-	destination, err := os.Create(dst)
+	destination, err := os.Create(filepath.Clean(dst))
 	if err != nil {
 		return 0, err
 	}

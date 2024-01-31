@@ -16,7 +16,7 @@ import (
 // Param 1: filename is the output zip file's name.
 // Param 2: files is a list of files to add to the zip.
 func zipFiles(filename string, files []string) error {
-	newZipFile, err := os.Create(filename)
+	newZipFile, err := os.Create(filepath.Clean(filename))
 	if err != nil {
 		return err
 	}
@@ -47,7 +47,7 @@ func unzip(src string, dest string) ([]string, error) {
 
 	for _, f := range r.File {
 		// Store filename/path for returning and using later on
-		path := filepath.Join(dest, f.Name)
+		path := filepath.Clean(filepath.Join(dest, filepath.Clean(f.Name)))
 		// Check for ZipSlip. More Info: http://bit.ly/2MsjAWE
 		if !strings.HasPrefix(path, filepath.Clean(dest)+string(os.PathSeparator)) {
 			return filenames, fmt.Errorf("%s: illegal file path", path)
@@ -69,11 +69,17 @@ func unzip(src string, dest string) ([]string, error) {
 		if err != nil {
 			return filenames, err
 		}
+
+		if f.FileInfo().Size() == 0 {
+			_ = outFile.Close()
+			continue
+		}
+
 		rc, err := f.Open()
 		if err != nil {
 			return filenames, err
 		}
-		_, err = io.Copy(outFile, rc)
+		_, err = io.CopyN(outFile, rc, f.FileInfo().Size())
 		// Close the file without defer to close before next iteration of loop
 		_ = outFile.Close()
 		_ = rc.Close()
@@ -85,7 +91,7 @@ func unzip(src string, dest string) ([]string, error) {
 }
 
 func addFileToZip(zipWriter *zip.Writer, filename string) error {
-	fileToZip, err := os.Open(filename)
+	fileToZip, err := os.Open(filepath.Clean(filename))
 	if err != nil {
 		return err
 	}

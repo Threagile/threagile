@@ -2,12 +2,14 @@ package main
 
 import (
 	"bufio"
+	"crypto/rand"
 	"encoding/json"
 	"fmt"
 	"github.com/threagile/threagile/pkg/security/types"
 	"io"
-	"math/rand"
+	"math/big"
 	"os"
+	"time"
 )
 
 // JUST A DUMMY TO HAVE AN ALTERNATIVE PLUGIN TO USE/TEST
@@ -44,7 +46,11 @@ func main() {
 
 func CalculateRAA(input *types.ParsedModel) string {
 	for techAssetID, techAsset := range input.TechnicalAssets {
-		techAsset.RAA = float64(rand.Intn(100))
+		nBig, randError := rand.Int(rand.Reader, big.NewInt(100))
+		if randError != nil {
+			nBig.SetInt64(time.Now().UnixMilli())
+		}
+		techAsset.RAA = float64(nBig.Int64())
 		fmt.Println("Using dummy RAA random calculation (just to test the usage of other shared object files as plugins)")
 		input.TechnicalAssets[techAssetID] = techAsset
 	}

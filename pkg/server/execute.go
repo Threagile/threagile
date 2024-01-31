@@ -132,7 +132,7 @@ func (s *server) execute(ginContext *gin.Context, dryRun bool) (yamlContent []by
 		s.doItViaRuntimeCall(yamlFile, tmpOutputDir, true, true, true, true, true, true, true, true, dpi)
 	}
 
-	yamlContent, err = os.ReadFile(yamlFile)
+	yamlContent, err = os.ReadFile(filepath.Clean(yamlFile))
 	if err != nil {
 		handleErrorInServiceCall(err, ginContext)
 		return yamlContent, false
@@ -214,7 +214,8 @@ func (s *server) doItViaRuntimeCall(modelFile string, outputDir string,
 	if nameError != nil {
 		panic(nameError)
 	}
-	cmd = exec.Command(self, args...)
+
+	cmd = exec.Command(self, args...) // #nosec G204
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		panic(errors.New(string(out)))

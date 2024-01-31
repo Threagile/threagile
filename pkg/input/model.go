@@ -67,7 +67,7 @@ func (model *Model) Defaults() *Model {
 }
 
 func (model *Model) Load(inputFilename string) error {
-	modelYaml, readError := os.ReadFile(inputFilename)
+	modelYaml, readError := os.ReadFile(filepath.Clean(inputFilename))
 	if readError != nil {
 		log.Fatal("Unable to read model file: ", readError)
 	}
@@ -88,7 +88,7 @@ func (model *Model) Load(inputFilename string) error {
 }
 
 func (model *Model) Merge(dir string, includeFilename string) error {
-	modelYaml, readError := os.ReadFile(filepath.Join(dir, includeFilename))
+	modelYaml, readError := os.ReadFile(filepath.Clean(filepath.Join(dir, includeFilename)))
 	if readError != nil {
 		return fmt.Errorf("unable to read model file: %v", readError)
 	}
