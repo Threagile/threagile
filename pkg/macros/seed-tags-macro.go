@@ -1,6 +1,7 @@
 package macros
 
 import (
+	"github.com/mpvl/unique"
 	"sort"
 	"strconv"
 
@@ -40,18 +41,11 @@ func (*seedTagsMacro) GetFinalChangeImpact(_ *input.Model, _ *types.ParsedModel)
 }
 
 func (*seedTagsMacro) Execute(modelInput *input.Model, parsedModel *types.ParsedModel) (message string, validResult bool, err error) {
-	tagMap := make(map[string]bool)
-	for k, v := range parsedModel.AllSupportedTags {
-		tagMap[k] = v
+	modelInput.TagsAvailable = parsedModel.TagsAvailable
+	for tag := range parsedModel.AllSupportedTags {
+		modelInput.TagsAvailable = append(modelInput.TagsAvailable, tag)
 	}
-	for _, tagFromModel := range parsedModel.TagsAvailable {
-		tagMap[tagFromModel] = true
-	}
-	tagsSorted := make([]string, 0)
-	for tag := range tagMap {
-		tagsSorted = append(tagsSorted, tag)
-	}
-	sort.Strings(tagsSorted)
-	modelInput.TagsAvailable = tagsSorted
+	unique.Strings(&modelInput.TagsAvailable)
+	sort.Strings(modelInput.TagsAvailable)
 	return "Model file seeding with " + strconv.Itoa(len(parsedModel.AllSupportedTags)) + " tags successful", true, nil
 }

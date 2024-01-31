@@ -10,35 +10,35 @@ import (
 )
 
 type TechnicalAsset struct {
-	Id                      string                   `json:"id,omitempty"`
-	Title                   string                   `json:"title,omitempty"`
-	Description             string                   `json:"description,omitempty"`
-	Usage                   Usage                    `json:"usage,omitempty"`
-	Type                    TechnicalAssetType       `json:"type,omitempty"`
-	Size                    TechnicalAssetSize       `json:"size,omitempty"`
-	Technology              TechnicalAssetTechnology `json:"technology,omitempty"`
-	Machine                 TechnicalAssetMachine    `json:"machine,omitempty"`
-	Internet                bool                     `json:"internet,omitempty"`
-	MultiTenant             bool                     `json:"multi_tenant,omitempty"`
-	Redundant               bool                     `json:"redundant,omitempty"`
-	CustomDevelopedParts    bool                     `json:"custom_developed_parts,omitempty"`
-	OutOfScope              bool                     `json:"out_of_scope,omitempty"`
-	UsedAsClientByHuman     bool                     `json:"used_as_client_by_human,omitempty"`
-	Encryption              EncryptionStyle          `json:"encryption,omitempty"`
-	JustificationOutOfScope string                   `json:"justification_out_of_scope,omitempty"`
-	Owner                   string                   `json:"owner,omitempty"`
-	Confidentiality         Confidentiality          `json:"confidentiality,omitempty"`
-	Integrity               Criticality              `json:"integrity,omitempty"`
-	Availability            Criticality              `json:"availability,omitempty"`
-	JustificationCiaRating  string                   `json:"justification_cia_rating,omitempty"`
-	Tags                    []string                 `json:"tags,omitempty"`
-	DataAssetsProcessed     []string                 `json:"data_assets_processed,omitempty"`
-	DataAssetsStored        []string                 `json:"data_assets_stored,omitempty"`
-	DataFormatsAccepted     []DataFormat             `json:"data_formats_accepted,omitempty"`
-	CommunicationLinks      []CommunicationLink      `json:"communication_links,omitempty"`
-	DiagramTweakOrder       int                      `json:"diagram_tweak_order,omitempty"`
+	Id                      string                   `json:"id,omitempty" yaml:"id,omitempty"`
+	Title                   string                   `json:"title,omitempty" yaml:"title,omitempty"`
+	Description             string                   `json:"description,omitempty" yaml:"description,omitempty"`
+	Usage                   Usage                    `json:"usage,omitempty" yaml:"usage,omitempty"`
+	Type                    TechnicalAssetType       `json:"type,omitempty" yaml:"type,omitempty"`
+	Size                    TechnicalAssetSize       `json:"size,omitempty" yaml:"size,omitempty"`
+	Technology              TechnicalAssetTechnology `json:"technology,omitempty" yaml:"technology,omitempty"`
+	Machine                 TechnicalAssetMachine    `json:"machine,omitempty" yaml:"machine,omitempty"`
+	Internet                bool                     `json:"internet,omitempty" yaml:"internet,omitempty"`
+	MultiTenant             bool                     `json:"multi_tenant,omitempty" yaml:"multi_tenant,omitempty"`
+	Redundant               bool                     `json:"redundant,omitempty" yaml:"redundant,omitempty"`
+	CustomDevelopedParts    bool                     `json:"custom_developed_parts,omitempty" yaml:"custom_developed_parts,omitempty"`
+	OutOfScope              bool                     `json:"out_of_scope,omitempty" yaml:"out_of_scope,omitempty"`
+	UsedAsClientByHuman     bool                     `json:"used_as_client_by_human,omitempty" yaml:"used_as_client_by_human,omitempty"`
+	Encryption              EncryptionStyle          `json:"encryption,omitempty" yaml:"encryption,omitempty"`
+	JustificationOutOfScope string                   `json:"justification_out_of_scope,omitempty" yaml:"justification_out_of_scope,omitempty"`
+	Owner                   string                   `json:"owner,omitempty" yaml:"owner,omitempty"`
+	Confidentiality         Confidentiality          `json:"confidentiality,omitempty" yaml:"confidentiality,omitempty"`
+	Integrity               Criticality              `json:"integrity,omitempty" yaml:"integrity,omitempty"`
+	Availability            Criticality              `json:"availability,omitempty" yaml:"availability,omitempty"`
+	JustificationCiaRating  string                   `json:"justification_cia_rating,omitempty" yaml:"justification_cia_rating,omitempty"`
+	Tags                    []string                 `json:"tags,omitempty" yaml:"tags,omitempty"`
+	DataAssetsProcessed     []string                 `json:"data_assets_processed,omitempty" yaml:"data_assets_processed,omitempty"`
+	DataAssetsStored        []string                 `json:"data_assets_stored,omitempty" yaml:"data_assets_stored,omitempty"`
+	DataFormatsAccepted     []DataFormat             `json:"data_formats_accepted,omitempty" yaml:"data_formats_accepted,omitempty"`
+	CommunicationLinks      []CommunicationLink      `json:"communication_links,omitempty" yaml:"communication_links,omitempty"`
+	DiagramTweakOrder       int                      `json:"diagram_tweak_order,omitempty" yaml:"diagram_tweak_order,omitempty"`
 	// will be set by separate calculation step:
-	RAA float64 `json:"raa,omitempty"`
+	RAA float64 `json:"raa,omitempty" yaml:"raa,omitempty"`
 }
 
 func (what TechnicalAsset) IsTaggedWithAny(tags ...string) bool {

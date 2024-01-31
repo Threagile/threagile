@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"strings"
 )
 
@@ -297,13 +298,42 @@ func (what TechnicalAssetTechnology) MarshalJSON() ([]byte, error) {
 	return json.Marshal(what.String())
 }
 
-func (what *TechnicalAssetTechnology) UnmarshalJSON([]byte) error {
+func (what *TechnicalAssetTechnology) UnmarshalJSON(data []byte) error {
+	var text string
+	unmarshalError := json.Unmarshal(data, &text)
+	if unmarshalError != nil {
+		return unmarshalError
+	}
+
+	value, findError := what.find(text)
+	if findError != nil {
+		return findError
+	}
+
+	*what = value
+	return nil
+}
+
+func (what TechnicalAssetTechnology) MarshalYAML() (interface{}, error) {
+	return what.String(), nil
+}
+
+func (what *TechnicalAssetTechnology) UnmarshalYAML(node *yaml.Node) error {
+	value, findError := what.find(node.Value)
+	if findError != nil {
+		return findError
+	}
+
+	*what = value
+	return nil
+}
+
+func (what TechnicalAssetTechnology) find(value string) (TechnicalAssetTechnology, error) {
 	for index, description := range TechnicalAssetTechnologyTypeDescription {
-		if strings.ToLower(what.String()) == strings.ToLower(description.Name) {
-			*what = TechnicalAssetTechnology(index)
-			return nil
+		if strings.EqualFold(value, description.Name) {
+			return TechnicalAssetTechnology(index), nil
 		}
 	}
 
-	return fmt.Errorf("unknown technical asset technology value %q", int(*what))
+	return TechnicalAssetTechnology(0), fmt.Errorf("unknown technical asset technology value %q", value)
 }

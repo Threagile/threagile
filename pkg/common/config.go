@@ -81,7 +81,7 @@ func (c *Config) Defaults(buildTimestamp string) *Config {
 		RiskRulesPlugins:            make([]string, 0),
 		SkipRiskRules:               "",
 		ExecuteModelMacro:           "",
-		ServerPort:                  DefaultServerPort,
+		ServerPort:                  0, //DefaultServerPort,
 
 		GraphvizDPI:              DefaultGraphvizDPI,
 		BackupHistoryFilesToKeep: DefaultBackupHistoryFilesToKeep,
@@ -282,12 +282,20 @@ func (c *Config) Merge(config Config, values map[string]any) {
 			c.ExecuteModelMacro = config.ExecuteModelMacro
 			break
 
+		case strings.ToLower("DiagramDPI"):
+			c.DiagramDPI = config.DiagramDPI
+			break
+
 		case strings.ToLower("ServerPort"):
 			c.ServerPort = config.ServerPort
 			break
 
 		case strings.ToLower("GraphvizDPI"):
 			c.GraphvizDPI = config.GraphvizDPI
+			break
+
+		case strings.ToLower("MaxGraphvizDPI"):
+			c.MaxGraphvizDPI = config.MaxGraphvizDPI
 			break
 
 		case strings.ToLower("BackupHistoryFilesToKeep"):
@@ -304,6 +312,10 @@ func (c *Config) Merge(config Config, values map[string]any) {
 
 		case strings.ToLower("IgnoreOrphanedRiskTracking"):
 			c.IgnoreOrphanedRiskTracking = config.IgnoreOrphanedRiskTracking
+			break
+
+		case strings.ToLower("Attractiveness"):
+			c.Attractiveness = config.Attractiveness
 			break
 		}
 	}

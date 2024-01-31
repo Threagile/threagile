@@ -4,7 +4,7 @@ import (
 	"github.com/threagile/threagile/internal/threagile"
 )
 
-const (
+var (
 	buildTimestamp = ""
 )
 

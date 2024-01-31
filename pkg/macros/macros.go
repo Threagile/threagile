@@ -31,7 +31,7 @@ func ListBuiltInMacros() []Macros {
 		NewBuildPipeline(),
 		NewAddVault(),
 		NewPrettyPrint(),
-		NewRemoveUnusedTags(),
+		newRemoveUnusedTags(),
 		NewSeedRiskTracking(),
 		NewSeedTags(),
 	}

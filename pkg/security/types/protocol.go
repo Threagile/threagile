@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"strings"
 )
 
@@ -213,13 +214,42 @@ func (what Protocol) MarshalJSON() ([]byte, error) {
 	return json.Marshal(what.String())
 }
 
-func (what *Protocol) UnmarshalJSON([]byte) error {
+func (what *Protocol) UnmarshalJSON(data []byte) error {
+	var text string
+	unmarshalError := json.Unmarshal(data, &text)
+	if unmarshalError != nil {
+		return unmarshalError
+	}
+
+	value, findError := what.find(text)
+	if findError != nil {
+		return findError
+	}
+
+	*what = value
+	return nil
+}
+
+func (what Protocol) MarshalYAML() (interface{}, error) {
+	return what.String(), nil
+}
+
+func (what *Protocol) UnmarshalYAML(node *yaml.Node) error {
+	value, findError := what.find(node.Value)
+	if findError != nil {
+		return findError
+	}
+
+	*what = value
+	return nil
+}
+
+func (what Protocol) find(value string) (Protocol, error) {
 	for index, description := range ProtocolTypeDescription {
-		if strings.ToLower(what.String()) == strings.ToLower(description.Name) {
-			*what = Protocol(index)
-			return nil
+		if strings.EqualFold(value, description.Name) {
+			return Protocol(index), nil
 		}
 	}
 
-	return fmt.Errorf("unknown protocol value %q", int(*what))
+	return Protocol(0), fmt.Errorf("unknown protocol value %q", value)
 }

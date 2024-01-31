@@ -15,7 +15,7 @@ BIN				= 							\
 	threagile
 
 # Commands and Flags
-GOFLAGS	= -a -ldflags="-s -w -X main.buildTimestamp=$(date '+%Y%m%d%H%M%S')"
+GOFLAGS	= -a -ldflags="-s -w -X main.buildTimestamp=$(shell date '+%Y%m%d%H%M%S')"
 GO		= env GO111MODULE=on go
 MKDIR	= mkdir -p
 CP		= cp -r
@@ -27,7 +27,7 @@ RM		= rm -rf
 default: all
 
 prep:
-	env GO111MODULE=on go mod vendor
+	@# env GO111MODULE=on go mod vendor
 	$(MKDIR) bin
 
 run_tests:

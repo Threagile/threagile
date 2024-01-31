@@ -61,6 +61,13 @@ func (r *pdfReporter) WriteReportPDF(reportFilename string,
 	customRiskRules map[string]*model.CustomRisk,
 	tempFolder string,
 	model *types.ParsedModel) error {
+	defer func() {
+		value := recover()
+		if value != nil {
+			fmt.Printf("error creating PDF report: %v", value)
+		}
+	}()
+
 	r.initReport()
 	r.createPdfAndInitMetadata(model)
 	r.parseBackgroundTemplate(templateFilename)
@@ -177,7 +184,7 @@ func (r *pdfReporter) createCover(parsedModel *types.ParsedModel) {
 	r.pdf.SetFont("Helvetica", "", 12)
 	reportDate := parsedModel.Date
 	if reportDate.IsZero() {
-		reportDate = time.Now()
+		reportDate = types.Date{Time: time.Now()}
 	}
 	r.pdf.Text(40.7, 145, reportDate.Format("2 January 2006"))
 	r.pdf.Text(40.7, 153, uni(parsedModel.Author.Name))

@@ -9,18 +9,18 @@ import (
 )
 
 type DataAsset struct {
-	Id                     string          `yaml:"id" json:"id"`                   // TODO: tag here still required?
-	Title                  string          `yaml:"title" json:"title"`             // TODO: tag here still required?
-	Description            string          `yaml:"description" json:"description"` // TODO: tag here still required?
-	Usage                  Usage           `yaml:"usage" json:"usage"`
-	Tags                   []string        `yaml:"tags" json:"tags"`
-	Origin                 string          `yaml:"origin" json:"origin"`
-	Owner                  string          `yaml:"owner" json:"owner"`
-	Quantity               Quantity        `yaml:"quantity" json:"quantity"`
-	Confidentiality        Confidentiality `yaml:"confidentiality" json:"confidentiality"`
-	Integrity              Criticality     `yaml:"integrity" json:"integrity"`
-	Availability           Criticality     `yaml:"availability" json:"availability"`
-	JustificationCiaRating string          `yaml:"justification_cia_rating" json:"justification_cia_rating"`
+	Id                     string          `yaml:"id,omitempty" json:"id,omitempty"`                   // TODO: tag here still required?
+	Title                  string          `yaml:"title,omitempty" json:"title,omitempty"`             // TODO: tag here still required?
+	Description            string          `yaml:"description,omitempty" json:"description,omitempty"` // TODO: tag here still required?
+	Usage                  Usage           `yaml:"usage,omitempty" json:"usage,omitempty"`
+	Tags                   []string        `yaml:"tags,omitempty" json:"tags,omitempty"`
+	Origin                 string          `yaml:"origin,omitempty" json:"origin,omitempty"`
+	Owner                  string          `yaml:"owner,omitempty" json:"owner,omitempty"`
+	Quantity               Quantity        `yaml:"quantity,omitempty" json:"quantity,omitempty"`
+	Confidentiality        Confidentiality `yaml:"confidentiality,omitempty" json:"confidentiality,omitempty"`
+	Integrity              Criticality     `yaml:"integrity,omitempty" json:"integrity,omitempty"`
+	Availability           Criticality     `yaml:"availability,omitempty" json:"availability,omitempty"`
+	JustificationCiaRating string          `yaml:"justification_cia_rating,omitempty" json:"justification_cia_rating,omitempty"`
 }
 
 func (what DataAsset) IsTaggedWithAny(tags ...string) bool {

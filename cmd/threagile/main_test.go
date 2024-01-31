@@ -2,10 +2,9 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/akedrou/textdiff"
 	"github.com/threagile/threagile/pkg/input"
-	"github.com/threagile/threagile/pkg/security/types"
-	"log"
 	"os"
 	"path/filepath"
 	"sort"
@@ -56,23 +55,28 @@ func TestParseModelYaml(t *testing.T) {
 }
 
 func TestParseModelJson(t *testing.T) {
-	modelFile := filepath.Join("..", "..", "test", "all.json")
-	modelJson, readError := os.ReadFile(modelFile)
-	if readError != nil {
-		t.Error("Unable to read model file: ", readError)
+	modelFile := filepath.Join("..", "..", "test", "all.yaml")
+	model := *new(input.Model).Defaults()
+	flatLoadError := model.Load(modelFile)
+	if flatLoadError != nil {
+		t.Errorf("unable to parse model yaml %q: %v", modelFile, flatLoadError)
 		return
 	}
 
-	var modelStruct types.ParsedModel
+	modelJson, marshalError := json.MarshalIndent(model, "", "  ")
+	if marshalError != nil {
+		t.Error("Unable to print model json: ", marshalError)
+		return
+	}
+
+	var modelStruct input.Model
 	unmarshalError := json.Unmarshal(modelJson, &modelStruct)
 	if unmarshalError != nil {
-		log.Fatal("Unable to parse model json: ", unmarshalError)
-		return
-	}
-
-	_, marshalError := json.Marshal(&modelStruct)
-	if marshalError != nil {
-		log.Fatal("Unable to print model json: ", marshalError)
+		jsonFile := "test.json"
+		_ = os.WriteFile(jsonFile, modelJson, 0644)
+		fmt.Printf("Yaml file: %v\n", modelFile)
+		fmt.Printf("Json file: %v\n", jsonFile)
+		t.Error("Unable to parse model json: ", unmarshalError)
 		return
 	}
 }

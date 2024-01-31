@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"strings"
 )
 
@@ -59,13 +60,42 @@ func (what TechnicalAssetSize) MarshalJSON() ([]byte, error) {
 	return json.Marshal(what.String())
 }
 
-func (what *TechnicalAssetSize) UnmarshalJSON([]byte) error {
+func (what *TechnicalAssetSize) UnmarshalJSON(data []byte) error {
+	var text string
+	unmarshalError := json.Unmarshal(data, &text)
+	if unmarshalError != nil {
+		return unmarshalError
+	}
+
+	value, findError := what.find(text)
+	if findError != nil {
+		return findError
+	}
+
+	*what = value
+	return nil
+}
+
+func (what TechnicalAssetSize) MarshalYAML() (interface{}, error) {
+	return what.String(), nil
+}
+
+func (what *TechnicalAssetSize) UnmarshalYAML(node *yaml.Node) error {
+	value, findError := what.find(node.Value)
+	if findError != nil {
+		return findError
+	}
+
+	*what = value
+	return nil
+}
+
+func (what TechnicalAssetSize) find(value string) (TechnicalAssetSize, error) {
 	for index, description := range TechnicalAssetSizeDescription {
-		if strings.ToLower(what.String()) == strings.ToLower(description.Name) {
-			*what = TechnicalAssetSize(index)
-			return nil
+		if strings.EqualFold(value, description.Name) {
+			return TechnicalAssetSize(index), nil
 		}
 	}
 
-	return fmt.Errorf("unknown technical asset size value %q", int(*what))
+	return TechnicalAssetSize(0), fmt.Errorf("unknown technical asset size value %q", value)
 }

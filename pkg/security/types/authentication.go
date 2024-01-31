@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"strings"
 )
 
@@ -69,13 +70,42 @@ func (what Authentication) MarshalJSON() ([]byte, error) {
 	return json.Marshal(what.String())
 }
 
-func (what *Authentication) UnmarshalJSON([]byte) error {
+func (what *Authentication) UnmarshalJSON(data []byte) error {
+	var text string
+	unmarshalError := json.Unmarshal(data, &text)
+	if unmarshalError != nil {
+		return unmarshalError
+	}
+
+	value, findError := what.find(text)
+	if findError != nil {
+		return findError
+	}
+
+	*what = value
+	return nil
+}
+
+func (what Authentication) MarshalYAML() (interface{}, error) {
+	return what.String(), nil
+}
+
+func (what *Authentication) UnmarshalYAML(node *yaml.Node) error {
+	value, findError := what.find(node.Value)
+	if findError != nil {
+		return findError
+	}
+
+	*what = value
+	return nil
+}
+
+func (what Authentication) find(value string) (Authentication, error) {
 	for index, description := range AuthenticationTypeDescription {
-		if strings.ToLower(what.String()) == strings.ToLower(description.Name) {
-			*what = Authentication(index)
-			return nil
+		if strings.EqualFold(value, description.Name) {
+			return Authentication(index), nil
 		}
 	}
 
-	return fmt.Errorf("unknown authentication value %q", int(*what))
+	return Authentication(0), fmt.Errorf("unknown authentication value %q", value)
 }

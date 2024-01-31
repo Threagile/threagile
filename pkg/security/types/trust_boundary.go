@@ -9,13 +9,13 @@ import (
 )
 
 type TrustBoundary struct {
-	Id                    string            `json:"id,omitempty"`
-	Title                 string            `json:"title,omitempty"`
-	Description           string            `json:"description,omitempty"`
-	Type                  TrustBoundaryType `json:"type,omitempty"`
-	Tags                  []string          `json:"tags,omitempty"`
-	TechnicalAssetsInside []string          `json:"technical_assets_inside,omitempty"`
-	TrustBoundariesNested []string          `json:"trust_boundaries_nested,omitempty"`
+	Id                    string            `json:"id,omitempty" yaml:"id,omitempty"`
+	Title                 string            `json:"title,omitempty" yaml:"title,omitempty"`
+	Description           string            `json:"description,omitempty" yaml:"description,omitempty"`
+	Type                  TrustBoundaryType `json:"type,omitempty" yaml:"type,omitempty"`
+	Tags                  []string          `json:"tags,omitempty" yaml:"tags,omitempty"`
+	TechnicalAssetsInside []string          `json:"technical_assets_inside,omitempty" yaml:"technical_assets_inside,omitempty"`
+	TrustBoundariesNested []string          `json:"trust_boundaries_nested,omitempty" yaml:"trust_boundaries_nested,omitempty"`
 }
 
 func (what TrustBoundary) RecursivelyAllTechnicalAssetIDsInside(model *ParsedModel) []string {

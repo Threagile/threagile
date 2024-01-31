@@ -186,7 +186,7 @@ func (m *addVaultMacro) Execute(modelInput *input.Model, parsedModel *types.Pars
 }
 
 func (m *addVaultMacro) applyChange(modelInput *input.Model, parsedModel *types.ParsedModel, changeLogCollector *[]string, dryRun bool) (message string, validResult bool, err error) {
-	input.AddTagToModelInput(modelInput, m.macroState["vault-name"][0], dryRun, changeLogCollector)
+	modelInput.AddTagToModelInput(m.macroState["vault-name"][0], dryRun, changeLogCollector)
 
 	var serverSideTechAssets = make([]string, 0)
 
