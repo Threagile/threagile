@@ -43,7 +43,7 @@ func (what *Threagile) initAbout() *Threagile {
 				cmd.Printf("weird app folder %v", appDir)
 				return errors.New("weird app folder")
 			}
-			content, err := os.ReadFile(filepath.Join(appDir, "LICENSE.txt"))
+			content, err := os.ReadFile(filepath.Clean(filepath.Join(appDir, "LICENSE.txt")))
 			if err != nil {
 				cmd.Printf("Unable to read license file: %v", err)
 				return err

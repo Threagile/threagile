@@ -108,42 +108,42 @@ func (s *server) streamResponse(ginContext *gin.Context, responseType responseTy
 			handleErrorInServiceCall(err, ginContext)
 			return
 		}
-		ginContext.File(filepath.Join(tmpOutputDir, s.config.DataFlowDiagramFilenamePNG))
+		ginContext.File(filepath.Clean(filepath.Join(tmpOutputDir, s.config.DataFlowDiagramFilenamePNG)))
 	} else if responseType == dataAssetDiagram {
 		s.doItViaRuntimeCall(tmpModelFile.Name(), tmpOutputDir, false, true, false, false, false, false, false, false, dpi)
 		if err != nil {
 			handleErrorInServiceCall(err, ginContext)
 			return
 		}
-		ginContext.File(filepath.Join(tmpOutputDir, s.config.DataAssetDiagramFilenamePNG))
+		ginContext.File(filepath.Clean(filepath.Join(tmpOutputDir, s.config.DataAssetDiagramFilenamePNG)))
 	} else if responseType == reportPDF {
 		s.doItViaRuntimeCall(tmpModelFile.Name(), tmpOutputDir, false, false, true, false, false, false, false, false, dpi)
 		if err != nil {
 			handleErrorInServiceCall(err, ginContext)
 			return
 		}
-		ginContext.FileAttachment(filepath.Join(tmpOutputDir, s.config.ReportFilename), s.config.ReportFilename)
+		ginContext.FileAttachment(filepath.Clean(filepath.Join(tmpOutputDir, s.config.ReportFilename)), s.config.ReportFilename)
 	} else if responseType == risksExcel {
 		s.doItViaRuntimeCall(tmpModelFile.Name(), tmpOutputDir, false, false, false, true, false, false, false, false, dpi)
 		if err != nil {
 			handleErrorInServiceCall(err, ginContext)
 			return
 		}
-		ginContext.FileAttachment(filepath.Join(tmpOutputDir, s.config.ExcelRisksFilename), s.config.ExcelRisksFilename)
+		ginContext.FileAttachment(filepath.Clean(filepath.Join(tmpOutputDir, s.config.ExcelRisksFilename)), s.config.ExcelRisksFilename)
 	} else if responseType == tagsExcel {
 		s.doItViaRuntimeCall(tmpModelFile.Name(), tmpOutputDir, false, false, false, false, true, false, false, false, dpi)
 		if err != nil {
 			handleErrorInServiceCall(err, ginContext)
 			return
 		}
-		ginContext.FileAttachment(filepath.Join(tmpOutputDir, s.config.ExcelTagsFilename), s.config.ExcelTagsFilename)
+		ginContext.FileAttachment(filepath.Clean(filepath.Join(tmpOutputDir, s.config.ExcelTagsFilename)), s.config.ExcelTagsFilename)
 	} else if responseType == risksJSON {
 		s.doItViaRuntimeCall(tmpModelFile.Name(), tmpOutputDir, false, false, false, false, false, true, false, false, dpi)
 		if err != nil {
 			handleErrorInServiceCall(err, ginContext)
 			return
 		}
-		jsonData, err := os.ReadFile(filepath.Join(tmpOutputDir, s.config.JsonRisksFilename))
+		jsonData, err := os.ReadFile(filepath.Clean(filepath.Join(tmpOutputDir, s.config.JsonRisksFilename)))
 		if err != nil {
 			handleErrorInServiceCall(err, ginContext)
 			return
@@ -155,7 +155,7 @@ func (s *server) streamResponse(ginContext *gin.Context, responseType responseTy
 			handleErrorInServiceCall(err, ginContext)
 			return
 		}
-		jsonData, err := os.ReadFile(filepath.Join(tmpOutputDir, s.config.JsonTechnicalAssetsFilename))
+		jsonData, err := os.ReadFile(filepath.Clean(filepath.Join(tmpOutputDir, s.config.JsonTechnicalAssetsFilename)))
 		if err != nil {
 			handleErrorInServiceCall(err, ginContext)
 			return
@@ -167,7 +167,7 @@ func (s *server) streamResponse(ginContext *gin.Context, responseType responseTy
 			handleErrorInServiceCall(err, ginContext)
 			return
 		}
-		jsonData, err := os.ReadFile(filepath.Join(tmpOutputDir, s.config.JsonStatsFilename))
+		jsonData, err := os.ReadFile(filepath.Clean(filepath.Join(tmpOutputDir, s.config.JsonStatsFilename)))
 		if err != nil {
 			handleErrorInServiceCall(err, ginContext)
 			return

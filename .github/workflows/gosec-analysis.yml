@@ -1,0 +1,24 @@
+name: Security Static Analysis
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    # The branches below must be a subset of the branches above
+    branches: [master]
+  schedule:
+    - cron: '0 0 1 * *'
+
+jobs:
+  analyze:
+    name: GoSec
+    runs-on: ubuntu-latest
+    env:
+      GO111MODULE: on
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v4
+      - name: Run Gosec
+        uses: securego/gosec@master
+        with:
+          args: ./...

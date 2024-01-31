@@ -994,7 +994,7 @@ func (s *server) readModel(ginContext *gin.Context, modelUUID string, key []byte
 		return modelInputResult, yamlText, false
 	}
 
-	fileBytes, err := os.ReadFile(filepath.Join(modelFolder, s.config.InputFile))
+	fileBytes, err := os.ReadFile(filepath.Clean(filepath.Join(modelFolder, s.config.InputFile)))
 	if err != nil {
 		log.Println(err)
 		ginContext.JSON(http.StatusInternalServerError, gin.H{
@@ -1264,7 +1264,7 @@ func (s *server) writeModelYAML(ginContext *gin.Context, yaml string, key []byte
 			return false
 		}
 	}
-	f, err := os.Create(filepath.Join(modelFolder, s.config.InputFile))
+	f, err := os.Create(filepath.Clean(filepath.Join(modelFolder, s.config.InputFile)))
 	if err != nil {
 		log.Println(err)
 		ginContext.JSON(http.StatusInternalServerError, gin.H{
@@ -1303,7 +1303,7 @@ func (s *server) backupModelToHistory(modelFolder string, changeReasonForHistory
 			return err
 		}
 	}
-	inputModel, err := os.ReadFile(filepath.Join(modelFolder, s.config.InputFile))
+	inputModel, err := os.ReadFile(filepath.Clean(filepath.Join(modelFolder, s.config.InputFile)))
 	if err != nil {
 		return err
 	}

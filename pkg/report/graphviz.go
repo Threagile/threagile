@@ -259,7 +259,7 @@ func WriteDataFlowDiagramGraphvizDOT(parsedModel *types.ParsedModel,
 	//fmt.Println(dotContent.String())
 
 	// Write the DOT file
-	file, err := os.Create(diagramFilenameDOT)
+	file, err := os.Create(filepath.Clean(diagramFilenameDOT))
 	if err != nil {
 		return nil, fmt.Errorf("Error creating %s: %v", diagramFilenameDOT, err)
 	}
@@ -292,14 +292,14 @@ func GenerateDataFlowDiagramGraphvizImage(dotFile *os.File, targetDir string,
 	if err != nil {
 		return fmt.Errorf("Error reading %s: %v", dotFile.Name(), err)
 	}
-	err = os.WriteFile(tmpFileDOT.Name(), inputDOT, 0644)
+	err = os.WriteFile(tmpFileDOT.Name(), inputDOT, 0600)
 	if err != nil {
 		return fmt.Errorf("Error creating %s: %v", tmpFileDOT.Name(), err)
 	}
 
 	// exec
 
-	cmd := exec.Command("dot", "-Tpng", tmpFileDOT.Name(), "-o", tmpFilePNG.Name())
+	cmd := exec.Command("dot", "-Tpng", tmpFileDOT.Name(), "-o", tmpFilePNG.Name()) // #nosec G204
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
@@ -311,7 +311,7 @@ func GenerateDataFlowDiagramGraphvizImage(dotFile *os.File, targetDir string,
 	if err != nil {
 		return fmt.Errorf("Error copying into resulting file %s: %v", tmpFilePNG.Name(), err)
 	}
-	err = os.WriteFile(filepath.Join(targetDir, dataFlowDiagramFilenamePNG), inputPNG, 0644)
+	err = os.WriteFile(filepath.Join(targetDir, dataFlowDiagramFilenamePNG), inputPNG, 0600)
 	if err != nil {
 		return fmt.Errorf("Error creating %s: %v", filepath.Join(targetDir, dataFlowDiagramFilenamePNG), err)
 	}
@@ -446,7 +446,7 @@ func WriteDataAssetDiagramGraphvizDOT(parsedModel *types.ParsedModel, diagramFil
 	dotContent.WriteString("}")
 
 	// Write the DOT file
-	file, err := os.Create(diagramFilenameDOT)
+	file, err := os.Create(filepath.Clean(diagramFilenameDOT))
 	if err != nil {
 		return nil, fmt.Errorf("Error creating %s: %v", diagramFilenameDOT, err)
 	}
@@ -567,13 +567,13 @@ func GenerateDataAssetDiagramGraphvizImage(dotFile *os.File, targetDir string,
 	if err != nil {
 		return fmt.Errorf("Error reading %s: %v", dotFile.Name(), err)
 	}
-	err = os.WriteFile(tmpFileDOT.Name(), inputDOT, 0644)
+	err = os.WriteFile(tmpFileDOT.Name(), inputDOT, 0600)
 	if err != nil {
 		return fmt.Errorf("Error creating %s: %v", tmpFileDOT.Name(), err)
 	}
 
 	// exec
-	cmd := exec.Command("dot", "-Tpng", tmpFileDOT.Name(), "-o", tmpFilePNG.Name())
+	cmd := exec.Command("dot", "-Tpng", tmpFileDOT.Name(), "-o", tmpFilePNG.Name()) // #nosec G204
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
@@ -585,7 +585,7 @@ func GenerateDataAssetDiagramGraphvizImage(dotFile *os.File, targetDir string,
 	if err != nil {
 		return fmt.Errorf("Error copying into resulting file %s: %v", tmpFilePNG.Name(), err)
 	}
-	err = os.WriteFile(filepath.Join(targetDir, dataAssetDiagramFilenamePNG), inputPNG, 0644)
+	err = os.WriteFile(filepath.Join(targetDir, dataAssetDiagramFilenamePNG), inputPNG, 0600)
 	if err != nil {
 		return fmt.Errorf("Error creating %s: %v", filepath.Join(targetDir, dataAssetDiagramFilenamePNG), err)
 	}

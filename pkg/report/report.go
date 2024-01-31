@@ -1172,8 +1172,8 @@ func (r *pdfReporter) createRiskMitigationStatus(parsedModel *types.ParsedModel,
 			},
 		}
 
-		r.embedPieChart(pieChartRemainingRiskSeverity, 15.0, 216, tempFolder)
-		r.embedPieChart(pieChartRemainingRisksByFunction, 110.0, 216, tempFolder)
+		_ = r.embedPieChart(pieChartRemainingRiskSeverity, 15.0, 216, tempFolder)
+		_ = r.embedPieChart(pieChartRemainingRisksByFunction, 110.0, 216, tempFolder)
 
 		r.pdf.SetFont("Helvetica", "B", fontSizeBody)
 		r.pdf.Ln(8)

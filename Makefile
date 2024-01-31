@@ -20,11 +20,14 @@ GO		= env GO111MODULE=on go
 MKDIR	= mkdir -p
 CP		= cp -r
 RM		= rm -rf
+GOSEC	= /opt/homebrew/bin/gosec
 
 # Targets
-.phony: all run_tests install clean uninstall
+.phony: all prep run_tests clean tidy install uninstall gosec
 
 default: all
+
+all: prep run_tests $(addprefix bin/,$(BIN))
 
 prep:
 	@# env GO111MODULE=on go mod vendor
@@ -32,8 +35,6 @@ prep:
 
 run_tests:
 	$(GO) test ./...
-
-all: prep run_tests $(addprefix bin/,$(BIN))
 
 clean:
 	$(RM) bin vendor
@@ -55,6 +56,9 @@ install: all
 uninstall:
 	$(RM) $(addprefix $(BIN_DIR)/,$(BIN))
 	$(RM) $(ASSET_DIR)
+
+gosec:
+	$(GOSEC) ./...
 
 bin/raa_calc: cmd/raa/main.go
 	$(GO) build $(GOFLAGS) -o $@ $<

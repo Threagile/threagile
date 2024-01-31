@@ -118,7 +118,7 @@ func (c *Config) Load(configFilename string) error {
 		return nil
 	}
 
-	data, readError := os.ReadFile(configFilename)
+	data, readError := os.ReadFile(filepath.Clean(configFilename))
 	if readError != nil {
 		return readError
 	}

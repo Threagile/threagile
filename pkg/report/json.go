@@ -22,7 +22,7 @@ func WriteRisksJSON(parsedModel *types.ParsedModel, filename string) error {
 	if err != nil {
 		return fmt.Errorf("failed to marshal risks to JSON: %w", err)
 	}
-	err = os.WriteFile(filename, jsonBytes, 0644)
+	err = os.WriteFile(filename, jsonBytes, 0600)
 	if err != nil {
 		return fmt.Errorf("failed to write risks to JSON file: %w", err)
 	}
@@ -36,7 +36,7 @@ func WriteTechnicalAssetsJSON(parsedModel *types.ParsedModel, filename string) e
 	if err != nil {
 		return fmt.Errorf("failed to marshal technical assets to JSON: %w", err)
 	}
-	err = os.WriteFile(filename, jsonBytes, 0644)
+	err = os.WriteFile(filename, jsonBytes, 0600)
 	if err != nil {
 		return fmt.Errorf("failed to write technical assets to JSON file: %w", err)
 	}
@@ -48,7 +48,7 @@ func WriteStatsJSON(parsedModel *types.ParsedModel, filename string) error {
 	if err != nil {
 		return fmt.Errorf("failed to marshal stats to JSON: %w", err)
 	}
-	err = os.WriteFile(filename, jsonBytes, 0644)
+	err = os.WriteFile(filename, jsonBytes, 0600)
 	if err != nil {
 		return fmt.Errorf("failed to write stats to JSON file: %w", err)
 	}

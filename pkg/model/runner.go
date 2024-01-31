@@ -42,7 +42,7 @@ func (p *runner) Run(in any, out any, parameters ...string) error {
 		Out:        out,
 	}
 
-	plugin := exec.Command(p.Filename, p.Parameters...)
+	plugin := exec.Command(p.Filename, p.Parameters...) // #nosec G204
 	stdin, stdinError := plugin.StdinPipe()
 	if stdinError != nil {
 		return stdinError
