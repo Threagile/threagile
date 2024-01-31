@@ -2,8 +2,7 @@ package input
 
 import (
 	"fmt"
-	"github.com/mpvl/unique"
-	"sort"
+	"slices"
 	"strings"
 )
 
@@ -31,7 +30,7 @@ func (what *Strings) MergeSingleton(first string, second string) (string, error)
 func (what *Strings) MergeMultiline(first string, second string) string {
 	text := first
 	if len(first) > 0 {
-		if len(second) > 0 {
+		if len(second) > 0 && !strings.EqualFold(first, second) {
 			text = text + lineSeparator + second
 		}
 	} else {
@@ -55,14 +54,11 @@ func (what *Strings) MergeMap(first map[string]string, second map[string]string)
 }
 
 func (what *Strings) MergeUniqueSlice(first []string, second []string) []string {
-	slice := append(first, second...)
-
-	for n := range slice {
-		slice[n] = strings.TrimSpace(strings.ToLower(slice[n]))
+	for _, item := range second {
+		if !slices.Contains(first, item) {
+			first = append(first, item)
+		}
 	}
 
-	sort.Strings(slice)
-	unique.Strings(&slice)
-
-	return slice
+	return first
 }
