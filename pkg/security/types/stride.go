@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"strings"
 )
 
@@ -69,13 +70,42 @@ func (what STRIDE) MarshalJSON() ([]byte, error) {
 	return json.Marshal(what.String())
 }
 
-func (what *STRIDE) UnmarshalJSON([]byte) error {
+func (what *STRIDE) UnmarshalJSON(data []byte) error {
+	var text string
+	unmarshalError := json.Unmarshal(data, &text)
+	if unmarshalError != nil {
+		return unmarshalError
+	}
+
+	value, findError := what.find(text)
+	if findError != nil {
+		return findError
+	}
+
+	*what = value
+	return nil
+}
+
+func (what STRIDE) MarshalYAML() (interface{}, error) {
+	return what.String(), nil
+}
+
+func (what *STRIDE) UnmarshalYAML(node *yaml.Node) error {
+	value, findError := what.find(node.Value)
+	if findError != nil {
+		return findError
+	}
+
+	*what = value
+	return nil
+}
+
+func (what STRIDE) find(value string) (STRIDE, error) {
 	for index, description := range StrideTypeDescription {
-		if strings.ToLower(what.String()) == strings.ToLower(description.Name) {
-			*what = STRIDE(index)
-			return nil
+		if strings.EqualFold(value, description.Name) {
+			return STRIDE(index), nil
 		}
 	}
 
-	return fmt.Errorf("unknown STRIDE value %q", int(*what))
+	return STRIDE(0), fmt.Errorf("unknown STRIDE value %q", value)
 }

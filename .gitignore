@@ -24,9 +24,10 @@ stats.json
 *.out
 
 # build artifacts
-vendor/
-bin/
+/vendor/
+/bin/
+/out*/
 
 # IDE stuff
-.idea/
+/.idea/
 /config.json

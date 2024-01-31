@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"strings"
 )
 
@@ -66,13 +67,42 @@ func (what EncryptionStyle) MarshalJSON() ([]byte, error) {
 	return json.Marshal(what.String())
 }
 
-func (what *EncryptionStyle) UnmarshalJSON([]byte) error {
+func (what *EncryptionStyle) UnmarshalJSON(data []byte) error {
+	var text string
+	unmarshalError := json.Unmarshal(data, &text)
+	if unmarshalError != nil {
+		return unmarshalError
+	}
+
+	value, findError := what.find(text)
+	if findError != nil {
+		return findError
+	}
+
+	*what = value
+	return nil
+}
+
+func (what EncryptionStyle) MarshalYAML() (interface{}, error) {
+	return what.String(), nil
+}
+
+func (what *EncryptionStyle) UnmarshalYAML(node *yaml.Node) error {
+	value, findError := what.find(node.Value)
+	if findError != nil {
+		return findError
+	}
+
+	*what = value
+	return nil
+}
+
+func (what EncryptionStyle) find(value string) (EncryptionStyle, error) {
 	for index, description := range EncryptionStyleTypeDescription {
-		if strings.ToLower(what.String()) == strings.ToLower(description.Name) {
-			*what = EncryptionStyle(index)
-			return nil
+		if strings.EqualFold(value, description.Name) {
+			return EncryptionStyle(index), nil
 		}
 	}
 
-	return fmt.Errorf("unknown encryption style value %q", int(*what))
+	return EncryptionStyle(0), fmt.Errorf("unknown encryption style value %q", value)
 }

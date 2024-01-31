@@ -7,51 +7,54 @@ package types
 import (
 	"errors"
 	"fmt"
+	"github.com/threagile/threagile/pkg/input"
 	"regexp"
+	"slices"
 	"sort"
 	"strings"
-	"time"
-
-	"github.com/threagile/threagile/pkg/input"
 )
 
 // TODO: move model out of types package and
 // rename parsedModel to model or something like this to emphasize that it's just a model
 // maybe
 type ParsedModel struct {
-	Author                                        input.Author                 `json:"author" yaml:"author"`
-	Title                                         string                       `json:"title,omitempty" yaml:"title"`
-	Date                                          time.Time                    `json:"date" yaml:"date"`
-	ManagementSummaryComment                      string                       `json:"management_summary_comment,omitempty" yaml:"management_summary_comment"`
-	BusinessOverview                              input.Overview               `json:"business_overview" yaml:"business_overview"`
-	TechnicalOverview                             input.Overview               `json:"technical_overview" yaml:"technical_overview"`
-	BusinessCriticality                           Criticality                  `json:"business_criticality,omitempty" yaml:"business_criticality"`
-	SecurityRequirements                          map[string]string            `json:"security_requirements,omitempty" yaml:"security_requirements"`
-	Questions                                     map[string]string            `json:"questions,omitempty" yaml:"questions"`
-	AbuseCases                                    map[string]string            `json:"abuse_cases,omitempty" yaml:"abuse_cases"`
-	TagsAvailable                                 []string                     `json:"tags_available,omitempty" yaml:"tags_available"`
-	DataAssets                                    map[string]DataAsset         `json:"data_assets,omitempty" yaml:"data_assets"`
-	TechnicalAssets                               map[string]TechnicalAsset    `json:"technical_assets,omitempty" yaml:"technical_assets"`
-	TrustBoundaries                               map[string]TrustBoundary     `json:"trust_boundaries,omitempty" yaml:"trust_boundaries"`
-	SharedRuntimes                                map[string]SharedRuntime     `json:"shared_runtimes,omitempty" yaml:"shared_runtimes"`
-	IndividualRiskCategories                      map[string]RiskCategory      `json:"individual_risk_categories,omitempty" yaml:"individual_risk_categories"`
-	BuiltInRiskCategories                         map[string]RiskCategory      `json:"built_in_risk_categories,omitempty" yaml:"built_in_risk_categories"`
-	RiskTracking                                  map[string]RiskTracking      `json:"risk_tracking,omitempty" yaml:"risk_tracking"`
-	CommunicationLinks                            map[string]CommunicationLink `json:"communication_links,omitempty" yaml:"communication_links"`
-	AllSupportedTags                              map[string]bool              `json:"all_supported_tags,omitempty" yaml:"all_supported_tags"`
-	DiagramTweakNodesep                           int                          `json:"diagram_tweak_nodesep,omitempty" yaml:"diagram_tweak_nodesep"`
-	DiagramTweakRanksep                           int                          `json:"diagram_tweak_ranksep,omitempty" yaml:"diagram_tweak_ranksep"`
-	DiagramTweakEdgeLayout                        string                       `json:"diagram_tweak_edge_layout,omitempty" yaml:"diagram_tweak_edge_layout"`
-	DiagramTweakSuppressEdgeLabels                bool                         `json:"diagram_tweak_suppress_edge_labels,omitempty" yaml:"diagram_tweak_suppress_edge_labels"`
-	DiagramTweakLayoutLeftToRight                 bool                         `json:"diagram_tweak_layout_left_to_right,omitempty" yaml:"diagram_tweak_layout_left_to_right"`
-	DiagramTweakInvisibleConnectionsBetweenAssets []string                     `json:"diagram_tweak_invisible_connections_between_assets,omitempty" yaml:"diagram_tweak_invisible_connections_between_assets"`
-	DiagramTweakSameRankAssets                    []string                     `json:"diagram_tweak_same_rank_assets,omitempty" yaml:"diagram_tweak_same_rank_assets"`
+	ThreagileVersion                              string                       `yaml:"threagile_version,omitempty" json:"threagile_version,omitempty"`
+	Includes                                      []string                     `yaml:"includes,omitempty" json:"includes,omitempty"`
+	Title                                         string                       `json:"title,omitempty" yaml:"title,omitempty"`
+	Author                                        input.Author                 `json:"author,omitempty" yaml:"author,omitempty"`
+	Contributors                                  []input.Author               `yaml:"contributors,omitempty" json:"contributors,omitempty"`
+	Date                                          Date                         `json:"date,omitempty" yaml:"date,omitempty"`
+	AppDescription                                input.Overview               `yaml:"application_description,omitempty" json:"application_description,omitempty"`
+	BusinessOverview                              input.Overview               `json:"business_overview,omitempty" yaml:"business_overview,omitempty"`
+	TechnicalOverview                             input.Overview               `json:"technical_overview,omitempty" yaml:"technical_overview,omitempty"`
+	BusinessCriticality                           Criticality                  `json:"business_criticality,omitempty" yaml:"business_criticality,omitempty"`
+	ManagementSummaryComment                      string                       `json:"management_summary_comment,omitempty" yaml:"management_summary_comment,omitempty"`
+	SecurityRequirements                          map[string]string            `json:"security_requirements,omitempty" yaml:"security_requirements,omitempty"`
+	Questions                                     map[string]string            `json:"questions,omitempty" yaml:"questions,omitempty"`
+	AbuseCases                                    map[string]string            `json:"abuse_cases,omitempty" yaml:"abuse_cases,omitempty"`
+	TagsAvailable                                 []string                     `json:"tags_available,omitempty" yaml:"tags_available,omitempty"`
+	DataAssets                                    map[string]DataAsset         `json:"data_assets,omitempty" yaml:"data_assets,omitempty"`
+	TechnicalAssets                               map[string]TechnicalAsset    `json:"technical_assets,omitempty" yaml:"technical_assets,omitempty"`
+	TrustBoundaries                               map[string]TrustBoundary     `json:"trust_boundaries,omitempty" yaml:"trust_boundaries,omitempty"`
+	SharedRuntimes                                map[string]SharedRuntime     `json:"shared_runtimes,omitempty" yaml:"shared_runtimes,omitempty"`
+	IndividualRiskCategories                      map[string]RiskCategory      `json:"individual_risk_categories,omitempty" yaml:"individual_risk_categories,omitempty"`
+	BuiltInRiskCategories                         map[string]RiskCategory      `json:"built_in_risk_categories,omitempty" yaml:"built_in_risk_categories,omitempty"`
+	RiskTracking                                  map[string]RiskTracking      `json:"risk_tracking,omitempty" yaml:"risk_tracking,omitempty"`
+	CommunicationLinks                            map[string]CommunicationLink `json:"communication_links,omitempty" yaml:"communication_links,omitempty"`
+	AllSupportedTags                              map[string]bool              `json:"all_supported_tags,omitempty" yaml:"all_supported_tags,omitempty"`
+	DiagramTweakNodesep                           int                          `json:"diagram_tweak_nodesep,omitempty" yaml:"diagram_tweak_nodesep,omitempty"`
+	DiagramTweakRanksep                           int                          `json:"diagram_tweak_ranksep,omitempty" yaml:"diagram_tweak_ranksep,omitempty"`
+	DiagramTweakEdgeLayout                        string                       `json:"diagram_tweak_edge_layout,omitempty" yaml:"diagram_tweak_edge_layout,omitempty"`
+	DiagramTweakSuppressEdgeLabels                bool                         `json:"diagram_tweak_suppress_edge_labels,omitempty" yaml:"diagram_tweak_suppress_edge_labels,omitempty"`
+	DiagramTweakLayoutLeftToRight                 bool                         `json:"diagram_tweak_layout_left_to_right,omitempty" yaml:"diagram_tweak_layout_left_to_right,omitempty"`
+	DiagramTweakInvisibleConnectionsBetweenAssets []string                     `json:"diagram_tweak_invisible_connections_between_assets,omitempty" yaml:"diagram_tweak_invisible_connections_between_assets,omitempty"`
+	DiagramTweakSameRankAssets                    []string                     `json:"diagram_tweak_same_rank_assets,omitempty" yaml:"diagram_tweak_same_rank_assets,omitempty"`
 
 	// TODO: those are generated based on items above and needs to be private
-	IncomingTechnicalCommunicationLinksMappedByTargetId   map[string][]CommunicationLink `json:"incoming_technical_communication_links_mapped_by_target_id,omitempty" yaml:"incoming_technical_communication_links_mapped_by_target_id"`
-	DirectContainingTrustBoundaryMappedByTechnicalAssetId map[string]TrustBoundary       `json:"direct_containing_trust_boundary_mapped_by_technical_asset_id,omitempty" yaml:"direct_containing_trust_boundary_mapped_by_technical_asset_id"`
-	GeneratedRisksByCategory                              map[string][]Risk              `json:"generated_risks_by_category,omitempty" yaml:"generated_risks_by_category"`
-	GeneratedRisksBySyntheticId                           map[string]Risk                `json:"generated_risks_by_synthetic_id,omitempty" yaml:"generated_risks_by_synthetic_id"`
+	IncomingTechnicalCommunicationLinksMappedByTargetId   map[string][]CommunicationLink `json:"incoming_technical_communication_links_mapped_by_target_id,omitempty" yaml:"incoming_technical_communication_links_mapped_by_target_id,omitempty"`
+	DirectContainingTrustBoundaryMappedByTechnicalAssetId map[string]TrustBoundary       `json:"direct_containing_trust_boundary_mapped_by_technical_asset_id,omitempty" yaml:"direct_containing_trust_boundary_mapped_by_technical_asset_id,omitempty"`
+	GeneratedRisksByCategory                              map[string][]Risk              `json:"generated_risks_by_category,omitempty" yaml:"generated_risks_by_category,omitempty"`
+	GeneratedRisksBySyntheticId                           map[string]Risk                `json:"generated_risks_by_synthetic_id,omitempty" yaml:"generated_risks_by_synthetic_id,omitempty"`
 }
 
 func (parsedModel *ParsedModel) AddToListOfSupportedTags(tags []string) {
@@ -157,7 +160,7 @@ func (parsedModel *ParsedModel) CheckRiskTracking(ignoreOrphanedRiskTracking boo
 }
 
 func (parsedModel *ParsedModel) CheckTagExists(referencedTag, where string) error {
-	if !contains(parsedModel.TagsAvailable, referencedTag) {
+	if !slices.Contains(parsedModel.TagsAvailable, referencedTag) {
 		return errors.New("missing referenced tag in overall tag list at " + where + ": " + referencedTag)
 	}
 	return nil

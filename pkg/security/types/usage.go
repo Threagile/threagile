@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"strings"
 )
 
@@ -57,13 +58,42 @@ func (what Usage) MarshalJSON() ([]byte, error) {
 	return json.Marshal(what.String())
 }
 
-func (what *Usage) UnmarshalJSON([]byte) error {
+func (what *Usage) UnmarshalJSON(data []byte) error {
+	var text string
+	unmarshalError := json.Unmarshal(data, &text)
+	if unmarshalError != nil {
+		return unmarshalError
+	}
+
+	value, findError := what.find(text)
+	if findError != nil {
+		return findError
+	}
+
+	*what = value
+	return nil
+}
+
+func (what Usage) MarshalYAML() (interface{}, error) {
+	return what.String(), nil
+}
+
+func (what *Usage) UnmarshalYAML(node *yaml.Node) error {
+	value, findError := what.find(node.Value)
+	if findError != nil {
+		return findError
+	}
+
+	*what = value
+	return nil
+}
+
+func (what Usage) find(value string) (Usage, error) {
 	for index, description := range UsageTypeDescription {
-		if strings.ToLower(what.String()) == strings.ToLower(description.Name) {
-			*what = Usage(index)
-			return nil
+		if strings.EqualFold(value, description.Name) {
+			return Usage(index), nil
 		}
 	}
 
-	return fmt.Errorf("unknown usage type value %q", int(*what))
+	return Usage(0), fmt.Errorf("unknown usage type value %q", value)
 }

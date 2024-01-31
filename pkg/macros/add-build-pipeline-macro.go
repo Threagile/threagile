@@ -272,15 +272,15 @@ func (m *addBuildPipeline) Execute(modelInput *input.Model, model *types.ParsedM
 func (m *addBuildPipeline) applyChange(modelInput *input.Model, parsedModel *types.ParsedModel, changeLogCollector *[]string, dryRun bool) (message string, validResult bool, err error) {
 	var serverSideTechAssets = make([]string, 0)
 	// ################################################
-	input.AddTagToModelInput(modelInput, m.macroState["source-repository"][0], dryRun, changeLogCollector)
-	input.AddTagToModelInput(modelInput, m.macroState["build-pipeline"][0], dryRun, changeLogCollector)
-	input.AddTagToModelInput(modelInput, m.macroState["artifact-registry"][0], dryRun, changeLogCollector)
+	modelInput.AddTagToModelInput(m.macroState["source-repository"][0], dryRun, changeLogCollector)
+	modelInput.AddTagToModelInput(m.macroState["build-pipeline"][0], dryRun, changeLogCollector)
+	modelInput.AddTagToModelInput(m.macroState["artifact-registry"][0], dryRun, changeLogCollector)
 	if m.containerTechUsed {
-		input.AddTagToModelInput(modelInput, m.macroState["container-registry"][0], dryRun, changeLogCollector)
-		input.AddTagToModelInput(modelInput, m.macroState["container-platform"][0], dryRun, changeLogCollector)
+		modelInput.AddTagToModelInput(m.macroState["container-registry"][0], dryRun, changeLogCollector)
+		modelInput.AddTagToModelInput(m.macroState["container-platform"][0], dryRun, changeLogCollector)
 	}
 	if m.codeInspectionUsed {
-		input.AddTagToModelInput(modelInput, m.macroState["code-inspection-platform"][0], dryRun, changeLogCollector)
+		modelInput.AddTagToModelInput(m.macroState["code-inspection-platform"][0], dryRun, changeLogCollector)
 	}
 
 	sourceRepoID := types.MakeID(m.macroState["source-repository"][0]) + "-sourcecode-repository"

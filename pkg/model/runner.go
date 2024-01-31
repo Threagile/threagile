@@ -76,13 +76,12 @@ func (p *runner) Run(in any, out any, parameters ...string) error {
 	}
 
 	waitError := plugin.Wait()
+	p.ErrorOutput = stderrBuf.String()
 	if waitError != nil {
 		return fmt.Errorf("%v: %v", waitError, p.ErrorOutput)
 	}
 
-	p.ErrorOutput = stderrBuf.String()
 	stdout := stdoutBuf.Bytes()
-
 	unmarshalError := json.Unmarshal(stdout, &p.Out)
 	if unmarshalError != nil {
 		return unmarshalError

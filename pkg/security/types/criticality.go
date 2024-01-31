@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"strings"
 )
 
@@ -96,13 +97,42 @@ func (what Criticality) MarshalJSON() ([]byte, error) {
 	return json.Marshal(what.String())
 }
 
-func (what *Criticality) UnmarshalJSON([]byte) error {
+func (what *Criticality) UnmarshalJSON(data []byte) error {
+	var text string
+	unmarshalError := json.Unmarshal(data, &text)
+	if unmarshalError != nil {
+		return unmarshalError
+	}
+
+	value, findError := what.find(text)
+	if findError != nil {
+		return findError
+	}
+
+	*what = value
+	return nil
+}
+
+func (what Criticality) MarshalYAML() (interface{}, error) {
+	return what.String(), nil
+}
+
+func (what *Criticality) UnmarshalYAML(node *yaml.Node) error {
+	value, findError := what.find(node.Value)
+	if findError != nil {
+		return findError
+	}
+
+	*what = value
+	return nil
+}
+
+func (what Criticality) find(value string) (Criticality, error) {
 	for index, description := range CriticalityTypeDescription {
-		if strings.ToLower(what.String()) == strings.ToLower(description.Name) {
-			*what = Criticality(index)
-			return nil
+		if strings.EqualFold(value, description.Name) {
+			return Criticality(index), nil
 		}
 	}
 
-	return fmt.Errorf("unknown criticality value %q", int(*what))
+	return Criticality(0), fmt.Errorf("unknown criticality value %q", value)
 }

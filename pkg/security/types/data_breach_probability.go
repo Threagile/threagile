@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"strings"
 )
 
@@ -64,13 +65,42 @@ func (what DataBreachProbability) MarshalJSON() ([]byte, error) {
 	return json.Marshal(what.String())
 }
 
-func (what *DataBreachProbability) UnmarshalJSON([]byte) error {
+func (what *DataBreachProbability) UnmarshalJSON(data []byte) error {
+	var text string
+	unmarshalError := json.Unmarshal(data, &text)
+	if unmarshalError != nil {
+		return unmarshalError
+	}
+
+	value, findError := what.find(text)
+	if findError != nil {
+		return findError
+	}
+
+	*what = value
+	return nil
+}
+
+func (what DataBreachProbability) MarshalYAML() (interface{}, error) {
+	return what.String(), nil
+}
+
+func (what *DataBreachProbability) UnmarshalYAML(node *yaml.Node) error {
+	value, findError := what.find(node.Value)
+	if findError != nil {
+		return findError
+	}
+
+	*what = value
+	return nil
+}
+
+func (what DataBreachProbability) find(value string) (DataBreachProbability, error) {
 	for index, description := range DataBreachProbabilityTypeDescription {
-		if strings.ToLower(what.String()) == strings.ToLower(description.Name) {
-			*what = DataBreachProbability(index)
-			return nil
+		if strings.EqualFold(value, description.Name) {
+			return DataBreachProbability(index), nil
 		}
 	}
 
-	return fmt.Errorf("unknown data breach probability value %q", int(*what))
+	return DataBreachProbability(0), fmt.Errorf("unknown data breach probability value %q", value)
 }

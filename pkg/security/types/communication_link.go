@@ -9,23 +9,23 @@ import (
 )
 
 type CommunicationLink struct {
-	Id                     string         `json:"id,omitempty"`
-	SourceId               string         `json:"source_id,omitempty"`
-	TargetId               string         `json:"target_id,omitempty"`
-	Title                  string         `json:"title,omitempty"`
-	Description            string         `json:"description,omitempty"`
-	Protocol               Protocol       `json:"protocol,omitempty"`
-	Tags                   []string       `json:"tags,omitempty"`
-	VPN                    bool           `json:"vpn,omitempty"`
-	IpFiltered             bool           `json:"ip_filtered,omitempty"`
-	Readonly               bool           `json:"readonly,omitempty"`
-	Authentication         Authentication `json:"authentication,omitempty"`
-	Authorization          Authorization  `json:"authorization,omitempty"`
-	Usage                  Usage          `json:"usage,omitempty"`
-	DataAssetsSent         []string       `json:"data_assets_sent,omitempty"`
-	DataAssetsReceived     []string       `json:"data_assets_received,omitempty"`
-	DiagramTweakWeight     int            `json:"diagram_tweak_weight,omitempty"`
-	DiagramTweakConstraint bool           `json:"diagram_tweak_constraint,omitempty"`
+	Id                     string         `json:"id,omitempty" yaml:"id,omitempty"`
+	SourceId               string         `json:"source_id,omitempty" yaml:"source_id,omitempty"`
+	TargetId               string         `json:"target_id,omitempty" yaml:"target_id,omitempty"`
+	Title                  string         `json:"title,omitempty" yaml:"title,omitempty"`
+	Description            string         `json:"description,omitempty" yaml:"description,omitempty"`
+	Protocol               Protocol       `json:"protocol,omitempty" yaml:"protocol,omitempty"`
+	Tags                   []string       `json:"tags,omitempty" yaml:"tags,omitempty"`
+	VPN                    bool           `json:"vpn,omitempty" yaml:"vpn,omitempty"`
+	IpFiltered             bool           `json:"ip_filtered,omitempty" yaml:"ip_filtered,omitempty"`
+	Readonly               bool           `json:"readonly,omitempty" yaml:"readonly,omitempty"`
+	Authentication         Authentication `json:"authentication,omitempty" yaml:"authentication,omitempty"`
+	Authorization          Authorization  `json:"authorization,omitempty" yaml:"authorization,omitempty"`
+	Usage                  Usage          `json:"usage,omitempty" yaml:"usage,omitempty"`
+	DataAssetsSent         []string       `json:"data_assets_sent,omitempty" yaml:"data_assets_sent,omitempty"`
+	DataAssetsReceived     []string       `json:"data_assets_received,omitempty" yaml:"data_assets_received,omitempty"`
+	DiagramTweakWeight     int            `json:"diagram_tweak_weight,omitempty" yaml:"diagram_tweak_weight,omitempty"`
+	DiagramTweakConstraint bool           `json:"diagram_tweak_constraint,omitempty" yaml:"diagram_tweak_constraint,omitempty"`
 }
 
 func (what CommunicationLink) IsTaggedWithAny(tags ...string) bool {

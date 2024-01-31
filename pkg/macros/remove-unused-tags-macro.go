@@ -1,6 +1,7 @@
 package macros
 
 import (
+	"github.com/mpvl/unique"
 	"sort"
 	"strconv"
 
@@ -11,7 +12,7 @@ import (
 type removeUnusedTagsMacro struct {
 }
 
-func NewRemoveUnusedTags() *removeUnusedTagsMacro {
+func newRemoveUnusedTags() *removeUnusedTagsMacro {
 	return &removeUnusedTagsMacro{}
 }
 
@@ -40,45 +41,24 @@ func (*removeUnusedTagsMacro) GetFinalChangeImpact(_ *input.Model, _ *types.Pars
 }
 
 func (*removeUnusedTagsMacro) Execute(modelInput *input.Model, parsedModel *types.ParsedModel) (message string, validResult bool, err error) {
-	tagUsageMap := make(map[string]bool)
-	for _, tag := range parsedModel.TagsAvailable {
-		tagUsageMap[tag] = false // false = tag is not used
+	modelInput.TagsAvailable = parsedModel.TagsAvailable
+	for _, asset := range parsedModel.DataAssets {
+		modelInput.TagsAvailable = append(modelInput.TagsAvailable, asset.Tags...)
 	}
-	for _, dA := range parsedModel.DataAssets {
-		for _, tag := range dA.Tags {
-			tagUsageMap[tag] = true // true = tag is used
+	for _, asset := range parsedModel.TechnicalAssets {
+		modelInput.TagsAvailable = append(modelInput.TagsAvailable, asset.Tags...)
+		for _, link := range asset.CommunicationLinks {
+			modelInput.TagsAvailable = append(modelInput.TagsAvailable, link.Tags...)
 		}
 	}
-	for _, tA := range parsedModel.TechnicalAssets {
-		for _, tag := range tA.Tags {
-			tagUsageMap[tag] = true // true = tag is used
-		}
-		for _, cL := range tA.CommunicationLinks {
-			for _, tag := range cL.Tags {
-				tagUsageMap[tag] = true // true = tag is used
-			}
-		}
+	for _, boundary := range parsedModel.TrustBoundaries {
+		modelInput.TagsAvailable = append(modelInput.TagsAvailable, boundary.Tags...)
 	}
-	for _, tB := range parsedModel.TrustBoundaries {
-		for _, tag := range tB.Tags {
-			tagUsageMap[tag] = true // true = tag is used
-		}
+	for _, runtime := range parsedModel.SharedRuntimes {
+		modelInput.TagsAvailable = append(modelInput.TagsAvailable, runtime.Tags...)
 	}
-	for _, sR := range parsedModel.SharedRuntimes {
-		for _, tag := range sR.Tags {
-			tagUsageMap[tag] = true // true = tag is used
-		}
-	}
-	counter := 0
-	tagsSorted := make([]string, 0)
-	for tag, used := range tagUsageMap {
-		if used {
-			tagsSorted = append(tagsSorted, tag)
-		} else {
-			counter++
-		}
-	}
-	sort.Strings(tagsSorted)
-	modelInput.TagsAvailable = tagsSorted
-	return "Model file removal of " + strconv.Itoa(counter) + " unused tags successful", true, nil
+	count := len(modelInput.TagsAvailable)
+	unique.Strings(&modelInput.TagsAvailable)
+	sort.Strings(modelInput.TagsAvailable)
+	return "Model file removal of " + strconv.Itoa(count-len(modelInput.TagsAvailable)) + " unused tags successful", true, nil
 }

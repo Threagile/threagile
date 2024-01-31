@@ -24,21 +24,24 @@ func ParseModel(modelInput *input.Model, builtinRiskRules map[string]risks.RiskR
 		var parseError error
 		reportDate, parseError = time.Parse("2006-01-02", modelInput.Date)
 		if parseError != nil {
-			return nil, errors.New("unable to parse 'date' value of model file")
+			return nil, errors.New("unable to parse 'date' value of model file (expected format: '2006-01-02')")
 		}
 	}
 
 	parsedModel := types.ParsedModel{
-		Author:                         modelInput.Author,
+		ThreagileVersion:               modelInput.ThreagileVersion,
 		Title:                          modelInput.Title,
-		Date:                           reportDate,
-		ManagementSummaryComment:       modelInput.ManagementSummaryComment,
-		BusinessCriticality:            businessCriticality,
+		Author:                         modelInput.Author,
+		Contributors:                   modelInput.Contributors,
+		Date:                           types.Date{Time: reportDate},
+		AppDescription:                 removePathElementsFromImageFiles(modelInput.AppDescription),
 		BusinessOverview:               removePathElementsFromImageFiles(modelInput.BusinessOverview),
 		TechnicalOverview:              removePathElementsFromImageFiles(modelInput.TechnicalOverview),
+		BusinessCriticality:            businessCriticality,
+		ManagementSummaryComment:       modelInput.ManagementSummaryComment,
+		SecurityRequirements:           modelInput.SecurityRequirements,
 		Questions:                      modelInput.Questions,
 		AbuseCases:                     modelInput.AbuseCases,
-		SecurityRequirements:           modelInput.SecurityRequirements,
 		TagsAvailable:                  lowerCaseAndTrim(modelInput.TagsAvailable),
 		DiagramTweakNodesep:            modelInput.DiagramTweakNodesep,
 		DiagramTweakRanksep:            modelInput.DiagramTweakRanksep,
@@ -50,11 +53,11 @@ func ParseModel(modelInput *input.Model, builtinRiskRules map[string]risks.RiskR
 	}
 
 	parsedModel.CommunicationLinks = make(map[string]types.CommunicationLink)
+	parsedModel.AllSupportedTags = make(map[string]bool)
 	parsedModel.IncomingTechnicalCommunicationLinksMappedByTargetId = make(map[string][]types.CommunicationLink)
 	parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId = make(map[string]types.TrustBoundary)
 	parsedModel.GeneratedRisksByCategory = make(map[string][]types.Risk)
 	parsedModel.GeneratedRisksBySyntheticId = make(map[string]types.Risk)
-	parsedModel.AllSupportedTags = make(map[string]bool)
 
 	if parsedModel.DiagramTweakNodesep == 0 {
 		parsedModel.DiagramTweakNodesep = 2
@@ -447,7 +450,7 @@ func ParseModel(modelInput *input.Model, builtinRiskRules map[string]risks.RiskR
 	}
 
 	// Individual Risk Categories (just used as regular risk categories) ===============================================================================
-	parsedModel.IndividualRiskCategories = make(map[string]types.RiskCategory)
+	//	parsedModel.IndividualRiskCategories = make(map[string]types.RiskCategory)
 	for title, individualCategory := range modelInput.IndividualRiskCategories {
 		id := fmt.Sprintf("%v", individualCategory.ID)
 
@@ -564,7 +567,7 @@ func ParseModel(modelInput *input.Model, builtinRiskRules map[string]risks.RiskR
 					}
 				}
 
-				individualRiskInstance := types.Risk{
+				parsedModel.GeneratedRisksByCategory[cat.Id] = append(parsedModel.GeneratedRisksByCategory[cat.Id], types.Risk{
 					SyntheticId:                     createSyntheticId(cat.Id, mostRelevantDataAssetId, mostRelevantTechnicalAssetId, mostRelevantCommunicationLinkId, mostRelevantTrustBoundaryId, mostRelevantSharedRuntimeId),
 					Title:                           fmt.Sprintf("%v", title),
 					CategoryId:                      cat.Id,
@@ -578,8 +581,7 @@ func ParseModel(modelInput *input.Model, builtinRiskRules map[string]risks.RiskR
 					MostRelevantSharedRuntimeId:     mostRelevantSharedRuntimeId,
 					DataBreachProbability:           dataBreachProbability,
 					DataBreachTechnicalAssetIDs:     dataBreachTechnicalAssetIDs,
-				}
-				parsedModel.GeneratedRisksByCategory[cat.Id] = append(parsedModel.GeneratedRisksByCategory[cat.Id], individualRiskInstance)
+				})
 			}
 		}
 	}
@@ -609,7 +611,7 @@ func ParseModel(modelInput *input.Model, builtinRiskRules map[string]risks.RiskR
 			Justification:   justification,
 			CheckedBy:       checkedBy,
 			Ticket:          ticket,
-			Date:            date,
+			Date:            types.Date{Time: date},
 			Status:          status,
 		}
 
@@ -625,6 +627,25 @@ func ParseModel(modelInput *input.Model, builtinRiskRules map[string]risks.RiskR
 			}
 		}
 	}
+
+	/*
+		data, _ := json.MarshalIndent(parsedModel, "", "  ")
+		_ = os.WriteFile(filepath.Join("all.json"), data, 0644)
+	*/
+
+	/**
+	inYamlData, _ := yaml.Marshal(modelInput)
+	_ = os.WriteFile(filepath.Join("in.yaml"), inYamlData, 0644)
+
+	inJsonData, _ := json.MarshalIndent(modelInput, "", "  ")
+	_ = os.WriteFile(filepath.Join("in.json"), inJsonData, 0644)
+
+	outYamlData, _ := yaml.Marshal(parsedModel)
+	_ = os.WriteFile(filepath.Join("out.yaml"), outYamlData, 0644)
+
+	outJsonData, _ := json.MarshalIndent(parsedModel, "", "  ")
+	_ = os.WriteFile(filepath.Join("out.json"), outJsonData, 0644)
+	/**/
 
 	return &parsedModel, nil
 }

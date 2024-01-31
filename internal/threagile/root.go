@@ -32,7 +32,7 @@ func (what *Threagile) initRoot() *Threagile {
 
 			r, err := model.ReadAndAnalyzeModel(*cfg, progressReporter)
 			if err != nil {
-				cmd.Println("Failed to read and analyze model")
+				cmd.Printf("Failed to read and analyze model: %v", err)
 				return err
 			}
 

@@ -2,7 +2,9 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
+	"io"
 	"os"
 	"sort"
 
@@ -12,12 +14,32 @@ import (
 // used from run caller:
 
 func main() {
+	inputFilename := flag.String("in", "", "input file")
+	outputFilename := flag.String("out", "", "output file")
+	flag.Parse()
+
+	var data []byte
+	var inputError error
+	if len(*inputFilename) > 0 {
+		data, inputError = os.ReadFile(*inputFilename)
+		if inputError != nil {
+			_, _ = fmt.Fprintf(os.Stderr, "failed to read input file %q: %v\n", *inputFilename, inputError)
+			os.Exit(-2)
+		}
+	} else {
+		data, inputError = io.ReadAll(os.Stdin)
+		if inputError != nil {
+			_, _ = fmt.Fprintf(os.Stderr, "failed to read input from stdin: %v\n", inputError)
+			os.Exit(-2)
+		}
+	}
+
+	//	_ = os.WriteFile("raa_in.json", data, 0644)
+
 	var input types.ParsedModel
-	decoder := json.NewDecoder(os.Stdin)
-	inError := decoder.Decode(&input)
-	if inError != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "failed to parse model: %v\n", inError)
-		_, _ = fmt.Fprintf(os.Stderr, "\n")
+	parseError := json.Unmarshal(data, &input)
+	if parseError != nil {
+		_, _ = fmt.Fprintf(os.Stderr, "failed to parse model: %v\n", parseError)
 		os.Exit(-2)
 	}
 
@@ -28,10 +50,29 @@ func main() {
 		os.Exit(-2)
 	}
 
-	_, _ = fmt.Fprint(os.Stdout, string(outData))
+	//	_ = os.WriteFile("raa_out.json", outData, 0644)
+
+	var outputFile io.Writer = os.Stdout
+	if len(*outputFilename) > 0 {
+		file, outputError := os.Open(*outputFilename)
+		if outputError != nil {
+			_, _ = fmt.Fprintf(os.Stderr, "failed to open output file %q: %v\n", *outputFilename, outputError)
+			os.Exit(-2)
+		}
+
+		defer closeFile(file)
+		outputFile = file
+	}
+
+	_, _ = fmt.Fprint(outputFile, string(outData))
 	_ = text
 	//	_, _ = fmt.Fprint(os.Stderr, text)
+
 	os.Exit(0)
+}
+
+func closeFile(file io.Closer) {
+	_ = file.Close()
 }
 
 func CalculateRAA(input *types.ParsedModel) string {
