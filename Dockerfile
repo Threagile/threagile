@@ -78,4 +78,4 @@ USER 1000:1000
 ENV PATH=/app:$PATH GIN_MODE=release
 
 ENTRYPOINT ["/app/threagile"]
-CMD ["-help"]
+CMD ["help"]
