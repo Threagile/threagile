@@ -6,6 +6,10 @@ package threagile
 
 import (
 	"fmt"
+	"github.com/chzyer/readline"
+	"github.com/mattn/go-shellwords"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -16,6 +20,25 @@ import (
 	"github.com/threagile/threagile/pkg/report"
 )
 
+const (
+	UsageTemplate = `Usage:{{if .Runnable}}
+  {{.UseLine}}{{end}}{{if .HasAvailableSubCommands}}
+ {{.CommandPath}} [command]{{end}}{{if gt (len .Aliases) 0}}
+
+Aliases:
+  {{.NameAndAliases}}{{end}}{{if .HasExample}}
+
+Examples:
+{{.Example}}{{end}}{{if .HasAvailableSubCommands}}
+
+Available Commands:{{range .Commands}}{{if (or .IsAvailableCommand (eq .Name "help"))}}
+  {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{end}}{{if .HasHelpSubCommands}}
+
+Additional help topics:{{range .Commands}}{{if .IsAdditionalHelpTopicCommand}}
+  {{rpad .CommandPath .CommandPathPadding}} {{.Short}}{{end}}{{end}}{{end}}
+`
+)
+
 func (what *Threagile) initRoot() *Threagile {
 	what.rootCmd = &cobra.Command{
 		Use:           "threagile",
@@ -24,6 +47,7 @@ func (what *Threagile) initRoot() *Threagile {
 		Long:          "\n" + docs.Logo + "\n\n" + fmt.Sprintf(docs.VersionText, what.buildTimestamp) + "\n\n" + docs.Examples,
 		SilenceErrors: true,
 		SilenceUsage:  true,
+		Run:           what.run,
 		CompletionOptions: cobra.CompletionOptions{
 			DisableDefaultCmd: true,
 		},
@@ -39,6 +63,7 @@ func (what *Threagile) initRoot() *Threagile {
 	what.rootCmd.PersistentFlags().StringVar(&what.flags.inputFileFlag, inputFileFlagName, defaultConfig.InputFile, "input model yaml file")
 	what.rootCmd.PersistentFlags().StringVar(&what.flags.raaPluginFlag, raaPluginFlagName, defaultConfig.RAAPlugin, "RAA calculation run file name")
 
+	what.rootCmd.PersistentFlags().BoolVarP(&what.flags.interactiveFlag, interactiveFlagName, interactiveFlagShorthand, defaultConfig.Interactive, "interactive mode")
 	what.rootCmd.PersistentFlags().BoolVarP(&what.flags.verboseFlag, verboseFlagName, verboseFlagShorthand, defaultConfig.Verbose, "verbose output")
 
 	what.rootCmd.PersistentFlags().StringVar(&what.flags.configFlag, configFlagName, "", "config file")
@@ -59,6 +84,121 @@ func (what *Threagile) initRoot() *Threagile {
 	what.rootCmd.PersistentFlags().BoolVar(&what.flags.generateReportPDFFlag, generateReportPDFFlagName, true, "generate report pdf, including diagrams")
 
 	return what
+}
+
+func (what *Threagile) run(*cobra.Command, []string) {
+	if !what.flags.interactiveFlag {
+		return
+	}
+
+	what.rootCmd.Use = "\b"
+	completer := readline.NewPrefixCompleter()
+	for _, child := range what.rootCmd.Commands() {
+		what.cobraToReadline(completer, child)
+	}
+
+	dir, homeError := os.UserHomeDir()
+	if homeError != nil {
+		return
+	}
+
+	shell, readlineError := readline.NewEx(&readline.Config{
+		Prompt:            "\033[31m>>\033[0m ",
+		HistoryFile:       filepath.Join(dir, ".threagile_history"),
+		HistoryLimit:      1000,
+		AutoComplete:      completer,
+		InterruptPrompt:   "^C",
+		EOFPrompt:         "quit",
+		HistorySearchFold: true,
+	})
+
+	if readlineError != nil {
+		return
+	}
+
+	defer func() { _ = shell.Close() }()
+
+	for {
+		line, readError := shell.Readline()
+		if readError != nil {
+			return
+		}
+
+		if len(strings.TrimSpace(line)) == 0 {
+			continue
+		}
+
+		params, parseError := shellwords.Parse(line)
+		if parseError != nil {
+			fmt.Printf("failed to parse command line: %s", parseError.Error())
+			continue
+		}
+
+		cmd, args, findError := what.rootCmd.Find(params)
+		if findError != nil {
+			fmt.Printf("failed to find command: %s", findError.Error())
+			continue
+		}
+
+		if cmd == nil || cmd == what.rootCmd {
+			fmt.Printf("failed to find command")
+			continue
+		}
+
+		flagsError := cmd.ParseFlags(args)
+		if flagsError != nil {
+			fmt.Printf("invalid flags: %s", flagsError.Error())
+			continue
+		}
+
+		if !cmd.DisableFlagParsing {
+			args = cmd.Flags().Args()
+		}
+
+		argsError := cmd.ValidateArgs(args)
+		if argsError != nil {
+			_ = cmd.Help()
+			continue
+		}
+
+		if cmd.Run != nil {
+			cmd.Run(cmd, args)
+			continue
+		}
+
+		if cmd.RunE != nil {
+			runError := cmd.RunE(cmd, args)
+			if runError != nil {
+				fmt.Printf("error: %v \n", runError)
+			}
+			continue
+		}
+
+		_ = cmd.Help()
+		continue
+	}
+}
+
+func (c *Threagile) cobraToReadline(node readline.PrefixCompleterInterface, cmd *cobra.Command) {
+	cmd.SetUsageTemplate(UsageTemplate)
+	cmd.Use = c.usage(cmd)
+	pcItem := readline.PcItem(cmd.Use)
+	node.SetChildren(append(node.GetChildren(), pcItem))
+
+	for _, child := range cmd.Commands() {
+		c.cobraToReadline(pcItem, child)
+	}
+}
+
+func (c *Threagile) usage(cmd *cobra.Command) string {
+	words := make([]string, 0, len(cmd.ArgAliases)+1)
+	words = append(words, cmd.Use)
+
+	for _, name := range cmd.ArgAliases {
+		words = append(words, "["+name+"]")
+	}
+
+	return strings.Join(words, " ")
 }
 
 func (what *Threagile) readCommands() *report.GenerateCommands {

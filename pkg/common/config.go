@@ -12,6 +12,7 @@ import (
 type Config struct {
 	BuildTimestamp string
 	Verbose        bool
+	Interactive    bool
 
 	AppFolder    string
 	BinFolder    string
