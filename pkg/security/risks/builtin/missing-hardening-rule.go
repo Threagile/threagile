@@ -32,7 +32,7 @@ func (r *MissingHardeningRule) Category() types.RiskCategory {
 		STRIDE:   types.Tampering,
 		DetectionLogic: "In-scope technical assets with RAA values of " + strconv.Itoa(r.raaLimit) + " % or higher. " +
 			"Generally for high-value targets like data stores, application servers, identity providers and ERP systems this limit is reduced to " + strconv.Itoa(r.raaLimitReduced) + " %",
-		RiskAssessment:             "The risk rating depends on the sensitivity of the data processed or stored in the technical asset.",
+		RiskAssessment:             "The risk rating depends on the sensitivity of the data processed in the technical asset.",
 		FalsePositives:             "Usually no false positives.",
 		ModelFailurePossibleReason: false,
 		CWE:                        16,

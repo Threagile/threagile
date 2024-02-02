@@ -535,7 +535,7 @@
             "type": "boolean"
           },
           "data_assets_processed": {
-            "description": "Data assets processed",
+            "description": "Data assets processed; ; all data assets stored or sent or received via a communication link (be it as a source or a target) are implicitly also processed and do not need to be listed here.",
             "type": [
               "array",
               "null"
@@ -745,9 +745,7 @@
                 "vpn",
                 "ip_filtered",
                 "readonly",
-                "usage",
-                "data_assets_sent",
-                "data_assets_received"
+                "usage"
               ]
             }
           }

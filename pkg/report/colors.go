@@ -367,17 +367,11 @@ func determineTechnicalAssetLabelColor(ta types.TechnicalAsset, model *types.Par
 
 // red when mission-critical integrity, but still unauthenticated (non-readonly) channels access it
 // amber when critical integrity, but still unauthenticated (non-readonly) channels access it
-// pink when model forgery attempt (i.e. nothing being processed or stored)
-
+// pink when model forgery attempt (i.e. nothing being processed)
 func determineShapeBorderColor(ta types.TechnicalAsset, parsedModel *types.ParsedModel) string {
 	// Check for red
 	if ta.Confidentiality == types.StrictlyConfidential {
 		return Red
-	}
-	for _, storedDataAsset := range ta.DataAssetsStored {
-		if parsedModel.DataAssets[storedDataAsset].Confidentiality == types.StrictlyConfidential {
-			return Red
-		}
 	}
 	for _, processedDataAsset := range ta.DataAssetsProcessed {
 		if parsedModel.DataAssets[processedDataAsset].Confidentiality == types.StrictlyConfidential {
@@ -387,11 +381,6 @@ func determineShapeBorderColor(ta types.TechnicalAsset, parsedModel *types.Parse
 	// Check for amber
 	if ta.Confidentiality == types.Confidential {
 		return Amber
-	}
-	for _, storedDataAsset := range ta.DataAssetsStored {
-		if parsedModel.DataAssets[storedDataAsset].Confidentiality == types.Confidential {
-			return Amber
-		}
 	}
 	for _, processedDataAsset := range ta.DataAssetsProcessed {
 		if parsedModel.DataAssets[processedDataAsset].Confidentiality == types.Confidential {
@@ -427,7 +416,7 @@ func determineShapeBorderColor(ta types.TechnicalAsset, parsedModel *types.Parse
 // dotted when model forgery attempt (i.e. nothing being processed or stored)
 
 func determineShapeBorderLineStyle(ta types.TechnicalAsset) string {
-	if len(ta.DataAssetsProcessed) == 0 && len(ta.DataAssetsStored) == 0 || ta.OutOfScope {
+	if len(ta.DataAssetsProcessed) == 0 || ta.OutOfScope {
 		return "dotted" // dotted, because it's strange when too many technical communication links transfer no data... some ok, but many in a diagram ist a sign of model forgery...
 	}
 	return "solid"

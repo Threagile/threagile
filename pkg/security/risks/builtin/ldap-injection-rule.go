@@ -15,7 +15,7 @@ func (*LdapInjectionRule) Category() types.RiskCategory {
 		Id:    "ldap-injection",
 		Title: "LDAP-Injection",
 		Description: "When an LDAP server is accessed LDAP-Injection risks might arise. " +
-			"The risk rating depends on the sensitivity of the LDAP server itself and of the data assets processed or stored.",
+			"The risk rating depends on the sensitivity of the LDAP server itself and of the data assets processed.",
 		Impact:     "If this risk remains unmitigated, attackers might be able to modify LDAP queries and access more data from the LDAP server than allowed.",
 		ASVS:       "V5 - Validation, Sanitization and Encoding Verification Requirements",
 		CheatSheet: "https://cheatsheetseries.owasp.org/cheatsheets/LDAP_Injection_Prevention_Cheat_Sheet.html",
@@ -27,7 +27,7 @@ func (*LdapInjectionRule) Category() types.RiskCategory {
 		Function:       types.Development,
 		STRIDE:         types.Tampering,
 		DetectionLogic: "In-scope clients accessing LDAP servers via typical LDAP access protocols.",
-		RiskAssessment: "The risk rating depends on the sensitivity of the LDAP server itself and of the data assets processed or stored.",
+		RiskAssessment: "The risk rating depends on the sensitivity of the LDAP server itself and of the data assets processed.",
 		FalsePositives: "LDAP server queries by search values not consisting of parts controllable by the caller can be considered " +
 			"as false positives after individual review.",
 		ModelFailurePossibleReason: false,

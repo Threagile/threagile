@@ -16,7 +16,7 @@ func (*UnnecessaryDataAssetRule) Category() types.RiskCategory {
 	return types.RiskCategory{
 		Id:    "unnecessary-data-asset",
 		Title: "Unnecessary Data Asset",
-		Description: "When a data asset is not processed or stored by any data assets and also not transferred by any " +
+		Description: "When a data asset is not processed by any data assets and also not transferred by any " +
 			"communication links, this is an indicator for an unnecessary data asset (or for an incomplete model).",
 		Impact: "If this risk is unmitigated, attackers might be able to access unnecessary data assets using " +
 			"other vulnerabilities.",
@@ -27,7 +27,7 @@ func (*UnnecessaryDataAssetRule) Category() types.RiskCategory {
 		Check:      "Are recommendations from the linked cheat sheet and referenced ASVS chapter applied?",
 		Function:   types.Architecture,
 		STRIDE:     types.ElevationOfPrivilege,
-		DetectionLogic: "Modelled data assets not processed or stored by any data assets and also not transferred by any " +
+		DetectionLogic: "Modelled data assets not processed by any data assets and also not transferred by any " +
 			"communication links.",
 		RiskAssessment:             types.LowSeverity.String(),
 		FalsePositives:             "Usually no false positives as this looks like an incomplete model.",
