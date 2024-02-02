@@ -16,132 +16,151 @@ import (
 )
 
 func TestDefaultInputNotFail(t *testing.T) {
-	parsedModel, err := ParseModel(createInputModel(map[string]input.TechnicalAsset{}), map[string]risks.RiskRule{}, map[string]*CustomRisk{})
+	parsedModel, err := ParseModel(createInputModel(make(map[string]input.TechnicalAsset), make(map[string]input.DataAsset)), make(map[string]risks.RiskRule), make(map[string]*CustomRisk))
 
 	assert.NoError(t, err)
 	assert.NotNil(t, parsedModel)
 }
 
 func TestInferConfidentiality_NotSet_NoOthers_ExpectTODO(t *testing.T) {
-	ta := map[string]input.TechnicalAsset{}
+	ta := make(map[string]input.TechnicalAsset)
+	da := make(map[string]input.DataAsset)
 
-	taUndefinedConfidentiality := createDefaultTechnicalAsset()
-	taUndefinedConfidentiality.Confidentiality = ""
-	ta[taUndefinedConfidentiality.ID] = taUndefinedConfidentiality
-
-	parsedModel, err := ParseModel(createInputModel(ta), map[string]risks.RiskRule{}, map[string]*CustomRisk{})
+	_, err := ParseModel(createInputModel(ta, da), make(map[string]risks.RiskRule), make(map[string]*CustomRisk))
+	// TODO: rename test and check if everyone agree that by default it should be public if there are no other assets
 
 	assert.NoError(t, err)
-	// TODO: rename test and check if everyone agree that by default it should be public if there are no other assets
-	assert.Equal(t, types.Public, parsedModel.TechnicalAssets[taUndefinedConfidentiality.ID].Confidentiality)
 }
 
-func TestInferConfidentiality_NotSet_ExpectHighestConfidentiality(t *testing.T) {
-	ta := map[string]input.TechnicalAsset{}
+func TestInferConfidentiality_ExpectHighestConfidentiality(t *testing.T) {
+	ta := make(map[string]input.TechnicalAsset)
+	da := make(map[string]input.DataAsset)
 
-	taUndefinedConfidentiality := createDefaultTechnicalAsset()
-	taUndefinedConfidentiality.Confidentiality = ""
-	ta[taUndefinedConfidentiality.ID] = taUndefinedConfidentiality
+	daConfidentialConfidentiality := createDataAsset(types.Confidential, types.Critical, types.Critical)
+	da[daConfidentialConfidentiality.ID] = daConfidentialConfidentiality
 
-	taLowerConfidentiality := createDefaultTechnicalAsset()
-	taLowerConfidentiality.Confidentiality = "restricted"
-	ta[taLowerConfidentiality.ID] = taLowerConfidentiality
+	daRestrictedConfidentiality := createDataAsset(types.Restricted, types.Important, types.Important)
+	da[daRestrictedConfidentiality.ID] = daRestrictedConfidentiality
 
-	taHigherConfidentiality := createDefaultTechnicalAsset()
-	taHigherConfidentiality.Confidentiality = "confidential"
-	ta[taLowerConfidentiality.ID] = taHigherConfidentiality
+	daPublicConfidentiality := createDataAsset(types.Public, types.Archive, types.Archive)
+	da[daPublicConfidentiality.ID] = daPublicConfidentiality
 
-	parsedModel, err := ParseModel(createInputModel(ta), map[string]risks.RiskRule{}, map[string]*CustomRisk{})
+	taWithConfidentialConfidentialityDataAsset := createTechnicalAsset(types.Internal, types.Operational, types.Operational)
+	taWithConfidentialConfidentialityDataAsset.DataAssetsProcessed = append(taWithConfidentialConfidentialityDataAsset.DataAssetsProcessed, daConfidentialConfidentiality.ID)
+	ta[taWithConfidentialConfidentialityDataAsset.ID] = taWithConfidentialConfidentialityDataAsset
+
+	taWithRestrictedConfidentialityDataAsset := createTechnicalAsset(types.Internal, types.Operational, types.Operational)
+	taWithRestrictedConfidentialityDataAsset.DataAssetsProcessed = append(taWithRestrictedConfidentialityDataAsset.DataAssetsProcessed, daRestrictedConfidentiality.ID)
+	ta[taWithRestrictedConfidentialityDataAsset.ID] = taWithRestrictedConfidentialityDataAsset
+
+	taWithPublicConfidentialityDataAsset := createTechnicalAsset(types.Internal, types.Operational, types.Operational)
+	taWithPublicConfidentialityDataAsset.DataAssetsProcessed = append(taWithPublicConfidentialityDataAsset.DataAssetsProcessed, daPublicConfidentiality.ID)
+	ta[taWithPublicConfidentialityDataAsset.ID] = taWithPublicConfidentialityDataAsset
+
+	parsedModel, err := ParseModel(createInputModel(ta, da), make(map[string]risks.RiskRule), make(map[string]*CustomRisk))
 
 	assert.NoError(t, err)
-	assert.Equal(t, types.Confidential, parsedModel.TechnicalAssets[taUndefinedConfidentiality.ID].Confidentiality)
-	assert.Equal(t, types.Confidential, parsedModel.TechnicalAssets[taLowerConfidentiality.ID].Confidentiality)
-	assert.Equal(t, types.Confidential, parsedModel.TechnicalAssets[taHigherConfidentiality.ID].Confidentiality)
+	assert.Equal(t, types.Confidential, parsedModel.TechnicalAssets[taWithConfidentialConfidentialityDataAsset.ID].Confidentiality)
+	assert.Equal(t, types.Restricted, parsedModel.TechnicalAssets[taWithRestrictedConfidentialityDataAsset.ID].Confidentiality)
+	assert.Equal(t, types.Internal, parsedModel.TechnicalAssets[taWithPublicConfidentialityDataAsset.ID].Confidentiality)
 }
 
 func TestInferIntegrity_NotSet_NoOthers_ExpectTODO(t *testing.T) {
-	ta := map[string]input.TechnicalAsset{}
+	ta := make(map[string]input.TechnicalAsset)
+	da := make(map[string]input.DataAsset)
 
-	taUndefinedIntegrity := createDefaultTechnicalAsset()
-	taUndefinedIntegrity.Integrity = ""
-	ta[taUndefinedIntegrity.ID] = taUndefinedIntegrity
-
-	parsedModel, err := ParseModel(createInputModel(ta), map[string]risks.RiskRule{}, map[string]*CustomRisk{})
+	_, err := ParseModel(createInputModel(ta, da), make(map[string]risks.RiskRule), make(map[string]*CustomRisk))
+	// TODO: rename test and check if everyone agree that by default it should be public if there are no other assets
 
 	assert.NoError(t, err)
-	// TODO: rename test and check if everyone agree that by default it should be archive if there are no other assets
-	assert.Equal(t, types.Archive, parsedModel.TechnicalAssets[taUndefinedIntegrity.ID].Integrity)
 }
 
-func TestInferIntegrity_NotSet_ExpectHighestIntegrity(t *testing.T) {
-	ta := map[string]input.TechnicalAsset{}
+func TestInferIntegrity_ExpectHighestIntegrity(t *testing.T) {
+	ta := make(map[string]input.TechnicalAsset)
+	da := make(map[string]input.DataAsset)
 
-	taUndefinedIntegrity := createDefaultTechnicalAsset()
-	taUndefinedIntegrity.Integrity = ""
-	ta[taUndefinedIntegrity.ID] = taUndefinedIntegrity
+	daCriticalIntegrity := createDataAsset(types.Confidential, types.Critical, types.Critical)
+	da[daCriticalIntegrity.ID] = daCriticalIntegrity
 
-	taLowerIntegrity := createDefaultTechnicalAsset()
-	taLowerIntegrity.Integrity = "important"
-	ta[taLowerIntegrity.ID] = taLowerIntegrity
+	daImportantIntegrity := createDataAsset(types.Restricted, types.Important, types.Important)
+	da[daImportantIntegrity.ID] = daImportantIntegrity
 
-	taHigherConfidentiality := createDefaultTechnicalAsset()
-	taHigherConfidentiality.Confidentiality = "critical"
-	ta[taHigherConfidentiality.ID] = taHigherConfidentiality
+	daArchiveIntegrity := createDataAsset(types.Public, types.Archive, types.Archive)
+	da[daArchiveIntegrity.ID] = daArchiveIntegrity
 
-	parsedModel, err := ParseModel(createInputModel(ta), map[string]risks.RiskRule{}, map[string]*CustomRisk{})
+	taWithCriticalIntegrityDataAsset := createTechnicalAsset(types.Internal, types.Operational, types.Operational)
+	taWithCriticalIntegrityDataAsset.DataAssetsProcessed = append(taWithCriticalIntegrityDataAsset.DataAssetsProcessed, daCriticalIntegrity.ID)
+	ta[taWithCriticalIntegrityDataAsset.ID] = taWithCriticalIntegrityDataAsset
+
+	taWithImportantIntegrityDataAsset := createTechnicalAsset(types.Internal, types.Operational, types.Operational)
+	taWithImportantIntegrityDataAsset.DataAssetsProcessed = append(taWithImportantIntegrityDataAsset.DataAssetsProcessed, daImportantIntegrity.ID)
+	ta[taWithImportantIntegrityDataAsset.ID] = taWithImportantIntegrityDataAsset
+
+	taWithArchiveIntegrityDataAsset := createTechnicalAsset(types.Internal, types.Operational, types.Operational)
+	taWithArchiveIntegrityDataAsset.DataAssetsProcessed = append(taWithArchiveIntegrityDataAsset.DataAssetsProcessed, daArchiveIntegrity.ID)
+	ta[taWithArchiveIntegrityDataAsset.ID] = taWithArchiveIntegrityDataAsset
+
+	parsedModel, err := ParseModel(createInputModel(ta, da), make(map[string]risks.RiskRule), make(map[string]*CustomRisk))
 
 	assert.NoError(t, err)
-	assert.Equal(t, types.Critical, parsedModel.TechnicalAssets[taUndefinedIntegrity.ID].Integrity)
-	assert.Equal(t, types.Important, parsedModel.TechnicalAssets[taLowerIntegrity.ID].Integrity)
-	assert.Equal(t, types.Critical, parsedModel.TechnicalAssets[taHigherConfidentiality.ID].Integrity)
+	assert.Equal(t, types.Critical, parsedModel.TechnicalAssets[taWithCriticalIntegrityDataAsset.ID].Integrity)
+	assert.Equal(t, types.Important, parsedModel.TechnicalAssets[taWithImportantIntegrityDataAsset.ID].Integrity)
+	assert.Equal(t, types.Operational, parsedModel.TechnicalAssets[taWithArchiveIntegrityDataAsset.ID].Integrity)
 }
 
 func TestInferAvailability_NotSet_NoOthers_ExpectTODO(t *testing.T) {
-	ta := map[string]input.TechnicalAsset{}
+	ta := make(map[string]input.TechnicalAsset)
+	da := make(map[string]input.DataAsset)
 
-	taUndefinedIntegrity := createDefaultTechnicalAsset()
-	taUndefinedIntegrity.Integrity = ""
-	ta[taUndefinedIntegrity.ID] = taUndefinedIntegrity
-
-	parsedModel, err := ParseModel(createInputModel(ta), map[string]risks.RiskRule{}, map[string]*CustomRisk{})
+	_, err := ParseModel(createInputModel(ta, da), make(map[string]risks.RiskRule), make(map[string]*CustomRisk))
 
 	assert.NoError(t, err)
-	assert.Equal(t, types.Archive, parsedModel.TechnicalAssets[taUndefinedIntegrity.ID].Integrity)
 }
 
-func TestInferAvailability_NotSet_ExpectHighestAvailability(t *testing.T) {
-	ta := map[string]input.TechnicalAsset{}
+func TestInferAvailability_ExpectHighestAvailability(t *testing.T) {
+	ta := make(map[string]input.TechnicalAsset)
+	da := make(map[string]input.DataAsset)
 
-	taUndefinedAvailability := createDefaultTechnicalAsset()
-	taUndefinedAvailability.Availability = ""
-	ta[taUndefinedAvailability.ID] = taUndefinedAvailability
+	daCriticalAvailability := createDataAsset(types.Confidential, types.Critical, types.Critical)
+	da[daCriticalAvailability.ID] = daCriticalAvailability
 
-	taLowerAvailability := createDefaultTechnicalAsset()
-	taLowerAvailability.Availability = "important"
-	ta[taLowerAvailability.ID] = taLowerAvailability
+	daImportantAvailability := createDataAsset(types.Restricted, types.Important, types.Important)
+	da[daImportantAvailability.ID] = daImportantAvailability
 
-	taHigherAvailability := createDefaultTechnicalAsset()
-	taHigherAvailability.Availability = "critical"
-	ta[taHigherAvailability.ID] = taHigherAvailability
+	daArchiveAvailability := createDataAsset(types.Public, types.Archive, types.Archive)
+	da[daArchiveAvailability.ID] = daArchiveAvailability
 
-	parsedModel, err := ParseModel(createInputModel(ta), map[string]risks.RiskRule{}, map[string]*CustomRisk{})
+	taWithCriticalAvailabilityDataAsset := createTechnicalAsset(types.Internal, types.Operational, types.Operational)
+	taWithCriticalAvailabilityDataAsset.DataAssetsProcessed = append(taWithCriticalAvailabilityDataAsset.DataAssetsProcessed, daCriticalAvailability.ID)
+	ta[taWithCriticalAvailabilityDataAsset.ID] = taWithCriticalAvailabilityDataAsset
+
+	taWithImportantAvailabilityDataAsset := createTechnicalAsset(types.Internal, types.Operational, types.Operational)
+	taWithImportantAvailabilityDataAsset.DataAssetsProcessed = append(taWithImportantAvailabilityDataAsset.DataAssetsProcessed, daImportantAvailability.ID)
+	ta[taWithImportantAvailabilityDataAsset.ID] = taWithImportantAvailabilityDataAsset
+
+	taWithArchiveAvailabilityDataAsset := createTechnicalAsset(types.Internal, types.Operational, types.Operational)
+	taWithArchiveAvailabilityDataAsset.DataAssetsProcessed = append(taWithArchiveAvailabilityDataAsset.DataAssetsProcessed, daArchiveAvailability.ID)
+	ta[taWithArchiveAvailabilityDataAsset.ID] = taWithArchiveAvailabilityDataAsset
+
+	parsedModel, err := ParseModel(createInputModel(ta, da), make(map[string]risks.RiskRule), make(map[string]*CustomRisk))
 
 	assert.NoError(t, err)
-	assert.Equal(t, types.Critical, parsedModel.TechnicalAssets[taUndefinedAvailability.ID].Availability)
-	assert.Equal(t, types.Important, parsedModel.TechnicalAssets[taLowerAvailability.ID].Availability)
-	assert.Equal(t, types.Critical, parsedModel.TechnicalAssets[taHigherAvailability.ID].Availability)
+	assert.Equal(t, types.Critical, parsedModel.TechnicalAssets[taWithCriticalAvailabilityDataAsset.ID].Availability)
+	assert.Equal(t, types.Important, parsedModel.TechnicalAssets[taWithImportantAvailabilityDataAsset.ID].Availability)
+	assert.Equal(t, types.Operational, parsedModel.TechnicalAssets[taWithArchiveAvailabilityDataAsset.ID].Availability)
 }
 
-func createInputModel(technicalAssets map[string]input.TechnicalAsset) *input.Model {
+func createInputModel(technicalAssets map[string]input.TechnicalAsset, dataAssets map[string]input.DataAsset) *input.Model {
 	return &input.Model{
 		TechnicalAssets: technicalAssets,
+		DataAssets:      dataAssets,
 
 		// set some dummy values to bypass validation
 		BusinessCriticality: "archive",
 	}
 }
 
-func createDefaultTechnicalAsset() input.TechnicalAsset {
+func createTechnicalAsset(confidentiality types.Confidentiality, integrity types.Criticality, availability types.Criticality) input.TechnicalAsset {
 	return input.TechnicalAsset{
 		ID: uuid.New().String(),
 		// those values are required to bypass validation
@@ -151,8 +170,19 @@ func createDefaultTechnicalAsset() input.TechnicalAsset {
 		Technology:      "unknown-technology",
 		Encryption:      "none",
 		Machine:         "virtual",
-		Confidentiality: "public",
-		Integrity:       "archive",
-		Availability:    "archive",
+		Confidentiality: confidentiality.String(),
+		Integrity:       integrity.String(),
+		Availability:    availability.String(),
+	}
+}
+
+func createDataAsset(confidentiality types.Confidentiality, integrity types.Criticality, availability types.Criticality) input.DataAsset {
+	return input.DataAsset{
+		ID:              uuid.New().String(),
+		Usage:           "business",
+		Quantity:        "few",
+		Confidentiality: confidentiality.String(),
+		Integrity:       integrity.String(),
+		Availability:    availability.String(),
 	}
 }
