@@ -110,12 +110,6 @@ func (what TechnicalAsset) HighestConfidentiality(parsedModel *ParsedModel) Conf
 			highest = dataAsset.Confidentiality
 		}
 	}
-	for _, dataId := range what.DataAssetsStored {
-		dataAsset := parsedModel.DataAssets[dataId]
-		if dataAsset.Confidentiality > highest {
-			highest = dataAsset.Confidentiality
-		}
-	}
 	return highest
 }
 
@@ -163,24 +157,12 @@ func (what TechnicalAsset) HighestIntegrity(model *ParsedModel) Criticality {
 			highest = dataAsset.Integrity
 		}
 	}
-	for _, dataId := range what.DataAssetsStored {
-		dataAsset := model.DataAssets[dataId]
-		if dataAsset.Integrity > highest {
-			highest = dataAsset.Integrity
-		}
-	}
 	return highest
 }
 
 func (what TechnicalAsset) HighestAvailability(model *ParsedModel) Criticality {
 	highest := what.Availability
 	for _, dataId := range what.DataAssetsProcessed {
-		dataAsset := model.DataAssets[dataId]
-		if dataAsset.Availability > highest {
-			highest = dataAsset.Availability
-		}
-	}
-	for _, dataId := range what.DataAssetsStored {
 		dataAsset := model.DataAssets[dataId]
 		if dataAsset.Availability > highest {
 			highest = dataAsset.Availability
@@ -238,13 +220,7 @@ func (what TechnicalAsset) IsZero() bool {
 }
 
 func (what TechnicalAsset) ProcessesOrStoresDataAsset(dataAssetId string) bool {
-	if contains(what.DataAssetsProcessed, dataAssetId) {
-		return true
-	}
-	if contains(what.DataAssetsStored, dataAssetId) {
-		return true
-	}
-	return false
+	return contains(what.DataAssetsProcessed, dataAssetId)
 }
 
 /*

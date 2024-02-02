@@ -14,7 +14,7 @@ func (*MissingAuthenticationRule) Category() types.RiskCategory {
 	return types.RiskCategory{
 		Id:          "missing-authentication",
 		Title:       "Missing Authentication",
-		Description: "Technical assets (especially multi-tenant systems) should authenticate incoming requests when the asset processes or stores sensitive data. ",
+		Description: "Technical assets (especially multi-tenant systems) should authenticate incoming requests when the asset processes sensitive data. ",
 		Impact:      "If this risk is unmitigated, attackers might be able to access or modify sensitive data in an unauthenticated way.",
 		ASVS:        "V2 - Authentication Verification Requirements",
 		CheatSheet:  "https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html",
@@ -24,7 +24,7 @@ func (*MissingAuthenticationRule) Category() types.RiskCategory {
 		Check:    "Are recommendations from the linked cheat sheet and referenced ASVS chapter applied?",
 		Function: types.Architecture,
 		STRIDE:   types.ElevationOfPrivilege,
-		DetectionLogic: "In-scope technical assets (except " + types.LoadBalancer.String() + ", " + types.ReverseProxy.String() + ", " + types.ServiceRegistry.String() + ", " + types.WAF.String() + ", " + types.IDS.String() + ", and " + types.IPS.String() + " and in-process calls) should authenticate incoming requests when the asset processes or stores " +
+		DetectionLogic: "In-scope technical assets (except " + types.LoadBalancer.String() + ", " + types.ReverseProxy.String() + ", " + types.ServiceRegistry.String() + ", " + types.WAF.String() + ", " + types.IDS.String() + ", and " + types.IPS.String() + " and in-process calls) should authenticate incoming requests when the asset processes " +
 			"sensitive data. This is especially the case for all multi-tenant assets (there even non-sensitive ones).",
 		RiskAssessment: "The risk rating (medium or high) " +
 			"depends on the sensitivity of the data sent across the communication link. Monitoring callers are exempted from this risk.",

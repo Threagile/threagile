@@ -14,7 +14,7 @@ func (*UnnecessaryTechnicalAssetRule) Category() types.RiskCategory {
 	return types.RiskCategory{
 		Id:    "unnecessary-technical-asset",
 		Title: "Unnecessary Technical Asset",
-		Description: "When a technical asset does not process or store any data assets, this is " +
+		Description: "When a technical asset does not process any data assets, this is " +
 			"an indicator for an unnecessary technical asset (or for an incomplete model). " +
 			"This is also the case if the asset has no communication links (either outgoing or incoming).",
 		Impact:                     "If this risk is unmitigated, attackers might be able to target unnecessary technical assets.",

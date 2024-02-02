@@ -24,7 +24,7 @@ func (*UnnecessaryDataTransferRule) Category() types.RiskCategory {
 		CheatSheet: "https://cheatsheetseries.owasp.org/cheatsheets/Attack_Surface_Analysis_Cheat_Sheet.html",
 		Action:     "Attack Surface Reduction",
 		Mitigation: "Try to avoid sending or receiving sensitive data assets which are not required (i.e. neither " +
-			"processed or stored) by the involved technical asset.",
+			"processed) by the involved technical asset.",
 		Check:    "Are recommendations from the linked cheat sheet and referenced ASVS chapter applied?",
 		Function: types.Architecture,
 		STRIDE:   types.ElevationOfPrivilege,
@@ -35,7 +35,7 @@ func (*UnnecessaryDataTransferRule) Category() types.RiskCategory {
 			"either " + types.LowSeverity.String() + " or " + types.MediumSeverity.String() + ".",
 		FalsePositives: "Technical assets missing the model entries of either processing or storing the mentioned data assets " +
 			"can be considered as false positives (incomplete models) after individual review. These should then be addressed by " +
-			"completing the model so that all necessary data assets are processed and/or stored by the technical asset involved.",
+			"completing the model so that all necessary data assets are processed by the technical asset involved.",
 		ModelFailurePossibleReason: true,
 		CWE:                        1008,
 	}

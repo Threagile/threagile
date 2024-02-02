@@ -129,29 +129,35 @@ func ParseModel(modelInput *input.Model, builtinRiskRules map[string]risks.RiskR
 			return nil, errors.New("unknown 'usage' value of technical asset '" + title + "': " + asset.Usage)
 		}
 
-		var dataAssetsProcessed = make([]string, 0)
-		if asset.DataAssetsProcessed != nil {
-			dataAssetsProcessed = make([]string, len(asset.DataAssetsProcessed))
-			for i, parsedProcessedAsset := range asset.DataAssetsProcessed {
-				referencedAsset := fmt.Sprintf("%v", parsedProcessedAsset)
+		var dataAssetsStored = make([]string, 0)
+		if asset.DataAssetsStored != nil {
+			for _, parsedStoredAssets := range asset.DataAssetsStored {
+				referencedAsset := fmt.Sprintf("%v", parsedStoredAssets)
+				if contains(dataAssetsStored, referencedAsset) {
+					continue
+				}
+
 				err := parsedModel.CheckDataAssetTargetExists(referencedAsset, "technical asset '"+title+"'")
 				if err != nil {
 					return nil, err
 				}
-				dataAssetsProcessed[i] = referencedAsset
+				dataAssetsStored = append(dataAssetsStored, referencedAsset)
 			}
 		}
 
-		var dataAssetsStored = make([]string, 0)
-		if asset.DataAssetsStored != nil {
-			dataAssetsStored = make([]string, len(asset.DataAssetsStored))
-			for i, parsedStoredAssets := range asset.DataAssetsStored {
-				referencedAsset := fmt.Sprintf("%v", parsedStoredAssets)
+		var dataAssetsProcessed = dataAssetsStored
+		if asset.DataAssetsProcessed != nil {
+			for _, parsedProcessedAsset := range asset.DataAssetsProcessed {
+				referencedAsset := fmt.Sprintf("%v", parsedProcessedAsset)
+				if contains(dataAssetsProcessed, referencedAsset) {
+					continue
+				}
+
 				err := parsedModel.CheckDataAssetTargetExists(referencedAsset, "technical asset '"+title+"'")
 				if err != nil {
 					return nil, err
 				}
-				dataAssetsStored[i] = referencedAsset
+				dataAssetsProcessed = append(dataAssetsProcessed, referencedAsset)
 			}
 		}
 
@@ -227,22 +233,36 @@ func ParseModel(modelInput *input.Model, builtinRiskRules map[string]risks.RiskR
 				if commLink.DataAssetsSent != nil {
 					for _, dataAssetSent := range commLink.DataAssetsSent {
 						referencedAsset := fmt.Sprintf("%v", dataAssetSent)
-						err := parsedModel.CheckDataAssetTargetExists(referencedAsset, "communication link '"+commLinkTitle+"' of technical asset '"+title+"'")
-						if err != nil {
-							return nil, err
+						if !contains(dataAssetsSent, referencedAsset) {
+							err := parsedModel.CheckDataAssetTargetExists(referencedAsset, "communication link '"+commLinkTitle+"' of technical asset '"+title+"'")
+							if err != nil {
+								return nil, err
+							}
+
+							dataAssetsSent = append(dataAssetsSent, referencedAsset)
+							if !contains(dataAssetsProcessed, referencedAsset) {
+								dataAssetsProcessed = append(dataAssetsProcessed, referencedAsset)
+							}
 						}
-						dataAssetsSent = append(dataAssetsSent, referencedAsset)
 					}
 				}
 
 				if commLink.DataAssetsReceived != nil {
 					for _, dataAssetReceived := range commLink.DataAssetsReceived {
 						referencedAsset := fmt.Sprintf("%v", dataAssetReceived)
+						if contains(dataAssetsReceived, referencedAsset) {
+							continue
+						}
+
 						err := parsedModel.CheckDataAssetTargetExists(referencedAsset, "communication link '"+commLinkTitle+"' of technical asset '"+title+"'")
 						if err != nil {
 							return nil, err
 						}
 						dataAssetsReceived = append(dataAssetsReceived, referencedAsset)
+
+						if !contains(dataAssetsProcessed, referencedAsset) {
+							dataAssetsProcessed = append(dataAssetsProcessed, referencedAsset)
+						}
 					}
 				}
 
@@ -331,6 +351,29 @@ func ParseModel(modelInput *input.Model, builtinRiskRules map[string]risks.RiskR
 			DataFormatsAccepted:     dataFormatsAccepted,
 			CommunicationLinks:      communicationLinks,
 			DiagramTweakOrder:       asset.DiagramTweakOrder,
+		}
+	}
+
+	// A target of a communication link implicitly processes all data assets that are sent to or received by that target
+	for id, techAsset := range parsedModel.TechnicalAssets {
+		for _, commLink := range techAsset.CommunicationLinks {
+			if commLink.TargetId == id {
+				continue
+			}
+			targetTechAsset := parsedModel.TechnicalAssets[commLink.TargetId]
+			dataAssetsProcessedByTarget := targetTechAsset.DataAssetsProcessed
+			for _, dataAssetSent := range commLink.DataAssetsSent {
+				if !contains(dataAssetsProcessedByTarget, dataAssetSent) {
+					dataAssetsProcessedByTarget = append(dataAssetsProcessedByTarget, dataAssetSent)
+				}
+			}
+			for _, dataAssetReceived := range commLink.DataAssetsReceived {
+				if !contains(dataAssetsProcessedByTarget, dataAssetReceived) {
+					dataAssetsProcessedByTarget = append(dataAssetsProcessedByTarget, dataAssetReceived)
+				}
+			}
+			targetTechAsset.DataAssetsProcessed = dataAssetsProcessedByTarget
+			parsedModel.TechnicalAssets[commLink.TargetId] = targetTechAsset
 		}
 	}
 
@@ -712,4 +755,13 @@ func lowerCaseAndTrim(tags []string) []string {
 		tags[i] = strings.ToLower(strings.TrimSpace(tags[i]))
 	}
 	return tags
+}
+
+func contains(a []string, x string) bool {
+	for _, n := range a {
+		if x == n {
+			return true
+		}
+	}
+	return false
 }

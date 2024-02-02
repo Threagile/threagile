@@ -15,7 +15,7 @@ func (*PathTraversalRule) Category() types.RiskCategory {
 		Id:    "path-traversal",
 		Title: "Path-Traversal",
 		Description: "When a filesystem is accessed Path-Traversal or Local-File-Inclusion (LFI) risks might arise. " +
-			"The risk rating depends on the sensitivity of the technical asset itself and of the data assets processed or stored.",
+			"The risk rating depends on the sensitivity of the technical asset itself and of the data assets processed.",
 		Impact: "If this risk is unmitigated, attackers might be able to read sensitive files (configuration data, key/credential files, deployment files, " +
 			"business data files, etc.) from the filesystem of affected components.",
 		ASVS:       "V12 - File and Resources Verification Requirements",
