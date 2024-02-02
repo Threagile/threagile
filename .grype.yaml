@@ -1,0 +1,47 @@
+ignore:
+  - vulnerability: CVE-2023-42363
+    reason:
+      busybox(1.36.1-r15) - no upstream fix available
+      busybox-binsh(1.36.1-r15) - no upstream fix available
+  - vulnerability: CVE-2023-42364
+    reason:
+      busybox(1.36.1-r15) - no upstream fix available
+      busybox-binsh(1.36.1-r15) - no upstream fix available
+  - vulnerability: CVE-2023-42365
+    reason:
+      busybox(1.36.1-r15) - no upstream fix available
+      busybox-binsh(1.36.1-r15) - no upstream fix available
+  - vulnerability: CVE-2023-42366
+    reason:
+      busybox(1.36.1-r15) - no upstream fix available
+      busybox-binsh(1.36.1-r15) - no upstream fix available
+  - vulnerability: CVE-2014-9157
+    reason:
+      graphviz(8.0.5-r1) - no upstream fix available
+      graphviz-libs(8.0.5-r1) - no upstream fix available
+  - vulnerability: CVE-2023-37769
+    reason: pixman(0.42.2-r1) - no upstream fix available
+  - vulnerability: CVE-2023-43789
+    reason: libxpm(3.5.16-r1) - no upstream fix available
+  - vulnerability: CVE-2023-42363
+    reason: ssl_client(1.36.1-r5) - no upstream fix available
+  - vulnerability: CVE-2023-42364
+    reason: ssl_client(1.36.1-r5) - no upstream fix available
+  - vulnerability: CVE-2023-42365
+    reason: ssl_client(1.36.1-r5) - no upstream fix available
+  - vulnerability: CVE-2015-7313
+    reason: tiff( 4.5.1-r0) - no upstream fix available
+  - vulnerability: CVE-2023-3164
+    reason: tiff( 4.5.1-r0) - no upstream fix available
+  - vulnerability: CVE-2023-40745
+    reason: tiff( 4.5.1-r0) - no upstream fix available
+  - vulnerability: CVE-2023-41175
+    reason: tiff( 4.5.1-r0) - no upstream fix available
+  - vulnerability: CVE-2023-6228
+    reason: tiff( 4.5.1-r0) - no upstream fix available
+  - vulnerability: CVE-2023-6277
+    reason: tiff( 4.5.1-r0) - no upstream fix available
+  - vulnerability: CVE-2023-52355
+    reason: tiff( 4.5.1-r0) - no upstream fix available
+  - vulnerability: CVE-2023-52356
+    reason: tiff( 4.5.1-r0) - no upstream fix available
