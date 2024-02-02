@@ -354,6 +354,26 @@ func ParseModel(modelInput *input.Model, builtinRiskRules map[string]risks.RiskR
 		}
 	}
 
+	// If CIA is lower than that of its data assets, it is implicitly set to the highest CIA value of its data assets
+	for id, techAsset := range parsedModel.TechnicalAssets {
+		dataAssetConfidentiality := techAsset.HighestConfidentiality(&parsedModel)
+		if techAsset.Confidentiality < dataAssetConfidentiality {
+			techAsset.Confidentiality = dataAssetConfidentiality
+		}
+
+		dataAssetIntegrity := techAsset.HighestIntegrity(&parsedModel)
+		if techAsset.Integrity < dataAssetIntegrity {
+			techAsset.Integrity = dataAssetIntegrity
+		}
+
+		dataAssetAvailability := techAsset.HighestAvailability(&parsedModel)
+		if techAsset.Availability < dataAssetAvailability {
+			techAsset.Availability = dataAssetAvailability
+		}
+
+		parsedModel.TechnicalAssets[id] = techAsset
+	}
+
 	// A target of a communication link implicitly processes all data assets that are sent to or received by that target
 	for id, techAsset := range parsedModel.TechnicalAssets {
 		for _, commLink := range techAsset.CommunicationLinks {
