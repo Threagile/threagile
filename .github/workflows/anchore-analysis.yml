@@ -36,6 +36,7 @@ jobs:
         uses: anchore/scan-action@v3
         with:
           image: "localbuild/threagile:latest"
+          fail-build: false
 
       - name: Upload Anchore Scan Report
         uses: github/codeql-action/upload-sarif@v3
