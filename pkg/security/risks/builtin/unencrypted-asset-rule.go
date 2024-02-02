@@ -30,6 +30,7 @@ func (*UnencryptedAssetRule) Category() types.RiskCategory {
 			"storing data assets rated at least as " + types.Confidential.String() + " or " + types.Critical.String() + ". " +
 			"For technical assets storing data assets rated as " + types.StrictlyConfidential.String() + " or " + types.MissionCritical.String() + " the " +
 			"encryption must be of type " + types.DataWithEndUserIndividualKey.String() + ".",
+		// NOTE: the risk assesment does not only consider the CIs of the *stored* data-assets
 		RiskAssessment:             "Depending on the confidentiality rating of the stored data-assets either medium or high risk.",
 		FalsePositives:             "When all sensitive data stored within the asset is already fully encrypted on document or data level.",
 		ModelFailurePossibleReason: false,

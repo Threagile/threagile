@@ -92,9 +92,6 @@ func (what DataAsset) IsDataBreachPotentialStillAtRisk(parsedModel *ParsedModel)
 			if contains(parsedModel.TechnicalAssets[techAsset].DataAssetsProcessed, what.Id) {
 				return true
 			}
-			if contains(parsedModel.TechnicalAssets[techAsset].DataAssetsStored, what.Id) {
-				return true
-			}
 		}
 	}
 	return false
@@ -105,12 +102,6 @@ func (what DataAsset) IdentifiedDataBreachProbability(parsedModel *ParsedModel) 
 	for _, risk := range AllRisks(parsedModel) {
 		for _, techAsset := range risk.DataBreachTechnicalAssetIDs {
 			if contains(parsedModel.TechnicalAssets[techAsset].DataAssetsProcessed, what.Id) {
-				if risk.DataBreachProbability > highestProbability {
-					highestProbability = risk.DataBreachProbability
-					break
-				}
-			}
-			if contains(parsedModel.TechnicalAssets[techAsset].DataAssetsStored, what.Id) {
 				if risk.DataBreachProbability > highestProbability {
 					highestProbability = risk.DataBreachProbability
 					break
@@ -131,12 +122,6 @@ func (what DataAsset) IdentifiedDataBreachProbabilityStillAtRisk(parsedModel *Pa
 					break
 				}
 			}
-			if contains(parsedModel.TechnicalAssets[techAsset].DataAssetsStored, what.Id) {
-				if risk.DataBreachProbability > highestProbability {
-					highestProbability = risk.DataBreachProbability
-					break
-				}
-			}
 		}
 	}
 	return highestProbability
@@ -150,10 +135,6 @@ func (what DataAsset) IdentifiedDataBreachProbabilityRisksStillAtRisk(parsedMode
 				result = append(result, risk)
 				break
 			}
-			if contains(parsedModel.TechnicalAssets[techAsset].DataAssetsStored, what.Id) {
-				result = append(result, risk)
-				break
-			}
 		}
 	}
 	return result
@@ -164,10 +145,6 @@ func (what DataAsset) IdentifiedDataBreachProbabilityRisks(parsedModel *ParsedMo
 	for _, risk := range AllRisks(parsedModel) {
 		for _, techAsset := range risk.DataBreachTechnicalAssetIDs {
 			if contains(parsedModel.TechnicalAssets[techAsset].DataAssetsProcessed, what.Id) {
-				result = append(result, risk)
-				break
-			}
-			if contains(parsedModel.TechnicalAssets[techAsset].DataAssetsStored, what.Id) {
 				result = append(result, risk)
 				break
 			}

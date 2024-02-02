@@ -27,7 +27,7 @@ func (*MissingIdentityStoreRule) Category() types.RiskCategory {
 		STRIDE:         types.Spoofing,
 		DetectionLogic: "Models with authenticated data-flows authorized via end user identity missing an in-scope identity store.",
 		RiskAssessment: "The risk rating depends on the sensitivity of the end user-identity authorized technical assets and " +
-			"their data assets processed and stored.",
+			"their data assets processed.",
 		FalsePositives: "Models only offering data/services without any real authentication need " +
 			"can be considered as false positives after individual review.",
 		ModelFailurePossibleReason: true,
