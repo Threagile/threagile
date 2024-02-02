@@ -1,47 +1,41 @@
-# Used for local manual test builds
+# Used for local manual test builds as well as Anchore scans in github workflow
 
 ######
-## Stage 1: Clone the Git repository
+## Stage 1: Build application with Go's build tools
 ######
-FROM alpine/git as clone
+FROM docker.io/library/golang:alpine as build
 WORKDIR /app
 
-COPY . /app/threagile
+# Add build dependencies (gcc, c stdlib)
+RUN apk add --no-cache build-base
+COPY go.mod go.sum ./
 
+RUN go mod download
+COPY . .
 
-
-
-######
-## Stage 2: Build application with Go's build tools
-######
-FROM golang as build
-WORKDIR /app
-
+# Set build-time variables
+ARG GOOS=linux
 ENV GO111MODULE=on
-
-# https://stackoverflow.com/questions/36279253/go-compiled-binary-wont-run-in-an-alpine-docker-container-on-ubuntu-host
-#ENV CGO_ENABLED=0 # cannot be set as otherwise plugins don't run
-COPY --from=clone /app/threagile /app
 
 RUN go version
 RUN go test ./...
-RUN GOOS=linux go build -ldflags="-X main.buildTimestamp=$(date '+%Y%m%d%H%M%S')" -o raa_calc cmd/raa/main.go
-RUN GOOS=linux go build -ldflags="-X main.buildTimestamp=$(date '+%Y%m%d%H%M%S')" -o raa_dummy cmd/raa_dummy/main.go
-RUN GOOS=linux go build -ldflags="-X main.buildTimestamp=$(date '+%Y%m%d%H%M%S')" -o risk_demo_rule cmd/risk_demo/main.go
-RUN GOOS=linux go build -ldflags="-X main.buildTimestamp=$(date '+%Y%m%d%H%M%S')" -o threagile cmd/threagile/main.go
+
+RUN go build -ldflags="-X main.buildTimestamp=$(date '+%Y%m%d%H%M%S')" -o raa_calc cmd/raa/main.go
+RUN go build -ldflags="-X main.buildTimestamp=$(date '+%Y%m%d%H%M%S')" -o raa_dummy cmd/raa_dummy/main.go
+RUN go build -ldflags="-X main.buildTimestamp=$(date '+%Y%m%d%H%M%S')" -o risk_demo_rule cmd/risk_demo/main.go
+RUN go build -ldflags="-X main.buildTimestamp=$(date '+%Y%m%d%H%M%S')" -o threagile cmd/threagile/main.go
+
 # add the -race parameter to go build call in order to instrument with race condition detector: https://blog.golang.org/race-detector
 # NOTE: copy files with final name to send to final build
+
 RUN cp /app/demo/example/threagile.yaml /app/demo/example/threagile-example-model.yaml
 RUN cp /app/demo/stub/threagile.yaml /app/demo/stub/threagile-stub-model.yaml
 
 
-
-
 ######
-## Stage 3: Make final small image
+## Stage 2: Make final small image
 ######
-FROM alpine as deploy
-WORKDIR /app
+FROM docker.io/library/alpine:latest as deploy
 
 # label used in other scripts to filter
 LABEL type="threagile"
@@ -56,6 +50,10 @@ RUN apk add libc6-compat
 # RUN mkdir -p /lib64 && ln -s /lib/libc.musl-x86_64.so.1 /lib64/ld-linux-x86-64.so.2
 # clean apk cache
 RUN rm -rf /var/cache/apk/*
+# add non-privileged user
+RUN adduser --disabled-password --gecos "" --home "$(pwd)" --no-create-home threagile
+
+WORKDIR /app
 
 RUN mkdir -p /app /data
 RUN chown -R 1000:1000 /app /data
@@ -73,7 +71,7 @@ COPY --from=build --chown=1000:1000 /app/demo/example/threagile-example-model.ya
 COPY --from=build --chown=1000:1000 /app/demo/stub/threagile-stub-model.yaml /app/
 COPY --from=build --chown=1000:1000 /app/server /app/server
 
-USER 1000:1000
+USER threagile
 
 ENV PATH=/app:$PATH GIN_MODE=release
 
