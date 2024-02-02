@@ -7,6 +7,9 @@ package threagile
 const (
 	configFlagName = "config"
 
+	interactiveFlagName      = "interactive"
+	interactiveFlagShorthand = "i"
+
 	verboseFlagName      = "verbose"
 	verboseFlagShorthand = "v"
 
@@ -38,16 +41,17 @@ const (
 )
 
 type Flags struct {
-	configFlag     string
-	verboseFlag    bool
-	appDirFlag     string
-	binDirFlag     string
-	outputDirFlag  string
-	tempDirFlag    string
-	inputFileFlag  string
-	raaPluginFlag  string
-	serverPortFlag int
-	serverDirFlag  string
+	configFlag      string
+	verboseFlag     bool
+	interactiveFlag bool
+	appDirFlag      string
+	binDirFlag      string
+	outputDirFlag   string
+	tempDirFlag     string
+	inputFileFlag   string
+	raaPluginFlag   string
+	serverPortFlag  int
+	serverDirFlag   string
 
 	skipRiskRulesFlag              string
 	customRiskRulesPluginFlag      string

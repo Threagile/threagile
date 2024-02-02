@@ -33,6 +33,7 @@ const (
 )
 
 const (
+	QuitCommand                 = "quit"
 	AnalyzeModelCommand         = "analyze-model"
 	CreateExampleModelCommand   = "create-example-model"
 	CreateStubModelCommand      = "create-stub-model"
