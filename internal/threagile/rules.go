@@ -19,7 +19,7 @@ import (
 
 func (what *Threagile) initRules() *Threagile {
 	what.rootCmd.AddCommand(&cobra.Command{
-		Use:   "list-risk-rules",
+		Use:   common.ListRiskRulesCommand,
 		Short: "Print available risk rules",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cmd.Println(docs.Logo + "\n\n" + fmt.Sprintf(docs.VersionText, what.buildTimestamp))
@@ -46,7 +46,7 @@ func (what *Threagile) initRules() *Threagile {
 	})
 
 	what.rootCmd.AddCommand(&cobra.Command{
-		Use:   "explain-risk-rules",
+		Use:   common.ExplainRiskRulesCommand,
 		Short: "Detailed explanation of all the risk rules",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cmd.Println(docs.Logo + "\n\n" + fmt.Sprintf(docs.VersionText, what.buildTimestamp))

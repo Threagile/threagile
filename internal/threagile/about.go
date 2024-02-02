@@ -7,6 +7,7 @@ package threagile
 import (
 	"errors"
 	"fmt"
+	"github.com/threagile/threagile/pkg/common"
 	"os"
 	"path/filepath"
 
@@ -17,19 +18,19 @@ import (
 
 func (what *Threagile) initAbout() *Threagile {
 	what.rootCmd.AddCommand(&cobra.Command{
-		Use:   "version",
+		Use:   common.PrintVersionCommand,
 		Short: "Get version information",
 		Long:  "\n" + docs.Logo + "\n\n" + fmt.Sprintf(docs.VersionText, what.buildTimestamp),
 	})
 
 	what.rootCmd.AddCommand(&cobra.Command{
-		Use:   "print-3rd-party-licenses",
+		Use:   common.Print3rdPartyCommand,
 		Short: "Print 3rd-party license information",
 		Long:  "\n" + docs.Logo + "\n\n" + fmt.Sprintf(docs.VersionText, what.buildTimestamp) + "\n\n" + docs.ThirdPartyLicenses,
 	})
 
 	what.rootCmd.AddCommand(&cobra.Command{
-		Use:   "print-license",
+		Use:   common.PrintLicenseCommand,
 		Short: "Print license information",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			appDir, err := cmd.Flags().GetString(appDirFlagName)

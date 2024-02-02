@@ -13,73 +13,41 @@ import (
 
 	"github.com/threagile/threagile/pkg/common"
 	"github.com/threagile/threagile/pkg/docs"
-	"github.com/threagile/threagile/pkg/model"
 	"github.com/threagile/threagile/pkg/report"
-	"github.com/threagile/threagile/pkg/server"
 )
 
 func (what *Threagile) initRoot() *Threagile {
 	what.rootCmd = &cobra.Command{
 		Use:           "threagile",
+		Version:       docs.ThreagileVersion,
 		Short:         "\n" + docs.Logo,
 		Long:          "\n" + docs.Logo + "\n\n" + fmt.Sprintf(docs.VersionText, what.buildTimestamp) + "\n\n" + docs.Examples,
 		SilenceErrors: true,
 		SilenceUsage:  true,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg := what.readConfig(cmd, what.buildTimestamp)
-			commands := what.readCommands()
-			progressReporter := common.DefaultProgressReporter{Verbose: cfg.Verbose}
-
-			r, err := model.ReadAndAnalyzeModel(*cfg, progressReporter)
-			if err != nil {
-				cmd.Printf("Failed to read and analyze model: %v", err)
-				return err
-			}
-
-			err = report.Generate(cfg, r, commands, progressReporter)
-			if err != nil {
-				cmd.Printf("Failed to generate reports: %v \n", err)
-				return err
-			}
-			return nil
-		},
 		CompletionOptions: cobra.CompletionOptions{
 			DisableDefaultCmd: true,
 		},
 	}
 
-	serverCmd := &cobra.Command{
-		Use:   "server",
-		Short: "Run server",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg := what.readConfig(cmd, what.buildTimestamp)
-			server.RunServer(cfg)
-			return nil
-		},
-	}
+	defaultConfig := new(common.Config).Defaults(what.buildTimestamp)
 
-	cfg := new(common.Config).Defaults("")
+	what.rootCmd.PersistentFlags().StringVar(&what.flags.appDirFlag, appDirFlagName, defaultConfig.AppFolder, "app folder")
+	what.rootCmd.PersistentFlags().StringVar(&what.flags.binDirFlag, binDirFlagName, defaultConfig.BinFolder, "binary folder location")
+	what.rootCmd.PersistentFlags().StringVar(&what.flags.outputDirFlag, outputFlagName, defaultConfig.OutputFolder, "output directory")
+	what.rootCmd.PersistentFlags().StringVar(&what.flags.tempDirFlag, tempDirFlagName, defaultConfig.TempFolder, "temporary folder location")
 
-	what.rootCmd.PersistentFlags().StringVar(&what.flags.appDirFlag, appDirFlagName, cfg.AppFolder, "app folder")
-	what.rootCmd.PersistentFlags().StringVar(&what.flags.binDirFlag, binDirFlagName, cfg.BinFolder, "binary folder location")
-	what.rootCmd.PersistentFlags().StringVar(&what.flags.outputDirFlag, outputFlagName, cfg.OutputFolder, "output directory")
-	what.rootCmd.PersistentFlags().StringVar(&what.flags.tempDirFlag, tempDirFlagName, cfg.TempFolder, "temporary folder location")
+	what.rootCmd.PersistentFlags().StringVar(&what.flags.inputFileFlag, inputFileFlagName, defaultConfig.InputFile, "input model yaml file")
+	what.rootCmd.PersistentFlags().StringVar(&what.flags.raaPluginFlag, raaPluginFlagName, defaultConfig.RAAPlugin, "RAA calculation run file name")
 
-	what.rootCmd.PersistentFlags().StringVar(&what.flags.inputFileFlag, inputFileFlagName, cfg.InputFile, "input model yaml file")
-	what.rootCmd.PersistentFlags().StringVar(&what.flags.raaPluginFlag, raaPluginFlagName, cfg.RAAPlugin, "RAA calculation run file name")
-
-	serverCmd.PersistentFlags().IntVar(&what.flags.serverPortFlag, serverPortFlagName, cfg.ServerPort, "the server port")
-	serverCmd.PersistentFlags().StringVar(&what.flags.serverDirFlag, serverDirFlagName, cfg.DataFolder, "base folder for server mode (default: "+common.DataDir+")")
-
-	what.rootCmd.PersistentFlags().BoolVarP(&what.flags.verboseFlag, verboseFlagName, verboseFlagShorthand, cfg.Verbose, "verbose output")
+	what.rootCmd.PersistentFlags().BoolVarP(&what.flags.verboseFlag, verboseFlagName, verboseFlagShorthand, defaultConfig.Verbose, "verbose output")
 
 	what.rootCmd.PersistentFlags().StringVar(&what.flags.configFlag, configFlagName, "", "config file")
 
-	what.rootCmd.PersistentFlags().StringVar(&what.flags.customRiskRulesPluginFlag, customRiskRulesPluginFlagName, strings.Join(cfg.RiskRulesPlugins, ","), "comma-separated list of plugins file names with custom risk rules to load")
-	what.rootCmd.PersistentFlags().IntVar(&what.flags.diagramDpiFlag, diagramDpiFlagName, cfg.DiagramDPI, "DPI used to render: maximum is "+fmt.Sprintf("%d", common.MaxGraphvizDPI)+"")
-	what.rootCmd.PersistentFlags().StringVar(&what.flags.skipRiskRulesFlag, skipRiskRulesFlagName, cfg.SkipRiskRules, "comma-separated list of risk rules (by their ID) to skip")
-	what.rootCmd.PersistentFlags().BoolVar(&what.flags.ignoreOrphanedRiskTrackingFlag, ignoreOrphanedRiskTrackingFlagName, cfg.IgnoreOrphanedRiskTracking, "ignore orphaned risk tracking (just log them) not matching a concrete risk")
-	what.rootCmd.PersistentFlags().StringVar(&what.flags.templateFileNameFlag, templateFileNameFlagName, cfg.TemplateFilename, "background pdf file")
+	what.rootCmd.PersistentFlags().StringVar(&what.flags.customRiskRulesPluginFlag, customRiskRulesPluginFlagName, strings.Join(defaultConfig.RiskRulesPlugins, ","), "comma-separated list of plugins file names with custom risk rules to load")
+	what.rootCmd.PersistentFlags().IntVar(&what.flags.diagramDpiFlag, diagramDpiFlagName, defaultConfig.DiagramDPI, "DPI used to render: maximum is "+fmt.Sprintf("%d", common.MaxGraphvizDPI)+"")
+	what.rootCmd.PersistentFlags().StringVar(&what.flags.skipRiskRulesFlag, skipRiskRulesFlagName, defaultConfig.SkipRiskRules, "comma-separated list of risk rules (by their ID) to skip")
+	what.rootCmd.PersistentFlags().BoolVar(&what.flags.ignoreOrphanedRiskTrackingFlag, ignoreOrphanedRiskTrackingFlagName, defaultConfig.IgnoreOrphanedRiskTracking, "ignore orphaned risk tracking (just log them) not matching a concrete risk")
+	what.rootCmd.PersistentFlags().StringVar(&what.flags.templateFileNameFlag, templateFileNameFlagName, defaultConfig.TemplateFilename, "background pdf file")
 
 	what.rootCmd.PersistentFlags().BoolVar(&what.flags.generateDataFlowDiagramFlag, generateDataFlowDiagramFlagName, true, "generate data flow diagram")
 	what.rootCmd.PersistentFlags().BoolVar(&what.flags.generateDataAssetDiagramFlag, generateDataAssetDiagramFlagName, true, "generate data asset diagram")
@@ -89,8 +57,6 @@ func (what *Threagile) initRoot() *Threagile {
 	what.rootCmd.PersistentFlags().BoolVar(&what.flags.generateRisksExcelFlag, generateRisksExcelFlagName, true, "generate risks excel")
 	what.rootCmd.PersistentFlags().BoolVar(&what.flags.generateTagsExcelFlag, generateTagsExcelFlagName, true, "generate tags excel")
 	what.rootCmd.PersistentFlags().BoolVar(&what.flags.generateReportPDFFlag, generateReportPDFFlagName, true, "generate report pdf, including diagrams")
-
-	what.rootCmd.AddCommand(serverCmd)
 
 	return what
 }

@@ -6,6 +6,7 @@ package threagile
 
 import (
 	"fmt"
+	"github.com/threagile/threagile/pkg/common"
 
 	"github.com/spf13/cobra"
 
@@ -15,7 +16,7 @@ import (
 
 func (what *Threagile) initTypes() *Threagile {
 	what.rootCmd.AddCommand(&cobra.Command{
-		Use:   "list-types",
+		Use:   common.ListTypesCommand,
 		Short: "Print type information (enum values to be used in models)",
 		Run: func(cmd *cobra.Command, args []string) {
 			cmd.Println(docs.Logo + "\n\n" + fmt.Sprintf(docs.VersionText, what.buildTimestamp))
@@ -30,7 +31,7 @@ func (what *Threagile) initTypes() *Threagile {
 	})
 
 	what.rootCmd.AddCommand(&cobra.Command{
-		Use:   "explain-types",
+		Use:   common.ExplainTypesCommand,
 		Short: "Print type information (enum values to be used in models)",
 		Run: func(cmd *cobra.Command, args []string) {
 			cmd.Println(docs.Logo + "\n\n" + fmt.Sprintf(docs.VersionText, what.buildTimestamp))

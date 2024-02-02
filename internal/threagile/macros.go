@@ -17,7 +17,7 @@ import (
 
 func (what *Threagile) initMacros() *Threagile {
 	what.rootCmd.AddCommand(&cobra.Command{
-		Use:   "list-model-macros",
+		Use:   common.ListModelMacrosCommand,
 		Short: "Print model macros",
 		Run: func(cmd *cobra.Command, args []string) {
 			cmd.Println(docs.Logo + "\n\n" + fmt.Sprintf(docs.VersionText, what.buildTimestamp))
@@ -43,7 +43,7 @@ func (what *Threagile) initMacros() *Threagile {
 	})
 
 	what.rootCmd.AddCommand(&cobra.Command{
-		Use:   "explain-model-macros",
+		Use:   common.ExplainModelMacrosCommand,
 		Short: "Explain model macros",
 		Run: func(cmd *cobra.Command, args []string) {
 			cmd.Println(docs.Logo + "\n\n" + fmt.Sprintf(docs.VersionText, what.buildTimestamp))
