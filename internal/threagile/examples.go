@@ -7,13 +7,14 @@ package threagile
 import (
 	"fmt"
 	"github.com/spf13/cobra"
+	"github.com/threagile/threagile/pkg/common"
 	"github.com/threagile/threagile/pkg/docs"
 	"github.com/threagile/threagile/pkg/examples"
 )
 
 func (what *Threagile) initExamples() *Threagile {
 	what.rootCmd.AddCommand(&cobra.Command{
-		Use:   "create-example-model",
+		Use:   common.CreateExampleModelCommand,
 		Short: "Create example threagile model",
 		Long:  "\n" + docs.Logo + "\n\n" + fmt.Sprintf(docs.VersionText, what.buildTimestamp) + "\n\njust create an example model named threagile-example-model.yaml in the output directory",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -44,7 +45,7 @@ func (what *Threagile) initExamples() *Threagile {
 	})
 
 	what.rootCmd.AddCommand(&cobra.Command{
-		Use:   "create-stub-model",
+		Use:   common.CreateStubModelCommand,
 		Short: "Create stub threagile model",
 		Long:  "\n" + docs.Logo + "\n\n" + fmt.Sprintf(docs.VersionText, what.buildTimestamp) + "\n\njust create a minimal stub model named threagile-stub-model.yaml in the output directory",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -75,7 +76,7 @@ func (what *Threagile) initExamples() *Threagile {
 	})
 
 	what.rootCmd.AddCommand(&cobra.Command{
-		Use:   "create-editing-support",
+		Use:   common.CreateEditingSupportCommand,
 		Short: "Create editing support",
 		Long:  "\n" + docs.Logo + "\n\n" + fmt.Sprintf(docs.VersionText, what.buildTimestamp) + "\n\njust create some editing support stuff in the output directory",
 		RunE: func(cmd *cobra.Command, args []string) error {

@@ -39,6 +39,7 @@ type Config struct {
 	SkipRiskRules     string
 	ExecuteModelMacro string
 
+	ServerMode               bool
 	DiagramDPI               int
 	ServerPort               int
 	GraphvizDPI              int
@@ -81,7 +82,8 @@ func (c *Config) Defaults(buildTimestamp string) *Config {
 		RiskRulesPlugins:            make([]string, 0),
 		SkipRiskRules:               "",
 		ExecuteModelMacro:           "",
-		ServerPort:                  0, //DefaultServerPort,
+		ServerMode:                  false,
+		ServerPort:                  DefaultServerPort,
 
 		GraphvizDPI:              DefaultGraphvizDPI,
 		BackupHistoryFilesToKeep: DefaultBackupHistoryFilesToKeep,
@@ -167,7 +169,11 @@ func (c *Config) Load(configFilename string) error {
 		return dataDirError
 	}
 
-	if c.ServerPort > 0 {
+	return c.CheckServerFolder()
+}
+
+func (c *Config) CheckServerFolder() error {
+	if c.ServerMode {
 		c.ServerFolder = c.CleanPath(c.ServerFolder)
 		serverDirError := c.checkDir(c.ServerFolder, "server")
 		if serverDirError != nil {
