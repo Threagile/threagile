@@ -1,0 +1,223 @@
+includes:
+  - technical_assets_clients.yaml
+
+technical_assets:
+
+  External Development Client:
+    id: external-dev-client
+    #diagram_tweak_order: 0 # affects left to right positioning (only within a trust boundary)
+    description: External developer client
+    type: external-entity # values: external-entity, process, datastore
+    usage: devops # values: business, devops
+    used_as_client_by_human: true
+    out_of_scope: true
+    justification_out_of_scope: Owned and managed by external developers
+    size: system # values: system, service, application, component
+    technology: devops-client # values: see help
+    tags:
+      - linux
+    internet: true
+    machine: physical # values: physical, virtual, container, serverless
+    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-enduser-individual-key
+    owner: External Developers
+    confidentiality: confidential # values: public, internal, restricted, confidential, strictly-confidential
+    integrity: critical # values: archive, operational, important, critical, mission-critical
+    availability: operational # values: archive, operational, important, critical, mission-critical
+    justification_cia_rating: >
+      The clients used by external developers to create parts of the application code.
+    multi_tenant: true
+    redundant: false
+    custom_developed_parts: false
+    data_assets_processed: # sequence of IDs to reference
+      - client-application-code
+      - server-application-code
+    data_assets_stored: # sequence of IDs to reference
+      - client-application-code
+      - server-application-code
+    data_formats_accepted: # sequence of formats like: json, xml, serialization, file, csv
+      - file
+    communication_links:
+      Git-Repo Code Write Access:
+        target: git-repo
+        description: Link to the Git repo
+        protocol: ssh # values: see help
+        authentication: client-certificate # values: none, credentials, session-id, token, client-certificate, two-factor
+        authorization: technical-user # values: none, technical-user, enduser-identity-propagation
+        tags:
+        vpn: false
+        ip_filtered: false
+        readonly: false
+        usage: devops # values: business, devops
+        data_assets_sent: # sequence of IDs to reference
+          - client-application-code
+          - server-application-code
+        data_assets_received: # sequence of IDs to reference
+          - client-application-code
+          - server-application-code
+        #diagram_tweak_weight: 1
+        #diagram_tweak_constraint: false
+      Git-Repo Web-UI Access:
+        target: git-repo
+        description: Link to the Git repo
+        protocol: https # values: see help
+        authentication: token # values: none, credentials, session-id, token, client-certificate, two-factor
+        authorization: technical-user # values: none, technical-user, enduser-identity-propagation
+        tags:
+        vpn: false
+        ip_filtered: false
+        readonly: false
+        usage: devops # values: business, devops
+        data_assets_sent: # sequence of IDs to reference
+          - client-application-code
+          - server-application-code
+        data_assets_received: # sequence of IDs to reference
+          - client-application-code
+          - server-application-code
+        #diagram_tweak_weight: 1
+        #diagram_tweak_constraint: false
+      Jenkins Web-UI Access:
+        target: jenkins-buildserver
+        description: Link to the Jenkins build server
+        protocol: https # values: see help
+        authentication: credentials # values: none, credentials, session-id, token, client-certificate, two-factor
+        authorization: technical-user # values: none, technical-user, enduser-identity-propagation
+        tags:
+        vpn: false
+        ip_filtered: false
+        readonly: false
+        usage: devops # values: business, devops
+        data_assets_sent: # sequence of IDs to reference
+          - build-job-config
+        data_assets_received: # sequence of IDs to reference
+          - build-job-config
+        #diagram_tweak_weight: 1
+        #diagram_tweak_constraint: false
+
+
+  Git Repository:
+    id: git-repo
+    #diagram_tweak_order: 99 # affects left to right positioning (only within a trust boundary)
+    description: Git repository server
+    type: process # values: external-entity, process, datastore
+    usage: devops # values: business, devops
+    used_as_client_by_human: false
+    out_of_scope: false
+    justification_out_of_scope:
+    size: system # values: system, service, application, component
+    technology: sourcecode-repository # values: see help
+    tags:
+      - linux
+      - git
+    internet: false
+    machine: virtual # values: physical, virtual, container, serverless
+    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-enduser-individual-key
+    owner: Company ABC
+    confidentiality: confidential # values: public, internal, restricted, confidential, strictly-confidential
+    integrity: important # values: archive, operational, important, critical, mission-critical
+    availability: important # values: archive, operational, important, critical, mission-critical
+    justification_cia_rating: >
+      The code repo pipeline might contain sensitive configuration values like backend credentials, certificates etc. and is
+      therefore rated as confidential.
+    multi_tenant: true
+    redundant: false
+    custom_developed_parts: false
+    data_assets_processed: # sequence of IDs to reference
+      - client-application-code
+      - server-application-code
+    data_assets_stored: # sequence of IDs to reference
+      - client-application-code
+      - server-application-code
+    data_formats_accepted: # sequence of formats like: json, xml, serialization, file, csv
+      - file
+    communication_links:
+
+
+  Jenkins Buildserver:
+    id: jenkins-buildserver
+    #diagram_tweak_order: 99 # affects left to right positioning (only within a trust boundary)
+    description: Jenkins buildserver
+    type: process # values: external-entity, process, datastore
+    usage: devops # values: business, devops
+    used_as_client_by_human: false
+    out_of_scope: false
+    justification_out_of_scope:
+    size: system # values: system, service, application, component
+    technology: build-pipeline # values: see help
+    tags:
+      - linux
+      - jenkins
+    internet: false
+    machine: virtual # values: physical, virtual, container, serverless
+    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-enduser-individual-key
+    owner: Company ABC
+    confidentiality: confidential # values: public, internal, restricted, confidential, strictly-confidential
+    integrity: critical # values: archive, operational, important, critical, mission-critical
+    availability: important # values: archive, operational, important, critical, mission-critical
+    justification_cia_rating: >
+      The build pipeline might contain sensitive configuration values like backend credentials, certificates etc. and is
+      therefore rated as confidential. The integrity and availability is rated as critical and important due to the risk
+      of reputation damage and application update unavailability when the build pipeline is compromised.
+    multi_tenant: true
+    redundant: false
+    custom_developed_parts: false
+    data_assets_processed: # sequence of IDs to reference
+      - build-job-config
+      - client-application-code
+      - server-application-code
+      - marketing-material
+    data_assets_stored: # sequence of IDs to reference
+      - build-job-config
+      - client-application-code
+      - server-application-code
+      - marketing-material
+    data_formats_accepted: # sequence of formats like: json, xml, serialization, file, csv
+      - file
+      - serialization
+    communication_links:
+      Git Repo Code Read Access:
+        target: git-repo
+        description: Link to the Git repository server
+        protocol: ssh # values: see help
+        authentication: client-certificate # values: none, credentials, session-id, token, client-certificate, two-factor
+        authorization: technical-user # values: none, technical-user, enduser-identity-propagation
+        tags:
+        vpn: false
+        ip_filtered: false
+        readonly: true
+        usage: devops # values: business, devops
+        data_assets_sent: # sequence of IDs to reference
+        data_assets_received: # sequence of IDs to reference
+          - client-application-code
+          - server-application-code
+        #diagram_tweak_weight: 1
+        #diagram_tweak_constraint: false
+      Application Deployment:
+        target: apache-webserver
+        description: Link to the Apache webserver
+        protocol: ssh # values: see help
+        authentication: client-certificate # values: none, credentials, session-id, token, client-certificate, two-factor
+        authorization: technical-user # values: none, technical-user, enduser-identity-propagation
+        tags:
+        vpn: false
+        ip_filtered: false
+        readonly: false
+        usage: devops # values: business, devops
+        data_assets_sent: # sequence of IDs to reference
+          - client-application-code
+          - server-application-code
+        data_assets_received: # sequence of IDs to reference
+      CMS Updates:
+        target: marketing-cms
+        description: Link to the CMS
+        protocol: ssh # values: see help
+        authentication: client-certificate # values: none, credentials, session-id, token, client-certificate, two-factor
+        authorization: technical-user # values: none, technical-user, enduser-identity-propagation
+        tags:
+        vpn: false
+        ip_filtered: false
+        readonly: false
+        usage: devops # values: business, devops
+        data_assets_sent: # sequence of IDs to reference
+          - marketing-material
+        data_assets_received: # sequence of IDs to reference
+

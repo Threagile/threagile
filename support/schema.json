@@ -32,6 +32,13 @@
             "null"
           ]
         },
+        "contact": {
+          "description": "Author contact info",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "homepage": {
           "description": "Author homepage",
           "type": [
@@ -43,6 +50,43 @@
       "required": [
         "name"
       ]
+    },
+    "contributors": {
+      "description": "Contributors to the model",
+      "type": [
+        "array",
+        "null"
+      ],
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "description": "Contributor name",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "contact": {
+            "description": "Contributor contact info",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "homepage": {
+            "description": "Contributor homepage",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "name"
+        ]
+      }
     },
     "management_summary_comment": {
       "description": "Individual management summary for the report",
@@ -61,6 +105,27 @@
         "critical",
         "mission-critical"
       ]
+    },
+    "application_description": {
+      "description": "General description of the application, its purpose and functionality.",
+      "type": "object",
+      "properties": {
+        "description": {
+          "description": "Application description for the report",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "images": {
+          "description": "Application images for the report",
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true
+        }
+      }
     },
     "business_overview": {
       "description": "Individual business overview for the report",
@@ -470,7 +535,7 @@
             "type": "boolean"
           },
           "data_assets_processed": {
-            "description": "Data assets processed",
+            "description": "Data assets processed; ; all data assets stored or sent or received via a communication link (be it as a source or a target) are implicitly also processed and do not need to be listed here.",
             "type": [
               "array",
               "null"
@@ -624,7 +689,7 @@
                   "description": "VPN",
                   "type": "boolean"
                 },
-                "ip_filtered": {
+                  "ip_filtered": {
                   "description": "IP filtered",
                   "type": "boolean"
                 },
@@ -680,9 +745,7 @@
                 "vpn",
                 "ip_filtered",
                 "readonly",
-                "usage",
-                "data_assets_sent",
-                "data_assets_received"
+                "usage"
               ]
             }
           }

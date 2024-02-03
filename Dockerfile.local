@@ -1,79 +1,87 @@
-# Used for local manual test builds
+# Used for local manual test builds as well as Anchore scans in github workflow
 
 ######
-## Stage 1: Clone the Git repository
+## Stage 1: Build application with Go's build tools
 ######
-FROM alpine/git as clone
+FROM docker.io/library/golang:alpine as build
+
+COPY . /app
 WORKDIR /app
-#RUN git clone https://github.com/threagile/threagile.git
-COPY . /app/threagile
 
-
-
-
-######
-## Stage 2: Build application with Go's build tools
-######
-FROM golang as build
+ARG GOOS=linux
 ENV GO111MODULE=on
-# https://stackoverflow.com/questions/36279253/go-compiled-binary-wont-run-in-an-alpine-docker-container-on-ubuntu-host
-#ENV CGO_ENABLED=0 # cannot be set as otherwise plugins don't run
-WORKDIR /app
-COPY --from=clone /app/threagile /app
+
+# download dependencies
+RUN go mod download
+
+# Set build-time variables
 RUN go version
 RUN go test ./...
-RUN GOOS=linux go build -a -trimpath -ldflags="-s -w -X main.buildTimestamp=$(date '+%Y%m%d%H%M%S')" -buildmode=plugin -o raa.so raa/raa/raa.go
-RUN GOOS=linux go build -a -trimpath -ldflags="-s -w -X main.buildTimestamp=$(date '+%Y%m%d%H%M%S')" -buildmode=plugin -o dummy.so raa/dummy/dummy.go
-RUN GOOS=linux go build -a -trimpath -ldflags="-s -w -X main.buildTimestamp=$(date '+%Y%m%d%H%M%S')" -buildmode=plugin -o demo-rule.so risks/custom/demo/demo-rule.go
-RUN GOOS=linux go build -a -trimpath -ldflags="-s -w -X main.buildTimestamp=$(date '+%Y%m%d%H%M%S')" -o threagile
+
+# build binaries
+RUN go build -ldflags="-X main.buildTimestamp=$(date '+%Y%m%d%H%M%S')" -o raa_calc cmd/raa/main.go
+RUN go build -ldflags="-X main.buildTimestamp=$(date '+%Y%m%d%H%M%S')" -o raa_dummy cmd/raa_dummy/main.go
+RUN go build -ldflags="-X main.buildTimestamp=$(date '+%Y%m%d%H%M%S')" -o risk_demo_rule cmd/risk_demo/main.go
+RUN go build -ldflags="-X main.buildTimestamp=$(date '+%Y%m%d%H%M%S')" -o threagile cmd/threagile/main.go
+
 # add the -race parameter to go build call in order to instrument with race condition detector: https://blog.golang.org/race-detector
+# NOTE: copy files with final name to send to final build
 
-
+# copy assets
+RUN cp /app/demo/example/threagile.yaml /app/demo/example/threagile-example-model.yaml
+RUN cp /app/demo/stub/threagile.yaml /app/demo/stub/threagile-stub-model.yaml
 
 
 ######
-## Stage 3: Make final small image
+## Stage 2: Make final small image
 ######
-FROM alpine
+#FROM alpine:edge as finalize
+FROM alpine:latest as finalize
 
 # label used in other scripts to filter
 LABEL type="threagile"
 
-# add certificates
-RUN apk add ca-certificates
-# add graphviz, fonts
+# update vulnerable packages
+RUN apk add libcrypto3=3.1.4-r5
+RUN apk add libssl3=3.1.4-r5
+
+# add certificates, graphviz, fonts
+RUN apk add --update --no-cache ca-certificates
 RUN apk add --update --no-cache graphviz ttf-freefont
+
 # https://stackoverflow.com/questions/66963068/docker-alpine-executable-binary-not-found-even-if-in-path
 RUN apk add libc6-compat
+
 # https://stackoverflow.com/questions/34729748/installed-go-binary-not-found-in-path-on-alpine-linux-docker
 # RUN mkdir -p /lib64 && ln -s /lib/libc.musl-x86_64.so.1 /lib64/ld-linux-x86-64.so.2
+
 # clean apk cache
 RUN rm -rf /var/cache/apk/*
 
+# add non-privileged user
 WORKDIR /app
+RUN adduser --disabled-password --gecos "" --home "$(pwd)" --no-create-home threagile
 
-COPY --from=build /app/threagile /app/threagile
-COPY --from=build /app/raa.so /app/raa.so
-COPY --from=build /app/dummy.so /app/dummy.so
-COPY --from=build /app/demo-rule.so /app/demo-rule.so
-COPY --from=build /app/LICENSE.txt /app/LICENSE.txt
-COPY --from=build /app/report/template/background.pdf /app/background.pdf
-COPY --from=build /app/support/openapi.yaml /app/openapi.yaml
-COPY --from=build /app/support/schema.json /app/schema.json
-COPY --from=build /app/support/live-templates.txt /app/live-templates.txt
-COPY --from=build /app/support/render-data-asset-diagram.sh /app/render-data-asset-diagram.sh
-COPY --from=build /app/support/render-data-flow-diagram.sh /app/render-data-flow-diagram.sh
-COPY --from=build /app/server /app/server
-COPY --from=build /app/demo/example/threagile.yaml /app/threagile-example-model.yaml
-COPY --from=build /app/demo/stub/threagile.yaml /app/threagile-stub-model.yaml
+RUN mkdir -p /app /data
+RUN chown -R threagile:threagile /app /data
 
-RUN mkdir /data
+USER threagile
 
-RUN chown -R 1000:1000 /app /data
-USER 1000:1000
+COPY --from=build --chown=threagile:threagile /app/threagile /app/
+COPY --from=build --chown=threagile:threagile /app/raa_calc /app/
+COPY --from=build --chown=threagile:threagile /app/raa_dummy /app/
+COPY --from=build --chown=threagile:threagile /app/risk_demo_rule /app/
+COPY --from=build --chown=threagile:threagile /app/LICENSE.txt /app/
+COPY --from=build --chown=threagile:threagile /app/report/template/background.pdf /app/
+COPY --from=build --chown=threagile:threagile /app/support/openapi.yaml /app/
+COPY --from=build --chown=threagile:threagile /app/support/schema.json /app/
+COPY --from=build --chown=threagile:threagile /app/support/live-templates.txt /app/
+COPY --from=build --chown=threagile:threagile /app/demo/example/threagile-example-model.yaml /app/
+COPY --from=build --chown=threagile:threagile /app/demo/stub/threagile-stub-model.yaml /app/
+COPY --from=build --chown=threagile:threagile /app/server /app/server
 
 ENV PATH=/app:$PATH
 ENV GIN_MODE=release
 
 ENTRYPOINT ["/app/threagile"]
-CMD ["-help"]
+CMD ["help"]

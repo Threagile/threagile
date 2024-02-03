@@ -1,0 +1,9 @@
+title: Some Example Application
+
+date: 2020-07-01
+
+author:
+  name: John Doe
+  homepage: www.example.com
+
+business_criticality: important # values: archive, operational, important, critical, mission-critical

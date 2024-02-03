@@ -1,0 +1,71 @@
+
+technical_assets:
+
+  LDAP Auth Server:
+    id: ldap-auth-server
+    #diagram_tweak_order: 0 # affects left to right positioning (only within a trust boundary)
+    description: LDAP authentication server
+    type: datastore # values: external-entity, process, datastore
+    usage: business # values: business, devops
+    used_as_client_by_human: false
+    out_of_scope: false
+    justification_out_of_scope:
+    size: component # values: system, service, application, component
+    technology: identity-store-ldap # values: see help
+    tags:
+      - linux
+    internet: false
+    machine: physical # values: physical, virtual, container, serverless
+    encryption: transparent # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-enduser-individual-key
+    owner: Company ABC
+    confidentiality: confidential # values: public, internal, restricted, confidential, strictly-confidential
+    integrity: critical # values: archive, operational, important, critical, mission-critical
+    availability: critical # values: archive, operational, important, critical, mission-critical
+    justification_cia_rating: >
+      The auth data of the application
+    multi_tenant: false
+    redundant: false
+    custom_developed_parts: false
+    data_assets_processed: # sequence of IDs to reference
+      - customer-accounts
+    data_assets_stored: # sequence of IDs to reference
+      - customer-accounts
+    data_formats_accepted: # sequence of formats like: json, xml, serialization, file, csv
+    communication_links:
+
+
+  Customer Contract Database:
+    id: sql-database
+    #diagram_tweak_order: 0 # affects left to right positioning (only within a trust boundary)
+    description: The database behind the ERP system
+    type: datastore # values: external-entity, process, datastore
+    usage: business # values: business, devops
+    used_as_client_by_human: false
+    out_of_scope: false
+    justification_out_of_scope:
+    size: component # values: system, service, application, component
+    technology: database # values: see help
+    tags:
+      - linux
+      - mysql
+    internet: false
+    machine: virtual # values: physical, virtual, container, serverless
+    encryption: data-with-symmetric-shared-key # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-enduser-individual-key
+    owner: Company ABC
+    confidentiality: strictly-confidential # values: public, internal, restricted, confidential, strictly-confidential
+    integrity: mission-critical # values: archive, operational, important, critical, mission-critical
+    availability: mission-critical # values: archive, operational, important, critical, mission-critical
+    justification_cia_rating: >
+      The ERP system's database contains business-relevant sensitive data for the leasing processes and eventually also
+      for other Company XYZ internal processes.
+    multi_tenant: false
+    redundant: false
+    custom_developed_parts: false
+    data_assets_processed: # sequence of IDs to reference
+      - db-dumps
+    data_assets_stored: # sequence of IDs to reference
+      - customer-accounts
+      - customer-operational-data
+      - internal-business-data
+    data_formats_accepted: # sequence of formats like: json, xml, serialization, file, csv
+    communication_links:

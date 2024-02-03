@@ -1,0 +1,16 @@
+
+shared_runtimes:
+
+
+  WebApp and Backoffice Virtualization:
+    id: webapp-virtualization
+    description: WebApp Virtualization
+    tags:
+      - vmware
+    technical_assets_running: # sequence of IDs to reference
+      - apache-webserver
+      - marketing-cms
+      - erp-system
+      - contract-fileserver
+      - sql-database
+
