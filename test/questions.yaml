@@ -1,0 +1,6 @@
+questions: # simply use "" as answer to signal "unanswered"
+  How are the admin clients managed/protected against compromise?: ""
+  How are the development clients managed/protected against compromise?: >
+    Managed by XYZ
+  How are the build pipeline components managed/protected against compromise?: >
+    Managed by XYZ

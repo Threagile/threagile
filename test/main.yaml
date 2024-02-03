@@ -1,0 +1,27 @@
+threagile_version: 1.0.0
+
+# NOTE:
+#
+# For a perfect editing experience within your IDE of choice you can easily
+# get model syntax validation and autocompletion (very handy for enum values)
+# as well as live templates: Just import the schema.json into your IDE and assign
+# it as "schema" to each Threagile YAML file. Also try to import individual parts
+# from the live-templates.txt file into your IDE as live editing templates.
+#
+# You might also want to try the REST API when running in server mode...
+
+includes:
+  - meta.yaml
+  - overview.yaml
+  - questions.yaml
+  - abuse_cases.yaml
+  - security_requirements.yaml
+  - tags.yaml
+  - data_assets.yaml
+  - technical_assets.yaml
+  - trust_boundaries.yaml
+  - shared_runtimes.yaml
+  - risk_categories.yaml
+  - risk_tracking.yaml
+  - diagram_tweak.yaml
+

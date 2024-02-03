@@ -1,0 +1,295 @@
+
+technical_assets:
+
+  Apache Webserver:
+    id: apache-webserver
+    #diagram_tweak_order: 0 # affects left to right positioning (only within a trust boundary)
+    description: Apache Webserver hosting the API code and client-side code
+    type: process # values: external-entity, process, datastore
+    usage: business # values: business, devops
+    used_as_client_by_human: false
+    out_of_scope: false
+    justification_out_of_scope:
+    size: application # values: system, service, application, component
+    technology: web-server # values: see help
+    tags:
+      - linux
+      - apache
+      - aws:ec2
+    internet: false
+    machine: container # values: physical, virtual, container, serverless
+    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-enduser-individual-key
+    owner: Company ABC
+    confidentiality: internal # values: public, internal, restricted, confidential, strictly-confidential
+    integrity: critical # values: archive, operational, important, critical, mission-critical
+    availability: critical # values: archive, operational, important, critical, mission-critical
+    justification_cia_rating: >
+      The correct configuration and reachability of the web server is mandatory for all customer usages of the portal.
+    multi_tenant: false
+    redundant: false
+    custom_developed_parts: true
+    data_assets_processed: # sequence of IDs to reference
+      - customer-accounts
+      - customer-operational-data
+      - customer-contracts
+      - internal-business-data
+      - client-application-code
+      - server-application-code
+    data_assets_stored: # sequence of IDs to reference
+      - client-application-code
+      - server-application-code
+    data_formats_accepted: # sequence of formats like: json, xml, serialization, file, csv
+      - json
+      - file
+    communication_links:
+      ERP System Traffic:
+        target: erp-system
+        description: Link to the ERP system
+        protocol: https # values: see help
+        authentication: token # values: none, credentials, session-id, token, client-certificate, two-factor
+        authorization: technical-user # values: none, technical-user, enduser-identity-propagation
+        tags:
+        vpn: false
+        ip_filtered: false
+        readonly: false
+        usage: business # values: business, devops
+        data_assets_sent: # sequence of IDs to reference
+          - customer-accounts
+          - customer-operational-data
+          - internal-business-data
+        data_assets_received: # sequence of IDs to reference
+          - customer-accounts
+          - customer-operational-data
+          - customer-contracts
+          - internal-business-data
+        #diagram_tweak_weight: 5
+        #diagram_tweak_constraint: false
+      Auth Credential Check Traffic:
+        target: identity-provider
+        description: Link to the identity provider server
+        protocol: https # values: see help
+        authentication: credentials # values: none, credentials, session-id, token, client-certificate, two-factor
+        authorization: technical-user # values: none, technical-user, enduser-identity-propagation
+        tags:
+        vpn: false
+        ip_filtered: false
+        readonly: false
+        usage: business # values: business, devops
+        data_assets_sent: # sequence of IDs to reference
+          - customer-accounts
+        data_assets_received: # sequence of IDs to reference
+
+
+  Identity Provider:
+    id: identity-provider
+    #diagram_tweak_order: 0 # affects left to right positioning (only within a trust boundary)
+    description: Identity provider server
+    type: process # values: external-entity, process, datastore
+    usage: business # values: business, devops
+    used_as_client_by_human: false
+    out_of_scope: false
+    justification_out_of_scope:
+    size: component # values: system, service, application, component
+    technology: identity-provider # values: see help
+    tags:
+      - linux
+      - jboss
+      - keycloak
+    internet: false
+    machine: virtual # values: physical, virtual, container, serverless
+    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-enduser-individual-key
+    owner: Company ABC
+    confidentiality: confidential # values: public, internal, restricted, confidential, strictly-confidential
+    integrity: critical # values: archive, operational, important, critical, mission-critical
+    availability: critical # values: archive, operational, important, critical, mission-critical
+    justification_cia_rating: >
+      The auth data of the application
+    multi_tenant: false
+    redundant: false
+    custom_developed_parts: false
+    data_assets_processed: # sequence of IDs to reference
+      - customer-accounts
+    data_assets_stored: # sequence of IDs to reference
+    data_formats_accepted: # sequence of formats like: json, xml, serialization, file, csv
+    communication_links:
+      LDAP Credential Check Traffic:
+        target: ldap-auth-server
+        description: Link to the LDAP server
+        protocol: ldaps # values: see help
+        authentication: credentials # values: none, credentials, session-id, token, client-certificate, two-factor
+        authorization: technical-user # values: none, technical-user, enduser-identity-propagation
+        tags:
+        vpn: false
+        ip_filtered: false
+        readonly: false
+        usage: business # values: business, devops
+        data_assets_sent: # sequence of IDs to reference
+          - customer-accounts
+        data_assets_received: # sequence of IDs to reference
+
+
+  Marketing CMS:
+    id: marketing-cms
+    #diagram_tweak_order: 0 # affects left to right positioning (only within a trust boundary)
+    description: CMS for the marketing content
+    type: process # values: external-entity, process, datastore
+    usage: business # values: business, devops
+    used_as_client_by_human: false
+    out_of_scope: false
+    justification_out_of_scope:
+    size: application # values: system, service, application, component
+    technology: cms # values: see help
+    tags:
+      - linux
+    internet: false
+    machine: container # values: physical, virtual, container, serverless
+    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-enduser-individual-key
+    owner: Company ABC
+    confidentiality: internal # values: public, internal, restricted, confidential, strictly-confidential
+    integrity: important # values: archive, operational, important, critical, mission-critical
+    availability: important # values: archive, operational, important, critical, mission-critical
+    justification_cia_rating: >
+      The correct configuration and reachability of the web server is mandatory for all customer usages of the portal.
+    multi_tenant: false
+    redundant: false
+    custom_developed_parts: true
+    data_assets_processed: # sequence of IDs to reference
+      - marketing-material
+      - customer-accounts
+    data_assets_stored: # sequence of IDs to reference
+      - marketing-material
+    data_formats_accepted: # sequence of formats like: json, xml, serialization, file, csv
+    communication_links:
+      Auth Traffic:
+        target: ldap-auth-server
+        description: Link to the LDAP auth server
+        protocol: ldap # values: see help
+        authentication: credentials # values: none, credentials, session-id, token, client-certificate, two-factor
+        authorization: technical-user # values: none, technical-user, enduser-identity-propagation
+        tags:
+        vpn: false
+        ip_filtered: false
+        readonly: true
+        usage: business # values: business, devops
+        data_assets_sent: # sequence of IDs to reference
+          - customer-accounts
+        data_assets_received: # sequence of IDs to reference
+          - customer-accounts
+        #diagram_tweak_weight: 5
+        #diagram_tweak_constraint: false
+
+
+  Backoffice ERP System:
+    id: erp-system
+    #diagram_tweak_order: 0 # affects left to right positioning (only within a trust boundary)
+    description: ERP system
+    type: process # values: external-entity, process, datastore
+    usage: business # values: business, devops
+    used_as_client_by_human: false
+    out_of_scope: false
+    justification_out_of_scope:
+    size: system # values: system, service, application, component
+    technology: erp # values: see help
+    tags:
+      - linux
+    internet: false
+    machine: virtual # values: physical, virtual, container, serverless
+    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-enduser-individual-key
+    owner: Company ABC
+    confidentiality: strictly-confidential # values: public, internal, restricted, confidential, strictly-confidential
+    integrity: mission-critical # values: archive, operational, important, critical, mission-critical
+    availability: mission-critical # values: archive, operational, important, critical, mission-critical
+    justification_cia_rating: >
+      The ERP system contains business-relevant sensitive data for the leasing processes and eventually also for other
+      Company XYZ internal processes.
+    multi_tenant: false
+    redundant: true
+    custom_developed_parts: false
+    data_assets_processed: # sequence of IDs to reference
+      - customer-accounts
+      - customer-operational-data
+      - customer-contracts
+      - internal-business-data
+      - erp-customizing
+    data_assets_stored: # sequence of IDs to reference
+      - erp-logs
+    data_formats_accepted: # sequence of formats like: json, xml, serialization, file, csv
+      - xml
+      - file
+      - serialization
+    communication_links:
+      Database Traffic:
+        target: sql-database
+        description: Link to the DB system
+        protocol: jdbc # values: see help
+        authentication: credentials # values: none, credentials, session-id, token, client-certificate, two-factor
+        authorization: technical-user # values: none, technical-user, enduser-identity-propagation
+        tags:
+        vpn: false
+        ip_filtered: false
+        readonly: false
+        usage: business # values: business, devops
+        data_assets_sent: # sequence of IDs to reference
+          - customer-accounts
+          - customer-operational-data
+          - internal-business-data
+        data_assets_received: # sequence of IDs to reference
+          - customer-accounts
+          - customer-operational-data
+          - internal-business-data
+        #diagram_tweak_weight: 1
+        #diagram_tweak_constraint: false
+      NFS Filesystem Access:
+        target: contract-fileserver
+        description: Link to the file system
+        protocol: nfs # values: see help
+        authentication: none # values: none, credentials, session-id, token, client-certificate, two-factor
+        authorization: none # values: none, technical-user, enduser-identity-propagation
+        tags:
+        vpn: false
+        ip_filtered: false
+        readonly: false
+        usage: business # values: business, devops
+        data_assets_sent: # sequence of IDs to reference
+          - customer-contracts
+        data_assets_received: # sequence of IDs to reference
+          - customer-contracts
+        #diagram_tweak_weight: 1
+        #diagram_tweak_constraint: false
+
+
+  Contract Fileserver:
+    id: contract-fileserver
+    #diagram_tweak_order: 0 # affects left to right positioning (only within a trust boundary)
+    description: NFS Filesystem for storing the contract PDFs
+    type: datastore # values: external-entity, process, datastore
+    usage: business # values: business, devops
+    used_as_client_by_human: false
+    out_of_scope: false
+    justification_out_of_scope:
+    size: component # values: system, service, application, component
+    technology: file-server # values: see help
+    tags:
+      - linux
+      - aws:s3
+    internet: false
+    machine: virtual # values: physical, virtual, container, serverless
+    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-enduser-individual-key
+    owner: Company ABC
+    confidentiality: confidential # values: public, internal, restricted, confidential, strictly-confidential
+    integrity: critical # values: archive, operational, important, critical, mission-critical
+    availability: important # values: archive, operational, important, critical, mission-critical
+    justification_cia_rating: >
+      Contract data might contain financial data as well as personally identifiable information (PII). The integrity and
+      availability of contract data is required for clearing payment disputes. The filesystem is also required to be available
+      for storing new contracts of freshly generated customers.
+    multi_tenant: false
+    redundant: false
+    custom_developed_parts: false
+    data_assets_processed: # sequence of IDs to reference
+    data_assets_stored: # sequence of IDs to reference
+      - customer-contracts
+      - contract-summaries
+    data_formats_accepted: # sequence of formats like: json, xml, serialization, file, csv
+      - file
+    communication_links:

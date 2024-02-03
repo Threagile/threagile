@@ -1,0 +1,67 @@
+
+trust_boundaries:
+
+
+  Web DMZ:
+    id: web-dmz
+    description: Web DMZ
+    type: network-cloud-security-group # values: see help
+    tags:
+    technical_assets_inside: # sequence of IDs to reference
+      - apache-webserver
+      - marketing-cms
+    trust_boundaries_nested: # sequence of IDs to reference
+
+
+  ERP DMZ:
+    id: erp-dmz
+    description: ERP DMZ
+    type: network-cloud-security-group # values: see help
+    tags:
+      - some-erp
+    technical_assets_inside: # sequence of IDs to reference
+      - erp-system
+      - contract-fileserver
+      - sql-database
+    trust_boundaries_nested: # sequence of IDs to reference
+
+
+  Application Network:
+    id: application-network
+    description: Application Network
+    type: network-cloud-provider # values: see help
+    tags:
+      - aws
+    technical_assets_inside: # sequence of IDs to reference
+      - load-balancer
+    trust_boundaries_nested: # sequence of IDs to reference
+      - web-dmz
+      - erp-dmz
+      - auth-env
+
+
+  Auth Handling Environment:
+    id: auth-env
+    description: Auth Handling Environment
+    type: execution-environment # values: see help
+    tags:
+    technical_assets_inside: # sequence of IDs to reference
+      - identity-provider
+      - ldap-auth-server
+    trust_boundaries_nested: # sequence of IDs to reference
+
+
+  Dev Network:
+    id: dev-network
+    description: Development Network
+    type: network-on-prem # values: see help
+    tags:
+    technical_assets_inside: # sequence of IDs to reference
+      - jenkins-buildserver
+      - git-repo
+      - backend-admin-client
+      - backoffice-client
+    trust_boundaries_nested: # sequence of IDs to reference
+
+
+

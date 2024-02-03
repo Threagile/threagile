@@ -23,5 +23,11 @@ stats.json
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 
+# build artifacts
+/vendor/
+/bin/
+/out*/
+
 # IDE stuff
-.idea/
+/.idea/
+/config.json

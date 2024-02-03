@@ -1,0 +1,75 @@
+
+technical_assets:
+
+  Load Balancer:
+    id: load-balancer
+    #diagram_tweak_order: 50 # affects left to right positioning (only within a trust boundary)
+    description: Load Balancer (HA-Proxy)
+    type: process # values: external-entity, process, datastore
+    usage: business # values: business, devops
+    used_as_client_by_human: false
+    out_of_scope: false
+    justification_out_of_scope:
+    size: component # values: system, service, application, component
+    technology: load-balancer # values: see help
+    tags:
+    internet: false
+    machine: physical # values: physical, virtual, container, serverless
+    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-enduser-individual-key
+    owner: Company ABC
+    confidentiality: internal # values: public, internal, restricted, confidential, strictly-confidential
+    integrity: mission-critical # values: archive, operational, important, critical, mission-critical
+    availability: mission-critical # values: archive, operational, important, critical, mission-critical
+    justification_cia_rating: >
+      The correct configuration and reachability of the load balancer is mandatory for all customer and Company XYZ
+      usages of the portal and ERP system.
+    multi_tenant: false
+    redundant: false
+    custom_developed_parts: false
+    data_assets_processed: # sequence of IDs to reference
+      - customer-accounts
+      - customer-operational-data
+      - customer-contracts
+      - internal-business-data
+      - client-application-code
+      - marketing-material
+    data_assets_stored: # sequence of IDs to reference
+    data_formats_accepted: # sequence of formats like: json, xml, serialization, file, csv
+    communication_links:
+      Web Application Traffic:
+        target: apache-webserver
+        description: Link to the web server
+        protocol: http # values: see help
+        authentication: session-id # values: none, credentials, session-id, token, client-certificate, two-factor
+        authorization: enduser-identity-propagation # values: none, technical-user, enduser-identity-propagation
+        tags:
+        vpn: false
+        ip_filtered: false
+        readonly: false
+        usage: business # values: business, devops
+        data_assets_sent: # sequence of IDs to reference
+          - customer-accounts
+          - customer-operational-data
+        data_assets_received: # sequence of IDs to reference
+          - customer-accounts
+          - customer-operational-data
+          - customer-contracts
+          - client-application-code
+        #diagram_tweak_weight: 5
+        #diagram_tweak_constraint: false
+      CMS Content Traffic:
+        target: marketing-cms
+        description: Link to the CMS server
+        protocol: http # values: see help
+        authentication: none # values: none, credentials, session-id, token, client-certificate, two-factor
+        authorization: none # values: none, technical-user, enduser-identity-propagation
+        tags:
+        vpn: false
+        ip_filtered: false
+        readonly: true
+        usage: business # values: business, devops
+        data_assets_sent: # sequence of IDs to reference
+        data_assets_received: # sequence of IDs to reference
+          - marketing-material
+        #diagram_tweak_weight: 5
+        #diagram_tweak_constraint: false

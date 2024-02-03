@@ -1,0 +1,4 @@
+security_requirements:
+  Input Validation: Strict input validation is required to reduce the overall attack surface.
+  Securing Administrative Access: Administrative access must be secured with strong encryption and multi-factor authentication.
+  EU-DSGVO: Mandatory EU-Datenschutzgrundverordnung

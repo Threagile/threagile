@@ -1,0 +1,211 @@
+
+technical_assets:
+
+  Customer Web Client:
+    id: customer-client
+    description: Customer Web Client
+    type: external-entity # values: external-entity, process, datastore
+    usage: business # values: business, devops
+    used_as_client_by_human: true
+    out_of_scope: true
+    justification_out_of_scope: Owned and managed by enduser customer
+    size: component # values: system, service, application, component
+    technology: browser # values: see help
+    tags:
+    internet: true
+    machine: physical # values: physical, virtual, container, serverless
+    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-enduser-individual-key
+    owner: Customer
+    confidentiality: internal # values: public, internal, restricted, confidential, strictly-confidential
+    integrity: operational # values: archive, operational, important, critical, mission-critical
+    availability: operational # values: archive, operational, important, critical, mission-critical
+    justification_cia_rating: >
+      The client used by the customer to access the system.
+    multi_tenant: false
+    redundant: false
+    custom_developed_parts: false
+    data_assets_processed: # sequence of IDs to reference
+      - customer-accounts
+      - customer-operational-data
+      - customer-contracts
+      - client-application-code
+      - marketing-material
+    data_assets_stored: # sequence of IDs to reference
+    data_formats_accepted: # sequence of formats like: json, xml, serialization, file, csv
+    communication_links:
+      Customer Traffic:
+        target: load-balancer
+        description: Link to the load balancer
+        protocol: https # values: see help
+        authentication: session-id # values: none, credentials, session-id, token, client-certificate, two-factor
+        authorization: enduser-identity-propagation # values: none, technical-user, enduser-identity-propagation
+        tags:
+        vpn: false
+        ip_filtered: false
+        readonly: false
+        usage: business # values: business, devops
+        data_assets_sent: # sequence of IDs to reference
+          - customer-accounts
+          - customer-operational-data
+        data_assets_received: # sequence of IDs to reference
+          - customer-accounts
+          - customer-operational-data
+          - customer-contracts
+          - client-application-code
+          - marketing-material
+        #diagram_tweak_weight: 1
+        #diagram_tweak_constraint: false
+
+
+  Backoffice Client:
+    id: backoffice-client
+    #diagram_tweak_order: 0 # affects left to right positioning (only within a trust boundary)
+    description: Backoffice client
+    type: external-entity # values: external-entity, process, datastore
+    usage: business # values: business, devops
+    used_as_client_by_human: true
+    out_of_scope: true
+    justification_out_of_scope: Owned and managed by Company XYZ company
+    size: component # values: system, service, application, component
+    technology: desktop # values: see help
+    tags:
+    internet: false
+    machine: physical # values: physical, virtual, container, serverless
+    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-enduser-individual-key
+    owner: Company XYZ
+    confidentiality: confidential # values: public, internal, restricted, confidential, strictly-confidential
+    integrity: important # values: archive, operational, important, critical, mission-critical
+    availability: important # values: archive, operational, important, critical, mission-critical
+    justification_cia_rating: >
+      The client used by Company XYZ to administer and use the system.
+    multi_tenant: false
+    redundant: false
+    custom_developed_parts: false
+    data_assets_processed: # sequence of IDs to reference
+      - customer-contracts
+      - internal-business-data
+      - erp-logs
+    data_assets_stored: # sequence of IDs to reference
+    data_formats_accepted: # sequence of formats like: json, xml, serialization, file, csv
+    communication_links:
+      ERP Internal Access:
+        target: erp-system
+        description: Link to the ERP system
+        protocol: https # values: see help
+        authentication: token # values: none, credentials, session-id, token, client-certificate, two-factor
+        authorization: enduser-identity-propagation # values: none, technical-user, enduser-identity-propagation
+        tags:
+          - some-erp
+        vpn: true
+        ip_filtered: false
+        readonly: false
+        usage: business # values: business, devops
+        data_assets_sent: # sequence of IDs to reference
+          - internal-business-data
+        data_assets_received: # sequence of IDs to reference
+          - customer-contracts
+          - internal-business-data
+        #diagram_tweak_weight: 1
+        #diagram_tweak_constraint: false
+      Marketing CMS Editing:
+        target: marketing-cms
+        description: Link to the CMS for editing content
+        protocol: https # values: see help
+        authentication: token # values: none, credentials, session-id, token, client-certificate, two-factor
+        authorization: enduser-identity-propagation # values: none, technical-user, enduser-identity-propagation
+        tags:
+        vpn: true
+        ip_filtered: false
+        readonly: false
+        usage: business # values: business, devops
+        data_assets_sent: # sequence of IDs to reference
+          - marketing-material
+        data_assets_received: # sequence of IDs to reference
+          - marketing-material
+        #diagram_tweak_weight: 1
+        #diagram_tweak_constraint: false
+
+
+  Backend Admin Client:
+    id: backend-admin-client
+    #diagram_tweak_order: 0 # affects left to right positioning (only within a trust boundary)
+    description: Backend admin client
+    type: external-entity # values: external-entity, process, datastore
+    usage: devops # values: business, devops
+    used_as_client_by_human: true
+    out_of_scope: true
+    justification_out_of_scope: Owned and managed by ops provider
+    size: component # values: system, service, application, component
+    technology: browser # values: see help
+    tags:
+    internet: false
+    machine: physical # values: physical, virtual, container, serverless
+    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-enduser-individual-key
+    owner: Company XYZ
+    confidentiality: internal # values: public, internal, restricted, confidential, strictly-confidential
+    integrity: operational # values: archive, operational, important, critical, mission-critical
+    availability: operational # values: archive, operational, important, critical, mission-critical
+    justification_cia_rating: >
+      The client used by Company XYZ to administer the system.
+    multi_tenant: false
+    redundant: false
+    custom_developed_parts: false
+    data_assets_processed: # sequence of IDs to reference
+      - erp-logs
+    data_assets_stored: # sequence of IDs to reference
+    data_formats_accepted: # sequence of formats like: json, xml, serialization, file, csv
+    communication_links:
+      ERP Web Access:
+        target: erp-system
+        description: Link to the ERP system (Web)
+        protocol: https # values: see help
+        authentication: token # values: none, credentials, session-id, token, client-certificate, two-factor
+        authorization: technical-user # values: none, technical-user, enduser-identity-propagation
+        tags:
+        vpn: false
+        ip_filtered: false
+        readonly: false
+        usage: devops # values: business, devops
+        data_assets_sent: # sequence of IDs to reference
+          - erp-customizing
+        data_assets_received: # sequence of IDs to reference
+          - erp-logs
+        #diagram_tweak_weight: 1
+        #diagram_tweak_constraint: false
+      DB Update Access:
+        target: sql-database
+        description: Link to the database (JDBC tunneled via SSH)
+        protocol: ssh # values: see help
+        authentication: client-certificate # values: none, credentials, session-id, token, client-certificate, two-factor
+        authorization: technical-user # values: none, technical-user, enduser-identity-propagation
+        tags:
+        vpn: false
+        ip_filtered: false
+        readonly: false
+        usage: devops # values: business, devops
+        data_assets_sent: # sequence of IDs to reference
+          - db-dumps
+        data_assets_received: # sequence of IDs to reference
+          - db-dumps
+          - erp-logs
+          - customer-accounts
+          - customer-operational-data
+        #diagram_tweak_weight: 1
+        #diagram_tweak_constraint: false
+      User Management Access:
+        target: ldap-auth-server
+        description: Link to the LDAP auth server for managing users
+        protocol: ldaps # values: see help
+        authentication: credentials # values: none, credentials, session-id, token, client-certificate, two-factor
+        authorization: technical-user # values: none, technical-user, enduser-identity-propagation
+        tags:
+        vpn: false
+        ip_filtered: false
+        readonly: false
+        usage: devops # values: business, devops
+        data_assets_sent: # sequence of IDs to reference
+          - customer-accounts
+        data_assets_received: # sequence of IDs to reference
+          - customer-accounts
+        #diagram_tweak_weight: 1
+        #diagram_tweak_constraint: false
