@@ -99,15 +99,15 @@ func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string) erro
 		return fmt.Errorf("unable to set column width: %w", err)
 	}
 
-	// styleSeverityCriticalBold, err := excel.NewStyle(`{"font":{"color":"` + RgbHexColorCriticalRisk() + `","size":12,"bold":true}}`)
+	// styleSeverityCriticalBold, err := excel.NewStyle(`{"font":{"color":"` + rgbHexColorCriticalRisk() + `","size":12,"bold":true}}`)
 	styleSeverityCriticalBold, err := excel.NewStyle(&excelize.Style{
 		Font: &excelize.Font{
-			Color: RgbHexColorCriticalRisk(),
+			Color: rgbHexColorCriticalRisk(),
 			Size:  12,
 			Bold:  true,
 		},
 	})
-	// styleSeverityCriticalCenter, err := excel.NewStyle(`{"alignment":{"horizontal":"center","shrink_to_fit":true,"wrap_text":false},"font":{"color":"` + RgbHexColorCriticalRisk() + `","size":12}}`)
+	// styleSeverityCriticalCenter, err := excel.NewStyle(`{"alignment":{"horizontal":"center","shrink_to_fit":true,"wrap_text":false},"font":{"color":"` + rgbHexColorCriticalRisk() + `","size":12}}`)
 	styleSeverityCriticalCenter, err := excel.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{
 			Horizontal:  "center",
@@ -115,19 +115,19 @@ func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string) erro
 			WrapText:    false,
 		},
 		Font: &excelize.Font{
-			Color: RgbHexColorCriticalRisk(),
+			Color: rgbHexColorCriticalRisk(),
 			Size:  12,
 		},
 	})
-	// styleSeverityHighBold, err := excel.NewStyle(`{"font":{"color":"` + RgbHexColorHighRisk() + `","size":12,"bold":true}}`)
+	// styleSeverityHighBold, err := excel.NewStyle(`{"font":{"color":"` + rgbHexColorHighRisk() + `","size":12,"bold":true}}`)
 	styleSeverityHighBold, err := excel.NewStyle(&excelize.Style{
 		Font: &excelize.Font{
-			Color: RgbHexColorHighRisk(),
+			Color: rgbHexColorHighRisk(),
 			Size:  12,
 			Bold:  true,
 		},
 	})
-	// styleSeverityHighCenter, err := excel.NewStyle(`{"alignment":{"horizontal":"center","shrink_to_fit":true,"wrap_text":false},"font":{"color":"` + RgbHexColorHighRisk() + `","size":12}}`)
+	// styleSeverityHighCenter, err := excel.NewStyle(`{"alignment":{"horizontal":"center","shrink_to_fit":true,"wrap_text":false},"font":{"color":"` + rgbHexColorHighRisk() + `","size":12}}`)
 	styleSeverityHighCenter, err := excel.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{
 			Horizontal:  "center",
@@ -135,19 +135,19 @@ func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string) erro
 			WrapText:    false,
 		},
 		Font: &excelize.Font{
-			Color: RgbHexColorHighRisk(),
+			Color: rgbHexColorHighRisk(),
 			Size:  12,
 		},
 	})
-	// styleSeverityElevatedBold, err := excel.NewStyle(`{"font":{"color":"` + RgbHexColorElevatedRisk() + `","size":12,"bold":true}}`)
+	// styleSeverityElevatedBold, err := excel.NewStyle(`{"font":{"color":"` + rgbHexColorElevatedRisk() + `","size":12,"bold":true}}`)
 	styleSeverityElevatedBold, err := excel.NewStyle(&excelize.Style{
 		Font: &excelize.Font{
-			Color: RgbHexColorElevatedRisk(),
+			Color: rgbHexColorElevatedRisk(),
 			Size:  12,
 			Bold:  true,
 		},
 	})
-	// styleSeverityElevatedCenter, err := excel.NewStyle(`{"alignment":{"horizontal":"center","shrink_to_fit":true,"wrap_text":false},"font":{"color":"` + RgbHexColorElevatedRisk() + `","size":12}}`)
+	// styleSeverityElevatedCenter, err := excel.NewStyle(`{"alignment":{"horizontal":"center","shrink_to_fit":true,"wrap_text":false},"font":{"color":"` + rgbHexColorElevatedRisk() + `","size":12}}`)
 	styleSeverityElevatedCenter, err := excel.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{
 			Horizontal:  "center",
@@ -155,19 +155,19 @@ func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string) erro
 			WrapText:    false,
 		},
 		Font: &excelize.Font{
-			Color: RgbHexColorElevatedRisk(),
+			Color: rgbHexColorElevatedRisk(),
 			Size:  12,
 		},
 	})
-	// styleSeverityMediumBold, err := excel.NewStyle(`{"font":{"color":"` + RgbHexColorMediumRisk() + `","size":12,"bold":true}}`)
+	// styleSeverityMediumBold, err := excel.NewStyle(`{"font":{"color":"` + rgbHexColorMediumRisk() + `","size":12,"bold":true}}`)
 	styleSeverityMediumBold, err := excel.NewStyle(&excelize.Style{
 		Font: &excelize.Font{
-			Color: RgbHexColorMediumRisk(),
+			Color: rgbHexColorMediumRisk(),
 			Size:  12,
 			Bold:  true,
 		},
 	})
-	// styleSeverityMediumCenter, err := excel.NewStyle(`{"alignment":{"horizontal":"center","shrink_to_fit":true,"wrap_text":false},"font":{"color":"` + RgbHexColorMediumRisk() + `","size":12}}`)
+	// styleSeverityMediumCenter, err := excel.NewStyle(`{"alignment":{"horizontal":"center","shrink_to_fit":true,"wrap_text":false},"font":{"color":"` + rgbHexColorMediumRisk() + `","size":12}}`)
 	styleSeverityMediumCenter, err := excel.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{
 			Horizontal:  "center",
@@ -175,19 +175,19 @@ func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string) erro
 			WrapText:    false,
 		},
 		Font: &excelize.Font{
-			Color: RgbHexColorMediumRisk(),
+			Color: rgbHexColorMediumRisk(),
 			Size:  12,
 		},
 	})
-	// styleSeverityLowBold, err := excel.NewStyle(`{"font":{"color":"` + RgbHexColorLowRisk() + `","size":12,"bold":true}}`)
+	// styleSeverityLowBold, err := excel.NewStyle(`{"font":{"color":"` + rgbHexColorLowRisk() + `","size":12,"bold":true}}`)
 	styleSeverityLowBold, err := excel.NewStyle(&excelize.Style{
 		Font: &excelize.Font{
-			Color: RgbHexColorLowRisk(),
+			Color: rgbHexColorLowRisk(),
 			Size:  12,
 			Bold:  true,
 		},
 	})
-	// styleSeverityLowCenter, err := excel.NewStyle(`{"alignment":{"horizontal":"center","shrink_to_fit":true,"wrap_text":false},"font":{"color":"` + RgbHexColorLowRisk() + `","size":12}}`)
+	// styleSeverityLowCenter, err := excel.NewStyle(`{"alignment":{"horizontal":"center","shrink_to_fit":true,"wrap_text":false},"font":{"color":"` + rgbHexColorLowRisk() + `","size":12}}`)
 	styleSeverityLowCenter, err := excel.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{
 			Horizontal:  "center",
@@ -195,7 +195,7 @@ func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string) erro
 			WrapText:    false,
 		},
 		Font: &excelize.Font{
-			Color: RgbHexColorLowRisk(),
+			Color: rgbHexColorLowRisk(),
 			Size:  12,
 		},
 	})
@@ -208,11 +208,11 @@ func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string) erro
 			WrapText:    false,
 		},
 		Font: &excelize.Font{
-			Color: RgbHexColorLowRisk(),
+			Color: rgbHexColorLowRisk(),
 			Size:  12,
 		},
 	})
-	// styleGreenCenter, err := excel.NewStyle(`{"alignment":{"horizontal":"center","shrink_to_fit":true,"wrap_text":false},"font":{"color":"` + RgbHexColorRiskStatusMitigated() + `","size":12}}`)
+	// styleGreenCenter, err := excel.NewStyle(`{"alignment":{"horizontal":"center","shrink_to_fit":true,"wrap_text":false},"font":{"color":"` + rgbHexColorRiskStatusMitigated() + `","size":12}}`)
 	styleGreenCenter, err := excel.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{
 			Horizontal:  "center",
@@ -220,11 +220,11 @@ func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string) erro
 			WrapText:    false,
 		},
 		Font: &excelize.Font{
-			Color: RgbHexColorRiskStatusMitigated(),
+			Color: rgbHexColorRiskStatusMitigated(),
 			Size:  12,
 		},
 	})
-	// styleBlueCenter, err := excel.NewStyle(`{"alignment":{"horizontal":"center","shrink_to_fit":true,"wrap_text":false},"font":{"color":"#` + RgbHexColorRiskStatusInProgress() + `","size":12}}`)
+	// styleBlueCenter, err := excel.NewStyle(`{"alignment":{"horizontal":"center","shrink_to_fit":true,"wrap_text":false},"font":{"color":"#` + rgbHexColorRiskStatusInProgress() + `","size":12}}`)
 	styleBlueCenter, err := excel.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{
 			Horizontal:  "center",
@@ -232,11 +232,11 @@ func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string) erro
 			WrapText:    false,
 		},
 		Font: &excelize.Font{
-			Color: RgbHexColorRiskStatusInProgress(),
+			Color: rgbHexColorRiskStatusInProgress(),
 			Size:  12,
 		},
 	})
-	// styleYellowCenter, err := excel.NewStyle(`{"alignment":{"horizontal":"center","shrink_to_fit":true,"wrap_text":false},"font":{"color":"#` + RgbHexColorRiskStatusAccepted() + `","size":12}}`)
+	// styleYellowCenter, err := excel.NewStyle(`{"alignment":{"horizontal":"center","shrink_to_fit":true,"wrap_text":false},"font":{"color":"#` + rgbHexColorRiskStatusAccepted() + `","size":12}}`)
 	styleYellowCenter, err := excel.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{
 			Horizontal:  "center",
@@ -244,11 +244,11 @@ func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string) erro
 			WrapText:    false,
 		},
 		Font: &excelize.Font{
-			Color: RgbHexColorRiskStatusAccepted(),
+			Color: rgbHexColorRiskStatusAccepted(),
 			Size:  12,
 		},
 	})
-	// styleOrangeCenter, err := excel.NewStyle(`{"alignment":{"horizontal":"center","shrink_to_fit":true,"wrap_text":false},"font":{"color":"#` + RgbHexColorRiskStatusInDiscussion() + `","size":12}}`)
+	// styleOrangeCenter, err := excel.NewStyle(`{"alignment":{"horizontal":"center","shrink_to_fit":true,"wrap_text":false},"font":{"color":"#` + rgbHexColorRiskStatusInDiscussion() + `","size":12}}`)
 	styleOrangeCenter, err := excel.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{
 			Horizontal:  "center",
@@ -256,11 +256,11 @@ func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string) erro
 			WrapText:    false,
 		},
 		Font: &excelize.Font{
-			Color: RgbHexColorRiskStatusInDiscussion(),
+			Color: rgbHexColorRiskStatusInDiscussion(),
 			Size:  12,
 		},
 	})
-	// styleGrayCenter, err := excel.NewStyle(`{"alignment":{"horizontal":"center","shrink_to_fit":true,"wrap_text":false},"font":{"color":"#` + RgbHexColorRiskStatusFalsePositive() + `","size":12}}`)
+	// styleGrayCenter, err := excel.NewStyle(`{"alignment":{"horizontal":"center","shrink_to_fit":true,"wrap_text":false},"font":{"color":"#` + rgbHexColorRiskStatusFalsePositive() + `","size":12}}`)
 	styleGrayCenter, err := excel.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{
 			Horizontal:  "center",
@@ -268,7 +268,7 @@ func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string) erro
 			WrapText:    false,
 		},
 		Font: &excelize.Font{
-			Color: RgbHexColorRiskStatusFalsePositive(),
+			Color: rgbHexColorRiskStatusFalsePositive(),
 			Size:  12,
 		},
 	})
@@ -315,10 +315,10 @@ func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string) erro
 			Size:  10,
 		},
 	})
-	// styleGraySmall, err := excel.NewStyle(`{"font":{"color":"` + RgbHexColorOutOfScope() + `","size":10}}`)
+	// styleGraySmall, err := excel.NewStyle(`{"font":{"color":"` + rgbHexColorOutOfScope() + `","size":10}}`)
 	styleGraySmall, err := excel.NewStyle(&excelize.Style{
 		Font: &excelize.Font{
-			Color: RgbHexColorOutOfScope(),
+			Color: rgbHexColorOutOfScope(),
 			Size:  10,
 		},
 	})
@@ -335,10 +335,10 @@ func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string) erro
 			Bold:  true,
 		},
 	})
-	// styleMitigation, err := excel.NewStyle(`{"font":{"color":"` + RgbHexColorRiskStatusMitigated() + `","size":10}}`)
+	// styleMitigation, err := excel.NewStyle(`{"font":{"color":"` + rgbHexColorRiskStatusMitigated() + `","size":10}}`)
 	styleMitigation, err := excel.NewStyle(&excelize.Style{
 		Font: &excelize.Font{
-			Color: RgbHexColorRiskStatusMitigated(),
+			Color: rgbHexColorRiskStatusMitigated(),
 			Size:  10,
 		},
 	})
@@ -400,7 +400,7 @@ func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string) erro
 				err = excel.SetCellStyle(sheetName, "A"+strconv.Itoa(excelRow), "F"+strconv.Itoa(excelRow), styleBlackCenter)
 				err = excel.SetCellStyle(sheetName, "G"+strconv.Itoa(excelRow), "I"+strconv.Itoa(excelRow), styleBlackBold)
 			}
-			styleFromRiskTracking := styleBlackCenter
+			var styleFromRiskTracking int
 			switch riskTrackingStatus {
 			case types.Unchecked:
 				styleFromRiskTracking = styleRedCenter

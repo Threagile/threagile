@@ -113,7 +113,7 @@ func WriteDataFlowDiagramGraphvizDOT(parsedModel *types.ParsedModel,
 											];`)
 			}
 			snippet.WriteString("\n subgraph cluster_" + hash(trustBoundary.Id) + " {\n")
-			color, fontColor, bgColor, style, fontname := RgbHexColorTwilight(), RgbHexColorTwilight() /*"#550E0C"*/, "#FAFAFA", "dashed", "Verdana"
+			color, fontColor, bgColor, style, fontname := rgbHexColorTwilight(), rgbHexColorTwilight() /*"#550E0C"*/, "#FAFAFA", "dashed", "Verdana"
 			penWidth := 4.5
 			if len(trustBoundary.TrustBoundariesNested) > 0 {
 				//color, fontColor, style, fontname = Blue, Blue, "dashed", "Verdana"
@@ -462,11 +462,11 @@ func makeDataAssetNode(parsedModel *types.ParsedModel, dataAsset types.DataAsset
 	var color string
 	switch dataAsset.IdentifiedDataBreachProbabilityStillAtRisk(parsedModel) {
 	case types.Probable:
-		color = RgbHexColorHighRisk()
+		color = rgbHexColorHighRisk()
 	case types.Possible:
-		color = RgbHexColorMediumRisk()
+		color = rgbHexColorMediumRisk()
 	case types.Improbable:
-		color = RgbHexColorLowRisk()
+		color = rgbHexColorLowRisk()
 	default:
 		color = "#444444" // since black is too dark here as fill color
 	}
@@ -478,20 +478,20 @@ func makeDataAssetNode(parsedModel *types.ParsedModel, dataAsset types.DataAsset
 
 func makeTechAssetNode(parsedModel *types.ParsedModel, technicalAsset types.TechnicalAsset, simplified bool) string {
 	if simplified {
-		color := RgbHexColorOutOfScope()
+		color := rgbHexColorOutOfScope()
 		if !technicalAsset.OutOfScope {
 			generatedRisks := technicalAsset.GeneratedRisks(parsedModel)
 			switch types.HighestSeverityStillAtRisk(parsedModel, generatedRisks) {
 			case types.CriticalSeverity:
-				color = RgbHexColorCriticalRisk()
+				color = rgbHexColorCriticalRisk()
 			case types.HighSeverity:
-				color = RgbHexColorHighRisk()
+				color = rgbHexColorHighRisk()
 			case types.ElevatedSeverity:
-				color = RgbHexColorElevatedRisk()
+				color = rgbHexColorElevatedRisk()
 			case types.MediumSeverity:
-				color = RgbHexColorMediumRisk()
+				color = rgbHexColorMediumRisk()
 			case types.LowSeverity:
-				color = RgbHexColorLowRisk()
+				color = rgbHexColorLowRisk()
 			default:
 				color = "#444444" // since black is too dark here as fill color
 			}

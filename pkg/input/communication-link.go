@@ -48,15 +48,15 @@ func (what *CommunicationLink) Merge(other CommunicationLink) error {
 
 	what.Tags = new(Strings).MergeUniqueSlice(what.Tags, other.Tags)
 
-	if what.VPN == false {
+	if !what.VPN {
 		what.VPN = other.VPN
 	}
 
-	if what.IpFiltered == false {
+	if !what.IpFiltered {
 		what.IpFiltered = other.IpFiltered
 	}
 
-	if what.Readonly == false {
+	if !what.Readonly {
 		what.Readonly = other.Readonly
 	}
 
@@ -73,7 +73,7 @@ func (what *CommunicationLink) Merge(other CommunicationLink) error {
 		what.DiagramTweakWeight = other.DiagramTweakWeight
 	}
 
-	if what.DiagramTweakConstraint == false {
+	if !what.DiagramTweakConstraint {
 		what.DiagramTweakConstraint = other.DiagramTweakConstraint
 	}
 
