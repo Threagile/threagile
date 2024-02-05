@@ -432,6 +432,9 @@ func ParseModel(modelInput *input.Model, builtinRiskRules map[string]risks.RiskR
 			return nil, errors.New("unknown 'type' of trust boundary '" + title + "': " + fmt.Sprintf("%v", boundary.Type))
 		}
 		tags, err := parsedModel.CheckTags(lowerCaseAndTrim(boundary.Tags), "trust boundary '"+title+"'")
+		if err != nil {
+			return nil, err
+		}
 		trustBoundary := types.TrustBoundary{
 			Id:                    id,
 			Title:                 title, //fmt.Sprintf("%v", boundary["title"]),

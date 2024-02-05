@@ -7,11 +7,12 @@ package types
 import (
 	"errors"
 	"fmt"
-	"github.com/threagile/threagile/pkg/input"
 	"regexp"
 	"slices"
 	"sort"
 	"strings"
+
+	"github.com/threagile/threagile/pkg/input"
 )
 
 // TODO: move model out of types package and
