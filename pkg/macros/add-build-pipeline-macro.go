@@ -236,13 +236,13 @@ func (m *addBuildPipeline) ApplyAnswer(questionID string, answer ...string) (mes
 	m.macroState[questionID] = answer
 	m.questionsAnswered = append(m.questionsAnswered, questionID)
 	if questionID == "code-inspection-used" {
-		m.codeInspectionUsed = strings.ToLower(m.macroState["code-inspection-used"][0]) == "yes"
+		m.codeInspectionUsed = strings.EqualFold(m.macroState["code-inspection-used"][0], "yes")
 	} else if questionID == "container-technology-used" {
-		m.containerTechUsed = strings.ToLower(m.macroState["container-technology-used"][0]) == "yes"
+		m.containerTechUsed = strings.EqualFold(m.macroState["container-technology-used"][0], "yes")
 	} else if questionID == "within-trust-boundary" {
-		m.withinTrustBoundary = strings.ToLower(m.macroState["within-trust-boundary"][0]) == "yes"
+		m.withinTrustBoundary = strings.EqualFold(m.macroState["within-trust-boundary"][0], "yes")
 	} else if questionID == "selected-trust-boundary" {
-		m.createNewTrustBoundary = strings.ToLower(m.macroState["selected-trust-boundary"][0]) == strings.ToLower(createNewTrustBoundaryLabel)
+		m.createNewTrustBoundary = strings.EqualFold(m.macroState["selected-trust-boundary"][0], createNewTrustBoundaryLabel)
 	}
 	return "Answer processed", true, nil
 }
@@ -346,7 +346,7 @@ func (m *addBuildPipeline) applyChange(modelInput *input.Model, parsedModel *typ
 	if _, exists := parsedModel.TechnicalAssets[id]; !exists {
 		//fmt.Println("Adding technical asset:", id) // ################################################
 		encryption := types.NoneEncryption.String()
-		if strings.ToLower(m.macroState["encryption"][0]) == "yes" {
+		if strings.EqualFold(m.macroState["encryption"][0], "yes") {
 			encryption = types.Transparent.String()
 		}
 
@@ -463,7 +463,7 @@ func (m *addBuildPipeline) applyChange(modelInput *input.Model, parsedModel *typ
 			Size:                    types.System.String(),
 			Technology:              types.DevOpsClient.String(),
 			Tags:                    []string{},
-			Internet:                strings.ToLower(m.macroState["internet"][0]) == "yes",
+			Internet:                strings.EqualFold(m.macroState["internet"][0], "yes"),
 			Machine:                 types.Physical.String(),
 			Encryption:              encryption,
 			Owner:                   owner,
@@ -491,7 +491,7 @@ func (m *addBuildPipeline) applyChange(modelInput *input.Model, parsedModel *typ
 		//fmt.Println("Adding technical asset:", id) // ################################################
 		serverSideTechAssets = append(serverSideTechAssets, id)
 		encryption := types.NoneEncryption.String()
-		if strings.ToLower(m.macroState["encryption"][0]) == "yes" {
+		if strings.EqualFold(m.macroState["encryption"][0], "yes") {
 			encryption = types.Transparent.String()
 		}
 		techAsset := input.TechnicalAsset{
@@ -505,7 +505,7 @@ func (m *addBuildPipeline) applyChange(modelInput *input.Model, parsedModel *typ
 			Size:                    types.Service.String(),
 			Technology:              types.SourcecodeRepository.String(),
 			Tags:                    []string{input.NormalizeTag(m.macroState["source-repository"][0])},
-			Internet:                strings.ToLower(m.macroState["internet"][0]) == "yes",
+			Internet:                strings.EqualFold(m.macroState["internet"][0], "yes"),
 			Machine:                 types.Virtual.String(),
 			Encryption:              encryption,
 			Owner:                   owner,
@@ -514,7 +514,7 @@ func (m *addBuildPipeline) applyChange(modelInput *input.Model, parsedModel *typ
 			Availability:            types.Important.String(),
 			JustificationCiaRating: "Sourcecode processing components are at least rated as 'critical' in terms of integrity, because any " +
 				"malicious modification of it might lead to a backdoored production system.",
-			MultiTenant:          strings.ToLower(m.macroState["multi-tenant"][0]) == "yes",
+			MultiTenant:          strings.EqualFold(m.macroState["multi-tenant"][0], "yes"),
 			Redundant:            false,
 			CustomDevelopedParts: false,
 			DataAssetsProcessed:  []string{"sourcecode"},
@@ -534,7 +534,7 @@ func (m *addBuildPipeline) applyChange(modelInput *input.Model, parsedModel *typ
 			//fmt.Println("Adding technical asset:", id) // ################################################
 			serverSideTechAssets = append(serverSideTechAssets, id)
 			encryption := types.NoneEncryption.String()
-			if strings.ToLower(m.macroState["encryption"][0]) == "yes" {
+			if strings.EqualFold(m.macroState["encryption"][0], "yes") {
 				encryption = types.Transparent.String()
 			}
 			techAsset := input.TechnicalAsset{
@@ -548,7 +548,7 @@ func (m *addBuildPipeline) applyChange(modelInput *input.Model, parsedModel *typ
 				Size:                    types.Service.String(),
 				Technology:              types.ArtifactRegistry.String(),
 				Tags:                    []string{input.NormalizeTag(m.macroState["container-registry"][0])},
-				Internet:                strings.ToLower(m.macroState["internet"][0]) == "yes",
+				Internet:                strings.EqualFold(m.macroState["internet"][0], "yes"),
 				Machine:                 types.Virtual.String(),
 				Encryption:              encryption,
 				Owner:                   owner,
@@ -557,7 +557,7 @@ func (m *addBuildPipeline) applyChange(modelInput *input.Model, parsedModel *typ
 				Availability:            types.Important.String(),
 				JustificationCiaRating: "Container registry components are at least rated as 'critical' in terms of integrity, because any " +
 					"malicious modification of it might lead to a backdoored production system.",
-				MultiTenant:          strings.ToLower(m.macroState["multi-tenant"][0]) == "yes",
+				MultiTenant:          strings.EqualFold(m.macroState["multi-tenant"][0], "yes"),
 				Redundant:            false,
 				CustomDevelopedParts: false,
 				DataAssetsProcessed:  []string{"deployment"},
@@ -576,7 +576,7 @@ func (m *addBuildPipeline) applyChange(modelInput *input.Model, parsedModel *typ
 			//fmt.Println("Adding technical asset:", id) // ################################################
 			serverSideTechAssets = append(serverSideTechAssets, id)
 			encryption := types.NoneEncryption.String()
-			if strings.ToLower(m.macroState["encryption"][0]) == "yes" {
+			if strings.EqualFold(m.macroState["encryption"][0], "yes") {
 				encryption = types.Transparent.String()
 			}
 			techAsset := input.TechnicalAsset{
@@ -590,7 +590,7 @@ func (m *addBuildPipeline) applyChange(modelInput *input.Model, parsedModel *typ
 				Size:                    types.System.String(),
 				Technology:              types.ContainerPlatform.String(),
 				Tags:                    []string{input.NormalizeTag(m.macroState["container-platform"][0])},
-				Internet:                strings.ToLower(m.macroState["internet"][0]) == "yes",
+				Internet:                strings.EqualFold(m.macroState["internet"][0], "yes"),
 				Machine:                 types.Virtual.String(),
 				Encryption:              encryption,
 				Owner:                   owner,
@@ -599,7 +599,7 @@ func (m *addBuildPipeline) applyChange(modelInput *input.Model, parsedModel *typ
 				Availability:            types.MissionCritical.String(),
 				JustificationCiaRating: "Container platform components are rated as 'mission-critical' in terms of integrity and availability, because any " +
 					"malicious modification of it might lead to a backdoored production system.",
-				MultiTenant:          strings.ToLower(m.macroState["multi-tenant"][0]) == "yes",
+				MultiTenant:          strings.EqualFold(m.macroState["multi-tenant"][0], "yes"),
 				Redundant:            false,
 				CustomDevelopedParts: false,
 				DataAssetsProcessed:  []string{"deployment"},
@@ -619,7 +619,7 @@ func (m *addBuildPipeline) applyChange(modelInput *input.Model, parsedModel *typ
 		//fmt.Println("Adding technical asset:", id) // ################################################
 		serverSideTechAssets = append(serverSideTechAssets, id)
 		encryption := types.NoneEncryption.String()
-		if strings.ToLower(m.macroState["encryption"][0]) == "yes" {
+		if strings.EqualFold(m.macroState["encryption"][0], "yes") {
 			encryption = types.Transparent.String()
 		}
 
@@ -843,7 +843,7 @@ func (m *addBuildPipeline) applyChange(modelInput *input.Model, parsedModel *typ
 			Size:                    types.Service.String(),
 			Technology:              types.BuildPipeline.String(),
 			Tags:                    []string{input.NormalizeTag(m.macroState["build-pipeline"][0])},
-			Internet:                strings.ToLower(m.macroState["internet"][0]) == "yes",
+			Internet:                strings.EqualFold(m.macroState["internet"][0], "yes"),
 			Machine:                 types.Virtual.String(),
 			Encryption:              encryption,
 			Owner:                   owner,
@@ -852,7 +852,7 @@ func (m *addBuildPipeline) applyChange(modelInput *input.Model, parsedModel *typ
 			Availability:            types.Important.String(),
 			JustificationCiaRating: "Build pipeline components are at least rated as 'critical' in terms of integrity, because any " +
 				"malicious modification of it might lead to a backdoored production system.",
-			MultiTenant:          strings.ToLower(m.macroState["multi-tenant"][0]) == "yes",
+			MultiTenant:          strings.EqualFold(m.macroState["multi-tenant"][0], "yes"),
 			Redundant:            false,
 			CustomDevelopedParts: false,
 			DataAssetsProcessed:  []string{"sourcecode", "deployment"},
@@ -871,7 +871,7 @@ func (m *addBuildPipeline) applyChange(modelInput *input.Model, parsedModel *typ
 		//fmt.Println("Adding technical asset:", id) // ################################################
 		serverSideTechAssets = append(serverSideTechAssets, id)
 		encryption := types.NoneEncryption.String()
-		if strings.ToLower(m.macroState["encryption"][0]) == "yes" {
+		if strings.EqualFold(m.macroState["encryption"][0], "yes") {
 			encryption = types.Transparent.String()
 		}
 		techAsset := input.TechnicalAsset{
@@ -885,7 +885,7 @@ func (m *addBuildPipeline) applyChange(modelInput *input.Model, parsedModel *typ
 			Size:                    types.Service.String(),
 			Technology:              types.ArtifactRegistry.String(),
 			Tags:                    []string{input.NormalizeTag(m.macroState["artifact-registry"][0])},
-			Internet:                strings.ToLower(m.macroState["internet"][0]) == "yes",
+			Internet:                strings.EqualFold(m.macroState["internet"][0], "yes"),
 			Machine:                 types.Virtual.String(),
 			Encryption:              encryption,
 			Owner:                   owner,
@@ -894,7 +894,7 @@ func (m *addBuildPipeline) applyChange(modelInput *input.Model, parsedModel *typ
 			Availability:            types.Important.String(),
 			JustificationCiaRating: "Artifact registry components are at least rated as 'critical' in terms of integrity, because any " +
 				"malicious modification of it might lead to a backdoored production system.",
-			MultiTenant:          strings.ToLower(m.macroState["multi-tenant"][0]) == "yes",
+			MultiTenant:          strings.EqualFold(m.macroState["multi-tenant"][0], "yes"),
 			Redundant:            false,
 			CustomDevelopedParts: false,
 			DataAssetsProcessed:  []string{"sourcecode", "deployment"},
@@ -914,7 +914,7 @@ func (m *addBuildPipeline) applyChange(modelInput *input.Model, parsedModel *typ
 			//fmt.Println("Adding technical asset:", id) // ################################################
 			serverSideTechAssets = append(serverSideTechAssets, id)
 			encryption := types.NoneEncryption.String()
-			if strings.ToLower(m.macroState["encryption"][0]) == "yes" {
+			if strings.EqualFold(m.macroState["encryption"][0], "yes") {
 				encryption = types.Transparent.String()
 			}
 			techAsset := input.TechnicalAsset{
@@ -928,7 +928,7 @@ func (m *addBuildPipeline) applyChange(modelInput *input.Model, parsedModel *typ
 				Size:                    types.Service.String(),
 				Technology:              types.CodeInspectionPlatform.String(),
 				Tags:                    []string{input.NormalizeTag(m.macroState["code-inspection-platform"][0])},
-				Internet:                strings.ToLower(m.macroState["internet"][0]) == "yes",
+				Internet:                strings.EqualFold(m.macroState["internet"][0], "yes"),
 				Machine:                 types.Virtual.String(),
 				Encryption:              encryption,
 				Owner:                   owner,
@@ -937,7 +937,7 @@ func (m *addBuildPipeline) applyChange(modelInput *input.Model, parsedModel *typ
 				Availability:            types.Operational.String(),
 				JustificationCiaRating: "Sourcecode inspection platforms are rated at least 'important' in terms of integrity, because any " +
 					"malicious modification of it might lead to vulnerabilities found by the scanner engine not being shown.",
-				MultiTenant:          strings.ToLower(m.macroState["multi-tenant"][0]) == "yes",
+				MultiTenant:          strings.EqualFold(m.macroState["multi-tenant"][0], "yes"),
 				Redundant:            false,
 				CustomDevelopedParts: false,
 				DataAssetsProcessed:  []string{"sourcecode"},
@@ -1000,9 +1000,7 @@ func (m *addBuildPipeline) applyChange(modelInput *input.Model, parsedModel *typ
 	if m.containerTechUsed {
 		// create shared runtime
 		assetsRunning := make([]string, 0)
-		for _, deployTargetID := range m.macroState["deploy-targets"] {
-			assetsRunning = append(assetsRunning, deployTargetID)
-		}
+		assetsRunning = append(assetsRunning, m.macroState["deploy-targets"]...)
 		title := m.macroState["container-platform"][0] + " Runtime"
 		sharedRuntime := input.SharedRuntime{
 			ID:                     containerSharedRuntimeID,

@@ -156,9 +156,9 @@ func (m *addVaultMacro) ApplyAnswer(questionID string, answer ...string) (messag
 	m.macroState[questionID] = answer
 	m.questionsAnswered = append(m.questionsAnswered, questionID)
 	if questionID == "within-trust-boundary" {
-		m.withinTrustBoundary = strings.ToLower(m.macroState["within-trust-boundary"][0]) == "yes"
+		m.withinTrustBoundary = strings.EqualFold(m.macroState["within-trust-boundary"][0], "yes")
 	} else if questionID == "selected-trust-boundary" {
-		m.createNewTrustBoundary = strings.ToLower(m.macroState["selected-trust-boundary"][0]) == strings.ToLower(createNewTrustBoundaryLabel)
+		m.createNewTrustBoundary = strings.EqualFold(m.macroState["selected-trust-boundary"][0], createNewTrustBoundaryLabel)
 	}
 	return "Answer processed", true, nil
 }
@@ -242,7 +242,7 @@ func (m *addVaultMacro) applyChange(modelInput *input.Model, parsedModel *types.
 				Integrity:               types.Critical.String(),
 				Availability:            types.Critical.String(),
 				JustificationCiaRating:  "Vault components are only rated as 'confidential' as vaults usually apply a trust barrier to encrypt all data-at-rest with a vault key.",
-				MultiTenant:             strings.ToLower(m.macroState["multi-tenant"][0]) == "yes",
+				MultiTenant:             strings.EqualFold(m.macroState["multi-tenant"][0], "yes"),
 				Redundant:               false,
 				CustomDevelopedParts:    false,
 				DataAssetsProcessed:     nil,
@@ -357,7 +357,7 @@ func (m *addVaultMacro) applyChange(modelInput *input.Model, parsedModel *types.
 			Integrity:               types.Critical.String(),
 			Availability:            types.Critical.String(),
 			JustificationCiaRating:  "Vault components are rated as 'strictly-confidential'.",
-			MultiTenant:             strings.ToLower(m.macroState["multi-tenant"][0]) == "yes",
+			MultiTenant:             strings.EqualFold(m.macroState["multi-tenant"][0], "yes"),
 			Redundant:               false,
 			CustomDevelopedParts:    false,
 			DataAssetsProcessed:     []string{"configuration-secrets"},

@@ -204,9 +204,8 @@ func ExecuteModelMacro(modelInput *input.Model, inputFile string, parsedModel *t
 		fmt.Println("The following changes will be applied:")
 		var changes []string
 		message := ""
-		validResult := true
 
-		changes, message, validResult, err = macros.GetFinalChangeImpact(modelInput, parsedModel)
+		changes, message, validResult, err := macros.GetFinalChangeImpact(modelInput, parsedModel)
 		if err != nil {
 			return err
 		}
@@ -339,7 +338,7 @@ func (what MacroQuestion) IsValueConstrained() bool {
 func (what MacroQuestion) IsMatchingValueConstraint(answer string) bool {
 	if what.IsValueConstrained() {
 		for _, val := range what.PossibleAnswers {
-			if strings.ToLower(val) == strings.ToLower(answer) {
+			if strings.EqualFold(val, answer) {
 				return true
 			}
 		}
