@@ -53,11 +53,11 @@ func (what *TechnicalAsset) Merge(other TechnicalAsset) error {
 		return fmt.Errorf("failed to merge usage: %v", mergeError)
 	}
 
-	if what.UsedAsClientByHuman == false {
+	if !what.UsedAsClientByHuman {
 		what.UsedAsClientByHuman = other.UsedAsClientByHuman
 	}
 
-	if what.OutOfScope == false {
+	if !what.OutOfScope {
 		what.OutOfScope = other.OutOfScope
 	}
 
@@ -75,7 +75,7 @@ func (what *TechnicalAsset) Merge(other TechnicalAsset) error {
 
 	what.Tags = new(Strings).MergeUniqueSlice(what.Tags, other.Tags)
 
-	if what.Internet == false {
+	if !what.Internet {
 		what.Internet = other.Internet
 	}
 
@@ -111,15 +111,15 @@ func (what *TechnicalAsset) Merge(other TechnicalAsset) error {
 
 	what.JustificationCiaRating = new(Strings).MergeMultiline(what.JustificationCiaRating, other.JustificationCiaRating)
 
-	if what.MultiTenant == false {
+	if !what.MultiTenant {
 		what.MultiTenant = other.MultiTenant
 	}
 
-	if what.Redundant == false {
+	if !what.Redundant {
 		what.Redundant = other.Redundant
 	}
 
-	if what.CustomDevelopedParts == false {
+	if !what.CustomDevelopedParts {
 		what.CustomDevelopedParts = other.CustomDevelopedParts
 	}
 

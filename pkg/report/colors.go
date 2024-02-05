@@ -30,7 +30,7 @@ const (
 	Brown                = "#8C4C17"
 )
 
-func DarkenHexColor(hexString string) string {
+func darkenHexColor(hexString string) string {
 	colorBytes, _ := hex.DecodeString(hexString[1:])
 	adjusted := make([]byte, 3)
 	for i := 0; i < 3; i++ {
@@ -43,7 +43,7 @@ func DarkenHexColor(hexString string) string {
 	return "#" + hex.EncodeToString(adjusted)
 }
 
-func BrightenHexColor(hexString string) string {
+func brightenHexColor(hexString string) string {
 	colorBytes, _ := hex.DecodeString(hexString[1:])
 	adjusted := make([]byte, 3)
 	for i := 0; i < 3; i++ {
@@ -56,130 +56,124 @@ func BrightenHexColor(hexString string) string {
 	return "#" + hex.EncodeToString(adjusted)
 }
 
-func ColorCriticalRisk(pdf *gofpdf.Fpdf) {
+func colorCriticalRisk(pdf *gofpdf.Fpdf) {
 	pdf.SetTextColor(255, 38, 0)
 }
-func RgbHexColorCriticalRisk() string {
+func rgbHexColorCriticalRisk() string {
 	return "#FF2600"
 }
 
-func ColorHighRisk(pdf *gofpdf.Fpdf) {
+func colorHighRisk(pdf *gofpdf.Fpdf) {
 	pdf.SetTextColor(160, 40, 30)
 }
-func RgbHexColorHighRisk() string {
+func rgbHexColorHighRisk() string {
 	return "#A0281E"
 }
 
-func ColorElevatedRisk(pdf *gofpdf.Fpdf) {
+func colorElevatedRisk(pdf *gofpdf.Fpdf) {
 	pdf.SetTextColor(255, 142, 0)
 }
-func RgbHexColorElevatedRisk() string {
+func rgbHexColorElevatedRisk() string {
 	return "#FF8E00"
 }
 
-func ColorMediumRisk(pdf *gofpdf.Fpdf) {
+func colorMediumRisk(pdf *gofpdf.Fpdf) {
 	pdf.SetTextColor(200, 120, 50)
 }
-func RgbHexColorMediumRisk() string {
+func rgbHexColorMediumRisk() string {
 	return "#C87832"
 }
 
-func ColorLowRisk(pdf *gofpdf.Fpdf) {
+func colorLowRisk(pdf *gofpdf.Fpdf) {
 	pdf.SetTextColor(35, 70, 95)
 }
-func RgbHexColorLowRisk() string {
+func rgbHexColorLowRisk() string {
 	return "#23465F"
 }
 
-func ColorOutOfScope(pdf *gofpdf.Fpdf) {
-	pdf.SetTextColor(127, 127, 127)
-}
-func RgbHexColorOutOfScope() string {
+func rgbHexColorOutOfScope() string {
 	return "#7F7F7F"
 }
 
-func ColorRiskStatusUnchecked(pdf *gofpdf.Fpdf) {
+func colorRiskStatusUnchecked(pdf *gofpdf.Fpdf) {
 	pdf.SetTextColor(256, 0, 0)
 }
 func RgbHexColorRiskStatusUnchecked() string {
 	return "#FF0000"
 }
 
-func ColorRiskStatusMitigated(pdf *gofpdf.Fpdf) {
+func colorRiskStatusMitigated(pdf *gofpdf.Fpdf) {
 	pdf.SetTextColor(0, 143, 0)
 }
-func RgbHexColorRiskStatusMitigated() string {
+func rgbHexColorRiskStatusMitigated() string {
 	return "#008F00"
 }
 
-func ColorRiskStatusInProgress(pdf *gofpdf.Fpdf) {
+func colorRiskStatusInProgress(pdf *gofpdf.Fpdf) {
 	pdf.SetTextColor(0, 0, 256)
 }
-func RgbHexColorRiskStatusInProgress() string {
+func rgbHexColorRiskStatusInProgress() string {
 	return "#0000FF"
 }
 
-func ColorRiskStatusAccepted(pdf *gofpdf.Fpdf) {
+func colorRiskStatusAccepted(pdf *gofpdf.Fpdf) {
 	pdf.SetTextColor(255, 64, 255)
 }
-func RgbHexColorRiskStatusAccepted() string {
+func rgbHexColorRiskStatusAccepted() string {
 	return "#FF40FF"
 }
 
-func ColorRiskStatusInDiscussion(pdf *gofpdf.Fpdf) {
+func colorRiskStatusInDiscussion(pdf *gofpdf.Fpdf) {
 	pdf.SetTextColor(256, 147, 0)
 }
-func RgbHexColorRiskStatusInDiscussion() string {
+func rgbHexColorRiskStatusInDiscussion() string {
 	return "#FF9300"
 }
 
-func ColorRiskStatusFalsePositive(pdf *gofpdf.Fpdf) {
+func colorRiskStatusFalsePositive(pdf *gofpdf.Fpdf) {
 	pdf.SetTextColor(102, 102, 102)
 }
-func RgbHexColorRiskStatusFalsePositive() string {
+func rgbHexColorRiskStatusFalsePositive() string {
 	return "#666666"
 }
 
-func ColorTwilight(pdf *gofpdf.Fpdf) {
+func colorTwilight(pdf *gofpdf.Fpdf) {
 	pdf.SetTextColor(58, 82, 200)
 }
-func RgbHexColorTwilight() string {
+func rgbHexColorTwilight() string {
 	return "#3A52C8"
 }
 
-func ColorBusiness(pdf *gofpdf.Fpdf) {
+func colorBusiness(pdf *gofpdf.Fpdf) {
 	pdf.SetTextColor(83, 27, 147)
 }
-func RgbHexColorBusiness() string {
+func rgbHexColorBusiness() string {
 	return "#531B93"
 }
 
-func ColorArchitecture(pdf *gofpdf.Fpdf) {
+func colorArchitecture(pdf *gofpdf.Fpdf) {
 	pdf.SetTextColor(0, 84, 147)
 }
-func RgbHexColorArchitecture() string {
+func rgbHexColorArchitecture() string {
 	return "#005493"
 }
 
-func ColorDevelopment(pdf *gofpdf.Fpdf) {
+func colorDevelopment(pdf *gofpdf.Fpdf) {
 	pdf.SetTextColor(222, 146, 35)
 }
-func RgbHexColorDevelopment() string {
+func rgbHexColorDevelopment() string {
 	return "#DE9223"
 }
 
-func ColorOperation(pdf *gofpdf.Fpdf) {
+func colorOperation(pdf *gofpdf.Fpdf) {
 	pdf.SetTextColor(148, 127, 80)
 }
-func RgbHexColorOperation() string {
+func rgbHexColorOperation() string {
 	return "#947F50"
 }
 
-func ColorModelFailure(pdf *gofpdf.Fpdf) {
+func colorModelFailure(pdf *gofpdf.Fpdf) {
 	pdf.SetTextColor(148, 82, 0)
-}
-func RgbHexColorModelFailure() string {
-	return "#945200"
 }
 
 func determineArrowLineStyle(cl types.CommunicationLink) string {
@@ -451,11 +445,11 @@ func determineShapeFillColor(ta types.TechnicalAsset, parsedModel *types.ParsedM
 	}
 	switch ta.Machine {
 	case types.Physical:
-		fillColor = DarkenHexColor(fillColor)
+		fillColor = darkenHexColor(fillColor)
 	case types.Container:
-		fillColor = BrightenHexColor(fillColor)
+		fillColor = brightenHexColor(fillColor)
 	case types.Serverless:
-		fillColor = BrightenHexColor(BrightenHexColor(fillColor))
+		fillColor = brightenHexColor(brightenHexColor(fillColor))
 	case types.Virtual:
 	}
 	return fillColor

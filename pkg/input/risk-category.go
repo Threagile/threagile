@@ -90,7 +90,7 @@ func (what *IndividualRiskCategory) Merge(other IndividualRiskCategory) error {
 		return fmt.Errorf("failed to merge false_positives: %v", mergeError)
 	}
 
-	if what.ModelFailurePossibleReason == false {
+	if !what.ModelFailurePossibleReason {
 		what.ModelFailurePossibleReason = other.ModelFailurePossibleReason
 	}
 

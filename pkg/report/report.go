@@ -347,7 +347,7 @@ func (r *pdfReporter) createTableOfContents(parsedModel *types.ParsedModel) {
 	}
 	countStillAtRisk := len(types.ReduceToOnlyStillAtRisk(parsedModel, modelFailures))
 	if countStillAtRisk > 0 {
-		ColorModelFailure(r.pdf)
+		colorModelFailure(r.pdf)
 	}
 	r.pdf.Text(11, y, "    "+"Potential Model Failures: "+strconv.Itoa(countStillAtRisk)+" / "+strconv.Itoa(count)+" "+risksStr)
 	r.pdf.Text(175, y, "{model-failures}")
@@ -362,7 +362,7 @@ func (r *pdfReporter) createTableOfContents(parsedModel *types.ParsedModel) {
 		questions = "Question"
 	}
 	if questionsUnanswered(parsedModel) > 0 {
-		ColorModelFailure(r.pdf)
+		colorModelFailure(r.pdf)
 	}
 	r.pdf.Text(11, y, "    "+"Questions: "+strconv.Itoa(questionsUnanswered(parsedModel))+" / "+strconv.Itoa(count)+" "+questions)
 	r.pdf.Text(175, y, "{questions}")
@@ -392,15 +392,15 @@ func (r *pdfReporter) createTableOfContents(parsedModel *types.ParsedModel) {
 			newRisksStr := types.SortedRisksOfCategory(parsedModel, category)
 			switch types.HighestSeverityStillAtRisk(parsedModel, newRisksStr) {
 			case types.CriticalSeverity:
-				ColorCriticalRisk(r.pdf)
+				colorCriticalRisk(r.pdf)
 			case types.HighSeverity:
-				ColorHighRisk(r.pdf)
+				colorHighRisk(r.pdf)
 			case types.ElevatedSeverity:
-				ColorElevatedRisk(r.pdf)
+				colorElevatedRisk(r.pdf)
 			case types.MediumSeverity:
-				ColorMediumRisk(r.pdf)
+				colorMediumRisk(r.pdf)
 			case types.LowSeverity:
-				ColorLowRisk(r.pdf)
+				colorLowRisk(r.pdf)
 			default:
 				r.pdfColorBlack()
 			}
@@ -461,15 +461,15 @@ func (r *pdfReporter) createTableOfContents(parsedModel *types.ParsedModel) {
 			} else {
 				switch types.HighestSeverityStillAtRisk(parsedModel, newRisksStr) {
 				case types.CriticalSeverity:
-					ColorCriticalRisk(r.pdf)
+					colorCriticalRisk(r.pdf)
 				case types.HighSeverity:
-					ColorHighRisk(r.pdf)
+					colorHighRisk(r.pdf)
 				case types.ElevatedSeverity:
-					ColorElevatedRisk(r.pdf)
+					colorElevatedRisk(r.pdf)
 				case types.MediumSeverity:
-					ColorMediumRisk(r.pdf)
+					colorMediumRisk(r.pdf)
 				case types.LowSeverity:
-					ColorLowRisk(r.pdf)
+					colorLowRisk(r.pdf)
 				default:
 					r.pdfColorBlack()
 				}
@@ -517,11 +517,11 @@ func (r *pdfReporter) createTableOfContents(parsedModel *types.ParsedModel) {
 			}
 			switch dataAsset.IdentifiedDataBreachProbabilityStillAtRisk(parsedModel) {
 			case types.Probable:
-				ColorHighRisk(r.pdf)
+				colorHighRisk(r.pdf)
 			case types.Possible:
-				ColorMediumRisk(r.pdf)
+				colorMediumRisk(r.pdf)
 			case types.Improbable:
-				ColorLowRisk(r.pdf)
+				colorLowRisk(r.pdf)
 			default:
 				r.pdfColorBlack()
 			}
@@ -556,7 +556,7 @@ func (r *pdfReporter) createTableOfContents(parsedModel *types.ParsedModel) {
 				r.pageBreakInLists()
 				y = 40
 			}
-			ColorTwilight(r.pdf)
+			colorTwilight(r.pdf)
 			if !trustBoundary.Type.IsNetworkBoundary() {
 				r.pdfColorLightGray()
 			}
@@ -764,47 +764,47 @@ func (r *pdfReporter) createManagementSummary(parsedModel *types.ParsedModel, te
 	r.pdf.CellFormat(17, 6, "", "0", 0, "", false, 0, "")
 	r.pdf.CellFormat(10, 6, "", "0", 0, "", false, 0, "")
 	r.pdf.CellFormat(60, 6, "", "0", 0, "", false, 0, "")
-	ColorRiskStatusUnchecked(r.pdf)
+	colorRiskStatusUnchecked(r.pdf)
 	r.pdf.CellFormat(23, 6, "", "0", 0, "", false, 0, "")
 	r.pdf.CellFormat(10, 6, strconv.Itoa(countStatusUnchecked), "0", 0, "R", false, 0, "")
 	r.pdf.CellFormat(60, 6, "unchecked", "0", 0, "", false, 0, "")
 	r.pdf.Ln(-1)
 
-	ColorCriticalRisk(r.pdf)
+	colorCriticalRisk(r.pdf)
 	r.pdf.CellFormat(17, 6, "", "0", 0, "", false, 0, "")
 	r.pdf.CellFormat(10, 6, strconv.Itoa(countCritical), "0", 0, "R", false, 0, "")
 	r.pdf.CellFormat(60, 6, "critical risk", "0", 0, "", false, 0, "")
-	ColorRiskStatusInDiscussion(r.pdf)
+	colorRiskStatusInDiscussion(r.pdf)
 	r.pdf.CellFormat(23, 6, "", "0", 0, "", false, 0, "")
 	r.pdf.CellFormat(10, 6, strconv.Itoa(countStatusInDiscussion), "0", 0, "R", false, 0, "")
 	r.pdf.CellFormat(60, 6, "in discussion", "0", 0, "", false, 0, "")
 	r.pdf.Ln(-1)
 
-	ColorHighRisk(r.pdf)
+	colorHighRisk(r.pdf)
 	r.pdf.CellFormat(17, 6, "", "0", 0, "", false, 0, "")
 	r.pdf.CellFormat(10, 6, strconv.Itoa(countHigh), "0", 0, "R", false, 0, "")
 	r.pdf.CellFormat(60, 6, "high risk", "0", 0, "", false, 0, "")
-	ColorRiskStatusAccepted(r.pdf)
+	colorRiskStatusAccepted(r.pdf)
 	r.pdf.CellFormat(23, 6, "", "0", 0, "", false, 0, "")
 	r.pdf.CellFormat(10, 6, strconv.Itoa(countStatusAccepted), "0", 0, "R", false, 0, "")
 	r.pdf.CellFormat(60, 6, "accepted", "0", 0, "", false, 0, "")
 	r.pdf.Ln(-1)
 
-	ColorElevatedRisk(r.pdf)
+	colorElevatedRisk(r.pdf)
 	r.pdf.CellFormat(17, 6, "", "0", 0, "", false, 0, "")
 	r.pdf.CellFormat(10, 6, strconv.Itoa(countElevated), "0", 0, "R", false, 0, "")
 	r.pdf.CellFormat(60, 6, "elevated risk", "0", 0, "", false, 0, "")
-	ColorRiskStatusInProgress(r.pdf)
+	colorRiskStatusInProgress(r.pdf)
 	r.pdf.CellFormat(23, 6, "", "0", 0, "", false, 0, "")
 	r.pdf.CellFormat(10, 6, strconv.Itoa(countStatusInProgress), "0", 0, "R", false, 0, "")
 	r.pdf.CellFormat(60, 6, "in progress", "0", 0, "", false, 0, "")
 	r.pdf.Ln(-1)
 
-	ColorMediumRisk(r.pdf)
+	colorMediumRisk(r.pdf)
 	r.pdf.CellFormat(17, 6, "", "0", 0, "", false, 0, "")
 	r.pdf.CellFormat(10, 6, strconv.Itoa(countMedium), "0", 0, "R", false, 0, "")
 	r.pdf.CellFormat(60, 6, "medium risk", "0", 0, "", false, 0, "")
-	ColorRiskStatusMitigated(r.pdf)
+	colorRiskStatusMitigated(r.pdf)
 	r.pdf.CellFormat(23, 6, "", "0", 0, "", false, 0, "")
 	r.pdf.CellFormat(10, 6, strconv.Itoa(countStatusMitigated), "0", 0, "R", false, 0, "")
 	r.pdf.SetFont("Helvetica", "BI", fontSizeBody)
@@ -812,11 +812,11 @@ func (r *pdfReporter) createManagementSummary(parsedModel *types.ParsedModel, te
 	r.pdf.SetFont("Helvetica", "B", fontSizeBody)
 	r.pdf.Ln(-1)
 
-	ColorLowRisk(r.pdf)
+	colorLowRisk(r.pdf)
 	r.pdf.CellFormat(17, 6, "", "0", 0, "", false, 0, "")
 	r.pdf.CellFormat(10, 6, strconv.Itoa(countLow), "0", 0, "R", false, 0, "")
 	r.pdf.CellFormat(60, 6, "low risk", "0", 0, "", false, 0, "")
-	ColorRiskStatusFalsePositive(r.pdf)
+	colorRiskStatusFalsePositive(r.pdf)
 	r.pdf.CellFormat(23, 6, "", "0", 0, "", false, 0, "")
 	r.pdf.CellFormat(10, 6, strconv.Itoa(countStatusFalsePositive), "0", 0, "R", false, 0, "")
 	r.pdf.SetFont("Helvetica", "BI", fontSizeBody)
@@ -833,28 +833,28 @@ func (r *pdfReporter) createManagementSummary(parsedModel *types.ParsedModel, te
 		Values: []chart.Value{
 			{Value: float64(countLow), //Label: strconv.Itoa(countLow) + " Low",
 				Style: chart.Style{
-					FillColor: makeColor(RgbHexColorLowRisk()).WithAlpha(98),
-					//FontColor: makeColor(RgbHexColorLowRisk()),
+					FillColor: makeColor(rgbHexColorLowRisk()).WithAlpha(98),
+					//FontColor: makeColor(rgbHexColorLowRisk()),
 					FontSize: 65}},
 			{Value: float64(countMedium), //Label: strconv.Itoa(countMedium) + " Medium",
 				Style: chart.Style{
-					FillColor: makeColor(RgbHexColorMediumRisk()).WithAlpha(98),
-					//FontColor: makeColor(RgbHexColorMediumRisk()),
+					FillColor: makeColor(rgbHexColorMediumRisk()).WithAlpha(98),
+					//FontColor: makeColor(rgbHexColorMediumRisk()),
 					FontSize: 65}},
 			{Value: float64(countElevated), //Label: strconv.Itoa(countElevated) + " Elevated",
 				Style: chart.Style{
-					FillColor: makeColor(RgbHexColorElevatedRisk()).WithAlpha(98),
-					//FontColor: makeColor(RgbHexColorElevatedRisk()),
+					FillColor: makeColor(rgbHexColorElevatedRisk()).WithAlpha(98),
+					//FontColor: makeColor(rgbHexColorElevatedRisk()),
 					FontSize: 65}},
 			{Value: float64(countHigh), //Label: strconv.Itoa(countHigh) + " High",
 				Style: chart.Style{
-					FillColor: makeColor(RgbHexColorHighRisk()).WithAlpha(98),
-					//FontColor: makeColor(RgbHexColorHighRisk()),
+					FillColor: makeColor(rgbHexColorHighRisk()).WithAlpha(98),
+					//FontColor: makeColor(rgbHexColorHighRisk()),
 					FontSize: 65}},
 			{Value: float64(countCritical), //Label: strconv.Itoa(countCritical) + " Critical",
 				Style: chart.Style{
-					FillColor: makeColor(RgbHexColorCriticalRisk()).WithAlpha(98),
-					//FontColor: makeColor(RgbHexColorCriticalRisk()),
+					FillColor: makeColor(rgbHexColorCriticalRisk()).WithAlpha(98),
+					//FontColor: makeColor(rgbHexColorCriticalRisk()),
 					FontSize: 65}},
 		},
 	}
@@ -866,28 +866,28 @@ func (r *pdfReporter) createManagementSummary(parsedModel *types.ParsedModel, te
 		Values: []chart.Value{
 			{Value: float64(countStatusFalsePositive), //Label: strconv.Itoa(countStatusFalsePositive) + " False Positive",
 				Style: chart.Style{
-					FillColor: makeColor(RgbHexColorRiskStatusFalsePositive()).WithAlpha(98),
-					//FontColor: makeColor(RgbHexColorRiskStatusFalsePositive()),
+					FillColor: makeColor(rgbHexColorRiskStatusFalsePositive()).WithAlpha(98),
+					//FontColor: makeColor(rgbHexColorRiskStatusFalsePositive()),
 					FontSize: 65}},
 			{Value: float64(countStatusMitigated), //Label: strconv.Itoa(countStatusMitigated) + " Mitigated",
 				Style: chart.Style{
-					FillColor: makeColor(RgbHexColorRiskStatusMitigated()).WithAlpha(98),
-					//FontColor: makeColor(RgbHexColorRiskStatusMitigated()),
+					FillColor: makeColor(rgbHexColorRiskStatusMitigated()).WithAlpha(98),
+					//FontColor: makeColor(rgbHexColorRiskStatusMitigated()),
 					FontSize: 65}},
 			{Value: float64(countStatusInProgress), //Label: strconv.Itoa(countStatusInProgress) + " InProgress",
 				Style: chart.Style{
-					FillColor: makeColor(RgbHexColorRiskStatusInProgress()).WithAlpha(98),
-					//FontColor: makeColor(RgbHexColorRiskStatusInProgress()),
+					FillColor: makeColor(rgbHexColorRiskStatusInProgress()).WithAlpha(98),
+					//FontColor: makeColor(rgbHexColorRiskStatusInProgress()),
 					FontSize: 65}},
 			{Value: float64(countStatusAccepted), //Label: strconv.Itoa(countStatusAccepted) + " Accepted",
 				Style: chart.Style{
-					FillColor: makeColor(RgbHexColorRiskStatusAccepted()).WithAlpha(98),
-					//FontColor: makeColor(RgbHexColorRiskStatusAccepted()),
+					FillColor: makeColor(rgbHexColorRiskStatusAccepted()).WithAlpha(98),
+					//FontColor: makeColor(rgbHexColorRiskStatusAccepted()),
 					FontSize: 65}},
 			{Value: float64(countStatusInDiscussion), //Label: strconv.Itoa(countStatusInDiscussion) + " InDiscussion",
 				Style: chart.Style{
-					FillColor: makeColor(RgbHexColorRiskStatusInDiscussion()).WithAlpha(98),
-					//FontColor: makeColor(RgbHexColorRiskStatusInDiscussion()),
+					FillColor: makeColor(rgbHexColorRiskStatusInDiscussion()).WithAlpha(98),
+					//FontColor: makeColor(rgbHexColorRiskStatusInDiscussion()),
 					FontSize: 65}},
 			{Value: float64(countStatusUnchecked), //Label: strconv.Itoa(countStatusUnchecked) + " Unchecked",
 				Style: chart.Style{
@@ -955,15 +955,15 @@ func (r *pdfReporter) createRiskMitigationStatus(parsedModel *types.ParsedModel,
 					{Value: float64(len(types.ReduceToOnlyRiskTrackingUnchecked(parsedModel, risksLow))), Label: types.Unchecked.Title(),
 						Style: chart.Style{FillColor: makeColor(RgbHexColorRiskStatusUnchecked()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
 					{Value: float64(len(types.ReduceToOnlyRiskTrackingInDiscussion(parsedModel, risksLow))), Label: types.InDiscussion.Title(),
-						Style: chart.Style{FillColor: makeColor(RgbHexColorRiskStatusInDiscussion()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
+						Style: chart.Style{FillColor: makeColor(rgbHexColorRiskStatusInDiscussion()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
 					{Value: float64(len(types.ReduceToOnlyRiskTrackingAccepted(parsedModel, risksLow))), Label: types.Accepted.Title(),
-						Style: chart.Style{FillColor: makeColor(RgbHexColorRiskStatusAccepted()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
+						Style: chart.Style{FillColor: makeColor(rgbHexColorRiskStatusAccepted()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
 					{Value: float64(len(types.ReduceToOnlyRiskTrackingInProgress(parsedModel, risksLow))), Label: types.InProgress.Title(),
-						Style: chart.Style{FillColor: makeColor(RgbHexColorRiskStatusInProgress()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
+						Style: chart.Style{FillColor: makeColor(rgbHexColorRiskStatusInProgress()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
 					{Value: float64(len(types.ReduceToOnlyRiskTrackingMitigated(parsedModel, risksLow))), Label: types.Mitigated.Title(),
-						Style: chart.Style{FillColor: makeColor(RgbHexColorRiskStatusMitigated()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
+						Style: chart.Style{FillColor: makeColor(rgbHexColorRiskStatusMitigated()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
 					{Value: float64(len(types.ReduceToOnlyRiskTrackingFalsePositive(parsedModel, risksLow))), Label: types.FalsePositive.Title(),
-						Style: chart.Style{FillColor: makeColor(RgbHexColorRiskStatusFalsePositive()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
+						Style: chart.Style{FillColor: makeColor(rgbHexColorRiskStatusFalsePositive()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
 				},
 			},
 			{
@@ -973,15 +973,15 @@ func (r *pdfReporter) createRiskMitigationStatus(parsedModel *types.ParsedModel,
 					{Value: float64(len(types.ReduceToOnlyRiskTrackingUnchecked(parsedModel, risksMedium))), Label: types.Unchecked.Title(),
 						Style: chart.Style{FillColor: makeColor(RgbHexColorRiskStatusUnchecked()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
 					{Value: float64(len(types.ReduceToOnlyRiskTrackingInDiscussion(parsedModel, risksMedium))), Label: types.InDiscussion.Title(),
-						Style: chart.Style{FillColor: makeColor(RgbHexColorRiskStatusInDiscussion()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
+						Style: chart.Style{FillColor: makeColor(rgbHexColorRiskStatusInDiscussion()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
 					{Value: float64(len(types.ReduceToOnlyRiskTrackingAccepted(parsedModel, risksMedium))), Label: types.Accepted.Title(),
-						Style: chart.Style{FillColor: makeColor(RgbHexColorRiskStatusAccepted()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
+						Style: chart.Style{FillColor: makeColor(rgbHexColorRiskStatusAccepted()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
 					{Value: float64(len(types.ReduceToOnlyRiskTrackingInProgress(parsedModel, risksMedium))), Label: types.InProgress.Title(),
-						Style: chart.Style{FillColor: makeColor(RgbHexColorRiskStatusInProgress()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
+						Style: chart.Style{FillColor: makeColor(rgbHexColorRiskStatusInProgress()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
 					{Value: float64(len(types.ReduceToOnlyRiskTrackingMitigated(parsedModel, risksMedium))), Label: types.Mitigated.Title(),
-						Style: chart.Style{FillColor: makeColor(RgbHexColorRiskStatusMitigated()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
+						Style: chart.Style{FillColor: makeColor(rgbHexColorRiskStatusMitigated()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
 					{Value: float64(len(types.ReduceToOnlyRiskTrackingFalsePositive(parsedModel, risksMedium))), Label: types.FalsePositive.Title(),
-						Style: chart.Style{FillColor: makeColor(RgbHexColorRiskStatusFalsePositive()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
+						Style: chart.Style{FillColor: makeColor(rgbHexColorRiskStatusFalsePositive()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
 				},
 			},
 			{
@@ -991,15 +991,15 @@ func (r *pdfReporter) createRiskMitigationStatus(parsedModel *types.ParsedModel,
 					{Value: float64(len(types.ReduceToOnlyRiskTrackingUnchecked(parsedModel, risksElevated))), Label: types.Unchecked.Title(),
 						Style: chart.Style{FillColor: makeColor(RgbHexColorRiskStatusUnchecked()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
 					{Value: float64(len(types.ReduceToOnlyRiskTrackingInDiscussion(parsedModel, risksElevated))), Label: types.InDiscussion.Title(),
-						Style: chart.Style{FillColor: makeColor(RgbHexColorRiskStatusInDiscussion()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
+						Style: chart.Style{FillColor: makeColor(rgbHexColorRiskStatusInDiscussion()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
 					{Value: float64(len(types.ReduceToOnlyRiskTrackingAccepted(parsedModel, risksElevated))), Label: types.Accepted.Title(),
-						Style: chart.Style{FillColor: makeColor(RgbHexColorRiskStatusAccepted()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
+						Style: chart.Style{FillColor: makeColor(rgbHexColorRiskStatusAccepted()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
 					{Value: float64(len(types.ReduceToOnlyRiskTrackingInProgress(parsedModel, risksElevated))), Label: types.InProgress.Title(),
-						Style: chart.Style{FillColor: makeColor(RgbHexColorRiskStatusInProgress()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
+						Style: chart.Style{FillColor: makeColor(rgbHexColorRiskStatusInProgress()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
 					{Value: float64(len(types.ReduceToOnlyRiskTrackingMitigated(parsedModel, risksElevated))), Label: types.Mitigated.Title(),
-						Style: chart.Style{FillColor: makeColor(RgbHexColorRiskStatusMitigated()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
+						Style: chart.Style{FillColor: makeColor(rgbHexColorRiskStatusMitigated()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
 					{Value: float64(len(types.ReduceToOnlyRiskTrackingFalsePositive(parsedModel, risksElevated))), Label: types.FalsePositive.Title(),
-						Style: chart.Style{FillColor: makeColor(RgbHexColorRiskStatusFalsePositive()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
+						Style: chart.Style{FillColor: makeColor(rgbHexColorRiskStatusFalsePositive()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
 				},
 			},
 			{
@@ -1009,15 +1009,15 @@ func (r *pdfReporter) createRiskMitigationStatus(parsedModel *types.ParsedModel,
 					{Value: float64(len(types.ReduceToOnlyRiskTrackingUnchecked(parsedModel, risksHigh))), Label: types.Unchecked.Title(),
 						Style: chart.Style{FillColor: makeColor(RgbHexColorRiskStatusUnchecked()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
 					{Value: float64(len(types.ReduceToOnlyRiskTrackingInDiscussion(parsedModel, risksHigh))), Label: types.InDiscussion.Title(),
-						Style: chart.Style{FillColor: makeColor(RgbHexColorRiskStatusInDiscussion()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
+						Style: chart.Style{FillColor: makeColor(rgbHexColorRiskStatusInDiscussion()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
 					{Value: float64(len(types.ReduceToOnlyRiskTrackingAccepted(parsedModel, risksHigh))), Label: types.Accepted.Title(),
-						Style: chart.Style{FillColor: makeColor(RgbHexColorRiskStatusAccepted()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
+						Style: chart.Style{FillColor: makeColor(rgbHexColorRiskStatusAccepted()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
 					{Value: float64(len(types.ReduceToOnlyRiskTrackingInProgress(parsedModel, risksHigh))), Label: types.InProgress.Title(),
-						Style: chart.Style{FillColor: makeColor(RgbHexColorRiskStatusInProgress()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
+						Style: chart.Style{FillColor: makeColor(rgbHexColorRiskStatusInProgress()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
 					{Value: float64(len(types.ReduceToOnlyRiskTrackingMitigated(parsedModel, risksHigh))), Label: types.Mitigated.Title(),
-						Style: chart.Style{FillColor: makeColor(RgbHexColorRiskStatusMitigated()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
+						Style: chart.Style{FillColor: makeColor(rgbHexColorRiskStatusMitigated()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
 					{Value: float64(len(types.ReduceToOnlyRiskTrackingFalsePositive(parsedModel, risksHigh))), Label: types.FalsePositive.Title(),
-						Style: chart.Style{FillColor: makeColor(RgbHexColorRiskStatusFalsePositive()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
+						Style: chart.Style{FillColor: makeColor(rgbHexColorRiskStatusFalsePositive()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
 				},
 			},
 			{
@@ -1027,15 +1027,15 @@ func (r *pdfReporter) createRiskMitigationStatus(parsedModel *types.ParsedModel,
 					{Value: float64(len(types.ReduceToOnlyRiskTrackingUnchecked(parsedModel, risksCritical))), Label: types.Unchecked.Title(),
 						Style: chart.Style{FillColor: makeColor(RgbHexColorRiskStatusUnchecked()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
 					{Value: float64(len(types.ReduceToOnlyRiskTrackingInDiscussion(parsedModel, risksCritical))), Label: types.InDiscussion.Title(),
-						Style: chart.Style{FillColor: makeColor(RgbHexColorRiskStatusInDiscussion()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
+						Style: chart.Style{FillColor: makeColor(rgbHexColorRiskStatusInDiscussion()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
 					{Value: float64(len(types.ReduceToOnlyRiskTrackingAccepted(parsedModel, risksCritical))), Label: types.Accepted.Title(),
-						Style: chart.Style{FillColor: makeColor(RgbHexColorRiskStatusAccepted()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
+						Style: chart.Style{FillColor: makeColor(rgbHexColorRiskStatusAccepted()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
 					{Value: float64(len(types.ReduceToOnlyRiskTrackingInProgress(parsedModel, risksCritical))), Label: types.InProgress.Title(),
-						Style: chart.Style{FillColor: makeColor(RgbHexColorRiskStatusInProgress()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
+						Style: chart.Style{FillColor: makeColor(rgbHexColorRiskStatusInProgress()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
 					{Value: float64(len(types.ReduceToOnlyRiskTrackingMitigated(parsedModel, risksCritical))), Label: types.Mitigated.Title(),
-						Style: chart.Style{FillColor: makeColor(RgbHexColorRiskStatusMitigated()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
+						Style: chart.Style{FillColor: makeColor(rgbHexColorRiskStatusMitigated()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
 					{Value: float64(len(types.ReduceToOnlyRiskTrackingFalsePositive(parsedModel, risksCritical))), Label: types.FalsePositive.Title(),
-						Style: chart.Style{FillColor: makeColor(RgbHexColorRiskStatusFalsePositive()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
+						Style: chart.Style{FillColor: makeColor(rgbHexColorRiskStatusFalsePositive()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
 				},
 			},
 		},
@@ -1059,34 +1059,34 @@ func (r *pdfReporter) createRiskMitigationStatus(parsedModel *types.ParsedModel,
 	r.pdf.SetFont("Helvetica", "B", fontSizeBody)
 	r.pdf.Ln(20)
 
-	ColorRiskStatusUnchecked(r.pdf)
+	colorRiskStatusUnchecked(r.pdf)
 	r.pdf.CellFormat(150, 6, "", "0", 0, "", false, 0, "")
 	r.pdf.CellFormat(10, 6, strconv.Itoa(countStatusUnchecked), "0", 0, "R", false, 0, "")
 	r.pdf.CellFormat(60, 6, "unchecked", "0", 0, "", false, 0, "")
 	r.pdf.Ln(-1)
-	ColorRiskStatusInDiscussion(r.pdf)
+	colorRiskStatusInDiscussion(r.pdf)
 	r.pdf.CellFormat(150, 6, "", "0", 0, "", false, 0, "")
 	r.pdf.CellFormat(10, 6, strconv.Itoa(countStatusInDiscussion), "0", 0, "R", false, 0, "")
 	r.pdf.CellFormat(60, 6, "in discussion", "0", 0, "", false, 0, "")
 	r.pdf.Ln(-1)
-	ColorRiskStatusAccepted(r.pdf)
+	colorRiskStatusAccepted(r.pdf)
 	r.pdf.CellFormat(150, 6, "", "0", 0, "", false, 0, "")
 	r.pdf.CellFormat(10, 6, strconv.Itoa(countStatusAccepted), "0", 0, "R", false, 0, "")
 	r.pdf.CellFormat(60, 6, "accepted", "0", 0, "", false, 0, "")
 	r.pdf.Ln(-1)
-	ColorRiskStatusInProgress(r.pdf)
+	colorRiskStatusInProgress(r.pdf)
 	r.pdf.CellFormat(150, 6, "", "0", 0, "", false, 0, "")
 	r.pdf.CellFormat(10, 6, strconv.Itoa(countStatusInProgress), "0", 0, "R", false, 0, "")
 	r.pdf.CellFormat(60, 6, "in progress", "0", 0, "", false, 0, "")
 	r.pdf.Ln(-1)
-	ColorRiskStatusMitigated(r.pdf)
+	colorRiskStatusMitigated(r.pdf)
 	r.pdf.CellFormat(150, 6, "", "0", 0, "", false, 0, "")
 	r.pdf.CellFormat(10, 6, strconv.Itoa(countStatusMitigated), "0", 0, "R", false, 0, "")
 	r.pdf.SetFont("Helvetica", "BI", fontSizeBody)
 	r.pdf.CellFormat(60, 6, "mitigated", "0", 0, "", false, 0, "")
 	r.pdf.SetFont("Helvetica", "B", fontSizeBody)
 	r.pdf.Ln(-1)
-	ColorRiskStatusFalsePositive(r.pdf)
+	colorRiskStatusFalsePositive(r.pdf)
 	r.pdf.CellFormat(150, 6, "", "0", 0, "", false, 0, "")
 	r.pdf.CellFormat(10, 6, strconv.Itoa(countStatusFalsePositive), "0", 0, "R", false, 0, "")
 	r.pdf.SetFont("Helvetica", "BI", fontSizeBody)
@@ -1123,28 +1123,28 @@ func (r *pdfReporter) createRiskMitigationStatus(parsedModel *types.ParsedModel,
 			Values: []chart.Value{
 				{Value: float64(countLow), //Label: strconv.Itoa(countLow) + " Low",
 					Style: chart.Style{
-						FillColor: makeColor(RgbHexColorLowRisk()).WithAlpha(98),
-						//FontColor: makeColor(RgbHexColorLowRisk()),
+						FillColor: makeColor(rgbHexColorLowRisk()).WithAlpha(98),
+						//FontColor: makeColor(rgbHexColorLowRisk()),
 						FontSize: 65}},
 				{Value: float64(countMedium), //Label: strconv.Itoa(countMedium) + " Medium",
 					Style: chart.Style{
-						FillColor: makeColor(RgbHexColorMediumRisk()).WithAlpha(98),
-						//FontColor: makeColor(RgbHexColorMediumRisk()),
+						FillColor: makeColor(rgbHexColorMediumRisk()).WithAlpha(98),
+						//FontColor: makeColor(rgbHexColorMediumRisk()),
 						FontSize: 65}},
 				{Value: float64(countElevated), //Label: strconv.Itoa(countElevated) + " Elevated",
 					Style: chart.Style{
-						FillColor: makeColor(RgbHexColorElevatedRisk()).WithAlpha(98),
-						//FontColor: makeColor(RgbHexColorElevatedRisk()),
+						FillColor: makeColor(rgbHexColorElevatedRisk()).WithAlpha(98),
+						//FontColor: makeColor(rgbHexColorElevatedRisk()),
 						FontSize: 65}},
 				{Value: float64(countHigh), //Label: strconv.Itoa(countHigh) + " High",
 					Style: chart.Style{
-						FillColor: makeColor(RgbHexColorHighRisk()).WithAlpha(98),
-						//FontColor: makeColor(RgbHexColorHighRisk()),
+						FillColor: makeColor(rgbHexColorHighRisk()).WithAlpha(98),
+						//FontColor: makeColor(rgbHexColorHighRisk()),
 						FontSize: 65}},
 				{Value: float64(countCritical), //Label: strconv.Itoa(countCritical) + " Critical",
 					Style: chart.Style{
-						FillColor: makeColor(RgbHexColorCriticalRisk()).WithAlpha(98),
-						//FontColor: makeColor(RgbHexColorCriticalRisk()),
+						FillColor: makeColor(rgbHexColorCriticalRisk()).WithAlpha(98),
+						//FontColor: makeColor(rgbHexColorCriticalRisk()),
 						FontSize: 65}},
 			},
 		}
@@ -1155,19 +1155,19 @@ func (r *pdfReporter) createRiskMitigationStatus(parsedModel *types.ParsedModel,
 			Values: []chart.Value{
 				{Value: float64(countBusinessSide),
 					Style: chart.Style{
-						FillColor: makeColor(RgbHexColorBusiness()).WithAlpha(98),
+						FillColor: makeColor(rgbHexColorBusiness()).WithAlpha(98),
 						FontSize:  65}},
 				{Value: float64(countArchitecture),
 					Style: chart.Style{
-						FillColor: makeColor(RgbHexColorArchitecture()).WithAlpha(98),
+						FillColor: makeColor(rgbHexColorArchitecture()).WithAlpha(98),
 						FontSize:  65}},
 				{Value: float64(countDevelopment),
 					Style: chart.Style{
-						FillColor: makeColor(RgbHexColorDevelopment()).WithAlpha(98),
+						FillColor: makeColor(rgbHexColorDevelopment()).WithAlpha(98),
 						FontSize:  65}},
 				{Value: float64(countOperation),
 					Style: chart.Style{
-						FillColor: makeColor(RgbHexColorOperation()).WithAlpha(98),
+						FillColor: makeColor(rgbHexColorOperation()).WithAlpha(98),
 						FontSize:  65}},
 			},
 		}
@@ -1178,7 +1178,7 @@ func (r *pdfReporter) createRiskMitigationStatus(parsedModel *types.ParsedModel,
 		r.pdf.SetFont("Helvetica", "B", fontSizeBody)
 		r.pdf.Ln(8)
 
-		ColorCriticalRisk(r.pdf)
+		colorCriticalRisk(r.pdf)
 		r.pdf.CellFormat(10, 6, "", "0", 0, "", false, 0, "")
 		r.pdf.CellFormat(10, 6, strconv.Itoa(countCritical), "0", 0, "R", false, 0, "")
 		r.pdf.CellFormat(60, 6, "unmitigated critical risk", "0", 0, "", false, 0, "")
@@ -1186,38 +1186,38 @@ func (r *pdfReporter) createRiskMitigationStatus(parsedModel *types.ParsedModel,
 		r.pdf.CellFormat(10, 6, "", "0", 0, "R", false, 0, "")
 		r.pdf.CellFormat(60, 6, "", "0", 0, "", false, 0, "")
 		r.pdf.Ln(-1)
-		ColorHighRisk(r.pdf)
+		colorHighRisk(r.pdf)
 		r.pdf.CellFormat(10, 6, "", "0", 0, "", false, 0, "")
 		r.pdf.CellFormat(10, 6, strconv.Itoa(countHigh), "0", 0, "R", false, 0, "")
 		r.pdf.CellFormat(60, 6, "unmitigated high risk", "0", 0, "", false, 0, "")
-		ColorBusiness(r.pdf)
+		colorBusiness(r.pdf)
 		r.pdf.CellFormat(22, 6, "", "0", 0, "", false, 0, "")
 		r.pdf.CellFormat(10, 6, strconv.Itoa(countBusinessSide), "0", 0, "R", false, 0, "")
 		r.pdf.CellFormat(60, 6, "business side related", "0", 0, "", false, 0, "")
 		r.pdf.Ln(-1)
-		ColorElevatedRisk(r.pdf)
+		colorElevatedRisk(r.pdf)
 		r.pdf.CellFormat(10, 6, "", "0", 0, "", false, 0, "")
 		r.pdf.CellFormat(10, 6, strconv.Itoa(countElevated), "0", 0, "R", false, 0, "")
 		r.pdf.CellFormat(60, 6, "unmitigated elevated risk", "0", 0, "", false, 0, "")
-		ColorArchitecture(r.pdf)
+		colorArchitecture(r.pdf)
 		r.pdf.CellFormat(22, 6, "", "0", 0, "", false, 0, "")
 		r.pdf.CellFormat(10, 6, strconv.Itoa(countArchitecture), "0", 0, "R", false, 0, "")
 		r.pdf.CellFormat(60, 6, "architecture related", "0", 0, "", false, 0, "")
 		r.pdf.Ln(-1)
-		ColorMediumRisk(r.pdf)
+		colorMediumRisk(r.pdf)
 		r.pdf.CellFormat(10, 6, "", "0", 0, "", false, 0, "")
 		r.pdf.CellFormat(10, 6, strconv.Itoa(countMedium), "0", 0, "R", false, 0, "")
 		r.pdf.CellFormat(60, 6, "unmitigated medium risk", "0", 0, "", false, 0, "")
-		ColorDevelopment(r.pdf)
+		colorDevelopment(r.pdf)
 		r.pdf.CellFormat(22, 6, "", "0", 0, "", false, 0, "")
 		r.pdf.CellFormat(10, 6, strconv.Itoa(countDevelopment), "0", 0, "R", false, 0, "")
 		r.pdf.CellFormat(60, 6, "development related", "0", 0, "", false, 0, "")
 		r.pdf.Ln(-1)
-		ColorLowRisk(r.pdf)
+		colorLowRisk(r.pdf)
 		r.pdf.CellFormat(10, 6, "", "0", 0, "", false, 0, "")
 		r.pdf.CellFormat(10, 6, strconv.Itoa(countLow), "0", 0, "R", false, 0, "")
 		r.pdf.CellFormat(60, 6, "unmitigated low risk", "0", 0, "", false, 0, "")
-		ColorOperation(r.pdf)
+		colorOperation(r.pdf)
 		r.pdf.CellFormat(22, 6, "", "0", 0, "", false, 0, "")
 		r.pdf.CellFormat(10, 6, strconv.Itoa(countOperation), "0", 0, "R", false, 0, "")
 		r.pdf.CellFormat(60, 6, "operations related", "0", 0, "", false, 0, "")
@@ -1424,7 +1424,7 @@ func (r *pdfReporter) createModelFailures(parsedModel *types.ParsedModel) {
 	}
 	countStillAtRisk := len(types.ReduceToOnlyStillAtRisk(parsedModel, modelFailures))
 	if countStillAtRisk > 0 {
-		ColorModelFailure(r.pdf)
+		colorModelFailure(r.pdf)
 	}
 	chapTitle := "Potential Model Failures: " + strconv.Itoa(countStillAtRisk) + " / " + strconv.Itoa(count) + " " + risksStr
 	r.addHeadline(chapTitle, false)
@@ -1497,11 +1497,11 @@ func (r *pdfReporter) createRAA(parsedModel *types.ParsedModel, introTextRAA str
 		newRisksStr := technicalAsset.GeneratedRisks(parsedModel)
 		switch types.HighestSeverityStillAtRisk(parsedModel, newRisksStr) {
 		case types.HighSeverity:
-			ColorHighRisk(r.pdf)
+			colorHighRisk(r.pdf)
 		case types.MediumSeverity:
-			ColorMediumRisk(r.pdf)
+			colorMediumRisk(r.pdf)
 		case types.LowSeverity:
-			ColorLowRisk(r.pdf)
+			colorLowRisk(r.pdf)
 		default:
 			r.pdfColorBlack()
 		}
@@ -1575,11 +1575,11 @@ func createDataRiskQuickWins() {
 		risks := technicalAsset.GeneratedRisks()
 		switch model.HighestSeverityStillAtRisk(risks) {
 		case model.High:
-			ColorHighRisk(r.pdf)
+			colorHighRisk(r.pdf)
 		case model.Medium:
-			ColorMediumRisk(r.pdf)
+			colorMediumRisk(r.pdf)
 		case model.Low:
-			ColorLowRisk(r.pdf)
+			colorLowRisk(r.pdf)
 		default:
 			r.pdfColorBlack()
 		}
@@ -1632,19 +1632,19 @@ func (r *pdfReporter) addCategories(parsedModel *types.ParsedModel, riskCategori
 		var prefix string
 		switch severity {
 		case types.CriticalSeverity:
-			ColorCriticalRisk(r.pdf)
+			colorCriticalRisk(r.pdf)
 			prefix = "Critical: "
 		case types.HighSeverity:
-			ColorHighRisk(r.pdf)
+			colorHighRisk(r.pdf)
 			prefix = "High: "
 		case types.ElevatedSeverity:
-			ColorElevatedRisk(r.pdf)
+			colorElevatedRisk(r.pdf)
 			prefix = "Elevated: "
 		case types.MediumSeverity:
-			ColorMediumRisk(r.pdf)
+			colorMediumRisk(r.pdf)
 			prefix = "Medium: "
 		case types.LowSeverity:
-			ColorLowRisk(r.pdf)
+			colorLowRisk(r.pdf)
 			prefix = "Low: "
 		default:
 			r.pdfColorBlack()
@@ -1652,15 +1652,15 @@ func (r *pdfReporter) addCategories(parsedModel *types.ParsedModel, riskCategori
 		}
 		switch types.HighestSeverityStillAtRisk(parsedModel, risksStr) {
 		case types.CriticalSeverity:
-			ColorCriticalRisk(r.pdf)
+			colorCriticalRisk(r.pdf)
 		case types.HighSeverity:
-			ColorHighRisk(r.pdf)
+			colorHighRisk(r.pdf)
 		case types.ElevatedSeverity:
-			ColorElevatedRisk(r.pdf)
+			colorElevatedRisk(r.pdf)
 		case types.MediumSeverity:
-			ColorMediumRisk(r.pdf)
+			colorMediumRisk(r.pdf)
 		case types.LowSeverity:
-			ColorLowRisk(r.pdf)
+			colorLowRisk(r.pdf)
 		}
 		if len(types.ReduceToOnlyStillAtRisk(parsedModel, risksStr)) == 0 {
 			r.pdfColorBlack()
@@ -2158,7 +2158,7 @@ func (r *pdfReporter) createQuestions(parsedModel *types.ParsedModel) {
 		questions = "Question"
 	}
 	if questionsUnanswered(parsedModel) > 0 {
-		ColorModelFailure(r.pdf)
+		colorModelFailure(r.pdf)
 	}
 	chapTitle := "Questions: " + strconv.Itoa(questionsUnanswered(parsedModel)) + " / " + strconv.Itoa(count) + " " + questions
 	r.addHeadline(chapTitle, false)
@@ -2188,7 +2188,7 @@ func (r *pdfReporter) createQuestions(parsedModel *types.ParsedModel) {
 			html.Write(5, "<b>"+uni(question)+"</b><br>")
 			html.Write(5, "<i>"+uni(strings.TrimSpace(answer))+"</i>")
 		} else {
-			ColorModelFailure(r.pdf)
+			colorModelFailure(r.pdf)
 			html.Write(5, "<b>"+uni(question)+"</b><br>")
 			r.pdfColorLightGray()
 			html.Write(5, "<i>- answer pending -</i>")
@@ -2319,15 +2319,15 @@ func (r *pdfReporter) createRiskCategories(parsedModel *types.ParsedModel) {
 		// category color
 		switch types.HighestSeverityStillAtRisk(parsedModel, risksStr) {
 		case types.CriticalSeverity:
-			ColorCriticalRisk(r.pdf)
+			colorCriticalRisk(r.pdf)
 		case types.HighSeverity:
-			ColorHighRisk(r.pdf)
+			colorHighRisk(r.pdf)
 		case types.ElevatedSeverity:
-			ColorElevatedRisk(r.pdf)
+			colorElevatedRisk(r.pdf)
 		case types.MediumSeverity:
-			ColorMediumRisk(r.pdf)
+			colorMediumRisk(r.pdf)
 		case types.LowSeverity:
-			ColorLowRisk(r.pdf)
+			colorLowRisk(r.pdf)
 		default:
 			r.pdfColorBlack()
 		}
@@ -2364,12 +2364,12 @@ func (r *pdfReporter) createRiskCategories(parsedModel *types.ParsedModel) {
 		text.WriteString(category.RiskAssessment)
 		html.Write(5, text.String())
 		text.Reset()
-		ColorRiskStatusFalsePositive(r.pdf)
+		colorRiskStatusFalsePositive(r.pdf)
 		text.WriteString("<br><br><br><b>False Positives</b><br><br>")
 		text.WriteString(category.FalsePositives)
 		html.Write(5, text.String())
 		text.Reset()
-		ColorRiskStatusMitigated(r.pdf)
+		colorRiskStatusMitigated(r.pdf)
 		text.WriteString("<br><br><br><b>Mitigation</b> (" + category.Function.Title() + "): " + category.Action + "<br><br>")
 		text.WriteString(category.Mitigation)
 
@@ -2430,7 +2430,7 @@ func (r *pdfReporter) createRiskCategories(parsedModel *types.ParsedModel) {
 			}
 			switch risk.Severity {
 			case types.CriticalSeverity:
-				ColorCriticalRisk(r.pdf)
+				colorCriticalRisk(r.pdf)
 				if !headlineCriticalWritten {
 					r.pdf.SetFont("Helvetica", "", fontSizeBody)
 					r.pdf.SetLeftMargin(oldLeft)
@@ -2440,7 +2440,7 @@ func (r *pdfReporter) createRiskCategories(parsedModel *types.ParsedModel) {
 					headlineCriticalWritten = true
 				}
 			case types.HighSeverity:
-				ColorHighRisk(r.pdf)
+				colorHighRisk(r.pdf)
 				if !headlineHighWritten {
 					r.pdf.SetFont("Helvetica", "", fontSizeBody)
 					r.pdf.SetLeftMargin(oldLeft)
@@ -2450,7 +2450,7 @@ func (r *pdfReporter) createRiskCategories(parsedModel *types.ParsedModel) {
 					headlineHighWritten = true
 				}
 			case types.ElevatedSeverity:
-				ColorElevatedRisk(r.pdf)
+				colorElevatedRisk(r.pdf)
 				if !headlineElevatedWritten {
 					r.pdf.SetFont("Helvetica", "", fontSizeBody)
 					r.pdf.SetLeftMargin(oldLeft)
@@ -2460,7 +2460,7 @@ func (r *pdfReporter) createRiskCategories(parsedModel *types.ParsedModel) {
 					headlineElevatedWritten = true
 				}
 			case types.MediumSeverity:
-				ColorMediumRisk(r.pdf)
+				colorMediumRisk(r.pdf)
 				if !headlineMediumWritten {
 					r.pdf.SetFont("Helvetica", "", fontSizeBody)
 					r.pdf.SetLeftMargin(oldLeft)
@@ -2470,7 +2470,7 @@ func (r *pdfReporter) createRiskCategories(parsedModel *types.ParsedModel) {
 					headlineMediumWritten = true
 				}
 			case types.LowSeverity:
-				ColorLowRisk(r.pdf)
+				colorLowRisk(r.pdf)
 				if !headlineLowWritten {
 					r.pdf.SetFont("Helvetica", "", fontSizeBody)
 					r.pdf.SetLeftMargin(oldLeft)
@@ -2519,17 +2519,17 @@ func (r *pdfReporter) writeRiskTrackingStatus(parsedModel *types.ParsedModel, ri
 	r.pdf.CellFormat(10, 6, "", "0", 0, "", false, 0, "")
 	switch tracking.Status {
 	case types.Unchecked:
-		ColorRiskStatusUnchecked(r.pdf)
+		colorRiskStatusUnchecked(r.pdf)
 	case types.InDiscussion:
-		ColorRiskStatusInDiscussion(r.pdf)
+		colorRiskStatusInDiscussion(r.pdf)
 	case types.Accepted:
-		ColorRiskStatusAccepted(r.pdf)
+		colorRiskStatusAccepted(r.pdf)
 	case types.InProgress:
-		ColorRiskStatusInProgress(r.pdf)
+		colorRiskStatusInProgress(r.pdf)
 	case types.Mitigated:
-		ColorRiskStatusMitigated(r.pdf)
+		colorRiskStatusMitigated(r.pdf)
 	case types.FalsePositive:
-		ColorRiskStatusFalsePositive(r.pdf)
+		colorRiskStatusFalsePositive(r.pdf)
 	default:
 		r.pdfColorBlack()
 	}
@@ -2594,15 +2594,15 @@ func (r *pdfReporter) createTechnicalAssets(parsedModel *types.ParsedModel) {
 		} else {
 			switch types.HighestSeverityStillAtRisk(parsedModel, risksStr) {
 			case types.CriticalSeverity:
-				ColorCriticalRisk(r.pdf)
+				colorCriticalRisk(r.pdf)
 			case types.HighSeverity:
-				ColorHighRisk(r.pdf)
+				colorHighRisk(r.pdf)
 			case types.ElevatedSeverity:
-				ColorElevatedRisk(r.pdf)
+				colorElevatedRisk(r.pdf)
 			case types.MediumSeverity:
-				ColorMediumRisk(r.pdf)
+				colorMediumRisk(r.pdf)
 			case types.LowSeverity:
-				ColorLowRisk(r.pdf)
+				colorLowRisk(r.pdf)
 			default:
 				r.pdfColorBlack()
 			}
@@ -2664,7 +2664,7 @@ func (r *pdfReporter) createTechnicalAssets(parsedModel *types.ParsedModel) {
 				}
 				switch risk.Severity {
 				case types.CriticalSeverity:
-					ColorCriticalRisk(r.pdf)
+					colorCriticalRisk(r.pdf)
 					if !headlineCriticalWritten {
 						r.pdf.SetFont("Helvetica", "", fontSizeBody)
 						r.pdf.SetLeftMargin(oldLeft + 3)
@@ -2672,7 +2672,7 @@ func (r *pdfReporter) createTechnicalAssets(parsedModel *types.ParsedModel) {
 						headlineCriticalWritten = true
 					}
 				case types.HighSeverity:
-					ColorHighRisk(r.pdf)
+					colorHighRisk(r.pdf)
 					if !headlineHighWritten {
 						r.pdf.SetFont("Helvetica", "", fontSizeBody)
 						r.pdf.SetLeftMargin(oldLeft + 3)
@@ -2680,7 +2680,7 @@ func (r *pdfReporter) createTechnicalAssets(parsedModel *types.ParsedModel) {
 						headlineHighWritten = true
 					}
 				case types.ElevatedSeverity:
-					ColorElevatedRisk(r.pdf)
+					colorElevatedRisk(r.pdf)
 					if !headlineElevatedWritten {
 						r.pdf.SetFont("Helvetica", "", fontSizeBody)
 						r.pdf.SetLeftMargin(oldLeft + 3)
@@ -2688,7 +2688,7 @@ func (r *pdfReporter) createTechnicalAssets(parsedModel *types.ParsedModel) {
 						headlineElevatedWritten = true
 					}
 				case types.MediumSeverity:
-					ColorMediumRisk(r.pdf)
+					colorMediumRisk(r.pdf)
 					if !headlineMediumWritten {
 						r.pdf.SetFont("Helvetica", "", fontSizeBody)
 						r.pdf.SetLeftMargin(oldLeft + 3)
@@ -2696,7 +2696,7 @@ func (r *pdfReporter) createTechnicalAssets(parsedModel *types.ParsedModel) {
 						headlineMediumWritten = true
 					}
 				case types.LowSeverity:
-					ColorLowRisk(r.pdf)
+					colorLowRisk(r.pdf)
 					if !headlineLowWritten {
 						r.pdf.SetFont("Helvetica", "", fontSizeBody)
 						r.pdf.SetLeftMargin(oldLeft + 3)
@@ -3402,11 +3402,11 @@ func (r *pdfReporter) createDataAssets(parsedModel *types.ParsedModel) {
 		r.pdfColorBlack()
 		switch dataAsset.IdentifiedDataBreachProbabilityStillAtRisk(parsedModel) {
 		case types.Probable:
-			ColorHighRisk(r.pdf)
+			colorHighRisk(r.pdf)
 		case types.Possible:
-			ColorMediumRisk(r.pdf)
+			colorMediumRisk(r.pdf)
 		case types.Improbable:
-			ColorLowRisk(r.pdf)
+			colorLowRisk(r.pdf)
 		default:
 			r.pdfColorBlack()
 		}
@@ -3437,11 +3437,11 @@ func (r *pdfReporter) createDataAssets(parsedModel *types.ParsedModel) {
 			dataBreachText := probability.String()
 			switch probability {
 			case model.Probable:
-				ColorHighRisk(r.pdf)
+				colorHighRisk(r.pdf)
 			case model.Possible:
-				ColorMediumRisk(r.pdf)
+				colorMediumRisk(r.pdf)
 			case model.Improbable:
-				ColorLowRisk(r.pdf)
+				colorLowRisk(r.pdf)
 			default:
 				r.pdfColorBlack()
 			}
@@ -3684,11 +3684,11 @@ func (r *pdfReporter) createDataAssets(parsedModel *types.ParsedModel) {
 					}
 					switch model.HighestSeverityStillAtRisk(techAssetResponsible.GeneratedRisks()) {
 					case model.High:
-						ColorHighRisk(r.pdf)
+						colorHighRisk(r.pdf)
 					case model.Medium:
-						ColorMediumRisk(r.pdf)
+						colorMediumRisk(r.pdf)
 					case model.Low:
-						ColorLowRisk(r.pdf)
+						colorLowRisk(r.pdf)
 					default:
 						r.pdfColorBlack()
 					}
@@ -3722,11 +3722,11 @@ func (r *pdfReporter) createDataAssets(parsedModel *types.ParsedModel) {
 		riskText := dataBreachProbability.String()
 		switch dataBreachProbability {
 		case types.Probable:
-			ColorHighRisk(r.pdf)
+			colorHighRisk(r.pdf)
 		case types.Possible:
-			ColorMediumRisk(r.pdf)
+			colorMediumRisk(r.pdf)
 		case types.Improbable:
-			ColorLowRisk(r.pdf)
+			colorLowRisk(r.pdf)
 		default:
 			r.pdfColorBlack()
 		}
@@ -3769,11 +3769,11 @@ func (r *pdfReporter) createDataAssets(parsedModel *types.ParsedModel) {
 				}
 				switch dataBreachRisk.DataBreachProbability {
 				case types.Probable:
-					ColorHighRisk(r.pdf)
+					colorHighRisk(r.pdf)
 				case types.Possible:
-					ColorMediumRisk(r.pdf)
+					colorMediumRisk(r.pdf)
 				case types.Improbable:
-					ColorLowRisk(r.pdf)
+					colorLowRisk(r.pdf)
 				default:
 					r.pdfColorBlack()
 				}
@@ -3813,7 +3813,7 @@ func (r *pdfReporter) createTrustBoundaries(parsedModel *types.ParsedModel) {
 		} else {
 			html.Write(5, "<br><br><br>")
 		}
-		ColorTwilight(r.pdf)
+		colorTwilight(r.pdf)
 		if !trustBoundary.Type.IsNetworkBoundary() {
 			r.pdfColorLightGray()
 		}
@@ -3837,7 +3837,7 @@ func (r *pdfReporter) createTrustBoundaries(parsedModel *types.ParsedModel) {
 		r.pdfColorGray()
 		r.pdf.CellFormat(5, 6, "", "0", 0, "", false, 0, "")
 		r.pdf.CellFormat(40, 6, "Type:", "0", 0, "", false, 0, "")
-		ColorTwilight(r.pdf)
+		colorTwilight(r.pdf)
 		if !trustBoundary.Type.IsNetworkBoundary() {
 			r.pdfColorLightGray()
 		}
@@ -4521,81 +4521,22 @@ func (r *pdfReporter) pageBreakInLists() {
 	r.pdf.SetDashPattern([]float64{0.5, 0.5}, 0)
 }
 
-func (r *pdfReporter) pdfColorDataAssets() {
-	r.pdf.SetTextColor(18, 36, 111)
-}
-func rgbHexColorDataAssets() string {
-	return "#12246F"
-}
-
-func (r *pdfReporter) pdfColorTechnicalAssets() {
-	r.pdf.SetTextColor(18, 36, 111)
-}
-func rgbHexColorTechnicalAssets() string {
-	return "#12246F"
-}
-
-func (r *pdfReporter) pdfColorTrustBoundaries() {
-	r.pdf.SetTextColor(18, 36, 111)
-}
-func rgbHexColorTrustBoundaries() string {
-	return "#12246F"
-}
-
-func (r *pdfReporter) pdfColorSharedRuntime() {
-	r.pdf.SetTextColor(18, 36, 111)
-}
-func rgbHexColorSharedRuntime() string {
-	return "#12246F"
-}
-
-func (r *pdfReporter) pdfColorRiskFindings() {
-	r.pdf.SetTextColor(160, 40, 30)
-}
-
-func rgbHexColorRiskFindings() string {
-	return "#A0281E"
-}
-
 func (r *pdfReporter) pdfColorDisclaimer() {
 	r.pdf.SetTextColor(140, 140, 140)
-}
-func rgbHexColorDisclaimer() string {
-	return "#8C8C8C"
 }
 
 func (r *pdfReporter) pdfColorOutOfScope() {
 	r.pdf.SetTextColor(127, 127, 127)
 }
 
-func rgbHexColorOutOfScope() string {
-	return "#7F7F7F"
-}
-
 func (r *pdfReporter) pdfColorGray() {
 	r.pdf.SetTextColor(80, 80, 80)
-}
-func rgbHexColorGray() string {
-	return "#505050"
 }
 
 func (r *pdfReporter) pdfColorLightGray() {
 	r.pdf.SetTextColor(100, 100, 100)
 }
-func rgbHexColorLightGray() string {
-	return "#646464"
-}
 
 func (r *pdfReporter) pdfColorBlack() {
 	r.pdf.SetTextColor(0, 0, 0)
-}
-func rgbHexColorBlack() string {
-	return "#000000"
-}
-
-func (r *pdfReporter) pdfColorRed() {
-	r.pdf.SetTextColor(255, 0, 0)
-}
-func rgbHexColorRed() string {
-	return "#FF0000"
 }
