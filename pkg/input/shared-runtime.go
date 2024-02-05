@@ -5,7 +5,7 @@ import "fmt"
 type SharedRuntime struct {
 	ID                     string   `yaml:"id,omitempty" json:"id,omitempty"`
 	Description            string   `yaml:"description,omitempty" json:"description,omitempty"`
-	Tags                   []string `yaml:"tags,omitempty" json:"tag,omitemptys"`
+	Tags                   []string `yaml:"tags,omitempty" json:"tag,omitempty"`
 	TechnicalAssetsRunning []string `yaml:"technical_assets_running,omitempty" json:"technical_assets_running,omitempty"`
 }
 

@@ -54,52 +54,58 @@ func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string) erro
 		return fmt.Errorf("unable to set header/footer: %w", err)
 	}
 
-	err = excel.SetCellValue(sheetName, "A1", "Severity")
-	err = excel.SetCellValue(sheetName, "B1", "Likelihood")
-	err = excel.SetCellValue(sheetName, "C1", "Impact")
-	err = excel.SetCellValue(sheetName, "D1", "STRIDE")
-	err = excel.SetCellValue(sheetName, "E1", "Function")
-	err = excel.SetCellValue(sheetName, "F1", "CWE")
-	err = excel.SetCellValue(sheetName, "G1", "Risk Category")
-	err = excel.SetCellValue(sheetName, "H1", "Technical Asset")
-	err = excel.SetCellValue(sheetName, "I1", "Communication Link")
-	err = excel.SetCellValue(sheetName, "J1", "RAA %")
-	err = excel.SetCellValue(sheetName, "K1", "Identified Risk")
-	err = excel.SetCellValue(sheetName, "L1", "Action")
-	err = excel.SetCellValue(sheetName, "M1", "Mitigation")
-	err = excel.SetCellValue(sheetName, "N1", "Check")
-	err = excel.SetCellValue(sheetName, "O1", "ID")
-	err = excel.SetCellValue(sheetName, "P1", "Status")
-	err = excel.SetCellValue(sheetName, "Q1", "Justification")
-	err = excel.SetCellValue(sheetName, "R1", "Date")
-	err = excel.SetCellValue(sheetName, "S1", "Checked by")
-	err = excel.SetCellValue(sheetName, "T1", "Ticket")
+	err = setCellValue(excel, sheetName, []setCellValueCommand{
+		{"A1", "Severity"},
+		{"B1", "Likelihood"},
+		{"C1", "Impact"},
+		{"D1", "STRIDE"},
+		{"E1", "Function"},
+		{"F1", "CWE"},
+		{"G1", "Risk Category"},
+		{"H1", "Technical Asset"},
+		{"I1", "Communication Link"},
+		{"J1", "RAA %"},
+		{"K1", "Identified Risk"},
+		{"L1", "Action"},
+		{"M1", "Mitigation"},
+		{"N1", "Check"},
+		{"O1", "ID"},
+		{"P1", "Status"},
+		{"Q1", "Justification"},
+		{"R1", "Date"},
+		{"S1", "Checked by"},
+		{"T1", "Ticket"},
+	})
+	if err != nil {
+		return fmt.Errorf("unable to set cell value: %w", err)
+	}
 
-	err = excel.SetColWidth(sheetName, "A", "A", 12)
-	err = excel.SetColWidth(sheetName, "B", "B", 15)
-	err = excel.SetColWidth(sheetName, "C", "C", 15)
-	err = excel.SetColWidth(sheetName, "D", "D", 22)
-	err = excel.SetColWidth(sheetName, "E", "E", 16)
-	err = excel.SetColWidth(sheetName, "F", "F", 12)
-	err = excel.SetColWidth(sheetName, "G", "G", 50)
-	err = excel.SetColWidth(sheetName, "H", "H", 50)
-	err = excel.SetColWidth(sheetName, "I", "I", 50)
-	err = excel.SetColWidth(sheetName, "J", "J", 10)
-	err = excel.SetColWidth(sheetName, "K", "K", 75)
-	err = excel.SetColWidth(sheetName, "L", "L", 45)
-	err = excel.SetColWidth(sheetName, "M", "M", 75)
-	err = excel.SetColWidth(sheetName, "N", "N", 50)
-	err = excel.SetColWidth(sheetName, "O", "O", 10)
-	err = excel.SetColWidth(sheetName, "P", "P", 18)
-	err = excel.SetColWidth(sheetName, "Q", "Q", 75)
-	err = excel.SetColWidth(sheetName, "R", "R", 18)
-	err = excel.SetColWidth(sheetName, "S", "S", 20)
-	err = excel.SetColWidth(sheetName, "T", "T", 20)
+	err = setColumnWidth(excel, sheetName, []setColumnWidthCommand{
+		{"A", 12},
+		{"B", 15},
+		{"C", 15},
+		{"D", 22},
+		{"E", 16},
+		{"F", 12},
+		{"G", 50},
+		{"H", 50},
+		{"I", 50},
+		{"J", 10},
+		{"K", 75},
+		{"L", 45},
+		{"M", 75},
+		{"N", 50},
+		{"O", 10},
+		{"P", 18},
+		{"Q", 75},
+		{"R", 18},
+		{"S", 20},
+		{"T", 20},
+	})
 	if err != nil {
 		return fmt.Errorf("unable to set column width: %w", err)
 	}
 
-	// styleSeverityCriticalBold, err := excel.NewStyle(`{"font":{"color":"` + rgbHexColorCriticalRisk() + `","size":12,"bold":true}}`)
 	styleSeverityCriticalBold, err := excel.NewStyle(&excelize.Style{
 		Font: &excelize.Font{
 			Color: rgbHexColorCriticalRisk(),
@@ -107,7 +113,6 @@ func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string) erro
 			Bold:  true,
 		},
 	})
-	// styleSeverityCriticalCenter, err := excel.NewStyle(`{"alignment":{"horizontal":"center","shrink_to_fit":true,"wrap_text":false},"font":{"color":"` + rgbHexColorCriticalRisk() + `","size":12}}`)
 	styleSeverityCriticalCenter, err := excel.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{
 			Horizontal:  "center",
@@ -119,7 +124,6 @@ func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string) erro
 			Size:  12,
 		},
 	})
-	// styleSeverityHighBold, err := excel.NewStyle(`{"font":{"color":"` + rgbHexColorHighRisk() + `","size":12,"bold":true}}`)
 	styleSeverityHighBold, err := excel.NewStyle(&excelize.Style{
 		Font: &excelize.Font{
 			Color: rgbHexColorHighRisk(),
@@ -127,7 +131,6 @@ func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string) erro
 			Bold:  true,
 		},
 	})
-	// styleSeverityHighCenter, err := excel.NewStyle(`{"alignment":{"horizontal":"center","shrink_to_fit":true,"wrap_text":false},"font":{"color":"` + rgbHexColorHighRisk() + `","size":12}}`)
 	styleSeverityHighCenter, err := excel.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{
 			Horizontal:  "center",
@@ -139,7 +142,6 @@ func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string) erro
 			Size:  12,
 		},
 	})
-	// styleSeverityElevatedBold, err := excel.NewStyle(`{"font":{"color":"` + rgbHexColorElevatedRisk() + `","size":12,"bold":true}}`)
 	styleSeverityElevatedBold, err := excel.NewStyle(&excelize.Style{
 		Font: &excelize.Font{
 			Color: rgbHexColorElevatedRisk(),
@@ -147,7 +149,6 @@ func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string) erro
 			Bold:  true,
 		},
 	})
-	// styleSeverityElevatedCenter, err := excel.NewStyle(`{"alignment":{"horizontal":"center","shrink_to_fit":true,"wrap_text":false},"font":{"color":"` + rgbHexColorElevatedRisk() + `","size":12}}`)
 	styleSeverityElevatedCenter, err := excel.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{
 			Horizontal:  "center",
@@ -159,7 +160,6 @@ func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string) erro
 			Size:  12,
 		},
 	})
-	// styleSeverityMediumBold, err := excel.NewStyle(`{"font":{"color":"` + rgbHexColorMediumRisk() + `","size":12,"bold":true}}`)
 	styleSeverityMediumBold, err := excel.NewStyle(&excelize.Style{
 		Font: &excelize.Font{
 			Color: rgbHexColorMediumRisk(),
@@ -167,7 +167,6 @@ func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string) erro
 			Bold:  true,
 		},
 	})
-	// styleSeverityMediumCenter, err := excel.NewStyle(`{"alignment":{"horizontal":"center","shrink_to_fit":true,"wrap_text":false},"font":{"color":"` + rgbHexColorMediumRisk() + `","size":12}}`)
 	styleSeverityMediumCenter, err := excel.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{
 			Horizontal:  "center",
@@ -179,7 +178,6 @@ func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string) erro
 			Size:  12,
 		},
 	})
-	// styleSeverityLowBold, err := excel.NewStyle(`{"font":{"color":"` + rgbHexColorLowRisk() + `","size":12,"bold":true}}`)
 	styleSeverityLowBold, err := excel.NewStyle(&excelize.Style{
 		Font: &excelize.Font{
 			Color: rgbHexColorLowRisk(),
@@ -187,7 +185,6 @@ func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string) erro
 			Bold:  true,
 		},
 	})
-	// styleSeverityLowCenter, err := excel.NewStyle(`{"alignment":{"horizontal":"center","shrink_to_fit":true,"wrap_text":false},"font":{"color":"` + rgbHexColorLowRisk() + `","size":12}}`)
 	styleSeverityLowCenter, err := excel.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{
 			Horizontal:  "center",
@@ -200,7 +197,6 @@ func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string) erro
 		},
 	})
 
-	// styleRedCenter, err := excel.NewStyle(`{"alignment":{"horizontal":"center","shrink_to_fit":true,"wrap_text":false},"font":{"color":"` + RgbHexColorRiskStatusUnchecked() + `","size":12}}`)
 	styleRedCenter, err := excel.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{
 			Horizontal:  "center",
@@ -212,7 +208,6 @@ func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string) erro
 			Size:  12,
 		},
 	})
-	// styleGreenCenter, err := excel.NewStyle(`{"alignment":{"horizontal":"center","shrink_to_fit":true,"wrap_text":false},"font":{"color":"` + rgbHexColorRiskStatusMitigated() + `","size":12}}`)
 	styleGreenCenter, err := excel.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{
 			Horizontal:  "center",
@@ -224,7 +219,6 @@ func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string) erro
 			Size:  12,
 		},
 	})
-	// styleBlueCenter, err := excel.NewStyle(`{"alignment":{"horizontal":"center","shrink_to_fit":true,"wrap_text":false},"font":{"color":"#` + rgbHexColorRiskStatusInProgress() + `","size":12}}`)
 	styleBlueCenter, err := excel.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{
 			Horizontal:  "center",
@@ -236,7 +230,6 @@ func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string) erro
 			Size:  12,
 		},
 	})
-	// styleYellowCenter, err := excel.NewStyle(`{"alignment":{"horizontal":"center","shrink_to_fit":true,"wrap_text":false},"font":{"color":"#` + rgbHexColorRiskStatusAccepted() + `","size":12}}`)
 	styleYellowCenter, err := excel.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{
 			Horizontal:  "center",
@@ -248,7 +241,6 @@ func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string) erro
 			Size:  12,
 		},
 	})
-	// styleOrangeCenter, err := excel.NewStyle(`{"alignment":{"horizontal":"center","shrink_to_fit":true,"wrap_text":false},"font":{"color":"#` + rgbHexColorRiskStatusInDiscussion() + `","size":12}}`)
 	styleOrangeCenter, err := excel.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{
 			Horizontal:  "center",
@@ -260,7 +252,6 @@ func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string) erro
 			Size:  12,
 		},
 	})
-	// styleGrayCenter, err := excel.NewStyle(`{"alignment":{"horizontal":"center","shrink_to_fit":true,"wrap_text":false},"font":{"color":"#` + rgbHexColorRiskStatusFalsePositive() + `","size":12}}`)
 	styleGrayCenter, err := excel.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{
 			Horizontal:  "center",
@@ -272,7 +263,6 @@ func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string) erro
 			Size:  12,
 		},
 	})
-	// styleBlackLeft, err := excel.NewStyle(`{"alignment":{"horizontal":"left","shrink_to_fit":true,"wrap_text":false},"font":{"color":"#000000","size":12}}`)
 	styleBlackLeft, err := excel.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{
 			Horizontal:  "left",
@@ -284,7 +274,6 @@ func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string) erro
 			Size:  12,
 		},
 	})
-	// styleBlackCenter, err := excel.NewStyle(`{"alignment":{"horizontal":"center","shrink_to_fit":true,"wrap_text":false},"font":{"color":"#000000","size":12}}`)
 	styleBlackCenter, err := excel.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{
 			Horizontal:  "center",
@@ -296,7 +285,6 @@ func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string) erro
 			Size:  12,
 		},
 	})
-	// styleBlackRight, err := excel.NewStyle(`{"alignment":{"horizontal":"right","shrink_to_fit":true,"wrap_text":false},"font":{"color":"#000000","size":12}}`)
 	styleBlackRight, err := excel.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{
 			Horizontal:  "right",
@@ -308,21 +296,18 @@ func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string) erro
 			Size:  12,
 		},
 	})
-	// styleBlackSmall, err := excel.NewStyle(`{"font":{"color":"#000000","size":10}}`)
 	styleBlackSmall, err := excel.NewStyle(&excelize.Style{
 		Font: &excelize.Font{
 			Color: "#000000",
 			Size:  10,
 		},
 	})
-	// styleGraySmall, err := excel.NewStyle(`{"font":{"color":"` + rgbHexColorOutOfScope() + `","size":10}}`)
 	styleGraySmall, err := excel.NewStyle(&excelize.Style{
 		Font: &excelize.Font{
 			Color: rgbHexColorOutOfScope(),
 			Size:  10,
 		},
 	})
-	// styleBlackBold, err := excel.NewStyle(`{"alignment":{"horizontal":"left","shrink_to_fit":true,"wrap_text":false},"font":{"color":"#000000","size":12,"bold":true}}`)
 	styleBlackBold, err := excel.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{
 			Horizontal:  "right",
@@ -335,7 +320,6 @@ func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string) erro
 			Bold:  true,
 		},
 	})
-	// styleMitigation, err := excel.NewStyle(`{"font":{"color":"` + rgbHexColorRiskStatusMitigated() + `","size":10}}`)
 	styleMitigation, err := excel.NewStyle(&excelize.Style{
 		Font: &excelize.Font{
 			Color: rgbHexColorRiskStatusMitigated(),
@@ -352,25 +336,37 @@ func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string) erro
 			commLink := parsedModel.CommunicationLinks[risk.MostRelevantCommunicationLinkId]
 			riskTrackingStatus := risk.GetRiskTrackingStatusDefaultingUnchecked(parsedModel)
 			// content
-			err := excel.SetCellValue(sheetName, "A"+strconv.Itoa(excelRow), risk.Severity.Title())
-			err = excel.SetCellValue(sheetName, "B"+strconv.Itoa(excelRow), risk.ExploitationLikelihood.Title())
-			err = excel.SetCellValue(sheetName, "C"+strconv.Itoa(excelRow), risk.ExploitationImpact.Title())
-			err = excel.SetCellValue(sheetName, "D"+strconv.Itoa(excelRow), category.STRIDE.Title())
-			err = excel.SetCellValue(sheetName, "E"+strconv.Itoa(excelRow), category.Function.Title())
-			err = excel.SetCellValue(sheetName, "F"+strconv.Itoa(excelRow), "CWE-"+strconv.Itoa(category.CWE))
-			err = excel.SetCellValue(sheetName, "G"+strconv.Itoa(excelRow), category.Title)
-			err = excel.SetCellValue(sheetName, "H"+strconv.Itoa(excelRow), techAsset.Title)
-			err = excel.SetCellValue(sheetName, "I"+strconv.Itoa(excelRow), commLink.Title)
+			err := setCellValue(excel, sheetName, []setCellValueCommand{
+				{"A" + strconv.Itoa(excelRow), risk.Severity.Title()},
+				{"B" + strconv.Itoa(excelRow), risk.ExploitationLikelihood.Title()},
+				{"C" + strconv.Itoa(excelRow), risk.ExploitationImpact.Title()},
+				{"D" + strconv.Itoa(excelRow), category.STRIDE.Title()},
+				{"E" + strconv.Itoa(excelRow), category.Function.Title()},
+				{"F" + strconv.Itoa(excelRow), "CWE-" + strconv.Itoa(category.CWE)},
+				{"G" + strconv.Itoa(excelRow), category.Title},
+				{"H" + strconv.Itoa(excelRow), techAsset.Title},
+				{"I" + strconv.Itoa(excelRow), commLink.Title},
+				{"K" + strconv.Itoa(excelRow), removeFormattingTags(risk.Title)},
+				{"L" + strconv.Itoa(excelRow), category.Action},
+				{"M" + strconv.Itoa(excelRow), category.Mitigation},
+				{"N" + strconv.Itoa(excelRow), category.Check},
+				{"O" + strconv.Itoa(excelRow), risk.SyntheticId},
+				{"P" + strconv.Itoa(excelRow), riskTrackingStatus.Title()},
+			})
+			if err != nil {
+				return err
+			}
+
 			err = excel.SetCellFloat(sheetName, "J"+strconv.Itoa(excelRow), techAsset.RAA, 0, 32)
-			err = excel.SetCellValue(sheetName, "K"+strconv.Itoa(excelRow), removeFormattingTags(risk.Title))
-			err = excel.SetCellValue(sheetName, "L"+strconv.Itoa(excelRow), category.Action)
-			err = excel.SetCellValue(sheetName, "M"+strconv.Itoa(excelRow), category.Mitigation)
-			err = excel.SetCellValue(sheetName, "N"+strconv.Itoa(excelRow), category.Check)
-			err = excel.SetCellValue(sheetName, "O"+strconv.Itoa(excelRow), risk.SyntheticId)
-			err = excel.SetCellValue(sheetName, "P"+strconv.Itoa(excelRow), riskTrackingStatus.Title())
+			if err != nil {
+				return fmt.Errorf("unable to set cell float: %w", err)
+			}
 			if riskTrackingStatus != types.Unchecked {
 				riskTracking := risk.GetRiskTracking(parsedModel)
 				err = excel.SetCellValue(sheetName, "Q"+strconv.Itoa(excelRow), riskTracking.Justification)
+				if err != nil {
+					return fmt.Errorf("unable to set cell value: %w", err)
+				}
 				if !riskTracking.Date.IsZero() {
 					err = excel.SetCellValue(sheetName, "R"+strconv.Itoa(excelRow), riskTracking.Date.Format("2006-01-02"))
 				}
@@ -513,12 +509,19 @@ func WriteTagsExcelToFile(parsedModel *types.ParsedModel, filename string) error
 	}
 
 	err = excel.SetCellValue(sheetName, "A1", "Element") // TODO is "Element" the correct generic name when referencing assets, links, trust boundaries etc.? Eventually add separate column "type of element" like "technical asset" or "data asset"?
+	if err != nil {
+		return err
+	}
+
 	sortedTagsAvailable := parsedModel.TagsActuallyUsed()
 	sort.Strings(sortedTagsAvailable)
 	axis := ""
 	for i, tag := range sortedTagsAvailable {
 		axis = determineColumnLetter(i)
 		err = excel.SetCellValue(sheetName, axis+"1", tag)
+		if err != nil {
+			return err
+		}
 	}
 
 	err = excel.SetColWidth(sheetName, "A", "A", 60)
@@ -688,9 +691,8 @@ func writeRow(excel *excelize.File, excelRow *int, sheetName string, axis string
 	return nil
 }
 
-var alphabet = []string{"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"}
-
 func determineColumnLetter(i int) string {
+	alphabet := []string{"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"}
 	// can only have 700 columns in Excel that way, but that should be more than usable anyway ;)... otherwise think about your model...
 	i++
 	if i < 26 {
@@ -704,4 +706,34 @@ func removeFormattingTags(content string) interface{} {
 	result = strings.ReplaceAll(strings.ReplaceAll(result, "<i>", ""), "</i>", "")
 	result = strings.ReplaceAll(strings.ReplaceAll(result, "<u>", ""), "</u>", "")
 	return result
+}
+
+type setCellValueCommand struct {
+	cell  string
+	value interface{}
+}
+
+func setCellValue(excel *excelize.File, sheetName string, cmds []setCellValueCommand) error {
+	for _, cmd := range cmds {
+		err := excel.SetCellValue(sheetName, cmd.cell, cmd.value)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+type setColumnWidthCommand struct {
+	column string
+	width  float64
+}
+
+func setColumnWidth(excel *excelize.File, sheetName string, cmds []setColumnWidthCommand) error {
+	for _, cmd := range cmds {
+		err := excel.SetColWidth(sheetName, cmd.column, cmd.column, cmd.width)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

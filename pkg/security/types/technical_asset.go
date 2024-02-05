@@ -133,18 +133,14 @@ func (what TechnicalAsset) DataAssetsStoredSorted(parsedModel *ParsedModel) []Da
 
 func (what TechnicalAsset) DataFormatsAcceptedSorted() []DataFormat {
 	result := make([]DataFormat, 0)
-	for _, format := range what.DataFormatsAccepted {
-		result = append(result, format)
-	}
+	result = append(result, what.DataFormatsAccepted...)
 	sort.Sort(ByDataFormatAcceptedSort(result))
 	return result
 }
 
 func (what TechnicalAsset) CommunicationLinksSorted() []CommunicationLink {
 	result := make([]CommunicationLink, 0)
-	for _, format := range what.CommunicationLinks {
-		result = append(result, format)
-	}
+	result = append(result, what.CommunicationLinks...)
 	sort.Sort(ByTechnicalCommunicationLinkTitleSort(result))
 	return result
 }

@@ -46,9 +46,7 @@ func GetRiskCategories(parsedModel *ParsedModel, categoryIDs []string) []RiskCat
 func AllRisks(parsedModel *ParsedModel) []Risk {
 	result := make([]Risk, 0)
 	for _, risks := range parsedModel.GeneratedRisksByCategory {
-		for _, risk := range risks {
-			result = append(result, risk)
-		}
+		result = append(result, risks...)
 	}
 	return result
 }
