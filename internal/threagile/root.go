@@ -6,11 +6,12 @@ package threagile
 
 import (
 	"fmt"
-	"github.com/chzyer/readline"
-	"github.com/mattn/go-shellwords"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/chzyer/readline"
+	"github.com/mattn/go-shellwords"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
