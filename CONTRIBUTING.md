@@ -30,3 +30,5 @@ To contribute the code simply make changes and create pull request. There is no 
 
 - it is easy to understand what the code change is achieving and why it was added
 - new change is covered with unit tests
+
+Before commiting the code please install [pre-commit](https://pre-commit.com/) and run ```pre-commit install``` to ensure that checks are running every time before commit.
