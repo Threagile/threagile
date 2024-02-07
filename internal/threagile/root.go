@@ -185,18 +185,18 @@ func (what *Threagile) run(cmd *cobra.Command, _ []string) {
 	}
 }
 
-func (c *Threagile) cobraToReadline(node readline.PrefixCompleterInterface, cmd *cobra.Command) {
+func (what *Threagile) cobraToReadline(node readline.PrefixCompleterInterface, cmd *cobra.Command) {
 	cmd.SetUsageTemplate(UsageTemplate)
-	cmd.Use = c.usage(cmd)
+	cmd.Use = what.usage(cmd)
 	pcItem := readline.PcItem(cmd.Use)
 	node.SetChildren(append(node.GetChildren(), pcItem))
 
 	for _, child := range cmd.Commands() {
-		c.cobraToReadline(pcItem, child)
+		what.cobraToReadline(pcItem, child)
 	}
 }
 
-func (c *Threagile) usage(cmd *cobra.Command) string {
+func (what *Threagile) usage(cmd *cobra.Command) string {
 	words := make([]string, 0, len(cmd.ArgAliases)+1)
 	words = append(words, cmd.Use)
 

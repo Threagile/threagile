@@ -12,7 +12,7 @@ import (
 	"github.com/threagile/threagile/pkg/examples"
 )
 
-func (what *Threagile) initExamples() *Threagile {
+func (what *Threagile) initCreate() *Threagile {
 	what.rootCmd.AddCommand(&cobra.Command{
 		Use:   common.CreateExampleModelCommand,
 		Short: "Create example threagile model",
