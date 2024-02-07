@@ -6,7 +6,6 @@ package types
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"gopkg.in/yaml.v3"
 	"strings"
@@ -39,7 +38,7 @@ func ParseConfidentiality(value string) (confidentiality Confidentiality, err er
 			return candidate.(Confidentiality), err
 		}
 	}
-	return confidentiality, errors.New("Unable to parse into type: " + value)
+	return confidentiality, fmt.Errorf("unable to parse into type: %v", value)
 }
 
 var ConfidentialityTypeDescription = [...]TypeDescription{

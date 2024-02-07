@@ -5,7 +5,7 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package types
 
 import (
-	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -33,7 +33,7 @@ func TestParseAuthorization(t *testing.T) {
 		},
 		"unknown": {
 			input:         "unknown",
-			expectedError: errors.New("Unable to parse into type: unknown"),
+			expectedError: fmt.Errorf("unable to parse into type: unknown"),
 		},
 	}
 

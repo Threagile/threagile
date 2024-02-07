@@ -6,7 +6,6 @@ package types
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"gopkg.in/yaml.v3"
 	"strings"
@@ -39,7 +38,7 @@ func ParseCriticality(value string) (criticality Criticality, err error) {
 			return candidate.(Criticality), err
 		}
 	}
-	return criticality, errors.New("Unable to parse into type: " + value)
+	return criticality, fmt.Errorf("unable to parse into type: %v", value)
 }
 
 var CriticalityTypeDescription = [...]TypeDescription{

@@ -6,7 +6,6 @@ package types
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"gopkg.in/yaml.v3"
 	"strings"
@@ -212,7 +211,7 @@ func ParseTechnicalAssetTechnology(value string) (technicalAssetTechnology Techn
 			return candidate.(TechnicalAssetTechnology), err
 		}
 	}
-	return technicalAssetTechnology, errors.New("Unable to parse into type: " + value)
+	return technicalAssetTechnology, fmt.Errorf("unable to parse into type: %v", value)
 }
 
 func (what TechnicalAssetTechnology) IsWebApplication() bool {

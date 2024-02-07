@@ -6,7 +6,6 @@ package types
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"gopkg.in/yaml.v3"
 	"strings"
@@ -44,7 +43,7 @@ func ParseRiskFunction(value string) (riskFunction RiskFunction, err error) {
 			return candidate.(RiskFunction), err
 		}
 	}
-	return riskFunction, errors.New("Unable to parse into type: " + value)
+	return riskFunction, fmt.Errorf("unable to parse into type: %v", value)
 }
 
 func (what RiskFunction) String() string {

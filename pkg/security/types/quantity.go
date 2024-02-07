@@ -6,7 +6,6 @@ package types
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"gopkg.in/yaml.v3"
 	"strings"
@@ -37,7 +36,7 @@ func ParseQuantity(value string) (quantity Quantity, err error) {
 			return candidate.(Quantity), err
 		}
 	}
-	return quantity, errors.New("Unable to parse into type: " + value)
+	return quantity, fmt.Errorf("unable to parse into type: %v", value)
 }
 
 var QuantityTypeDescription = [...]TypeDescription{

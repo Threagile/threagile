@@ -6,7 +6,6 @@ package types
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"gopkg.in/yaml.v3"
 	"strings"
@@ -45,7 +44,7 @@ func ParseDataBreachProbability(value string) (dataBreachProbability DataBreachP
 			return candidate.(DataBreachProbability), err
 		}
 	}
-	return dataBreachProbability, errors.New("Unable to parse into type: " + value)
+	return dataBreachProbability, fmt.Errorf("unable to parse into type: %v", value)
 }
 
 func (what DataBreachProbability) String() string {

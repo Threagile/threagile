@@ -4,7 +4,6 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package server
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -108,7 +107,7 @@ func (s *server) execute(ginContext *gin.Context, dryRun bool) (yamlContent []by
 			}
 		}
 		if !found {
-			panic(errors.New("no yaml file found in uploaded archive"))
+			panic(fmt.Errorf("no yaml file found in uploaded archive"))
 		}
 	}
 
@@ -218,7 +217,7 @@ func (s *server) doItViaRuntimeCall(modelFile string, outputDir string,
 	cmd = exec.Command(self, args...) // #nosec G204
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		panic(errors.New(string(out)))
+		panic(fmt.Errorf(string(out)))
 	} else {
 		if s.config.Verbose && len(out) > 0 {
 			fmt.Println("---")

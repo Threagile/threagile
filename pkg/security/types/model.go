@@ -5,7 +5,6 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package types
 
 import (
-	"errors"
 	"fmt"
 	"regexp"
 	"slices"
@@ -98,10 +97,10 @@ func (parsedModel *ParsedModel) CheckTags(tags []string, where string) ([]string
 	return tagsUsed, nil
 }
 
-func (parsedModel *ParsedModel) ApplyWildcardRiskTrackingEvaluation(ignoreOrphanedRiskTracking bool, progressReporter progressReporter) error {
+func (parsedModel *ParsedModel) ApplyWildcardRiskTrackingEvaluation(ignoreOrphanedRiskTracking bool, progressReporter ProgressReporter) error {
 	progressReporter.Info("Executing risk tracking evaluation")
 	for syntheticRiskIdPattern, riskTracking := range parsedModel.GetDeferredRiskTrackingDueToWildcardMatching() {
-		progressReporter.Info("Applying wildcard risk tracking for risk id: " + syntheticRiskIdPattern)
+		progressReporter.Infof("Applying wildcard risk tracking for risk id: %v", syntheticRiskIdPattern)
 
 		foundSome := false
 		var matchingRiskIdExpression = regexp.MustCompile(strings.ReplaceAll(regexp.QuoteMeta(syntheticRiskIdPattern), `\*`, `[^@]+`))
@@ -121,31 +120,32 @@ func (parsedModel *ParsedModel) ApplyWildcardRiskTrackingEvaluation(ignoreOrphan
 
 		if !foundSome {
 			if ignoreOrphanedRiskTracking {
-				progressReporter.Warn("WARNING: Wildcard risk tracking does not match any risk id: " + syntheticRiskIdPattern)
+				progressReporter.Warnf("Wildcard risk tracking does not match any risk id: %v", syntheticRiskIdPattern)
 			} else {
-				return errors.New("wildcard risk tracking does not match any risk id: " + syntheticRiskIdPattern)
+				return fmt.Errorf("wildcard risk tracking does not match any risk id: %v", syntheticRiskIdPattern)
 			}
 		}
 	}
 	return nil
 }
 
-func (parsedModel *ParsedModel) CheckRiskTracking(ignoreOrphanedRiskTracking bool, progressReporter progressReporter) error {
+func (parsedModel *ParsedModel) CheckRiskTracking(ignoreOrphanedRiskTracking bool, progressReporter ProgressReporter) error {
 	progressReporter.Info("Checking risk tracking")
 	for _, tracking := range parsedModel.RiskTracking {
 		if _, ok := parsedModel.GeneratedRisksBySyntheticId[tracking.SyntheticRiskId]; !ok {
 			if ignoreOrphanedRiskTracking {
-				progressReporter.Info("Risk tracking references unknown risk (risk id not found): " + tracking.SyntheticRiskId)
+				progressReporter.Infof("Risk tracking references unknown risk (risk id not found): %v", tracking.SyntheticRiskId)
 			} else {
-				return errors.New("Risk tracking references unknown risk (risk id not found) - you might want to use the option -ignore-orphaned-risk-tracking: " + tracking.SyntheticRiskId +
-					"\n\nNOTE: For risk tracking each risk-id needs to be defined (the string with the @ sign in it). " +
-					"These unique risk IDs are visible in the PDF report (the small grey string under each risk), " +
-					"the Excel (column \"ID\"), as well as the JSON responses. Some risk IDs have only one @ sign in them, " +
-					"while others multiple. The idea is to allow for unique but still speaking IDs. Therefore each risk instance " +
-					"creates its individual ID by taking all affected elements causing the risk to be within an @-delimited part. " +
-					"Using wildcards (the * sign) for parts delimited by @ signs allows to handle groups of certain risks at once. " +
-					"Best is to lookup the IDs to use in the created Excel file. Alternatively a model macro \"seed-risk-tracking\" " +
-					"is available that helps in initially seeding the risk tracking part here based on already identified and not yet handled risks.")
+				return fmt.Errorf("Risk tracking references unknown risk (risk id not found) - you might want to use the option -ignore-orphaned-risk-tracking: %v"+
+					"\n\nNOTE: For risk tracking each risk-id needs to be defined (the string with the @ sign in it). "+
+					"These unique risk IDs are visible in the PDF report (the small grey string under each risk), "+
+					"the Excel (column \"ID\"), as well as the JSON responses. Some risk IDs have only one @ sign in them, "+
+					"while others multiple. The idea is to allow for unique but still speaking IDs. Therefore each risk instance "+
+					"creates its individual ID by taking all affected elements causing the risk to be within an @-delimited part. "+
+					"Using wildcards (the * sign) for parts delimited by @ signs allows to handle groups of certain risks at once. "+
+					"Best is to lookup the IDs to use in the created Excel file. Alternatively a model macro \"seed-risk-tracking\" "+
+					"is available that helps in initially seeding the risk tracking part here based on already identified and not yet handled risks.",
+					tracking.SyntheticRiskId)
 			}
 		}
 	}
@@ -162,35 +162,35 @@ func (parsedModel *ParsedModel) CheckRiskTracking(ignoreOrphanedRiskTracking boo
 
 func (parsedModel *ParsedModel) CheckTagExists(referencedTag, where string) error {
 	if !slices.Contains(parsedModel.TagsAvailable, referencedTag) {
-		return errors.New("missing referenced tag in overall tag list at " + where + ": " + referencedTag)
+		return fmt.Errorf("missing referenced tag in overall tag list at %v: %v", where, referencedTag)
 	}
 	return nil
 }
 
 func (parsedModel *ParsedModel) CheckDataAssetTargetExists(referencedAsset, where string) error {
 	if _, ok := parsedModel.DataAssets[referencedAsset]; !ok {
-		return errors.New("missing referenced data asset target at " + where + ": " + referencedAsset)
+		return fmt.Errorf("missing referenced data asset target at %v: %v", where, referencedAsset)
 	}
 	return nil
 }
 
 func (parsedModel *ParsedModel) CheckTrustBoundaryExists(referencedId, where string) error {
 	if _, ok := parsedModel.TrustBoundaries[referencedId]; !ok {
-		return errors.New("missing referenced trust boundary at " + where + ": " + referencedId)
+		return fmt.Errorf("missing referenced trust boundary at %v: %v", where, referencedId)
 	}
 	return nil
 }
 
 func (parsedModel *ParsedModel) CheckSharedRuntimeExists(referencedId, where string) error {
 	if _, ok := parsedModel.SharedRuntimes[referencedId]; !ok {
-		return errors.New("missing referenced shared runtime at " + where + ": " + referencedId)
+		return fmt.Errorf("missing referenced shared runtime at %v: %v", where, referencedId)
 	}
 	return nil
 }
 
 func (parsedModel *ParsedModel) CheckCommunicationLinkExists(referencedId, where string) error {
 	if _, ok := parsedModel.CommunicationLinks[referencedId]; !ok {
-		return errors.New("missing referenced communication link at " + where + ": " + referencedId)
+		return fmt.Errorf("missing referenced communication link at %v: %v", where, referencedId)
 	}
 	return nil
 }
@@ -201,7 +201,7 @@ func (parsedModel *ParsedModel) CheckTechnicalAssetExists(referencedAsset, where
 		if onlyForTweak {
 			suffix = " (only referenced in diagram tweak)"
 		}
-		return errors.New("missing referenced technical asset target" + suffix + " at " + where + ": " + referencedAsset)
+		return fmt.Errorf("missing referenced technical asset target%v at %v: %v", suffix, where, referencedAsset)
 	}
 	return nil
 }
@@ -210,7 +210,7 @@ func (parsedModel *ParsedModel) CheckNestedTrustBoundariesExisting() error {
 	for _, trustBoundary := range parsedModel.TrustBoundaries {
 		for _, nestedId := range trustBoundary.TrustBoundariesNested {
 			if _, ok := parsedModel.TrustBoundaries[nestedId]; !ok {
-				return errors.New("missing referenced nested trust boundary: " + nestedId)
+				return fmt.Errorf("missing referenced nested trust boundary: %v", nestedId)
 			}
 		}
 	}
@@ -419,10 +419,4 @@ func (parsedModel *ParsedModel) RisksOfOnlyOperation(risksByCategory map[string]
 		}
 	}
 	return result
-}
-
-type progressReporter interface {
-	Info(a ...any)
-	Warn(a ...any)
-	Error(a ...any)
 }

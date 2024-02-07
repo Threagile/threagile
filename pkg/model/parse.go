@@ -1,7 +1,6 @@
 package model
 
 import (
-	"errors"
 	"fmt"
 	"path/filepath"
 	"regexp"
@@ -16,7 +15,7 @@ import (
 func ParseModel(modelInput *input.Model, builtinRiskRules map[string]risks.RiskRule, customRiskRules map[string]*CustomRisk) (*types.ParsedModel, error) {
 	businessCriticality, err := types.ParseCriticality(modelInput.BusinessCriticality)
 	if err != nil {
-		return nil, errors.New("unknown 'business_criticality' value of application: " + modelInput.BusinessCriticality)
+		return nil, fmt.Errorf("unknown 'business_criticality' value of application: %v", modelInput.BusinessCriticality)
 	}
 
 	reportDate := time.Now()
@@ -24,7 +23,7 @@ func ParseModel(modelInput *input.Model, builtinRiskRules map[string]risks.RiskR
 		var parseError error
 		reportDate, parseError = time.Parse("2006-01-02", modelInput.Date)
 		if parseError != nil {
-			return nil, errors.New("unable to parse 'date' value of model file (expected format: '2006-01-02')")
+			return nil, fmt.Errorf("unable to parse 'date' value of model file (expected format: '2006-01-02')")
 		}
 	}
 
@@ -73,23 +72,23 @@ func ParseModel(modelInput *input.Model, builtinRiskRules map[string]risks.RiskR
 
 		usage, err := types.ParseUsage(asset.Usage)
 		if err != nil {
-			return nil, errors.New("unknown 'usage' value of data asset '" + title + "': " + asset.Usage)
+			return nil, fmt.Errorf("unknown 'usage' value of data asset %q: %v", title, asset.Usage)
 		}
 		quantity, err := types.ParseQuantity(asset.Quantity)
 		if err != nil {
-			return nil, errors.New("unknown 'quantity' value of data asset '" + title + "': " + asset.Quantity)
+			return nil, fmt.Errorf("unknown 'quantity' value of data asset %q: %v", title, asset.Quantity)
 		}
 		confidentiality, err := types.ParseConfidentiality(asset.Confidentiality)
 		if err != nil {
-			return nil, errors.New("unknown 'confidentiality' value of data asset '" + title + "': " + asset.Confidentiality)
+			return nil, fmt.Errorf("unknown 'confidentiality' value of data asset %q: %v", title, asset.Confidentiality)
 		}
 		integrity, err := types.ParseCriticality(asset.Integrity)
 		if err != nil {
-			return nil, errors.New("unknown 'integrity' value of data asset '" + title + "': " + asset.Integrity)
+			return nil, fmt.Errorf("unknown 'integrity' value of data asset %q: %v", title, asset.Integrity)
 		}
 		availability, err := types.ParseCriticality(asset.Availability)
 		if err != nil {
-			return nil, errors.New("unknown 'availability' value of data asset '" + title + "': " + asset.Availability)
+			return nil, fmt.Errorf("unknown 'availability' value of data asset %q: %v", title, asset.Availability)
 		}
 
 		err = checkIdSyntax(id)
@@ -97,7 +96,7 @@ func ParseModel(modelInput *input.Model, builtinRiskRules map[string]risks.RiskR
 			return nil, err
 		}
 		if _, exists := parsedModel.DataAssets[id]; exists {
-			return nil, errors.New("duplicate id used: " + id)
+			return nil, fmt.Errorf("duplicate id used: %v", id)
 		}
 		tags, err := parsedModel.CheckTags(lowerCaseAndTrim(asset.Tags), "data asset '"+title+"'")
 		if err != nil {
@@ -126,7 +125,7 @@ func ParseModel(modelInput *input.Model, builtinRiskRules map[string]risks.RiskR
 
 		usage, err := types.ParseUsage(asset.Usage)
 		if err != nil {
-			return nil, errors.New("unknown 'usage' value of technical asset '" + title + "': " + asset.Usage)
+			return nil, fmt.Errorf("unknown 'usage' value of technical asset %q: %v", title, asset.Usage)
 		}
 
 		var dataAssetsStored = make([]string, 0)
@@ -137,7 +136,7 @@ func ParseModel(modelInput *input.Model, builtinRiskRules map[string]risks.RiskR
 					continue
 				}
 
-				err := parsedModel.CheckDataAssetTargetExists(referencedAsset, "technical asset '"+title+"'")
+				err := parsedModel.CheckDataAssetTargetExists(referencedAsset, fmt.Sprintf("technical asset %q", title))
 				if err != nil {
 					return nil, err
 				}
@@ -163,35 +162,35 @@ func ParseModel(modelInput *input.Model, builtinRiskRules map[string]risks.RiskR
 
 		technicalAssetType, err := types.ParseTechnicalAssetType(asset.Type)
 		if err != nil {
-			return nil, errors.New("unknown 'type' value of technical asset '" + title + "': " + fmt.Sprintf("%v", asset.Type))
+			return nil, fmt.Errorf("unknown 'type' value of technical asset %q: %v", title, asset.Type)
 		}
 		technicalAssetSize, err := types.ParseTechnicalAssetSize(asset.Size)
 		if err != nil {
-			return nil, errors.New("unknown 'size' value of technical asset '" + title + "': " + fmt.Sprintf("%v", asset.Size))
+			return nil, fmt.Errorf("unknown 'size' value of technical asset %q: %v", title, asset.Size)
 		}
 		technicalAssetTechnology, err := types.ParseTechnicalAssetTechnology(asset.Technology)
 		if err != nil {
-			return nil, errors.New("unknown 'technology' value of technical asset '" + title + "': " + fmt.Sprintf("%v", asset.Technology))
+			return nil, fmt.Errorf("unknown 'technology' value of technical asset %q: %v", title, asset.Technology)
 		}
 		encryption, err := types.ParseEncryptionStyle(asset.Encryption)
 		if err != nil {
-			return nil, errors.New("unknown 'encryption' value of technical asset '" + title + "': " + fmt.Sprintf("%v", asset.Encryption))
+			return nil, fmt.Errorf("unknown 'encryption' value of technical asset %q: %v", title, asset.Encryption)
 		}
 		technicalAssetMachine, err := types.ParseTechnicalAssetMachine(asset.Machine)
 		if err != nil {
-			return nil, errors.New("unknown 'machine' value of technical asset '" + title + "': " + fmt.Sprintf("%v", asset.Machine))
+			return nil, fmt.Errorf("unknown 'machine' value of technical asset %q: %v", title, asset.Machine)
 		}
 		confidentiality, err := types.ParseConfidentiality(asset.Confidentiality)
 		if err != nil {
-			return nil, errors.New("unknown 'confidentiality' value of technical asset '" + title + "': " + fmt.Sprintf("%v", asset.Confidentiality))
+			return nil, fmt.Errorf("unknown 'confidentiality' value of technical asset %q: %v", title, asset.Confidentiality)
 		}
 		integrity, err := types.ParseCriticality(asset.Integrity)
 		if err != nil {
-			return nil, errors.New("unknown 'integrity' value of technical asset '" + title + "': " + fmt.Sprintf("%v", asset.Integrity))
+			return nil, fmt.Errorf("unknown 'integrity' value of technical asset %q: %v", title, asset.Integrity)
 		}
 		availability, err := types.ParseCriticality(asset.Availability)
 		if err != nil {
-			return nil, errors.New("unknown 'availability' value of technical asset '" + title + "': " + fmt.Sprintf("%v", asset.Availability))
+			return nil, fmt.Errorf("unknown 'availability' value of technical asset %q: %v", title, asset.Availability)
 		}
 
 		dataFormatsAccepted := make([]types.DataFormat, 0)
@@ -199,7 +198,7 @@ func ParseModel(modelInput *input.Model, builtinRiskRules map[string]risks.RiskR
 			for _, dataFormatName := range asset.DataFormatsAccepted {
 				dataFormat, err := types.ParseDataFormat(dataFormatName)
 				if err != nil {
-					return nil, errors.New("unknown 'data_formats_accepted' value of technical asset '" + title + "': " + fmt.Sprintf("%v", dataFormatName))
+					return nil, fmt.Errorf("unknown 'data_formats_accepted' value of technical asset %q: %v", title, dataFormatName)
 				}
 				dataFormatsAccepted = append(dataFormatsAccepted, dataFormat)
 			}
@@ -214,26 +213,26 @@ func ParseModel(modelInput *input.Model, builtinRiskRules map[string]risks.RiskR
 
 				authentication, err := types.ParseAuthentication(commLink.Authentication)
 				if err != nil {
-					return nil, errors.New("unknown 'authentication' value of technical asset '" + title + "' communication link '" + commLinkTitle + "': " + fmt.Sprintf("%v", commLink.Authentication))
+					return nil, fmt.Errorf("unknown 'authentication' value of technical asset %q communication link %q: %v", title, commLinkTitle, commLink.Authentication)
 				}
 				authorization, err := types.ParseAuthorization(commLink.Authorization)
 				if err != nil {
-					return nil, errors.New("unknown 'authorization' value of technical asset '" + title + "' communication link '" + commLinkTitle + "': " + fmt.Sprintf("%v", commLink.Authorization))
+					return nil, fmt.Errorf("unknown 'authorization' value of technical asset %q communication link %q: %v", title, commLinkTitle, commLink.Authorization)
 				}
 				usage, err := types.ParseUsage(commLink.Usage)
 				if err != nil {
-					return nil, errors.New("unknown 'usage' value of technical asset '" + title + "' communication link '" + commLinkTitle + "': " + fmt.Sprintf("%v", commLink.Usage))
+					return nil, fmt.Errorf("unknown 'usage' value of technical asset %q communication link %q: %v", title, commLinkTitle, commLink.Usage)
 				}
 				protocol, err := types.ParseProtocol(commLink.Protocol)
 				if err != nil {
-					return nil, errors.New("unknown 'protocol' value of technical asset '" + title + "' communication link '" + commLinkTitle + "': " + fmt.Sprintf("%v", commLink.Protocol))
+					return nil, fmt.Errorf("unknown 'protocol' value of technical asset %q communication link %q: %v", title, commLinkTitle, commLink.Protocol)
 				}
 
 				if commLink.DataAssetsSent != nil {
 					for _, dataAssetSent := range commLink.DataAssetsSent {
 						referencedAsset := fmt.Sprintf("%v", dataAssetSent)
 						if !contains(dataAssetsSent, referencedAsset) {
-							err := parsedModel.CheckDataAssetTargetExists(referencedAsset, "communication link '"+commLinkTitle+"' of technical asset '"+title+"'")
+							err := parsedModel.CheckDataAssetTargetExists(referencedAsset, fmt.Sprintf("communication link %q of technical asset %q", commLinkTitle, title))
 							if err != nil {
 								return nil, err
 							}
@@ -314,9 +313,9 @@ func ParseModel(modelInput *input.Model, builtinRiskRules map[string]risks.RiskR
 			return nil, err
 		}
 		if _, exists := parsedModel.TechnicalAssets[id]; exists {
-			return nil, errors.New("duplicate id used: " + id)
+			return nil, fmt.Errorf("duplicate id used: %v", id)
 		}
-		tags, err := parsedModel.CheckTags(lowerCaseAndTrim(asset.Tags), "technical asset '"+title+"'")
+		tags, err := parsedModel.CheckTags(lowerCaseAndTrim(asset.Tags), fmt.Sprintf("technical asset %q", title))
 		if err != nil {
 			return nil, err
 		}
@@ -408,10 +407,10 @@ func ParseModel(modelInput *input.Model, builtinRiskRules map[string]risks.RiskR
 				technicalAssetsInside[i] = fmt.Sprintf("%v", parsedInsideAsset)
 				_, found := parsedModel.TechnicalAssets[technicalAssetsInside[i]]
 				if !found {
-					return nil, errors.New("missing referenced technical asset " + technicalAssetsInside[i] + " at trust boundary '" + title + "'")
+					return nil, fmt.Errorf("missing referenced technical asset %q at trust boundary %q", technicalAssetsInside[i], title)
 				}
 				if checklistToAvoidAssetBeingModeledInMultipleTrustBoundaries[technicalAssetsInside[i]] {
-					return nil, errors.New("referenced technical asset " + technicalAssetsInside[i] + " at trust boundary '" + title + "' is modeled in multiple trust boundaries")
+					return nil, fmt.Errorf("referenced technical asset %q at trust boundary %q is modeled in multiple trust boundaries", technicalAssetsInside[i], title)
 				}
 				checklistToAvoidAssetBeingModeledInMultipleTrustBoundaries[technicalAssetsInside[i]] = true
 				//fmt.Println("asset "+technicalAssetsInside[i]+" at i="+strconv.Itoa(i))
@@ -429,9 +428,9 @@ func ParseModel(modelInput *input.Model, builtinRiskRules map[string]risks.RiskR
 
 		trustBoundaryType, err := types.ParseTrustBoundary(boundary.Type)
 		if err != nil {
-			return nil, errors.New("unknown 'type' of trust boundary '" + title + "': " + fmt.Sprintf("%v", boundary.Type))
+			return nil, fmt.Errorf("unknown 'type' of trust boundary %q: %v", title, boundary.Type)
 		}
-		tags, err := parsedModel.CheckTags(lowerCaseAndTrim(boundary.Tags), "trust boundary '"+title+"'")
+		tags, err := parsedModel.CheckTags(lowerCaseAndTrim(boundary.Tags), fmt.Sprintf("trust boundary %q", title))
 		if err != nil {
 			return nil, err
 		}
@@ -449,7 +448,7 @@ func ParseModel(modelInput *input.Model, builtinRiskRules map[string]risks.RiskR
 			return nil, err
 		}
 		if _, exists := parsedModel.TrustBoundaries[id]; exists {
-			return nil, errors.New("duplicate id used: " + id)
+			return nil, fmt.Errorf("duplicate id used: %v", id)
 		}
 		parsedModel.TrustBoundaries[id] = trustBoundary
 		for _, technicalAsset := range trustBoundary.TechnicalAssetsInside {
@@ -496,7 +495,7 @@ func ParseModel(modelInput *input.Model, builtinRiskRules map[string]risks.RiskR
 			return nil, err
 		}
 		if _, exists := parsedModel.SharedRuntimes[id]; exists {
-			return nil, errors.New("duplicate id used: " + id)
+			return nil, fmt.Errorf("duplicate id used: %v", id)
 		}
 		parsedModel.SharedRuntimes[id] = sharedRuntime
 	}
@@ -519,11 +518,11 @@ func ParseModel(modelInput *input.Model, builtinRiskRules map[string]risks.RiskR
 
 		function, err := types.ParseRiskFunction(individualCategory.Function)
 		if err != nil {
-			return nil, errors.New("unknown 'function' value of individual risk category '" + title + "': " + fmt.Sprintf("%v", individualCategory.Function))
+			return nil, fmt.Errorf("unknown 'function' value of individual risk category %q: %v", title, individualCategory.Function)
 		}
 		stride, err := types.ParseSTRIDE(individualCategory.STRIDE)
 		if err != nil {
-			return nil, errors.New("unknown 'stride' value of individual risk category '" + title + "': " + fmt.Sprintf("%v", individualCategory.STRIDE))
+			return nil, fmt.Errorf("unknown 'stride' value of individual risk category  %q: %v", title, individualCategory.STRIDE)
 		}
 
 		cat := types.RiskCategory{
@@ -549,7 +548,7 @@ func ParseModel(modelInput *input.Model, builtinRiskRules map[string]risks.RiskR
 			return nil, err
 		}
 		if _, exists := parsedModel.IndividualRiskCategories[id]; exists {
-			return nil, errors.New("duplicate id used: " + id)
+			return nil, fmt.Errorf("duplicate id used: %v", id)
 		}
 		parsedModel.IndividualRiskCategories[id] = cat
 
@@ -562,20 +561,20 @@ func ParseModel(modelInput *input.Model, builtinRiskRules map[string]risks.RiskR
 				var dataBreachTechnicalAssetIDs []string
 				severity, err := types.ParseRiskSeverity(individualRiskInstance.Severity)
 				if err != nil {
-					return nil, errors.New("unknown 'severity' value of individual risk instance '" + title + "': " + fmt.Sprintf("%v", individualRiskInstance.Severity))
+					return nil, fmt.Errorf("unknown 'severity' value of individual risk instance %q: %v", title, individualRiskInstance.Severity)
 				}
 				exploitationLikelihood, err := types.ParseRiskExploitationLikelihood(individualRiskInstance.ExploitationLikelihood)
 				if err != nil {
-					return nil, errors.New("unknown 'exploitation_likelihood' value of individual risk instance '" + title + "': " + fmt.Sprintf("%v", individualRiskInstance.ExploitationLikelihood))
+					return nil, fmt.Errorf("unknown 'exploitation_likelihood' value of individual risk instance %q: %v", title, individualRiskInstance.ExploitationLikelihood)
 				}
 				exploitationImpact, err := types.ParseRiskExploitationImpact(individualRiskInstance.ExploitationImpact)
 				if err != nil {
-					return nil, errors.New("unknown 'exploitation_impact' value of individual risk instance '" + title + "': " + fmt.Sprintf("%v", individualRiskInstance.ExploitationImpact))
+					return nil, fmt.Errorf("unknown 'exploitation_impact' value of individual risk instance %q: %v", title, individualRiskInstance.ExploitationImpact)
 				}
 
 				if len(individualRiskInstance.MostRelevantDataAsset) > 0 {
 					mostRelevantDataAssetId = fmt.Sprintf("%v", individualRiskInstance.MostRelevantDataAsset)
-					err := parsedModel.CheckDataAssetTargetExists(mostRelevantDataAssetId, "individual risk '"+title+"'")
+					err := parsedModel.CheckDataAssetTargetExists(mostRelevantDataAssetId, fmt.Sprintf("individual risk %q", title))
 					if err != nil {
 						return nil, err
 					}
@@ -583,7 +582,7 @@ func ParseModel(modelInput *input.Model, builtinRiskRules map[string]risks.RiskR
 
 				if len(individualRiskInstance.MostRelevantTechnicalAsset) > 0 {
 					mostRelevantTechnicalAssetId = fmt.Sprintf("%v", individualRiskInstance.MostRelevantTechnicalAsset)
-					err := parsedModel.CheckTechnicalAssetExists(mostRelevantTechnicalAssetId, "individual risk '"+title+"'", false)
+					err := parsedModel.CheckTechnicalAssetExists(mostRelevantTechnicalAssetId, fmt.Sprintf("individual risk %q", title), false)
 					if err != nil {
 						return nil, err
 					}
@@ -591,7 +590,7 @@ func ParseModel(modelInput *input.Model, builtinRiskRules map[string]risks.RiskR
 
 				if len(individualRiskInstance.MostRelevantCommunicationLink) > 0 {
 					mostRelevantCommunicationLinkId = fmt.Sprintf("%v", individualRiskInstance.MostRelevantCommunicationLink)
-					err := parsedModel.CheckCommunicationLinkExists(mostRelevantCommunicationLinkId, "individual risk '"+title+"'")
+					err := parsedModel.CheckCommunicationLinkExists(mostRelevantCommunicationLinkId, fmt.Sprintf("individual risk %q", title))
 					if err != nil {
 						return nil, err
 					}
@@ -599,7 +598,7 @@ func ParseModel(modelInput *input.Model, builtinRiskRules map[string]risks.RiskR
 
 				if len(individualRiskInstance.MostRelevantTrustBoundary) > 0 {
 					mostRelevantTrustBoundaryId = fmt.Sprintf("%v", individualRiskInstance.MostRelevantTrustBoundary)
-					err := parsedModel.CheckTrustBoundaryExists(mostRelevantTrustBoundaryId, "individual risk '"+title+"'")
+					err := parsedModel.CheckTrustBoundaryExists(mostRelevantTrustBoundaryId, fmt.Sprintf("individual risk %q", title))
 					if err != nil {
 						return nil, err
 					}
@@ -607,7 +606,7 @@ func ParseModel(modelInput *input.Model, builtinRiskRules map[string]risks.RiskR
 
 				if len(individualRiskInstance.MostRelevantSharedRuntime) > 0 {
 					mostRelevantSharedRuntimeId = fmt.Sprintf("%v", individualRiskInstance.MostRelevantSharedRuntime)
-					err := parsedModel.CheckSharedRuntimeExists(mostRelevantSharedRuntimeId, "individual risk '"+title+"'")
+					err := parsedModel.CheckSharedRuntimeExists(mostRelevantSharedRuntimeId, fmt.Sprintf("individual risk %q", title))
 					if err != nil {
 						return nil, err
 					}
@@ -615,14 +614,14 @@ func ParseModel(modelInput *input.Model, builtinRiskRules map[string]risks.RiskR
 
 				dataBreachProbability, err = types.ParseDataBreachProbability(individualRiskInstance.DataBreachProbability)
 				if err != nil {
-					return nil, errors.New("unknown 'data_breach_probability' value of individual risk instance '" + title + "': " + fmt.Sprintf("%v", individualRiskInstance.DataBreachProbability))
+					return nil, fmt.Errorf("unknown 'data_breach_probability' value of individual risk instance %q: %v", title, individualRiskInstance.DataBreachProbability)
 				}
 
 				if individualRiskInstance.DataBreachTechnicalAssets != nil {
 					dataBreachTechnicalAssetIDs = make([]string, len(individualRiskInstance.DataBreachTechnicalAssets))
 					for i, parsedReferencedAsset := range individualRiskInstance.DataBreachTechnicalAssets {
 						assetId := fmt.Sprintf("%v", parsedReferencedAsset)
-						err := parsedModel.CheckTechnicalAssetExists(assetId, "data breach technical assets of individual risk '"+title+"'", false)
+						err := parsedModel.CheckTechnicalAssetExists(assetId, fmt.Sprintf("data breach technical assets of individual risk %q", title), false)
 						if err != nil {
 							return nil, err
 						}
@@ -660,13 +659,13 @@ func ParseModel(modelInput *input.Model, builtinRiskRules map[string]risks.RiskR
 			var parseError error
 			date, parseError = time.Parse("2006-01-02", riskTracking.Date)
 			if parseError != nil {
-				return nil, errors.New("unable to parse 'date' of risk tracking '" + syntheticRiskId + "': " + riskTracking.Date)
+				return nil, fmt.Errorf("unable to parse 'date' of risk tracking %q: %v", syntheticRiskId, riskTracking.Date)
 			}
 		}
 
 		status, err := types.ParseRiskStatus(riskTracking.Status)
 		if err != nil {
-			return nil, errors.New("unknown 'status' value of risk tracking '" + syntheticRiskId + "': " + riskTracking.Status)
+			return nil, fmt.Errorf("unknown 'status' value of risk tracking %q: %v", syntheticRiskId, riskTracking.Status)
 		}
 
 		tracking := types.RiskTracking{
@@ -716,7 +715,7 @@ func ParseModel(modelInput *input.Model, builtinRiskRules map[string]risks.RiskR
 func checkIdSyntax(id string) error {
 	validIdSyntax := regexp.MustCompile(`^[a-zA-Z0-9\-]+$`)
 	if !validIdSyntax.MatchString(id) {
-		return errors.New("invalid id syntax used (only letters, numbers, and hyphen allowed): " + id)
+		return fmt.Errorf("invalid id syntax used (only letters, numbers, and hyphen allowed): %v", id)
 	}
 	return nil
 }

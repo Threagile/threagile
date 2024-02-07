@@ -5,7 +5,6 @@ package macros
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -52,7 +51,7 @@ func GetMacroByID(id string) (Macros, error) {
 			return macro, nil
 		}
 	}
-	return nil, errors.New("unknown macro id: " + id)
+	return nil, fmt.Errorf("unknown macro id: %v", id)
 }
 
 func ExecuteModelMacro(modelInput *input.Model, inputFile string, parsedModel *types.ParsedModel, macroID string) error {

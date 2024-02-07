@@ -6,7 +6,6 @@ package types
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"gopkg.in/yaml.v3"
 	"strings"
@@ -53,7 +52,7 @@ func ParseAuthentication(value string) (authentication Authentication, err error
 			return candidate.(Authentication), err
 		}
 	}
-	return authentication, errors.New("Unable to parse into type: " + value)
+	return authentication, fmt.Errorf("unable to parse into type: %v", value)
 }
 
 func (what Authentication) String() string {

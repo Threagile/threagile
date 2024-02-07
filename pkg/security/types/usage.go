@@ -5,7 +5,6 @@ package types
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"gopkg.in/yaml.v3"
 	"strings"
@@ -32,7 +31,7 @@ func ParseUsage(value string) (usage Usage, err error) {
 			return candidate.(Usage), err
 		}
 	}
-	return usage, errors.New("Unable to parse into type: " + value)
+	return usage, fmt.Errorf("unable to parse into type: %v", value)
 }
 
 var UsageTypeDescription = [...]TypeDescription{
