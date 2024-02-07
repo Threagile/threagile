@@ -22,5 +22,5 @@ func (what *Threagile) Execute() {
 
 func (what *Threagile) Init(buildTimestamp string) *Threagile {
 	what.buildTimestamp = buildTimestamp
-	return what.initRoot().initAbout().initRules().initExamples().initMacros().initTypes().initAnalyze().initServer().initQuit()
+	return what.initRoot().initAnalyze().initCreate().initExecute().initExplain().initList().initPrint().initQuit().initServer().initVersion()
 }

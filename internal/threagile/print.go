@@ -1,28 +1,15 @@
-/*
-Copyright © 2023 NAME HERE <EMAIL ADDRESS>
-*/
-
 package threagile
 
 import (
-	"errors"
 	"fmt"
+	"github.com/spf13/cobra"
 	"github.com/threagile/threagile/pkg/common"
+	"github.com/threagile/threagile/pkg/docs"
 	"os"
 	"path/filepath"
-
-	"github.com/spf13/cobra"
-
-	"github.com/threagile/threagile/pkg/docs"
 )
 
-func (what *Threagile) initAbout() *Threagile {
-	what.rootCmd.AddCommand(&cobra.Command{
-		Use:   common.PrintVersionCommand,
-		Short: "Get version information",
-		Long:  "\n" + docs.Logo + "\n\n" + fmt.Sprintf(docs.VersionText, what.buildTimestamp),
-	})
-
+func (what *Threagile) initPrint() *Threagile {
 	what.rootCmd.AddCommand(&cobra.Command{
 		Use:   common.Print3rdPartyCommand,
 		Short: "Print 3rd-party license information",
@@ -42,7 +29,7 @@ func (what *Threagile) initAbout() *Threagile {
 			if appDir != filepath.Clean(appDir) {
 				// TODO: do we need this check here?
 				cmd.Printf("weird app folder %v", appDir)
-				return errors.New("weird app folder")
+				return fmt.Errorf("weird app folder")
 			}
 			content, err := os.ReadFile(filepath.Clean(filepath.Join(appDir, "LICENSE.txt")))
 			if err != nil {
