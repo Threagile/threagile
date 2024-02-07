@@ -11,12 +11,6 @@ import (
 	"github.com/threagile/threagile/pkg/security/types"
 )
 
-type progressReporter interface {
-	Info(a ...any)
-	Warn(a ...any)
-	Error(a ...any)
-}
-
 type ReadResult struct {
 	ModelInput       *input.Model
 	ParsedModel      *types.ParsedModel
@@ -25,10 +19,14 @@ type ReadResult struct {
 	CustomRiskRules  map[string]*CustomRisk
 }
 
+func (what ReadResult) ExplainRisk(cfg *common.Config, risk string, reporter common.DefaultProgressReporter) error {
+	return fmt.Errorf("not implemented")
+}
+
 // TODO: consider about splitting this function into smaller ones for better reusability
-func ReadAndAnalyzeModel(config common.Config, progressReporter progressReporter) (*ReadResult, error) {
-	progressReporter.Info("Writing into output directory:", config.OutputFolder)
-	progressReporter.Info("Parsing model:", config.InputFile)
+func ReadAndAnalyzeModel(config common.Config, progressReporter types.ProgressReporter) (*ReadResult, error) {
+	progressReporter.Infof("Writing into output directory: %v", config.OutputFolder)
+	progressReporter.Infof("Parsing model: %v", config.InputFile)
 
 	builtinRiskRules := make(map[string]risks.RiskRule)
 	for _, rule := range risks.GetBuiltInRiskRules() {
@@ -94,7 +92,7 @@ func applyRisk(parsedModel *types.ParsedModel, rule risks.RiskRule, skippedRules
 func applyRiskGeneration(parsedModel *types.ParsedModel, customRiskRules map[string]*CustomRisk,
 	builtinRiskRules map[string]risks.RiskRule,
 	skipRiskRules string,
-	progressReporter progressReporter) {
+	progressReporter types.ProgressReporter) {
 	progressReporter.Info("Applying risk generation")
 
 	skippedRules := make(map[string]bool)
@@ -112,17 +110,17 @@ func applyRiskGeneration(parsedModel *types.ParsedModel, customRiskRules map[str
 	for id, customRule := range customRiskRules {
 		_, ok := skippedRules[id]
 		if ok {
-			progressReporter.Info("Skipping custom risk rule:", id)
+			progressReporter.Infof("Skipping custom risk rule: %v", id)
 			delete(skippedRules, id)
 		} else {
-			progressReporter.Info("Executing custom risk rule:", id)
+			progressReporter.Infof("Executing custom risk rule: %v", id)
 			parsedModel.AddToListOfSupportedTags(customRule.Tags)
 			customRisks := customRule.GenerateRisks(parsedModel)
 			if len(customRisks) > 0 {
 				parsedModel.GeneratedRisksByCategory[customRule.Category.Id] = customRisks
 			}
 
-			progressReporter.Info("Added custom risks:", len(customRisks))
+			progressReporter.Infof("Added custom risks: %v", len(customRisks))
 		}
 	}
 
@@ -132,7 +130,7 @@ func applyRiskGeneration(parsedModel *types.ParsedModel, customRiskRules map[str
 			keys = append(keys, k)
 		}
 		if len(keys) > 0 {
-			progressReporter.Info("Unknown risk rules to skip:", keys)
+			progressReporter.Infof("Unknown risk rules to skip: %v", keys)
 		}
 	}
 
@@ -145,18 +143,18 @@ func applyRiskGeneration(parsedModel *types.ParsedModel, customRiskRules map[str
 	}
 }
 
-func applyRAA(parsedModel *types.ParsedModel, binFolder, raaPlugin string, progressReporter progressReporter) string {
-	progressReporter.Info("Applying RAA calculation:", raaPlugin)
+func applyRAA(parsedModel *types.ParsedModel, binFolder, raaPlugin string, progressReporter types.ProgressReporter) string {
+	progressReporter.Infof("Applying RAA calculation: %v", raaPlugin)
 
 	runner, loadError := new(runner).Load(filepath.Join(binFolder, raaPlugin))
 	if loadError != nil {
-		progressReporter.Warn(fmt.Sprintf("WARNING: raa %q not loaded: %v\n", raaPlugin, loadError))
+		progressReporter.Warnf("raa %q not loaded: %v\n", raaPlugin, loadError)
 		return ""
 	}
 
 	runError := runner.Run(parsedModel, parsedModel)
 	if runError != nil {
-		progressReporter.Warn(fmt.Sprintf("WARNING: raa %q not applied: %v\n", raaPlugin, runError))
+		progressReporter.Warnf("raa %q not applied: %v\n", raaPlugin, runError)
 		return ""
 	}
 

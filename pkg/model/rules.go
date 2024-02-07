@@ -29,7 +29,7 @@ func (r *CustomRisk) GenerateRisks(m *types.ParsedModel) []types.Risk {
 	return risks
 }
 
-func LoadCustomRiskRules(pluginFiles []string, reporter progressReporter) map[string]*CustomRisk {
+func LoadCustomRiskRules(pluginFiles []string, reporter types.ProgressReporter) map[string]*CustomRisk {
 	customRiskRuleList := make([]string, 0)
 	customRiskRules := make(map[string]*CustomRisk)
 	if len(pluginFiles) > 0 {

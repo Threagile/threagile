@@ -6,14 +6,13 @@ package server
 import (
 	"crypto/sha512"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"hash/fnv"
 )
 
 func xor(key []byte, xor []byte) []byte {
 	if len(key) != len(xor) {
-		panic(errors.New("key length not matching XOR length"))
+		panic(fmt.Errorf("key length not matching XOR length"))
 	}
 	result := make([]byte, len(xor))
 	for i, b := range key {

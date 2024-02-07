@@ -6,7 +6,6 @@ package types
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"gopkg.in/yaml.v3"
 	"strings"
@@ -39,7 +38,7 @@ func ParseEncryptionStyle(value string) (encryptionStyle EncryptionStyle, err er
 			return candidate.(EncryptionStyle), err
 		}
 	}
-	return encryptionStyle, errors.New("Unable to parse into type: " + value)
+	return encryptionStyle, fmt.Errorf("unable to parse into type: %v", value)
 }
 
 var EncryptionStyleTypeDescription = [...]TypeDescription{

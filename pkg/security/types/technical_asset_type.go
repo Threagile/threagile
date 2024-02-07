@@ -6,7 +6,6 @@ package types
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"gopkg.in/yaml.v3"
 	"strings"
@@ -50,7 +49,7 @@ func ParseTechnicalAssetType(value string) (technicalAssetType TechnicalAssetTyp
 			return candidate.(TechnicalAssetType), err
 		}
 	}
-	return technicalAssetType, errors.New("Unable to parse into type: " + value)
+	return technicalAssetType, fmt.Errorf("unable to parse into type: %v", value)
 }
 
 func (what TechnicalAssetType) MarshalJSON() ([]byte, error) {

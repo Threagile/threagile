@@ -1,7 +1,6 @@
 package report
 
 import (
-	"errors"
 	"fmt"
 	"hash/fnv"
 	"os"
@@ -427,16 +426,16 @@ func GenerateDataFlowDiagramGraphvizImage(dotFile *os.File, targetDir string,
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
 	if err != nil {
-		return errors.New("graph rendering call failed with error: " + err.Error())
+		return fmt.Errorf("graph rendering call failed with error: %v", err)
 	}
 	// copy into resulting file
 	inputPNG, err := os.ReadFile(tmpFilePNG.Name())
 	if err != nil {
-		return fmt.Errorf("Error copying into resulting file %s: %v", tmpFilePNG.Name(), err)
+		return fmt.Errorf("failed to copy to file %s: %v", tmpFilePNG.Name(), err)
 	}
 	err = os.WriteFile(filepath.Join(targetDir, dataFlowDiagramFilenamePNG), inputPNG, 0600)
 	if err != nil {
-		return fmt.Errorf("Error creating %s: %v", filepath.Join(targetDir, dataFlowDiagramFilenamePNG), err)
+		return fmt.Errorf("failed to create %s: %v", filepath.Join(targetDir, dataFlowDiagramFilenamePNG), err)
 	}
 	return nil
 }
@@ -861,16 +860,16 @@ func GenerateDataAssetDiagramGraphvizImage(dotFile *os.File, targetDir string,
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
 	if err != nil {
-		return errors.New("graph rendering call failed with error: " + err.Error())
+		return fmt.Errorf("graph rendering call failed with error: %v", err)
 	}
 	// copy into resulting file
 	inputPNG, err := os.ReadFile(tmpFilePNG.Name())
 	if err != nil {
-		return fmt.Errorf("Error copying into resulting file %s: %v", tmpFilePNG.Name(), err)
+		return fmt.Errorf("failed to copy to file %s: %v", tmpFilePNG.Name(), err)
 	}
 	err = os.WriteFile(filepath.Join(targetDir, dataAssetDiagramFilenamePNG), inputPNG, 0600)
 	if err != nil {
-		return fmt.Errorf("Error creating %s: %v", filepath.Join(targetDir, dataAssetDiagramFilenamePNG), err)
+		return fmt.Errorf("failed to create %s: %v", filepath.Join(targetDir, dataAssetDiagramFilenamePNG), err)
 	}
 	return nil
 }

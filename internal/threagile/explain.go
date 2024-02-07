@@ -14,6 +14,31 @@ import (
 
 func (what *Threagile) initExplain() *Threagile {
 	what.rootCmd.AddCommand(&cobra.Command{
+		Use:   common.ExplainRiskCommand,
+		Short: "Detailed explanation of why a risk was flagged",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cfg := what.readConfig(cmd, what.buildTimestamp)
+			progressReporter := common.DefaultProgressReporter{Verbose: cfg.Verbose}
+
+			r, runError := model.ReadAndAnalyzeModel(*cfg, progressReporter)
+			if runError != nil {
+				cmd.Printf("Failed to read and analyze model: %v", runError)
+				return runError
+			}
+
+			for _, risk := range args {
+				explainError := r.ExplainRisk(cfg, risk, progressReporter)
+				if explainError != nil {
+					cmd.Printf("Failed to explain risk %q: %v \n", risk, explainError)
+					return explainError
+				}
+			}
+
+			return nil
+		},
+	})
+
+	what.rootCmd.AddCommand(&cobra.Command{
 		Use:   common.ExplainRiskRulesCommand,
 		Short: "Detailed explanation of all the risk rules",
 		RunE: func(cmd *cobra.Command, args []string) error {

@@ -5,7 +5,6 @@ package types
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"gopkg.in/yaml.v3"
 	"strings"
@@ -52,7 +51,7 @@ func ParseTrustBoundary(value string) (trustBoundary TrustBoundaryType, err erro
 			return candidate.(TrustBoundaryType), err
 		}
 	}
-	return trustBoundary, errors.New("Unable to parse into type: " + value)
+	return trustBoundary, fmt.Errorf("unable to parse into type: %v", value)
 }
 
 func (what TrustBoundaryType) String() string {

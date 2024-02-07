@@ -6,7 +6,6 @@ package types
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"gopkg.in/yaml.v3"
 	"strings"
@@ -47,7 +46,7 @@ func ParseDataFormat(value string) (dataFormat DataFormat, err error) {
 			return candidate.(DataFormat), err
 		}
 	}
-	return dataFormat, errors.New("Unable to parse into type: " + value)
+	return dataFormat, fmt.Errorf("unable to parse into type: %v", value)
 }
 
 func (what DataFormat) String() string {
