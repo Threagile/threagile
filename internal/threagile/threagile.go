@@ -1,8 +1,9 @@
 package threagile
 
 import (
-	"github.com/spf13/cobra"
 	"os"
+
+	"github.com/spf13/cobra"
 )
 
 type Threagile struct {
@@ -14,6 +15,7 @@ type Threagile struct {
 func (what *Threagile) Execute() {
 	err := what.rootCmd.Execute()
 	if err != nil {
+		what.rootCmd.Println(err)
 		os.Exit(1)
 	}
 }
