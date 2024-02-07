@@ -57,7 +57,7 @@ func (what *Threagile) initRoot() *Threagile {
 	defaultConfig := new(common.Config).Defaults(what.buildTimestamp)
 
 	what.rootCmd.PersistentFlags().StringVar(&what.flags.appDirFlag, appDirFlagName, defaultConfig.AppFolder, "app folder")
-	what.rootCmd.PersistentFlags().StringVar(&what.flags.binDirFlag, binDirFlagName, defaultConfig.BinFolder, "binary folder location")
+	what.rootCmd.PersistentFlags().StringVar(&what.flags.pluginDirFlag, pluginDirFlagName, defaultConfig.PluginFolder, "plugin folder location")
 	what.rootCmd.PersistentFlags().StringVar(&what.flags.outputDirFlag, outputFlagName, defaultConfig.OutputFolder, "output directory")
 	what.rootCmd.PersistentFlags().StringVar(&what.flags.tempDirFlag, tempDirFlagName, defaultConfig.TempFolder, "temporary folder location")
 
@@ -233,8 +233,8 @@ func (what *Threagile) readConfig(cmd *cobra.Command, buildTimestamp string) *co
 	if isFlagOverridden(flags, appDirFlagName) {
 		cfg.AppFolder = cfg.CleanPath(what.flags.appDirFlag)
 	}
-	if isFlagOverridden(flags, binDirFlagName) {
-		cfg.BinFolder = cfg.CleanPath(what.flags.binDirFlag)
+	if isFlagOverridden(flags, pluginDirFlagName) {
+		cfg.PluginFolder = cfg.CleanPath(what.flags.pluginDirFlag)
 	}
 	if isFlagOverridden(flags, outputFlagName) {
 		cfg.OutputFolder = cfg.CleanPath(what.flags.outputDirFlag)

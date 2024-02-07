@@ -24,6 +24,47 @@ Before running the project please install
 
 Main program is [threagile](./cmd/threagile/main.go).
 
+### Development with Visual Studio Code
+
+To run the code with VS Code add launch.json with this content and simply use ```Run -> Start Debugging```/```Run -> Start Without Debugging```:
+
+```
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+          "name": "Launch Threagile",
+          "type": "go",
+          "request": "launch",
+          "mode": "debug",
+          "program": "${workspaceFolder}/cmd/threagile",
+          "args": [
+            "help",
+            "--ignore-orphaned-risk-tracking",
+            "--model",
+            "./threagile.yaml",
+            "--app-dir",
+            "directory_with_support_files",
+            "--temp-dir",
+            "./",
+            "-v"
+          ]
+        }
+    ]
+}
+```
+
+```directory_with_support_files``` is a directory where support files are located:
+
+app/
+├─ [background.pdf](./report/template/background.pdf)
+├─ [LICENSE.txt](./LICENSE.txt)
+├─ [live-templates.txt](./support/live-templates.txt)
+├─ [openapi.yaml](./support/openapi.yaml)
+├─ [schema.json](./support/schema.json)
+├─ [threagile-example-model.yaml](./demo/example/threagile.yaml)
+├─ [threagile-stub-model.yaml](./demo/stub/threagile.yaml)
+
 ## Contribution
 
 To contribute the code simply make changes and create pull request. There is no strict rules about pull requests format like [this](https://www.pullrequest.com/blog/writing-a-great-pull-request-description/) however please take into consideration:

@@ -15,7 +15,7 @@ type Config struct {
 	Interactive    bool
 
 	AppFolder    string
-	BinFolder    string
+	PluginFolder string
 	DataFolder   string
 	OutputFolder string
 	ServerFolder string
@@ -60,7 +60,7 @@ func (c *Config) Defaults(buildTimestamp string) *Config {
 		Verbose:        false,
 
 		AppFolder:    AppDir,
-		BinFolder:    BinDir,
+		PluginFolder: PluginDir,
 		DataFolder:   DataDir,
 		OutputFolder: OutputDir,
 		ServerFolder: ServerDir,
@@ -158,8 +158,8 @@ func (c *Config) Load(configFilename string) error {
 		return appDirError
 	}
 
-	c.BinFolder = c.CleanPath(c.BinFolder)
-	binDirError := c.checkDir(c.BinFolder, "bin")
+	c.PluginFolder = c.CleanPath(c.PluginFolder)
+	binDirError := c.checkDir(c.PluginFolder, "plugin")
 	if binDirError != nil {
 		return binDirError
 	}
@@ -199,8 +199,8 @@ func (c *Config) Merge(config Config, values map[string]any) {
 		case strings.ToLower("AppFolder"):
 			c.AppFolder = config.AppFolder
 
-		case strings.ToLower("BinFolder"):
-			c.BinFolder = config.BinFolder
+		case strings.ToLower("PluginFolder"):
+			c.PluginFolder = config.PluginFolder
 
 		case strings.ToLower("DataFolder"):
 			c.DataFolder = config.DataFolder

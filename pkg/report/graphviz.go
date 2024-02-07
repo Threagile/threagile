@@ -395,7 +395,7 @@ func determineArrowColor(cl types.CommunicationLink, parsedModel *types.ParsedMo
 }
 
 func GenerateDataFlowDiagramGraphvizImage(dotFile *os.File, targetDir string,
-	tempFolder, binFolder, dataFlowDiagramFilenamePNG string, progressReporter progressReporter) error {
+	tempFolder, dataFlowDiagramFilenamePNG string, progressReporter progressReporter) error {
 	progressReporter.Info("Rendering data flow diagram input")
 	// tmp files
 	tmpFileDOT, err := os.CreateTemp(tempFolder, "diagram-*-.gv")
@@ -830,7 +830,7 @@ func determineTechnicalAssetLabelColor(ta types.TechnicalAsset, model *types.Par
 }
 
 func GenerateDataAssetDiagramGraphvizImage(dotFile *os.File, targetDir string,
-	tempFolder, binFolder, dataAssetDiagramFilenamePNG string, progressReporter progressReporter) error { // TODO dedupe with other render...() method here
+	tempFolder, dataAssetDiagramFilenamePNG string, progressReporter progressReporter) error { // TODO dedupe with other render...() method here
 	progressReporter.Info("Rendering data asset diagram input")
 	// tmp files
 	tmpFileDOT, err := os.CreateTemp(tempFolder, "diagram-*-.gv")

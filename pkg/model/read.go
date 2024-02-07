@@ -47,7 +47,7 @@ func ReadAndAnalyzeModel(config common.Config, progressReporter progressReporter
 		return nil, fmt.Errorf("unable to parse model yaml: %v", parseError)
 	}
 
-	introTextRAA := applyRAA(parsedModel, config.BinFolder, config.RAAPlugin, progressReporter)
+	introTextRAA := applyRAA(parsedModel, config.PluginFolder, config.RAAPlugin, progressReporter)
 
 	applyRiskGeneration(parsedModel, customRiskRules, builtinRiskRules,
 		config.SkipRiskRules, progressReporter)

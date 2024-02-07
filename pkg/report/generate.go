@@ -68,7 +68,7 @@ func Generate(config *common.Config, readResult *model.ReadResult, commands *Gen
 		}
 
 		err = GenerateDataFlowDiagramGraphvizImage(dotFile, config.OutputFolder,
-			config.TempFolder, config.BinFolder, config.DataFlowDiagramFilenamePNG, progressReporter)
+			config.TempFolder, config.DataFlowDiagramFilenamePNG, progressReporter)
 		if err != nil {
 			progressReporter.Warn(err)
 		}
@@ -89,7 +89,7 @@ func Generate(config *common.Config, readResult *model.ReadResult, commands *Gen
 			return fmt.Errorf("error while generating data asset diagram: %s", err)
 		}
 		err = GenerateDataAssetDiagramGraphvizImage(dotFile, config.OutputFolder,
-			config.TempFolder, config.BinFolder, config.DataAssetDiagramFilenamePNG, progressReporter)
+			config.TempFolder, config.DataAssetDiagramFilenamePNG, progressReporter)
 		if err != nil {
 			progressReporter.Warn(err)
 		}
