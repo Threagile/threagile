@@ -56,6 +56,7 @@ To run the code with VS Code add launch.json with this content and simply use ``
 
 ```directory_with_support_files``` is a directory where support files are located:
 
+```
 app/
 ├─ [background.pdf](./report/template/background.pdf)
 ├─ [LICENSE.txt](./LICENSE.txt)
@@ -64,6 +65,7 @@ app/
 ├─ [schema.json](./support/schema.json)
 ├─ [threagile-example-model.yaml](./demo/example/threagile.yaml)
 ├─ [threagile-stub-model.yaml](./demo/stub/threagile.yaml)
+```
 
 ## Contribution
 
