@@ -87,12 +87,12 @@ func (what *Threagile) initRoot() *Threagile {
 	return what
 }
 
-func (what *Threagile) run(*cobra.Command, []string) {
+func (what *Threagile) run(cmd *cobra.Command, _ []string) {
 	if !what.flags.interactiveFlag {
+		cmd.Println("Please add the --interactive flag to run in interactive mode.")
 		return
 	}
 
-	what.rootCmd.Use = "\b"
 	completer := readline.NewPrefixCompleter()
 	for _, child := range what.rootCmd.Commands() {
 		what.cobraToReadline(completer, child)
@@ -100,6 +100,7 @@ func (what *Threagile) run(*cobra.Command, []string) {
 
 	dir, homeError := os.UserHomeDir()
 	if homeError != nil {
+		cmd.Println("Error, please report bug at https://github.com/Threagile/threagile. Unable to find home directory: " + homeError.Error())
 		return
 	}
 
@@ -114,6 +115,7 @@ func (what *Threagile) run(*cobra.Command, []string) {
 	})
 
 	if readlineError != nil {
+		cmd.Println("Error, please report bug at https://github.com/Threagile/threagile. Unable to initialize readline: " + readlineError.Error())
 		return
 	}
 
@@ -121,7 +123,11 @@ func (what *Threagile) run(*cobra.Command, []string) {
 
 	for {
 		line, readError := shell.Readline()
+		if readError == readline.ErrInterrupt {
+			return
+		}
 		if readError != nil {
+			cmd.Println("Error, please report bug at https://github.com/Threagile/threagile. Unable to read line: " + readError.Error())
 			return
 		}
 
@@ -131,24 +137,24 @@ func (what *Threagile) run(*cobra.Command, []string) {
 
 		params, parseError := shellwords.Parse(line)
 		if parseError != nil {
-			fmt.Printf("failed to parse command line: %s", parseError.Error())
+			cmd.Printf("failed to parse command line: %s", parseError.Error())
 			continue
 		}
 
 		cmd, args, findError := what.rootCmd.Find(params)
 		if findError != nil {
-			fmt.Printf("failed to find command: %s", findError.Error())
+			cmd.Printf("failed to find command: %s", findError.Error())
 			continue
 		}
 
 		if cmd == nil || cmd == what.rootCmd {
-			fmt.Printf("failed to find command")
+			cmd.Println("failed to find command")
 			continue
 		}
 
 		flagsError := cmd.ParseFlags(args)
 		if flagsError != nil {
-			fmt.Printf("invalid flags: %s", flagsError.Error())
+			cmd.Printf("invalid flags: %s", flagsError.Error())
 			continue
 		}
 
@@ -170,13 +176,12 @@ func (what *Threagile) run(*cobra.Command, []string) {
 		if cmd.RunE != nil {
 			runError := cmd.RunE(cmd, args)
 			if runError != nil {
-				fmt.Printf("error: %v \n", runError)
+				cmd.Printf("error: %v \n", runError)
 			}
 			continue
 		}
 
 		_ = cmd.Help()
-		continue
 	}
 }
 
@@ -219,7 +224,7 @@ func (what *Threagile) readConfig(cmd *cobra.Command, buildTimestamp string) *co
 	cfg := new(common.Config).Defaults(buildTimestamp)
 	configError := cfg.Load(what.flags.configFlag)
 	if configError != nil {
-		fmt.Printf("WARNING: failed to load config file %q: %v\n", what.flags.configFlag, configError)
+		cmd.Printf("WARNING: failed to load config file %q: %v\n", what.flags.configFlag, configError)
 	}
 
 	flags := cmd.Flags()

@@ -37,6 +37,7 @@ To run the code with VS Code add launch.json with this content and simply use ``
           "type": "go",
           "request": "launch",
           "mode": "debug",
+          "console": "integratedTerminal",
           "program": "${workspaceFolder}/cmd/threagile",
           "args": [
             "help",
