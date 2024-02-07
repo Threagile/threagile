@@ -3,7 +3,7 @@ package common
 const (
 	TempDir   = "/dev/shm" // TODO: make configurable via cmdline arg?
 	AppDir    = "/app"
-	BinDir    = "/app"
+	PluginDir = "/app"
 	DataDir   = "/data"
 	OutputDir = "."
 	ServerDir = "/server"

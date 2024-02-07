@@ -13,10 +13,10 @@ const (
 	verboseFlagName      = "verbose"
 	verboseFlagShorthand = "v"
 
-	appDirFlagName  = "app-dir"
-	binDirFlagName  = "bin-dir"
-	outputFlagName  = "output"
-	tempDirFlagName = "temp-dir"
+	appDirFlagName    = "app-dir"
+	pluginDirFlagName = "plugin-dir"
+	outputFlagName    = "output"
+	tempDirFlagName   = "temp-dir"
 
 	serverDirFlagName  = "server-dir"
 	serverPortFlagName = "server-port"
@@ -45,7 +45,7 @@ type Flags struct {
 	verboseFlag     bool
 	interactiveFlag bool
 	appDirFlag      string
-	binDirFlag      string
+	pluginDirFlag   string
 	outputDirFlag   string
 	tempDirFlag     string
 	inputFileFlag   string

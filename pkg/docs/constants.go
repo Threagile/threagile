@@ -21,7 +21,9 @@ const (
 		"If you want to create a minimal stub model (via docker) as a starting point for your own model just run: \n" +
 		" docker run --rm -it -v \"$(pwd)\":app/work threagile/threagile " + common.CreateStubModelCommand + " -output app/work \n\n" +
 		"If you want to execute Threagile on a model yaml file (via docker):  \n" +
-		" docker run --rm -it -v \"$(pwd)\":app/work threagile/threagile -verbose -model -output app/work \n\n" +
+		" docker run --rm -it -v \"$(pwd)\":app/work threagile/threagile analyze-model -verbose -model -output app/work \n\n" +
+		"If you want to execute Threagile in interactive mode (via docker):  \n" +
+		" docker run --rm -it -v \"$(pwd)\":app/work threagile/threagile -i -verbose -model -output app/work \n\n" +
 		"If you want to run Threagile as a server (REST API) on some port (here 8080):  \n" +
 		" docker run --rm -it --shm-size=256m  -p 8080:8080 --name --mount 'type=volume,src=threagile-storage,dst=/data,readonly=false' threagile/threagile server --server-port 8080 \n\n" +
 		"If you want to find out about the different enum values usable in the model yaml file: \n" +
