@@ -119,3 +119,13 @@ func (r *UnguardedDirectDatastoreAccessRule) createRisk(dataStore types.Technica
 	risk.SyntheticId = risk.CategoryId + "@" + dataFlow.Id + "@" + clientOutsideTrustBoundary.Id + "@" + dataStore.Id
 	return risk
 }
+
+func (r *UnguardedDirectDatastoreAccessRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
+	// todo
+	return false
+}
+
+func (r *UnguardedDirectDatastoreAccessRule) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
+	// todo
+	return nil
+}

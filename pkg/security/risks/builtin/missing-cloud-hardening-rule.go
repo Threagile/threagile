@@ -464,3 +464,13 @@ func (r *MissingCloudHardeningRule) createRiskForTechnicalAsset(parsedModel *typ
 	risk.SyntheticId = risk.CategoryId + "@" + technicalAsset.Id
 	return risk
 }
+
+func (r *MissingCloudHardeningRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
+	// todo
+	return false
+}
+
+func (r *MissingCloudHardeningRule) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
+	// todo
+	return nil
+}

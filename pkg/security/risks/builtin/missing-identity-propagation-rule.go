@@ -104,3 +104,13 @@ func (r *MissingIdentityPropagationRule) createRisk(input *types.ParsedModel, te
 	risk.SyntheticId = risk.CategoryId + "@" + incomingAccess.Id + "@" + input.TechnicalAssets[incomingAccess.SourceId].Id + "@" + technicalAsset.Id
 	return risk
 }
+
+func (r *MissingIdentityPropagationRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
+	// todo
+	return false
+}
+
+func (r *MissingIdentityPropagationRule) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
+	// todo
+	return nil
+}

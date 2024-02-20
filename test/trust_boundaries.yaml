@@ -21,7 +21,7 @@ trust_boundaries:
       - some-erp
     technical_assets_inside: # sequence of IDs to reference
       - erp-system
-      - contract-fileserver
+      - contract-file-server
       - sql-database
     trust_boundaries_nested: # sequence of IDs to reference
 
@@ -57,7 +57,7 @@ trust_boundaries:
     type: network-on-prem # values: see help
     tags:
     technical_assets_inside: # sequence of IDs to reference
-      - jenkins-buildserver
+      - jenkins-build-server
       - git-repo
       - backend-admin-client
       - backoffice-client

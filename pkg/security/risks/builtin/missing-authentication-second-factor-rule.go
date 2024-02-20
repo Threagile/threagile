@@ -89,3 +89,13 @@ func (r *MissingAuthenticationSecondFactorRule) GenerateRisks(input *types.Parse
 	}
 	return risks
 }
+
+func (r *MissingAuthenticationSecondFactorRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
+	// todo
+	return false
+}
+
+func (r *MissingAuthenticationSecondFactorRule) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
+	// todo
+	return nil
+}

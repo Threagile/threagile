@@ -25,7 +25,7 @@ func (what *Threagile) initList() *Threagile {
 			cmd.Println("----------------------")
 			customRiskRules := model.LoadCustomRiskRules(strings.Split(what.flags.customRiskRulesPluginFlag, ","), common.DefaultProgressReporter{Verbose: what.flags.verboseFlag})
 			for id, customRule := range customRiskRules {
-				cmd.Println(id, "-->", customRule.Category.Title, "--> with tags:", customRule.Tags)
+				cmd.Println(id, "-->", customRule.Category().Title, "--> with tags:", customRule.SupportedTags())
 			}
 			cmd.Println()
 			cmd.Println("--------------------")
@@ -58,8 +58,8 @@ func (what *Threagile) initList() *Threagile {
 			cmd.Println("----------------------")
 			cmd.Println("Built-in model macros:")
 			cmd.Println("----------------------")
-			for _, macros := range macros.ListBuiltInMacros() {
-				details := macros.GetMacroDetails()
+			for _, macroList := range macros.ListBuiltInMacros() {
+				details := macroList.GetMacroDetails()
 				cmd.Println(details.ID, "-->", details.Title)
 			}
 			cmd.Println()

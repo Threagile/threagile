@@ -5,6 +5,7 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package threagile
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -123,7 +124,7 @@ func (what *Threagile) run(cmd *cobra.Command, _ []string) {
 
 	for {
 		line, readError := shell.Readline()
-		if readError == readline.ErrInterrupt {
+		if errors.Is(readError, readline.ErrInterrupt) {
 			return
 		}
 		if readError != nil {

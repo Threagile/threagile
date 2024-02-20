@@ -146,3 +146,13 @@ func (r *UnnecessaryDataTransferRule) createRisk(technicalAsset types.TechnicalA
 	risk.SyntheticId = risk.CategoryId + "@" + dataAssetTransferred.Id + "@" + technicalAsset.Id + "@" + commPartnerAsset.Id
 	return risk
 }
+
+func (r *UnnecessaryDataTransferRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
+	// todo
+	return false
+}
+
+func (r *UnnecessaryDataTransferRule) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
+	// todo
+	return nil
+}

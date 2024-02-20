@@ -16,7 +16,7 @@ technical_assets:
       - linux
     internet: false
     machine: physical # values: physical, virtual, container, serverless
-    encryption: transparent # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-enduser-individual-key
+    encryption: transparent # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-end-user-individual-key
     owner: Company ABC
     confidentiality: confidential # values: public, internal, restricted, confidential, strictly-confidential
     integrity: critical # values: archive, operational, important, critical, mission-critical
@@ -50,7 +50,7 @@ technical_assets:
       - mysql
     internet: false
     machine: virtual # values: physical, virtual, container, serverless
-    encryption: data-with-symmetric-shared-key # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-enduser-individual-key
+    encryption: data-with-symmetric-shared-key # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-end-user-individual-key
     owner: Company ABC
     confidentiality: strictly-confidential # values: public, internal, restricted, confidential, strictly-confidential
     integrity: mission-critical # values: archive, operational, important, critical, mission-critical

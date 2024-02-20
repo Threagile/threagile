@@ -73,3 +73,13 @@ func (r *ContainerBaseImageBackdooringRule) createRisk(parsedModel *types.Parsed
 	risk.SyntheticId = risk.CategoryId + "@" + technicalAsset.Id
 	return risk
 }
+
+func (r *ContainerBaseImageBackdooringRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
+	// todo
+	return false
+}
+
+func (r *ContainerBaseImageBackdooringRule) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
+	// todo
+	return nil
+}

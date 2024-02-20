@@ -89,3 +89,13 @@ func (r *WrongCommunicationLinkContentRule) createRisk(technicalAsset types.Tech
 	risk.SyntheticId = risk.CategoryId + "@" + technicalAsset.Id + "@" + commLink.Id
 	return risk
 }
+
+func (r *WrongCommunicationLinkContentRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
+	// todo
+	return false
+}
+
+func (r *WrongCommunicationLinkContentRule) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
+	// todo
+	return nil
+}

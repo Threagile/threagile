@@ -22,8 +22,8 @@ abuse_cases:
   Cross-Site Scripting Attacks: >
     As a hacker I want to execute Cross-Site Scripting (XSS) and similar attacks in order to takeover victim sessions and
     cause reputational damage.
-  Denial-of-Service of Enduser Functionality: >
-    As a hacker I want to disturb the functionality of the enduser parts of the application in order to cause direct financial
+  Denial-of-Service of End-User Functionality: >
+    As a hacker I want to disturb the functionality of the end-user parts of the application in order to cause direct financial
     damage (lower sales).
   Denial-of-Service of ERP/DB Functionality: >
     As a hacker I want to disturb the functionality of the ERP system and/or it's database in order to cause indirect

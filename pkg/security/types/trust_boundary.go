@@ -109,6 +109,7 @@ func (what TrustBoundary) addTrustBoundaryIDsRecursively(model *ParsedModel, res
 }
 
 // as in Go ranging over map is random order, range over them in sorted (hence reproducible) way:
+
 func SortedKeysOfTrustBoundaries(model *ParsedModel) []string {
 	keys := make([]string, 0)
 	for k := range model.TrustBoundaries {

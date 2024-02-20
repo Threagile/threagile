@@ -37,7 +37,7 @@ individual_risk_categories: # used for adding custom manually identified risks
         data_breach_probability: improbable # values: improbable, possible, probable
         data_breach_technical_assets: # list of technical asset IDs which might have data breach
         most_relevant_data_asset:
-        most_relevant_technical_asset: contract-fileserver
+        most_relevant_technical_asset: contract-file-server
         most_relevant_communication_link:
         most_relevant_trust_boundary:
         most_relevant_shared_runtime:

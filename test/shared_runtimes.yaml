@@ -11,6 +11,6 @@ shared_runtimes:
       - apache-webserver
       - marketing-cms
       - erp-system
-      - contract-fileserver
+      - contract-file-server
       - sql-database
 

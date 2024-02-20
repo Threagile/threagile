@@ -26,11 +26,7 @@ func main() {
 	if *getInfo {
 		rule := new(customRiskRule)
 		category := rule.Category()
-		riskData, marshalError := json.Marshal(model.CustomRisk{
-			ID:       category.Id,
-			Category: category,
-			Tags:     rule.SupportedTags(),
-		})
+		riskData, marshalError := json.Marshal(new(model.CustomRisk).Init(category.Id, category, rule.SupportedTags()))
 
 		if marshalError != nil {
 			_, _ = fmt.Fprintf(os.Stderr, "failed to print risk data: %v", marshalError)

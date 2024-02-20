@@ -100,3 +100,13 @@ func (r *MissingBuildInfrastructureRule) createRisk(technicalAsset types.Technic
 	risk.SyntheticId = risk.CategoryId + "@" + technicalAsset.Id
 	return risk
 }
+
+func (r *MissingBuildInfrastructureRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
+	// todo
+	return false
+}
+
+func (r *MissingBuildInfrastructureRule) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
+	// todo
+	return nil
+}

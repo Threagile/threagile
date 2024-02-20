@@ -71,3 +71,13 @@ func (r *CrossSiteScriptingRule) createRisk(parsedModel *types.ParsedModel, tech
 	risk.SyntheticId = risk.CategoryId + "@" + technicalAsset.Id
 	return risk
 }
+
+func (r *CrossSiteScriptingRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
+	// todo
+	return false
+}
+
+func (r *CrossSiteScriptingRule) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
+	// todo
+	return nil
+}

@@ -99,3 +99,13 @@ func (r *MissingIdentityStoreRule) createRisk(technicalAsset types.TechnicalAsse
 	risk.SyntheticId = risk.CategoryId + "@" + technicalAsset.Id
 	return risk
 }
+
+func (r *MissingIdentityStoreRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
+	// todo
+	return false
+}
+
+func (r *MissingIdentityStoreRule) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
+	// todo
+	return nil
+}

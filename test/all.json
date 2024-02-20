@@ -30,7 +30,7 @@
     "Database Compromise": "As a hacker I want to access the database backend of the ERP-System in order to steal/modify sensitive business data.\n",
     "Denial-of-Service": "As a hacker I want to disturb the functionality of the backend system in order to cause indirect financial damage via unusable features.\n",
     "Denial-of-Service of ERP/DB Functionality": "As a hacker I want to disturb the functionality of the ERP system and/or it's database in order to cause indirect financial damage via unusable internal ERP features (not related to customer portal).\n",
-    "Denial-of-Service of Enduser Functionality": "As a hacker I want to disturb the functionality of the enduser parts of the application in order to cause direct financial damage (lower sales).\n",
+    "Denial-of-Service of End-User Functionality": "As a hacker I want to disturb the functionality of the end-user parts of the application in order to cause direct financial damage (lower sales).\n",
     "ERP-System Compromise": "As a hacker I want to access the ERP-System in order to steal/modify sensitive business data.\n",
     "Identity Theft": "As a hacker I want to steal identity data in order to reuse credentials and/or keys on other targets of the same company or outside.\n",
     "PII Theft": "As a hacker I want to steal PII (Personally Identifiable Information) data in order to blackmail the company and/or damage their repudiation by publishing them.\n",
@@ -386,7 +386,7 @@
           ],
           "vpn": true,
           "authentication": "token",
-          "authorization": "enduser-identity-propagation",
+          "authorization": "end-user-identity-propagation",
           "data_assets_sent": [
             "internal-business-data"
           ],
@@ -406,7 +406,7 @@
           "protocol": "https",
           "vpn": true,
           "authentication": "token",
-          "authorization": "enduser-identity-propagation",
+          "authorization": "end-user-identity-propagation",
           "data_assets_sent": [
             "marketing-material"
           ],
@@ -418,8 +418,8 @@
         }
       ]
     },
-    "contract-fileserver": {
-      "id": "contract-fileserver",
+    "contract-file-server": {
+      "id": "contract-file-server",
       "title": "Contract Fileserver",
       "description": "NFS Filesystem for storing the contract PDFs",
       "type": "datastore",
@@ -452,7 +452,7 @@
       "internet": true,
       "out_of_scope": true,
       "used_as_client_by_human": true,
-      "justification_out_of_scope": "Owned and managed by enduser customer",
+      "justification_out_of_scope": "Owned and managed by end-user customer",
       "owner": "Customer",
       "confidentiality": "internal",
       "integrity": "operational",
@@ -474,7 +474,7 @@
           "description": "Link to the load balancer",
           "protocol": "https",
           "authentication": "session-id",
-          "authorization": "enduser-identity-propagation",
+          "authorization": "end-user-identity-propagation",
           "data_assets_sent": [
             "customer-accounts",
             "customer-operational-data"
@@ -548,7 +548,7 @@
         {
           "id": "erp-system\u003enfs-filesystem-access",
           "source_id": "erp-system",
-          "target_id": "contract-fileserver",
+          "target_id": "contract-file-server",
           "title": "NFS Filesystem Access",
           "description": "Link to the file system",
           "protocol": "nfs",
@@ -639,7 +639,7 @@
         {
           "id": "external-dev-client\u003ejenkins-web-ui-access",
           "source_id": "external-dev-client",
-          "target_id": "jenkins-buildserver",
+          "target_id": "jenkins-build-server",
           "title": "Jenkins Web-UI Access",
           "description": "Link to the Jenkins build server",
           "protocol": "https",
@@ -726,10 +726,10 @@
         }
       ]
     },
-    "jenkins-buildserver": {
-      "id": "jenkins-buildserver",
+    "jenkins-build-server": {
+      "id": "jenkins-build-server",
       "title": "Jenkins Buildserver",
-      "description": "Jenkins buildserver",
+      "description": "Jenkins build-server",
       "usage": "devops",
       "type": "process",
       "technology": "build-pipeline",
@@ -762,8 +762,8 @@
       ],
       "communication_links": [
         {
-          "id": "jenkins-buildserver\u003egit-repo-code-read-access",
-          "source_id": "jenkins-buildserver",
+          "id": "jenkins-build-server\u003egit-repo-code-read-access",
+          "source_id": "jenkins-build-server",
           "target_id": "git-repo",
           "title": "Git Repo Code Read Access",
           "description": "Link to the Git repository server",
@@ -780,8 +780,8 @@
           "diagram_tweak_constraint": true
         },
         {
-          "id": "jenkins-buildserver\u003eapplication-deployment",
-          "source_id": "jenkins-buildserver",
+          "id": "jenkins-build-server\u003eapplication-deployment",
+          "source_id": "jenkins-build-server",
           "target_id": "apache-webserver",
           "title": "Application Deployment",
           "description": "Link to the Apache webserver",
@@ -797,8 +797,8 @@
           "diagram_tweak_constraint": true
         },
         {
-          "id": "jenkins-buildserver\u003ecms-updates",
-          "source_id": "jenkins-buildserver",
+          "id": "jenkins-build-server\u003ecms-updates",
+          "source_id": "jenkins-build-server",
           "target_id": "marketing-cms",
           "title": "CMS Updates",
           "description": "Link to the CMS",
@@ -866,7 +866,7 @@
           "description": "Link to the web server",
           "protocol": "http",
           "authentication": "session-id",
-          "authorization": "enduser-identity-propagation",
+          "authorization": "end-user-identity-propagation",
           "data_assets_sent": [
             "customer-accounts",
             "customer-operational-data"
@@ -1003,7 +1003,7 @@
       "title": "Dev Network",
       "description": "Development Network",
       "technical_assets_inside": [
-        "jenkins-buildserver",
+        "jenkins-build-server",
         "git-repo",
         "backend-admin-client",
         "backoffice-client"
@@ -1019,7 +1019,7 @@
       ],
       "technical_assets_inside": [
         "erp-system",
-        "contract-fileserver",
+        "contract-file-server",
         "sql-database"
       ]
     },
@@ -1046,7 +1046,7 @@
         "apache-webserver",
         "marketing-cms",
         "erp-system",
-        "contract-fileserver",
+        "contract-file-server",
         "sql-database"
       ]
     }
@@ -1590,7 +1590,7 @@
       "action": "Encryption of Technical Asset",
       "mitigation": "Apply encryption to the technical asset.",
       "check": "Are recommendations from the linked cheat sheet and referenced ASVS chapter applied?",
-      "detection_logic": "In-scope unencrypted technical assets (excluding reverse-proxy, load-balancer, waf, ids, ips and embedded components like library) storing data assets rated at least as confidential or critical. For technical assets storing data assets rated as strictly-confidential or mission-critical the encryption must be of type data-with-enduser-individual-key.",
+      "detection_logic": "In-scope unencrypted technical assets (excluding reverse-proxy, load-balancer, waf, ids, ips and embedded components like library) storing data assets rated at least as confidential or critical. For technical assets storing data assets rated as strictly-confidential or mission-critical the encryption must be of type data-with-end-user-individual-key.",
       "risk_assessment": "Depending on the confidentiality rating of the stored data-assets either medium or high risk.",
       "false_positives": "When all sensitive data stored within the asset is already fully encrypted on document or data level.",
       "function": "operations",
@@ -1952,7 +1952,7 @@
       ],
       "vpn": true,
       "authentication": "token",
-      "authorization": "enduser-identity-propagation",
+      "authorization": "end-user-identity-propagation",
       "data_assets_sent": [
         "internal-business-data"
       ],
@@ -1972,7 +1972,7 @@
       "protocol": "https",
       "vpn": true,
       "authentication": "token",
-      "authorization": "enduser-identity-propagation",
+      "authorization": "end-user-identity-propagation",
       "data_assets_sent": [
         "marketing-material"
       ],
@@ -1990,7 +1990,7 @@
       "description": "Link to the load balancer",
       "protocol": "https",
       "authentication": "session-id",
-      "authorization": "enduser-identity-propagation",
+      "authorization": "end-user-identity-propagation",
       "data_assets_sent": [
         "customer-accounts",
         "customer-operational-data"
@@ -2030,7 +2030,7 @@
     "erp-system\u003enfs-filesystem-access": {
       "id": "erp-system\u003enfs-filesystem-access",
       "source_id": "erp-system",
-      "target_id": "contract-fileserver",
+      "target_id": "contract-file-server",
       "title": "NFS Filesystem Access",
       "description": "Link to the file system",
       "protocol": "nfs",
@@ -2088,7 +2088,7 @@
     "external-dev-client\u003ejenkins-web-ui-access": {
       "id": "external-dev-client\u003ejenkins-web-ui-access",
       "source_id": "external-dev-client",
-      "target_id": "jenkins-buildserver",
+      "target_id": "jenkins-build-server",
       "title": "Jenkins Web-UI Access",
       "description": "Link to the Jenkins build server",
       "protocol": "https",
@@ -2119,9 +2119,9 @@
       "diagram_tweak_weight": 1,
       "diagram_tweak_constraint": true
     },
-    "jenkins-buildserver\u003eapplication-deployment": {
-      "id": "jenkins-buildserver\u003eapplication-deployment",
-      "source_id": "jenkins-buildserver",
+    "jenkins-build-server\u003eapplication-deployment": {
+      "id": "jenkins-build-server\u003eapplication-deployment",
+      "source_id": "jenkins-build-server",
       "target_id": "apache-webserver",
       "title": "Application Deployment",
       "description": "Link to the Apache webserver",
@@ -2136,9 +2136,9 @@
       "diagram_tweak_weight": 1,
       "diagram_tweak_constraint": true
     },
-    "jenkins-buildserver\u003ecms-updates": {
-      "id": "jenkins-buildserver\u003ecms-updates",
-      "source_id": "jenkins-buildserver",
+    "jenkins-build-server\u003ecms-updates": {
+      "id": "jenkins-build-server\u003ecms-updates",
+      "source_id": "jenkins-build-server",
       "target_id": "marketing-cms",
       "title": "CMS Updates",
       "description": "Link to the CMS",
@@ -2152,9 +2152,9 @@
       "diagram_tweak_weight": 1,
       "diagram_tweak_constraint": true
     },
-    "jenkins-buildserver\u003egit-repo-code-read-access": {
-      "id": "jenkins-buildserver\u003egit-repo-code-read-access",
-      "source_id": "jenkins-buildserver",
+    "jenkins-build-server\u003egit-repo-code-read-access": {
+      "id": "jenkins-build-server\u003egit-repo-code-read-access",
+      "source_id": "jenkins-build-server",
       "target_id": "git-repo",
       "title": "Git Repo Code Read Access",
       "description": "Link to the Git repository server",
@@ -2192,7 +2192,7 @@
       "description": "Link to the web server",
       "protocol": "http",
       "authentication": "session-id",
-      "authorization": "enduser-identity-propagation",
+      "authorization": "end-user-identity-propagation",
       "data_assets_sent": [
         "customer-accounts",
         "customer-operational-data"
@@ -2238,7 +2238,7 @@
         "description": "Link to the web server",
         "protocol": "http",
         "authentication": "session-id",
-        "authorization": "enduser-identity-propagation",
+        "authorization": "end-user-identity-propagation",
         "data_assets_sent": [
           "customer-accounts",
           "customer-operational-data"
@@ -2253,8 +2253,8 @@
         "diagram_tweak_constraint": true
       },
       {
-        "id": "jenkins-buildserver\u003eapplication-deployment",
-        "source_id": "jenkins-buildserver",
+        "id": "jenkins-build-server\u003eapplication-deployment",
+        "source_id": "jenkins-build-server",
         "target_id": "apache-webserver",
         "title": "Application Deployment",
         "description": "Link to the Apache webserver",
@@ -2270,11 +2270,11 @@
         "diagram_tweak_constraint": true
       }
     ],
-    "contract-fileserver": [
+    "contract-file-server": [
       {
         "id": "erp-system\u003enfs-filesystem-access",
         "source_id": "erp-system",
-        "target_id": "contract-fileserver",
+        "target_id": "contract-file-server",
         "title": "NFS Filesystem Access",
         "description": "Link to the file system",
         "protocol": "nfs",
@@ -2320,7 +2320,7 @@
         ],
         "vpn": true,
         "authentication": "token",
-        "authorization": "enduser-identity-propagation",
+        "authorization": "end-user-identity-propagation",
         "data_assets_sent": [
           "internal-business-data"
         ],
@@ -2399,8 +2399,8 @@
         "diagram_tweak_constraint": true
       },
       {
-        "id": "jenkins-buildserver\u003egit-repo-code-read-access",
-        "source_id": "jenkins-buildserver",
+        "id": "jenkins-build-server\u003egit-repo-code-read-access",
+        "source_id": "jenkins-build-server",
         "target_id": "git-repo",
         "title": "Git Repo Code Read Access",
         "description": "Link to the Git repository server",
@@ -2434,11 +2434,11 @@
         "diagram_tweak_constraint": true
       }
     ],
-    "jenkins-buildserver": [
+    "jenkins-build-server": [
       {
         "id": "external-dev-client\u003ejenkins-web-ui-access",
         "source_id": "external-dev-client",
-        "target_id": "jenkins-buildserver",
+        "target_id": "jenkins-build-server",
         "title": "Jenkins Web-UI Access",
         "description": "Link to the Jenkins build server",
         "protocol": "https",
@@ -2519,7 +2519,7 @@
         "description": "Link to the load balancer",
         "protocol": "https",
         "authentication": "session-id",
-        "authorization": "enduser-identity-propagation",
+        "authorization": "end-user-identity-propagation",
         "data_assets_sent": [
           "customer-accounts",
           "customer-operational-data"
@@ -2559,7 +2559,7 @@
         "protocol": "https",
         "vpn": true,
         "authentication": "token",
-        "authorization": "enduser-identity-propagation",
+        "authorization": "end-user-identity-propagation",
         "data_assets_sent": [
           "marketing-material"
         ],
@@ -2570,8 +2570,8 @@
         "diagram_tweak_constraint": true
       },
       {
-        "id": "jenkins-buildserver\u003ecms-updates",
-        "source_id": "jenkins-buildserver",
+        "id": "jenkins-build-server\u003ecms-updates",
+        "source_id": "jenkins-build-server",
         "target_id": "marketing-cms",
         "title": "CMS Updates",
         "description": "Link to the CMS",
@@ -2649,7 +2649,7 @@
       "title": "Dev Network",
       "description": "Development Network",
       "technical_assets_inside": [
-        "jenkins-buildserver",
+        "jenkins-build-server",
         "git-repo",
         "backend-admin-client",
         "backoffice-client"
@@ -2660,13 +2660,13 @@
       "title": "Dev Network",
       "description": "Development Network",
       "technical_assets_inside": [
-        "jenkins-buildserver",
+        "jenkins-build-server",
         "git-repo",
         "backend-admin-client",
         "backoffice-client"
       ]
     },
-    "contract-fileserver": {
+    "contract-file-server": {
       "id": "erp-dmz",
       "title": "ERP DMZ",
       "description": "ERP DMZ",
@@ -2676,7 +2676,7 @@
       ],
       "technical_assets_inside": [
         "erp-system",
-        "contract-fileserver",
+        "contract-file-server",
         "sql-database"
       ]
     },
@@ -2690,7 +2690,7 @@
       ],
       "technical_assets_inside": [
         "erp-system",
-        "contract-fileserver",
+        "contract-file-server",
         "sql-database"
       ]
     },
@@ -2699,7 +2699,7 @@
       "title": "Dev Network",
       "description": "Development Network",
       "technical_assets_inside": [
-        "jenkins-buildserver",
+        "jenkins-build-server",
         "git-repo",
         "backend-admin-client",
         "backoffice-client"
@@ -2715,12 +2715,12 @@
         "ldap-auth-server"
       ]
     },
-    "jenkins-buildserver": {
+    "jenkins-build-server": {
       "id": "dev-network",
       "title": "Dev Network",
       "description": "Development Network",
       "technical_assets_inside": [
-        "jenkins-buildserver",
+        "jenkins-build-server",
         "git-repo",
         "backend-admin-client",
         "backoffice-client"
@@ -2773,7 +2773,7 @@
       ],
       "technical_assets_inside": [
         "erp-system",
-        "contract-fileserver",
+        "contract-file-server",
         "sql-database"
       ]
     }
@@ -2799,8 +2799,8 @@
         "exploitation_likelihood": "frequent",
         "exploitation_impact": "very-high",
         "title": "\u003cb\u003eExample Individual Risk\u003c/b\u003e at \u003cb\u003eContract Filesystem\u003c/b\u003e",
-        "synthetic_id": "something-strange@contract-fileserver",
-        "most_relevant_technical_asset": "contract-fileserver"
+        "synthetic_id": "something-strange@contract-file-server",
+        "most_relevant_technical_asset": "contract-file-server"
       }
     ]
   }

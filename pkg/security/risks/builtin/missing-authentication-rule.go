@@ -102,3 +102,13 @@ func (r *MissingAuthenticationRule) createRisk(input *types.ParsedModel, technic
 	risk.SyntheticId = risk.CategoryId + "@" + incomingAccess.Id + "@" + input.TechnicalAssets[incomingAccess.SourceId].Id + "@" + technicalAsset.Id
 	return risk
 }
+
+func (r *MissingAuthenticationRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
+	// todo
+	return false
+}
+
+func (r *MissingAuthenticationRule) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
+	// todo
+	return nil
+}

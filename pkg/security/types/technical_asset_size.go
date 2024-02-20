@@ -46,13 +46,7 @@ func (what TechnicalAssetSize) Explain() string {
 }
 
 func ParseTechnicalAssetSize(value string) (technicalAssetSize TechnicalAssetSize, err error) {
-	value = strings.TrimSpace(value)
-	for _, candidate := range TechnicalAssetSizeValues() {
-		if candidate.String() == value {
-			return candidate.(TechnicalAssetSize), err
-		}
-	}
-	return technicalAssetSize, fmt.Errorf("unable to parse into type: %v", value)
+	return TechnicalAssetSize(0).Find(value)
 }
 
 func (what TechnicalAssetSize) MarshalJSON() ([]byte, error) {
@@ -66,7 +60,7 @@ func (what *TechnicalAssetSize) UnmarshalJSON(data []byte) error {
 		return unmarshalError
 	}
 
-	value, findError := what.find(text)
+	value, findError := what.Find(text)
 	if findError != nil {
 		return findError
 	}
@@ -80,7 +74,7 @@ func (what TechnicalAssetSize) MarshalYAML() (interface{}, error) {
 }
 
 func (what *TechnicalAssetSize) UnmarshalYAML(node *yaml.Node) error {
-	value, findError := what.find(node.Value)
+	value, findError := what.Find(node.Value)
 	if findError != nil {
 		return findError
 	}
@@ -89,7 +83,7 @@ func (what *TechnicalAssetSize) UnmarshalYAML(node *yaml.Node) error {
 	return nil
 }
 
-func (what TechnicalAssetSize) find(value string) (TechnicalAssetSize, error) {
+func (what TechnicalAssetSize) Find(value string) (TechnicalAssetSize, error) {
 	for index, description := range TechnicalAssetSizeDescription {
 		if strings.EqualFold(value, description.Name) {
 			return TechnicalAssetSize(index), nil

@@ -260,12 +260,12 @@ func WriteDataFlowDiagramGraphvizDOT(parsedModel *types.ParsedModel,
 	// Write the DOT file
 	file, err := os.Create(filepath.Clean(diagramFilenameDOT))
 	if err != nil {
-		return nil, fmt.Errorf("Error creating %s: %v", diagramFilenameDOT, err)
+		return nil, fmt.Errorf("error creating %s: %v", diagramFilenameDOT, err)
 	}
 	defer func() { _ = file.Close() }()
 	_, err = fmt.Fprintln(file, dotContent.String())
 	if err != nil {
-		return nil, fmt.Errorf("Error writing %s: %v", diagramFilenameDOT, err)
+		return nil, fmt.Errorf("error writing %s: %v", diagramFilenameDOT, err)
 	}
 	return file, nil
 }
@@ -399,24 +399,24 @@ func GenerateDataFlowDiagramGraphvizImage(dotFile *os.File, targetDir string,
 	// tmp files
 	tmpFileDOT, err := os.CreateTemp(tempFolder, "diagram-*-.gv")
 	if err != nil {
-		return fmt.Errorf("Error creating temp file: %v", err)
+		return fmt.Errorf("error creating temp file: %v", err)
 	}
 	defer func() { _ = os.Remove(tmpFileDOT.Name()) }()
 
 	tmpFilePNG, err := os.CreateTemp(tempFolder, "diagram-*-.png")
 	if err != nil {
-		return fmt.Errorf("Error creating temp file: %v", err)
+		return fmt.Errorf("error creating temp file: %v", err)
 	}
 	defer func() { _ = os.Remove(tmpFilePNG.Name()) }()
 
 	// copy into tmp file as input
 	inputDOT, err := os.ReadFile(dotFile.Name())
 	if err != nil {
-		return fmt.Errorf("Error reading %s: %v", dotFile.Name(), err)
+		return fmt.Errorf("error reading %s: %v", dotFile.Name(), err)
 	}
 	err = os.WriteFile(tmpFileDOT.Name(), inputDOT, 0600)
 	if err != nil {
-		return fmt.Errorf("Error creating %s: %v", tmpFileDOT.Name(), err)
+		return fmt.Errorf("error creating %s: %v", tmpFileDOT.Name(), err)
 	}
 
 	// exec
@@ -570,12 +570,12 @@ func WriteDataAssetDiagramGraphvizDOT(parsedModel *types.ParsedModel, diagramFil
 	// Write the DOT file
 	file, err := os.Create(filepath.Clean(diagramFilenameDOT))
 	if err != nil {
-		return nil, fmt.Errorf("Error creating %s: %v", diagramFilenameDOT, err)
+		return nil, fmt.Errorf("error creating %s: %v", diagramFilenameDOT, err)
 	}
 	defer func() { _ = file.Close() }()
 	_, err = fmt.Fprintln(file, dotContent.String())
 	if err != nil {
-		return nil, fmt.Errorf("Error writing %s: %v", diagramFilenameDOT, err)
+		return nil, fmt.Errorf("error writing %s: %v", diagramFilenameDOT, err)
 	}
 	return file, nil
 }
@@ -834,24 +834,24 @@ func GenerateDataAssetDiagramGraphvizImage(dotFile *os.File, targetDir string,
 	// tmp files
 	tmpFileDOT, err := os.CreateTemp(tempFolder, "diagram-*-.gv")
 	if err != nil {
-		return fmt.Errorf("Error creating temp file: %v", err)
+		return fmt.Errorf("error creating temp file: %v", err)
 	}
 	defer func() { _ = os.Remove(tmpFileDOT.Name()) }()
 
 	tmpFilePNG, err := os.CreateTemp(tempFolder, "diagram-*-.png")
 	if err != nil {
-		return fmt.Errorf("Error creating temp file: %v", err)
+		return fmt.Errorf("error creating temp file: %v", err)
 	}
 	defer func() { _ = os.Remove(tmpFilePNG.Name()) }()
 
 	// copy into tmp file as input
 	inputDOT, err := os.ReadFile(dotFile.Name())
 	if err != nil {
-		return fmt.Errorf("Error reading %s: %v", dotFile.Name(), err)
+		return fmt.Errorf("error reading %s: %v", dotFile.Name(), err)
 	}
 	err = os.WriteFile(tmpFileDOT.Name(), inputDOT, 0600)
 	if err != nil {
-		return fmt.Errorf("Error creating %s: %v", tmpFileDOT.Name(), err)
+		return fmt.Errorf("error creating %s: %v", tmpFileDOT.Name(), err)
 	}
 
 	// exec

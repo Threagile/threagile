@@ -231,7 +231,7 @@ func (r *pdfReporter) createTableOfContents(parsedModel *types.ParsedModel) {
 		risksStr = "Risk"
 	}
 	if catCount == 1 {
-		catStr = "Category"
+		catStr = "category"
 	}
 	y += 6
 	r.pdf.Text(11, y, "    "+"Impact Analysis of "+strconv.Itoa(count)+" Initial "+risksStr+" in "+strconv.Itoa(catCount)+" "+catStr)
@@ -253,7 +253,7 @@ func (r *pdfReporter) createTableOfContents(parsedModel *types.ParsedModel) {
 		risksStr = "Risk"
 	}
 	if catCount == 1 {
-		catStr = "Category"
+		catStr = "category"
 	}
 	r.pdf.Text(11, y, "    "+"Impact Analysis of "+strconv.Itoa(count)+" Remaining "+risksStr+" in "+strconv.Itoa(catCount)+" "+catStr)
 	r.pdf.Text(175, y, "{impact-analysis-remaining-risks}")
@@ -381,10 +381,10 @@ func (r *pdfReporter) createTableOfContents(parsedModel *types.ParsedModel) {
 		}
 		r.pdf.SetFont("Helvetica", "B", fontSizeBody)
 		r.pdf.SetTextColor(0, 0, 0)
-		r.pdf.Text(11, y, "Risks by Vulnerability Category")
+		r.pdf.Text(11, y, "Risks by Vulnerability category")
 		r.pdf.SetFont("Helvetica", "", fontSizeBody)
 		y += 6
-		r.pdf.Text(11, y, "    "+"Identified Risks by Vulnerability Category")
+		r.pdf.Text(11, y, "    "+"Identified Risks by Vulnerability category")
 		r.pdf.Text(175, y, "{intro-risks-by-vulnerability-category}")
 		r.pdf.Line(15.6, y+1.3, 11+171.5, y+1.3)
 		r.pdf.Link(10, y-5, 172.5, 6.5, r.pdf.AddLink())
@@ -1293,7 +1293,7 @@ func (r *pdfReporter) renderImpactAnalysis(parsedModel *types.ParsedModel, initi
 		riskStr = "Risk"
 	}
 	if catCount == 1 {
-		catStr = "Category"
+		catStr = "category"
 	}
 	if initialRisks {
 		chapTitle := "Impact Analysis of " + strconv.Itoa(count) + " Initial " + riskStr + " in " + strconv.Itoa(catCount) + " " + catStr
@@ -2295,7 +2295,7 @@ func sortedTechnicalAssetsByTitle(parsedModel *types.ParsedModel) []types.Techni
 func (r *pdfReporter) createRiskCategories(parsedModel *types.ParsedModel) {
 	uni := r.pdf.UnicodeTranslatorFromDescriptor("")
 	// category title
-	title := "Identified Risks by Vulnerability Category"
+	title := "Identified Risks by Vulnerability category"
 	r.pdfColorBlack()
 	r.addHeadline(title, false)
 	r.defineLinkTarget("{intro-risks-by-vulnerability-category}")
@@ -4043,7 +4043,7 @@ func (r *pdfReporter) createRiskRulesChecked(parsedModel *types.ParsedModel, mod
 		} else {
 			skipped = ""
 		}
-		r.pdf.CellFormat(190, 3, skipped+customRule.Category.Title, "0", 0, "", false, 0, "")
+		r.pdf.CellFormat(190, 3, skipped+customRule.Category().Title, "0", 0, "", false, 0, "")
 		r.pdf.Ln(-1)
 		r.pdf.SetFont("Helvetica", "", fontSizeSmall)
 		r.pdf.CellFormat(190, 6, id, "0", 0, "", false, 0, "")
@@ -4056,22 +4056,22 @@ func (r *pdfReporter) createRiskRulesChecked(parsedModel *types.ParsedModel, mod
 		r.pdf.CellFormat(5, 6, "", "0", 0, "", false, 0, "")
 		r.pdf.CellFormat(25, 6, "STRIDE:", "0", 0, "", false, 0, "")
 		r.pdfColorBlack()
-		r.pdf.MultiCell(160, 6, customRule.Category.STRIDE.Title(), "0", "0", false)
+		r.pdf.MultiCell(160, 6, customRule.Category().STRIDE.Title(), "0", "0", false)
 		r.pdfColorGray()
 		r.pdf.CellFormat(5, 6, "", "0", 0, "", false, 0, "")
 		r.pdf.CellFormat(25, 6, "Description:", "0", 0, "", false, 0, "")
 		r.pdfColorBlack()
-		r.pdf.MultiCell(160, 6, firstParagraph(customRule.Category.Description), "0", "0", false)
+		r.pdf.MultiCell(160, 6, firstParagraph(customRule.Category().Description), "0", "0", false)
 		r.pdfColorGray()
 		r.pdf.CellFormat(5, 6, "", "0", 0, "", false, 0, "")
 		r.pdf.CellFormat(25, 6, "Detection:", "0", 0, "", false, 0, "")
 		r.pdfColorBlack()
-		r.pdf.MultiCell(160, 6, customRule.Category.DetectionLogic, "0", "0", false)
+		r.pdf.MultiCell(160, 6, customRule.Category().DetectionLogic, "0", "0", false)
 		r.pdfColorGray()
 		r.pdf.CellFormat(5, 6, "", "0", 0, "", false, 0, "")
 		r.pdf.CellFormat(25, 6, "Rating:", "0", 0, "", false, 0, "")
 		r.pdfColorBlack()
-		r.pdf.MultiCell(160, 6, customRule.Category.RiskAssessment, "0", "0", false)
+		r.pdf.MultiCell(160, 6, customRule.Category().RiskAssessment, "0", "0", false)
 	}
 
 	for _, key := range sortedKeysOfIndividualRiskCategories(parsedModel) {
@@ -4084,7 +4084,7 @@ func (r *pdfReporter) createRiskRulesChecked(parsedModel *types.ParsedModel, mod
 		r.pdf.CellFormat(190, 6, individualRiskCategory.Id, "0", 0, "", false, 0, "")
 		r.pdf.Ln(-1)
 		r.pdf.SetFont("Helvetica", "I", fontSizeBody)
-		r.pdf.CellFormat(190, 6, "Individual Risk Category", "0", 0, "", false, 0, "")
+		r.pdf.CellFormat(190, 6, "Individual Risk category", "0", 0, "", false, 0, "")
 		r.pdf.Ln(-1)
 		r.pdf.SetFont("Helvetica", "", fontSizeBody)
 		r.pdfColorGray()

@@ -9,6 +9,7 @@ require (
 	github.com/jung-kurt/gofpdf v1.16.2
 	github.com/mattn/go-shellwords v1.0.12
 	github.com/mpvl/unique v0.0.0-20150818121801-cbe035fff7de
+	github.com/shopspring/decimal v1.3.1
 	github.com/spf13/pflag v1.0.5
 	github.com/wcharczuk/go-chart v2.0.1+incompatible
 	github.com/xuri/excelize/v2 v2.8.0

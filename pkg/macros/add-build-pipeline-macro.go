@@ -9,7 +9,7 @@ import (
 	"github.com/threagile/threagile/pkg/security/types"
 )
 
-type addBuildPipeline struct {
+type AddBuildPipeline struct {
 	macroState             map[string][]string
 	questionsAnswered      []string
 	codeInspectionUsed     bool
@@ -18,8 +18,8 @@ type addBuildPipeline struct {
 	createNewTrustBoundary bool
 }
 
-func NewBuildPipeline() *addBuildPipeline {
-	return &addBuildPipeline{
+func NewBuildPipeline() *AddBuildPipeline {
+	return &AddBuildPipeline{
 		macroState:        make(map[string][]string),
 		questionsAnswered: make([]string, 0),
 	}
@@ -30,7 +30,7 @@ var pushOrPull = []string{
 	"Pull-based Deployment (deployment target asset fetches deployment from registry)",
 }
 
-func (m *addBuildPipeline) GetMacroDetails() MacroDetails {
+func (m *AddBuildPipeline) GetMacroDetails() MacroDetails {
 	return MacroDetails{
 		ID:    "add-build-pipeline",
 		Title: "Add Build Pipeline",
@@ -41,7 +41,7 @@ func (m *addBuildPipeline) GetMacroDetails() MacroDetails {
 
 // TODO add question for type of machine (either physical, virtual, container, etc.)
 
-func (m *addBuildPipeline) GetNextQuestion(model *types.ParsedModel) (nextQuestion MacroQuestion, err error) {
+func (m *AddBuildPipeline) GetNextQuestion(model *types.ParsedModel) (nextQuestion MacroQuestion, err error) {
 	counter := len(m.questionsAnswered)
 	if counter > 3 && !m.codeInspectionUsed {
 		counter++
@@ -232,7 +232,7 @@ func (m *addBuildPipeline) GetNextQuestion(model *types.ParsedModel) (nextQuesti
 	return NoMoreQuestions(), nil
 }
 
-func (m *addBuildPipeline) ApplyAnswer(questionID string, answer ...string) (message string, validResult bool, err error) {
+func (m *AddBuildPipeline) ApplyAnswer(questionID string, answer ...string) (message string, validResult bool, err error) {
 	m.macroState[questionID] = answer
 	m.questionsAnswered = append(m.questionsAnswered, questionID)
 	if questionID == "code-inspection-used" {
@@ -247,7 +247,7 @@ func (m *addBuildPipeline) ApplyAnswer(questionID string, answer ...string) (mes
 	return "Answer processed", true, nil
 }
 
-func (m *addBuildPipeline) GoBack() (message string, validResult bool, err error) {
+func (m *AddBuildPipeline) GoBack() (message string, validResult bool, err error) {
 	if len(m.questionsAnswered) == 0 {
 		return "Cannot go back further", false, nil
 	}
@@ -257,19 +257,19 @@ func (m *addBuildPipeline) GoBack() (message string, validResult bool, err error
 	return "Undo successful", true, nil
 }
 
-func (m *addBuildPipeline) GetFinalChangeImpact(modelInput *input.Model, model *types.ParsedModel) (changes []string, message string, validResult bool, err error) {
+func (m *AddBuildPipeline) GetFinalChangeImpact(modelInput *input.Model, model *types.ParsedModel) (changes []string, message string, validResult bool, err error) {
 	changeLogCollector := make([]string, 0)
 	message, validResult, err = m.applyChange(modelInput, model, &changeLogCollector, true)
 	return changeLogCollector, message, validResult, err
 }
 
-func (m *addBuildPipeline) Execute(modelInput *input.Model, model *types.ParsedModel) (message string, validResult bool, err error) {
+func (m *AddBuildPipeline) Execute(modelInput *input.Model, model *types.ParsedModel) (message string, validResult bool, err error) {
 	changeLogCollector := make([]string, 0)
 	message, validResult, err = m.applyChange(modelInput, model, &changeLogCollector, false)
 	return message, validResult, err
 }
 
-func (m *addBuildPipeline) applyChange(modelInput *input.Model, parsedModel *types.ParsedModel, changeLogCollector *[]string, dryRun bool) (message string, validResult bool, err error) {
+func (m *AddBuildPipeline) applyChange(modelInput *input.Model, parsedModel *types.ParsedModel, changeLogCollector *[]string, dryRun bool) (message string, validResult bool, err error) {
 	var serverSideTechAssets = make([]string, 0)
 	// ################################################
 	modelInput.AddTagToModelInput(m.macroState["source-repository"][0], dryRun, changeLogCollector)

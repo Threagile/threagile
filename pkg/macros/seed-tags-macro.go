@@ -9,14 +9,14 @@ import (
 	"github.com/threagile/threagile/pkg/security/types"
 )
 
-type seedTagsMacro struct {
+type SeedTagsMacro struct {
 }
 
-func NewSeedTags() *seedTagsMacro {
-	return &seedTagsMacro{}
+func NewSeedTags() *SeedTagsMacro {
+	return &SeedTagsMacro{}
 }
 
-func (*seedTagsMacro) GetMacroDetails() MacroDetails {
+func (*SeedTagsMacro) GetMacroDetails() MacroDetails {
 	return MacroDetails{
 		ID:          "seed-tags",
 		Title:       "Seed Tags",
@@ -24,23 +24,23 @@ func (*seedTagsMacro) GetMacroDetails() MacroDetails {
 	}
 }
 
-func (*seedTagsMacro) GetNextQuestion(parsedModel *types.ParsedModel) (nextQuestion MacroQuestion, err error) {
+func (*SeedTagsMacro) GetNextQuestion(parsedModel *types.ParsedModel) (nextQuestion MacroQuestion, err error) {
 	return NoMoreQuestions(), nil
 }
 
-func (*seedTagsMacro) ApplyAnswer(_ string, _ ...string) (message string, validResult bool, err error) {
+func (*SeedTagsMacro) ApplyAnswer(_ string, _ ...string) (message string, validResult bool, err error) {
 	return "Answer processed", true, nil
 }
 
-func (*seedTagsMacro) GoBack() (message string, validResult bool, err error) {
+func (*SeedTagsMacro) GoBack() (message string, validResult bool, err error) {
 	return "Cannot go back further", false, nil
 }
 
-func (*seedTagsMacro) GetFinalChangeImpact(_ *input.Model, _ *types.ParsedModel) (changes []string, message string, validResult bool, err error) {
+func (*SeedTagsMacro) GetFinalChangeImpact(_ *input.Model, _ *types.ParsedModel) (changes []string, message string, validResult bool, err error) {
 	return []string{"seed the model file with supported tags from all risk rules"}, "Changeset valid", true, err
 }
 
-func (*seedTagsMacro) Execute(modelInput *input.Model, parsedModel *types.ParsedModel) (message string, validResult bool, err error) {
+func (*SeedTagsMacro) Execute(modelInput *input.Model, parsedModel *types.ParsedModel) (message string, validResult bool, err error) {
 	modelInput.TagsAvailable = parsedModel.TagsAvailable
 	for tag := range parsedModel.AllSupportedTags {
 		modelInput.TagsAvailable = append(modelInput.TagsAvailable, tag)

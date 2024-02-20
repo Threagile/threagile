@@ -49,28 +49,23 @@ func (what *Threagile) initCreate() *Threagile {
 		Short: "Create stub threagile model",
 		Long:  "\n" + docs.Logo + "\n\n" + fmt.Sprintf(docs.VersionText, what.buildTimestamp) + "\n\njust create a minimal stub model named threagile-stub-model.yaml in the output directory",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			appDir, err := cmd.Flags().GetString(appDirFlagName)
-			if err != nil {
-				cmd.Printf("Unable to read app-dir flag: %v", err)
-				return err
-			}
-			outDir, err := cmd.Flags().GetString(outputFlagName)
-			if err != nil {
-				cmd.Printf("Unable to read output flag: %v", err)
-				return err
-			}
+			cfg := what.readConfig(cmd, what.buildTimestamp)
 
-			err = examples.CreateStubModelFile(appDir, outDir)
+			err := examples.CreateStubModelFile(cfg.AppFolder, cfg.OutputFolder)
 			if err != nil {
 				cmd.Printf("Unable to copy stub model: %v", err)
 				return err
 			}
 
-			cmd.Println(docs.Logo + "\n\n" + fmt.Sprintf(docs.VersionText, what.buildTimestamp))
-			cmd.Println("A minimal stub model was created named threagile-stub-model.yaml in the output directory.")
-			cmd.Println()
-			cmd.Println(docs.Examples)
-			cmd.Println()
+			if !what.flags.interactiveFlag {
+				cmd.Println(docs.Logo + "\n\n" + fmt.Sprintf(docs.VersionText, what.buildTimestamp))
+			}
+			cmd.Printf("A minimal stub model was created named threagile-stub-model.yaml in %q.\n", cfg.OutputFolder)
+			if !what.flags.interactiveFlag {
+				cmd.Println()
+				cmd.Println(docs.Examples)
+				cmd.Println()
+			}
 			return nil
 		},
 	})

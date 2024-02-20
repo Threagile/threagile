@@ -61,7 +61,7 @@ func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string) erro
 		{"D1", "STRIDE"},
 		{"E1", "Function"},
 		{"F1", "CWE"},
-		{"G1", "Risk Category"},
+		{"G1", "Risk category"},
 		{"H1", "Technical Asset"},
 		{"I1", "Communication Link"},
 		{"J1", "RAA %"},
