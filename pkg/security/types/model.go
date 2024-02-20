@@ -17,6 +17,7 @@ import (
 // TODO: move model out of types package and
 // rename parsedModel to model or something like this to emphasize that it's just a model
 // maybe
+
 type ParsedModel struct {
 	ThreagileVersion                              string                       `yaml:"threagile_version,omitempty" json:"threagile_version,omitempty"`
 	Includes                                      []string                     `yaml:"includes,omitempty" json:"includes,omitempty"`

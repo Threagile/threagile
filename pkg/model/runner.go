@@ -1,4 +1,5 @@
 // TODO: consider moving to internal
+
 package model
 
 import (

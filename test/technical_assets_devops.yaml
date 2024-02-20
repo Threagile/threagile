@@ -18,7 +18,7 @@ technical_assets:
       - linux
     internet: true
     machine: physical # values: physical, virtual, container, serverless
-    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-enduser-individual-key
+    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-end-user-individual-key
     owner: External Developers
     confidentiality: confidential # values: public, internal, restricted, confidential, strictly-confidential
     integrity: critical # values: archive, operational, important, critical, mission-critical
@@ -42,7 +42,7 @@ technical_assets:
         description: Link to the Git repo
         protocol: ssh # values: see help
         authentication: client-certificate # values: none, credentials, session-id, token, client-certificate, two-factor
-        authorization: technical-user # values: none, technical-user, enduser-identity-propagation
+        authorization: technical-user # values: none, technical-user, end-user-identity-propagation
         tags:
         vpn: false
         ip_filtered: false
@@ -61,7 +61,7 @@ technical_assets:
         description: Link to the Git repo
         protocol: https # values: see help
         authentication: token # values: none, credentials, session-id, token, client-certificate, two-factor
-        authorization: technical-user # values: none, technical-user, enduser-identity-propagation
+        authorization: technical-user # values: none, technical-user, end-user-identity-propagation
         tags:
         vpn: false
         ip_filtered: false
@@ -76,11 +76,11 @@ technical_assets:
         #diagram_tweak_weight: 1
         #diagram_tweak_constraint: false
       Jenkins Web-UI Access:
-        target: jenkins-buildserver
+        target: jenkins-build-server
         description: Link to the Jenkins build server
         protocol: https # values: see help
         authentication: credentials # values: none, credentials, session-id, token, client-certificate, two-factor
-        authorization: technical-user # values: none, technical-user, enduser-identity-propagation
+        authorization: technical-user # values: none, technical-user, end-user-identity-propagation
         tags:
         vpn: false
         ip_filtered: false
@@ -110,7 +110,7 @@ technical_assets:
       - git
     internet: false
     machine: virtual # values: physical, virtual, container, serverless
-    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-enduser-individual-key
+    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-end-user-individual-key
     owner: Company ABC
     confidentiality: confidential # values: public, internal, restricted, confidential, strictly-confidential
     integrity: important # values: archive, operational, important, critical, mission-critical
@@ -133,9 +133,9 @@ technical_assets:
 
 
   Jenkins Buildserver:
-    id: jenkins-buildserver
+    id: jenkins-build-server
     #diagram_tweak_order: 99 # affects left to right positioning (only within a trust boundary)
-    description: Jenkins buildserver
+    description: Jenkins build-server
     type: process # values: external-entity, process, datastore
     usage: devops # values: business, devops
     used_as_client_by_human: false
@@ -148,7 +148,7 @@ technical_assets:
       - jenkins
     internet: false
     machine: virtual # values: physical, virtual, container, serverless
-    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-enduser-individual-key
+    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-end-user-individual-key
     owner: Company ABC
     confidentiality: confidential # values: public, internal, restricted, confidential, strictly-confidential
     integrity: critical # values: archive, operational, important, critical, mission-critical
@@ -179,7 +179,7 @@ technical_assets:
         description: Link to the Git repository server
         protocol: ssh # values: see help
         authentication: client-certificate # values: none, credentials, session-id, token, client-certificate, two-factor
-        authorization: technical-user # values: none, technical-user, enduser-identity-propagation
+        authorization: technical-user # values: none, technical-user, end-user-identity-propagation
         tags:
         vpn: false
         ip_filtered: false
@@ -196,7 +196,7 @@ technical_assets:
         description: Link to the Apache webserver
         protocol: ssh # values: see help
         authentication: client-certificate # values: none, credentials, session-id, token, client-certificate, two-factor
-        authorization: technical-user # values: none, technical-user, enduser-identity-propagation
+        authorization: technical-user # values: none, technical-user, end-user-identity-propagation
         tags:
         vpn: false
         ip_filtered: false
@@ -211,7 +211,7 @@ technical_assets:
         description: Link to the CMS
         protocol: ssh # values: see help
         authentication: client-certificate # values: none, credentials, session-id, token, client-certificate, two-factor
-        authorization: technical-user # values: none, technical-user, enduser-identity-propagation
+        authorization: technical-user # values: none, technical-user, end-user-identity-propagation
         tags:
         vpn: false
         ip_filtered: false

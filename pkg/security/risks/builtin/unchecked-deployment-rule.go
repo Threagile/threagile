@@ -94,3 +94,13 @@ func (r *UncheckedDeploymentRule) createRisk(input *types.ParsedModel, technical
 	risk.SyntheticId = risk.CategoryId + "@" + technicalAsset.Id
 	return risk
 }
+
+func (r *UncheckedDeploymentRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
+	// todo
+	return false
+}
+
+func (r *UncheckedDeploymentRule) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
+	// todo
+	return nil
+}

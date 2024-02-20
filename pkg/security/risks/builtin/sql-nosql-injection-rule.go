@@ -82,3 +82,13 @@ func (r *SqlNoSqlInjectionRule) createRisk(input *types.ParsedModel, technicalAs
 	risk.SyntheticId = risk.CategoryId + "@" + caller.Id + "@" + technicalAsset.Id + "@" + incomingFlow.Id
 	return risk
 }
+
+func (r *SqlNoSqlInjectionRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
+	// todo
+	return false
+}
+
+func (r *SqlNoSqlInjectionRule) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
+	// todo
+	return nil
+}

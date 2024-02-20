@@ -85,3 +85,13 @@ func (r *PathTraversalRule) createRisk(input *types.ParsedModel, technicalAsset 
 	risk.SyntheticId = risk.CategoryId + "@" + caller.Id + "@" + technicalAsset.Id + "@" + incomingFlow.Id
 	return risk
 }
+
+func (r *PathTraversalRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
+	// todo
+	return false
+}
+
+func (r *PathTraversalRule) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
+	// todo
+	return nil
+}

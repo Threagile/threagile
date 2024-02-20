@@ -86,3 +86,13 @@ func (r *ContainerPlatformEscapeRule) createRisk(parsedModel *types.ParsedModel,
 	risk.SyntheticId = risk.CategoryId + "@" + technicalAsset.Id
 	return risk
 }
+
+func (r *ContainerPlatformEscapeRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
+	// todo
+	return false
+}
+
+func (r *ContainerPlatformEscapeRule) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
+	// todo
+	return nil
+}

@@ -107,3 +107,13 @@ func (r *ServerSideRequestForgeryRule) createRisk(input *types.ParsedModel, tech
 	risk.SyntheticId = risk.CategoryId + "@" + technicalAsset.Id + "@" + target.Id + "@" + outgoingFlow.Id
 	return risk
 }
+
+func (r *ServerSideRequestForgeryRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
+	// todo
+	return false
+}
+
+func (r *ServerSideRequestForgeryRule) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
+	// todo
+	return nil
+}

@@ -404,7 +404,7 @@ func ParseModel(modelInput *input.Model, builtinRiskRules map[string]risks.RiskR
 			parsedInsideAssets := boundary.TechnicalAssetsInside
 			technicalAssetsInside = make([]string, len(parsedInsideAssets))
 			for i, parsedInsideAsset := range parsedInsideAssets {
-				technicalAssetsInside[i] = fmt.Sprintf("%v", parsedInsideAsset)
+				technicalAssetsInside[i] = strings.ToLower(parsedInsideAsset)
 				_, found := parsedModel.TechnicalAssets[technicalAssetsInside[i]]
 				if !found {
 					return nil, fmt.Errorf("missing referenced technical asset %q at trust boundary %q", technicalAssetsInside[i], title)
@@ -508,7 +508,7 @@ func ParseModel(modelInput *input.Model, builtinRiskRules map[string]risks.RiskR
 
 	parsedModel.IndividualRiskCategories = make(map[string]types.RiskCategory)
 	for _, rule := range customRiskRules {
-		parsedModel.IndividualRiskCategories[rule.Category.Id] = rule.Category
+		parsedModel.IndividualRiskCategories[rule.category.Id] = rule.category
 	}
 
 	// Individual Risk Categories (just used as regular risk categories) ===============================================================================

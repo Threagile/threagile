@@ -102,3 +102,13 @@ func (r *DosRiskyAccessAcrossTrustBoundaryRule) createRisk(techAsset types.Techn
 	risk.SyntheticId = risk.CategoryId + "@" + techAsset.Id + "@" + clientOutsideTrustBoundary.Id + "@" + dataFlow.Id
 	return risk
 }
+
+func (r *DosRiskyAccessAcrossTrustBoundaryRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
+	// todo
+	return false
+}
+
+func (r *DosRiskyAccessAcrossTrustBoundaryRule) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
+	// todo
+	return nil
+}

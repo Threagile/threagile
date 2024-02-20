@@ -35,8 +35,8 @@ func TestParseEncryptionStyle(t *testing.T) {
 			input:    "data-with-asymmetric-shared-key",
 			expected: DataWithAsymmetricSharedKey,
 		},
-		"data-with-enduser-individual-key": {
-			input:    "data-with-enduser-individual-key",
+		"data-with-end-user-individual-key": {
+			input:    "data-with-end-user-individual-key",
 			expected: DataWithEndUserIndividualKey,
 		},
 		"unknown": {

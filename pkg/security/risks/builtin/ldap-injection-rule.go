@@ -81,3 +81,13 @@ func (r *LdapInjectionRule) createRisk(input *types.ParsedModel, technicalAsset 
 	risk.SyntheticId = risk.CategoryId + "@" + caller.Id + "@" + technicalAsset.Id + "@" + incomingFlow.Id
 	return risk
 }
+
+func (r *LdapInjectionRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
+	// todo
+	return false
+}
+
+func (r *LdapInjectionRule) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
+	// todo
+	return nil
+}

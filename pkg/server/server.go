@@ -204,7 +204,7 @@ func (s *server) addSupportedTags(input []byte) []byte {
 	// add distinct tags as "tags_available"
 	supportedTags := make(map[string]bool)
 	for _, customRule := range s.customRiskRules {
-		for _, tag := range customRule.Tags {
+		for _, tag := range customRule.SupportedTags() {
 			supportedTags[strings.ToLower(tag)] = true
 		}
 	}

@@ -103,3 +103,13 @@ func (r *UntrustedDeserializationRule) createRisk(parsedModel *types.ParsedModel
 	risk.SyntheticId = risk.CategoryId + "@" + technicalAsset.Id
 	return risk
 }
+
+func (r *UntrustedDeserializationRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
+	// todo
+	return false
+}
+
+func (r *UntrustedDeserializationRule) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
+	// todo
+	return nil
+}

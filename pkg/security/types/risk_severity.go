@@ -40,16 +40,7 @@ var RiskSeverityTypeDescription = [...]TypeDescription{
 }
 
 func ParseRiskSeverity(value string) (riskSeverity RiskSeverity, err error) {
-	value = strings.TrimSpace(value)
-	if value == "" {
-		return MediumSeverity, nil
-	}
-	for _, candidate := range RiskSeverityValues() {
-		if candidate.String() == value {
-			return candidate.(RiskSeverity), err
-		}
-	}
-	return riskSeverity, fmt.Errorf("unable to parse into type: %v", value)
+	return RiskSeverity(0).Find(value)
 }
 
 func (what RiskSeverity) String() string {
@@ -76,7 +67,7 @@ func (what *RiskSeverity) UnmarshalJSON(data []byte) error {
 		return unmarshalError
 	}
 
-	value, findError := what.find(text)
+	value, findError := what.Find(text)
 	if findError != nil {
 		return findError
 	}
@@ -90,7 +81,7 @@ func (what RiskSeverity) MarshalYAML() (interface{}, error) {
 }
 
 func (what *RiskSeverity) UnmarshalYAML(node *yaml.Node) error {
-	value, findError := what.find(node.Value)
+	value, findError := what.Find(node.Value)
 	if findError != nil {
 		return findError
 	}
@@ -99,7 +90,7 @@ func (what *RiskSeverity) UnmarshalYAML(node *yaml.Node) error {
 	return nil
 }
 
-func (what RiskSeverity) find(value string) (RiskSeverity, error) {
+func (what RiskSeverity) Find(value string) (RiskSeverity, error) {
 	for index, description := range RiskSeverityTypeDescription {
 		if strings.EqualFold(value, description.Name) {
 			return RiskSeverity(index), nil

@@ -77,3 +77,13 @@ func (r *MissingFileValidationRule) createRisk(input *types.ParsedModel, technic
 	risk.SyntheticId = risk.CategoryId + "@" + technicalAsset.Id
 	return risk
 }
+
+func (r *MissingFileValidationRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
+	// todo
+	return false
+}
+
+func (r *MissingFileValidationRule) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
+	// todo
+	return nil
+}

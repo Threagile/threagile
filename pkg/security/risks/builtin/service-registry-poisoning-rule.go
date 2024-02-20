@@ -77,3 +77,13 @@ func (r *ServiceRegistryPoisoningRule) createRisk(input *types.ParsedModel, tech
 	risk.SyntheticId = risk.CategoryId + "@" + technicalAsset.Id
 	return risk
 }
+
+func (r *ServiceRegistryPoisoningRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
+	// todo
+	return false
+}
+
+func (r *ServiceRegistryPoisoningRule) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
+	// todo
+	return nil
+}

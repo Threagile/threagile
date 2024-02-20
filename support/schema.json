@@ -472,7 +472,7 @@
               "transparent",
               "data-with-symmetric-shared-key",
               "data-with-asymmetric-shared-key",
-              "data-with-enduser-individual-key"
+              "data-with-end-user-individual-key"
             ]
           },
           "owner": {
@@ -671,7 +671,7 @@
                   "enum": [
                     "none",
                     "technical-user",
-                    "enduser-identity-propagation"
+                    "end-user-identity-propagation"
                   ]
                 },
                 "tags": {

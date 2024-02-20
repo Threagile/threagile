@@ -8,13 +8,13 @@ technical_assets:
     usage: business # values: business, devops
     used_as_client_by_human: true
     out_of_scope: true
-    justification_out_of_scope: Owned and managed by enduser customer
+    justification_out_of_scope: Owned and managed by end-user customer
     size: component # values: system, service, application, component
     technology: browser # values: see help
     tags:
     internet: true
     machine: physical # values: physical, virtual, container, serverless
-    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-enduser-individual-key
+    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-end-user-individual-key
     owner: Customer
     confidentiality: internal # values: public, internal, restricted, confidential, strictly-confidential
     integrity: operational # values: archive, operational, important, critical, mission-critical
@@ -38,7 +38,7 @@ technical_assets:
         description: Link to the load balancer
         protocol: https # values: see help
         authentication: session-id # values: none, credentials, session-id, token, client-certificate, two-factor
-        authorization: enduser-identity-propagation # values: none, technical-user, enduser-identity-propagation
+        authorization: end-user-identity-propagation # values: none, technical-user, end-user-identity-propagation
         tags:
         vpn: false
         ip_filtered: false
@@ -71,7 +71,7 @@ technical_assets:
     tags:
     internet: false
     machine: physical # values: physical, virtual, container, serverless
-    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-enduser-individual-key
+    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-end-user-individual-key
     owner: Company XYZ
     confidentiality: confidential # values: public, internal, restricted, confidential, strictly-confidential
     integrity: important # values: archive, operational, important, critical, mission-critical
@@ -93,7 +93,7 @@ technical_assets:
         description: Link to the ERP system
         protocol: https # values: see help
         authentication: token # values: none, credentials, session-id, token, client-certificate, two-factor
-        authorization: enduser-identity-propagation # values: none, technical-user, enduser-identity-propagation
+        authorization: end-user-identity-propagation # values: none, technical-user, end-user-identity-propagation
         tags:
           - some-erp
         vpn: true
@@ -112,7 +112,7 @@ technical_assets:
         description: Link to the CMS for editing content
         protocol: https # values: see help
         authentication: token # values: none, credentials, session-id, token, client-certificate, two-factor
-        authorization: enduser-identity-propagation # values: none, technical-user, enduser-identity-propagation
+        authorization: end-user-identity-propagation # values: none, technical-user, end-user-identity-propagation
         tags:
         vpn: true
         ip_filtered: false
@@ -140,7 +140,7 @@ technical_assets:
     tags:
     internet: false
     machine: physical # values: physical, virtual, container, serverless
-    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-enduser-individual-key
+    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-end-user-individual-key
     owner: Company XYZ
     confidentiality: internal # values: public, internal, restricted, confidential, strictly-confidential
     integrity: operational # values: archive, operational, important, critical, mission-critical
@@ -160,7 +160,7 @@ technical_assets:
         description: Link to the ERP system (Web)
         protocol: https # values: see help
         authentication: token # values: none, credentials, session-id, token, client-certificate, two-factor
-        authorization: technical-user # values: none, technical-user, enduser-identity-propagation
+        authorization: technical-user # values: none, technical-user, end-user-identity-propagation
         tags:
         vpn: false
         ip_filtered: false
@@ -177,7 +177,7 @@ technical_assets:
         description: Link to the database (JDBC tunneled via SSH)
         protocol: ssh # values: see help
         authentication: client-certificate # values: none, credentials, session-id, token, client-certificate, two-factor
-        authorization: technical-user # values: none, technical-user, enduser-identity-propagation
+        authorization: technical-user # values: none, technical-user, end-user-identity-propagation
         tags:
         vpn: false
         ip_filtered: false
@@ -197,7 +197,7 @@ technical_assets:
         description: Link to the LDAP auth server for managing users
         protocol: ldaps # values: see help
         authentication: credentials # values: none, credentials, session-id, token, client-certificate, two-factor
-        authorization: technical-user # values: none, technical-user, enduser-identity-propagation
+        authorization: technical-user # values: none, technical-user, end-user-identity-propagation
         tags:
         vpn: false
         ip_filtered: false

@@ -79,8 +79,8 @@ abuse_cases:
   Cross-Site Scripting Attacks: >
     As a hacker I want to execute Cross-Site Scripting (XSS) and similar attacks in order to takeover victim sessions and
     cause reputational damage.
-  Denial-of-Service of Enduser Functionality: >
-    As a hacker I want to disturb the functionality of the enduser parts of the application in order to cause direct financial
+  Denial-of-Service of End-User Functionality: >
+    As a hacker I want to disturb the functionality of the end-user parts of the application in order to cause direct financial
     damage (lower sales).
   Denial-of-Service of ERP/DB Functionality: >
     As a hacker I want to disturb the functionality of the ERP system and/or it's database in order to cause indirect
@@ -291,13 +291,13 @@ technical_assets:
     usage: business # values: business, devops
     used_as_client_by_human: true
     out_of_scope: true
-    justification_out_of_scope: Owned and managed by enduser customer
+    justification_out_of_scope: Owned and managed by end-user customer
     size: component # values: system, service, application, component
     technology: browser # values: see help
     tags:
     internet: true
     machine: physical # values: physical, virtual, container, serverless
-    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-enduser-individual-key
+    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-end-user-individual-key
     owner: Customer
     confidentiality: internal # values: public, internal, restricted, confidential, strictly-confidential
     integrity: operational # values: archive, operational, important, critical, mission-critical
@@ -321,7 +321,7 @@ technical_assets:
         description: Link to the load balancer
         protocol: https # values: see help
         authentication: session-id # values: none, credentials, session-id, token, client-certificate, two-factor
-        authorization: enduser-identity-propagation # values: none, technical-user, enduser-identity-propagation
+        authorization: end-user-identity-propagation # values: none, technical-user, end-user-identity-propagation
         tags:
         vpn: false
         ip_filtered: false
@@ -354,7 +354,7 @@ technical_assets:
     tags:
     internet: false
     machine: physical # values: physical, virtual, container, serverless
-    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-enduser-individual-key
+    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-end-user-individual-key
     owner: Company XYZ
     confidentiality: confidential # values: public, internal, restricted, confidential, strictly-confidential
     integrity: important # values: archive, operational, important, critical, mission-critical
@@ -376,7 +376,7 @@ technical_assets:
         description: Link to the ERP system
         protocol: https # values: see help
         authentication: token # values: none, credentials, session-id, token, client-certificate, two-factor
-        authorization: enduser-identity-propagation # values: none, technical-user, enduser-identity-propagation
+        authorization: end-user-identity-propagation # values: none, technical-user, end-user-identity-propagation
         tags:
           - some-erp
         vpn: true
@@ -395,7 +395,7 @@ technical_assets:
         description: Link to the CMS for editing content
         protocol: https # values: see help
         authentication: token # values: none, credentials, session-id, token, client-certificate, two-factor
-        authorization: enduser-identity-propagation # values: none, technical-user, enduser-identity-propagation
+        authorization: end-user-identity-propagation # values: none, technical-user, end-user-identity-propagation
         tags:
         vpn: true
         ip_filtered: false
@@ -423,7 +423,7 @@ technical_assets:
     tags:
     internet: false
     machine: physical # values: physical, virtual, container, serverless
-    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-enduser-individual-key
+    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-end-user-individual-key
     owner: Company XYZ
     confidentiality: internal # values: public, internal, restricted, confidential, strictly-confidential
     integrity: operational # values: archive, operational, important, critical, mission-critical
@@ -443,7 +443,7 @@ technical_assets:
         description: Link to the ERP system (Web)
         protocol: https # values: see help
         authentication: token # values: none, credentials, session-id, token, client-certificate, two-factor
-        authorization: technical-user # values: none, technical-user, enduser-identity-propagation
+        authorization: technical-user # values: none, technical-user, end-user-identity-propagation
         tags:
         vpn: false
         ip_filtered: false
@@ -460,7 +460,7 @@ technical_assets:
         description: Link to the database (JDBC tunneled via SSH)
         protocol: ssh # values: see help
         authentication: client-certificate # values: none, credentials, session-id, token, client-certificate, two-factor
-        authorization: technical-user # values: none, technical-user, enduser-identity-propagation
+        authorization: technical-user # values: none, technical-user, end-user-identity-propagation
         tags:
         vpn: false
         ip_filtered: false
@@ -480,7 +480,7 @@ technical_assets:
         description: Link to the LDAP auth server for managing users
         protocol: ldaps # values: see help
         authentication: credentials # values: none, credentials, session-id, token, client-certificate, two-factor
-        authorization: technical-user # values: none, technical-user, enduser-identity-propagation
+        authorization: technical-user # values: none, technical-user, end-user-identity-propagation
         tags:
         vpn: false
         ip_filtered: false
@@ -508,7 +508,7 @@ technical_assets:
     tags:
     internet: false
     machine: physical # values: physical, virtual, container, serverless
-    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-enduser-individual-key
+    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-end-user-individual-key
     owner: Company ABC
     confidentiality: internal # values: public, internal, restricted, confidential, strictly-confidential
     integrity: mission-critical # values: archive, operational, important, critical, mission-critical
@@ -534,7 +534,7 @@ technical_assets:
         description: Link to the web server
         protocol: http # values: see help
         authentication: session-id # values: none, credentials, session-id, token, client-certificate, two-factor
-        authorization: enduser-identity-propagation # values: none, technical-user, enduser-identity-propagation
+        authorization: end-user-identity-propagation # values: none, technical-user, end-user-identity-propagation
         tags:
         vpn: false
         ip_filtered: false
@@ -555,7 +555,7 @@ technical_assets:
         description: Link to the CMS server
         protocol: http # values: see help
         authentication: none # values: none, credentials, session-id, token, client-certificate, two-factor
-        authorization: none # values: none, technical-user, enduser-identity-propagation
+        authorization: none # values: none, technical-user, end-user-identity-propagation
         tags:
         vpn: false
         ip_filtered: false
@@ -585,7 +585,7 @@ technical_assets:
       - aws:ec2
     internet: false
     machine: container # values: physical, virtual, container, serverless
-    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-enduser-individual-key
+    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-end-user-individual-key
     owner: Company ABC
     confidentiality: internal # values: public, internal, restricted, confidential, strictly-confidential
     integrity: critical # values: archive, operational, important, critical, mission-critical
@@ -614,7 +614,7 @@ technical_assets:
         description: Link to the ERP system
         protocol: https # values: see help
         authentication: token # values: none, credentials, session-id, token, client-certificate, two-factor
-        authorization: technical-user # values: none, technical-user, enduser-identity-propagation
+        authorization: technical-user # values: none, technical-user, end-user-identity-propagation
         tags:
         vpn: false
         ip_filtered: false
@@ -636,7 +636,7 @@ technical_assets:
         description: Link to the identity provider server
         protocol: https # values: see help
         authentication: credentials # values: none, credentials, session-id, token, client-certificate, two-factor
-        authorization: technical-user # values: none, technical-user, enduser-identity-propagation
+        authorization: technical-user # values: none, technical-user, end-user-identity-propagation
         tags:
         vpn: false
         ip_filtered: false
@@ -664,7 +664,7 @@ technical_assets:
       - keycloak
     internet: false
     machine: virtual # values: physical, virtual, container, serverless
-    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-enduser-individual-key
+    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-end-user-individual-key
     owner: Company ABC
     confidentiality: confidential # values: public, internal, restricted, confidential, strictly-confidential
     integrity: critical # values: archive, operational, important, critical, mission-critical
@@ -684,7 +684,7 @@ technical_assets:
         description: Link to the LDAP server
         protocol: ldaps # values: see help
         authentication: credentials # values: none, credentials, session-id, token, client-certificate, two-factor
-        authorization: technical-user # values: none, technical-user, enduser-identity-propagation
+        authorization: technical-user # values: none, technical-user, end-user-identity-propagation
         tags:
         vpn: false
         ip_filtered: false
@@ -710,7 +710,7 @@ technical_assets:
       - linux
     internet: false
     machine: physical # values: physical, virtual, container, serverless
-    encryption: transparent # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-enduser-individual-key
+    encryption: transparent # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-end-user-individual-key
     owner: Company ABC
     confidentiality: confidential # values: public, internal, restricted, confidential, strictly-confidential
     integrity: critical # values: archive, operational, important, critical, mission-critical
@@ -743,7 +743,7 @@ technical_assets:
       - linux
     internet: false
     machine: container # values: physical, virtual, container, serverless
-    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-enduser-individual-key
+    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-end-user-individual-key
     owner: Company ABC
     confidentiality: internal # values: public, internal, restricted, confidential, strictly-confidential
     integrity: important # values: archive, operational, important, critical, mission-critical
@@ -765,7 +765,7 @@ technical_assets:
         description: Link to the LDAP auth server
         protocol: ldap # values: see help
         authentication: credentials # values: none, credentials, session-id, token, client-certificate, two-factor
-        authorization: technical-user # values: none, technical-user, enduser-identity-propagation
+        authorization: technical-user # values: none, technical-user, end-user-identity-propagation
         tags:
         vpn: false
         ip_filtered: false
@@ -794,7 +794,7 @@ technical_assets:
       - linux
     internet: false
     machine: virtual # values: physical, virtual, container, serverless
-    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-enduser-individual-key
+    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-end-user-individual-key
     owner: Company ABC
     confidentiality: strictly-confidential # values: public, internal, restricted, confidential, strictly-confidential
     integrity: mission-critical # values: archive, operational, important, critical, mission-critical
@@ -823,7 +823,7 @@ technical_assets:
         description: Link to the DB system
         protocol: jdbc # values: see help
         authentication: credentials # values: none, credentials, session-id, token, client-certificate, two-factor
-        authorization: technical-user # values: none, technical-user, enduser-identity-propagation
+        authorization: technical-user # values: none, technical-user, end-user-identity-propagation
         tags:
         vpn: false
         ip_filtered: false
@@ -840,11 +840,11 @@ technical_assets:
         #diagram_tweak_weight: 1
         #diagram_tweak_constraint: false
       NFS Filesystem Access:
-        target: contract-fileserver
+        target: contract-file-server
         description: Link to the file system
         protocol: nfs # values: see help
         authentication: none # values: none, credentials, session-id, token, client-certificate, two-factor
-        authorization: none # values: none, technical-user, enduser-identity-propagation
+        authorization: none # values: none, technical-user, end-user-identity-propagation
         tags:
         vpn: false
         ip_filtered: false
@@ -859,7 +859,7 @@ technical_assets:
 
 
   Contract Fileserver:
-    id: contract-fileserver
+    id: contract-file-server
     #diagram_tweak_order: 0 # affects left to right positioning (only within a trust boundary)
     description: NFS Filesystem for storing the contract PDFs
     type: datastore # values: external-entity, process, datastore
@@ -874,7 +874,7 @@ technical_assets:
       - aws:s3
     internet: false
     machine: virtual # values: physical, virtual, container, serverless
-    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-enduser-individual-key
+    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-end-user-individual-key
     owner: Company ABC
     confidentiality: confidential # values: public, internal, restricted, confidential, strictly-confidential
     integrity: critical # values: archive, operational, important, critical, mission-critical
@@ -911,7 +911,7 @@ technical_assets:
       - mysql
     internet: false
     machine: virtual # values: physical, virtual, container, serverless
-    encryption: data-with-symmetric-shared-key # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-enduser-individual-key
+    encryption: data-with-symmetric-shared-key # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-end-user-individual-key
     owner: Company ABC
     confidentiality: strictly-confidential # values: public, internal, restricted, confidential, strictly-confidential
     integrity: mission-critical # values: archive, operational, important, critical, mission-critical
@@ -947,7 +947,7 @@ technical_assets:
       - linux
     internet: true
     machine: physical # values: physical, virtual, container, serverless
-    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-enduser-individual-key
+    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-end-user-individual-key
     owner: External Developers
     confidentiality: confidential # values: public, internal, restricted, confidential, strictly-confidential
     integrity: critical # values: archive, operational, important, critical, mission-critical
@@ -971,7 +971,7 @@ technical_assets:
         description: Link to the Git repo
         protocol: ssh # values: see help
         authentication: client-certificate # values: none, credentials, session-id, token, client-certificate, two-factor
-        authorization: technical-user # values: none, technical-user, enduser-identity-propagation
+        authorization: technical-user # values: none, technical-user, end-user-identity-propagation
         tags:
         vpn: false
         ip_filtered: false
@@ -990,7 +990,7 @@ technical_assets:
         description: Link to the Git repo
         protocol: https # values: see help
         authentication: token # values: none, credentials, session-id, token, client-certificate, two-factor
-        authorization: technical-user # values: none, technical-user, enduser-identity-propagation
+        authorization: technical-user # values: none, technical-user, end-user-identity-propagation
         tags:
         vpn: false
         ip_filtered: false
@@ -1005,11 +1005,11 @@ technical_assets:
         #diagram_tweak_weight: 1
         #diagram_tweak_constraint: false
       Jenkins Web-UI Access:
-        target: jenkins-buildserver
+        target: jenkins-build-server
         description: Link to the Jenkins build server
         protocol: https # values: see help
         authentication: credentials # values: none, credentials, session-id, token, client-certificate, two-factor
-        authorization: technical-user # values: none, technical-user, enduser-identity-propagation
+        authorization: technical-user # values: none, technical-user, end-user-identity-propagation
         tags:
         vpn: false
         ip_filtered: false
@@ -1039,7 +1039,7 @@ technical_assets:
       - git
     internet: false
     machine: virtual # values: physical, virtual, container, serverless
-    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-enduser-individual-key
+    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-end-user-individual-key
     owner: Company ABC
     confidentiality: confidential # values: public, internal, restricted, confidential, strictly-confidential
     integrity: important # values: archive, operational, important, critical, mission-critical
@@ -1062,9 +1062,9 @@ technical_assets:
 
 
   Jenkins Buildserver:
-    id: jenkins-buildserver
+    id: jenkins-build-server
     #diagram_tweak_order: 99 # affects left to right positioning (only within a trust boundary)
-    description: Jenkins buildserver
+    description: Jenkins build-server
     type: process # values: external-entity, process, datastore
     usage: devops # values: business, devops
     used_as_client_by_human: false
@@ -1077,7 +1077,7 @@ technical_assets:
       - jenkins
     internet: false
     machine: virtual # values: physical, virtual, container, serverless
-    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-enduser-individual-key
+    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-end-user-individual-key
     owner: Company ABC
     confidentiality: confidential # values: public, internal, restricted, confidential, strictly-confidential
     integrity: critical # values: archive, operational, important, critical, mission-critical
@@ -1108,7 +1108,7 @@ technical_assets:
         description: Link to the Git repository server
         protocol: ssh # values: see help
         authentication: client-certificate # values: none, credentials, session-id, token, client-certificate, two-factor
-        authorization: technical-user # values: none, technical-user, enduser-identity-propagation
+        authorization: technical-user # values: none, technical-user, end-user-identity-propagation
         tags:
         vpn: false
         ip_filtered: false
@@ -1125,7 +1125,7 @@ technical_assets:
         description: Link to the Apache webserver
         protocol: ssh # values: see help
         authentication: client-certificate # values: none, credentials, session-id, token, client-certificate, two-factor
-        authorization: technical-user # values: none, technical-user, enduser-identity-propagation
+        authorization: technical-user # values: none, technical-user, end-user-identity-propagation
         tags:
         vpn: false
         ip_filtered: false
@@ -1140,7 +1140,7 @@ technical_assets:
         description: Link to the CMS
         protocol: ssh # values: see help
         authentication: client-certificate # values: none, credentials, session-id, token, client-certificate, two-factor
-        authorization: technical-user # values: none, technical-user, enduser-identity-propagation
+        authorization: technical-user # values: none, technical-user, end-user-identity-propagation
         tags:
         vpn: false
         ip_filtered: false
@@ -1176,7 +1176,7 @@ trust_boundaries:
       - some-erp
     technical_assets_inside: # sequence of IDs to reference
       - erp-system
-      - contract-fileserver
+      - contract-file-server
       - sql-database
     trust_boundaries_nested: # sequence of IDs to reference
 
@@ -1212,7 +1212,7 @@ trust_boundaries:
     type: network-on-prem # values: see help
     tags:
     technical_assets_inside: # sequence of IDs to reference
-      - jenkins-buildserver
+      - jenkins-build-server
       - git-repo
       - backend-admin-client
       - backoffice-client
@@ -1234,7 +1234,7 @@ shared_runtimes:
       - apache-webserver
       - marketing-cms
       - erp-system
-      - contract-fileserver
+      - contract-file-server
       - sql-database
 
 
@@ -1279,7 +1279,7 @@ individual_risk_categories: # used for adding custom manually identified risks
         data_breach_probability: improbable # values: improbable, possible, probable
         data_breach_technical_assets: # list of technical asset IDs which might have data breach
         most_relevant_data_asset:
-        most_relevant_technical_asset: contract-fileserver
+        most_relevant_technical_asset: contract-file-server
         most_relevant_communication_link:
         most_relevant_trust_boundary:
         most_relevant_shared_runtime:

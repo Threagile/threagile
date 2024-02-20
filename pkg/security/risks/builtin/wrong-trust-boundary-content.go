@@ -66,3 +66,13 @@ func (r *WrongTrustBoundaryContentRule) createRisk(technicalAsset types.Technica
 	risk.SyntheticId = risk.CategoryId + "@" + technicalAsset.Id
 	return risk
 }
+
+func (r *WrongTrustBoundaryContentRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
+	// todo
+	return false
+}
+
+func (r *WrongTrustBoundaryContentRule) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
+	// todo
+	return nil
+}

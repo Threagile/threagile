@@ -79,3 +79,13 @@ func (r *PushInsteadPullDeploymentRule) createRisk(buildPipeline types.Technical
 	risk.SyntheticId = risk.CategoryId + "@" + buildPipeline.Id
 	return risk
 }
+
+func (r *PushInsteadPullDeploymentRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
+	// todo
+	return false
+}
+
+func (r *PushInsteadPullDeploymentRule) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
+	// todo
+	return nil
+}

@@ -18,7 +18,7 @@ technical_assets:
       - aws:ec2
     internet: false
     machine: container # values: physical, virtual, container, serverless
-    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-enduser-individual-key
+    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-end-user-individual-key
     owner: Company ABC
     confidentiality: internal # values: public, internal, restricted, confidential, strictly-confidential
     integrity: critical # values: archive, operational, important, critical, mission-critical
@@ -47,7 +47,7 @@ technical_assets:
         description: Link to the ERP system
         protocol: https # values: see help
         authentication: token # values: none, credentials, session-id, token, client-certificate, two-factor
-        authorization: technical-user # values: none, technical-user, enduser-identity-propagation
+        authorization: technical-user # values: none, technical-user, end-user-identity-propagation
         tags:
         vpn: false
         ip_filtered: false
@@ -69,7 +69,7 @@ technical_assets:
         description: Link to the identity provider server
         protocol: https # values: see help
         authentication: credentials # values: none, credentials, session-id, token, client-certificate, two-factor
-        authorization: technical-user # values: none, technical-user, enduser-identity-propagation
+        authorization: technical-user # values: none, technical-user, end-user-identity-propagation
         tags:
         vpn: false
         ip_filtered: false
@@ -97,7 +97,7 @@ technical_assets:
       - keycloak
     internet: false
     machine: virtual # values: physical, virtual, container, serverless
-    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-enduser-individual-key
+    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-end-user-individual-key
     owner: Company ABC
     confidentiality: confidential # values: public, internal, restricted, confidential, strictly-confidential
     integrity: critical # values: archive, operational, important, critical, mission-critical
@@ -117,7 +117,7 @@ technical_assets:
         description: Link to the LDAP server
         protocol: ldaps # values: see help
         authentication: credentials # values: none, credentials, session-id, token, client-certificate, two-factor
-        authorization: technical-user # values: none, technical-user, enduser-identity-propagation
+        authorization: technical-user # values: none, technical-user, end-user-identity-propagation
         tags:
         vpn: false
         ip_filtered: false
@@ -143,7 +143,7 @@ technical_assets:
       - linux
     internet: false
     machine: container # values: physical, virtual, container, serverless
-    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-enduser-individual-key
+    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-end-user-individual-key
     owner: Company ABC
     confidentiality: internal # values: public, internal, restricted, confidential, strictly-confidential
     integrity: important # values: archive, operational, important, critical, mission-critical
@@ -165,7 +165,7 @@ technical_assets:
         description: Link to the LDAP auth server
         protocol: ldap # values: see help
         authentication: credentials # values: none, credentials, session-id, token, client-certificate, two-factor
-        authorization: technical-user # values: none, technical-user, enduser-identity-propagation
+        authorization: technical-user # values: none, technical-user, end-user-identity-propagation
         tags:
         vpn: false
         ip_filtered: false
@@ -194,7 +194,7 @@ technical_assets:
       - linux
     internet: false
     machine: virtual # values: physical, virtual, container, serverless
-    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-enduser-individual-key
+    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-end-user-individual-key
     owner: Company ABC
     confidentiality: strictly-confidential # values: public, internal, restricted, confidential, strictly-confidential
     integrity: mission-critical # values: archive, operational, important, critical, mission-critical
@@ -223,7 +223,7 @@ technical_assets:
         description: Link to the DB system
         protocol: jdbc # values: see help
         authentication: credentials # values: none, credentials, session-id, token, client-certificate, two-factor
-        authorization: technical-user # values: none, technical-user, enduser-identity-propagation
+        authorization: technical-user # values: none, technical-user, end-user-identity-propagation
         tags:
         vpn: false
         ip_filtered: false
@@ -240,11 +240,11 @@ technical_assets:
         #diagram_tweak_weight: 1
         #diagram_tweak_constraint: false
       NFS Filesystem Access:
-        target: contract-fileserver
+        target: contract-file-server
         description: Link to the file system
         protocol: nfs # values: see help
         authentication: none # values: none, credentials, session-id, token, client-certificate, two-factor
-        authorization: none # values: none, technical-user, enduser-identity-propagation
+        authorization: none # values: none, technical-user, end-user-identity-propagation
         tags:
         vpn: false
         ip_filtered: false
@@ -259,7 +259,7 @@ technical_assets:
 
 
   Contract Fileserver:
-    id: contract-fileserver
+    id: contract-file-server
     #diagram_tweak_order: 0 # affects left to right positioning (only within a trust boundary)
     description: NFS Filesystem for storing the contract PDFs
     type: datastore # values: external-entity, process, datastore
@@ -274,7 +274,7 @@ technical_assets:
       - aws:s3
     internet: false
     machine: virtual # values: physical, virtual, container, serverless
-    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-enduser-individual-key
+    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-end-user-individual-key
     owner: Company ABC
     confidentiality: confidential # values: public, internal, restricted, confidential, strictly-confidential
     integrity: critical # values: archive, operational, important, critical, mission-critical

@@ -96,3 +96,13 @@ func (r *UnencryptedAssetRule) createRisk(technicalAsset types.TechnicalAsset, i
 	risk.SyntheticId = risk.CategoryId + "@" + technicalAsset.Id
 	return risk
 }
+
+func (r *UnencryptedAssetRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
+	// todo
+	return false
+}
+
+func (r *UnencryptedAssetRule) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
+	// todo
+	return nil
+}

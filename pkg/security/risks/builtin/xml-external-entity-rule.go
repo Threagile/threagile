@@ -77,3 +77,13 @@ func (r *XmlExternalEntityRule) createRisk(parsedModel *types.ParsedModel, techn
 	risk.SyntheticId = risk.CategoryId + "@" + technicalAsset.Id
 	return risk
 }
+
+func (r *XmlExternalEntityRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
+	// todo
+	return false
+}
+
+func (r *XmlExternalEntityRule) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
+	// todo
+	return nil
+}

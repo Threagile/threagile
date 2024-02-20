@@ -15,7 +15,7 @@ technical_assets:
     tags:
     internet: false
     machine: physical # values: physical, virtual, container, serverless
-    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-enduser-individual-key
+    encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-end-user-individual-key
     owner: Company ABC
     confidentiality: internal # values: public, internal, restricted, confidential, strictly-confidential
     integrity: mission-critical # values: archive, operational, important, critical, mission-critical
@@ -41,7 +41,7 @@ technical_assets:
         description: Link to the web server
         protocol: http # values: see help
         authentication: session-id # values: none, credentials, session-id, token, client-certificate, two-factor
-        authorization: enduser-identity-propagation # values: none, technical-user, enduser-identity-propagation
+        authorization: end-user-identity-propagation # values: none, technical-user, end-user-identity-propagation
         tags:
         vpn: false
         ip_filtered: false
@@ -62,7 +62,7 @@ technical_assets:
         description: Link to the CMS server
         protocol: http # values: see help
         authentication: none # values: none, credentials, session-id, token, client-certificate, two-factor
-        authorization: none # values: none, technical-user, enduser-identity-propagation
+        authorization: none # values: none, technical-user, end-user-identity-propagation
         tags:
         vpn: false
         ip_filtered: false

@@ -32,13 +32,7 @@ func CriticalityValues() []TypeEnum {
 }
 
 func ParseCriticality(value string) (criticality Criticality, err error) {
-	value = strings.TrimSpace(value)
-	for _, candidate := range CriticalityValues() {
-		if candidate.String() == value {
-			return candidate.(Criticality), err
-		}
-	}
-	return criticality, fmt.Errorf("unable to parse into type: %v", value)
+	return Criticality(0).Find(value)
 }
 
 var CriticalityTypeDescription = [...]TypeDescription{
@@ -103,7 +97,7 @@ func (what *Criticality) UnmarshalJSON(data []byte) error {
 		return unmarshalError
 	}
 
-	value, findError := what.find(text)
+	value, findError := what.Find(text)
 	if findError != nil {
 		return findError
 	}
@@ -117,7 +111,7 @@ func (what Criticality) MarshalYAML() (interface{}, error) {
 }
 
 func (what *Criticality) UnmarshalYAML(node *yaml.Node) error {
-	value, findError := what.find(node.Value)
+	value, findError := what.Find(node.Value)
 	if findError != nil {
 		return findError
 	}
@@ -126,7 +120,7 @@ func (what *Criticality) UnmarshalYAML(node *yaml.Node) error {
 	return nil
 }
 
-func (what Criticality) find(value string) (Criticality, error) {
+func (what Criticality) Find(value string) (Criticality, error) {
 	for index, description := range CriticalityTypeDescription {
 		if strings.EqualFold(value, description.Name) {
 			return Criticality(index), nil

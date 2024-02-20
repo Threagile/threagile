@@ -90,3 +90,13 @@ func (r *SearchQueryInjectionRule) createRisk(input *types.ParsedModel, technica
 	risk.SyntheticId = risk.CategoryId + "@" + caller.Id + "@" + technicalAsset.Id + "@" + incomingFlow.Id
 	return risk
 }
+
+func (r *SearchQueryInjectionRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
+	// todo
+	return false
+}
+
+func (r *SearchQueryInjectionRule) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
+	// todo
+	return nil
+}

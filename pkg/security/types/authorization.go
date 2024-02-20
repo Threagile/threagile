@@ -30,17 +30,11 @@ func AuthorizationValues() []TypeEnum {
 var AuthorizationTypeDescription = [...]TypeDescription{
 	{"none", "No authorization"},
 	{"technical-user", "Technical user (service-to-service) like DB user credentials"},
-	{"enduser-identity-propagation", "Identity of end user propagates to this service"},
+	{"end-user-identity-propagation", "Identity of end user propagates to this service"},
 }
 
 func ParseAuthorization(value string) (authorization Authorization, err error) {
-	value = strings.TrimSpace(value)
-	for _, candidate := range AuthorizationValues() {
-		if candidate.String() == value {
-			return candidate.(Authorization), err
-		}
-	}
-	return authorization, fmt.Errorf("unable to parse into type: %v", value)
+	return Authorization(0).Find(value)
 }
 
 func (what Authorization) String() string {
@@ -63,7 +57,7 @@ func (what *Authorization) UnmarshalJSON(data []byte) error {
 		return unmarshalError
 	}
 
-	value, findError := what.find(text)
+	value, findError := what.Find(text)
 	if findError != nil {
 		return findError
 	}
@@ -77,7 +71,7 @@ func (what Authorization) MarshalYAML() (interface{}, error) {
 }
 
 func (what *Authorization) UnmarshalYAML(node *yaml.Node) error {
-	value, findError := what.find(node.Value)
+	value, findError := what.Find(node.Value)
 	if findError != nil {
 		return findError
 	}
@@ -86,7 +80,7 @@ func (what *Authorization) UnmarshalYAML(node *yaml.Node) error {
 	return nil
 }
 
-func (what Authorization) find(value string) (Authorization, error) {
+func (what Authorization) Find(value string) (Authorization, error) {
 	for index, description := range AuthorizationTypeDescription {
 		if strings.EqualFold(value, description.Name) {
 			return Authorization(index), nil

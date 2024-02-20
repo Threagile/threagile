@@ -1,6 +1,7 @@
 package threagile
 
 import (
+	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/threagile/threagile/pkg/common"
 	"github.com/threagile/threagile/pkg/model"
@@ -19,14 +20,12 @@ func (what *Threagile) initAnalyze() *Threagile {
 
 			r, err := model.ReadAndAnalyzeModel(*cfg, progressReporter)
 			if err != nil {
-				cmd.Printf("Failed to read and analyze model: %v", err)
-				return err
+				return fmt.Errorf("failed to read and analyze model: %v", err)
 			}
 
 			err = report.Generate(cfg, r, commands, progressReporter)
 			if err != nil {
-				cmd.Printf("Failed to generate reports: %v \n", err)
-				return err
+				return fmt.Errorf("failed to generate reports: %v", err)
 			}
 			return nil
 		},

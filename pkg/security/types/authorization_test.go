@@ -27,8 +27,8 @@ func TestParseAuthorization(t *testing.T) {
 			input:    "technical-user",
 			expected: TechnicalUser,
 		},
-		"enduser-identity-propagation": {
-			input:    "enduser-identity-propagation",
+		"end-user-identity-propagation": {
+			input:    "end-user-identity-propagation",
 			expected: EndUserIdentityPropagation,
 		},
 		"unknown": {
