@@ -49,15 +49,15 @@ func CastValue(value any, castType string) (any, error) {
 }
 
 func toConfidentiality(value any) (any, error) {
-	switch value.(type) {
+	switch castValue := value.(type) {
 	case string:
-		return types.Confidentiality(0).Find(value.(string))
+		return types.Confidentiality(0).Find(castValue)
 
 	case fmt.Stringer:
-		return types.Confidentiality(0).Find(value.(fmt.Stringer).String())
+		return types.Confidentiality(0).Find(castValue.String())
 
 	case int, int64:
-		return value, nil
+		return castValue, nil
 
 	default:
 		return nil, fmt.Errorf("toConfidentiality: unexpected type %T", value)
@@ -65,15 +65,15 @@ func toConfidentiality(value any) (any, error) {
 }
 
 func toCriticality(value any) (any, error) {
-	switch value.(type) {
+	switch castValue := value.(type) {
 	case string:
-		return types.Criticality(0).Find(value.(string))
+		return types.Criticality(0).Find(castValue)
 
 	case fmt.Stringer:
-		return types.Criticality(0).Find(value.(fmt.Stringer).String())
+		return types.Criticality(0).Find(castValue.String())
 
 	case int, int64:
-		return value, nil
+		return castValue, nil
 
 	default:
 		return nil, fmt.Errorf("toCriticality: unexpected type %T", value)
@@ -81,15 +81,15 @@ func toCriticality(value any) (any, error) {
 }
 
 func toAuthentication(value any) (any, error) {
-	switch value.(type) {
+	switch castValue := value.(type) {
 	case string:
-		return types.Authentication(0).Find(value.(string))
+		return types.Authentication(0).Find(castValue)
 
 	case fmt.Stringer:
-		return types.Authentication(0).Find(value.(fmt.Stringer).String())
+		return types.Authentication(0).Find(castValue.String())
 
 	case int, int64:
-		return value, nil
+		return castValue, nil
 
 	default:
 		return nil, fmt.Errorf("toAuthentication: unexpected type %T", value)
@@ -97,15 +97,15 @@ func toAuthentication(value any) (any, error) {
 }
 
 func toAuthorization(value any) (any, error) {
-	switch value.(type) {
+	switch castValue := value.(type) {
 	case string:
-		return types.Authorization(0).Find(value.(string))
+		return types.Authorization(0).Find(castValue)
 
 	case fmt.Stringer:
-		return types.Authorization(0).Find(value.(fmt.Stringer).String())
+		return types.Authorization(0).Find(castValue.String())
 
 	case int, int64:
-		return value, nil
+		return castValue, nil
 
 	default:
 		return nil, fmt.Errorf("toAuthorization: unexpected type %T", value)
@@ -113,15 +113,15 @@ func toAuthorization(value any) (any, error) {
 }
 
 func toProbability(value any) (any, error) {
-	switch value.(type) {
+	switch castValue := value.(type) {
 	case string:
-		return types.DataBreachProbability(0).Find(value.(string))
+		return types.DataBreachProbability(0).Find(castValue)
 
 	case fmt.Stringer:
-		return types.DataBreachProbability(0).Find(value.(fmt.Stringer).String())
+		return types.DataBreachProbability(0).Find(castValue.String())
 
 	case int, int64:
-		return value, nil
+		return castValue, nil
 
 	default:
 		return nil, fmt.Errorf("toProbability: unexpected type %T", value)
@@ -129,15 +129,15 @@ func toProbability(value any) (any, error) {
 }
 
 func toEncryption(value any) (any, error) {
-	switch value.(type) {
+	switch castValue := value.(type) {
 	case string:
-		return types.EncryptionStyle(0).Find(value.(string))
+		return types.EncryptionStyle(0).Find(castValue)
 
 	case fmt.Stringer:
-		return types.EncryptionStyle(0).Find(value.(fmt.Stringer).String())
+		return types.EncryptionStyle(0).Find(castValue.String())
 
 	case int, int64:
-		return value, nil
+		return castValue, nil
 
 	default:
 		return nil, fmt.Errorf("toEncryption: unexpected type %T", value)
@@ -145,15 +145,15 @@ func toEncryption(value any) (any, error) {
 }
 
 func toQuantity(value any) (any, error) {
-	switch value.(type) {
+	switch castValue := value.(type) {
 	case string:
-		return types.Quantity(0).Find(value.(string))
+		return types.Quantity(0).Find(castValue)
 
 	case fmt.Stringer:
-		return types.Quantity(0).Find(value.(fmt.Stringer).String())
+		return types.Quantity(0).Find(castValue.String())
 
 	case int, int64:
-		return value, nil
+		return castValue, nil
 
 	default:
 		return nil, fmt.Errorf("toQuantity: unexpected type %T", value)
@@ -161,15 +161,15 @@ func toQuantity(value any) (any, error) {
 }
 
 func toImpact(value any) (any, error) {
-	switch value.(type) {
+	switch castValue := value.(type) {
 	case string:
-		return types.RiskExploitationImpact(0).Find(value.(string))
+		return types.RiskExploitationImpact(0).Find(castValue)
 
 	case fmt.Stringer:
-		return types.RiskExploitationImpact(0).Find(value.(fmt.Stringer).String())
+		return types.RiskExploitationImpact(0).Find(castValue.String())
 
 	case int, int64:
-		return value, nil
+		return castValue, nil
 
 	default:
 		return nil, fmt.Errorf("toImpact: unexpected type %T", value)
@@ -177,15 +177,15 @@ func toImpact(value any) (any, error) {
 }
 
 func toLikelihood(value any) (any, error) {
-	switch value.(type) {
+	switch castValue := value.(type) {
 	case string:
-		return types.RiskExploitationLikelihood(0).Find(value.(string))
+		return types.RiskExploitationLikelihood(0).Find(castValue)
 
 	case fmt.Stringer:
-		return types.RiskExploitationLikelihood(0).Find(value.(fmt.Stringer).String())
+		return types.RiskExploitationLikelihood(0).Find(castValue.String())
 
 	case int, int64:
-		return value, nil
+		return castValue, nil
 
 	default:
 		return nil, fmt.Errorf("toLikelihood: unexpected type %T", value)
@@ -193,15 +193,15 @@ func toLikelihood(value any) (any, error) {
 }
 
 func toSize(value any) (any, error) {
-	switch value.(type) {
+	switch castValue := value.(type) {
 	case string:
-		return types.TechnicalAssetSize(0).Find(value.(string))
+		return types.TechnicalAssetSize(0).Find(castValue)
 
 	case fmt.Stringer:
-		return types.TechnicalAssetSize(0).Find(value.(fmt.Stringer).String())
+		return types.TechnicalAssetSize(0).Find(castValue.String())
 
 	case int, int64:
-		return value, nil
+		return castValue, nil
 
 	default:
 		return nil, fmt.Errorf("toSize: unexpected type %T", value)

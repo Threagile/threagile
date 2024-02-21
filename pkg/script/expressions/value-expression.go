@@ -12,7 +12,6 @@ import (
 type ValueExpression struct {
 	literal string
 	value   any
-	cast    string
 }
 
 func (what *ValueExpression) ParseArray(script any) (common.ArrayExpression, any, error) {
@@ -450,30 +449,6 @@ func (what *ValueExpression) resolveMethodCall(scope *common.Scope, reString str
 	}
 
 	return value, what.Literal(), fmt.Errorf("no method %q", match[1])
-}
-
-func (what *ValueExpression) evalArray(scope *common.Scope, value []any) (any, string, error) {
-	array := make([]any, 0)
-	for _, item := range value {
-		itemValue, errorLiteral, evalError := what.eval(scope, item)
-		if evalError != nil {
-			return nil, errorLiteral, evalError
-		}
-
-		arrayValue, isArray := itemValue.([]any)
-		if isArray {
-			newValue, errorArrayLiteral, arrayError := what.evalArray(scope, arrayValue)
-			if arrayError != nil {
-				return nil, errorArrayLiteral, arrayError
-			}
-
-			itemValue = newValue
-		}
-
-		array = append(array, itemValue)
-	}
-
-	return array, "", nil
 }
 
 func (what *ValueExpression) Literal() string {
