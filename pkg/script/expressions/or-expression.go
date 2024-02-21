@@ -18,9 +18,9 @@ func (what *OrExpression) ParseBool(script any) (common.BoolExpression, any, err
 		return nil, errorScript, fmt.Errorf("failed to parse or-expression list: %v", itemError)
 	}
 
-	switch item.(type) {
+	switch castItem := item.(type) {
 	case common.ExpressionList:
-		for _, expression := range item.(common.ExpressionList).Expressions() {
+		for _, expression := range castItem.Expressions() {
 			boolExpression, ok := expression.(common.BoolExpression)
 			if !ok {
 				return nil, script, fmt.Errorf("or-expression contains non-bool expression: %v", itemError)
@@ -30,7 +30,7 @@ func (what *OrExpression) ParseBool(script any) (common.BoolExpression, any, err
 		}
 
 	case common.BoolExpression:
-		what.expressions = append(what.expressions, item.(common.BoolExpression))
+		what.expressions = append(what.expressions, castItem)
 
 	default:
 		return nil, script, fmt.Errorf("or-expression has non-bool expression: %v", itemError)

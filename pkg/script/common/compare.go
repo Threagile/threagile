@@ -22,8 +22,8 @@ func Compare(first any, second any, as string) (int, error) {
 		}
 	}
 
-	firstDecimal := decimal.NewFromInt(0)
-	switch firstValue.(type) {
+	var firstDecimal decimal.Decimal
+	switch castValue := firstValue.(type) {
 	case bool:
 		secondBool, ok := secondValue.(bool)
 		if !ok {
@@ -45,34 +45,34 @@ func Compare(first any, second any, as string) (int, error) {
 		}
 
 	case decimal.Decimal:
-		firstDecimal = firstValue.(decimal.Decimal)
+		firstDecimal = castValue
 
 	case int:
-		firstDecimal = decimal.NewFromInt(int64(firstValue.(int)))
+		firstDecimal = decimal.NewFromInt(int64(castValue))
 
 	case int64:
-		firstDecimal = decimal.NewFromInt(firstValue.(int64))
+		firstDecimal = decimal.NewFromInt(castValue)
 
 	case float64:
-		firstDecimal = decimal.NewFromFloat(firstValue.(float64))
+		firstDecimal = decimal.NewFromFloat(castValue)
 
 	case string, fmt.Stringer:
 		firstString := ""
-		switch firstValue.(type) {
+		switch castFirstValue := firstValue.(type) {
 		case string:
-			firstString = firstValue.(string)
+			firstString = castFirstValue
 
 		case fmt.Stringer:
-			firstString = firstValue.(fmt.Stringer).String()
+			firstString = castFirstValue.String()
 		}
 
 		secondString := ""
-		switch secondValue.(type) {
+		switch castSecondValue := secondValue.(type) {
 		case string:
-			secondString = secondValue.(string)
+			secondString = castSecondValue
 
 		case fmt.Stringer:
-			secondString = secondValue.(fmt.Stringer).String()
+			secondString = castSecondValue.String()
 
 		default:
 			return 0, fmt.Errorf("can't compare string to %T", secondValue)
@@ -84,19 +84,19 @@ func Compare(first any, second any, as string) (int, error) {
 		return 0, fmt.Errorf("can't compare %T to %T", firstValue, secondValue)
 	}
 
-	secondDecimal := decimal.NewFromInt(0)
-	switch secondValue.(type) {
+	var secondDecimal decimal.Decimal
+	switch castSecondValue := secondValue.(type) {
 	case decimal.Decimal:
-		secondDecimal = secondValue.(decimal.Decimal)
+		secondDecimal = castSecondValue
 
 	case int:
-		secondDecimal = decimal.NewFromInt(int64(secondValue.(int)))
+		secondDecimal = decimal.NewFromInt(int64(castSecondValue))
 
 	case int64:
-		secondDecimal = decimal.NewFromInt(secondValue.(int64))
+		secondDecimal = decimal.NewFromInt(castSecondValue)
 
 	case float64:
-		secondDecimal = decimal.NewFromFloat(secondValue.(float64))
+		secondDecimal = decimal.NewFromFloat(castSecondValue)
 
 	default:
 		return 0, fmt.Errorf("can't compare decimal to %T", secondValue)

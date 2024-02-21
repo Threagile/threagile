@@ -70,9 +70,9 @@ func (what *ContainsExpression) EvalBool(scope *common.Scope) (bool, string, err
 		return false, errorInLiteral, evalError
 	}
 
-	switch in.(type) {
+	switch castIn := in.(type) {
 	case []any:
-		for index, value := range in.([]any) {
+		for index, value := range castIn {
 			compareValue, compareError := common.Compare(item, value, what.as)
 			if compareError != nil {
 				return false, what.Literal(), fmt.Errorf("failed to eval contains-expression: can't compare value to item #%d: %v", index+1, compareError)
@@ -86,7 +86,7 @@ func (what *ContainsExpression) EvalBool(scope *common.Scope) (bool, string, err
 		return false, "", nil
 
 	case map[string]any:
-		for name, value := range in.(map[string]any) {
+		for name, value := range castIn {
 			compareValue, compareError := common.Compare(item, value, what.as)
 			if compareError != nil {
 				return false, what.Literal(), fmt.Errorf("failed to eval contains-expression: can't compare value to item %q: %v", name, compareError)

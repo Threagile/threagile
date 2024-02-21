@@ -118,15 +118,15 @@ func (what *ValueExpression) EvalBool(scope *common.Scope) (bool, string, error)
 			return false, errorLiteral, evalError
 		}
 
-		switch value.(type) {
+		switch castValue := value.(type) {
 		case string, fmt.Stringer:
 			stringValue := ""
-			switch value.(type) {
+			switch castStringValue := value.(type) {
 			case string:
-				stringValue = value.(string)
+				stringValue = castStringValue
 
 			case fmt.Stringer:
-				stringValue = value.(fmt.Stringer).String()
+				stringValue = castStringValue.String()
 			}
 
 			if len(stringValue) == 0 {
@@ -141,7 +141,7 @@ func (what *ValueExpression) EvalBool(scope *common.Scope) (bool, string, error)
 			return boolValue, "", nil
 
 		case bool:
-			return value.(bool), "", nil
+			return castValue, "", nil
 
 		case nil:
 			return false, "", nil
@@ -162,15 +162,18 @@ func (what *ValueExpression) EvalBool(scope *common.Scope) (bool, string, error)
 }
 
 func (what *ValueExpression) EvalDecimal(scope *common.Scope) (decimal.Decimal, string, error) {
-	switch what.value.(type) {
+	switch castOrigValue := what.value.(type) {
+	case decimal.Decimal:
+		return castOrigValue, "", nil
+
 	case string, fmt.Stringer:
 		valueString := ""
-		switch what.value.(type) {
+		switch castStringValue := what.value.(type) {
 		case string:
-			valueString = what.value.(string)
+			valueString = castStringValue
 
 		case fmt.Stringer:
-			valueString = what.value.(fmt.Stringer).String()
+			valueString = castStringValue.String()
 		}
 
 		value, errorLiteral, evalError := what.evalString(scope, valueString)
@@ -178,15 +181,18 @@ func (what *ValueExpression) EvalDecimal(scope *common.Scope) (decimal.Decimal, 
 			return decimal.NewFromInt(0), errorLiteral, evalError
 		}
 
-		switch value.(type) {
+		switch castValue := value.(type) {
+		case decimal.Decimal:
+			return castValue, "", nil
+
 		case string, fmt.Stringer:
 			evalString := ""
-			switch value.(type) {
+			switch castStringValue := value.(type) {
 			case string:
-				evalString = value.(string)
+				evalString = castStringValue
 
 			case fmt.Stringer:
-				evalString = value.(fmt.Stringer).String()
+				evalString = castStringValue.String()
 			}
 
 			decimalValue, parseError := decimal.NewFromString(evalString)
@@ -196,18 +202,12 @@ func (what *ValueExpression) EvalDecimal(scope *common.Scope) (decimal.Decimal, 
 
 			return decimalValue, "", nil
 
-		case decimal.Decimal:
-			return value.(decimal.Decimal), "", nil
-
 		case nil:
 			return decimal.NewFromInt(0), "", nil
 
 		default:
 			return decimal.NewFromInt(0), what.Literal(), fmt.Errorf("expected value-expression to eval to a decimal instead of %T", value)
 		}
-
-	case decimal.Decimal:
-		return what.value.(decimal.Decimal), "", nil
 
 	case nil:
 		return decimal.NewFromInt(0), "", nil
@@ -239,12 +239,12 @@ func (what *ValueExpression) EvalString(scope *common.Scope) (string, string, er
 		switch value.(type) {
 		case string, fmt.Stringer:
 			evalString := ""
-			switch value.(type) {
+			switch castStringValue := value.(type) {
 			case string:
-				evalString = value.(string)
+				evalString = castStringValue
 
 			case fmt.Stringer:
-				evalString = value.(fmt.Stringer).String()
+				evalString = castStringValue.String()
 			}
 
 			return evalString, "", nil
@@ -263,6 +263,9 @@ func (what *ValueExpression) EvalString(scope *common.Scope) (string, string, er
 
 func (what *ValueExpression) EvalAny(scope *common.Scope) (any, string, error) {
 	switch what.value.(type) {
+	case decimal.Decimal:
+		return what.value.(decimal.Decimal), "", nil
+
 	case string:
 		return what.evalString(scope, what.value.(string))
 
@@ -277,9 +280,6 @@ func (what *ValueExpression) EvalAny(scope *common.Scope) (any, string, error) {
 
 	case int64:
 		return decimal.NewFromInt(what.value.(int64)), "", nil
-
-	case decimal.Decimal:
-		return what.value.(decimal.Decimal), "", nil
 
 	case []any:
 		array := make([]any, 0)
@@ -303,12 +303,12 @@ func (what *ValueExpression) EvalAny(scope *common.Scope) (any, string, error) {
 }
 
 func (what *ValueExpression) eval(scope *common.Scope, value any) (any, string, error) {
-	switch value.(type) {
+	switch castStringValue := value.(type) {
 	case string:
-		return what.evalString(scope, value.(string))
+		return what.evalString(scope, castStringValue)
 
 	case fmt.Stringer:
-		return what.evalString(scope, value.(fmt.Stringer).String())
+		return what.evalString(scope, castStringValue.String())
 
 	default:
 		return value, "", nil
@@ -350,14 +350,14 @@ func (what *ValueExpression) resolveStringValues(scope *common.Scope, reString s
 			return name
 		}
 
-		switch item.(type) {
+		switch castItem := item.(type) {
 		case string:
 			replacements++
-			return item.(string)
+			return castItem
 
 		case fmt.Stringer:
 			replacements++
-			return item.(fmt.Stringer).String()
+			return castItem.String()
 
 		default:
 			return name
@@ -380,14 +380,14 @@ func (what *ValueExpression) resolveMethodCalls(scope *common.Scope, reString st
 			return name
 		}
 
-		switch returnValue.(type) {
+		switch castReturnValue := returnValue.(type) {
 		case string:
 			replacements++
-			return returnValue.(string)
+			return castReturnValue
 
 		case fmt.Stringer:
 			replacements++
-			return returnValue.(fmt.Stringer).String()
+			return castReturnValue.String()
 
 		default:
 			return name

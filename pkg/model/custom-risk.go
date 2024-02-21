@@ -9,28 +9,28 @@ import (
 )
 
 type CustomRisk struct {
-	id       string
-	category types.RiskCategory
-	tags     []string
-	runner   *runner
+	ID           string             `json:"id,omitempty" yaml:"id,omitempty"`
+	RiskCategory types.RiskCategory `json:"risk_category" yaml:"risk_category,omitempty"`
+	Tags         []string           `json:"tags,omitempty" yaml:"tags,omitempty"`
+	runner       *runner
 }
 
 func (what *CustomRisk) Init(id string, category types.RiskCategory, tags []string) *CustomRisk {
 	*what = CustomRisk{
-		id:       id,
-		category: category,
-		tags:     tags,
+		ID:           id,
+		RiskCategory: category,
+		Tags:         tags,
 	}
 
 	return what
 }
 
 func (what *CustomRisk) Category() types.RiskCategory {
-	return what.category
+	return what.RiskCategory
 }
 
 func (what *CustomRisk) SupportedTags() []string {
-	return what.tags
+	return what.Tags
 }
 
 func (what *CustomRisk) GenerateRisks(parsedModel *types.ParsedModel) []types.Risk {
@@ -48,7 +48,7 @@ func (what *CustomRisk) GenerateRisks(parsedModel *types.ParsedModel) []types.Ri
 }
 
 func (what *CustomRisk) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
-	categoryId := what.category.Id
+	categoryId := what.RiskCategory.Id
 	for _, id := range parsedModel.SortedTechnicalAssetIDs() {
 		techAsset := parsedModel.TechnicalAssets[id]
 		if strings.EqualFold(risk, categoryId+"@"+techAsset.Id) {
@@ -93,9 +93,9 @@ func LoadCustomRiskRules(pluginFiles []string, reporter types.ProgressReporter) 
 				}
 
 				risk.runner = runner
-				customRiskRules[risk.id] = risk
-				customRiskRuleList = append(customRiskRuleList, risk.id)
-				reporter.Info("Custom risk rule loaded:", risk.id)
+				customRiskRules[risk.ID] = risk
+				customRiskRuleList = append(customRiskRuleList, risk.ID)
+				reporter.Info("Custom risk rule loaded:", risk.ID)
 			}
 		}
 

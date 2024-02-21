@@ -18,12 +18,12 @@ func (what *AssignStatement) Parse(script any) (common.Statement, any, error) {
 		what.items = make(map[string]common.Expression)
 	}
 
-	switch script.(type) {
+	switch castScript := script.(type) {
 	case map[string]any:
-		return what.parse(script.(map[string]any))
+		return what.parse(castScript)
 
 	case []any:
-		for _, statement := range script.([]any) {
+		for _, statement := range castScript {
 			_, errorScript, itemError := what.Parse(statement)
 			if itemError != nil {
 				return nil, errorScript, fmt.Errorf("failed to parse assign-statement: %v", itemError)

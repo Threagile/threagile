@@ -20,9 +20,9 @@ func (what *TrueExpression) ParseBool(script any) (common.BoolExpression, any, e
 		return nil, errorScript, fmt.Errorf("failed to parse true-expression: %v", itemError)
 	}
 
-	switch item.(type) {
+	switch castItem := item.(type) {
 	case common.BoolExpression:
-		what.expression = item.(common.BoolExpression)
+		what.expression = castItem
 
 	default:
 		return nil, script, fmt.Errorf("true-expression has non-bool expression: %v", itemError)

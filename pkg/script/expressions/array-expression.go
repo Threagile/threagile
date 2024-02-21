@@ -13,10 +13,10 @@ type ArrayExpression struct {
 func (what *ArrayExpression) ParseArray(script any) (common.ArrayExpression, any, error) {
 	what.literal = common.ToLiteral(script)
 
-	switch script.(type) {
+	switch castScript := script.(type) {
 	case map[string]any:
 		expressions := new(ExpressionList)
-		_, errorScript, itemError := expressions.ParseAny(script.(map[string]any))
+		_, errorScript, itemError := expressions.ParseAny(castScript)
 		if itemError != nil {
 			return nil, errorScript, fmt.Errorf("failed to parse array-expression: %v", itemError)
 		}

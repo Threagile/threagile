@@ -71,9 +71,9 @@ func (what *LoopStatement) Run(scope *common.Scope) (string, error) {
 		return errorEvalLiteral, evalError
 	}
 
-	switch value.(type) {
+	switch castValue := value.(type) {
 	case []any:
-		for index, item := range value.([]any) {
+		for index, item := range castValue {
 			if len(what.index) > 0 {
 				scope.Set(what.index, index)
 			}
@@ -89,7 +89,7 @@ func (what *LoopStatement) Run(scope *common.Scope) (string, error) {
 		}
 
 	case map[string]any:
-		for name, item := range value.(map[string]any) {
+		for name, item := range castValue {
 			if len(what.index) > 0 {
 				scope.Set(what.index, name)
 			}
