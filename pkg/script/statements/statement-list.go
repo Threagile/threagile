@@ -13,9 +13,9 @@ type StatementList struct {
 func (what *StatementList) Parse(script any) (common.Statement, any, error) {
 	what.literal = common.ToLiteral(script)
 
-	switch script.(type) {
+	switch castScript := script.(type) {
 	case map[string]any:
-		scriptMap := script.(map[string]any)
+		scriptMap := castScript
 		if len(scriptMap) != 1 {
 			return nil, script, fmt.Errorf("failed to parse statement: statements must have single identifier")
 		}
@@ -25,7 +25,7 @@ func (what *StatementList) Parse(script any) (common.Statement, any, error) {
 		}
 
 	case []any:
-		for _, statement := range script.([]any) {
+		for _, statement := range castScript {
 			item, errorScript, itemError := what.Parse(statement)
 			if itemError != nil {
 				return nil, errorScript, fmt.Errorf("failed to parse statement list: %v", itemError)

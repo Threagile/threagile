@@ -26,9 +26,9 @@ func (what *Script) Parse(text []byte) error {
 	for key, value := range items {
 		switch strings.ToLower(key) {
 		case common.Risk:
-			switch value.(type) {
+			switch castValue := value.(type) {
 			case map[string]any:
-				what.risk = value.(map[string]any)
+				what.risk = castValue
 
 			default:
 				return fmt.Errorf("failed to parse %q: unexpected script type %T\nscript:\n%v", key, value, what.AddLineNumbers(value))
@@ -192,7 +192,7 @@ func (what *Script) generateRisk(scope *common.Scope) (*types.Risk, string, erro
 
 	parameter, ok := what.risk[common.Parameter]
 	if ok {
-		switch parameter.(type) {
+		switch castParameter := parameter.(type) {
 		case string:
 			if len(scope.Args) != 1 {
 				return nil, common.ToLiteral(parameter), fmt.Errorf("expected single parameter, got %d", len(scope.Args))
@@ -202,7 +202,7 @@ func (what *Script) generateRisk(scope *common.Scope) (*types.Risk, string, erro
 				scope.Vars = make(map[string]common.Value)
 			}
 
-			scope.Vars[parameter.(string)] = scope.Args[0]
+			scope.Vars[castParameter] = scope.Args[0]
 
 		default:
 			return nil, common.ToLiteral(parameter), fmt.Errorf("unexpected parameter format %T", parameter)
@@ -284,9 +284,9 @@ func (what *Script) getItem(value any, path ...string) (any, bool) {
 
 func (what *Script) parseUtils(script any) (map[string]*statements.MethodStatement, any, error) {
 	statementMap := make(map[string]*statements.MethodStatement)
-	switch script.(type) {
+	switch castScript := script.(type) {
 	case map[string]any:
-		for key, value := range script.(map[string]any) {
+		for key, value := range castScript {
 			methodStatement := new(statements.MethodStatement)
 			_, errorScript, parseError := methodStatement.Parse(value)
 			if parseError != nil {
@@ -297,7 +297,7 @@ func (what *Script) parseUtils(script any) (map[string]*statements.MethodStateme
 		}
 
 	case []any:
-		for n, value := range script.([]any) {
+		for n, value := range castScript {
 			newStatementMap, errorScript, parseError := what.parseUtils(value)
 			if parseError != nil {
 				return nil, errorScript, fmt.Errorf("failed to parse method #%d: %v", n+1, parseError)

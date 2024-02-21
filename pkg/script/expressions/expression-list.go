@@ -57,9 +57,9 @@ func (what *ExpressionList) ParseExpression(script map[string]any) (common.Expre
 func (what *ExpressionList) ParseArray(script any) (common.ExpressionList, any, error) {
 	what.literal = common.ToLiteral(script)
 
-	switch script.(type) {
+	switch castScript := script.(type) {
 	case []any:
-		for _, expression := range script.([]any) {
+		for _, expression := range castScript {
 			item, errorScript, itemError := what.ParseAny(expression)
 			if itemError != nil {
 				return nil, errorScript, fmt.Errorf("failed to parse expression list: %v", itemError)
@@ -78,20 +78,20 @@ func (what *ExpressionList) ParseArray(script any) (common.ExpressionList, any, 
 func (what *ExpressionList) ParseAny(script any) (common.Expression, any, error) {
 	what.literal = common.ToLiteral(script)
 
-	switch script.(type) {
+	switch castScript := script.(type) {
 	case map[any]any:
 		newMap := make(map[string]any)
-		for key, value := range script.(map[any]any) {
+		for key, value := range castScript {
 			newMap[fmt.Sprintf("%v", key)] = value
 		}
 
 		return what.ParseExpression(newMap)
 
 	case map[string]any:
-		return what.ParseExpression(script.(map[string]any))
+		return what.ParseExpression(castScript)
 
 	case []any:
-		for _, expression := range script.([]any) {
+		for _, expression := range castScript {
 			item, errorScript, itemError := what.ParseAny(expression)
 			if itemError != nil {
 				return nil, errorScript, fmt.Errorf("failed to parse expression list: %v", itemError)

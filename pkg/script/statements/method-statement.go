@@ -19,12 +19,12 @@ func (what *MethodStatement) Parse(script any) (common.Statement, any, error) {
 		for key, value := range script.(map[string]any) {
 			switch key {
 			case common.Parameter, common.Parameters:
-				switch value.(type) {
+				switch castValue := value.(type) {
 				case []string:
-					what.parameters = append(what.parameters, value.([]string)...)
+					what.parameters = append(what.parameters, castValue...)
 
 				case []any:
-					for _, generic := range value.([]any) {
+					for _, generic := range castValue {
 						text, ok := generic.(string)
 						if !ok {
 							return nil, generic, fmt.Errorf("failed to parse %q of method-statement: expected string, got %T", key, generic)
@@ -34,10 +34,10 @@ func (what *MethodStatement) Parse(script any) (common.Statement, any, error) {
 					}
 
 				case string:
-					what.parameters = append(what.parameters, value.(string))
+					what.parameters = append(what.parameters, castValue)
 
 				case fmt.Stringer:
-					what.parameters = append(what.parameters, value.(fmt.Stringer).String())
+					what.parameters = append(what.parameters, castValue.String())
 
 				default:
 					return nil, value, fmt.Errorf("failed to parse %q of method-statement: unexpected parameter type %T", key, value)

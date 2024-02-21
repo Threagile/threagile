@@ -508,7 +508,7 @@ func ParseModel(modelInput *input.Model, builtinRiskRules map[string]risks.RiskR
 
 	parsedModel.IndividualRiskCategories = make(map[string]types.RiskCategory)
 	for _, rule := range customRiskRules {
-		parsedModel.IndividualRiskCategories[rule.category.Id] = rule.category
+		parsedModel.IndividualRiskCategories[rule.RiskCategory.Id] = rule.RiskCategory
 	}
 
 	// Individual Risk Categories (just used as regular risk categories) ===============================================================================

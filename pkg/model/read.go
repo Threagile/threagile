@@ -127,7 +127,7 @@ func applyRiskGeneration(parsedModel *types.ParsedModel, customRiskRules map[str
 			parsedModel.AddToListOfSupportedTags(customRule.SupportedTags())
 			customRisks := customRule.GenerateRisks(parsedModel)
 			if len(customRisks) > 0 {
-				parsedModel.GeneratedRisksByCategory[customRule.category.Id] = customRisks
+				parsedModel.GeneratedRisksByCategory[customRule.RiskCategory.Id] = customRisks
 			}
 
 			progressReporter.Infof("Added custom risks: %v", len(customRisks))
