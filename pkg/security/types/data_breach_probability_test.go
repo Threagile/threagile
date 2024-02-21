@@ -37,7 +37,7 @@ func TestParseDataBreachProbability(t *testing.T) {
 		},
 		"unknown": {
 			input:         "unknown",
-			expectedError: fmt.Errorf("unable to parse into type: unknown"),
+			expectedError: fmt.Errorf("unknown data breach probability value \"unknown\""),
 		},
 	}
 

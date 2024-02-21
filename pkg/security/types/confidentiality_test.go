@@ -41,7 +41,7 @@ func TestParseConfidenitality(t *testing.T) {
 		},
 		"unknown": {
 			input:         "unknown",
-			expectedError: fmt.Errorf("unable to parse into type: unknown"),
+			expectedError: fmt.Errorf("unknown confidentiality value \"unknown\""),
 		},
 	}
 

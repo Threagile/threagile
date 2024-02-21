@@ -91,6 +91,10 @@ func (what *RiskSeverity) UnmarshalYAML(node *yaml.Node) error {
 }
 
 func (what RiskSeverity) Find(value string) (RiskSeverity, error) {
+	if len(value) == 0 {
+		return MediumSeverity, nil
+	}
+
 	for index, description := range RiskSeverityTypeDescription {
 		if strings.EqualFold(value, description.Name) {
 			return RiskSeverity(index), nil
