@@ -7,9 +7,8 @@ import (
 )
 
 type ReturnStatement struct {
-	literal      string
-	expression   common.Expression
-	returnValues []common.Value
+	literal    string
+	expression common.Expression
 }
 
 func (what *ReturnStatement) Parse(script any) (common.Statement, any, error) {

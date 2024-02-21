@@ -282,19 +282,6 @@ func (what *Script) getItem(value any, path ...string) (any, bool) {
 	return nil, false
 }
 
-func (what *Script) parseMatch(script any) (common.Statement, any, error) {
-	switch script.(type) {
-	case map[string]any:
-		return new(statements.MethodStatement).Parse(script)
-
-	case []any:
-		return new(statements.StatementList).Parse(script)
-
-	default:
-		return nil, nil, fmt.Errorf("unexpected script format %T", script)
-	}
-}
-
 func (what *Script) parseUtils(script any) (map[string]*statements.MethodStatement, any, error) {
 	statementMap := make(map[string]*statements.MethodStatement)
 	switch script.(type) {
