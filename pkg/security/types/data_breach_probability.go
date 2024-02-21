@@ -85,6 +85,10 @@ func (what *DataBreachProbability) UnmarshalYAML(node *yaml.Node) error {
 }
 
 func (what DataBreachProbability) Find(value string) (DataBreachProbability, error) {
+	if len(value) == 0 {
+		return Possible, nil
+	}
+
 	for index, description := range DataBreachProbabilityTypeDescription {
 		if strings.EqualFold(value, description.Name) {
 			return DataBreachProbability(index), nil
