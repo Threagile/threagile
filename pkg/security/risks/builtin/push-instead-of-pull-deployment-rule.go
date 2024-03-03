@@ -50,9 +50,9 @@ func (r *PushInsteadPullDeploymentRule) GenerateRisks(input *types.ParsedModel) 
 				targetAsset := input.TechnicalAssets[deploymentLink.TargetId]
 				if !deploymentLink.Readonly && deploymentLink.Usage == types.DevOps &&
 					!targetAsset.OutOfScope && !targetAsset.Technology.IsDevelopmentRelevant() && targetAsset.Usage == types.Business {
-					if targetAsset.HighestConfidentiality(input) >= types.Confidential ||
-						targetAsset.HighestIntegrity(input) >= types.Critical ||
-						targetAsset.HighestAvailability(input) >= types.Critical {
+					if targetAsset.HighestProcessedConfidentiality(input) >= types.Confidential ||
+						targetAsset.HighestProcessedIntegrity(input) >= types.Critical ||
+						targetAsset.HighestProcessedAvailability(input) >= types.Critical {
 						impact = types.MediumImpact
 					}
 					risks = append(risks, r.createRisk(buildPipeline, targetAsset, deploymentLink, impact))
@@ -78,14 +78,4 @@ func (r *PushInsteadPullDeploymentRule) createRisk(buildPipeline types.Technical
 	}
 	risk.SyntheticId = risk.CategoryId + "@" + buildPipeline.Id
 	return risk
-}
-
-func (r *PushInsteadPullDeploymentRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
-	// todo
-	return false
-}
-
-func (r *PushInsteadPullDeploymentRule) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
-	// todo
-	return nil
 }

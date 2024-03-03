@@ -110,13 +110,3 @@ func (r *UnguardedAccessFromInternetRule) createRisk(dataStore types.TechnicalAs
 	risk.SyntheticId = risk.CategoryId + "@" + dataStore.Id + "@" + clientFromInternet.Id + "@" + dataFlow.Id
 	return risk
 }
-
-func (r *UnguardedAccessFromInternetRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
-	// todo
-	return false
-}
-
-func (r *UnguardedAccessFromInternetRule) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
-	// todo
-	return nil
-}

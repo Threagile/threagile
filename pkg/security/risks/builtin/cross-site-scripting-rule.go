@@ -55,7 +55,7 @@ func (r *CrossSiteScriptingRule) GenerateRisks(input *types.ParsedModel) []types
 func (r *CrossSiteScriptingRule) createRisk(parsedModel *types.ParsedModel, technicalAsset types.TechnicalAsset) types.Risk {
 	title := "<b>Cross-Site Scripting (XSS)</b> risk at <b>" + technicalAsset.Title + "</b>"
 	impact := types.MediumImpact
-	if technicalAsset.HighestConfidentiality(parsedModel) == types.StrictlyConfidential || technicalAsset.HighestIntegrity(parsedModel) == types.MissionCritical {
+	if technicalAsset.HighestProcessedConfidentiality(parsedModel) == types.StrictlyConfidential || technicalAsset.HighestProcessedIntegrity(parsedModel) == types.MissionCritical {
 		impact = types.HighImpact
 	}
 	risk := types.Risk{
@@ -70,14 +70,4 @@ func (r *CrossSiteScriptingRule) createRisk(parsedModel *types.ParsedModel, tech
 	}
 	risk.SyntheticId = risk.CategoryId + "@" + technicalAsset.Id
 	return risk
-}
-
-func (r *CrossSiteScriptingRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
-	// todo
-	return false
-}
-
-func (r *CrossSiteScriptingRule) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
-	// todo
-	return nil
 }

@@ -33,53 +33,16 @@ func (what *Threagile) initExplainNew() *Threagile {
 			cfg := what.readConfig(cmd, what.buildTimestamp)
 			progressReporter := common.DefaultProgressReporter{Verbose: cfg.Verbose}
 
+			// todo: reuse model if already loaded
+
 			result, runError := model.ReadAndAnalyzeModel(*cfg, progressReporter)
 			if runError != nil {
 				cmd.Printf("Failed to read and analyze model: %v", runError)
 				return runError
 			}
 
-			cmd.Println()
-
-			for _, risk := range args {
-				cmd.Printf("risk: %v\n", risk)
-				found := false
-
-				customRiskRules := model.LoadCustomRiskRules(strings.Split(what.flags.customRiskRulesPluginFlag, ","), common.DefaultProgressReporter{Verbose: what.flags.verboseFlag})
-				for _, rule := range customRiskRules {
-					if rule.MatchRisk(result.ParsedModel, risk) {
-						cmd.Printf("matching custom rule: %v\n", rule.Category().Id)
-
-						explanation := rule.ExplainRisk(result.ParsedModel, risk)
-						if explanation != nil {
-							cmd.Printf("explanation:\n%v\n", strings.Join(explanation, "\n"))
-							found = true
-						}
-
-						cmd.Println()
-					}
-				}
-
-				for _, rule := range risks.GetBuiltInRiskRules() {
-					if rule.MatchRisk(result.ParsedModel, risk) {
-						cmd.Printf("matching built-in rule: %v\n", rule.Category().Id)
-
-						explanation := rule.ExplainRisk(result.ParsedModel, risk)
-						if explanation != nil {
-							cmd.Printf("explanation:\n%v\n", strings.Join(explanation, "\n"))
-							found = true
-						}
-
-						cmd.Println()
-					}
-				}
-
-				if !found {
-					cmd.Printf("no matching rule found to explain risk %q\n", risk)
-				}
-			}
-
-			return nil
+			_ = result
+			return fmt.Errorf("not implemneted yet")
 		},
 	})
 

@@ -56,8 +56,8 @@ func (r *ServiceRegistryPoisoningRule) createRisk(input *types.ParsedModel, tech
 
 	for _, incomingFlow := range incomingFlows {
 		caller := input.TechnicalAssets[incomingFlow.SourceId]
-		if technicalAsset.HighestConfidentiality(input) == types.StrictlyConfidential || technicalAsset.HighestIntegrity(input) == types.MissionCritical || technicalAsset.HighestAvailability(input) == types.MissionCritical ||
-			caller.HighestConfidentiality(input) == types.StrictlyConfidential || caller.HighestIntegrity(input) == types.MissionCritical || caller.HighestAvailability(input) == types.MissionCritical ||
+		if technicalAsset.HighestProcessedConfidentiality(input) == types.StrictlyConfidential || technicalAsset.HighestProcessedIntegrity(input) == types.MissionCritical || technicalAsset.HighestProcessedAvailability(input) == types.MissionCritical ||
+			caller.HighestProcessedConfidentiality(input) == types.StrictlyConfidential || caller.HighestProcessedIntegrity(input) == types.MissionCritical || caller.HighestProcessedAvailability(input) == types.MissionCritical ||
 			incomingFlow.HighestConfidentiality(input) == types.StrictlyConfidential || incomingFlow.HighestIntegrity(input) == types.MissionCritical || incomingFlow.HighestAvailability(input) == types.MissionCritical {
 			impact = types.MediumImpact
 			break
@@ -76,14 +76,4 @@ func (r *ServiceRegistryPoisoningRule) createRisk(input *types.ParsedModel, tech
 	}
 	risk.SyntheticId = risk.CategoryId + "@" + technicalAsset.Id
 	return risk
-}
-
-func (r *ServiceRegistryPoisoningRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
-	// todo
-	return false
-}
-
-func (r *ServiceRegistryPoisoningRule) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
-	// todo
-	return nil
 }

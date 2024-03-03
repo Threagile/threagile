@@ -122,7 +122,7 @@ individual_risk_categories:
       get_highest:
         parameters:
           - tech_asset
-          - type
+          - "type"
         do:
           - assign:
               - value: "{tech_asset.{type}}"

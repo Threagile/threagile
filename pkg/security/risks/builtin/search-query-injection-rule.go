@@ -71,9 +71,9 @@ func (r *SearchQueryInjectionRule) createRisk(input *types.ParsedModel, technica
 	title := "<b>Search Query Injection</b> risk at <b>" + caller.Title + "</b> against search engine server <b>" + technicalAsset.Title + "</b>" +
 		" via <b>" + incomingFlow.Title + "</b>"
 	impact := types.MediumImpact
-	if technicalAsset.HighestConfidentiality(input) == types.StrictlyConfidential || technicalAsset.HighestIntegrity(input) == types.MissionCritical {
+	if technicalAsset.HighestProcessedConfidentiality(input) == types.StrictlyConfidential || technicalAsset.HighestProcessedIntegrity(input) == types.MissionCritical {
 		impact = types.HighImpact
-	} else if technicalAsset.HighestConfidentiality(input) <= types.Internal && technicalAsset.HighestIntegrity(input) == types.Operational {
+	} else if technicalAsset.HighestProcessedConfidentiality(input) <= types.Internal && technicalAsset.HighestProcessedIntegrity(input) == types.Operational {
 		impact = types.LowImpact
 	}
 	risk := types.Risk{
@@ -89,14 +89,4 @@ func (r *SearchQueryInjectionRule) createRisk(input *types.ParsedModel, technica
 	}
 	risk.SyntheticId = risk.CategoryId + "@" + caller.Id + "@" + technicalAsset.Id + "@" + incomingFlow.Id
 	return risk
-}
-
-func (r *SearchQueryInjectionRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
-	// todo
-	return false
-}
-
-func (r *SearchQueryInjectionRule) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
-	// todo
-	return nil
 }

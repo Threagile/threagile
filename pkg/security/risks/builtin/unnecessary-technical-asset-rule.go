@@ -64,13 +64,3 @@ func (r *UnnecessaryTechnicalAssetRule) createRisk(technicalAsset types.Technica
 	risk.SyntheticId = risk.CategoryId + "@" + technicalAsset.Id
 	return risk
 }
-
-func (r *UnnecessaryTechnicalAssetRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
-	// todo
-	return false
-}
-
-func (r *UnnecessaryTechnicalAssetRule) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
-	// todo
-	return nil
-}

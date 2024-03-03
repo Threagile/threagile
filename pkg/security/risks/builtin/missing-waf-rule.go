@@ -61,9 +61,9 @@ func (r *MissingWafRule) createRisk(input *types.ParsedModel, technicalAsset typ
 	title := "<b>Missing Web Application Firewall (WAF)</b> risk at <b>" + technicalAsset.Title + "</b>"
 	likelihood := types.Unlikely
 	impact := types.LowImpact
-	if technicalAsset.HighestConfidentiality(input) == types.StrictlyConfidential ||
-		technicalAsset.HighestIntegrity(input) == types.MissionCritical ||
-		technicalAsset.HighestAvailability(input) == types.MissionCritical {
+	if technicalAsset.HighestProcessedConfidentiality(input) == types.StrictlyConfidential ||
+		technicalAsset.HighestProcessedIntegrity(input) == types.MissionCritical ||
+		technicalAsset.HighestProcessedAvailability(input) == types.MissionCritical {
 		impact = types.MediumImpact
 	}
 	risk := types.Risk{
@@ -78,14 +78,4 @@ func (r *MissingWafRule) createRisk(input *types.ParsedModel, technicalAsset typ
 	}
 	risk.SyntheticId = risk.CategoryId + "@" + technicalAsset.Id
 	return risk
-}
-
-func (r *MissingWafRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
-	// todo
-	return false
-}
-
-func (r *MissingWafRule) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
-	// todo
-	return nil
 }

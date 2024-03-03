@@ -16,43 +16,29 @@ type Script struct {
 	utils map[string]*statements.MethodStatement
 }
 
-func (what *Script) Parse(text []byte) error {
+func (what *Script) Parse(text []byte) (map[string]Script, error) {
 	items := make(map[string]any)
 	parseError := yaml.Unmarshal(text, &items)
 	if parseError != nil {
-		return parseError
+		return nil, parseError
 	}
 
 	for key, value := range items {
 		switch strings.ToLower(key) {
-		case common.Risk:
-			switch castValue := value.(type) {
-			case map[string]any:
-				what.risk = castValue
-
-			default:
-				return fmt.Errorf("failed to parse %q: unexpected script type %T\nscript:\n%v", key, value, what.AddLineNumbers(value))
+		case "individual_risk_categories":
+			risk, ok := value.(map[string]any)
+			if !ok {
+				return nil, fmt.Errorf("unexpected format %T in risk definition", value)
 			}
 
-		case common.Match:
-			item, errorScript, itemError := new(statements.MethodStatement).Parse(value)
-			if itemError != nil {
-				return fmt.Errorf("failed to parse %q: %v\nscript:\n%v", key, itemError, what.AddLineNumbers(errorScript))
-			}
+			return what.parseRiskScripts(risk)
 
-			what.match = item
-
-		case common.Utils:
-			item, errorScript, itemError := what.parseUtils(value)
-			if itemError != nil {
-				return fmt.Errorf("failed to parse %q: %v\nscript:\n%v", key, itemError, what.AddLineNumbers(errorScript))
-			}
-
-			what.utils = item
+		default:
+			return nil, fmt.Errorf("unexpected key %q in risk definition", key)
 		}
 	}
 
-	return nil
+	return nil, fmt.Errorf("no scripts found")
 }
 
 func (what *Script) GenerateRisks(scope *common.Scope) (map[string]*types.Risk, string, error) {
@@ -141,6 +127,58 @@ func (what *Script) IndentPrintf(level int, script any) string {
 
 func (what *Script) IndentLine(level int, format string, params ...any) string {
 	return strings.Repeat("    ", level) + fmt.Sprintf(format, params...)
+}
+
+func (what *Script) parseRiskScripts(item map[string]any) (map[string]Script, error) {
+	scripts := make(map[string]Script)
+	for key, value := range item {
+		risk, ok := value.(map[string]any)
+		if !ok {
+			return nil, fmt.Errorf("unexpected format %T in risk definition for %q", value, key)
+		}
+
+		script, parseError := new(Script).parseScript(risk)
+		if parseError != nil {
+			return nil, fmt.Errorf("failed to parse script of risk definition for %q: %v", key, parseError)
+		}
+
+		scripts[key] = *script
+	}
+
+	return scripts, nil
+}
+
+func (what *Script) parseScript(script map[string]any) (*Script, error) {
+	for key, value := range script {
+		switch strings.ToLower(key) {
+		case common.Risk:
+			switch castValue := value.(type) {
+			case map[string]any:
+				what.risk = castValue
+
+			default:
+				return what, fmt.Errorf("failed to parse %q: unexpected script type %T\nscript:\n%v", key, value, what.AddLineNumbers(value))
+			}
+
+		case common.Match:
+			item, errorScript, itemError := new(statements.MethodStatement).Parse(value)
+			if itemError != nil {
+				return what, fmt.Errorf("failed to parse %q: %v\nscript:\n%v", key, itemError, what.AddLineNumbers(errorScript))
+			}
+
+			what.match = item
+
+		case common.Utils:
+			item, errorScript, itemError := what.parseUtils(value)
+			if itemError != nil {
+				return what, fmt.Errorf("failed to parse %q: %v\nscript:\n%v", key, itemError, what.AddLineNumbers(errorScript))
+			}
+
+			what.utils = item
+		}
+	}
+
+	return what, nil
 }
 
 func (what *Script) matchRisk(scope *common.Scope) (bool, string, error) {

@@ -60,9 +60,9 @@ func (r *MissingIdentityStoreRule) GenerateRisks(input *types.ParsedModel) []typ
 				targetAsset := input.TechnicalAssets[commLink.TargetId]
 				if impact == types.LowImpact {
 					mostRelevantAsset = targetAsset
-					if targetAsset.HighestConfidentiality(input) >= types.Confidential ||
-						targetAsset.HighestIntegrity(input) >= types.Critical ||
-						targetAsset.HighestAvailability(input) >= types.Critical {
+					if targetAsset.HighestProcessedConfidentiality(input) >= types.Confidential ||
+						targetAsset.HighestProcessedIntegrity(input) >= types.Critical ||
+						targetAsset.HighestProcessedAvailability(input) >= types.Critical {
 						impact = types.MediumImpact
 					}
 				}
@@ -98,14 +98,4 @@ func (r *MissingIdentityStoreRule) createRisk(technicalAsset types.TechnicalAsse
 	}
 	risk.SyntheticId = risk.CategoryId + "@" + technicalAsset.Id
 	return risk
-}
-
-func (r *MissingIdentityStoreRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
-	// todo
-	return false
-}
-
-func (r *MissingIdentityStoreRule) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
-	// todo
-	return nil
 }

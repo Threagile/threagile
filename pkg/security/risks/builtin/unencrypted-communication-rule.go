@@ -123,13 +123,3 @@ func isHighSensitivity(dataAsset types.DataAsset) bool {
 func isMediumSensitivity(dataAsset types.DataAsset) bool {
 	return dataAsset.Confidentiality == types.Confidential || dataAsset.Integrity == types.Critical
 }
-
-func (r *UnencryptedCommunicationRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
-	// todo
-	return false
-}
-
-func (r *UnencryptedCommunicationRule) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
-	// todo
-	return nil
-}

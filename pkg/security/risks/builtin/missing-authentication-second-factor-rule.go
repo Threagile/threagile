@@ -50,9 +50,9 @@ func (r *MissingAuthenticationSecondFactorRule) GenerateRisks(input *types.Parse
 			technicalAsset.Technology.IsUnprotectedCommunicationsTolerated() {
 			continue
 		}
-		if technicalAsset.HighestConfidentiality(input) >= types.Confidential ||
-			technicalAsset.HighestIntegrity(input) >= types.Critical ||
-			technicalAsset.HighestAvailability(input) >= types.Critical ||
+		if technicalAsset.HighestProcessedConfidentiality(input) >= types.Confidential ||
+			technicalAsset.HighestProcessedIntegrity(input) >= types.Critical ||
+			technicalAsset.HighestProcessedAvailability(input) >= types.Critical ||
 			technicalAsset.MultiTenant {
 			// check each incoming data flow
 			commLinks := input.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id]
@@ -88,14 +88,4 @@ func (r *MissingAuthenticationSecondFactorRule) GenerateRisks(input *types.Parse
 		}
 	}
 	return risks
-}
-
-func (r *MissingAuthenticationSecondFactorRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
-	// todo
-	return false
-}
-
-func (r *MissingAuthenticationSecondFactorRule) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
-	// todo
-	return nil
 }

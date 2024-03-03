@@ -91,13 +91,3 @@ func (r *UnnecessaryDataAssetRule) createRisk(input *types.ParsedModel, unusedDa
 	risk.SyntheticId = risk.CategoryId + "@" + unusedDataAsset.Id
 	return risk
 }
-
-func (r *UnnecessaryDataAssetRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
-	// todo
-	return false
-}
-
-func (r *UnnecessaryDataAssetRule) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
-	// todo
-	return nil
-}

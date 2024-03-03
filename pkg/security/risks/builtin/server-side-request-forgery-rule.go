@@ -63,7 +63,7 @@ func (r *ServerSideRequestForgeryRule) createRisk(input *types.ParsedModel, tech
 		"the target <b>" + target.Title + "</b> via <b>" + outgoingFlow.Title + "</b>"
 	impact := types.LowImpact
 	// check by the target itself (can be in another trust-boundary)
-	if target.HighestConfidentiality(input) == types.StrictlyConfidential {
+	if target.HighestProcessedConfidentiality(input) == types.StrictlyConfidential {
 		impact = types.MediumImpact
 	}
 	// check all potential attack targets within the same trust boundary (accessible via web protocols)
@@ -74,7 +74,7 @@ func (r *ServerSideRequestForgeryRule) createRisk(input *types.ParsedModel, tech
 			for _, commLinkIncoming := range input.IncomingTechnicalCommunicationLinksMappedByTargetId[potentialTargetAsset.Id] {
 				if commLinkIncoming.Protocol.IsPotentialWebAccessProtocol() {
 					uniqueDataBreachTechnicalAssetIDs[potentialTargetAsset.Id] = true
-					if potentialTargetAsset.HighestConfidentiality(input) == types.StrictlyConfidential {
+					if potentialTargetAsset.HighestProcessedConfidentiality(input) == types.StrictlyConfidential {
 						impact = types.MediumImpact
 					}
 				}
@@ -106,14 +106,4 @@ func (r *ServerSideRequestForgeryRule) createRisk(input *types.ParsedModel, tech
 	}
 	risk.SyntheticId = risk.CategoryId + "@" + technicalAsset.Id + "@" + target.Id + "@" + outgoingFlow.Id
 	return risk
-}
-
-func (r *ServerSideRequestForgeryRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
-	// todo
-	return false
-}
-
-func (r *ServerSideRequestForgeryRule) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
-	// todo
-	return nil
 }

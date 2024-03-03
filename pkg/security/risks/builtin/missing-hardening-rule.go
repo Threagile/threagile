@@ -60,7 +60,7 @@ func (r *MissingHardeningRule) GenerateRisks(input *types.ParsedModel) []types.R
 func (r *MissingHardeningRule) createRisk(input *types.ParsedModel, technicalAsset types.TechnicalAsset) types.Risk {
 	title := "<b>Missing Hardening</b> risk at <b>" + technicalAsset.Title + "</b>"
 	impact := types.LowImpact
-	if technicalAsset.HighestConfidentiality(input) == types.StrictlyConfidential || technicalAsset.HighestIntegrity(input) == types.MissionCritical {
+	if technicalAsset.HighestProcessedConfidentiality(input) == types.StrictlyConfidential || technicalAsset.HighestProcessedIntegrity(input) == types.MissionCritical {
 		impact = types.MediumImpact
 	}
 	risk := types.Risk{
@@ -75,14 +75,4 @@ func (r *MissingHardeningRule) createRisk(input *types.ParsedModel, technicalAss
 	}
 	risk.SyntheticId = risk.CategoryId + "@" + technicalAsset.Id
 	return risk
-}
-
-func (r *MissingHardeningRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
-	// todo
-	return false
-}
-
-func (r *MissingHardeningRule) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
-	// todo
-	return nil
 }

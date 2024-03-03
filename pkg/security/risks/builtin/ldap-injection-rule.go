@@ -64,7 +64,7 @@ func (r *LdapInjectionRule) createRisk(input *types.ParsedModel, technicalAsset 
 	title := "<b>LDAP-Injection</b> risk at <b>" + caller.Title + "</b> against LDAP server <b>" + technicalAsset.Title + "</b>" +
 		" via <b>" + incomingFlow.Title + "</b>"
 	impact := types.MediumImpact
-	if technicalAsset.HighestConfidentiality(input) == types.StrictlyConfidential || technicalAsset.HighestIntegrity(input) == types.MissionCritical {
+	if technicalAsset.HighestProcessedConfidentiality(input) == types.StrictlyConfidential || technicalAsset.HighestProcessedIntegrity(input) == types.MissionCritical {
 		impact = types.HighImpact
 	}
 	risk := types.Risk{
@@ -80,14 +80,4 @@ func (r *LdapInjectionRule) createRisk(input *types.ParsedModel, technicalAsset 
 	}
 	risk.SyntheticId = risk.CategoryId + "@" + caller.Id + "@" + technicalAsset.Id + "@" + incomingFlow.Id
 	return risk
-}
-
-func (r *LdapInjectionRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
-	// todo
-	return false
-}
-
-func (r *LdapInjectionRule) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
-	// todo
-	return nil
 }

@@ -47,32 +47,6 @@ func (what *CustomRisk) GenerateRisks(parsedModel *types.ParsedModel) []types.Ri
 	return risks
 }
 
-func (what *CustomRisk) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
-	categoryId := what.RiskCategory.Id
-	for _, id := range parsedModel.SortedTechnicalAssetIDs() {
-		techAsset := parsedModel.TechnicalAssets[id]
-		if strings.EqualFold(risk, categoryId+"@"+techAsset.Id) {
-			return true
-		}
-	}
-
-	return false
-}
-
-func (what *CustomRisk) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
-	if what.runner == nil {
-		return nil
-	}
-
-	explanation := make([]string, 0)
-	runError := what.runner.Run(parsedModel, &explanation, "-explain-risk", risk)
-	if runError != nil {
-		log.Fatalf("Failed to explain risk %q for custom risk rule %q: %v\n", risk, what.runner.Filename, runError)
-	}
-
-	return explanation
-}
-
 func LoadCustomRiskRules(pluginFiles []string, reporter types.ProgressReporter) map[string]*CustomRisk {
 	customRiskRuleList := make([]string, 0)
 	customRiskRules := make(map[string]*CustomRisk)

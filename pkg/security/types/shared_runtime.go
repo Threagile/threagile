@@ -28,8 +28,8 @@ func (what SharedRuntime) HighestConfidentiality(model *ParsedModel) Confidentia
 	highest := Public
 	for _, id := range what.TechnicalAssetsRunning {
 		techAsset := model.TechnicalAssets[id]
-		if techAsset.HighestConfidentiality(model) > highest {
-			highest = techAsset.HighestConfidentiality(model)
+		if techAsset.HighestProcessedConfidentiality(model) > highest {
+			highest = techAsset.HighestProcessedConfidentiality(model)
 		}
 	}
 	return highest
@@ -39,8 +39,8 @@ func (what SharedRuntime) HighestIntegrity(model *ParsedModel) Criticality {
 	highest := Archive
 	for _, id := range what.TechnicalAssetsRunning {
 		techAsset := model.TechnicalAssets[id]
-		if techAsset.HighestIntegrity(model) > highest {
-			highest = techAsset.HighestIntegrity(model)
+		if techAsset.HighestProcessedIntegrity(model) > highest {
+			highest = techAsset.HighestProcessedIntegrity(model)
 		}
 	}
 	return highest
@@ -50,8 +50,8 @@ func (what SharedRuntime) HighestAvailability(model *ParsedModel) Criticality {
 	highest := Archive
 	for _, id := range what.TechnicalAssetsRunning {
 		techAsset := model.TechnicalAssets[id]
-		if techAsset.HighestAvailability(model) > highest {
-			highest = techAsset.HighestAvailability(model)
+		if techAsset.HighestProcessedAvailability(model) > highest {
+			highest = techAsset.HighestProcessedAvailability(model)
 		}
 	}
 	return highest

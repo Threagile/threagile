@@ -101,13 +101,3 @@ func (r *MissingVaultIsolationRule) createRisk(techAsset types.TechnicalAsset, m
 	risk.SyntheticId = risk.CategoryId + "@" + techAsset.Id
 	return risk
 }
-
-func (r *MissingVaultIsolationRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
-	// todo
-	return false
-}
-
-func (r *MissingVaultIsolationRule) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
-	// todo
-	return nil
-}

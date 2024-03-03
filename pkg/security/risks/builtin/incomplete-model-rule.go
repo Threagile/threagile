@@ -86,13 +86,3 @@ func (r *IncompleteModelRule) createRiskCommLink(technicalAsset types.TechnicalA
 	risk.SyntheticId = risk.CategoryId + "@" + commLink.Id + "@" + technicalAsset.Id
 	return risk
 }
-
-func (r *IncompleteModelRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
-	// todo
-	return false
-}
-
-func (r *IncompleteModelRule) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
-	// todo
-	return nil
-}

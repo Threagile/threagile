@@ -52,9 +52,9 @@ func (r *MissingBuildInfrastructureRule) GenerateRisks(input *types.ParsedModel)
 			hasCustomDevelopedParts = true
 			if impact == types.LowImpact {
 				mostRelevantAsset = technicalAsset
-				if technicalAsset.HighestConfidentiality(input) >= types.Confidential ||
-					technicalAsset.HighestIntegrity(input) >= types.Critical ||
-					technicalAsset.HighestAvailability(input) >= types.Critical {
+				if technicalAsset.HighestProcessedConfidentiality(input) >= types.Confidential ||
+					technicalAsset.HighestProcessedIntegrity(input) >= types.Critical ||
+					technicalAsset.HighestProcessedAvailability(input) >= types.Critical {
 					impact = types.MediumImpact
 				}
 			}
@@ -99,14 +99,4 @@ func (r *MissingBuildInfrastructureRule) createRisk(technicalAsset types.Technic
 	}
 	risk.SyntheticId = risk.CategoryId + "@" + technicalAsset.Id
 	return risk
-}
-
-func (r *MissingBuildInfrastructureRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
-	// todo
-	return false
-}
-
-func (r *MissingBuildInfrastructureRule) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
-	// todo
-	return nil
 }
