@@ -102,9 +102,35 @@ func (what TechnicalAsset) HighestSensitivityScore() float64 {
 		what.Availability.AttackerAttractivenessForAsset()
 }
 
-func (what TechnicalAsset) HighestConfidentiality(parsedModel *ParsedModel) Confidentiality {
+func (what TechnicalAsset) HighestConfidentiality(model *ParsedModel) Confidentiality {
+	highest := what.Confidentiality
+	highestProcessed := what.HighestProcessedConfidentiality(model)
+	if highest < highestProcessed {
+		highest = highestProcessed
+	}
+
+	highestStored := what.HighestStoredConfidentiality(model)
+	if highest < highestStored {
+		highest = highestStored
+	}
+
+	return highest
+}
+
+func (what TechnicalAsset) HighestProcessedConfidentiality(parsedModel *ParsedModel) Confidentiality {
 	highest := what.Confidentiality
 	for _, dataId := range what.DataAssetsProcessed {
+		dataAsset := parsedModel.DataAssets[dataId]
+		if dataAsset.Confidentiality > highest {
+			highest = dataAsset.Confidentiality
+		}
+	}
+	return highest
+}
+
+func (what TechnicalAsset) HighestStoredConfidentiality(parsedModel *ParsedModel) Confidentiality {
+	highest := what.Confidentiality
+	for _, dataId := range what.DataAssetsStored {
 		dataAsset := parsedModel.DataAssets[dataId]
 		if dataAsset.Confidentiality > highest {
 			highest = dataAsset.Confidentiality
@@ -147,7 +173,33 @@ func (what TechnicalAsset) CommunicationLinksSorted() []CommunicationLink {
 
 func (what TechnicalAsset) HighestIntegrity(model *ParsedModel) Criticality {
 	highest := what.Integrity
+	highestProcessed := what.HighestProcessedIntegrity(model)
+	if highest < highestProcessed {
+		highest = highestProcessed
+	}
+
+	highestStored := what.HighestStoredIntegrity(model)
+	if highest < highestStored {
+		highest = highestStored
+	}
+
+	return highest
+}
+
+func (what TechnicalAsset) HighestProcessedIntegrity(model *ParsedModel) Criticality {
+	highest := what.Integrity
 	for _, dataId := range what.DataAssetsProcessed {
+		dataAsset := model.DataAssets[dataId]
+		if dataAsset.Integrity > highest {
+			highest = dataAsset.Integrity
+		}
+	}
+	return highest
+}
+
+func (what TechnicalAsset) HighestStoredIntegrity(model *ParsedModel) Criticality {
+	highest := what.Integrity
+	for _, dataId := range what.DataAssetsStored {
 		dataAsset := model.DataAssets[dataId]
 		if dataAsset.Integrity > highest {
 			highest = dataAsset.Integrity
@@ -158,7 +210,33 @@ func (what TechnicalAsset) HighestIntegrity(model *ParsedModel) Criticality {
 
 func (what TechnicalAsset) HighestAvailability(model *ParsedModel) Criticality {
 	highest := what.Availability
+	highestProcessed := what.HighestProcessedAvailability(model)
+	if highest < highestProcessed {
+		highest = highestProcessed
+	}
+
+	highestStored := what.HighestStoredAvailability(model)
+	if highest < highestStored {
+		highest = highestStored
+	}
+
+	return highest
+}
+
+func (what TechnicalAsset) HighestProcessedAvailability(model *ParsedModel) Criticality {
+	highest := what.Availability
 	for _, dataId := range what.DataAssetsProcessed {
+		dataAsset := model.DataAssets[dataId]
+		if dataAsset.Availability > highest {
+			highest = dataAsset.Availability
+		}
+	}
+	return highest
+}
+
+func (what TechnicalAsset) HighestStoredAvailability(model *ParsedModel) Criticality {
+	highest := what.Availability
+	for _, dataId := range what.DataAssetsStored {
 		dataAsset := model.DataAssets[dataId]
 		if dataAsset.Availability > highest {
 			highest = dataAsset.Availability

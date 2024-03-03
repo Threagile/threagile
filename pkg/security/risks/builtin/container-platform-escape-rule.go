@@ -60,9 +60,9 @@ func (r *ContainerPlatformEscapeRule) GenerateRisks(parsedModel *types.ParsedMod
 func (r *ContainerPlatformEscapeRule) createRisk(parsedModel *types.ParsedModel, technicalAsset types.TechnicalAsset) types.Risk {
 	title := "<b>Container Platform Escape</b> risk at <b>" + technicalAsset.Title + "</b>"
 	impact := types.MediumImpact
-	if technicalAsset.HighestConfidentiality(parsedModel) == types.StrictlyConfidential ||
-		technicalAsset.HighestIntegrity(parsedModel) == types.MissionCritical ||
-		technicalAsset.HighestAvailability(parsedModel) == types.MissionCritical {
+	if technicalAsset.HighestProcessedConfidentiality(parsedModel) == types.StrictlyConfidential ||
+		technicalAsset.HighestProcessedIntegrity(parsedModel) == types.MissionCritical ||
+		technicalAsset.HighestProcessedAvailability(parsedModel) == types.MissionCritical {
 		impact = types.HighImpact
 	}
 	// data breach at all container assets
@@ -85,14 +85,4 @@ func (r *ContainerPlatformEscapeRule) createRisk(parsedModel *types.ParsedModel,
 	}
 	risk.SyntheticId = risk.CategoryId + "@" + technicalAsset.Id
 	return risk
-}
-
-func (r *ContainerPlatformEscapeRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
-	// todo
-	return false
-}
-
-func (r *ContainerPlatformEscapeRule) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
-	// todo
-	return nil
 }

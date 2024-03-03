@@ -1,10 +1,7 @@
 package model
 
 import (
-	"encoding/json"
 	"fmt"
-	"gopkg.in/yaml.v3"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -63,11 +60,13 @@ func ReadAndAnalyzeModel(config common.Config, progressReporter types.ProgressRe
 		return nil, fmt.Errorf("unable to check risk tracking: %v", err)
 	}
 
-	jsonData, _ := json.MarshalIndent(parsedModel, "", "  ")
-	_ = os.WriteFile("parsed-model.json", jsonData, 0600)
+	/*
+		jsonData, _ := json.MarshalIndent(parsedModel, "", "  ")
+		_ = os.WriteFile("parsed-model.json", jsonData, 0600)
 
-	yamlData, _ := yaml.Marshal(parsedModel)
-	_ = os.WriteFile("parsed-model.yaml", yamlData, 0600)
+		yamlData, _ := yaml.Marshal(parsedModel)
+		_ = os.WriteFile("parsed-model.yaml", yamlData, 0600)
+	*/
 
 	return &ReadResult{
 		ModelInput:       modelInput,

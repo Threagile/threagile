@@ -215,82 +215,202 @@ func ParseTechnicalAssetTechnology(value string) (technicalAssetTechnology Techn
 }
 
 func (what TechnicalAssetTechnology) IsWebApplication() bool {
-	return what == WebServer || what == WebApplication || what == ApplicationServer || what == ERP || what == CMS || what == IdentityProvider || what == ReportEngine
+	switch what {
+	case WebServer, WebApplication, ApplicationServer, ERP, CMS, IdentityProvider, ReportEngine:
+
+	default:
+		return false
+	}
+
+	return true
 }
 
 func (what TechnicalAssetTechnology) IsWebService() bool {
-	return what == WebServiceREST || what == WebServiceSOAP
+	switch what {
+	case WebServiceREST, WebServiceSOAP:
+
+	default:
+		return false
+	}
+
+	return true
 }
 
 func (what TechnicalAssetTechnology) IsIdentityRelated() bool {
-	return what == IdentityProvider || what == IdentityStoreLDAP || what == IdentityStoreDatabase
+	switch what {
+	case IdentityProvider, IdentityStoreLDAP, IdentityStoreDatabase:
+
+	default:
+		return false
+	}
+
+	return true
 }
 
 func (what TechnicalAssetTechnology) IsSecurityControlRelated() bool {
-	return what == Vault || what == HSM || what == WAF || what == IDS || what == IPS
+	switch what {
+	case Vault, HSM, WAF, IDS, IPS:
+
+	default:
+		return false
+	}
+
+	return true
 }
 
 func (what TechnicalAssetTechnology) IsUnprotectedCommunicationsTolerated() bool {
-	return what == Monitoring || what == IDS || what == IPS
+	switch what {
+	case Monitoring, IDS, IPS:
+
+	default:
+		return false
+	}
+
+	return true
 }
 
 func (what TechnicalAssetTechnology) IsUnnecessaryDataTolerated() bool {
-	return what == Monitoring || what == IDS || what == IPS
+	switch what {
+	case Monitoring, IDS, IPS:
+
+	default:
+		return false
+	}
+
+	return true
 }
 
 func (what TechnicalAssetTechnology) IsCloseToHighValueTargetsTolerated() bool {
-	return what == Monitoring || what == IDS || what == IPS || what == LoadBalancer || what == ReverseProxy
+	switch what {
+	case Monitoring, IDS, IPS, LoadBalancer, ReverseProxy:
+
+	default:
+		return false
+	}
+
+	return true
 }
 
 func (what TechnicalAssetTechnology) IsClient() bool {
-	return what == ClientSystem || what == Browser || what == Desktop || what == MobileApp || what == DevOpsClient || what == IoTDevice
+	switch what {
+	case ClientSystem, Browser, Desktop, MobileApp, DevOpsClient, IoTDevice:
+
+	default:
+		return false
+	}
+
+	return true
 }
 
 func (what TechnicalAssetTechnology) IsUsuallyAbleToPropagateIdentityToOutgoingTargets() bool {
-	return what == ClientSystem || what == Browser || what == Desktop || what == MobileApp ||
-		what == DevOpsClient || what == WebServer || what == WebApplication || what == ApplicationServer || what == ERP ||
-		what == CMS || what == WebServiceREST || what == WebServiceSOAP || what == EJB ||
-		what == SearchEngine || what == ReverseProxy || what == LoadBalancer || what == IdentityProvider ||
-		what == Tool || what == CLI || what == Task || what == Function || what == Gateway ||
-		what == IoTDevice || what == MessageQueue || what == ServiceMesh || what == ReportEngine || what == WAF || what == Library
+	switch what {
+	case ClientSystem, Browser, Desktop, MobileApp, DevOpsClient, Tool, CLI, IoTDevice: // client apps and devices
+	case WebServer, WebApplication, ApplicationServer, WebServiceREST, WebServiceSOAP, EJB: // services
+	case ERP, CMS, SearchEngine, ReportEngine: // systems
+	case ReverseProxy, LoadBalancer, IdentityProvider, Gateway, ServiceMesh, WAF, MessageQueue: // infrastructure
+	case Task, Function, Library: // other entities
 
+	default:
+		return false
+	}
+
+	return true
 }
 
 func (what TechnicalAssetTechnology) IsLessProtectedType() bool {
-	return what == ClientSystem || what == Browser || what == Desktop || what == MobileApp || what == DevOpsClient || what == WebServer || what == WebApplication || what == ApplicationServer || what == CMS ||
-		what == WebServiceREST || what == WebServiceSOAP || what == EJB || what == BuildPipeline || what == SourcecodeRepository ||
-		what == ArtifactRegistry || what == CodeInspectionPlatform || what == Monitoring || what == IoTDevice || what == AI || what == MailServer || what == Scheduler ||
-		what == Mainframe
+	switch what {
+	case ClientSystem, Browser, Desktop, MobileApp, DevOpsClient, IoTDevice: // client apps and devices
+	case WebServer, WebApplication, ApplicationServer, WebServiceREST, WebServiceSOAP, EJB: // services
+	case CMS: // systems
+	case Monitoring, MailServer, Scheduler, Mainframe: // infrastructure
+	case BuildPipeline, SourcecodeRepository, ArtifactRegistry, CodeInspectionPlatform: // devops
+	case AI: // other entities
+
+	default:
+		return false
+	}
+
+	return true
 }
 
 func (what TechnicalAssetTechnology) IsUsuallyProcessingEndUserRequests() bool {
-	return what == WebServer || what == WebApplication || what == ApplicationServer || what == ERP || what == WebServiceREST || what == WebServiceSOAP || what == EJB || what == ReportEngine
+	switch what {
+	case WebServer, WebApplication, ApplicationServer, ERP, WebServiceREST, WebServiceSOAP, EJB, ReportEngine:
+
+	default:
+		return false
+	}
+
+	return true
 }
 
 func (what TechnicalAssetTechnology) IsUsuallyStoringEndUserData() bool {
-	return what == Database || what == ERP || what == FileServer || what == LocalFileSystem || what == BlockStorage || what == MailServer || what == StreamProcessing || what == MessageQueue
+	switch what {
+	case Database, ERP, FileServer, LocalFileSystem, BlockStorage, MailServer, StreamProcessing, MessageQueue:
+
+	default:
+		return false
+	}
+
+	return true
 }
 
 func (what TechnicalAssetTechnology) IsExclusivelyFrontendRelated() bool {
-	return what == ClientSystem || what == Browser || what == Desktop || what == MobileApp || what == DevOpsClient || what == CMS || what == ReverseProxy || what == WAF || what == LoadBalancer || what == Gateway || what == IoTDevice
+	switch what {
+	case ClientSystem, Browser, Desktop, MobileApp, DevOpsClient, CMS, ReverseProxy, WAF, LoadBalancer, Gateway, IoTDevice:
+
+	default:
+		return false
+	}
+
+	return true
 }
 
 func (what TechnicalAssetTechnology) IsExclusivelyBackendRelated() bool {
-	return what == Database || what == IdentityProvider || what == IdentityStoreLDAP || what == IdentityStoreDatabase || what == ERP || what == WebServiceREST || what == WebServiceSOAP || what == EJB || what == SearchIndex ||
-		what == SearchEngine || what == ContainerPlatform || what == BatchProcessing || what == EventListener || what == DataLake || what == BigDataPlatform || what == MessageQueue ||
-		what == StreamProcessing || what == ServiceMesh || what == Vault || what == HSM || what == Scheduler || what == Mainframe || what == FileServer || what == BlockStorage
+	switch what {
+	case Database, IdentityProvider, IdentityStoreLDAP, IdentityStoreDatabase, ERP:
+	case WebServiceREST, WebServiceSOAP, EJB:
+	case SearchIndex, SearchEngine, ContainerPlatform, BatchProcessing, EventListener, DataLake, BigDataPlatform:
+	case MessageQueue, StreamProcessing, ServiceMesh, Vault, HSM, Scheduler, Mainframe, FileServer, BlockStorage:
+
+	default:
+		return false
+	}
+
+	return true
 }
 
 func (what TechnicalAssetTechnology) IsDevelopmentRelevant() bool {
-	return what == BuildPipeline || what == SourcecodeRepository || what == ArtifactRegistry || what == CodeInspectionPlatform || what == DevOpsClient
+	switch what {
+	case BuildPipeline, SourcecodeRepository, ArtifactRegistry, CodeInspectionPlatform, DevOpsClient:
+
+	default:
+		return false
+	}
+
+	return true
 }
 
 func (what TechnicalAssetTechnology) IsTrafficForwarding() bool {
-	return what == LoadBalancer || what == ReverseProxy || what == WAF
+	switch what {
+	case LoadBalancer, ReverseProxy, WAF:
+
+	default:
+		return false
+	}
+
+	return true
 }
 
 func (what TechnicalAssetTechnology) IsEmbeddedComponent() bool {
-	return what == Library
+	switch what {
+	case Library:
+
+	default:
+		return false
+	}
+
+	return true
 }
 
 func (what TechnicalAssetTechnology) MarshalJSON() ([]byte, error) {

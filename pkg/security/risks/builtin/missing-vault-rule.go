@@ -50,9 +50,9 @@ func (r *MissingVaultRule) GenerateRisks(input *types.ParsedModel) []types.Risk 
 		if techAsset.Technology == types.Vault {
 			hasVault = true
 		}
-		if techAsset.HighestConfidentiality(input) >= types.Confidential ||
-			techAsset.HighestIntegrity(input) >= types.Critical ||
-			techAsset.HighestAvailability(input) >= types.Critical {
+		if techAsset.HighestProcessedConfidentiality(input) >= types.Confidential ||
+			techAsset.HighestProcessedIntegrity(input) >= types.Critical ||
+			techAsset.HighestProcessedAvailability(input) >= types.Critical {
 			impact = types.MediumImpact
 		}
 		if techAsset.Confidentiality >= types.Confidential ||
@@ -85,14 +85,4 @@ func (r *MissingVaultRule) createRisk(technicalAsset types.TechnicalAsset, impac
 	}
 	risk.SyntheticId = risk.CategoryId + "@" + technicalAsset.Id
 	return risk
-}
-
-func (r *MissingVaultRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
-	// todo
-	return false
-}
-
-func (r *MissingVaultRule) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
-	// todo
-	return nil
 }

@@ -84,13 +84,3 @@ func (r *CrossSiteRequestForgeryRule) createRisk(parsedModel *types.ParsedModel,
 	risk.SyntheticId = risk.CategoryId + "@" + technicalAsset.Id + "@" + incomingFlow.Id
 	return risk
 }
-
-func (r *CrossSiteRequestForgeryRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
-	// todo
-	return false
-}
-
-func (r *CrossSiteRequestForgeryRule) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
-	// todo
-	return nil
-}

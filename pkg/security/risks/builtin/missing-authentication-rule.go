@@ -47,9 +47,9 @@ func (r *MissingAuthenticationRule) GenerateRisks(input *types.ParsedModel) []ty
 			technicalAsset.Technology == types.ReverseProxy || technicalAsset.Technology == types.ServiceRegistry || technicalAsset.Technology == types.WAF || technicalAsset.Technology == types.IDS || technicalAsset.Technology == types.IPS {
 			continue
 		}
-		if technicalAsset.HighestConfidentiality(input) >= types.Confidential ||
-			technicalAsset.HighestIntegrity(input) >= types.Critical ||
-			technicalAsset.HighestAvailability(input) >= types.Critical ||
+		if technicalAsset.HighestProcessedConfidentiality(input) >= types.Confidential ||
+			technicalAsset.HighestProcessedIntegrity(input) >= types.Critical ||
+			technicalAsset.HighestProcessedAvailability(input) >= types.Critical ||
 			technicalAsset.MultiTenant {
 			// check each incoming data flow
 			commLinks := input.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id]
@@ -87,7 +87,7 @@ func (r *MissingAuthenticationRule) createRisk(input *types.ParsedModel, technic
 		hopBetween = "forwarded via <b>" + hopBetween + "</b> "
 	}
 	risk := types.Risk{
-		CategoryId:             r.Category().Id,
+		CategoryId:             category.Id,
 		Severity:               types.CalculateSeverity(likelihood, impact),
 		ExploitationLikelihood: likelihood,
 		ExploitationImpact:     impact,
@@ -101,14 +101,4 @@ func (r *MissingAuthenticationRule) createRisk(input *types.ParsedModel, technic
 	}
 	risk.SyntheticId = risk.CategoryId + "@" + incomingAccess.Id + "@" + input.TechnicalAssets[incomingAccess.SourceId].Id + "@" + technicalAsset.Id
 	return risk
-}
-
-func (r *MissingAuthenticationRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
-	// todo
-	return false
-}
-
-func (r *MissingAuthenticationRule) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
-	// todo
-	return nil
 }

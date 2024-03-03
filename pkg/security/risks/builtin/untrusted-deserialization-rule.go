@@ -85,9 +85,9 @@ func (r *UntrustedDeserializationRule) createRisk(parsedModel *types.ParsedModel
 		likelihood = types.VeryLikely
 		title += " across a trust boundary (at least via communication link <b>" + commLinkTitle + "</b>)"
 	}
-	if technicalAsset.HighestConfidentiality(parsedModel) == types.StrictlyConfidential ||
-		technicalAsset.HighestIntegrity(parsedModel) == types.MissionCritical ||
-		technicalAsset.HighestAvailability(parsedModel) == types.MissionCritical {
+	if technicalAsset.HighestProcessedConfidentiality(parsedModel) == types.StrictlyConfidential ||
+		technicalAsset.HighestProcessedIntegrity(parsedModel) == types.MissionCritical ||
+		technicalAsset.HighestProcessedAvailability(parsedModel) == types.MissionCritical {
 		impact = types.VeryHighImpact
 	}
 	risk := types.Risk{
@@ -102,14 +102,4 @@ func (r *UntrustedDeserializationRule) createRisk(parsedModel *types.ParsedModel
 	}
 	risk.SyntheticId = risk.CategoryId + "@" + technicalAsset.Id
 	return risk
-}
-
-func (r *UntrustedDeserializationRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
-	// todo
-	return false
-}
-
-func (r *UntrustedDeserializationRule) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
-	// todo
-	return nil
 }

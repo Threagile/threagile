@@ -61,7 +61,7 @@ func (r *SqlNoSqlInjectionRule) createRisk(input *types.ParsedModel, technicalAs
 	title := "<b>SQL/NoSQL-Injection</b> risk at <b>" + caller.Title + "</b> against database <b>" + technicalAsset.Title + "</b>" +
 		" via <b>" + incomingFlow.Title + "</b>"
 	impact := types.MediumImpact
-	if technicalAsset.HighestConfidentiality(input) == types.StrictlyConfidential || technicalAsset.HighestIntegrity(input) == types.MissionCritical {
+	if technicalAsset.HighestProcessedConfidentiality(input) == types.StrictlyConfidential || technicalAsset.HighestProcessedIntegrity(input) == types.MissionCritical {
 		impact = types.HighImpact
 	}
 	likelihood := types.VeryLikely
@@ -81,14 +81,4 @@ func (r *SqlNoSqlInjectionRule) createRisk(input *types.ParsedModel, technicalAs
 	}
 	risk.SyntheticId = risk.CategoryId + "@" + caller.Id + "@" + technicalAsset.Id + "@" + incomingFlow.Id
 	return risk
-}
-
-func (r *SqlNoSqlInjectionRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
-	// todo
-	return false
-}
-
-func (r *SqlNoSqlInjectionRule) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
-	// todo
-	return nil
 }

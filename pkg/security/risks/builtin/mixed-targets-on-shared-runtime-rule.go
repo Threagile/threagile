@@ -109,13 +109,3 @@ func isMoreRisky(input *types.ParsedModel, sharedRuntime types.SharedRuntime) bo
 	}
 	return false
 }
-
-func (r *MixedTargetsOnSharedRuntimeRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
-	// todo
-	return false
-}
-
-func (r *MixedTargetsOnSharedRuntimeRule) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
-	// todo
-	return nil
-}

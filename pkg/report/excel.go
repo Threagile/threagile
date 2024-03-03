@@ -145,27 +145,26 @@ func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string) erro
 			if err != nil {
 				return fmt.Errorf("unable to set cell float: %w", err)
 			}
-			if riskTrackingStatus != types.Unchecked {
-				riskTracking := risk.GetRiskTracking(parsedModel)
-				err = excel.SetCellValue(sheetName, "Q"+strconv.Itoa(excelRow), riskTracking.Justification)
-				if err != nil {
-					return fmt.Errorf("unable to set cell value: %w", err)
-				}
-				if !riskTracking.Date.IsZero() {
-					err = excel.SetCellValue(sheetName, "R"+strconv.Itoa(excelRow), riskTracking.Date.Format("2006-01-02"))
-					if err != nil {
-						return fmt.Errorf("unable to set cell value: %w", err)
-					}
-				}
-				err = excel.SetCellValue(sheetName, "S"+strconv.Itoa(excelRow), riskTracking.CheckedBy)
-				if err != nil {
-					return fmt.Errorf("unable to set cell value: %w", err)
-				}
-				err = excel.SetCellValue(sheetName, "T"+strconv.Itoa(excelRow), riskTracking.Ticket)
+			riskTracking := risk.GetRiskTracking(parsedModel)
+			err = excel.SetCellValue(sheetName, "Q"+strconv.Itoa(excelRow), riskTracking.Justification)
+			if err != nil {
+				return fmt.Errorf("unable to set cell value: %w", err)
+			}
+			if !riskTracking.Date.IsZero() {
+				err = excel.SetCellValue(sheetName, "R"+strconv.Itoa(excelRow), riskTracking.Date.Format("2006-01-02"))
 				if err != nil {
 					return fmt.Errorf("unable to set cell value: %w", err)
 				}
 			}
+			err = excel.SetCellValue(sheetName, "S"+strconv.Itoa(excelRow), riskTracking.CheckedBy)
+			if err != nil {
+				return fmt.Errorf("unable to set cell value: %w", err)
+			}
+			err = excel.SetCellValue(sheetName, "T"+strconv.Itoa(excelRow), riskTracking.Ticket)
+			if err != nil {
+				return fmt.Errorf("unable to set cell value: %w", err)
+			}
+
 			// styles
 			leftCellsStyle, rightCellStyles := fromSeverityToExcelStyle(riskTrackingStatus, risk.Severity, cellStyles)
 			err = setCellStyle(excel, sheetName, []setCellStyleCommand{

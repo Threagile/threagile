@@ -59,22 +59,34 @@ func (r *MissingNetworkSegmentationRule) GenerateRisks(input *types.ParsedModel)
 	sort.Strings(keys)
 	for _, key := range keys {
 		technicalAsset := input.TechnicalAssets[key]
-		if !technicalAsset.OutOfScope && technicalAsset.Technology != types.ReverseProxy && technicalAsset.Technology != types.WAF && technicalAsset.Technology != types.IDS && technicalAsset.Technology != types.IPS && technicalAsset.Technology != types.ServiceRegistry {
-			if technicalAsset.RAA >= float64(r.raaLimit) && (technicalAsset.Type == types.Datastore || technicalAsset.Confidentiality >= types.Confidential ||
-				technicalAsset.Integrity >= types.Critical || technicalAsset.Availability >= types.Critical) {
-				// now check for any other same-network assets of certain types which have no direct connection
-				for _, sparringAssetCandidateId := range keys { // so inner loop again over all assets
-					if technicalAsset.Id != sparringAssetCandidateId {
-						sparringAssetCandidate := input.TechnicalAssets[sparringAssetCandidateId]
-						if sparringAssetCandidate.Technology.IsLessProtectedType() &&
-							technicalAsset.IsSameTrustBoundaryNetworkOnly(input, sparringAssetCandidateId) &&
-							!technicalAsset.HasDirectConnection(input, sparringAssetCandidateId) &&
-							!sparringAssetCandidate.Technology.IsCloseToHighValueTargetsTolerated() {
-							highRisk := technicalAsset.Confidentiality == types.StrictlyConfidential ||
-								technicalAsset.Integrity == types.MissionCritical || technicalAsset.Availability == types.MissionCritical
-							risks = append(risks, r.createRisk(technicalAsset, highRisk))
-							break
-						}
+		if technicalAsset.OutOfScope {
+			continue
+		}
+
+		switch technicalAsset.Technology {
+		case types.ReverseProxy, types.WAF, types.IDS, types.IPS, types.ServiceRegistry:
+
+		default:
+			continue
+		}
+
+		if technicalAsset.RAA < float64(r.raaLimit) {
+			continue
+		}
+
+		if technicalAsset.Type == types.Datastore || technicalAsset.Confidentiality >= types.Confidential || technicalAsset.Integrity >= types.Critical || technicalAsset.Availability >= types.Critical {
+			// now check for any other same-network assets of certain types which have no direct connection
+			for _, sparringAssetCandidateId := range keys { // so inner loop again over all assets
+				if technicalAsset.Id != sparringAssetCandidateId {
+					sparringAssetCandidate := input.TechnicalAssets[sparringAssetCandidateId]
+					if sparringAssetCandidate.Technology.IsLessProtectedType() &&
+						technicalAsset.IsSameTrustBoundaryNetworkOnly(input, sparringAssetCandidateId) &&
+						!technicalAsset.HasDirectConnection(input, sparringAssetCandidateId) &&
+						!sparringAssetCandidate.Technology.IsCloseToHighValueTargetsTolerated() {
+						highRisk := technicalAsset.Confidentiality == types.StrictlyConfidential ||
+							technicalAsset.Integrity == types.MissionCritical || technicalAsset.Availability == types.MissionCritical
+						risks = append(risks, r.createRisk(technicalAsset, highRisk))
+						break
 					}
 				}
 			}
@@ -101,14 +113,4 @@ func (r *MissingNetworkSegmentationRule) createRisk(techAsset types.TechnicalAss
 	}
 	risk.SyntheticId = risk.CategoryId + "@" + techAsset.Id
 	return risk
-}
-
-func (r *MissingNetworkSegmentationRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
-	// todo
-	return false
-}
-
-func (r *MissingNetworkSegmentationRule) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
-	// todo
-	return nil
 }

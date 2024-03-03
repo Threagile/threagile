@@ -59,9 +59,9 @@ func (r *MissingFileValidationRule) GenerateRisks(input *types.ParsedModel) []ty
 func (r *MissingFileValidationRule) createRisk(input *types.ParsedModel, technicalAsset types.TechnicalAsset) types.Risk {
 	title := "<b>Missing File Validation</b> risk at <b>" + technicalAsset.Title + "</b>"
 	impact := types.LowImpact
-	if technicalAsset.HighestConfidentiality(input) == types.StrictlyConfidential ||
-		technicalAsset.HighestIntegrity(input) == types.MissionCritical ||
-		technicalAsset.HighestAvailability(input) == types.MissionCritical {
+	if technicalAsset.HighestProcessedConfidentiality(input) == types.StrictlyConfidential ||
+		technicalAsset.HighestProcessedIntegrity(input) == types.MissionCritical ||
+		technicalAsset.HighestProcessedAvailability(input) == types.MissionCritical {
 		impact = types.MediumImpact
 	}
 	risk := types.Risk{
@@ -76,14 +76,4 @@ func (r *MissingFileValidationRule) createRisk(input *types.ParsedModel, technic
 	}
 	risk.SyntheticId = risk.CategoryId + "@" + technicalAsset.Id
 	return risk
-}
-
-func (r *MissingFileValidationRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
-	// todo
-	return false
-}
-
-func (r *MissingFileValidationRule) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
-	// todo
-	return nil
 }

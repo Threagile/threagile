@@ -1,9 +1,7 @@
 package builtin
 
 import (
-	"fmt"
 	"github.com/threagile/threagile/pkg/security/types"
-	"strings"
 )
 
 type CodeBackdooringRule struct{}
@@ -81,7 +79,7 @@ func (r *CodeBackdooringRule) createRisk(input *types.ParsedModel, technicalAsse
 		if elevatedRisk {
 			impact = types.MediumImpact
 		}
-		if technicalAsset.HighestConfidentiality(input) >= types.Confidential || technicalAsset.HighestIntegrity(input) >= types.Critical {
+		if technicalAsset.HighestProcessedConfidentiality(input) >= types.Confidential || technicalAsset.HighestProcessedIntegrity(input) >= types.Critical {
 			impact = types.MediumImpact
 			if elevatedRisk {
 				impact = types.HighImpact
@@ -120,104 +118,4 @@ func (r *CodeBackdooringRule) createRisk(input *types.ParsedModel, technicalAsse
 	}
 	risk.SyntheticId = risk.CategoryId + "@" + technicalAsset.Id
 	return risk
-}
-
-func (r *CodeBackdooringRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
-	// todo
-	return false
-}
-
-func (r *CodeBackdooringRule) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
-	categoryId := r.Category().Id
-	explanation := make([]string, 0)
-	for _, id := range parsedModel.SortedTechnicalAssetIDs() {
-		techAsset := parsedModel.TechnicalAssets[id]
-		if strings.EqualFold(risk, categoryId+"@"+techAsset.Id) || strings.EqualFold(risk, categoryId+"@*") {
-			if !techAsset.OutOfScope && (techAsset.Technology == types.SourcecodeRepository || techAsset.Technology == types.ArtifactRegistry) {
-				riskExplanation := r.explainRisk(parsedModel, techAsset)
-				if riskExplanation != nil {
-					if len(explanation) > 0 {
-						explanation = append(explanation, "")
-					}
-
-					explanation = append(explanation, []string{
-						fmt.Sprintf("technical asset %q", techAsset.Id),
-						fmt.Sprintf("  - out of scope: %v (=false)", techAsset.OutOfScope),
-						fmt.Sprintf("  - technology: %v (is in [%q, %q])", techAsset.Technology, types.SourcecodeRepository, types.ArtifactRegistry),
-					}...)
-
-					if techAsset.IsTaggedWithAny("git") {
-						explanation = append(explanation, "  is tagged with 'git'")
-					}
-
-					explanation = append(explanation, riskExplanation...)
-				}
-			}
-		}
-	}
-
-	return explanation
-}
-
-func (r *CodeBackdooringRule) explainRisk(parsedModel *types.ParsedModel, technicalAsset types.TechnicalAsset) []string {
-	explanation := make([]string, 0)
-	impact := types.LowImpact
-	if technicalAsset.HighestConfidentiality(parsedModel) == types.StrictlyConfidential ||
-		technicalAsset.HighestIntegrity(parsedModel) == types.MissionCritical ||
-		technicalAsset.HighestAvailability(parsedModel) == types.MissionCritical {
-		impact = types.HighImpact
-
-		explanation = append(explanation,
-			fmt.Sprintf("    - impact is %v because", impact),
-		)
-
-		if technicalAsset.HighestConfidentiality(parsedModel) == types.StrictlyConfidential {
-			explanation = append(explanation,
-				fmt.Sprintf("      => highest confidentiality: %v (==%v)", technicalAsset.HighestConfidentiality(parsedModel), types.StrictlyConfidential),
-			)
-		}
-
-		if technicalAsset.HighestIntegrity(parsedModel) == types.MissionCritical {
-			explanation = append(explanation,
-				fmt.Sprintf("      => highest integrity: %v (==%v)", technicalAsset.HighestIntegrity(parsedModel), types.MissionCritical),
-			)
-		}
-
-		if technicalAsset.HighestAvailability(parsedModel) == types.MissionCritical {
-			explanation = append(explanation,
-				fmt.Sprintf("      => highest availability: %v (==%v)", technicalAsset.HighestAvailability(parsedModel), types.MissionCritical),
-			)
-		}
-	} else if technicalAsset.HighestConfidentiality(parsedModel) >= types.Confidential ||
-		technicalAsset.HighestIntegrity(parsedModel) >= types.Critical ||
-		technicalAsset.HighestAvailability(parsedModel) >= types.Critical {
-		impact = types.MediumImpact
-		explanation = append(explanation,
-			fmt.Sprintf("    - impact is %v because", impact),
-		)
-
-		if technicalAsset.HighestConfidentiality(parsedModel) == types.StrictlyConfidential {
-			explanation = append(explanation,
-				fmt.Sprintf("     =>  highest confidentiality: %v (>=%v)", technicalAsset.HighestConfidentiality(parsedModel), types.Confidential),
-			)
-		}
-
-		if technicalAsset.HighestIntegrity(parsedModel) == types.MissionCritical {
-			explanation = append(explanation,
-				fmt.Sprintf("     =>  highest integrity: %v (==%v)", technicalAsset.HighestIntegrity(parsedModel), types.Critical),
-			)
-		}
-
-		if technicalAsset.HighestAvailability(parsedModel) == types.MissionCritical {
-			explanation = append(explanation,
-				fmt.Sprintf("     =>  highest availability: %v (==%v)", technicalAsset.HighestAvailability(parsedModel), types.Critical),
-			)
-		}
-	} else {
-		explanation = append(explanation,
-			fmt.Sprintf("     - impact is %v (default)", impact),
-		)
-	}
-
-	return explanation
 }

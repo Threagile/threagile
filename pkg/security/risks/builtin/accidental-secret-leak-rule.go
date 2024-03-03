@@ -1,9 +1,7 @@
 package builtin
 
 import (
-	"fmt"
 	"github.com/threagile/threagile/pkg/security/types"
-	"strings"
 )
 
 type AccidentalSecretLeakRule struct{}
@@ -70,14 +68,14 @@ func (r *AccidentalSecretLeakRule) createRisk(parsedModel *types.ParsedModel, te
 		title += ": <u>" + details + "</u>"
 	}
 	impact := types.LowImpact
-	if technicalAsset.HighestConfidentiality(parsedModel) >= types.Confidential ||
-		technicalAsset.HighestIntegrity(parsedModel) >= types.Critical ||
-		technicalAsset.HighestAvailability(parsedModel) >= types.Critical {
+	if technicalAsset.HighestProcessedConfidentiality(parsedModel) >= types.Confidential ||
+		technicalAsset.HighestProcessedIntegrity(parsedModel) >= types.Critical ||
+		technicalAsset.HighestProcessedAvailability(parsedModel) >= types.Critical {
 		impact = types.MediumImpact
 	}
-	if technicalAsset.HighestConfidentiality(parsedModel) == types.StrictlyConfidential ||
-		technicalAsset.HighestIntegrity(parsedModel) == types.MissionCritical ||
-		technicalAsset.HighestAvailability(parsedModel) == types.MissionCritical {
+	if technicalAsset.HighestProcessedConfidentiality(parsedModel) == types.StrictlyConfidential ||
+		technicalAsset.HighestProcessedIntegrity(parsedModel) == types.MissionCritical ||
+		technicalAsset.HighestProcessedAvailability(parsedModel) == types.MissionCritical {
 		impact = types.HighImpact
 	}
 	// create risk
@@ -95,6 +93,7 @@ func (r *AccidentalSecretLeakRule) createRisk(parsedModel *types.ParsedModel, te
 	return risk
 }
 
+/*
 func (r *AccidentalSecretLeakRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
 	categoryId := r.Category().Id
 	for _, id := range parsedModel.SortedTechnicalAssetIDs() {
@@ -142,55 +141,55 @@ func (r *AccidentalSecretLeakRule) ExplainRisk(parsedModel *types.ParsedModel, r
 func (r *AccidentalSecretLeakRule) explainRisk(parsedModel *types.ParsedModel, technicalAsset types.TechnicalAsset) []string {
 	explanation := make([]string, 0)
 	impact := types.LowImpact
-	if technicalAsset.HighestConfidentiality(parsedModel) == types.StrictlyConfidential ||
-		technicalAsset.HighestIntegrity(parsedModel) == types.MissionCritical ||
-		technicalAsset.HighestAvailability(parsedModel) == types.MissionCritical {
+	if technicalAsset.HighestProcessedConfidentiality(parsedModel) == types.StrictlyConfidential ||
+		technicalAsset.HighestProcessedIntegrity(parsedModel) == types.MissionCritical ||
+		technicalAsset.HighestProcessedAvailability(parsedModel) == types.MissionCritical {
 		impact = types.HighImpact
 
 		explanation = append(explanation,
 			fmt.Sprintf("    - impact is %v because", impact),
 		)
 
-		if technicalAsset.HighestConfidentiality(parsedModel) == types.StrictlyConfidential {
+		if technicalAsset.HighestProcessedConfidentiality(parsedModel) == types.StrictlyConfidential {
 			explanation = append(explanation,
-				fmt.Sprintf("      => highest confidentiality: %v (==%v)", technicalAsset.HighestConfidentiality(parsedModel), types.StrictlyConfidential),
+				fmt.Sprintf("      => highest confidentiality: %v (==%v)", technicalAsset.HighestProcessedConfidentiality(parsedModel), types.StrictlyConfidential),
 			)
 		}
 
-		if technicalAsset.HighestIntegrity(parsedModel) == types.MissionCritical {
+		if technicalAsset.HighestProcessedIntegrity(parsedModel) == types.MissionCritical {
 			explanation = append(explanation,
-				fmt.Sprintf("      => highest integrity: %v (==%v)", technicalAsset.HighestIntegrity(parsedModel), types.MissionCritical),
+				fmt.Sprintf("      => highest integrity: %v (==%v)", technicalAsset.HighestProcessedIntegrity(parsedModel), types.MissionCritical),
 			)
 		}
 
-		if technicalAsset.HighestAvailability(parsedModel) == types.MissionCritical {
+		if technicalAsset.HighestProcessedAvailability(parsedModel) == types.MissionCritical {
 			explanation = append(explanation,
-				fmt.Sprintf("      => highest availability: %v (==%v)", technicalAsset.HighestAvailability(parsedModel), types.MissionCritical),
+				fmt.Sprintf("      => highest availability: %v (==%v)", technicalAsset.HighestProcessedAvailability(parsedModel), types.MissionCritical),
 			)
 		}
-	} else if technicalAsset.HighestConfidentiality(parsedModel) >= types.Confidential ||
-		technicalAsset.HighestIntegrity(parsedModel) >= types.Critical ||
-		technicalAsset.HighestAvailability(parsedModel) >= types.Critical {
+	} else if technicalAsset.HighestProcessedConfidentiality(parsedModel) >= types.Confidential ||
+		technicalAsset.HighestProcessedIntegrity(parsedModel) >= types.Critical ||
+		technicalAsset.HighestProcessedAvailability(parsedModel) >= types.Critical {
 		impact = types.MediumImpact
 		explanation = append(explanation,
 			fmt.Sprintf("    - impact is %v because", impact),
 		)
 
-		if technicalAsset.HighestConfidentiality(parsedModel) == types.StrictlyConfidential {
+		if technicalAsset.HighestProcessedConfidentiality(parsedModel) == types.StrictlyConfidential {
 			explanation = append(explanation,
-				fmt.Sprintf("     =>  highest confidentiality: %v (>=%v)", technicalAsset.HighestConfidentiality(parsedModel), types.Confidential),
+				fmt.Sprintf("     =>  highest confidentiality: %v (>=%v)", technicalAsset.HighestProcessedConfidentiality(parsedModel), types.Confidential),
 			)
 		}
 
-		if technicalAsset.HighestIntegrity(parsedModel) == types.MissionCritical {
+		if technicalAsset.HighestProcessedIntegrity(parsedModel) == types.MissionCritical {
 			explanation = append(explanation,
-				fmt.Sprintf("     =>  highest integrity: %v (==%v)", technicalAsset.HighestIntegrity(parsedModel), types.Critical),
+				fmt.Sprintf("     =>  highest integrity: %v (==%v)", technicalAsset.HighestProcessedIntegrity(parsedModel), types.Critical),
 			)
 		}
 
-		if technicalAsset.HighestAvailability(parsedModel) == types.MissionCritical {
+		if technicalAsset.HighestProcessedAvailability(parsedModel) == types.MissionCritical {
 			explanation = append(explanation,
-				fmt.Sprintf("     =>  highest availability: %v (==%v)", technicalAsset.HighestAvailability(parsedModel), types.Critical),
+				fmt.Sprintf("     =>  highest availability: %v (==%v)", technicalAsset.HighestProcessedAvailability(parsedModel), types.Critical),
 			)
 		}
 	} else {
@@ -201,3 +200,5 @@ func (r *AccidentalSecretLeakRule) explainRisk(parsedModel *types.ParsedModel, t
 
 	return explanation
 }
+
+*/

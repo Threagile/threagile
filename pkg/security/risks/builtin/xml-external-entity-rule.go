@@ -59,9 +59,9 @@ func (r *XmlExternalEntityRule) GenerateRisks(input *types.ParsedModel) []types.
 func (r *XmlExternalEntityRule) createRisk(parsedModel *types.ParsedModel, technicalAsset types.TechnicalAsset) types.Risk {
 	title := "<b>XML External Entity (XXE)</b> risk at <b>" + technicalAsset.Title + "</b>"
 	impact := types.MediumImpact
-	if technicalAsset.HighestConfidentiality(parsedModel) == types.StrictlyConfidential ||
-		technicalAsset.HighestIntegrity(parsedModel) == types.MissionCritical ||
-		technicalAsset.HighestAvailability(parsedModel) == types.MissionCritical {
+	if technicalAsset.HighestProcessedConfidentiality(parsedModel) == types.StrictlyConfidential ||
+		technicalAsset.HighestProcessedIntegrity(parsedModel) == types.MissionCritical ||
+		technicalAsset.HighestProcessedAvailability(parsedModel) == types.MissionCritical {
 		impact = types.HighImpact
 	}
 	risk := types.Risk{
@@ -76,14 +76,4 @@ func (r *XmlExternalEntityRule) createRisk(parsedModel *types.ParsedModel, techn
 	}
 	risk.SyntheticId = risk.CategoryId + "@" + technicalAsset.Id
 	return risk
-}
-
-func (r *XmlExternalEntityRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
-	// todo
-	return false
-}
-
-func (r *XmlExternalEntityRule) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
-	// todo
-	return nil
 }
