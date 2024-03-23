@@ -39,6 +39,8 @@ type Config struct {
 	RiskRulesPlugins  []string
 	SkipRiskRules     string
 	ExecuteModelMacro string
+	HideColumns       []string
+	GroupByColumns    []string
 
 	ServerMode               bool
 	DiagramDPI               int
@@ -81,6 +83,8 @@ func (c *Config) Defaults(buildTimestamp string) *Config {
 		TemplateFilename:            TemplateFilename,
 		RAAPlugin:                   RAAPluginName,
 		RiskRulesPlugins:            make([]string, 0),
+		HideColumns:                 make([]string, 0),
+		GroupByColumns:              make([]string, 0),
 		SkipRiskRules:               "",
 		ExecuteModelMacro:           "",
 		ServerMode:                  false,
@@ -258,6 +262,12 @@ func (c *Config) Merge(config Config, values map[string]any) {
 
 		case strings.ToLower("RiskRulesPlugins"):
 			c.RiskRulesPlugins = config.RiskRulesPlugins
+
+		case strings.ToLower("HideColumns"):
+			c.HideColumns = append(c.HideColumns, config.HideColumns...)
+
+		case strings.ToLower("GroupByColumns"):
+			c.GroupByColumns = append(c.GroupByColumns, config.GroupByColumns...)
 
 		case strings.ToLower("SkipRiskRules"):
 			c.SkipRiskRules = config.SkipRiskRules

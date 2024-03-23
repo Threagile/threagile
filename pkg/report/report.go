@@ -163,9 +163,9 @@ func (r *pdfReporter) parseBackgroundTemplate(templateFilename string) {
 		checkErr(err)
 		file, err := os.CreateTemp("", "background-*-.r.pdf")
 		checkErr(err)
-		defer os.Remove(file.Name())
+		defer os.Remove(file.Title())
 		backgroundBytes := imageBox.MustBytes("background.r.pdf")
-		err = os.WriteFile(file.Name(), backgroundBytes, 0644)
+		err = os.WriteFile(file.Title(), backgroundBytes, 0644)
 		checkErr(err)
 	*/
 	r.coverTemplateId = gofpdi.ImportPage(r.pdf, templateFilename, 1, "/MediaBox")
@@ -4352,15 +4352,15 @@ func (r *pdfReporter) embedDataFlowDiagram(diagramFilenamePNG string, tempFolder
 				// now rotate left by 90 degrees
 				rotatedFile, err := os.CreateTemp(tempFolder, "diagram-*-.png")
 				checkErr(err)
-				defer os.Remove(rotatedFile.Name())
+				defer os.Remove(rotatedFile.Title())
 				dstImage := image.NewRGBA(image.Rect(0, 0, srcDimensions.Dy(), srcDimensions.Dx()))
 				err = graphics.Rotate(dstImage, srcImage, &graphics.RotateOptions{-1 * math.Pi / 2.0})
 				checkErr(err)
-				newImage, _ := os.Create(rotatedFile.Name())
+				newImage, _ := os.Create(rotatedFile.Title())
 					defer newImage.Close()
 					err = png.Encode(newImage, dstImage)
 					checkErr(err)
-					diagramFilenamePNG = rotatedFile.Name()
+					diagramFilenamePNG = rotatedFile.Title()
 				}
 			} else {
 				r.pdf.AddPage()
@@ -4452,15 +4452,15 @@ func (r *pdfReporter) embedDataRiskMapping(diagramFilenamePNG string, tempFolder
 				// now rotate left by 90 degrees
 				rotatedFile, err := os.CreateTemp(tempFolder, "diagram-*-.png")
 				checkErr(err)
-				defer os.Remove(rotatedFile.Name())
+				defer os.Remove(rotatedFile.Title())
 				dstImage := image.NewRGBA(image.Rect(0, 0, srcDimensions.Dy(), srcDimensions.Dx()))
 				err = graphics.Rotate(dstImage, srcImage, &graphics.RotateOptions{-1 * math.Pi / 2.0})
 				checkErr(err)
-				newImage, _ := os.Create(rotatedFile.Name())
+				newImage, _ := os.Create(rotatedFile.Title())
 				defer newImage.Close()
 					err = png.Encode(newImage, dstImage)
 					checkErr(err)
-					diagramFilenamePNG = rotatedFile.Name()
+					diagramFilenamePNG = rotatedFile.Title()
 				}
 			} else {
 				r.pdf.AddPage()

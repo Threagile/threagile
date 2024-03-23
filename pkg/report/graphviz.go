@@ -394,20 +394,24 @@ func determineArrowColor(cl types.CommunicationLink, parsedModel *types.ParsedMo
 }
 
 func GenerateDataFlowDiagramGraphvizImage(dotFile *os.File, targetDir string,
-	tempFolder, dataFlowDiagramFilenamePNG string, progressReporter progressReporter) error {
+	tempFolder, dataFlowDiagramFilenamePNG string, progressReporter progressReporter, keepGraphVizDataFile bool) error {
 	progressReporter.Info("Rendering data flow diagram input")
 	// tmp files
 	tmpFileDOT, err := os.CreateTemp(tempFolder, "diagram-*-.gv")
 	if err != nil {
 		return fmt.Errorf("error creating temp file: %v", err)
 	}
-	defer func() { _ = os.Remove(tmpFileDOT.Name()) }()
+	if !keepGraphVizDataFile {
+		defer func() { _ = os.Remove(tmpFileDOT.Name()) }()
+	}
 
 	tmpFilePNG, err := os.CreateTemp(tempFolder, "diagram-*-.png")
 	if err != nil {
 		return fmt.Errorf("error creating temp file: %v", err)
 	}
-	defer func() { _ = os.Remove(tmpFilePNG.Name()) }()
+	if !keepGraphVizDataFile {
+		defer func() { _ = os.Remove(tmpFilePNG.Name()) }()
+	}
 
 	// copy into tmp file as input
 	inputDOT, err := os.ReadFile(dotFile.Name())

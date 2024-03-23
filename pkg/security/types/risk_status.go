@@ -62,7 +62,7 @@ func (what RiskStatus) Explain() string {
 }
 
 func (what RiskStatus) Title() string {
-	return [...]string{"Unchecked", "in Discussion", "Accepted", "in Progress", "Mitigated", "False Positive"}[what]
+	return [...]string{"Unchecked", "In Discussion", "Accepted", "In Progress", "Mitigated", "False Positive"}[what]
 }
 
 func (what RiskStatus) IsStillAtRisk() bool {

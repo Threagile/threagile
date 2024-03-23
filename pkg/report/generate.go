@@ -68,7 +68,7 @@ func Generate(config *common.Config, readResult *model.ReadResult, commands *Gen
 		}
 
 		err = GenerateDataFlowDiagramGraphvizImage(dotFile, config.OutputFolder,
-			config.TempFolder, config.DataFlowDiagramFilenamePNG, progressReporter)
+			config.TempFolder, config.DataFlowDiagramFilenamePNG, progressReporter, config.KeepDiagramSourceFiles)
 		if err != nil {
 			progressReporter.Warn(err)
 		}
@@ -125,7 +125,7 @@ func Generate(config *common.Config, readResult *model.ReadResult, commands *Gen
 	// risks Excel
 	if commands.RisksExcel {
 		progressReporter.Info("Writing risks excel")
-		err := WriteRisksExcelToFile(readResult.ParsedModel, filepath.Join(config.OutputFolder, config.ExcelRisksFilename))
+		err := WriteRisksExcelToFile(readResult.ParsedModel, filepath.Join(config.OutputFolder, config.ExcelRisksFilename), config)
 		if err != nil {
 			return err
 		}
