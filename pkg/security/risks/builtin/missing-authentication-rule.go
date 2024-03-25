@@ -43,10 +43,10 @@ func (r *MissingAuthenticationRule) GenerateRisks(input *types.ParsedModel) []ty
 	risks := make([]types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
-		if technicalAsset.OutOfScope || technicalAsset.Technology == types.LoadBalancer ||
-			technicalAsset.Technology == types.ReverseProxy || technicalAsset.Technology == types.ServiceRegistry || technicalAsset.Technology == types.WAF || technicalAsset.Technology == types.IDS || technicalAsset.Technology == types.IPS {
+		if technicalAsset.OutOfScope || technicalAsset.Technologies.HasAnyType(types.LoadBalancer, types.ReverseProxy, types.ServiceRegistry, types.WAF, types.IDS, types.IPS) {
 			continue
 		}
+
 		if technicalAsset.HighestProcessedConfidentiality(input) >= types.Confidential ||
 			technicalAsset.HighestProcessedIntegrity(input) >= types.Critical ||
 			technicalAsset.HighestProcessedAvailability(input) >= types.Critical ||
@@ -55,7 +55,7 @@ func (r *MissingAuthenticationRule) GenerateRisks(input *types.ParsedModel) []ty
 			commLinks := input.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id]
 			for _, commLink := range commLinks {
 				caller := input.TechnicalAssets[commLink.SourceId]
-				if caller.Technology.IsUnprotectedCommunicationsTolerated() || caller.Type == types.Datastore {
+				if caller.Technologies.IsUnprotectedCommunicationsTolerated() || caller.Type == types.Datastore {
 					continue
 				}
 				highRisk := commLink.HighestConfidentiality(input) == types.StrictlyConfidential ||

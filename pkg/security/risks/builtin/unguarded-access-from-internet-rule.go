@@ -58,18 +58,18 @@ func (r *UnguardedAccessFromInternetRule) GenerateRisks(input *types.ParsedModel
 			commLinks := input.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id]
 			sort.Sort(types.ByTechnicalCommunicationLinkIdSort(commLinks))
 			for _, incomingAccess := range commLinks {
-				if technicalAsset.Technology != types.LoadBalancer {
+				if !technicalAsset.Technologies.HasType(types.LoadBalancer) {
 					if !technicalAsset.CustomDevelopedParts {
-						if (technicalAsset.Technology == types.WebServer || technicalAsset.Technology == types.WebApplication || technicalAsset.Technology == types.ReverseProxy || technicalAsset.Technology == types.WAF || technicalAsset.Technology == types.Gateway) &&
+						if technicalAsset.Technologies.HasAnyType(types.WebServer, types.WebApplication, types.ReverseProxy, types.WAF, types.Gateway) &&
 							(incomingAccess.Protocol == types.HTTP || incomingAccess.Protocol == types.HTTPS) {
 							continue
 						}
-						if technicalAsset.Technology == types.Gateway &&
+						if technicalAsset.Technologies.HasType(types.Gateway) &&
 							(incomingAccess.Protocol == types.FTP || incomingAccess.Protocol == types.FTPS || incomingAccess.Protocol == types.SFTP) {
 							continue
 						}
 					}
-					if input.TechnicalAssets[incomingAccess.SourceId].Technology == types.Monitoring ||
+					if input.TechnicalAssets[incomingAccess.SourceId].Technologies.HasType(types.Monitoring) ||
 						incomingAccess.VPN {
 						continue
 					}

@@ -55,13 +55,13 @@ func (r *WrongCommunicationLinkContentRule) GenerateRisks(input *types.ParsedMod
 			}
 			// check for protocol inconsistencies
 			targetAsset := input.TechnicalAssets[commLink.TargetId]
-			if commLink.Protocol == types.InProcessLibraryCall && targetAsset.Technology != types.Library {
+			if commLink.Protocol == types.InProcessLibraryCall && !targetAsset.Technologies.HasType(types.Library) {
 				risks = append(risks, r.createRisk(techAsset, commLink,
-					"(protocol type \""+types.InProcessLibraryCall.String()+"\" does not match target technology type \""+targetAsset.Technology.String()+"\": expected \""+types.Library.String()+"\")"))
+					"(protocol type \""+types.InProcessLibraryCall.String()+"\" does not match target technology type \""+targetAsset.Technologies.String()+"\": expected \""+types.Library.String()+"\")"))
 			}
-			if commLink.Protocol == types.LocalFileAccess && targetAsset.Technology != types.LocalFileSystem {
+			if commLink.Protocol == types.LocalFileAccess && !targetAsset.Technologies.HasType(types.LocalFileSystem) {
 				risks = append(risks, r.createRisk(techAsset, commLink,
-					"(protocol type \""+types.LocalFileAccess.String()+"\" does not match target technology type \""+targetAsset.Technology.String()+"\": expected \""+types.LocalFileSystem.String()+"\")"))
+					"(protocol type \""+types.LocalFileAccess.String()+"\" does not match target technology type \""+targetAsset.Technologies.String()+"\": expected \""+types.LocalFileSystem.String()+"\")"))
 			}
 			if commLink.Protocol == types.ContainerSpawning && targetAsset.Machine != types.Container {
 				risks = append(risks, r.createRisk(techAsset, commLink,

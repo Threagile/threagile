@@ -46,7 +46,7 @@ func (r *AccidentalSecretLeakRule) GenerateRisks(parsedModel *types.ParsedModel)
 	for _, id := range parsedModel.SortedTechnicalAssetIDs() {
 		techAsset := parsedModel.TechnicalAssets[id]
 		if !techAsset.OutOfScope &&
-			(techAsset.Technology == types.SourcecodeRepository || techAsset.Technology == types.ArtifactRegistry) {
+			techAsset.Technologies.HasAnyType(types.SourcecodeRepository, types.ArtifactRegistry) {
 			var risk types.Risk
 			if techAsset.IsTaggedWithAny("git") {
 				risk = r.createRisk(parsedModel, techAsset, "Git", "Git Leak Prevention")

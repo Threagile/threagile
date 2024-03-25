@@ -665,7 +665,7 @@ func makeTechAssetNode(parsedModel *types.ParsedModel, technicalAsset types.Tech
 		}
 
 		return "  " + hash(technicalAsset.Id) + ` [
-	label=<<table border="0" cellborder="` + compartmentBorder + `" cellpadding="2" cellspacing="0"><tr><td><font point-size="15" color="` + DarkBlue + `">` + lineBreak + technicalAsset.Technology.String() + `</font><br/><font point-size="15" color="` + LightGray + `">` + technicalAsset.Size.String() + `</font></td></tr><tr><td><b><font color="` + determineTechnicalAssetLabelColor(technicalAsset, parsedModel) + `">` + encode(title) + `</font></b><br/></td></tr><tr><td>` + attackerAttractivenessLabel + `</td></tr></table>>
+	label=<<table border="0" cellborder="` + compartmentBorder + `" cellpadding="2" cellspacing="0"><tr><td><font point-size="15" color="` + DarkBlue + `">` + lineBreak + technicalAsset.Technologies.String() + `</font><br/><font point-size="15" color="` + LightGray + `">` + technicalAsset.Size.String() + `</font></td></tr><tr><td><b><font color="` + determineTechnicalAssetLabelColor(technicalAsset, parsedModel) + `">` + encode(title) + `</font></b><br/></td></tr><tr><td>` + attackerAttractivenessLabel + `</td></tr></table>>
 	shape=` + shape + ` style="` + determineShapeBorderLineStyle(technicalAsset) + `,` + determineShapeStyle(technicalAsset) + `" penwidth="` + determineShapeBorderPenWidth(technicalAsset, parsedModel) + `" fillcolor="` + determineShapeFillColor(technicalAsset, parsedModel) + `"
 	peripheries=` + strconv.Itoa(determineShapePeripheries(technicalAsset)) + `
 	color="` + determineShapeBorderColor(technicalAsset, parsedModel) + "\"\n  ]; "
@@ -679,7 +679,7 @@ func determineShapeStyle(ta types.TechnicalAsset) string {
 func determineShapeFillColor(ta types.TechnicalAsset, parsedModel *types.ParsedModel) string {
 	fillColor := VeryLightGray
 	if len(ta.DataAssetsProcessed) == 0 && len(ta.DataAssetsStored) == 0 ||
-		ta.Technology == types.UnknownTechnology {
+		!ta.Technologies.IsNotOnlyType(types.UnknownTechnology) {
 		fillColor = LightPink // lightPink, because it's strange when too many technical assets process no data... some ok, but many in a diagram ist a sign of model forgery...
 	} else if len(ta.CommunicationLinks) == 0 && len(parsedModel.IncomingTechnicalCommunicationLinksMappedByTargetId[ta.Id]) == 0 {
 		fillColor = LightPink

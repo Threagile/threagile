@@ -34,6 +34,7 @@ type Config struct {
 	JsonTechnicalAssetsFilename string
 	JsonStatsFilename           string
 	TemplateFilename            string
+	TechnologyFilename          string
 
 	RAAPlugin         string
 	RiskRulesPlugins  []string
@@ -81,6 +82,7 @@ func (c *Config) Defaults(buildTimestamp string) *Config {
 		JsonTechnicalAssetsFilename: JsonTechnicalAssetsFilename,
 		JsonStatsFilename:           JsonStatsFilename,
 		TemplateFilename:            TemplateFilename,
+		TechnologyFilename:          "",
 		RAAPlugin:                   RAAPluginName,
 		RiskRulesPlugins:            make([]string, 0),
 		HideColumns:                 make([]string, 0),
@@ -174,6 +176,8 @@ func (c *Config) Load(configFilename string) error {
 		return dataDirError
 	}
 
+	c.TechnologyFilename = c.CleanPath(c.TechnologyFilename)
+
 	return c.CheckServerFolder()
 }
 
@@ -256,6 +260,9 @@ func (c *Config) Merge(config Config, values map[string]any) {
 
 		case strings.ToLower("TemplateFilename"):
 			c.TemplateFilename = config.TemplateFilename
+
+		case strings.ToLower("TechnologyFilename"):
+			c.TechnologyFilename = config.TechnologyFilename
 
 		case strings.ToLower("RAAPlugin"):
 			c.RAAPlugin = config.RAAPlugin

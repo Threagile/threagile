@@ -48,11 +48,11 @@ func (r *DosRiskyAccessAcrossTrustBoundaryRule) GenerateRisks(input *types.Parse
 	risks := make([]types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
-		if !technicalAsset.OutOfScope && technicalAsset.Technology != types.LoadBalancer &&
+		if !technicalAsset.OutOfScope && !technicalAsset.Technologies.HasType(types.LoadBalancer) &&
 			technicalAsset.Availability >= types.Critical {
 			for _, incomingAccess := range input.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id] {
 				sourceAsset := input.TechnicalAssets[incomingAccess.SourceId]
-				if sourceAsset.Technology.IsTrafficForwarding() {
+				if sourceAsset.Technologies.IsTrafficForwarding() {
 					// Now try to walk a call chain up (1 hop only) to find a caller's caller used by human
 					callersCommLinks := input.IncomingTechnicalCommunicationLinksMappedByTargetId[sourceAsset.Id]
 					for _, callersCommLink := range callersCommLinks {

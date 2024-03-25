@@ -47,7 +47,7 @@ func (r *SqlNoSqlInjectionRule) GenerateRisks(input *types.ParsedModel) []types.
 			if input.TechnicalAssets[incomingFlow.SourceId].OutOfScope {
 				continue
 			}
-			if incomingFlow.Protocol.IsPotentialDatabaseAccessProtocol(true) && (technicalAsset.Technology == types.Database || technicalAsset.Technology == types.IdentityStoreDatabase) ||
+			if incomingFlow.Protocol.IsPotentialDatabaseAccessProtocol(true) && technicalAsset.Technologies.HasAnyType(types.Database, types.IdentityStoreDatabase) ||
 				(incomingFlow.Protocol.IsPotentialDatabaseAccessProtocol(false)) {
 				risks = append(risks, r.createRisk(input, technicalAsset, incomingFlow))
 			}

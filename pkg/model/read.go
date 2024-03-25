@@ -41,7 +41,7 @@ func ReadAndAnalyzeModel(config common.Config, progressReporter types.ProgressRe
 		return nil, fmt.Errorf("unable to load model yaml: %v", loadError)
 	}
 
-	parsedModel, parseError := ParseModel(modelInput, builtinRiskRules, customRiskRules)
+	parsedModel, parseError := ParseModel(config, modelInput, builtinRiskRules, customRiskRules)
 	if parseError != nil {
 		return nil, fmt.Errorf("unable to parse model yaml: %v", parseError)
 	}

@@ -49,8 +49,7 @@ func (r *UnguardedDirectDatastoreAccessRule) GenerateRisks(input *types.ParsedMo
 		if !technicalAsset.OutOfScope && technicalAsset.Type == types.Datastore {
 			for _, incomingAccess := range input.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id] {
 				sourceAsset := input.TechnicalAssets[incomingAccess.SourceId]
-				if (technicalAsset.Technology == types.IdentityStoreLDAP || technicalAsset.Technology == types.IdentityStoreDatabase) &&
-					sourceAsset.Technology == types.IdentityProvider {
+				if technicalAsset.Technologies.HasAnyType(types.IdentityStoreLDAP, types.IdentityStoreDatabase) && sourceAsset.Technologies.HasType(types.IdentityProvider) {
 					continue
 				}
 				if technicalAsset.Confidentiality >= types.Confidential || technicalAsset.Integrity >= types.Critical {
@@ -95,7 +94,7 @@ func isSharingSameParentTrustBoundary(input *types.ParsedModel, left, right type
 }
 
 func fileServerAccessViaFTP(technicalAsset types.TechnicalAsset, incomingAccess types.CommunicationLink) bool {
-	return technicalAsset.Technology == types.FileServer &&
+	return technicalAsset.Technologies.HasType(types.FileServer) &&
 		(incomingAccess.Protocol == types.FTP || incomingAccess.Protocol == types.FTPS || incomingAccess.Protocol == types.SFTP)
 }
 

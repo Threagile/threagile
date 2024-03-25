@@ -56,7 +56,7 @@ func (r *UntrustedDeserializationRule) GenerateRisks(input *types.ParsedModel) [
 				hasOne = true
 			}
 		}
-		if technicalAsset.Technology == types.EJB {
+		if technicalAsset.Technologies.HasType(types.EJB) {
 			hasOne = true
 		}
 		// check for any incoming IIOP and JRMP protocols

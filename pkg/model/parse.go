@@ -2,17 +2,25 @@ package model
 
 import (
 	"fmt"
+	"github.com/threagile/threagile/pkg/common"
+	"github.com/threagile/threagile/pkg/input"
+	"github.com/threagile/threagile/pkg/security/risks"
+	"github.com/threagile/threagile/pkg/security/types"
 	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
-
-	"github.com/threagile/threagile/pkg/input"
-	"github.com/threagile/threagile/pkg/security/risks"
-	"github.com/threagile/threagile/pkg/security/types"
 )
 
-func ParseModel(modelInput *input.Model, builtinRiskRules map[string]risks.RiskRule, customRiskRules map[string]*CustomRisk) (*types.ParsedModel, error) {
+func ParseModel(config common.Config, modelInput *input.Model, builtinRiskRules map[string]risks.RiskRule, customRiskRules map[string]*CustomRisk) (*types.ParsedModel, error) {
+	technologies := make(types.TechnologyMap)
+	technologiesLoadError := technologies.LoadWithConfig(config, "technologies.yaml")
+	if technologiesLoadError != nil {
+		return nil, fmt.Errorf("error loading technologies: %v", technologiesLoadError)
+	}
+
+	technologies.PropagateAttributes()
+
 	businessCriticality, err := types.ParseCriticality(modelInput.BusinessCriticality)
 	if err != nil {
 		return nil, fmt.Errorf("unknown 'business_criticality' value of application: %v", modelInput.BusinessCriticality)
@@ -168,7 +176,17 @@ func ParseModel(modelInput *input.Model, builtinRiskRules map[string]risks.RiskR
 		if err != nil {
 			return nil, fmt.Errorf("unknown 'size' value of technical asset %q: %v", title, asset.Size)
 		}
-		technicalAssetTechnology, err := types.ParseTechnicalAssetTechnology(asset.Technology)
+
+		technicalAssetTechnologies := make([]*types.Technology, 0)
+		for _, technologyName := range append(asset.Technologies, asset.Technology) {
+			technicalAssetTechnology := technologies.Get(technologyName)
+			if technicalAssetTechnology == nil {
+				return nil, fmt.Errorf("unknown 'technology' value of technical asset %q: %v", title, asset.Technology)
+			}
+
+			technicalAssetTechnologies = append(technicalAssetTechnologies, technicalAssetTechnology)
+		}
+
 		if err != nil {
 			return nil, fmt.Errorf("unknown 'technology' value of technical asset %q: %v", title, asset.Technology)
 		}
@@ -326,7 +344,7 @@ func ParseModel(modelInput *input.Model, builtinRiskRules map[string]risks.RiskR
 			Description:             withDefault(fmt.Sprintf("%v", asset.Description), title),
 			Type:                    technicalAssetType,
 			Size:                    technicalAssetSize,
-			Technology:              technicalAssetTechnology,
+			Technologies:            technicalAssetTechnologies,
 			Tags:                    tags,
 			Machine:                 technicalAssetMachine,
 			Internet:                asset.Internet,

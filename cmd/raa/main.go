@@ -189,22 +189,22 @@ func calculateAttackerAttractiveness(input *types.ParsedModel, techAsset types.T
 			score += dataAsset.Availability.AttackerAttractivenessForInOutTransferredData()
 		}
 	}
-	if techAsset.Technology == types.LoadBalancer || techAsset.Technology == types.ReverseProxy {
+	if techAsset.Technologies.HasAnyType(types.LoadBalancer, types.ReverseProxy) {
 		score = score / 5.5
 	}
-	if techAsset.Technology == types.Monitoring {
+	if techAsset.Technologies.HasAnyType(types.Monitoring) {
 		score = score / 5
 	}
-	if techAsset.Technology == types.ContainerPlatform {
+	if techAsset.Technologies.HasAnyType(types.ContainerPlatform) {
 		score = score * 5
 	}
-	if techAsset.Technology == types.Vault {
+	if techAsset.Technologies.HasAnyType(types.Vault) {
 		score = score * 2
 	}
-	if techAsset.Technology == types.BuildPipeline || techAsset.Technology == types.SourcecodeRepository || techAsset.Technology == types.ArtifactRegistry {
+	if techAsset.Technologies.HasAnyType(types.BuildPipeline, types.SourcecodeRepository, types.ArtifactRegistry) {
 		score = score * 2
 	}
-	if techAsset.Technology == types.IdentityProvider || techAsset.Technology == types.IdentityStoreDatabase || techAsset.Technology == types.IdentityStoreLDAP {
+	if techAsset.Technologies.HasAnyType(types.IdentityProvider, types.IdentityStoreDatabase, types.IdentityStoreLDAP) {
 		score = score * 2.5
 	} else if techAsset.Type == types.Datastore {
 		score = score * 2

@@ -49,8 +49,8 @@ func (r *UnencryptedCommunicationRule) GenerateRisks(input *types.ParsedModel) [
 			targetAsset := input.TechnicalAssets[dataFlow.TargetId]
 			if !technicalAsset.OutOfScope || !sourceAsset.OutOfScope {
 				if !dataFlow.Protocol.IsEncrypted() && !dataFlow.Protocol.IsProcessLocal() &&
-					!sourceAsset.Technology.IsUnprotectedCommunicationsTolerated() &&
-					!targetAsset.Technology.IsUnprotectedCommunicationsTolerated() {
+					!sourceAsset.Technologies.IsUnprotectedCommunicationsTolerated() &&
+					!targetAsset.Technologies.IsUnprotectedCommunicationsTolerated() {
 					addedOne := false
 					for _, sentDataAsset := range dataFlow.DataAssetsSent {
 						dataAsset := input.DataAssets[sentDataAsset]

@@ -13,66 +13,6 @@ import (
 
 type TechnicalAssetTechnology int
 
-const (
-	UnknownTechnology TechnicalAssetTechnology = iota
-	ClientSystem
-	Browser
-	Desktop
-	MobileApp
-	DevOpsClient
-	WebServer
-	WebApplication
-	ApplicationServer
-	Database
-	FileServer
-	LocalFileSystem
-	ERP
-	CMS
-	WebServiceREST
-	WebServiceSOAP
-	EJB
-	SearchIndex
-	SearchEngine
-	ServiceRegistry
-	ReverseProxy
-	LoadBalancer
-	BuildPipeline
-	SourcecodeRepository
-	ArtifactRegistry
-	CodeInspectionPlatform
-	Monitoring
-	LDAPServer
-	ContainerPlatform
-	BatchProcessing
-	EventListener
-	IdentityProvider
-	IdentityStoreLDAP
-	IdentityStoreDatabase
-	Tool
-	CLI
-	Task
-	Function
-	Gateway // TODO rename to API-Gateway to be more clear?
-	IoTDevice
-	MessageQueue
-	StreamProcessing
-	ServiceMesh
-	DataLake
-	BigDataPlatform
-	ReportEngine
-	AI
-	MailServer
-	Vault
-	HSM
-	WAF
-	IDS
-	IPS
-	Scheduler
-	Mainframe
-	BlockStorage
-	Library
-)
-
 func TechnicalAssetTechnologyValues() []TypeEnum {
 	return []TypeEnum{
 		UnknownTechnology,
@@ -171,7 +111,7 @@ var TechnicalAssetTechnologyTypeDescription = [...]TypeDescription{
 	{"identity-store-ldap", "Authentication data as LDAP"},
 	{"identity-store-database", "Authentication data as database"},
 	{"tool", "A specific tool"},
-	{"threagile", "A command line tool"},
+	{"cli", "A command line tool"},
 	{"task", "A specific task"},
 	{"function", "A specific function (maybe RPC ?)"},
 	{"gateway", "A gateway connecting two systems or trust boundaries"},

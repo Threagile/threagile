@@ -41,7 +41,7 @@ func (r *IncompleteModelRule) GenerateRisks(input *types.ParsedModel) []types.Ri
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
 		if !technicalAsset.OutOfScope {
-			if technicalAsset.Technology == types.UnknownTechnology {
+			if technicalAsset.Technologies.HasType(types.UnknownTechnology) {
 				risks = append(risks, r.createRiskTechAsset(technicalAsset))
 			}
 			for _, commLink := range technicalAsset.CommunicationLinks {

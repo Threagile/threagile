@@ -45,11 +45,11 @@ func (r *PushInsteadPullDeploymentRule) GenerateRisks(input *types.ParsedModel) 
 	risks := make([]types.Risk, 0)
 	impact := types.LowImpact
 	for _, buildPipeline := range input.TechnicalAssets {
-		if buildPipeline.Technology == types.BuildPipeline {
+		if buildPipeline.Technologies.HasType(types.BuildPipeline) {
 			for _, deploymentLink := range buildPipeline.CommunicationLinks {
 				targetAsset := input.TechnicalAssets[deploymentLink.TargetId]
 				if !deploymentLink.Readonly && deploymentLink.Usage == types.DevOps &&
-					!targetAsset.OutOfScope && !targetAsset.Technology.IsDevelopmentRelevant() && targetAsset.Usage == types.Business {
+					!targetAsset.OutOfScope && !targetAsset.Technologies.IsDevelopmentRelevant() && targetAsset.Usage == types.Business {
 					if targetAsset.HighestProcessedConfidentiality(input) >= types.Confidential ||
 						targetAsset.HighestProcessedIntegrity(input) >= types.Critical ||
 						targetAsset.HighestProcessedAvailability(input) >= types.Critical {

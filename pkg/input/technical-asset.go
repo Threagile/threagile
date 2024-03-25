@@ -12,6 +12,7 @@ type TechnicalAsset struct {
 	JustificationOutOfScope string                       `yaml:"justification_out_of_scope,omitempty" json:"justification_out_of_scope,omitempty"`
 	Size                    string                       `yaml:"size,omitempty" json:"size,omitempty"`
 	Technology              string                       `yaml:"technology,omitempty" json:"technology,omitempty"`
+	Technologies            []string                     `yaml:"technologies,omitempty" json:"technologies,omitempty"`
 	Tags                    []string                     `yaml:"tags,omitempty" json:"tags,omitempty"`
 	Internet                bool                         `yaml:"internet,omitempty" json:"internet,omitempty"`
 	Machine                 string                       `yaml:"machine,omitempty" json:"machine,omitempty"`

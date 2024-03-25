@@ -63,10 +63,7 @@ func (r *MissingNetworkSegmentationRule) GenerateRisks(input *types.ParsedModel)
 			continue
 		}
 
-		switch technicalAsset.Technology {
-		case types.ReverseProxy, types.WAF, types.IDS, types.IPS, types.ServiceRegistry:
-
-		default:
+		if !technicalAsset.Technologies.HasAnyType(types.ReverseProxy, types.WAF, types.IDS, types.IPS, types.ServiceRegistry) {
 			continue
 		}
 
@@ -79,10 +76,10 @@ func (r *MissingNetworkSegmentationRule) GenerateRisks(input *types.ParsedModel)
 			for _, sparringAssetCandidateId := range keys { // so inner loop again over all assets
 				if technicalAsset.Id != sparringAssetCandidateId {
 					sparringAssetCandidate := input.TechnicalAssets[sparringAssetCandidateId]
-					if sparringAssetCandidate.Technology.IsLessProtectedType() &&
+					if sparringAssetCandidate.Technologies.IsLessProtectedType() &&
 						technicalAsset.IsSameTrustBoundaryNetworkOnly(input, sparringAssetCandidateId) &&
 						!technicalAsset.HasDirectConnection(input, sparringAssetCandidateId) &&
-						!sparringAssetCandidate.Technology.IsCloseToHighValueTargetsTolerated() {
+						!sparringAssetCandidate.Technologies.IsCloseToHighValueTargetsTolerated() {
 						highRisk := technicalAsset.Confidentiality == types.StrictlyConfidential ||
 							technicalAsset.Integrity == types.MissionCritical || technicalAsset.Availability == types.MissionCritical
 						risks = append(risks, r.createRisk(technicalAsset, highRisk))

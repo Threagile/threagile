@@ -50,7 +50,7 @@ func (r *CodeBackdooringRule) GenerateRisks(parsedModel *types.ParsedModel) []ty
 	risks := make([]types.Risk, 0)
 	for _, id := range parsedModel.SortedTechnicalAssetIDs() {
 		technicalAsset := parsedModel.TechnicalAssets[id]
-		if !technicalAsset.OutOfScope && technicalAsset.Technology.IsDevelopmentRelevant() {
+		if !technicalAsset.OutOfScope && technicalAsset.Technologies.IsDevelopmentRelevant() {
 			if technicalAsset.Internet {
 				risks = append(risks, r.createRisk(parsedModel, technicalAsset, true))
 				continue
@@ -75,7 +75,7 @@ func (r *CodeBackdooringRule) GenerateRisks(parsedModel *types.ParsedModel) []ty
 func (r *CodeBackdooringRule) createRisk(input *types.ParsedModel, technicalAsset types.TechnicalAsset, elevatedRisk bool) types.Risk {
 	title := "<b>Code Backdooring</b> risk at <b>" + technicalAsset.Title + "</b>"
 	impact := types.LowImpact
-	if technicalAsset.Technology != types.CodeInspectionPlatform {
+	if !technicalAsset.Technologies.HasType(types.CodeInspectionPlatform) {
 		if elevatedRisk {
 			impact = types.MediumImpact
 		}

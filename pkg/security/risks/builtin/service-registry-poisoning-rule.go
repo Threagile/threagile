@@ -42,7 +42,7 @@ func (r *ServiceRegistryPoisoningRule) GenerateRisks(input *types.ParsedModel) [
 	risks := make([]types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
-		if !technicalAsset.OutOfScope && technicalAsset.Technology == types.ServiceRegistry {
+		if !technicalAsset.OutOfScope && technicalAsset.Technologies.HasType(types.ServiceRegistry) {
 			incomingFlows := input.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id]
 			risks = append(risks, r.createRisk(input, technicalAsset, incomingFlows))
 		}

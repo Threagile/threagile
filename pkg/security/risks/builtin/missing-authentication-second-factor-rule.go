@@ -46,8 +46,8 @@ func (r *MissingAuthenticationSecondFactorRule) GenerateRisks(input *types.Parse
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
 		if technicalAsset.OutOfScope ||
-			technicalAsset.Technology.IsTrafficForwarding() ||
-			technicalAsset.Technology.IsUnprotectedCommunicationsTolerated() {
+			technicalAsset.Technologies.IsTrafficForwarding() ||
+			technicalAsset.Technologies.IsUnprotectedCommunicationsTolerated() {
 			continue
 		}
 		if technicalAsset.HighestProcessedConfidentiality(input) >= types.Confidential ||
@@ -58,7 +58,7 @@ func (r *MissingAuthenticationSecondFactorRule) GenerateRisks(input *types.Parse
 			commLinks := input.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id]
 			for _, commLink := range commLinks {
 				caller := input.TechnicalAssets[commLink.SourceId]
-				if caller.Technology.IsUnprotectedCommunicationsTolerated() || caller.Type == types.Datastore {
+				if caller.Technologies.IsUnprotectedCommunicationsTolerated() || caller.Type == types.Datastore {
 					continue
 				}
 				if caller.UsedAsClientByHuman {
@@ -67,12 +67,12 @@ func (r *MissingAuthenticationSecondFactorRule) GenerateRisks(input *types.Parse
 					if moreRisky && commLink.Authentication != types.TwoFactor {
 						risks = append(risks, r.missingAuthenticationRule.createRisk(input, technicalAsset, commLink, commLink, "", types.MediumImpact, types.Unlikely, true, r.Category()))
 					}
-				} else if caller.Technology.IsTrafficForwarding() {
+				} else if caller.Technologies.IsTrafficForwarding() {
 					// Now try to walk a call chain up (1 hop only) to find a caller's caller used by human
 					callersCommLinks := input.IncomingTechnicalCommunicationLinksMappedByTargetId[caller.Id]
 					for _, callersCommLink := range callersCommLinks {
 						callersCaller := input.TechnicalAssets[callersCommLink.SourceId]
-						if callersCaller.Technology.IsUnprotectedCommunicationsTolerated() || callersCaller.Type == types.Datastore {
+						if callersCaller.Technologies.IsUnprotectedCommunicationsTolerated() || callersCaller.Type == types.Datastore {
 							continue
 						}
 						if callersCaller.UsedAsClientByHuman {

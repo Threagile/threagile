@@ -65,10 +65,10 @@ func (r *MixedTargetsOnSharedRuntimeRule) GenerateRisks(input *types.ParsedModel
 				break
 			}
 			currentTrustBoundaryId = technicalAsset.GetTrustBoundaryId(input)
-			if technicalAsset.Technology.IsExclusivelyFrontendRelated() {
+			if technicalAsset.Technologies.IsExclusivelyFrontendRelated() {
 				hasFrontend = true
 			}
-			if technicalAsset.Technology.IsExclusivelyBackendRelated() {
+			if technicalAsset.Technologies.IsExclusivelyBackendRelated() {
 				hasBackend = true
 			}
 		}

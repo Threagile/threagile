@@ -52,7 +52,7 @@ func (r *MissingIdentityPropagationRule) GenerateRisks(input *types.ParsedModel)
 		if technicalAsset.OutOfScope {
 			continue
 		}
-		if technicalAsset.Technology.IsUsuallyProcessingEndUserRequests() &&
+		if technicalAsset.Technologies.IsUsuallyProcessingEndUserRequests() &&
 			(technicalAsset.Confidentiality >= types.Confidential ||
 				technicalAsset.Integrity >= types.Critical ||
 				technicalAsset.Availability >= types.Critical ||
@@ -64,7 +64,7 @@ func (r *MissingIdentityPropagationRule) GenerateRisks(input *types.ParsedModel)
 			commLinks := input.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id]
 			for _, commLink := range commLinks {
 				caller := input.TechnicalAssets[commLink.SourceId]
-				if !caller.Technology.IsUsuallyAbleToPropagateIdentityToOutgoingTargets() || caller.Type == types.Datastore {
+				if !caller.Technologies.IsUsuallyAbleToPropagateIdentityToOutgoingTargets() || caller.Type == types.Datastore {
 					continue
 				}
 				if commLink.Authentication != types.NoneAuthentication &&

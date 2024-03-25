@@ -2807,7 +2807,7 @@ func (r *pdfReporter) createTechnicalAssets(parsedModel *types.ParsedModel) {
 		r.pdf.CellFormat(5, 6, "", "0", 0, "", false, 0, "")
 		r.pdf.CellFormat(40, 6, "Technology:", "0", 0, "", false, 0, "")
 		r.pdfColorBlack()
-		r.pdf.MultiCell(145, 6, technicalAsset.Technology.String(), "0", "0", false)
+		r.pdf.MultiCell(145, 6, technicalAsset.Technologies.String(), "0", "0", false)
 		if r.pdf.GetY() > 270 {
 			r.pageBreak()
 			r.pdf.SetY(36)

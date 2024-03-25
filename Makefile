@@ -7,6 +7,7 @@ ASSETS			= 							\
 	support/openapi.yaml 					\
 	support/schema.json 					\
 	support/live-templates.txt				\
+	pkg/security/types/technologies.yaml	\
 	server
 BIN				= 							\
 	raa_calc 								\

@@ -47,7 +47,7 @@ func (r *MissingVaultRule) GenerateRisks(input *types.ParsedModel) []types.Risk 
 	impact := types.LowImpact
 	for _, id := range input.SortedTechnicalAssetIDs() { // use the sorted one to always get the same tech asset with the highest sensitivity as example asset
 		techAsset := input.TechnicalAssets[id]
-		if techAsset.Technology == types.Vault {
+		if techAsset.Technologies.HasType(types.Vault) {
 			hasVault = true
 		}
 		if techAsset.HighestProcessedConfidentiality(input) >= types.Confidential ||

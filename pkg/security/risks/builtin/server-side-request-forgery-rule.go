@@ -45,7 +45,7 @@ func (r *ServerSideRequestForgeryRule) GenerateRisks(input *types.ParsedModel) [
 	risks := make([]types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
-		if technicalAsset.OutOfScope || technicalAsset.Technology.IsClient() || technicalAsset.Technology == types.LoadBalancer {
+		if technicalAsset.OutOfScope || technicalAsset.Technologies.IsClient() || technicalAsset.Technologies.HasType(types.LoadBalancer) {
 			continue
 		}
 		for _, outgoingFlow := range technicalAsset.CommunicationLinks {

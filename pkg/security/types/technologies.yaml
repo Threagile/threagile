@@ -1,0 +1,369 @@
+ai:
+    name: ai
+    description: An Artificial Intelligence service
+    attributes:
+        less_protected_type: true
+application-server:
+    name: application-server
+    description: An application server (Apache Tomcat, ...)
+    attributes:
+        less_protected_type: true
+        processing_end_user_requests: true
+        propagate_identity_to_outgoing_targets: true
+        web_application: true
+artifact-registry:
+    name: artifact-registry
+    description: A registry to store build artifacts
+    attributes:
+        development_relevant: true
+        less_protected_type: true
+batch-processing:
+    name: batch-processing
+    description: A set of tools automatically processing data
+    attributes:
+        backend_related: true
+big-data-platform:
+    name: big-data-platform
+    description: Storage for big data
+    attributes:
+        backend_related: true
+block-storage:
+    name: block-storage
+    description: SAN or similar central file storage
+    attributes:
+        backend_related: true
+        storing_end_user_data: true
+browser:
+    name: browser
+    description: A web browser
+    attributes:
+        client: true
+        frontend_related: true
+        less_protected_type: true
+        propagate_identity_to_outgoing_targets: true
+build-pipeline:
+    name: build-pipeline
+    description: A software build pipeline
+    attributes:
+        development_relevant: true
+        less_protected_type: true
+client-system:
+    name: client-system
+    description: A client system
+    attributes:
+        client: true
+        frontend_related: true
+        less_protected_type: true
+        propagate_identity_to_outgoing_targets: true
+cli:
+    name: cli
+    description: A command line tool
+    attributes:
+        propagate_identity_to_outgoing_targets: true
+cms:
+    name: cms
+    description: Content Management System
+    attributes:
+        frontend_related: true
+        less_protected_type: true
+        propagate_identity_to_outgoing_targets: true
+        web_application: true
+code-inspection-platform:
+    name: code-inspection-platform
+    description: (Static) Code Analysis)
+    attributes:
+        development_relevant: true
+        less_protected_type: true
+container-platform:
+    name: container-platform
+    description: A platform for hosting and executing containers
+    attributes:
+        backend_related: true
+data-lake:
+    name: data-lake
+    description: A huge database
+    attributes:
+        backend_related: true
+database:
+    name: database
+    description: A database
+    attributes:
+        backend_related: true
+        storing_end_user_data: true
+desktop:
+    name: desktop
+    description: A desktop system (or laptop)
+    attributes:
+        client: true
+        frontend_related: true
+        less_protected_type: true
+        propagate_identity_to_outgoing_targets: true
+devops-client:
+    name: devops-client
+    description: A client used for DevOps
+    attributes:
+        client: true
+        development_relevant: true
+        frontend_related: true
+        less_protected_type: true
+        propagate_identity_to_outgoing_targets: true
+ejb:
+    name: ejb
+    description: Jakarta Enterprise Beans fka Enterprise JavaBeans
+    attributes:
+        backend_related: true
+        less_protected_type: true
+        processing_end_user_requests: true
+        propagate_identity_to_outgoing_targets: true
+erp:
+    name: erp
+    description: Enterprise-Resource-Planning
+    attributes:
+        backend_related: true
+        processing_end_user_requests: true
+        propagate_identity_to_outgoing_targets: true
+        storing_end_user_data: true
+        web_application: true
+event-listener:
+    name: event-listener
+    description: An event listener waiting to be triggered and spring to action
+    attributes:
+        backend_related: true
+file-server:
+    name: file-server
+    description: A file server
+    attributes:
+        backend_related: true
+        storing_end_user_data: true
+function:
+    name: function
+    description: A specific function (maybe RPC ?)
+    attributes:
+        propagate_identity_to_outgoing_targets: true
+gateway:
+    name: gateway
+    description: A gateway connecting two systems or trust boundaries
+    attributes:
+        frontend_related: true
+        propagate_identity_to_outgoing_targets: true
+hsm:
+    name: hsm
+    description: Hardware Security Module
+    attributes:
+        backend_related: true
+        security_control_related: true
+identity-provider:
+    name: identity-provider
+    description: A authentication provider
+    attributes:
+        backend_related: true
+        identity_related: true
+        propagate_identity_to_outgoing_targets: true
+        web_application: true
+identity-store-database:
+    name: identity-store-database
+    description: Authentication data as database
+    attributes:
+        backend_related: true
+        identity_related: true
+identity-store-ldap:
+    name: identity-store-ldap
+    description: Authentication data as LDAP
+    attributes:
+        backend_related: true
+        identity_related: true
+ids:
+    name: ids
+    description: Intrusion Detection System
+    attributes:
+        close_to_high_value_targets_tolerated: true
+        security_control_related: true
+        unnecessary_data_tolerated: true
+        unprotected_communications_tolerated: true
+iot-device:
+    name: iot-device
+    description: An IoT device
+    attributes:
+        client: true
+        frontend_related: true
+        less_protected_type: true
+        propagate_identity_to_outgoing_targets: true
+ips:
+    name: ips
+    description: Intrusion Prevention System
+    attributes:
+        close_to_high_value_targets_tolerated: true
+        security_control_related: true
+        unnecessary_data_tolerated: true
+        unprotected_communications_tolerated: true
+ldap-server:
+    name: ldap-server
+    description: A LDAP server
+library:
+    name: library
+    description: A software library
+    attributes:
+        embedded_component: true
+        propagate_identity_to_outgoing_targets: true
+load-balancer:
+    name: load-balancer
+    description: A load balancer directing incoming requests to available internal infrastructure
+    attributes:
+        close_to_high_value_targets_tolerated: true
+        frontend_related: true
+        propagate_identity_to_outgoing_targets: true
+        traffic_forwarding: true
+local-file-system:
+    name: local-file-system
+    description: The local file system
+    attributes:
+        storing_end_user_data: true
+mail-server:
+    name: mail-server
+    description: A Mail server
+    attributes:
+        less_protected_type: true
+        storing_end_user_data: true
+mainframe:
+    name: mainframe
+    description: A central, big computer
+    attributes:
+        backend_related: true
+        less_protected_type: true
+message-queue:
+    name: message-queue
+    description: A message queue (like MQTT)
+    attributes:
+        backend_related: true
+        propagate_identity_to_outgoing_targets: true
+        storing_end_user_data: true
+mobile-app:
+    name: mobile-app
+    description: A mobile app (smartphone, tablet)
+    attributes:
+        client: true
+        frontend_related: true
+        less_protected_type: true
+        propagate_identity_to_outgoing_targets: true
+monitoring:
+    name: monitoring
+    description: A monitoring system (SIEM, logs)
+    attributes:
+        close_to_high_value_targets_tolerated: true
+        less_protected_type: true
+        unnecessary_data_tolerated: true
+        unprotected_communications_tolerated: true
+report-engine:
+    name: report-engine
+    description: Software for report generation
+    attributes:
+        processing_end_user_requests: true
+        propagate_identity_to_outgoing_targets: true
+        web_application: true
+reverse-proxy:
+    name: reverse-proxy
+    description: A proxy hiding internal infrastructure from caller making requests. Can also reduce load
+    attributes:
+        close_to_high_value_targets_tolerated: true
+        frontend_related: true
+        propagate_identity_to_outgoing_targets: true
+        traffic_forwarding: true
+scheduler:
+    name: scheduler
+    description: Scheduled tasks
+    attributes:
+        backend_related: true
+        less_protected_type: true
+search-engine:
+    name: search-engine
+    description: A search engine
+    attributes:
+        backend_related: true
+        propagate_identity_to_outgoing_targets: true
+search-index:
+    name: search-index
+    description: The index database of a search engine
+    attributes:
+        backend_related: true
+service-mesh:
+    name: service-mesh
+    description: Infrastructure for service-to-service communication
+    attributes:
+        backend_related: true
+        propagate_identity_to_outgoing_targets: true
+service-registry:
+    name: service-registry
+    description: A central place where data schemas can be found and distributed
+sourcecode-repository:
+    name: sourcecode-repository
+    description: Git or similar
+    attributes:
+        development_relevant: true
+        less_protected_type: true
+stream-processing:
+    name: stream-processing
+    description: Data stream processing
+    attributes:
+        backend_related: true
+        storing_end_user_data: true
+task:
+    name: task
+    description: A specific task
+    attributes:
+        propagate_identity_to_outgoing_targets: true
+tool:
+    name: tool
+    description: A specific tool
+    attributes:
+        propagate_identity_to_outgoing_targets: true
+unknown-technology:
+    name: unknown-technology
+    description: Unknown technology
+vault:
+    name: vault
+    description: Encryption and key management
+    attributes:
+        backend_related: true
+        security_control_related: true
+waf:
+    name: waf
+    description: Web Application Firewall
+    attributes:
+        frontend_related: true
+        propagate_identity_to_outgoing_targets: true
+        security_control_related: true
+        traffic_forwarding: true
+web-application:
+    name: web-application
+    description: A web application
+    attributes:
+        less_protected_type: true
+        processing_end_user_requests: true
+        propagate_identity_to_outgoing_targets: true
+        web_application: true
+web-server:
+    name: web-server
+    description: A web server
+    attributes:
+        less_protected_type: true
+        processing_end_user_requests: true
+        propagate_identity_to_outgoing_targets: true
+        web_application: true
+web-service-rest:
+    name: web-service-rest
+    description: A REST web service (API)
+    attributes:
+        backend_related: true
+        less_protected_type: true
+        processing_end_user_requests: true
+        propagate_identity_to_outgoing_targets: true
+        web_service: true
+web-service-soap:
+    name: web-service-soap
+    description: A SOAP web service (API)
+    attributes:
+        backend_related: true
+        less_protected_type: true
+        processing_end_user_requests: true
+        propagate_identity_to_outgoing_targets: true
+        web_service: true
