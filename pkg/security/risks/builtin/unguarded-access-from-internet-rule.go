@@ -29,18 +29,18 @@ func (*UnguardedAccessFromInternetRule) Category() types.RiskCategory {
 		Check:    "Are recommendations from the linked cheat sheet and referenced ASVS chapter applied?",
 		Function: types.Architecture,
 		STRIDE:   types.ElevationOfPrivilege,
-		DetectionLogic: "In-scope technical assets (excluding " + types.LoadBalancer.String() + ") with confidentiality rating " +
+		DetectionLogic: "In-scope technical assets (excluding " + types.LoadBalancer + ") with confidentiality rating " +
 			"of " + types.Confidential.String() + " (or higher) or with integrity rating of " + types.Critical.String() + " (or higher) when " +
 			"accessed directly from the internet. All " +
-			types.WebServer.String() + ", " + types.WebApplication.String() + ", " + types.ReverseProxy.String() + ", " + types.WAF.String() + ", and " + types.Gateway.String() + " assets are exempted from this risk when " +
+			types.WebServer + ", " + types.WebApplication + ", " + types.ReverseProxy + ", " + types.WAF + ", and " + types.Gateway + " assets are exempted from this risk when " +
 			"they do not consist of custom developed code and " +
-			"the data-flow only consists of HTTP or FTP protocols. Access from " + types.Monitoring.String() + " systems " +
+			"the data-flow only consists of HTTP or FTP protocols. Access from " + types.Monitoring + " systems " +
 			"as well as VPN-protected connections are exempted.",
 		RiskAssessment: "The matching technical assets are at " + types.LowSeverity.String() + " risk. When either the " +
 			"confidentiality rating is " + types.StrictlyConfidential.String() + " or the integrity rating " +
 			"is " + types.MissionCritical.String() + ", the risk-rating is considered " + types.MediumSeverity.String() + ". " +
 			"For assets with RAA values higher than 40 % the risk-rating increases.",
-		FalsePositives:             "When other means of filtering client requests are applied equivalent of " + types.ReverseProxy.String() + ", " + types.WAF.String() + ", or " + types.Gateway.String() + " components.",
+		FalsePositives:             "When other means of filtering client requests are applied equivalent of " + types.ReverseProxy + ", " + types.WAF + ", or " + types.Gateway + " components.",
 		ModelFailurePossibleReason: false,
 		CWE:                        501,
 	}
@@ -58,18 +58,16 @@ func (r *UnguardedAccessFromInternetRule) GenerateRisks(input *types.ParsedModel
 			commLinks := input.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id]
 			sort.Sort(types.ByTechnicalCommunicationLinkIdSort(commLinks))
 			for _, incomingAccess := range commLinks {
-				if !technicalAsset.Technologies.HasType(types.LoadBalancer) {
+				if !technicalAsset.Technologies.GetAttribute(types.LoadBalancer) {
 					if !technicalAsset.CustomDevelopedParts {
-						if technicalAsset.Technologies.HasAnyType(types.WebServer, types.WebApplication, types.ReverseProxy, types.WAF, types.Gateway) &&
-							(incomingAccess.Protocol == types.HTTP || incomingAccess.Protocol == types.HTTPS) {
+						if technicalAsset.Technologies.GetAttribute(types.IsHTTPInternetAccessOK) && (incomingAccess.Protocol == types.HTTP || incomingAccess.Protocol == types.HTTPS) {
 							continue
 						}
-						if technicalAsset.Technologies.HasType(types.Gateway) &&
-							(incomingAccess.Protocol == types.FTP || incomingAccess.Protocol == types.FTPS || incomingAccess.Protocol == types.SFTP) {
+						if technicalAsset.Technologies.GetAttribute(types.IsFTPInternetAccessOK) && (incomingAccess.Protocol == types.FTP || incomingAccess.Protocol == types.FTPS || incomingAccess.Protocol == types.SFTP) {
 							continue
 						}
 					}
-					if input.TechnicalAssets[incomingAccess.SourceId].Technologies.HasType(types.Monitoring) ||
+					if input.TechnicalAssets[incomingAccess.SourceId].Technologies.GetAttribute(types.Monitoring) ||
 						incomingAccess.VPN {
 						continue
 					}

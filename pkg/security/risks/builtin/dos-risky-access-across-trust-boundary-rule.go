@@ -26,7 +26,7 @@ func (*DosRiskyAccessAcrossTrustBoundaryRule) Category() types.RiskCategory {
 		Check:    "Are recommendations from the linked cheat sheet and referenced ASVS chapter applied?",
 		Function: types.Operations,
 		STRIDE:   types.DenialOfService,
-		DetectionLogic: "In-scope technical assets (excluding " + types.LoadBalancer.String() + ") with " +
+		DetectionLogic: "In-scope technical assets (excluding " + types.LoadBalancer + ") with " +
 			"availability rating of " + types.Critical.String() + " or higher which have incoming data-flows across a " +
 			"network trust-boundary (excluding " + types.DevOps.String() + " usage).",
 		RiskAssessment: "Matching technical assets with availability rating " +
@@ -48,11 +48,11 @@ func (r *DosRiskyAccessAcrossTrustBoundaryRule) GenerateRisks(input *types.Parse
 	risks := make([]types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
-		if !technicalAsset.OutOfScope && !technicalAsset.Technologies.HasType(types.LoadBalancer) &&
+		if !technicalAsset.OutOfScope && !technicalAsset.Technologies.GetAttribute(types.LoadBalancer) &&
 			technicalAsset.Availability >= types.Critical {
 			for _, incomingAccess := range input.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id] {
 				sourceAsset := input.TechnicalAssets[incomingAccess.SourceId]
-				if sourceAsset.Technologies.IsTrafficForwarding() {
+				if sourceAsset.Technologies.GetAttribute(types.IsTrafficForwarding) {
 					// Now try to walk a call chain up (1 hop only) to find a caller's caller used by human
 					callersCommLinks := input.IncomingTechnicalCommunicationLinksMappedByTargetId[sourceAsset.Id]
 					for _, callersCommLink := range callersCommLinks {

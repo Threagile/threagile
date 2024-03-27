@@ -4,6 +4,8 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 
 package types
 
+import "github.com/threagile/threagile/pkg/common"
+
 // TypeDescription contains a name for a type and its description
 type TypeDescription struct {
 	Name        string
@@ -15,7 +17,7 @@ type TypeEnum interface {
 	Explain() string
 }
 
-func GetBuiltinTypeValues() map[string][]TypeEnum {
+func GetBuiltinTypeValues(cfg *common.Config) map[string][]TypeEnum {
 	return map[string][]TypeEnum{
 		"Authentication":  AuthenticationValues(),
 		"Authorization":   AuthorizationValues(),
@@ -34,7 +36,7 @@ func GetBuiltinTypeValues() map[string][]TypeEnum {
 		"STRIDE":                                       STRIDEValues(),
 		"Technical Asset Machine":                      TechnicalAssetMachineValues(),
 		"Technical Asset Size":                         TechnicalAssetSizeValues(),
-		"Technical Asset Technology":                   TechnicalAssetTechnologyValues(),
+		"Technical Asset Technology":                   TechnicalAssetTechnologyValues(cfg),
 		"Technical Asset Type":                         TechnicalAssetTypeValues(),
 		"Trust Boundary Type":                          TrustBoundaryTypeValues(),
 		"Usage":                                        UsageValues(),

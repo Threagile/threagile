@@ -10,72 +10,12 @@ import (
 	"path/filepath"
 )
 
-const (
-	UnknownTechnology TechnicalAssetTechnology = iota
-	ClientSystem
-	Browser
-	Desktop
-	MobileApp
-	DevOpsClient
-	WebServer
-	WebApplication
-	ApplicationServer
-	Database
-	FileServer
-	LocalFileSystem
-	ERP
-	CMS
-	WebServiceREST
-	WebServiceSOAP
-	EJB
-	SearchIndex
-	SearchEngine
-	ServiceRegistry
-	ReverseProxy
-	LoadBalancer
-	BuildPipeline
-	SourcecodeRepository
-	ArtifactRegistry
-	CodeInspectionPlatform
-	Monitoring
-	LDAPServer
-	ContainerPlatform
-	BatchProcessing
-	EventListener
-	IdentityProvider
-	IdentityStoreLDAP
-	IdentityStoreDatabase
-	Tool
-	CLI
-	Task
-	Function
-	Gateway // TODO rename to API-Gateway to be more clear?
-	IoTDevice
-	MessageQueue
-	StreamProcessing
-	ServiceMesh
-	DataLake
-	BigDataPlatform
-	ReportEngine
-	AI
-	MailServer
-	Vault
-	HSM
-	WAF
-	IDS
-	IPS
-	Scheduler
-	Mainframe
-	BlockStorage
-	Library
-)
-
 //go:embed technologies.yaml
-var supportFolder embed.FS
+var technologiesLocation embed.FS
 
 type TechnologyMap map[string]Technology
 
-func (what TechnologyMap) LoadWithConfig(config common.Config, defaultFilename string) error {
+func (what TechnologyMap) LoadWithConfig(config *common.Config, defaultFilename string) error {
 	technologiesFilename := filepath.Join(config.AppFolder, defaultFilename)
 	_, statError := os.Stat(technologiesFilename)
 	if statError == nil {
@@ -106,7 +46,7 @@ func (what TechnologyMap) LoadWithConfig(config common.Config, defaultFilename s
 }
 
 func (what TechnologyMap) LoadDefault() error {
-	defaultTechnologyFile, readError := supportFolder.ReadFile("technologies.yaml")
+	defaultTechnologyFile, readError := technologiesLocation.ReadFile("technologies.yaml")
 	if readError != nil {
 		return fmt.Errorf("error reading default technologies: %w", readError)
 	}
@@ -192,6 +132,8 @@ func (what TechnologyMap) PropagateAttributes() {
 		technology.Attributes = make(map[string]bool)
 
 		what.propagateAttributes(name, technology.Attributes)
+		technology.Attributes[name] = true
+		technology.Name = name
 
 		technologyList = append(technologyList, *technology)
 	}
@@ -214,4 +156,17 @@ func (what TechnologyMap) propagateAttributes(name string, attributes map[string
 	for key, value := range tech.Attributes {
 		attributes[key] = value
 	}
+}
+
+func TechnicalAssetTechnologyValues(cfg *common.Config) []TypeEnum {
+	technologies := make(TechnologyMap)
+	_ = technologies.LoadWithConfig(cfg, "technologies.yaml")
+	technologies.PropagateAttributes()
+
+	values := make([]TypeEnum, 0)
+	for _, technology := range technologies {
+		values = append(values, TypeEnum(technology))
+	}
+
+	return values
 }

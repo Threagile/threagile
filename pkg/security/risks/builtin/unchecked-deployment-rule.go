@@ -44,7 +44,7 @@ func (*UncheckedDeploymentRule) SupportedTags() []string {
 func (r *UncheckedDeploymentRule) GenerateRisks(input *types.ParsedModel) []types.Risk {
 	risks := make([]types.Risk, 0)
 	for _, technicalAsset := range input.TechnicalAssets {
-		if technicalAsset.Technologies.IsDevelopmentRelevant() {
+		if technicalAsset.Technologies.GetAttribute(types.IsDevelopmentRelevant) {
 			risks = append(risks, r.createRisk(input, technicalAsset))
 		}
 	}

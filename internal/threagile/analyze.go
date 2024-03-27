@@ -18,7 +18,7 @@ func (what *Threagile) initAnalyze() *Threagile {
 			commands := what.readCommands()
 			progressReporter := common.DefaultProgressReporter{Verbose: cfg.Verbose}
 
-			r, err := model.ReadAndAnalyzeModel(*cfg, progressReporter)
+			r, err := model.ReadAndAnalyzeModel(cfg, progressReporter)
 			if err != nil {
 				return fmt.Errorf("failed to read and analyze model: %v", err)
 			}

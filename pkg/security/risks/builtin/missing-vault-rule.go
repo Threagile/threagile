@@ -24,7 +24,7 @@ func (*MissingVaultRule) Category() types.RiskCategory {
 		CheatSheet:     "https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html",
 		Action:         "Vault (Secret Storage)",
 		Mitigation:     "Consider using a Vault (Secret Storage) to securely store and access config secrets (like credentials, private keys, client certificates, etc.).",
-		Check:          "Is a Vault (Secret Storage) in place?",
+		Check:          "GetAttribute a Vault (Secret Storage) in place?",
 		Function:       types.Architecture,
 		STRIDE:         types.InformationDisclosure,
 		DetectionLogic: "Models without a Vault (Secret Storage).",
@@ -47,7 +47,7 @@ func (r *MissingVaultRule) GenerateRisks(input *types.ParsedModel) []types.Risk 
 	impact := types.LowImpact
 	for _, id := range input.SortedTechnicalAssetIDs() { // use the sorted one to always get the same tech asset with the highest sensitivity as example asset
 		techAsset := input.TechnicalAssets[id]
-		if techAsset.Technologies.HasType(types.Vault) {
+		if techAsset.Technologies.GetAttribute(types.Vault) {
 			hasVault = true
 		}
 		if techAsset.HighestProcessedConfidentiality(input) >= types.Confidential ||

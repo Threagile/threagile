@@ -23,7 +23,7 @@ func (what *Threagile) initExecute() *Threagile {
 			cfg := what.readConfig(cmd, what.buildTimestamp)
 			progressReporter := common.DefaultProgressReporter{Verbose: cfg.Verbose}
 
-			r, err := model.ReadAndAnalyzeModel(*cfg, progressReporter)
+			r, err := model.ReadAndAnalyzeModel(cfg, progressReporter)
 			if err != nil {
 				return fmt.Errorf("unable to read and analyze model: %v", err)
 			}

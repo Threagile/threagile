@@ -68,13 +68,13 @@ func (r *MissingBuildInfrastructureRule) GenerateRisks(input *types.ParsedModel)
 				mostRelevantAsset = technicalAsset
 			}
 		}
-		if technicalAsset.Technologies.HasType(types.BuildPipeline) {
+		if technicalAsset.Technologies.GetAttribute(types.BuildPipeline) {
 			hasBuildPipeline = true
 		}
-		if technicalAsset.Technologies.HasType(types.SourcecodeRepository) {
+		if technicalAsset.Technologies.GetAttribute(types.SourcecodeRepository) {
 			hasSourcecodeRepo = true
 		}
-		if technicalAsset.Technologies.HasType(types.DevOpsClient) {
+		if technicalAsset.Technologies.GetAttribute(types.DevOpsClient) {
 			hasDevOpsClient = true
 		}
 	}

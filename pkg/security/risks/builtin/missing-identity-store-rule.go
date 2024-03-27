@@ -42,8 +42,7 @@ func (*MissingIdentityStoreRule) SupportedTags() []string {
 func (r *MissingIdentityStoreRule) GenerateRisks(input *types.ParsedModel) []types.Risk {
 	risks := make([]types.Risk, 0)
 	for _, technicalAsset := range input.TechnicalAssets {
-		if !technicalAsset.OutOfScope &&
-			technicalAsset.Technologies.HasAnyType(types.IdentityStoreLDAP, types.IdentityStoreDatabase) {
+		if !technicalAsset.OutOfScope && technicalAsset.Technologies.GetAttribute(types.IsIdentityStore) {
 			// everything fine, no risk, as we have an in-scope identity store in the model
 			return risks
 		}

@@ -25,7 +25,7 @@ func (what ReadResult) ExplainRisk(cfg *common.Config, risk string, reporter com
 
 // TODO: consider about splitting this function into smaller ones for better reusability
 
-func ReadAndAnalyzeModel(config common.Config, progressReporter types.ProgressReporter) (*ReadResult, error) {
+func ReadAndAnalyzeModel(config *common.Config, progressReporter types.ProgressReporter) (*ReadResult, error) {
 	progressReporter.Infof("Writing into output directory: %v", config.OutputFolder)
 	progressReporter.Infof("Parsing model: %v", config.InputFile)
 

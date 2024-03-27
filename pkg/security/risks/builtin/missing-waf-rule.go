@@ -23,7 +23,7 @@ func (*MissingWafRule) Category() types.RiskCategory {
 		Action:     "Web Application Firewall (WAF)",
 		Mitigation: "Consider placing a Web Application Firewall (WAF) in front of the web-services and/or web-applications. For cloud environments many cloud providers offer " +
 			"pre-configured WAFs. Even reverse proxies can be enhances by a WAF component via ModSecurity plugins.",
-		Check:          "Is a Web Application Firewall (WAF) in place?",
+		Check:          "GetAttribute a Web Application Firewall (WAF) in place?",
 		Function:       types.Operations,
 		STRIDE:         types.Tampering,
 		DetectionLogic: "In-scope web-services and/or web-applications accessed across a network trust boundary not having a Web Application Firewall (WAF) in front of them.",
@@ -43,11 +43,11 @@ func (r *MissingWafRule) GenerateRisks(input *types.ParsedModel) []types.Risk {
 	risks := make([]types.Risk, 0)
 	for _, technicalAsset := range input.TechnicalAssets {
 		if !technicalAsset.OutOfScope &&
-			(technicalAsset.Technologies.IsWebApplication() || technicalAsset.Technologies.IsWebService()) {
+			(technicalAsset.Technologies.GetAttribute(types.WebApplication) || technicalAsset.Technologies.GetAttribute(types.IsWebService)) {
 			for _, incomingAccess := range input.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id] {
 				if incomingAccess.IsAcrossTrustBoundaryNetworkOnly(input) &&
 					incomingAccess.Protocol.IsPotentialWebAccessProtocol() &&
-					!input.TechnicalAssets[incomingAccess.SourceId].Technologies.HasType(types.WAF) {
+					!input.TechnicalAssets[incomingAccess.SourceId].Technologies.GetAttribute(types.WAF) {
 					risks = append(risks, r.createRisk(input, technicalAsset))
 					break
 				}

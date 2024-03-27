@@ -75,7 +75,7 @@ func (what *Threagile) initList() *Threagile {
 			cmd.Println()
 			cmd.Println("The following types are available (can be extended for custom rules):")
 			cmd.Println()
-			for name, values := range types.GetBuiltinTypeValues() {
+			for name, values := range types.GetBuiltinTypeValues(what.readConfig(cmd, what.buildTimestamp)) {
 				cmd.Println(fmt.Sprintf("  %v: %v", name, values))
 			}
 		},

@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-func ParseModel(config common.Config, modelInput *input.Model, builtinRiskRules map[string]risks.RiskRule, customRiskRules map[string]*CustomRisk) (*types.ParsedModel, error) {
+func ParseModel(config *common.Config, modelInput *input.Model, builtinRiskRules map[string]risks.RiskRule, customRiskRules map[string]*CustomRisk) (*types.ParsedModel, error) {
 	technologies := make(types.TechnologyMap)
 	technologiesLoadError := technologies.LoadWithConfig(config, "technologies.yaml")
 	if technologiesLoadError != nil {

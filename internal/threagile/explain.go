@@ -35,7 +35,7 @@ func (what *Threagile) initExplainNew() *Threagile {
 
 			// todo: reuse model if already loaded
 
-			result, runError := model.ReadAndAnalyzeModel(*cfg, progressReporter)
+			result, runError := model.ReadAndAnalyzeModel(cfg, progressReporter)
 			if runError != nil {
 				cmd.Printf("Failed to read and analyze model: %v", runError)
 				return runError
@@ -110,7 +110,7 @@ func (what *Threagile) initExplainNew() *Threagile {
 			cmd.Println()
 			cmd.Println("The following types are available (can be extended for custom rules):")
 			cmd.Println()
-			for name, values := range types.GetBuiltinTypeValues() {
+			for name, values := range types.GetBuiltinTypeValues(what.readConfig(cmd, what.buildTimestamp)) {
 				cmd.Println(name)
 				for _, candidate := range values {
 					cmd.Printf("\t %v: %v\n", candidate, candidate.Explain())

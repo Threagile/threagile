@@ -1,367 +1,499 @@
 ai:
-    name: ai
+    aliases:
+        - artificial-intelligence
+        - machine-learning
+        - deep-learning
+        - neural-network
+        - ml
+        - dl
     description: An Artificial Intelligence service
     attributes:
+        ai: true
         less_protected_type: true
 application-server:
-    name: application-server
+    aliases:
+        - app-server
     description: An application server (Apache Tomcat, ...)
     attributes:
+        application-server: true
+        high_value_target: true
         less_protected_type: true
         processing_end_user_requests: true
         propagate_identity_to_outgoing_targets: true
         web_application: true
 artifact-registry:
-    name: artifact-registry
     description: A registry to store build artifacts
     attributes:
+        artifact-registry: true
         development_relevant: true
         less_protected_type: true
+        may_contain_secrets: true
 batch-processing:
-    name: batch-processing
     description: A set of tools automatically processing data
     attributes:
+        batch-processing: true
         backend_related: true
 big-data-platform:
-    name: big-data-platform
+    aliases:
+        - big-data
     description: Storage for big data
     attributes:
+        big-data-platform: true
         backend_related: true
 block-storage:
-    name: block-storage
+    aliases:
+        - san
     description: SAN or similar central file storage
     attributes:
+        block-storage: true
         backend_related: true
         storing_end_user_data: true
 browser:
-    name: browser
+    aliases:
+        - web-browser
     description: A web browser
     attributes:
+        browser: true
         client: true
         frontend_related: true
         less_protected_type: true
         propagate_identity_to_outgoing_targets: true
 build-pipeline:
-    name: build-pipeline
+    aliases:
+        - ci
+        - continuous-integration
     description: A software build pipeline
     attributes:
+        build-pipeline: true
         development_relevant: true
         less_protected_type: true
 client-system:
-    name: client-system
+    aliases:
+        - client
     description: A client system
     attributes:
+        client-system: true
         client: true
         frontend_related: true
         less_protected_type: true
         propagate_identity_to_outgoing_targets: true
 cli:
-    name: cli
+    aliases:
+        - command-line
+        - command-line-tool
+        - command-line-interface
     description: A command line tool
     attributes:
+        cli: true
         propagate_identity_to_outgoing_targets: true
 cms:
-    name: cms
+    aliases:
+        - content-management-system
     description: Content Management System
     attributes:
+        cms: true
         frontend_related: true
         less_protected_type: true
         propagate_identity_to_outgoing_targets: true
         web_application: true
 code-inspection-platform:
-    name: code-inspection-platform
+    aliases:
+        - code-inspection
+        - code-analysis
     description: (Static) Code Analysis)
     attributes:
+        code-inspection-platform: true
         development_relevant: true
         less_protected_type: true
 container-platform:
-    name: container-platform
+    aliases:
+        - container
+        - docker
+        - kubernetes
     description: A platform for hosting and executing containers
     attributes:
+        container-platform: true
         backend_related: true
+        container_platform: true
 data-lake:
-    name: data-lake
     description: A huge database
     attributes:
+        data-lake: true
         backend_related: true
 database:
-    name: database
+    aliases:
+        - db
     description: A database
     attributes:
+        database: true
         backend_related: true
         storing_end_user_data: true
+        vulnerable_to_query_injection: true
 desktop:
-    name: desktop
+    aliases:
+        - desktop-system
     description: A desktop system (or laptop)
     attributes:
+        desktop: true
         client: true
         frontend_related: true
         less_protected_type: true
         propagate_identity_to_outgoing_targets: true
 devops-client:
-    name: devops-client
     description: A client used for DevOps
     attributes:
+        devops-client: true
         client: true
         development_relevant: true
         frontend_related: true
         less_protected_type: true
         propagate_identity_to_outgoing_targets: true
 ejb:
-    name: ejb
+    aliases:
+        - enterprise-java-beans
     description: Jakarta Enterprise Beans fka Enterprise JavaBeans
     attributes:
+        ejb: true
         backend_related: true
         less_protected_type: true
         processing_end_user_requests: true
         propagate_identity_to_outgoing_targets: true
 erp:
-    name: erp
+    aliases:
+        - enterprise-resource-planning
     description: Enterprise-Resource-Planning
     attributes:
+        erp: true
         backend_related: true
+        high_value_target: true
         processing_end_user_requests: true
         propagate_identity_to_outgoing_targets: true
         storing_end_user_data: true
         web_application: true
 event-listener:
-    name: event-listener
     description: An event listener waiting to be triggered and spring to action
     attributes:
+        event-listener: true
         backend_related: true
 file-server:
-    name: file-server
+    aliases:
+        - file-storage
     description: A file server
     attributes:
+        file-server: true
         backend_related: true
+        file_storage: true
         storing_end_user_data: true
 function:
-    name: function
     description: A specific function (maybe RPC ?)
     attributes:
+        function: true
         propagate_identity_to_outgoing_targets: true
 gateway:
-    name: gateway
     description: A gateway connecting two systems or trust boundaries
     attributes:
+        gateway: true
         frontend_related: true
+        ftp_internet_access_ok: true
+        http_internet_access_ok: true
         propagate_identity_to_outgoing_targets: true
 hsm:
+    aliases:
+        - hardware-security-module
     name: hsm
     description: Hardware Security Module
     attributes:
+        hsm: true
         backend_related: true
         security_control_related: true
 identity-provider:
-    name: identity-provider
+    aliases:
+        - idp
     description: A authentication provider
     attributes:
+        identity-provider: true
         backend_related: true
+        high_value_target: true
         identity_related: true
         propagate_identity_to_outgoing_targets: true
         web_application: true
 identity-store-database:
-    name: identity-store-database
+    aliases:
+        - identity-store
     description: Authentication data as database
     attributes:
+        identity-store-database: true
         backend_related: true
         identity_related: true
+        identity_store: true
+        vulnerable_to_query_injection: true
 identity-store-ldap:
-    name: identity-store-ldap
     description: Authentication data as LDAP
     attributes:
+        identity-store-ldap: true
         backend_related: true
         identity_related: true
+        identity_store: true
 ids:
-    name: ids
+    aliases:
+        - intrusion-detection-system
     description: Intrusion Detection System
     attributes:
+        ids: true
         close_to_high_value_targets_tolerated: true
+        no_authentication_required: true
+        no_network_segmentation_required: true
+        no_storage_at_rest: true
         security_control_related: true
         unnecessary_data_tolerated: true
         unprotected_communications_tolerated: true
 iot-device:
-    name: iot-device
+    aliases:
+        - iot
     description: An IoT device
     attributes:
+        iot-device: true
         client: true
         frontend_related: true
         less_protected_type: true
         propagate_identity_to_outgoing_targets: true
 ips:
-    name: ips
+    aliases:
+        - intrusion-prevention-system
     description: Intrusion Prevention System
     attributes:
+        ips: true
         close_to_high_value_targets_tolerated: true
+        no_authentication_required: true
+        no_network_segmentation_required: true
+        no_storage_at_rest: true
         security_control_related: true
         unnecessary_data_tolerated: true
         unprotected_communications_tolerated: true
 ldap-server:
-    name: ldap-server
+    aliases:
+        - ldap
     description: A LDAP server
+    attributes:
+        ldap-server: true
+        backend_related: true
+        identity_related: true
+        identity_store: true
 library:
-    name: library
     description: A software library
     attributes:
+        library: true
         embedded_component: true
         propagate_identity_to_outgoing_targets: true
 load-balancer:
-    name: load-balancer
+    aliases:
+        - lb
     description: A load balancer directing incoming requests to available internal infrastructure
     attributes:
+        load-balancer: true
         close_to_high_value_targets_tolerated: true
         frontend_related: true
+        no_authentication_required: true
+        no_storage_at_rest: true
         propagate_identity_to_outgoing_targets: true
         traffic_forwarding: true
 local-file-system:
-    name: local-file-system
+    aliases:
+        - local-storage
     description: The local file system
     attributes:
+        local-file-system: true
+        file_storage: true
         storing_end_user_data: true
 mail-server:
-    name: mail-server
+    aliases:
+        - email-server
     description: A Mail server
     attributes:
+        mail-server: true
         less_protected_type: true
         storing_end_user_data: true
 mainframe:
-    name: mainframe
     description: A central, big computer
     attributes:
+        mainframe: true
         backend_related: true
         less_protected_type: true
 message-queue:
-    name: message-queue
+    aliases:
+        - mq
     description: A message queue (like MQTT)
     attributes:
+        message-queue: true
         backend_related: true
         propagate_identity_to_outgoing_targets: true
         storing_end_user_data: true
 mobile-app:
-    name: mobile-app
     description: A mobile app (smartphone, tablet)
     attributes:
+        mobile-app: true
         client: true
         frontend_related: true
         less_protected_type: true
         propagate_identity_to_outgoing_targets: true
 monitoring:
-    name: monitoring
+    aliases:
+        - siem
     description: A monitoring system (SIEM, logs)
     attributes:
+        monitoring: true
         close_to_high_value_targets_tolerated: true
         less_protected_type: true
         unnecessary_data_tolerated: true
         unprotected_communications_tolerated: true
 report-engine:
-    name: report-engine
+    aliases:
+        - reporting
     description: Software for report generation
     attributes:
+        report-engine: true
         processing_end_user_requests: true
         propagate_identity_to_outgoing_targets: true
         web_application: true
 reverse-proxy:
-    name: reverse-proxy
     description: A proxy hiding internal infrastructure from caller making requests. Can also reduce load
     attributes:
+        reverse-proxy: true
         close_to_high_value_targets_tolerated: true
         frontend_related: true
+        http_internet_access_ok: true
+        no_authentication_required: true
+        no_network_segmentation_required: true
+        no_storage_at_rest: true
         propagate_identity_to_outgoing_targets: true
         traffic_forwarding: true
 scheduler:
-    name: scheduler
+    aliases:
+        - cron
     description: Scheduled tasks
     attributes:
+        scheduler: true
         backend_related: true
         less_protected_type: true
 search-engine:
-    name: search-engine
     description: A search engine
     attributes:
+        search-engine: true
         backend_related: true
         propagate_identity_to_outgoing_targets: true
+        search_related: true
 search-index:
-    name: search-index
     description: The index database of a search engine
     attributes:
+        search-index: true
         backend_related: true
+        search_related: true
 service-mesh:
-    name: service-mesh
     description: Infrastructure for service-to-service communication
     attributes:
+        service-mesh: true
         backend_related: true
         propagate_identity_to_outgoing_targets: true
 service-registry:
-    name: service-registry
+    aliases:
+        - service-discovery
     description: A central place where data schemas can be found and distributed
+    attributes:
+        service-registry: true
+        no_authentication_required: true
+        no_network_segmentation_required: true
 sourcecode-repository:
-    name: sourcecode-repository
+    aliases:
+        - git
     description: Git or similar
     attributes:
+        sourcecode-repository: true
         development_relevant: true
         less_protected_type: true
+        may_contain_secrets: true
 stream-processing:
-    name: stream-processing
     description: Data stream processing
     attributes:
+        stream-processing: true
         backend_related: true
         storing_end_user_data: true
 task:
-    name: task
+    aliases:
+        - job
     description: A specific task
     attributes:
+        task: true
         propagate_identity_to_outgoing_targets: true
 tool:
-    name: tool
+    aliases:
+        - utility
     description: A specific tool
     attributes:
+        tool: true
         propagate_identity_to_outgoing_targets: true
 unknown-technology:
-    name: unknown-technology
+    aliases:
+        - unknown
     description: Unknown technology
 vault:
-    name: vault
+    aliases:
+        - hashicorp-vault
     description: Encryption and key management
     attributes:
+        vault: true
         backend_related: true
         security_control_related: true
 waf:
-    name: waf
+    aliases:
+        - web-application-firewall
     description: Web Application Firewall
     attributes:
+        waf: true
         frontend_related: true
+        http_internet_access_ok: true
+        no_authentication_required: true
+        no_network_segmentation_required: true
+        no_storage_at_rest: true
         propagate_identity_to_outgoing_targets: true
         security_control_related: true
         traffic_forwarding: true
 web-application:
-    name: web-application
+    aliases:
+        - web-app
     description: A web application
     attributes:
+        web-application: true
+        http_internet_access_ok: true
         less_protected_type: true
         processing_end_user_requests: true
         propagate_identity_to_outgoing_targets: true
         web_application: true
 web-server:
-    name: web-server
     description: A web server
     attributes:
+        web-server: true
+        http_internet_access_ok: true
         less_protected_type: true
         processing_end_user_requests: true
         propagate_identity_to_outgoing_targets: true
         web_application: true
 web-service-rest:
-    name: web-service-rest
+    aliases:
+        - rest-api
     description: A REST web service (API)
     attributes:
+        web-service-rest: true
         backend_related: true
         less_protected_type: true
         processing_end_user_requests: true
         propagate_identity_to_outgoing_targets: true
         web_service: true
 web-service-soap:
-    name: web-service-soap
+    aliases:
+        - soap-api
     description: A SOAP web service (API)
     attributes:
+        web-service-soap: true
         backend_related: true
         less_protected_type: true
         processing_end_user_requests: true

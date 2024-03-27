@@ -94,7 +94,7 @@ func (m *AddBuildPipeline) GetNextQuestion(model *types.ParsedModel) (nextQuesti
 		}, nil
 	case 4:
 		return MacroQuestion{
-			ID:              "code-inspection-platform",
+			ID:              types.CodeInspectionPlatform,
 			Title:           "What product is used as the code inspection platform?",
 			Description:     "This name affects the technical asset's title and ID plus also the tags used.",
 			PossibleAnswers: nil,
@@ -280,7 +280,7 @@ func (m *AddBuildPipeline) applyChange(modelInput *input.Model, parsedModel *typ
 		modelInput.AddTagToModelInput(m.macroState["container-platform"][0], dryRun, changeLogCollector)
 	}
 	if m.codeInspectionUsed {
-		modelInput.AddTagToModelInput(m.macroState["code-inspection-platform"][0], dryRun, changeLogCollector)
+		modelInput.AddTagToModelInput(m.macroState[types.CodeInspectionPlatform][0], dryRun, changeLogCollector)
 	}
 
 	sourceRepoID := types.MakeID(m.macroState["source-repository"][0]) + "-sourcecode-repository"
@@ -294,7 +294,7 @@ func (m *AddBuildPipeline) applyChange(modelInput *input.Model, parsedModel *typ
 	}
 	codeInspectionPlatformID := ""
 	if m.codeInspectionUsed {
-		codeInspectionPlatformID = types.MakeID(m.macroState["code-inspection-platform"][0]) + "-code-inspection-platform"
+		codeInspectionPlatformID = types.MakeID(m.macroState[types.CodeInspectionPlatform][0]) + "-code-inspection-platform"
 	}
 	owner := m.macroState["owner"][0]
 
@@ -461,7 +461,7 @@ func (m *AddBuildPipeline) applyChange(modelInput *input.Model, parsedModel *typ
 			OutOfScope:              true,
 			JustificationOutOfScope: "Development client is not directly in-scope of the application.",
 			Size:                    types.System.String(),
-			Technology:              types.DevOpsClient.String(),
+			Technology:              types.DevOpsClient,
 			Tags:                    []string{},
 			Internet:                strings.EqualFold(m.macroState["internet"][0], "yes"),
 			Machine:                 types.Physical.String(),
@@ -503,7 +503,7 @@ func (m *AddBuildPipeline) applyChange(modelInput *input.Model, parsedModel *typ
 			OutOfScope:              false,
 			JustificationOutOfScope: "",
 			Size:                    types.Service.String(),
-			Technology:              types.SourcecodeRepository.String(),
+			Technology:              types.SourcecodeRepository,
 			Tags:                    []string{input.NormalizeTag(m.macroState["source-repository"][0])},
 			Internet:                strings.EqualFold(m.macroState["internet"][0], "yes"),
 			Machine:                 types.Virtual.String(),
@@ -546,7 +546,7 @@ func (m *AddBuildPipeline) applyChange(modelInput *input.Model, parsedModel *typ
 				OutOfScope:              false,
 				JustificationOutOfScope: "",
 				Size:                    types.Service.String(),
-				Technology:              types.ArtifactRegistry.String(),
+				Technology:              types.ArtifactRegistry,
 				Tags:                    []string{input.NormalizeTag(m.macroState["container-registry"][0])},
 				Internet:                strings.EqualFold(m.macroState["internet"][0], "yes"),
 				Machine:                 types.Virtual.String(),
@@ -588,7 +588,7 @@ func (m *AddBuildPipeline) applyChange(modelInput *input.Model, parsedModel *typ
 				OutOfScope:              false,
 				JustificationOutOfScope: "",
 				Size:                    types.System.String(),
-				Technology:              types.ContainerPlatform.String(),
+				Technology:              types.ContainerPlatform,
 				Tags:                    []string{input.NormalizeTag(m.macroState["container-platform"][0])},
 				Internet:                strings.EqualFold(m.macroState["internet"][0], "yes"),
 				Machine:                 types.Virtual.String(),
@@ -841,7 +841,7 @@ func (m *AddBuildPipeline) applyChange(modelInput *input.Model, parsedModel *typ
 			OutOfScope:              false,
 			JustificationOutOfScope: "",
 			Size:                    types.Service.String(),
-			Technology:              types.BuildPipeline.String(),
+			Technology:              types.BuildPipeline,
 			Tags:                    []string{input.NormalizeTag(m.macroState["build-pipeline"][0])},
 			Internet:                strings.EqualFold(m.macroState["internet"][0], "yes"),
 			Machine:                 types.Virtual.String(),
@@ -883,7 +883,7 @@ func (m *AddBuildPipeline) applyChange(modelInput *input.Model, parsedModel *typ
 			OutOfScope:              false,
 			JustificationOutOfScope: "",
 			Size:                    types.Service.String(),
-			Technology:              types.ArtifactRegistry.String(),
+			Technology:              types.ArtifactRegistry,
 			Tags:                    []string{input.NormalizeTag(m.macroState["artifact-registry"][0])},
 			Internet:                strings.EqualFold(m.macroState["internet"][0], "yes"),
 			Machine:                 types.Virtual.String(),
@@ -919,15 +919,15 @@ func (m *AddBuildPipeline) applyChange(modelInput *input.Model, parsedModel *typ
 			}
 			techAsset := input.TechnicalAsset{
 				ID:                      id,
-				Description:             m.macroState["code-inspection-platform"][0] + " Code Inspection Platform",
+				Description:             m.macroState[types.CodeInspectionPlatform][0] + " Code Inspection Platform",
 				Type:                    types.Process.String(),
 				Usage:                   types.DevOps.String(),
 				UsedAsClientByHuman:     false,
 				OutOfScope:              false,
 				JustificationOutOfScope: "",
 				Size:                    types.Service.String(),
-				Technology:              types.CodeInspectionPlatform.String(),
-				Tags:                    []string{input.NormalizeTag(m.macroState["code-inspection-platform"][0])},
+				Technology:              types.CodeInspectionPlatform,
+				Tags:                    []string{input.NormalizeTag(m.macroState[types.CodeInspectionPlatform][0])},
 				Internet:                strings.EqualFold(m.macroState["internet"][0], "yes"),
 				Machine:                 types.Virtual.String(),
 				Encryption:              encryption,
@@ -947,7 +947,7 @@ func (m *AddBuildPipeline) applyChange(modelInput *input.Model, parsedModel *typ
 			}
 			*changeLogCollector = append(*changeLogCollector, "adding technical asset (including communication links): "+id)
 			if !dryRun {
-				modelInput.TechnicalAssets[m.macroState["code-inspection-platform"][0]+" Code Inspection Platform"] = techAsset
+				modelInput.TechnicalAssets[m.macroState[types.CodeInspectionPlatform][0]+" Code Inspection Platform"] = techAsset
 			}
 		}
 	}

@@ -2,6 +2,36 @@ package types
 
 import "strings"
 
+const (
+	MayContainSecrets                                 = "may_contain_secrets"
+	NoAuthenticationRequired                          = "no_authentication_required"
+	IsHighValueTarget                                 = "high_value_target"
+	IsWebService                                      = "web_service"
+	IsIdentityStore                                   = "identity_store"
+	IsNoNetworkSegmentationRequired                   = "no_network_segmentation_required"
+	IsIdentityRelated                                 = "identity_related"
+	IsFileStorage                                     = "file_storage"
+	IsSearchRelated                                   = "search_related"
+	IsVulnerableToQueryInjection                      = "vulnerable_to_query_injection"
+	IsNoStorageAtRest                                 = "no_storage_at_rest"
+	IsHTTPInternetAccessOK                            = "http_internet_access_ok"
+	IsFTPInternetAccessOK                             = "ftp_internet_access_ok"
+	IsSecurityControlRelated                          = "security_control_related"
+	IsUnprotectedCommunicationsTolerated              = "unprotected_communications_tolerated"
+	IsUnnecessaryDataTolerated                        = "unnecessary_data_tolerated"
+	IsCloseToHighValueTargetsTolerated                = "close_to_high_value_targets_tolerated"
+	IsClient                                          = "client"
+	IsUsuallyAbleToPropagateIdentityToOutgoingTargets = "propagate_identity_to_outgoing_targets"
+	IsLessProtectedType                               = "less_protected_type"
+	IsUsuallyProcessingEndUserRequests                = "processing_end_user_requests"
+	IsUsuallyStoringEndUserData                       = "storing_end_user_data"
+	IsExclusivelyFrontendRelated                      = "frontend_related"
+	IsExclusivelyBackendRelated                       = "backend_related"
+	IsDevelopmentRelevant                             = "development_relevant"
+	IsTrafficForwarding                               = "traffic_forwarding"
+	IsEmbeddedComponent                               = "embedded_component"
+)
+
 type TechnologyList []*Technology
 
 func (what TechnologyList) String() string {
@@ -13,10 +43,10 @@ func (what TechnologyList) String() string {
 	return strings.Join(names, "/")
 }
 
-func (what TechnologyList) HasAnyType(firstKind TechnicalAssetTechnology, otherKinds ...TechnicalAssetTechnology) bool {
-	for _, kind := range append(otherKinds, firstKind) {
+func (what TechnologyList) GetAttribute(firstAttribute string, otherAttributes ...string) bool {
+	for _, attribute := range append(otherAttributes, firstAttribute) {
 		for _, technology := range what {
-			if technology.Type() == kind {
+			if technology.GetAttribute(attribute) {
 				return true
 			}
 		}
@@ -25,110 +55,16 @@ func (what TechnologyList) HasAnyType(firstKind TechnicalAssetTechnology, otherK
 	return false
 }
 
-func (what TechnologyList) HasAllTypes(firstKind TechnicalAssetTechnology, otherKinds ...TechnicalAssetTechnology) bool {
-	for _, kind := range append(otherKinds, firstKind) {
-		if !what.HasType(kind) {
+func (what TechnologyList) IsUnknown() bool {
+	if what.GetAttribute(UnknownTechnology) {
+		return true
+	}
+
+	for _, technology := range what {
+		if len(technology.Attributes) > 0 {
 			return false
 		}
 	}
 
 	return true
-}
-
-func (what TechnologyList) HasType(kind TechnicalAssetTechnology) bool {
-	for _, technology := range what {
-		if technology.Type() == kind {
-			return true
-		}
-	}
-
-	return false
-}
-
-func (what TechnologyList) IsNotOnlyType(kind TechnicalAssetTechnology) bool {
-	for _, technology := range what {
-		if technology.Type() != kind {
-			return true
-		}
-	}
-
-	return false
-}
-
-func (what TechnologyList) GetAttribute(name string) bool {
-	for _, technology := range what {
-		if technology.GetAttribute(name) {
-			return true
-		}
-	}
-
-	return false
-}
-
-func (what TechnologyList) IsWebApplication() bool {
-	return what.GetAttribute("web_application")
-}
-
-func (what TechnologyList) IsWebService() bool {
-	return what.GetAttribute("web_service")
-}
-
-func (what TechnologyList) IsIdentityRelated() bool {
-	return what.GetAttribute("identity_related")
-}
-
-func (what TechnologyList) IsSecurityControlRelated() bool {
-	return what.GetAttribute("security_control_related")
-}
-
-func (what TechnologyList) IsUnprotectedCommunicationsTolerated() bool {
-	return what.GetAttribute("unprotected_communications_tolerated")
-}
-
-func (what TechnologyList) IsUnnecessaryDataTolerated() bool {
-	return what.GetAttribute("unnecessary_data_tolerated")
-}
-
-func (what TechnologyList) IsCloseToHighValueTargetsTolerated() bool {
-	return what.GetAttribute("close_to_high_value_targets_tolerated")
-}
-
-func (what TechnologyList) IsClient() bool {
-	return what.GetAttribute("client")
-}
-
-func (what TechnologyList) IsUsuallyAbleToPropagateIdentityToOutgoingTargets() bool {
-	return what.GetAttribute("propagate_identity_to_outgoing_targets")
-}
-
-func (what TechnologyList) IsLessProtectedType() bool {
-	return what.GetAttribute("less_protected_type")
-}
-
-func (what TechnologyList) IsUsuallyProcessingEndUserRequests() bool {
-	return what.GetAttribute("processing_end_user_requests")
-}
-
-func (what TechnologyList) IsUsuallyStoringEndUserData() bool {
-	return what.GetAttribute("storing_end_user_data")
-}
-
-func (what TechnologyList) IsExclusivelyFrontendRelated() bool {
-	return what.GetAttribute("frontend_related")
-}
-
-func (what TechnologyList) IsExclusivelyBackendRelated() bool {
-	return what.GetAttribute("backend_related")
-}
-
-func (what TechnologyList) IsDevelopmentRelevant() bool {
-	return what.GetAttribute("development_relevant")
-}
-
-func (what TechnologyList) IsTrafficForwarding() bool {
-	return what.GetAttribute("traffic_forwarding")
-}
-
-func (what TechnologyList) IsEmbeddedComponent() bool {
-	return what.GetAttribute("embedded_component")
 }

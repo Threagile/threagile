@@ -31,9 +31,9 @@ func (*MissingNetworkSegmentationRule) Category() types.RiskCategory {
 		Function:   types.Operations,
 		STRIDE:     types.ElevationOfPrivilege,
 		DetectionLogic: "In-scope technical assets with high sensitivity and RAA values as well as data stores " +
-			"when surrounded by assets (without a network trust-boundary in-between) which are of type " + types.ClientSystem.String() + ", " +
-			types.WebServer.String() + ", " + types.WebApplication.String() + ", " + types.CMS.String() + ", " + types.WebServiceREST.String() + ", " + types.WebServiceSOAP.String() + ", " +
-			types.BuildPipeline.String() + ", " + types.SourcecodeRepository.String() + ", " + types.Monitoring.String() + ", or similar and there is no direct connection between these " +
+			"when surrounded by assets (without a network trust-boundary in-between) which are of type " + types.ClientSystem + ", " +
+			types.WebServer + ", " + types.WebApplication + ", " + types.CMS + ", " + types.WebServiceREST + ", " + types.WebServiceSOAP + ", " +
+			types.BuildPipeline + ", " + types.SourcecodeRepository + ", " + types.Monitoring + ", or similar and there is no direct connection between these " +
 			"(hence no requirement to be so close to each other).",
 		RiskAssessment: "Default is " + types.LowSeverity.String() + " risk. The risk is increased to " + types.MediumSeverity.String() + " when the asset missing the " +
 			"trust-boundary protection is rated as " + types.StrictlyConfidential.String() + " or " + types.MissionCritical.String() + ".",
@@ -63,7 +63,7 @@ func (r *MissingNetworkSegmentationRule) GenerateRisks(input *types.ParsedModel)
 			continue
 		}
 
-		if !technicalAsset.Technologies.HasAnyType(types.ReverseProxy, types.WAF, types.IDS, types.IPS, types.ServiceRegistry) {
+		if !technicalAsset.Technologies.GetAttribute(types.IsNoNetworkSegmentationRequired) {
 			continue
 		}
 
@@ -76,10 +76,10 @@ func (r *MissingNetworkSegmentationRule) GenerateRisks(input *types.ParsedModel)
 			for _, sparringAssetCandidateId := range keys { // so inner loop again over all assets
 				if technicalAsset.Id != sparringAssetCandidateId {
 					sparringAssetCandidate := input.TechnicalAssets[sparringAssetCandidateId]
-					if sparringAssetCandidate.Technologies.IsLessProtectedType() &&
+					if sparringAssetCandidate.Technologies.GetAttribute(types.IsLessProtectedType) &&
 						technicalAsset.IsSameTrustBoundaryNetworkOnly(input, sparringAssetCandidateId) &&
 						!technicalAsset.HasDirectConnection(input, sparringAssetCandidateId) &&
-						!sparringAssetCandidate.Technologies.IsCloseToHighValueTargetsTolerated() {
+						!sparringAssetCandidate.Technologies.GetAttribute(types.IsCloseToHighValueTargetsTolerated) {
 						highRisk := technicalAsset.Confidentiality == types.StrictlyConfidential ||
 							technicalAsset.Integrity == types.MissionCritical || technicalAsset.Availability == types.MissionCritical
 						risks = append(risks, r.createRisk(technicalAsset, highRisk))

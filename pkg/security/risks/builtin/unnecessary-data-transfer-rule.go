@@ -55,7 +55,7 @@ func (r *UnnecessaryDataTransferRule) GenerateRisks(input *types.ParsedModel) []
 		// outgoing data flows
 		for _, outgoingDataFlow := range technicalAsset.CommunicationLinks {
 			targetAsset := input.TechnicalAssets[outgoingDataFlow.TargetId]
-			if targetAsset.Technologies.IsUnnecessaryDataTolerated() {
+			if targetAsset.Technologies.GetAttribute(types.IsUnnecessaryDataTolerated) {
 				continue
 			}
 			risks = r.checkRisksAgainstTechnicalAsset(input, risks, technicalAsset, outgoingDataFlow, false)
@@ -65,7 +65,7 @@ func (r *UnnecessaryDataTransferRule) GenerateRisks(input *types.ParsedModel) []
 		sort.Sort(types.ByTechnicalCommunicationLinkIdSort(commLinks))
 		for _, incomingDataFlow := range commLinks {
 			targetAsset := input.TechnicalAssets[incomingDataFlow.SourceId]
-			if targetAsset.Technologies.IsUnnecessaryDataTolerated() {
+			if targetAsset.Technologies.GetAttribute(types.IsUnnecessaryDataTolerated) {
 				continue
 			}
 			risks = r.checkRisksAgainstTechnicalAsset(input, risks, technicalAsset, incomingDataFlow, true)

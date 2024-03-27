@@ -27,7 +27,7 @@ func (*MissingAuthenticationSecondFactorRule) Category() types.RiskCategory {
 		Check:    "Are recommendations from the linked cheat sheet and referenced ASVS chapter applied?",
 		Function: types.BusinessSide,
 		STRIDE:   types.ElevationOfPrivilege,
-		DetectionLogic: "In-scope technical assets (except " + types.LoadBalancer.String() + ", " + types.ReverseProxy.String() + ", " + types.WAF.String() + ", " + types.IDS.String() + ", and " + types.IPS.String() + ") should authenticate incoming requests via two-factor authentication (2FA) " +
+		DetectionLogic: "In-scope technical assets (except " + types.LoadBalancer + ", " + types.ReverseProxy + ", " + types.WAF + ", " + types.IDS + ", and " + types.IPS + ") should authenticate incoming requests via two-factor authentication (2FA) " +
 			"when the asset processes or stores highly sensitive data (in terms of confidentiality, integrity, and availability) and is accessed by a client used by a human user.",
 		RiskAssessment: types.MediumSeverity.String(),
 		FalsePositives: "Technical assets which do not process requests regarding functionality or data linked to end-users (customers) " +
@@ -46,8 +46,8 @@ func (r *MissingAuthenticationSecondFactorRule) GenerateRisks(input *types.Parse
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
 		if technicalAsset.OutOfScope ||
-			technicalAsset.Technologies.IsTrafficForwarding() ||
-			technicalAsset.Technologies.IsUnprotectedCommunicationsTolerated() {
+			technicalAsset.Technologies.GetAttribute(types.IsTrafficForwarding) ||
+			technicalAsset.Technologies.GetAttribute(types.IsUnprotectedCommunicationsTolerated) {
 			continue
 		}
 		if technicalAsset.HighestProcessedConfidentiality(input) >= types.Confidential ||
@@ -58,7 +58,7 @@ func (r *MissingAuthenticationSecondFactorRule) GenerateRisks(input *types.Parse
 			commLinks := input.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id]
 			for _, commLink := range commLinks {
 				caller := input.TechnicalAssets[commLink.SourceId]
-				if caller.Technologies.IsUnprotectedCommunicationsTolerated() || caller.Type == types.Datastore {
+				if caller.Technologies.GetAttribute(types.IsUnprotectedCommunicationsTolerated) || caller.Type == types.Datastore {
 					continue
 				}
 				if caller.UsedAsClientByHuman {
@@ -67,12 +67,12 @@ func (r *MissingAuthenticationSecondFactorRule) GenerateRisks(input *types.Parse
 					if moreRisky && commLink.Authentication != types.TwoFactor {
 						risks = append(risks, r.missingAuthenticationRule.createRisk(input, technicalAsset, commLink, commLink, "", types.MediumImpact, types.Unlikely, true, r.Category()))
 					}
-				} else if caller.Technologies.IsTrafficForwarding() {
+				} else if caller.Technologies.GetAttribute(types.IsTrafficForwarding) {
 					// Now try to walk a call chain up (1 hop only) to find a caller's caller used by human
 					callersCommLinks := input.IncomingTechnicalCommunicationLinksMappedByTargetId[caller.Id]
 					for _, callersCommLink := range callersCommLinks {
 						callersCaller := input.TechnicalAssets[callersCommLink.SourceId]
-						if callersCaller.Technologies.IsUnprotectedCommunicationsTolerated() || callersCaller.Type == types.Datastore {
+						if callersCaller.Technologies.GetAttribute(types.IsUnprotectedCommunicationsTolerated) || callersCaller.Type == types.Datastore {
 							continue
 						}
 						if callersCaller.UsedAsClientByHuman {

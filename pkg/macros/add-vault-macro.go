@@ -217,9 +217,9 @@ func (m *AddVaultMacro) applyChange(modelInput *input.Model, parsedModel *types.
 	storageID := "vault-storage"
 
 	if databaseUsed || filesystemUsed {
-		tech := types.FileServer.String() // TODO ask for local or remote and only local use execution-environment (and add separate tech type LocalFilesystem?)
+		tech := types.FileServer // TODO ask for local or remote and only local use execution-environment (and add separate tech type LocalFilesystem?)
 		if databaseUsed {
-			tech = types.Database.String()
+			tech = types.Database
 		}
 		if _, exists := parsedModel.TechnicalAssets[storageID]; !exists {
 			serverSideTechAssets = append(serverSideTechAssets, storageID)
@@ -347,7 +347,7 @@ func (m *AddVaultMacro) applyChange(modelInput *input.Model, parsedModel *types.
 			OutOfScope:              false,
 			JustificationOutOfScope: "",
 			Size:                    types.Service.String(),
-			Technology:              types.Vault.String(),
+			Technology:              types.Vault,
 			Tags:                    []string{input.NormalizeTag(m.macroState["vault-name"][0])},
 			Internet:                false,
 			Machine:                 types.Virtual.String(),

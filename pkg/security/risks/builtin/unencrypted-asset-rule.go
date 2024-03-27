@@ -24,9 +24,9 @@ func (*UnencryptedAssetRule) Category() types.RiskCategory {
 		Check:      "Are recommendations from the linked cheat sheet and referenced ASVS chapter applied?",
 		Function:   types.Operations,
 		STRIDE:     types.InformationDisclosure,
-		DetectionLogic: "In-scope unencrypted technical assets (excluding " + types.ReverseProxy.String() +
-			", " + types.LoadBalancer.String() + ", " + types.WAF.String() + ", " + types.IDS.String() +
-			", " + types.IPS.String() + " and embedded components like " + types.Library.String() + ") " +
+		DetectionLogic: "In-scope unencrypted technical assets (excluding " + types.ReverseProxy +
+			", " + types.LoadBalancer + ", " + types.WAF + ", " + types.IDS +
+			", " + types.IPS + " and embedded components like " + types.Library + ") " +
 			"storing data assets rated at least as " + types.Confidential.String() + " or " + types.Critical.String() + ". " +
 			"For technical assets storing data assets rated as " + types.StrictlyConfidential.String() + " or " + types.MissionCritical.String() + " the " +
 			"encryption must be of type " + types.DataWithEndUserIndividualKey.String() + ".",
@@ -53,7 +53,7 @@ func (r *UnencryptedAssetRule) GenerateRisks(input *types.ParsedModel) []types.R
 				technicalAsset.HighestStoredIntegrity(input) >= types.Critical) {
 			verySensitive := technicalAsset.HighestStoredConfidentiality(input) == types.StrictlyConfidential ||
 				technicalAsset.HighestStoredIntegrity(input) == types.MissionCritical
-			requiresEndUserKey := verySensitive && technicalAsset.Technologies.IsUsuallyStoringEndUserData()
+			requiresEndUserKey := verySensitive && technicalAsset.Technologies.GetAttribute(types.IsUsuallyStoringEndUserData)
 			if technicalAsset.Encryption == types.NoneEncryption {
 				impact := types.MediumImpact
 				if verySensitive {
@@ -73,7 +73,7 @@ func (r *UnencryptedAssetRule) GenerateRisks(input *types.ParsedModel) []types.R
 // encryption requirement for the asset itself (though for the communication, but that's a different rule)
 
 func isEncryptionWaiver(asset types.TechnicalAsset) bool {
-	return asset.Technologies.HasAnyType(types.ReverseProxy, types.LoadBalancer, types.WAF, types.IDS, types.IPS) || asset.Technologies.IsEmbeddedComponent()
+	return asset.Technologies.GetAttribute(types.IsNoStorageAtRest) || asset.Technologies.GetAttribute(types.IsEmbeddedComponent)
 }
 
 func (r *UnencryptedAssetRule) createRisk(technicalAsset types.TechnicalAsset, impact types.RiskExploitationImpact, requiresEndUserKey bool) types.Risk {

@@ -46,7 +46,7 @@ func (r *SearchQueryInjectionRule) GenerateRisks(input *types.ParsedModel) []typ
 	risks := make([]types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
-		if technicalAsset.Technologies.HasAnyType(types.SearchEngine, types.SearchIndex) {
+		if technicalAsset.Technologies.GetAttribute(types.IsSearchRelated) {
 			incomingFlows := input.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id]
 			for _, incomingFlow := range incomingFlows {
 				if input.TechnicalAssets[incomingFlow.SourceId].OutOfScope {

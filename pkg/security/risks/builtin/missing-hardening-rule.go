@@ -49,8 +49,7 @@ func (r *MissingHardeningRule) GenerateRisks(input *types.ParsedModel) []types.R
 		technicalAsset := input.TechnicalAssets[id]
 		if !technicalAsset.OutOfScope {
 			if technicalAsset.RAA >= float64(r.raaLimit) || (technicalAsset.RAA >= float64(r.raaLimitReduced) &&
-				(technicalAsset.Type == types.Datastore ||
-					technicalAsset.Technologies.HasAnyType(types.ApplicationServer, types.IdentityProvider, types.ERP))) {
+				(technicalAsset.Type == types.Datastore || technicalAsset.Technologies.GetAttribute(types.IsHighValueTarget))) {
 				risks = append(risks, r.createRisk(input, technicalAsset))
 			}
 		}

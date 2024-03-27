@@ -678,8 +678,7 @@ func determineShapeStyle(ta types.TechnicalAsset) string {
 
 func determineShapeFillColor(ta types.TechnicalAsset, parsedModel *types.ParsedModel) string {
 	fillColor := VeryLightGray
-	if len(ta.DataAssetsProcessed) == 0 && len(ta.DataAssetsStored) == 0 ||
-		!ta.Technologies.IsNotOnlyType(types.UnknownTechnology) {
+	if (len(ta.DataAssetsProcessed) == 0 && len(ta.DataAssetsStored) == 0) || ta.Technologies.IsUnknown() {
 		fillColor = LightPink // lightPink, because it's strange when too many technical assets process no data... some ok, but many in a diagram ist a sign of model forgery...
 	} else if len(ta.CommunicationLinks) == 0 && len(parsedModel.IncomingTechnicalCommunicationLinksMappedByTargetId[ta.Id]) == 0 {
 		fillColor = LightPink

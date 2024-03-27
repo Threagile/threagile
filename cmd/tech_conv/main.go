@@ -8,9 +8,9 @@ import (
 )
 
 func main() {
-	save := flag.Bool("save", false, "Save all technologies to technologies.yaml")
+	//	save := flag.Bool("save", false, "Save all technologies to technologies.yaml")
 	load := flag.Bool("load", false, "Load all technologies from technologies.yaml")
-	comp := flag.Bool("comp", false, "Compare all technologies from technologies.yaml to types.TechnicalAssetTechnologyValues()")
+	//	comp := flag.Bool("comp", false, "Compare all technologies from technologies.yaml to types.TechnicalAssetTechnologyValues()")
 	flag.Parse()
 
 	filename := flag.Arg(0)
@@ -18,34 +18,38 @@ func main() {
 		filename = "technologies.yaml"
 	}
 
-	if *save {
-		saveError := getTechnologies().Save(filename)
-		if saveError != nil {
-			fmt.Printf("error saving technologies: %v\n", saveError)
-			return
+	/*
+		if *save {
+			saveError := getTechnologies().Save(filename)
+			if saveError != nil {
+				fmt.Printf("error saving technologies: %v\n", saveError)
+				return
+			}
 		}
-	}
+	*/
 
 	if *load {
 		technologies := make(types.TechnologyMap)
-		loadError := technologies.Load(filename)
+		loadError := technologies.LoadFromFile(filename)
 		if loadError != nil {
 			fmt.Printf("error loading technologies: %v\n", loadError)
 			return
 		}
 	}
 
-	if *comp {
-		savedTechnologies := make(types.TechnologyMap)
-		loadError := savedTechnologies.Load(filename)
-		if loadError != nil {
-			fmt.Printf("error loading technologies: %v\n", loadError)
-			return
-		}
+	/*
+		if *comp {
+			savedTechnologies := make(types.TechnologyMap)
+			loadError := savedTechnologies.LoadFromFile(filename)
+			if loadError != nil {
+				fmt.Printf("error loading technologies: %v\n", loadError)
+				return
+			}
 
-		savedTechnologies.PropagateAttributes()
-		compareTechnologies(savedTechnologies, getTechnologies())
-	}
+			savedTechnologies.PropagateAttributes()
+			compareTechnologies(savedTechnologies, getTechnologies())
+		}
+	*/
 }
 
 func compareTechnologies(savedTechnologies types.TechnologyMap, builtinTechnologies types.TechnologyMap) {
@@ -161,6 +165,7 @@ func compareTechnology(savedTechnology types.Technology, builtinTechnology types
 	return diffs
 }
 
+/*
 func getTechnologies() types.TechnologyMap {
 	technologies := make(types.TechnologyMap)
 	for _, value := range types.TechnicalAssetTechnologyValues() {
@@ -172,11 +177,11 @@ func getTechnologies() types.TechnologyMap {
 			Attributes:  make(map[string]bool),
 		}
 
-		if tech.IsWebApplication() {
+		if tech..GetAttribute(types.WebApplication) {
 			technology.Attributes["web_application"] = true
 		}
 
-		if tech.IsWebService() {
+		if tech.GetAttribute(IsWebService) {
 			technology.Attributes["web_service"] = true
 		}
 
@@ -245,3 +250,4 @@ func getTechnologies() types.TechnologyMap {
 
 	return technologies
 }
+*/

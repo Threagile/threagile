@@ -46,7 +46,7 @@ func (r *CrossSiteRequestForgeryRule) GenerateRisks(parsedModel *types.ParsedMod
 	risks := make([]types.Risk, 0)
 	for _, id := range parsedModel.SortedTechnicalAssetIDs() {
 		technicalAsset := parsedModel.TechnicalAssets[id]
-		if technicalAsset.OutOfScope || !technicalAsset.Technologies.IsWebApplication() {
+		if technicalAsset.OutOfScope || !technicalAsset.Technologies.GetAttribute(types.WebApplication) {
 			continue
 		}
 		incomingFlows := parsedModel.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id]

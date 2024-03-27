@@ -24,7 +24,7 @@ func (*UnencryptedCommunicationRule) Category() types.RiskCategory {
 		Check:      "Are recommendations from the linked cheat sheet and referenced ASVS chapter applied?",
 		Function:   types.Operations,
 		STRIDE:     types.InformationDisclosure,
-		DetectionLogic: "Unencrypted technical communication links of in-scope technical assets (excluding " + types.Monitoring.String() + " traffic as well as " + types.LocalFileAccess.String() + " and " + types.InProcessLibraryCall.String() + ") " +
+		DetectionLogic: "Unencrypted technical communication links of in-scope technical assets (excluding " + types.Monitoring + " traffic as well as " + types.LocalFileAccess.String() + " and " + types.InProcessLibraryCall.String() + ") " +
 			"transferring sensitive data.", // TODO more detailed text required here
 		RiskAssessment: "Depending on the confidentiality rating of the transferred data-assets either medium or high risk.",
 		FalsePositives: "When all sensitive data sent over the communication link is already fully encrypted on document or data level. " +
@@ -49,8 +49,8 @@ func (r *UnencryptedCommunicationRule) GenerateRisks(input *types.ParsedModel) [
 			targetAsset := input.TechnicalAssets[dataFlow.TargetId]
 			if !technicalAsset.OutOfScope || !sourceAsset.OutOfScope {
 				if !dataFlow.Protocol.IsEncrypted() && !dataFlow.Protocol.IsProcessLocal() &&
-					!sourceAsset.Technologies.IsUnprotectedCommunicationsTolerated() &&
-					!targetAsset.Technologies.IsUnprotectedCommunicationsTolerated() {
+					!sourceAsset.Technologies.GetAttribute(types.IsUnprotectedCommunicationsTolerated) &&
+					!targetAsset.Technologies.GetAttribute(types.IsUnprotectedCommunicationsTolerated) {
 					addedOne := false
 					for _, sentDataAsset := range dataFlow.DataAssetsSent {
 						dataAsset := input.DataAssets[sentDataAsset]

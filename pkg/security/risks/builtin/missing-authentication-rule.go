@@ -24,7 +24,7 @@ func (*MissingAuthenticationRule) Category() types.RiskCategory {
 		Check:    "Are recommendations from the linked cheat sheet and referenced ASVS chapter applied?",
 		Function: types.Architecture,
 		STRIDE:   types.ElevationOfPrivilege,
-		DetectionLogic: "In-scope technical assets (except " + types.LoadBalancer.String() + ", " + types.ReverseProxy.String() + ", " + types.ServiceRegistry.String() + ", " + types.WAF.String() + ", " + types.IDS.String() + ", and " + types.IPS.String() + " and in-process calls) should authenticate incoming requests when the asset processes " +
+		DetectionLogic: "In-scope technical assets (except " + types.LoadBalancer + ", " + types.ReverseProxy + ", " + types.ServiceRegistry + ", " + types.WAF + ", " + types.IDS + ", and " + types.IPS + " and in-process calls) should authenticate incoming requests when the asset processes " +
 			"sensitive data. This is especially the case for all multi-tenant assets (there even non-sensitive ones).",
 		RiskAssessment: "The risk rating (medium or high) " +
 			"depends on the sensitivity of the data sent across the communication link. Monitoring callers are exempted from this risk.",
@@ -43,7 +43,7 @@ func (r *MissingAuthenticationRule) GenerateRisks(input *types.ParsedModel) []ty
 	risks := make([]types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
-		if technicalAsset.OutOfScope || technicalAsset.Technologies.HasAnyType(types.LoadBalancer, types.ReverseProxy, types.ServiceRegistry, types.WAF, types.IDS, types.IPS) {
+		if technicalAsset.OutOfScope || technicalAsset.Technologies.GetAttribute(types.NoAuthenticationRequired) {
 			continue
 		}
 
@@ -55,7 +55,7 @@ func (r *MissingAuthenticationRule) GenerateRisks(input *types.ParsedModel) []ty
 			commLinks := input.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id]
 			for _, commLink := range commLinks {
 				caller := input.TechnicalAssets[commLink.SourceId]
-				if caller.Technologies.IsUnprotectedCommunicationsTolerated() || caller.Type == types.Datastore {
+				if caller.Technologies.GetAttribute(types.IsUnprotectedCommunicationsTolerated) || caller.Type == types.Datastore {
 					continue
 				}
 				highRisk := commLink.HighestConfidentiality(input) == types.StrictlyConfidential ||

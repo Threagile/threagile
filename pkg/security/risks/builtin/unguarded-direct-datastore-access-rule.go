@@ -23,7 +23,7 @@ func (*UnguardedDirectDatastoreAccessRule) Category() types.RiskCategory {
 		Check:       "Are recommendations from the linked cheat sheet and referenced ASVS chapter applied?",
 		Function:    types.Architecture,
 		STRIDE:      types.ElevationOfPrivilege,
-		DetectionLogic: "In-scope technical assets of type " + types.Datastore.String() + " (except " + types.IdentityStoreLDAP.String() + " when accessed from " + types.IdentityProvider.String() + " and " + types.FileServer.String() + " when accessed via file transfer protocols) with confidentiality rating " +
+		DetectionLogic: "In-scope technical assets of type " + types.Datastore.String() + " (except " + types.IdentityStoreLDAP + " when accessed from " + types.IdentityProvider + " and " + types.FileServer + " when accessed via file transfer protocols) with confidentiality rating " +
 			"of " + types.Confidential.String() + " (or higher) or with integrity rating of " + types.Critical.String() + " (or higher) " +
 			"which have incoming data-flows from assets outside across a network trust-boundary. DevOps config and deployment access is excluded from this risk.", // TODO new rule "missing bastion host"?
 		RiskAssessment: "The matching technical assets are at " + types.LowSeverity.String() + " risk. When either the " +
@@ -49,9 +49,10 @@ func (r *UnguardedDirectDatastoreAccessRule) GenerateRisks(input *types.ParsedMo
 		if !technicalAsset.OutOfScope && technicalAsset.Type == types.Datastore {
 			for _, incomingAccess := range input.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id] {
 				sourceAsset := input.TechnicalAssets[incomingAccess.SourceId]
-				if technicalAsset.Technologies.HasAnyType(types.IdentityStoreLDAP, types.IdentityStoreDatabase) && sourceAsset.Technologies.HasType(types.IdentityProvider) {
+				if technicalAsset.Technologies.GetAttribute(types.IsIdentityStore) && sourceAsset.Technologies.GetAttribute(types.IdentityProvider) {
 					continue
 				}
+
 				if technicalAsset.Confidentiality >= types.Confidential || technicalAsset.Integrity >= types.Critical {
 					if incomingAccess.IsAcrossTrustBoundaryNetworkOnly(input) && !fileServerAccessViaFTP(technicalAsset, incomingAccess) &&
 						incomingAccess.Usage != types.DevOps && !isSharingSameParentTrustBoundary(input, technicalAsset, sourceAsset) {
@@ -94,7 +95,7 @@ func isSharingSameParentTrustBoundary(input *types.ParsedModel, left, right type
 }
 
 func fileServerAccessViaFTP(technicalAsset types.TechnicalAsset, incomingAccess types.CommunicationLink) bool {
-	return technicalAsset.Technologies.HasType(types.FileServer) &&
+	return technicalAsset.Technologies.GetAttribute(types.FileServer) &&
 		(incomingAccess.Protocol == types.FTP || incomingAccess.Protocol == types.FTPS || incomingAccess.Protocol == types.SFTP)
 }
 

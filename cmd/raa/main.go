@@ -182,6 +182,7 @@ func calculateAttackerAttractiveness(input *types.ParsedModel, techAsset types.T
 			score += dataAsset.Integrity.AttackerAttractivenessForInOutTransferredData() * dataAsset.Quantity.QuantityFactor()
 			score += dataAsset.Availability.AttackerAttractivenessForInOutTransferredData()
 		}
+
 		for _, dataAssetReceived := range dataFlow.DataAssetsReceived {
 			dataAsset := input.DataAssets[dataAssetReceived]
 			score += dataAsset.Confidentiality.AttackerAttractivenessForInOutTransferredData() * dataAsset.Quantity.QuantityFactor()
@@ -189,28 +190,26 @@ func calculateAttackerAttractiveness(input *types.ParsedModel, techAsset types.T
 			score += dataAsset.Availability.AttackerAttractivenessForInOutTransferredData()
 		}
 	}
-	if techAsset.Technologies.HasAnyType(types.LoadBalancer, types.ReverseProxy) {
+
+	if techAsset.Technologies.GetAttribute(types.LoadBalancer, types.ReverseProxy) {
 		score = score / 5.5
-	}
-	if techAsset.Technologies.HasAnyType(types.Monitoring) {
+	} else if techAsset.Technologies.GetAttribute(types.Monitoring) {
 		score = score / 5
-	}
-	if techAsset.Technologies.HasAnyType(types.ContainerPlatform) {
+	} else if techAsset.Technologies.GetAttribute(types.ContainerPlatform) {
 		score = score * 5
-	}
-	if techAsset.Technologies.HasAnyType(types.Vault) {
+	} else if techAsset.Technologies.GetAttribute(types.Vault) {
 		score = score * 2
-	}
-	if techAsset.Technologies.HasAnyType(types.BuildPipeline, types.SourcecodeRepository, types.ArtifactRegistry) {
+	} else if techAsset.Technologies.GetAttribute(types.BuildPipeline, types.SourcecodeRepository, types.ArtifactRegistry) {
 		score = score * 2
-	}
-	if techAsset.Technologies.HasAnyType(types.IdentityProvider, types.IdentityStoreDatabase, types.IdentityStoreLDAP) {
+	} else if techAsset.Technologies.GetAttribute(types.IdentityProvider, types.IdentityStoreDatabase, types.IdentityStoreLDAP) {
 		score = score * 2.5
 	} else if techAsset.Type == types.Datastore {
 		score = score * 2
 	}
+
 	if techAsset.MultiTenant {
 		score = score * 1.5
 	}
+
 	return score
 }

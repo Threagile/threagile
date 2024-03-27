@@ -45,7 +45,7 @@ func (r *PathTraversalRule) GenerateRisks(input *types.ParsedModel) []types.Risk
 	risks := make([]types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
-		if !technicalAsset.Technologies.HasAnyType(types.FileServer, types.LocalFileSystem) {
+		if !technicalAsset.Technologies.GetAttribute(types.IsFileStorage) {
 			continue
 		}
 		incomingFlows := input.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id]

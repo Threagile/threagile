@@ -44,7 +44,7 @@ func (*MissingIdentityProviderIsolationRule) SupportedTags() []string {
 func (r *MissingIdentityProviderIsolationRule) GenerateRisks(input *types.ParsedModel) []types.Risk {
 	risks := make([]types.Risk, 0)
 	for _, technicalAsset := range input.TechnicalAssets {
-		if !technicalAsset.OutOfScope && technicalAsset.Technologies.IsIdentityRelated() {
+		if !technicalAsset.OutOfScope && technicalAsset.Technologies.GetAttribute(types.IsIdentityRelated) {
 			moreImpact := technicalAsset.Confidentiality == types.StrictlyConfidential ||
 				technicalAsset.Integrity == types.MissionCritical ||
 				technicalAsset.Availability == types.MissionCritical
@@ -54,7 +54,7 @@ func (r *MissingIdentityProviderIsolationRule) GenerateRisks(input *types.Parsed
 			for sparringAssetCandidateId := range input.TechnicalAssets { // so inner loop again over all assets
 				if technicalAsset.Id != sparringAssetCandidateId {
 					sparringAssetCandidate := input.TechnicalAssets[sparringAssetCandidateId]
-					if !sparringAssetCandidate.Technologies.IsIdentityRelated() && !sparringAssetCandidate.Technologies.IsCloseToHighValueTargetsTolerated() {
+					if !sparringAssetCandidate.Technologies.GetAttribute(types.IsIdentityRelated) && !sparringAssetCandidate.Technologies.GetAttribute(types.IsCloseToHighValueTargetsTolerated) {
 						if technicalAsset.IsSameExecutionEnvironment(input, sparringAssetCandidateId) {
 							createRiskEntry = true
 							sameExecutionEnv = true

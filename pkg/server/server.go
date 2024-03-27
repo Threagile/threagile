@@ -102,7 +102,7 @@ func RunServer(config *common.Config) {
 			"encryption":                   arrayOfStringValues(types.EncryptionStyleValues()),
 			"data_format":                  arrayOfStringValues(types.DataFormatValues()),
 			"protocol":                     arrayOfStringValues(types.ProtocolValues()),
-			"technical_asset_technology":   arrayOfStringValues(types.TechnicalAssetTechnologyValues()),
+			"technical_asset_technology":   arrayOfStringValues(types.TechnicalAssetTechnologyValues(config)),
 			"technical_asset_machine":      arrayOfStringValues(types.TechnicalAssetMachineValues()),
 			"trust_boundary_type":          arrayOfStringValues(types.TrustBoundaryTypeValues()),
 			"data_breach_probability":      arrayOfStringValues(types.DataBreachProbabilityValues()),

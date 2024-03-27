@@ -44,7 +44,7 @@ func (*MissingVaultIsolationRule) SupportedTags() []string {
 func (r *MissingVaultIsolationRule) GenerateRisks(input *types.ParsedModel) []types.Risk {
 	risks := make([]types.Risk, 0)
 	for _, technicalAsset := range input.TechnicalAssets {
-		if !technicalAsset.OutOfScope && technicalAsset.Technologies.HasType(types.Vault) {
+		if !technicalAsset.OutOfScope && technicalAsset.Technologies.GetAttribute(types.Vault) {
 			moreImpact := technicalAsset.Confidentiality == types.StrictlyConfidential ||
 				technicalAsset.Integrity == types.MissionCritical ||
 				technicalAsset.Availability == types.MissionCritical
@@ -54,7 +54,7 @@ func (r *MissingVaultIsolationRule) GenerateRisks(input *types.ParsedModel) []ty
 			for sparringAssetCandidateId := range input.TechnicalAssets { // so inner loop again over all assets
 				if technicalAsset.Id != sparringAssetCandidateId {
 					sparringAssetCandidate := input.TechnicalAssets[sparringAssetCandidateId]
-					if !sparringAssetCandidate.Technologies.HasType(types.Vault) && !isVaultStorage(input, technicalAsset, sparringAssetCandidate) {
+					if !sparringAssetCandidate.Technologies.GetAttribute(types.Vault) && !isVaultStorage(input, technicalAsset, sparringAssetCandidate) {
 						if technicalAsset.IsSameExecutionEnvironment(input, sparringAssetCandidateId) {
 							createRiskEntry = true
 							sameExecutionEnv = true
