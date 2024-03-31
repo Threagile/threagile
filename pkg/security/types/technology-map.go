@@ -4,10 +4,11 @@ import (
 	"embed"
 	_ "embed"
 	"fmt"
-	"github.com/threagile/threagile/pkg/common"
-	"gopkg.in/yaml.v3"
 	"os"
 	"path/filepath"
+
+	"github.com/threagile/threagile/pkg/common"
+	"gopkg.in/yaml.v3"
 )
 
 //go:embed technologies.yaml
@@ -60,6 +61,7 @@ func (what TechnologyMap) LoadDefault() error {
 }
 
 func (what TechnologyMap) LoadFromFile(filename string) error {
+	// #nosec G304 // fine for potential file for now because used mostly internally or as part of CI/CD
 	data, readError := os.ReadFile(filename)
 	if readError != nil {
 		return fmt.Errorf("error reading technologies from %q: %w", filename, readError)
