@@ -5,9 +5,7 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package types
 
 import (
-	"encoding/json"
 	"fmt"
-	"gopkg.in/yaml.v3"
 	"strings"
 )
 
@@ -65,50 +63,6 @@ func (what DataFormat) Title() string {
 func (what DataFormat) Description() string {
 	return [...]string{"JSON marshalled object data", "XML structured data", "Serialization-based object graphs",
 		"File input/uploads", "CSV tabular data"}[what]
-}
-
-func (what DataFormat) MarshalJSON() ([]byte, error) {
-	return json.Marshal(what.String())
-}
-
-func (what *DataFormat) UnmarshalJSON(data []byte) error {
-	var text string
-	unmarshalError := json.Unmarshal(data, &text)
-	if unmarshalError != nil {
-		return unmarshalError
-	}
-
-	value, findError := what.find(text)
-	if findError != nil {
-		return findError
-	}
-
-	*what = value
-	return nil
-}
-
-func (what DataFormat) MarshalYAML() (interface{}, error) {
-	return what.String(), nil
-}
-
-func (what *DataFormat) UnmarshalYAML(node *yaml.Node) error {
-	value, findError := what.find(node.Value)
-	if findError != nil {
-		return findError
-	}
-
-	*what = value
-	return nil
-}
-
-func (what DataFormat) find(value string) (DataFormat, error) {
-	for index, description := range DataFormatTypeDescription {
-		if strings.EqualFold(value, description.Name) {
-			return DataFormat(index), nil
-		}
-	}
-
-	return DataFormat(0), fmt.Errorf("unknown data format value %q", value)
 }
 
 type ByDataFormatAcceptedSort []DataFormat

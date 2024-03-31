@@ -5,9 +5,7 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package types
 
 import (
-	"encoding/json"
 	"fmt"
-	"gopkg.in/yaml.v3"
 	"strings"
 )
 
@@ -44,40 +42,6 @@ func (what Authorization) String() string {
 
 func (what Authorization) Explain() string {
 	return AuthorizationTypeDescription[what].Description
-}
-
-func (what Authorization) MarshalJSON() ([]byte, error) {
-	return json.Marshal(what.String())
-}
-
-func (what *Authorization) UnmarshalJSON(data []byte) error {
-	var text string
-	unmarshalError := json.Unmarshal(data, &text)
-	if unmarshalError != nil {
-		return unmarshalError
-	}
-
-	value, findError := what.Find(text)
-	if findError != nil {
-		return findError
-	}
-
-	*what = value
-	return nil
-}
-
-func (what Authorization) MarshalYAML() (interface{}, error) {
-	return what.String(), nil
-}
-
-func (what *Authorization) UnmarshalYAML(node *yaml.Node) error {
-	value, findError := what.Find(node.Value)
-	if findError != nil {
-		return findError
-	}
-
-	*what = value
-	return nil
 }
 
 func (what Authorization) Find(value string) (Authorization, error) {

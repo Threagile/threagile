@@ -5,9 +5,7 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package types
 
 import (
-	"encoding/json"
 	"fmt"
-	"gopkg.in/yaml.v3"
 	"strings"
 )
 
@@ -71,48 +69,4 @@ func (what TrustBoundaryType) IsNetworkBoundary() bool {
 
 func (what TrustBoundaryType) IsWithinCloud() bool {
 	return what == NetworkCloudProvider || what == NetworkCloudSecurityGroup
-}
-
-func (what TrustBoundaryType) MarshalJSON() ([]byte, error) {
-	return json.Marshal(what.String())
-}
-
-func (what *TrustBoundaryType) UnmarshalJSON(data []byte) error {
-	var text string
-	unmarshalError := json.Unmarshal(data, &text)
-	if unmarshalError != nil {
-		return unmarshalError
-	}
-
-	value, findError := what.find(text)
-	if findError != nil {
-		return findError
-	}
-
-	*what = value
-	return nil
-}
-
-func (what TrustBoundaryType) MarshalYAML() (interface{}, error) {
-	return what.String(), nil
-}
-
-func (what *TrustBoundaryType) UnmarshalYAML(node *yaml.Node) error {
-	value, findError := what.find(node.Value)
-	if findError != nil {
-		return findError
-	}
-
-	*what = value
-	return nil
-}
-
-func (what TrustBoundaryType) find(value string) (TrustBoundaryType, error) {
-	for index, description := range TrustBoundaryTypeDescription {
-		if strings.EqualFold(value, description.Name) {
-			return TrustBoundaryType(index), nil
-		}
-	}
-
-	return TrustBoundaryType(0), fmt.Errorf("unknown trust boundary type value %q", value)
 }
