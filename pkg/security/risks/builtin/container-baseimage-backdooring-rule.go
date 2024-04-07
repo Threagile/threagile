@@ -52,7 +52,7 @@ func (r *ContainerBaseImageBackdooringRule) GenerateRisks(parsedModel *types.Par
 	return risks
 }
 
-func (r *ContainerBaseImageBackdooringRule) createRisk(parsedModel *types.ParsedModel, technicalAsset types.TechnicalAsset) types.Risk {
+func (r *ContainerBaseImageBackdooringRule) createRisk(parsedModel *types.ParsedModel, technicalAsset *types.TechnicalAsset) types.Risk {
 	title := "<b>Container Base Image Backdooring</b> risk at <b>" + technicalAsset.Title + "</b>"
 	impact := types.MediumImpact
 	if technicalAsset.HighestProcessedConfidentiality(parsedModel) == types.StrictlyConfidential ||

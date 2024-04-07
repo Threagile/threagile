@@ -51,7 +51,7 @@ func (r *UnnecessaryCommunicationLinkRule) GenerateRisks(input *types.ParsedMode
 	return risks
 }
 
-func (r *UnnecessaryCommunicationLinkRule) createRisk(technicalAsset types.TechnicalAsset, commLink types.CommunicationLink) types.Risk {
+func (r *UnnecessaryCommunicationLinkRule) createRisk(technicalAsset *types.TechnicalAsset, commLink *types.CommunicationLink) types.Risk {
 	title := "<b>Unnecessary Communication Link</b> titled <b>" + commLink.Title + "</b> at technical asset <b>" + technicalAsset.Title + "</b>"
 	risk := types.Risk{
 		CategoryId:                      r.Category().Id,

@@ -26,6 +26,7 @@ const (
 
 	RAAPluginName = "raa_calc"
 
+	DefaultDiagramDPI               = 100
 	DefaultGraphvizDPI              = 120
 	MinGraphvizDPI                  = 20
 	MaxGraphvizDPI                  = 300
@@ -33,19 +34,33 @@ const (
 )
 
 const (
-	QuitCommand                 = "quit"
 	AnalyzeModelCommand         = "analyze-model"
 	CreateExampleModelCommand   = "create-example-model"
 	CreateStubModelCommand      = "create-stub-model"
 	CreateEditingSupportCommand = "create-editing-support"
-	PrintVersionCommand         = "version"
 	ListTypesCommand            = "list-types"
 	ListRiskRulesCommand        = "list-risk-rules"
 	ListModelMacrosCommand      = "list-model-macros"
-	ExplainTypesCommand         = "explain-types"
-	ExplainRiskRulesCommand     = "explain-risk-rules"
-	ExplainRiskCommand          = "explain-risk"
-	ExplainModelMacrosCommand   = "explain-model-macros"
 	Print3rdPartyCommand        = "print-3rd-party-licenses"
 	PrintLicenseCommand         = "print-license"
+
+	CreateCommand       = "create"
+	ExplainCommand      = "explain"
+	ListCommand         = "list"
+	PrintCommand        = "print"
+	QuitCommand         = "quit"
+	RunCommand          = "run"
+	PrintVersionCommand = "version"
+)
+
+const (
+	EditingSupportItem = "editing-support"
+	ExampleItem        = "example"
+	LicenseItem        = "license"
+	MacrosItem         = "macros"
+	ModelItem          = "model"
+	RiskItem           = "risk"
+	RulesItem          = "rules"
+	StubItem           = "stub"
+	TypesItem          = "types"
 )

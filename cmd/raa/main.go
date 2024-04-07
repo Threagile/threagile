@@ -130,7 +130,7 @@ func calculateRelativeAttackerAttractiveness(input *types.ParsedModel, attractiv
 }
 
 // increase the RAA (relative attacker attractiveness) by one third (1/3) of the delta to the highest outgoing neighbour (if positive delta)
-func calculatePivotingNeighbourEffectAdjustment(input *types.ParsedModel, techAsset types.TechnicalAsset) float64 {
+func calculatePivotingNeighbourEffectAdjustment(input *types.ParsedModel, techAsset *types.TechnicalAsset) float64 {
 	if techAsset.OutOfScope {
 		return 0
 	}
@@ -153,7 +153,7 @@ func calculatePivotingNeighbourEffectAdjustment(input *types.ParsedModel, techAs
 
 // The sum of all CIAs of the asset itself (fibonacci scale) plus the sum of the comm-links' transferred CIAs
 // Multiplied by the quantity values of the data asset for C and I (not A)
-func calculateAttackerAttractiveness(input *types.ParsedModel, techAsset types.TechnicalAsset) float64 {
+func calculateAttackerAttractiveness(input *types.ParsedModel, techAsset *types.TechnicalAsset) float64 {
 	if techAsset.OutOfScope {
 		return 0
 	}

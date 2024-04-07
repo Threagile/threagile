@@ -83,7 +83,7 @@ func (r *MissingIdentityPropagationRule) GenerateRisks(input *types.ParsedModel)
 	return risks
 }
 
-func (r *MissingIdentityPropagationRule) createRisk(input *types.ParsedModel, technicalAsset types.TechnicalAsset, incomingAccess types.CommunicationLink, moreRisky bool) types.Risk {
+func (r *MissingIdentityPropagationRule) createRisk(input *types.ParsedModel, technicalAsset *types.TechnicalAsset, incomingAccess *types.CommunicationLink, moreRisky bool) types.Risk {
 	impact := types.LowImpact
 	if moreRisky {
 		impact = types.MediumImpact

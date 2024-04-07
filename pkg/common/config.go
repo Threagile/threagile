@@ -40,8 +40,7 @@ type Config struct {
 	RiskRulesPlugins  []string
 	SkipRiskRules     string
 	ExecuteModelMacro string
-	HideColumns       []string
-	GroupByColumns    []string
+	RiskExcel         RiskExcelConfig
 
 	ServerMode               bool
 	DiagramDPI               int
@@ -57,10 +56,17 @@ type Config struct {
 	Attractiveness Attractiveness
 }
 
+type RiskExcelConfig struct {
+	HideColumns    []string
+	SortByColumns  []string
+	WidthOfColumns map[string]float64
+}
+
 func (c *Config) Defaults(buildTimestamp string) *Config {
 	*c = Config{
 		BuildTimestamp: buildTimestamp,
 		Verbose:        false,
+		Interactive:    false,
 
 		AppFolder:    AppDir,
 		PluginFolder: PluginDir,
@@ -83,16 +89,21 @@ func (c *Config) Defaults(buildTimestamp string) *Config {
 		JsonStatsFilename:           JsonStatsFilename,
 		TemplateFilename:            TemplateFilename,
 		TechnologyFilename:          "",
-		RAAPlugin:                   RAAPluginName,
-		RiskRulesPlugins:            make([]string, 0),
-		HideColumns:                 make([]string, 0),
-		GroupByColumns:              make([]string, 0),
-		SkipRiskRules:               "",
-		ExecuteModelMacro:           "",
-		ServerMode:                  false,
-		ServerPort:                  DefaultServerPort,
 
+		RAAPlugin:         RAAPluginName,
+		RiskRulesPlugins:  make([]string, 0),
+		SkipRiskRules:     "",
+		ExecuteModelMacro: "",
+		RiskExcel: RiskExcelConfig{
+			HideColumns:   make([]string, 0),
+			SortByColumns: make([]string, 0),
+		},
+
+		ServerMode:               false,
+		DiagramDPI:               DefaultDiagramDPI,
+		ServerPort:               DefaultServerPort,
 		GraphvizDPI:              DefaultGraphvizDPI,
+		MaxGraphvizDPI:           MaxGraphvizDPI,
 		BackupHistoryFilesToKeep: DefaultBackupHistoryFilesToKeep,
 
 		AddModelTitle:              false,
@@ -270,11 +281,30 @@ func (c *Config) Merge(config Config, values map[string]any) {
 		case strings.ToLower("RiskRulesPlugins"):
 			c.RiskRulesPlugins = config.RiskRulesPlugins
 
-		case strings.ToLower("HideColumns"):
-			c.HideColumns = append(c.HideColumns, config.HideColumns...)
+		case strings.ToLower("RiskExcel"):
+			configMap, mapOk := values[key].(map[string]any)
+			if !mapOk {
+				continue
+			}
 
-		case strings.ToLower("GroupByColumns"):
-			c.GroupByColumns = append(c.GroupByColumns, config.GroupByColumns...)
+			for valueName := range configMap {
+				switch strings.ToLower(valueName) {
+				case strings.ToLower("HideColumns"):
+					c.RiskExcel.HideColumns = append(c.RiskExcel.HideColumns, config.RiskExcel.HideColumns...)
+
+				case strings.ToLower("SortByColumns"):
+					c.RiskExcel.SortByColumns = append(c.RiskExcel.SortByColumns, config.RiskExcel.SortByColumns...)
+
+				case strings.ToLower("WidthOfColumns"):
+					if c.RiskExcel.WidthOfColumns == nil {
+						c.RiskExcel.WidthOfColumns = make(map[string]float64)
+					}
+
+					for name, value := range config.RiskExcel.WidthOfColumns {
+						c.RiskExcel.WidthOfColumns[name] = value
+					}
+				}
+			}
 
 		case strings.ToLower("SkipRiskRules"):
 			c.SkipRiskRules = config.SkipRiskRules

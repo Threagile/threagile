@@ -43,12 +43,12 @@ func (r *WrongCommunicationLinkContentRule) GenerateRisks(input *types.ParsedMod
 		for _, commLink := range techAsset.CommunicationLinks {
 			// check readonly consistency
 			if commLink.Readonly {
-				if len(commLink.DataAssetsReceived) == 0 {
+				if len(commLink.DataAssetsReceived) == 0 && len(commLink.DataAssetsSent) > 0 {
 					risks = append(risks, r.createRisk(techAsset, commLink,
 						"(data assets sent/received not matching the communication link's readonly flag)"))
 				}
 			} else {
-				if len(commLink.DataAssetsSent) == 0 {
+				if len(commLink.DataAssetsSent) == 0 && len(commLink.DataAssetsReceived) > 0 {
 					risks = append(risks, r.createRisk(techAsset, commLink,
 						"(data assets sent/received not matching the communication link's readonly flag)"))
 				}
@@ -72,7 +72,7 @@ func (r *WrongCommunicationLinkContentRule) GenerateRisks(input *types.ParsedMod
 	return risks
 }
 
-func (r *WrongCommunicationLinkContentRule) createRisk(technicalAsset types.TechnicalAsset, commLink types.CommunicationLink, reason string) types.Risk {
+func (r *WrongCommunicationLinkContentRule) createRisk(technicalAsset *types.TechnicalAsset, commLink *types.CommunicationLink, reason string) types.Risk {
 	title := "<b>Wrong Communication Link Content</b> " + reason + " at <b>" + technicalAsset.Title + "</b> " +
 		"regarding communication link <b>" + commLink.Title + "</b>"
 	risk := types.Risk{

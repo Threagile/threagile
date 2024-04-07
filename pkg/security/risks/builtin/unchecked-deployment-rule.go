@@ -51,7 +51,7 @@ func (r *UncheckedDeploymentRule) GenerateRisks(input *types.ParsedModel) []type
 	return risks
 }
 
-func (r *UncheckedDeploymentRule) createRisk(input *types.ParsedModel, technicalAsset types.TechnicalAsset) types.Risk {
+func (r *UncheckedDeploymentRule) createRisk(input *types.ParsedModel, technicalAsset *types.TechnicalAsset) types.Risk {
 	title := "<b>Unchecked Deployment</b> risk at <b>" + technicalAsset.Title + "</b>"
 	// impact is depending on highest rating
 	impact := types.LowImpact

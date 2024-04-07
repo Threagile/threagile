@@ -63,7 +63,7 @@ func (r *PathTraversalRule) GenerateRisks(input *types.ParsedModel) []types.Risk
 	return risks
 }
 
-func (r *PathTraversalRule) createRisk(input *types.ParsedModel, technicalAsset types.TechnicalAsset, incomingFlow types.CommunicationLink, likelihood types.RiskExploitationLikelihood) types.Risk {
+func (r *PathTraversalRule) createRisk(input *types.ParsedModel, technicalAsset *types.TechnicalAsset, incomingFlow *types.CommunicationLink, likelihood types.RiskExploitationLikelihood) types.Risk {
 	caller := input.TechnicalAssets[incomingFlow.SourceId]
 	title := "<b>Path-Traversal</b> risk at <b>" + caller.Title + "</b> against filesystem <b>" + technicalAsset.Title + "</b>" +
 		" via <b>" + incomingFlow.Title + "</b>"

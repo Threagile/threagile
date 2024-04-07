@@ -57,7 +57,7 @@ func (r *MissingHardeningRule) GenerateRisks(input *types.ParsedModel) []types.R
 	return risks
 }
 
-func (r *MissingHardeningRule) createRisk(input *types.ParsedModel, technicalAsset types.TechnicalAsset) types.Risk {
+func (r *MissingHardeningRule) createRisk(input *types.ParsedModel, technicalAsset *types.TechnicalAsset) types.Risk {
 	title := "<b>Missing Hardening</b> risk at <b>" + technicalAsset.Title + "</b>"
 	impact := types.LowImpact
 	if technicalAsset.HighestProcessedConfidentiality(input) == types.StrictlyConfidential || technicalAsset.HighestProcessedIntegrity(input) == types.MissionCritical {

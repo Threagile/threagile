@@ -54,7 +54,7 @@ func (r *IncompleteModelRule) GenerateRisks(input *types.ParsedModel) []types.Ri
 	return risks
 }
 
-func (r *IncompleteModelRule) createRiskTechAsset(technicalAsset types.TechnicalAsset) types.Risk {
+func (r *IncompleteModelRule) createRiskTechAsset(technicalAsset *types.TechnicalAsset) types.Risk {
 	title := "<b>Unknown Technology</b> specified at technical asset <b>" + technicalAsset.Title + "</b>"
 	risk := types.Risk{
 		CategoryId:                   r.Category().Id,
@@ -70,7 +70,7 @@ func (r *IncompleteModelRule) createRiskTechAsset(technicalAsset types.Technical
 	return risk
 }
 
-func (r *IncompleteModelRule) createRiskCommLink(technicalAsset types.TechnicalAsset, commLink types.CommunicationLink) types.Risk {
+func (r *IncompleteModelRule) createRiskCommLink(technicalAsset *types.TechnicalAsset, commLink *types.CommunicationLink) types.Risk {
 	title := "<b>Unknown Protocol</b> specified for communication link <b>" + commLink.Title + "</b> at technical asset <b>" + technicalAsset.Title + "</b>"
 	risk := types.Risk{
 		CategoryId:                      r.Category().Id,

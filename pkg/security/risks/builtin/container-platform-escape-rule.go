@@ -57,7 +57,7 @@ func (r *ContainerPlatformEscapeRule) GenerateRisks(parsedModel *types.ParsedMod
 	return risks
 }
 
-func (r *ContainerPlatformEscapeRule) createRisk(parsedModel *types.ParsedModel, technicalAsset types.TechnicalAsset) types.Risk {
+func (r *ContainerPlatformEscapeRule) createRisk(parsedModel *types.ParsedModel, technicalAsset *types.TechnicalAsset) types.Risk {
 	title := "<b>Container Platform Escape</b> risk at <b>" + technicalAsset.Title + "</b>"
 	impact := types.MediumImpact
 	if technicalAsset.HighestProcessedConfidentiality(parsedModel) == types.StrictlyConfidential ||

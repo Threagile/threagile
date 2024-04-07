@@ -1,7 +1,9 @@
 package builtin
 
 import (
+	"fmt"
 	"github.com/threagile/threagile/pkg/security/types"
+	"strings"
 )
 
 type AccidentalSecretLeakRule struct{}
@@ -58,7 +60,7 @@ func (r *AccidentalSecretLeakRule) GenerateRisks(parsedModel *types.ParsedModel)
 	return risks
 }
 
-func (r *AccidentalSecretLeakRule) createRisk(parsedModel *types.ParsedModel, technicalAsset types.TechnicalAsset, prefix, details string) types.Risk {
+func (r *AccidentalSecretLeakRule) createRisk(parsedModel *types.ParsedModel, technicalAsset *types.TechnicalAsset, prefix, details string) types.Risk {
 	if len(prefix) > 0 {
 		prefix = " (" + prefix + ")"
 	}
@@ -92,7 +94,6 @@ func (r *AccidentalSecretLeakRule) createRisk(parsedModel *types.ParsedModel, te
 	return risk
 }
 
-/*
 func (r *AccidentalSecretLeakRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
 	categoryId := r.Category().Id
 	for _, id := range parsedModel.SortedTechnicalAssetIDs() {
@@ -111,7 +112,7 @@ func (r *AccidentalSecretLeakRule) ExplainRisk(parsedModel *types.ParsedModel, r
 	for _, id := range parsedModel.SortedTechnicalAssetIDs() {
 		techAsset := parsedModel.TechnicalAssets[id]
 		if strings.EqualFold(risk, categoryId+"@"+techAsset.Id) || strings.EqualFold(risk, categoryId+"@*") {
-			if !techAsset.OutOfScope && (techAsset.Technology == types.SourcecodeRepository || techAsset.Technology == types.ArtifactRegistry) {
+			if !techAsset.OutOfScope && (techAsset.Technologies.GetAttribute(types.SourcecodeRepository) || techAsset.Technologies.GetAttribute(types.ArtifactRegistry)) {
 				riskExplanation := r.explainRisk(parsedModel, techAsset)
 				if riskExplanation != nil {
 					if len(explanation) > 0 {
@@ -121,7 +122,7 @@ func (r *AccidentalSecretLeakRule) ExplainRisk(parsedModel *types.ParsedModel, r
 					explanation = append(explanation, []string{
 						fmt.Sprintf("technical asset %q", techAsset.Id),
 						fmt.Sprintf("  - out of scope: %v (=false)", techAsset.OutOfScope),
-						fmt.Sprintf("  - technology: %v (is in [%q, %q])", techAsset.Technology, types.SourcecodeRepository, types.ArtifactRegistry),
+						fmt.Sprintf("  - technology: %v (has either [%q, %q])", techAsset.Technologies.String(), types.SourcecodeRepository, types.ArtifactRegistry),
 					}...)
 
 					if techAsset.IsTaggedWithAny("git") {
@@ -137,7 +138,7 @@ func (r *AccidentalSecretLeakRule) ExplainRisk(parsedModel *types.ParsedModel, r
 	return explanation
 }
 
-func (r *AccidentalSecretLeakRule) explainRisk(parsedModel *types.ParsedModel, technicalAsset types.TechnicalAsset) []string {
+func (r *AccidentalSecretLeakRule) explainRisk(parsedModel *types.ParsedModel, technicalAsset *types.TechnicalAsset) []string {
 	explanation := make([]string, 0)
 	impact := types.LowImpact
 	if technicalAsset.HighestProcessedConfidentiality(parsedModel) == types.StrictlyConfidential ||
@@ -199,5 +200,3 @@ func (r *AccidentalSecretLeakRule) explainRisk(parsedModel *types.ParsedModel, t
 
 	return explanation
 }
-
-*/

@@ -49,7 +49,7 @@ func (r *UnnecessaryTechnicalAssetRule) GenerateRisks(input *types.ParsedModel) 
 	return risks
 }
 
-func (r *UnnecessaryTechnicalAssetRule) createRisk(technicalAsset types.TechnicalAsset) types.Risk {
+func (r *UnnecessaryTechnicalAssetRule) createRisk(technicalAsset *types.TechnicalAsset) types.Risk {
 	title := "<b>Unnecessary Technical Asset</b> named <b>" + technicalAsset.Title + "</b>"
 	risk := types.Risk{
 		CategoryId:                   r.Category().Id,

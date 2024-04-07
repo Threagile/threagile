@@ -153,8 +153,8 @@ func (what DataAsset) IdentifiedDataBreachProbabilityRisks(parsedModel *ParsedMo
 	return result
 }
 
-func (what DataAsset) ProcessedByTechnicalAssetsSorted(parsedModel *ParsedModel) []TechnicalAsset {
-	result := make([]TechnicalAsset, 0)
+func (what DataAsset) ProcessedByTechnicalAssetsSorted(parsedModel *ParsedModel) []*TechnicalAsset {
+	result := make([]*TechnicalAsset, 0)
 	for _, technicalAsset := range parsedModel.TechnicalAssets {
 		for _, candidateID := range technicalAsset.DataAssetsProcessed {
 			if candidateID == what.Id {
@@ -166,8 +166,8 @@ func (what DataAsset) ProcessedByTechnicalAssetsSorted(parsedModel *ParsedModel)
 	return result
 }
 
-func (what DataAsset) StoredByTechnicalAssetsSorted(parsedModel *ParsedModel) []TechnicalAsset {
-	result := make([]TechnicalAsset, 0)
+func (what DataAsset) StoredByTechnicalAssetsSorted(parsedModel *ParsedModel) []*TechnicalAsset {
+	result := make([]*TechnicalAsset, 0)
 	for _, technicalAsset := range parsedModel.TechnicalAssets {
 		for _, candidateID := range technicalAsset.DataAssetsStored {
 			if candidateID == what.Id {
@@ -179,8 +179,8 @@ func (what DataAsset) StoredByTechnicalAssetsSorted(parsedModel *ParsedModel) []
 	return result
 }
 
-func (what DataAsset) SentViaCommLinksSorted(parsedModel *ParsedModel) []CommunicationLink {
-	result := make([]CommunicationLink, 0)
+func (what DataAsset) SentViaCommLinksSorted(parsedModel *ParsedModel) []*CommunicationLink {
+	result := make([]*CommunicationLink, 0)
 	for _, technicalAsset := range parsedModel.TechnicalAssets {
 		for _, commLink := range technicalAsset.CommunicationLinks {
 			for _, candidateID := range commLink.DataAssetsSent {
@@ -194,8 +194,8 @@ func (what DataAsset) SentViaCommLinksSorted(parsedModel *ParsedModel) []Communi
 	return result
 }
 
-func (what DataAsset) ReceivedViaCommLinksSorted(parsedModel *ParsedModel) []CommunicationLink {
-	result := make([]CommunicationLink, 0)
+func (what DataAsset) ReceivedViaCommLinksSorted(parsedModel *ParsedModel) []*CommunicationLink {
+	result := make([]*CommunicationLink, 0)
 	for _, technicalAsset := range parsedModel.TechnicalAssets {
 		for _, commLink := range technicalAsset.CommunicationLinks {
 			for _, candidateID := range commLink.DataAssetsReceived {
@@ -209,7 +209,7 @@ func (what DataAsset) ReceivedViaCommLinksSorted(parsedModel *ParsedModel) []Com
 	return result
 }
 
-func SortByDataAssetDataBreachProbabilityAndTitle(parsedModel *ParsedModel, assets []DataAsset) {
+func SortByDataAssetDataBreachProbabilityAndTitle(parsedModel *ParsedModel, assets []*DataAsset) {
 	sort.Slice(assets, func(i, j int) bool {
 		highestDataBreachProbabilityLeft := assets[i].IdentifiedDataBreachProbability(parsedModel)
 		highestDataBreachProbabilityRight := assets[j].IdentifiedDataBreachProbability(parsedModel)
@@ -220,7 +220,7 @@ func SortByDataAssetDataBreachProbabilityAndTitle(parsedModel *ParsedModel, asse
 	})
 }
 
-func SortByDataAssetDataBreachProbabilityAndTitleStillAtRisk(parsedModel *ParsedModel, assets []DataAsset) {
+func SortByDataAssetDataBreachProbabilityAndTitleStillAtRisk(parsedModel *ParsedModel, assets []*DataAsset) {
 	sort.Slice(assets, func(i, j int) bool {
 		risksLeft := assets[i].IdentifiedDataBreachProbabilityRisksStillAtRisk(parsedModel)
 		risksRight := assets[j].IdentifiedDataBreachProbabilityRisksStillAtRisk(parsedModel)
@@ -239,7 +239,7 @@ func SortByDataAssetDataBreachProbabilityAndTitleStillAtRisk(parsedModel *Parsed
 	})
 }
 
-type ByDataAssetTitleSort []DataAsset
+type ByDataAssetTitleSort []*DataAsset
 
 func (what ByDataAssetTitleSort) Len() int      { return len(what) }
 func (what ByDataAssetTitleSort) Swap(i, j int) { what[i], what[j] = what[j], what[i] }

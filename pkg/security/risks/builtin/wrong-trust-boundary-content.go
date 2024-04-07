@@ -51,7 +51,7 @@ func (r *WrongTrustBoundaryContentRule) GenerateRisks(input *types.ParsedModel) 
 	return risks
 }
 
-func (r *WrongTrustBoundaryContentRule) createRisk(technicalAsset types.TechnicalAsset) types.Risk {
+func (r *WrongTrustBoundaryContentRule) createRisk(technicalAsset *types.TechnicalAsset) types.Risk {
 	title := "<b>Wrong Trust Boundary Content</b> (non-container asset inside container trust boundary) at <b>" + technicalAsset.Title + "</b>"
 	risk := types.Risk{
 		CategoryId:                   r.Category().Id,

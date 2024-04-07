@@ -83,7 +83,7 @@ func (r *UnencryptedCommunicationRule) GenerateRisks(input *types.ParsedModel) [
 	return risks
 }
 
-func (r *UnencryptedCommunicationRule) createRisk(input *types.ParsedModel, technicalAsset types.TechnicalAsset, dataFlow types.CommunicationLink, highRisk bool, transferringAuthData bool) types.Risk {
+func (r *UnencryptedCommunicationRule) createRisk(input *types.ParsedModel, technicalAsset *types.TechnicalAsset, dataFlow *types.CommunicationLink, highRisk bool, transferringAuthData bool) types.Risk {
 	impact := types.MediumImpact
 	if highRisk {
 		impact = types.HighImpact
@@ -116,10 +116,10 @@ func (r *UnencryptedCommunicationRule) createRisk(input *types.ParsedModel, tech
 	return risk
 }
 
-func isHighSensitivity(dataAsset types.DataAsset) bool {
+func isHighSensitivity(dataAsset *types.DataAsset) bool {
 	return dataAsset.Confidentiality == types.StrictlyConfidential || dataAsset.Integrity == types.MissionCritical
 }
 
-func isMediumSensitivity(dataAsset types.DataAsset) bool {
+func isMediumSensitivity(dataAsset *types.DataAsset) bool {
 	return dataAsset.Confidentiality == types.Confidential || dataAsset.Integrity == types.Critical
 }

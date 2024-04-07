@@ -56,7 +56,7 @@ func (r *MissingFileValidationRule) GenerateRisks(input *types.ParsedModel) []ty
 	return risks
 }
 
-func (r *MissingFileValidationRule) createRisk(input *types.ParsedModel, technicalAsset types.TechnicalAsset) types.Risk {
+func (r *MissingFileValidationRule) createRisk(input *types.ParsedModel, technicalAsset *types.TechnicalAsset) types.Risk {
 	title := "<b>Missing File Validation</b> risk at <b>" + technicalAsset.Title + "</b>"
 	impact := types.LowImpact
 	if technicalAsset.HighestProcessedConfidentiality(input) == types.StrictlyConfidential ||

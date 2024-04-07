@@ -57,7 +57,7 @@ func (r *MissingWafRule) GenerateRisks(input *types.ParsedModel) []types.Risk {
 	return risks
 }
 
-func (r *MissingWafRule) createRisk(input *types.ParsedModel, technicalAsset types.TechnicalAsset) types.Risk {
+func (r *MissingWafRule) createRisk(input *types.ParsedModel, technicalAsset *types.TechnicalAsset) types.Risk {
 	title := "<b>Missing Web Application Firewall (WAF)</b> risk at <b>" + technicalAsset.Title + "</b>"
 	likelihood := types.Unlikely
 	impact := types.LowImpact

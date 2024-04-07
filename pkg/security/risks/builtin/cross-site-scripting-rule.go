@@ -52,7 +52,7 @@ func (r *CrossSiteScriptingRule) GenerateRisks(input *types.ParsedModel) []types
 	return risks
 }
 
-func (r *CrossSiteScriptingRule) createRisk(parsedModel *types.ParsedModel, technicalAsset types.TechnicalAsset) types.Risk {
+func (r *CrossSiteScriptingRule) createRisk(parsedModel *types.ParsedModel, technicalAsset *types.TechnicalAsset) types.Risk {
 	title := "<b>Cross-Site Scripting (XSS)</b> risk at <b>" + technicalAsset.Title + "</b>"
 	impact := types.MediumImpact
 	if technicalAsset.HighestProcessedConfidentiality(parsedModel) == types.StrictlyConfidential || technicalAsset.HighestProcessedIntegrity(parsedModel) == types.MissionCritical {

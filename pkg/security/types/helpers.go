@@ -45,7 +45,7 @@ func IsTaggedWithBaseTag(tags []string, baseTag string) bool { // base tags are 
 	return false
 }
 
-type byDataAssetTitleSort []DataAsset
+type byDataAssetTitleSort []*DataAsset
 
 func (what byDataAssetTitleSort) Len() int      { return len(what) }
 func (what byDataAssetTitleSort) Swap(i, j int) { what[i], what[j] = what[j], what[i] }

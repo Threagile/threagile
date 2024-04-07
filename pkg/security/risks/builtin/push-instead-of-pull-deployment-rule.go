@@ -63,7 +63,7 @@ func (r *PushInsteadPullDeploymentRule) GenerateRisks(input *types.ParsedModel) 
 	return risks
 }
 
-func (r *PushInsteadPullDeploymentRule) createRisk(buildPipeline types.TechnicalAsset, deploymentTarget types.TechnicalAsset, deploymentCommLink types.CommunicationLink, impact types.RiskExploitationImpact) types.Risk {
+func (r *PushInsteadPullDeploymentRule) createRisk(buildPipeline *types.TechnicalAsset, deploymentTarget *types.TechnicalAsset, deploymentCommLink *types.CommunicationLink, impact types.RiskExploitationImpact) types.Risk {
 	title := "<b>Push instead of Pull Deployment</b> at <b>" + deploymentTarget.Title + "</b> via build pipeline asset <b>" + buildPipeline.Title + "</b>"
 	risk := types.Risk{
 		CategoryId:                      r.Category().Id,

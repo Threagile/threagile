@@ -100,7 +100,7 @@ func (r customRiskRule) GenerateRisks(parsedModel *types.ParsedModel) []types.Ri
 	return generatedRisks
 }
 
-func createRisk(technicalAsset types.TechnicalAsset) types.Risk {
+func createRisk(technicalAsset *types.TechnicalAsset) types.Risk {
 	risk := types.Risk{
 		CategoryId:                   CustomRiskRule.Category().Id,
 		Severity:                     types.CalculateSeverity(types.VeryLikely, types.MediumImpact),

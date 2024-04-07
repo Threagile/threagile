@@ -63,7 +63,7 @@ func (r *CrossSiteRequestForgeryRule) GenerateRisks(parsedModel *types.ParsedMod
 	return risks
 }
 
-func (r *CrossSiteRequestForgeryRule) createRisk(parsedModel *types.ParsedModel, technicalAsset types.TechnicalAsset, incomingFlow types.CommunicationLink, likelihood types.RiskExploitationLikelihood) types.Risk {
+func (r *CrossSiteRequestForgeryRule) createRisk(parsedModel *types.ParsedModel, technicalAsset *types.TechnicalAsset, incomingFlow *types.CommunicationLink, likelihood types.RiskExploitationLikelihood) types.Risk {
 	sourceAsset := parsedModel.TechnicalAssets[incomingFlow.SourceId]
 	title := "<b>Cross-Site Request Forgery (CSRF)</b> risk at <b>" + technicalAsset.Title + "</b> via <b>" + incomingFlow.Title + "</b> from <b>" + sourceAsset.Title + "</b>"
 	impact := types.LowImpact

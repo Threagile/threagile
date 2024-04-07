@@ -57,7 +57,7 @@ func (what SharedRuntime) HighestAvailability(model *ParsedModel) Criticality {
 	return highest
 }
 
-func (what SharedRuntime) TechnicalAssetWithHighestRAA(model *ParsedModel) TechnicalAsset {
+func (what SharedRuntime) TechnicalAssetWithHighestRAA(model *ParsedModel) *TechnicalAsset {
 	result := model.TechnicalAssets[what.TechnicalAssetsRunning[0]]
 	for _, asset := range what.TechnicalAssetsRunning {
 		candidate := model.TechnicalAssets[asset]
@@ -79,7 +79,7 @@ func SortedKeysOfSharedRuntime(model *ParsedModel) []string {
 	return keys
 }
 
-type BySharedRuntimeTitleSort []SharedRuntime
+type BySharedRuntimeTitleSort []*SharedRuntime
 
 func (what BySharedRuntimeTitleSort) Len() int      { return len(what) }
 func (what BySharedRuntimeTitleSort) Swap(i, j int) { what[i], what[j] = what[j], what[i] }

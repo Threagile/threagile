@@ -59,7 +59,7 @@ func (r *LdapInjectionRule) GenerateRisks(input *types.ParsedModel) []types.Risk
 	return risks
 }
 
-func (r *LdapInjectionRule) createRisk(input *types.ParsedModel, technicalAsset types.TechnicalAsset, incomingFlow types.CommunicationLink, likelihood types.RiskExploitationLikelihood) types.Risk {
+func (r *LdapInjectionRule) createRisk(input *types.ParsedModel, technicalAsset *types.TechnicalAsset, incomingFlow *types.CommunicationLink, likelihood types.RiskExploitationLikelihood) types.Risk {
 	caller := input.TechnicalAssets[incomingFlow.SourceId]
 	title := "<b>LDAP-Injection</b> risk at <b>" + caller.Title + "</b> against LDAP server <b>" + technicalAsset.Title + "</b>" +
 		" via <b>" + incomingFlow.Title + "</b>"

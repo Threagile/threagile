@@ -68,7 +68,7 @@ func (r *UnguardedDirectDatastoreAccessRule) GenerateRisks(input *types.ParsedMo
 	return risks
 }
 
-func isSharingSameParentTrustBoundary(input *types.ParsedModel, left, right types.TechnicalAsset) bool {
+func isSharingSameParentTrustBoundary(input *types.ParsedModel, left, right *types.TechnicalAsset) bool {
 	tbIDLeft, tbIDRight := left.GetTrustBoundaryId(input), right.GetTrustBoundaryId(input)
 	if len(tbIDLeft) == 0 && len(tbIDRight) > 0 {
 		return false
@@ -94,12 +94,12 @@ func isSharingSameParentTrustBoundary(input *types.ParsedModel, left, right type
 	return false
 }
 
-func fileServerAccessViaFTP(technicalAsset types.TechnicalAsset, incomingAccess types.CommunicationLink) bool {
+func fileServerAccessViaFTP(technicalAsset *types.TechnicalAsset, incomingAccess *types.CommunicationLink) bool {
 	return technicalAsset.Technologies.GetAttribute(types.FileServer) &&
 		(incomingAccess.Protocol == types.FTP || incomingAccess.Protocol == types.FTPS || incomingAccess.Protocol == types.SFTP)
 }
 
-func (r *UnguardedDirectDatastoreAccessRule) createRisk(dataStore types.TechnicalAsset, dataFlow types.CommunicationLink, clientOutsideTrustBoundary types.TechnicalAsset, moreRisky bool) types.Risk {
+func (r *UnguardedDirectDatastoreAccessRule) createRisk(dataStore *types.TechnicalAsset, dataFlow *types.CommunicationLink, clientOutsideTrustBoundary *types.TechnicalAsset, moreRisky bool) types.Risk {
 	impact := types.LowImpact
 	if moreRisky || dataStore.RAA > 40 {
 		impact = types.MediumImpact

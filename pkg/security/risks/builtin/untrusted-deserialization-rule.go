@@ -77,7 +77,7 @@ func (r *UntrustedDeserializationRule) GenerateRisks(input *types.ParsedModel) [
 	return risks
 }
 
-func (r *UntrustedDeserializationRule) createRisk(parsedModel *types.ParsedModel, technicalAsset types.TechnicalAsset, acrossTrustBoundary bool, commLinkTitle string) types.Risk {
+func (r *UntrustedDeserializationRule) createRisk(parsedModel *types.ParsedModel, technicalAsset *types.TechnicalAsset, acrossTrustBoundary bool, commLinkTitle string) types.Risk {
 	title := "<b>Untrusted Deserialization</b> risk at <b>" + technicalAsset.Title + "</b>"
 	impact := types.HighImpact
 	likelihood := types.Likely

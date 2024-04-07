@@ -59,10 +59,10 @@ func ParseModel(config *common.Config, modelInput *input.Model, builtinRiskRules
 		DiagramTweakSameRankAssets:                    modelInput.DiagramTweakSameRankAssets,
 	}
 
-	parsedModel.CommunicationLinks = make(map[string]types.CommunicationLink)
+	parsedModel.CommunicationLinks = make(map[string]*types.CommunicationLink)
 	parsedModel.AllSupportedTags = make(map[string]bool)
-	parsedModel.IncomingTechnicalCommunicationLinksMappedByTargetId = make(map[string][]types.CommunicationLink)
-	parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId = make(map[string]types.TrustBoundary)
+	parsedModel.IncomingTechnicalCommunicationLinksMappedByTargetId = make(map[string][]*types.CommunicationLink)
+	parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId = make(map[string]*types.TrustBoundary)
 	parsedModel.GeneratedRisksByCategory = make(map[string][]types.Risk)
 	parsedModel.GeneratedRisksBySyntheticId = make(map[string]types.Risk)
 
@@ -74,7 +74,7 @@ func ParseModel(config *common.Config, modelInput *input.Model, builtinRiskRules
 	}
 
 	// Data Assets ===============================================================================
-	parsedModel.DataAssets = make(map[string]types.DataAsset)
+	parsedModel.DataAssets = make(map[string]*types.DataAsset)
 	for title, asset := range modelInput.DataAssets {
 		id := fmt.Sprintf("%v", asset.ID)
 
@@ -110,7 +110,7 @@ func ParseModel(config *common.Config, modelInput *input.Model, builtinRiskRules
 		if err != nil {
 			return nil, err
 		}
-		parsedModel.DataAssets[id] = types.DataAsset{
+		parsedModel.DataAssets[id] = &types.DataAsset{
 			Id:                     id,
 			Title:                  title,
 			Usage:                  usage,
@@ -127,7 +127,7 @@ func ParseModel(config *common.Config, modelInput *input.Model, builtinRiskRules
 	}
 
 	// Technical Assets ===============================================================================
-	parsedModel.TechnicalAssets = make(map[string]types.TechnicalAsset)
+	parsedModel.TechnicalAssets = make(map[string]*types.TechnicalAsset)
 	for title, asset := range modelInput.TechnicalAssets {
 		id := fmt.Sprintf("%v", asset.ID)
 
@@ -222,7 +222,7 @@ func ParseModel(config *common.Config, modelInput *input.Model, builtinRiskRules
 			}
 		}
 
-		communicationLinks := make([]types.CommunicationLink, 0)
+		communicationLinks := make([]*types.CommunicationLink, 0)
 		if asset.CommunicationLinks != nil {
 			for commLinkTitle, commLink := range asset.CommunicationLinks {
 				weight := 1
@@ -298,7 +298,7 @@ func ParseModel(config *common.Config, modelInput *input.Model, builtinRiskRules
 				if err != nil {
 					return nil, err
 				}
-				commLink := types.CommunicationLink{
+				commLink := &types.CommunicationLink{
 					Id:                     commLinkId,
 					SourceId:               id,
 					TargetId:               commLink.Target,
@@ -337,7 +337,7 @@ func ParseModel(config *common.Config, modelInput *input.Model, builtinRiskRules
 		if err != nil {
 			return nil, err
 		}
-		parsedModel.TechnicalAssets[id] = types.TechnicalAsset{
+		parsedModel.TechnicalAssets[id] = &types.TechnicalAsset{
 			Id:                      id,
 			Usage:                   usage,
 			Title:                   title, //fmt.Sprintf("%v", asset["title"]),
@@ -413,7 +413,7 @@ func ParseModel(config *common.Config, modelInput *input.Model, builtinRiskRules
 
 	// Trust Boundaries ===============================================================================
 	checklistToAvoidAssetBeingModeledInMultipleTrustBoundaries := make(map[string]bool)
-	parsedModel.TrustBoundaries = make(map[string]types.TrustBoundary)
+	parsedModel.TrustBoundaries = make(map[string]*types.TrustBoundary)
 	for title, boundary := range modelInput.TrustBoundaries {
 		id := fmt.Sprintf("%v", boundary.ID)
 
@@ -452,7 +452,7 @@ func ParseModel(config *common.Config, modelInput *input.Model, builtinRiskRules
 		if err != nil {
 			return nil, err
 		}
-		trustBoundary := types.TrustBoundary{
+		trustBoundary := &types.TrustBoundary{
 			Id:                    id,
 			Title:                 title, //fmt.Sprintf("%v", boundary["title"]),
 			Description:           withDefault(fmt.Sprintf("%v", boundary.Description), title),
@@ -480,7 +480,7 @@ func ParseModel(config *common.Config, modelInput *input.Model, builtinRiskRules
 	}
 
 	// Shared Runtime ===============================================================================
-	parsedModel.SharedRuntimes = make(map[string]types.SharedRuntime)
+	parsedModel.SharedRuntimes = make(map[string]*types.SharedRuntime)
 	for title, inputRuntime := range modelInput.SharedRuntimes {
 		id := fmt.Sprintf("%v", inputRuntime.ID)
 
@@ -501,7 +501,7 @@ func ParseModel(config *common.Config, modelInput *input.Model, builtinRiskRules
 		if err != nil {
 			return nil, err
 		}
-		sharedRuntime := types.SharedRuntime{
+		sharedRuntime := &types.SharedRuntime{
 			Id:                     id,
 			Title:                  title, //fmt.Sprintf("%v", boundary["title"]),
 			Description:            withDefault(fmt.Sprintf("%v", inputRuntime.Description), title),

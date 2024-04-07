@@ -638,8 +638,8 @@ func (r *pdfReporter) createTableOfContents(parsedModel *types.ParsedModel) {
 	// by the current page number. --> See the "r.pdf.RegisterAlias()" calls during the PDF creation in this file
 }
 
-func sortedTechnicalAssetsByRiskSeverityAndTitle(parsedModel *types.ParsedModel) []types.TechnicalAsset {
-	assets := make([]types.TechnicalAsset, 0)
+func sortedTechnicalAssetsByRiskSeverityAndTitle(parsedModel *types.ParsedModel) []*types.TechnicalAsset {
+	assets := make([]*types.TechnicalAsset, 0)
 	for _, asset := range parsedModel.TechnicalAssets {
 		assets = append(assets, asset)
 	}
@@ -647,8 +647,8 @@ func sortedTechnicalAssetsByRiskSeverityAndTitle(parsedModel *types.ParsedModel)
 	return assets
 }
 
-func sortedDataAssetsByDataBreachProbabilityAndTitle(parsedModel *types.ParsedModel) []types.DataAsset {
-	assets := make([]types.DataAsset, 0)
+func sortedDataAssetsByDataBreachProbabilityAndTitle(parsedModel *types.ParsedModel) []*types.DataAsset {
+	assets := make([]*types.DataAsset, 0)
 	for _, asset := range parsedModel.DataAssets {
 		assets = append(assets, asset)
 	}
@@ -1405,8 +1405,8 @@ func (r *pdfReporter) createOutOfScopeAssets(parsedModel *types.ParsedModel) {
 	r.pdf.SetDashPattern([]float64{}, 0)
 }
 
-func sortedTechnicalAssetsByRAAAndTitle(parsedModel *types.ParsedModel) []types.TechnicalAsset {
-	assets := make([]types.TechnicalAsset, 0)
+func sortedTechnicalAssetsByRAAAndTitle(parsedModel *types.ParsedModel) []*types.TechnicalAsset {
+	assets := make([]*types.TechnicalAsset, 0)
 	for _, asset := range parsedModel.TechnicalAssets {
 		assets = append(assets, asset)
 	}
@@ -2274,8 +2274,8 @@ func (r *pdfReporter) createTagListing(parsedModel *types.ParsedModel) {
 	}
 }
 
-func sortedSharedRuntimesByTitle(parsedModel *types.ParsedModel) []types.SharedRuntime {
-	result := make([]types.SharedRuntime, 0)
+func sortedSharedRuntimesByTitle(parsedModel *types.ParsedModel) []*types.SharedRuntime {
+	result := make([]*types.SharedRuntime, 0)
 	for _, runtime := range parsedModel.SharedRuntimes {
 		result = append(result, runtime)
 	}
@@ -2283,8 +2283,8 @@ func sortedSharedRuntimesByTitle(parsedModel *types.ParsedModel) []types.SharedR
 	return result
 }
 
-func sortedTechnicalAssetsByTitle(parsedModel *types.ParsedModel) []types.TechnicalAsset {
-	assets := make([]types.TechnicalAsset, 0)
+func sortedTechnicalAssetsByTitle(parsedModel *types.ParsedModel) []*types.TechnicalAsset {
+	assets := make([]*types.TechnicalAsset, 0)
 	for _, asset := range parsedModel.TechnicalAssets {
 		assets = append(assets, asset)
 	}

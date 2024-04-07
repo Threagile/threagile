@@ -92,7 +92,7 @@ func (r *MissingNetworkSegmentationRule) GenerateRisks(input *types.ParsedModel)
 	return risks
 }
 
-func (r *MissingNetworkSegmentationRule) createRisk(techAsset types.TechnicalAsset, moreRisky bool) types.Risk {
+func (r *MissingNetworkSegmentationRule) createRisk(techAsset *types.TechnicalAsset, moreRisky bool) types.Risk {
 	impact := types.LowImpact
 	if moreRisky {
 		impact = types.MediumImpact

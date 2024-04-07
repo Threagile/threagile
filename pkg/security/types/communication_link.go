@@ -105,8 +105,8 @@ func (what CommunicationLink) HighestAvailability(parsedModel *ParsedModel) Crit
 	return highest
 }
 
-func (what CommunicationLink) DataAssetsSentSorted(parsedModel *ParsedModel) []DataAsset {
-	result := make([]DataAsset, 0)
+func (what CommunicationLink) DataAssetsSentSorted(parsedModel *ParsedModel) []*DataAsset {
+	result := make([]*DataAsset, 0)
 	for _, assetID := range what.DataAssetsSent {
 		result = append(result, parsedModel.DataAssets[assetID])
 	}
@@ -114,8 +114,8 @@ func (what CommunicationLink) DataAssetsSentSorted(parsedModel *ParsedModel) []D
 	return result
 }
 
-func (what CommunicationLink) DataAssetsReceivedSorted(parsedModel *ParsedModel) []DataAsset {
-	result := make([]DataAsset, 0)
+func (what CommunicationLink) DataAssetsReceivedSorted(parsedModel *ParsedModel) []*DataAsset {
+	result := make([]*DataAsset, 0)
 	for _, assetID := range what.DataAssetsReceived {
 		result = append(result, parsedModel.DataAssets[assetID])
 	}
@@ -127,7 +127,7 @@ func (what CommunicationLink) IsBidirectional() bool {
 	return len(what.DataAssetsSent) > 0 && len(what.DataAssetsReceived) > 0
 }
 
-type ByTechnicalCommunicationLinkIdSort []CommunicationLink
+type ByTechnicalCommunicationLinkIdSort []*CommunicationLink
 
 func (what ByTechnicalCommunicationLinkIdSort) Len() int      { return len(what) }
 func (what ByTechnicalCommunicationLinkIdSort) Swap(i, j int) { what[i], what[j] = what[j], what[i] }
@@ -135,7 +135,7 @@ func (what ByTechnicalCommunicationLinkIdSort) Less(i, j int) bool {
 	return what[i].Id > what[j].Id
 }
 
-type ByTechnicalCommunicationLinkTitleSort []CommunicationLink
+type ByTechnicalCommunicationLinkTitleSort []*CommunicationLink
 
 func (what ByTechnicalCommunicationLinkTitleSort) Len() int      { return len(what) }
 func (what ByTechnicalCommunicationLinkTitleSort) Swap(i, j int) { what[i], what[j] = what[j], what[i] }

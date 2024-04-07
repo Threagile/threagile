@@ -79,7 +79,7 @@ func (r *MixedTargetsOnSharedRuntimeRule) GenerateRisks(input *types.ParsedModel
 	return risks
 }
 
-func (r *MixedTargetsOnSharedRuntimeRule) createRisk(input *types.ParsedModel, sharedRuntime types.SharedRuntime) types.Risk {
+func (r *MixedTargetsOnSharedRuntimeRule) createRisk(input *types.ParsedModel, sharedRuntime *types.SharedRuntime) types.Risk {
 	impact := types.LowImpact
 	if isMoreRisky(input, sharedRuntime) {
 		impact = types.MediumImpact
@@ -99,7 +99,7 @@ func (r *MixedTargetsOnSharedRuntimeRule) createRisk(input *types.ParsedModel, s
 	return risk
 }
 
-func isMoreRisky(input *types.ParsedModel, sharedRuntime types.SharedRuntime) bool {
+func isMoreRisky(input *types.ParsedModel, sharedRuntime *types.SharedRuntime) bool {
 	for _, techAssetId := range sharedRuntime.TechnicalAssetsRunning {
 		techAsset := input.TechnicalAssets[techAssetId]
 		if techAsset.Confidentiality == types.StrictlyConfidential || techAsset.Integrity == types.MissionCritical ||

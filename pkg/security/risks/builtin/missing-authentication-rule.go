@@ -77,7 +77,7 @@ func (r *MissingAuthenticationRule) GenerateRisks(input *types.ParsedModel) []ty
 	return risks
 }
 
-func (r *MissingAuthenticationRule) createRisk(input *types.ParsedModel, technicalAsset types.TechnicalAsset, incomingAccess, incomingAccessOrigin types.CommunicationLink, hopBetween string,
+func (r *MissingAuthenticationRule) createRisk(input *types.ParsedModel, technicalAsset *types.TechnicalAsset, incomingAccess, incomingAccessOrigin *types.CommunicationLink, hopBetween string,
 	impact types.RiskExploitationImpact, likelihood types.RiskExploitationLikelihood, twoFactor bool, category types.RiskCategory) types.Risk {
 	factorString := ""
 	if twoFactor {

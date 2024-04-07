@@ -72,7 +72,7 @@ func (r *CodeBackdooringRule) GenerateRisks(parsedModel *types.ParsedModel) []ty
 	return risks
 }
 
-func (r *CodeBackdooringRule) createRisk(input *types.ParsedModel, technicalAsset types.TechnicalAsset, elevatedRisk bool) types.Risk {
+func (r *CodeBackdooringRule) createRisk(input *types.ParsedModel, technicalAsset *types.TechnicalAsset, elevatedRisk bool) types.Risk {
 	title := "<b>Code Backdooring</b> risk at <b>" + technicalAsset.Title + "</b>"
 	impact := types.LowImpact
 	if !technicalAsset.Technologies.GetAttribute(types.CodeInspectionPlatform) {

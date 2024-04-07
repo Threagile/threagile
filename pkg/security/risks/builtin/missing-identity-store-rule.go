@@ -49,7 +49,7 @@ func (r *MissingIdentityStoreRule) GenerateRisks(input *types.ParsedModel) []typ
 	}
 	// now check if we have end user identity authorized communication links, then it's a risk
 	riskIdentified := false
-	var mostRelevantAsset types.TechnicalAsset
+	var mostRelevantAsset *types.TechnicalAsset
 	impact := types.LowImpact
 	for _, id := range input.SortedTechnicalAssetIDs() { // use the sorted one to always get the same tech asset with the highest sensitivity as example asset
 		technicalAsset := input.TechnicalAssets[id]
@@ -83,7 +83,7 @@ func (r *MissingIdentityStoreRule) GenerateRisks(input *types.ParsedModel) []typ
 	return risks
 }
 
-func (r *MissingIdentityStoreRule) createRisk(technicalAsset types.TechnicalAsset, impact types.RiskExploitationImpact) types.Risk {
+func (r *MissingIdentityStoreRule) createRisk(technicalAsset *types.TechnicalAsset, impact types.RiskExploitationImpact) types.Risk {
 	title := "<b>Missing Identity Store</b> in the threat model (referencing asset <b>" + technicalAsset.Title + "</b> as an example)"
 	risk := types.Risk{
 		CategoryId:                   r.Category().Id,

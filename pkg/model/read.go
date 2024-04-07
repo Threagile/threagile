@@ -48,8 +48,7 @@ func ReadAndAnalyzeModel(config *common.Config, progressReporter types.ProgressR
 
 	introTextRAA := applyRAA(parsedModel, config.PluginFolder, config.RAAPlugin, progressReporter)
 
-	applyRiskGeneration(parsedModel, customRiskRules, builtinRiskRules,
-		config.SkipRiskRules, progressReporter)
+	applyRiskGeneration(parsedModel, customRiskRules, builtinRiskRules, config.SkipRiskRules, progressReporter)
 	err := parsedModel.ApplyWildcardRiskTrackingEvaluation(config.IgnoreOrphanedRiskTracking, progressReporter)
 	if err != nil {
 		return nil, fmt.Errorf("unable to apply wildcard risk tracking evaluation: %v", err)

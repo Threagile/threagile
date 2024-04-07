@@ -74,8 +74,8 @@ func (r *UnnecessaryDataTransferRule) GenerateRisks(input *types.ParsedModel) []
 	return risks
 }
 
-func (r *UnnecessaryDataTransferRule) checkRisksAgainstTechnicalAsset(input *types.ParsedModel, risks []types.Risk, technicalAsset types.TechnicalAsset,
-	dataFlow types.CommunicationLink, inverseDirection bool) []types.Risk {
+func (r *UnnecessaryDataTransferRule) checkRisksAgainstTechnicalAsset(input *types.ParsedModel, risks []types.Risk, technicalAsset *types.TechnicalAsset,
+	dataFlow *types.CommunicationLink, inverseDirection bool) []types.Risk {
 	for _, transferredDataAssetId := range dataFlow.DataAssetsSent {
 		if !technicalAsset.ProcessesOrStoresDataAsset(transferredDataAssetId) {
 			transferredDataAsset := input.DataAssets[transferredDataAssetId]
@@ -122,7 +122,7 @@ func isNewRisk(risks []types.Risk, risk types.Risk) bool {
 	return true
 }
 
-func (r *UnnecessaryDataTransferRule) createRisk(technicalAsset types.TechnicalAsset, dataAssetTransferred types.DataAsset, commPartnerAsset types.TechnicalAsset) types.Risk {
+func (r *UnnecessaryDataTransferRule) createRisk(technicalAsset *types.TechnicalAsset, dataAssetTransferred *types.DataAsset, commPartnerAsset *types.TechnicalAsset) types.Risk {
 	moreRisky := dataAssetTransferred.Confidentiality == types.StrictlyConfidential || dataAssetTransferred.Integrity == types.MissionCritical
 
 	impact := types.LowImpact

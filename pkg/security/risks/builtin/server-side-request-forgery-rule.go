@@ -57,7 +57,7 @@ func (r *ServerSideRequestForgeryRule) GenerateRisks(input *types.ParsedModel) [
 	return risks
 }
 
-func (r *ServerSideRequestForgeryRule) createRisk(input *types.ParsedModel, technicalAsset types.TechnicalAsset, outgoingFlow types.CommunicationLink) types.Risk {
+func (r *ServerSideRequestForgeryRule) createRisk(input *types.ParsedModel, technicalAsset *types.TechnicalAsset, outgoingFlow *types.CommunicationLink) types.Risk {
 	target := input.TechnicalAssets[outgoingFlow.TargetId]
 	title := "<b>Server-Side Request Forgery (SSRF)</b> risk at <b>" + technicalAsset.Title + "</b> server-side web-requesting " +
 		"the target <b>" + target.Title + "</b> via <b>" + outgoingFlow.Title + "</b>"

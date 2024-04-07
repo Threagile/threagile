@@ -72,11 +72,11 @@ func (r *MissingVaultIsolationRule) GenerateRisks(input *types.ParsedModel) []ty
 	return risks
 }
 
-func isVaultStorage(parsedModel *types.ParsedModel, vault types.TechnicalAsset, storage types.TechnicalAsset) bool {
+func isVaultStorage(parsedModel *types.ParsedModel, vault *types.TechnicalAsset, storage *types.TechnicalAsset) bool {
 	return storage.Type == types.Datastore && vault.HasDirectConnection(parsedModel, storage.Id)
 }
 
-func (r *MissingVaultIsolationRule) createRisk(techAsset types.TechnicalAsset, moreImpact bool, sameExecutionEnv bool) types.Risk {
+func (r *MissingVaultIsolationRule) createRisk(techAsset *types.TechnicalAsset, moreImpact bool, sameExecutionEnv bool) types.Risk {
 	impact := types.MediumImpact
 	likelihood := types.Unlikely
 	others := "<b>in the same network segment</b>"

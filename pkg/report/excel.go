@@ -84,7 +84,18 @@ func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string, conf
 		risks := types.SortedRisksOfCategory(parsedModel, category)
 		for _, risk := range risks {
 			techAsset := parsedModel.TechnicalAssets[risk.MostRelevantTechnicalAssetId]
+			techAssetTitle := ""
+			techAssetRAA := 0.
+			if techAsset != nil {
+				techAssetTitle = techAsset.Title
+				techAssetRAA = techAsset.RAA
+			}
+
 			commLink := parsedModel.CommunicationLinks[risk.MostRelevantCommunicationLinkId]
+			commLinkTitle := ""
+			if commLink != nil {
+				commLinkTitle = commLink.Title
+			}
 
 			date := ""
 			riskTracking := risk.GetRiskTracking(parsedModel)
@@ -103,9 +114,9 @@ func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string, conf
 					category.Function.Title(),
 					"CWE-" + strconv.Itoa(category.CWE),
 					category.Title,
-					techAsset.Title,
-					commLink.Title,
-					decimal.NewFromFloat(techAsset.RAA).StringFixed(0),
+					techAssetTitle,
+					commLinkTitle,
+					decimal.NewFromFloat(techAssetRAA).StringFixed(0),
 					removeFormattingTags(risk.Title),
 					category.Action,
 					category.Mitigation,
@@ -124,12 +135,10 @@ func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string, conf
 	}
 
 	// group risks
-	groupedRisk, groupedRiskError := new(RiskGroup).Make(riskItems, columns, config.GroupByColumns)
+	groupedRisk, groupedRiskError := new(RiskGroup).Make(riskItems, columns, config.RiskExcel.SortByColumns)
 	if groupedRiskError != nil {
 		return fmt.Errorf("failed to group risks: %w", groupedRiskError)
 	}
-
-	_ = groupedRisk
 
 	// write data
 	writeError := groupedRisk.Write(excel, sheetName, cellStyles)
@@ -152,41 +161,46 @@ func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string, conf
 				return columnNumberToNameError
 			}
 
-			var largestWidth float64 = 0
-			for rowIndex, rowCell := range col {
-				cellWidth := float64(utf8.RuneCountInString(rowCell) + 1) // + 1 for margin
+			var minWidth float64 = 0
+			width, widthOk := config.RiskExcel.WidthOfColumns[columns[name].Title]
+			if widthOk {
+				minWidth = width
+			} else {
+				var largestWidth float64 = 0
+				for rowIndex, rowCell := range col {
+					cellWidth := float64(utf8.RuneCountInString(rowCell) + 1) // + 1 for margin
 
-				cellName, coordinateError := excelize.CoordinatesToCellName(colIndex+1, rowIndex+1)
-				if coordinateError == nil {
-					style, styleError := excel.GetCellStyle(sheetName, cellName)
-					if styleError == nil {
-						styleDetails, detailsError := excel.GetStyle(style)
-						if detailsError == nil {
-							if styleDetails.Font != nil && styleDetails.Font.Size > 0 {
-								cellWidth *= styleDetails.Font.Size / 14.
+					cellName, coordinateError := excelize.CoordinatesToCellName(colIndex+1, rowIndex+1)
+					if coordinateError == nil {
+						style, styleError := excel.GetCellStyle(sheetName, cellName)
+						if styleError == nil {
+							styleDetails, detailsError := excel.GetStyle(style)
+							if detailsError == nil {
+								if styleDetails.Font != nil && styleDetails.Font.Size > 0 {
+									cellWidth *= styleDetails.Font.Size / 14.
+								}
 							}
 						}
 					}
+
+					if cellWidth > largestWidth {
+						largestWidth = cellWidth
+					}
 				}
 
-				if cellWidth > largestWidth {
-					largestWidth = cellWidth
+				for columnLetter := range columns {
+					if strings.EqualFold(columnLetter, name) {
+						minWidth = columns[columnLetter].Width
+					}
 				}
-			}
 
-			var minWidth float64
-			for columnLetter := range columns {
-				if strings.EqualFold(columnLetter, name) {
-					minWidth = columns[columnLetter].Width
+				if largestWidth < 100 {
+					minWidth = largestWidth
 				}
-			}
 
-			if largestWidth < 100 {
-				minWidth = largestWidth
-			}
-
-			if minWidth < 8 {
-				minWidth = 8
+				if minWidth < 8 {
+					minWidth = 8
+				}
 			}
 
 			setColWidthError := excel.SetColWidth(sheetName, name, name, minWidth)
@@ -198,7 +212,7 @@ func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string, conf
 
 	// hide some columns
 	for columnLetter, column := range columns {
-		for _, hiddenColumn := range config.HideColumns {
+		for _, hiddenColumn := range config.RiskExcel.HideColumns {
 			if strings.EqualFold(hiddenColumn, column.Title) {
 				hideColumnError := excel.SetColVisible(sheetName, columnLetter, false)
 				if hideColumnError != nil {
@@ -363,8 +377,8 @@ func WriteTagsExcelToFile(parsedModel *types.ParsedModel, filename string) error
 	return nil
 }
 
-func sortedTrustBoundariesByTitle(parsedModel *types.ParsedModel) []types.TrustBoundary {
-	boundaries := make([]types.TrustBoundary, 0)
+func sortedTrustBoundariesByTitle(parsedModel *types.ParsedModel) []*types.TrustBoundary {
+	boundaries := make([]*types.TrustBoundary, 0)
 	for _, boundary := range parsedModel.TrustBoundaries {
 		boundaries = append(boundaries, boundary)
 	}
@@ -372,8 +386,8 @@ func sortedTrustBoundariesByTitle(parsedModel *types.ParsedModel) []types.TrustB
 	return boundaries
 }
 
-func sortedDataAssetsByTitle(parsedModel *types.ParsedModel) []types.DataAsset {
-	assets := make([]types.DataAsset, 0)
+func sortedDataAssetsByTitle(parsedModel *types.ParsedModel) []*types.DataAsset {
+	assets := make([]*types.DataAsset, 0)
 	for _, asset := range parsedModel.DataAssets {
 		assets = append(assets, asset)
 	}

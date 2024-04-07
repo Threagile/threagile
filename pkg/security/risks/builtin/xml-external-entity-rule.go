@@ -56,7 +56,7 @@ func (r *XmlExternalEntityRule) GenerateRisks(input *types.ParsedModel) []types.
 	return risks
 }
 
-func (r *XmlExternalEntityRule) createRisk(parsedModel *types.ParsedModel, technicalAsset types.TechnicalAsset) types.Risk {
+func (r *XmlExternalEntityRule) createRisk(parsedModel *types.ParsedModel, technicalAsset *types.TechnicalAsset) types.Risk {
 	title := "<b>XML External Entity (XXE)</b> risk at <b>" + technicalAsset.Title + "</b>"
 	impact := types.MediumImpact
 	if technicalAsset.HighestProcessedConfidentiality(parsedModel) == types.StrictlyConfidential ||

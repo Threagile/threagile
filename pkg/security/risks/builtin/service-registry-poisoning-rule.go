@@ -50,7 +50,7 @@ func (r *ServiceRegistryPoisoningRule) GenerateRisks(input *types.ParsedModel) [
 	return risks
 }
 
-func (r *ServiceRegistryPoisoningRule) createRisk(input *types.ParsedModel, technicalAsset types.TechnicalAsset, incomingFlows []types.CommunicationLink) types.Risk {
+func (r *ServiceRegistryPoisoningRule) createRisk(input *types.ParsedModel, technicalAsset *types.TechnicalAsset, incomingFlows []*types.CommunicationLink) types.Risk {
 	title := "<b>Service Registry Poisoning</b> risk at <b>" + technicalAsset.Title + "</b>"
 	impact := types.LowImpact
 

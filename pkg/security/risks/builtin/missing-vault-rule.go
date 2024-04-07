@@ -43,7 +43,7 @@ func (*MissingVaultRule) SupportedTags() []string {
 func (r *MissingVaultRule) GenerateRisks(input *types.ParsedModel) []types.Risk {
 	risks := make([]types.Risk, 0)
 	hasVault := false
-	var mostRelevantAsset types.TechnicalAsset
+	var mostRelevantAsset *types.TechnicalAsset
 	impact := types.LowImpact
 	for _, id := range input.SortedTechnicalAssetIDs() { // use the sorted one to always get the same tech asset with the highest sensitivity as example asset
 		techAsset := input.TechnicalAssets[id]
@@ -61,7 +61,7 @@ func (r *MissingVaultRule) GenerateRisks(input *types.ParsedModel) []types.Risk 
 			impact = types.MediumImpact
 		}
 		// just for referencing the most interesting asset
-		if techAsset.HighestSensitivityScore() > mostRelevantAsset.HighestSensitivityScore() {
+		if mostRelevantAsset != nil && techAsset.HighestSensitivityScore() > mostRelevantAsset.HighestSensitivityScore() {
 			mostRelevantAsset = techAsset
 		}
 	}
@@ -71,7 +71,7 @@ func (r *MissingVaultRule) GenerateRisks(input *types.ParsedModel) []types.Risk 
 	return risks
 }
 
-func (r *MissingVaultRule) createRisk(technicalAsset types.TechnicalAsset, impact types.RiskExploitationImpact) types.Risk {
+func (r *MissingVaultRule) createRisk(technicalAsset *types.TechnicalAsset, impact types.RiskExploitationImpact) types.Risk {
 	title := "<b>Missing Vault (Secret Storage)</b> in the threat model (referencing asset <b>" + technicalAsset.Title + "</b> as an example)"
 	risk := types.Risk{
 		CategoryId:                   r.Category().Id,

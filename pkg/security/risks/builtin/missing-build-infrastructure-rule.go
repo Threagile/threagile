@@ -45,7 +45,7 @@ func (r *MissingBuildInfrastructureRule) GenerateRisks(input *types.ParsedModel)
 	risks := make([]types.Risk, 0)
 	hasCustomDevelopedParts, hasBuildPipeline, hasSourcecodeRepo, hasDevOpsClient := false, false, false, false
 	impact := types.LowImpact
-	var mostRelevantAsset types.TechnicalAsset
+	var mostRelevantAsset *types.TechnicalAsset
 	for _, id := range input.SortedTechnicalAssetIDs() { // use the sorted one to always get the same tech asset with the highest sensitivity as example asset
 		technicalAsset := input.TechnicalAssets[id]
 		if technicalAsset.CustomDevelopedParts && !technicalAsset.OutOfScope {
@@ -85,7 +85,7 @@ func (r *MissingBuildInfrastructureRule) GenerateRisks(input *types.ParsedModel)
 	return risks
 }
 
-func (r *MissingBuildInfrastructureRule) createRisk(technicalAsset types.TechnicalAsset, impact types.RiskExploitationImpact) types.Risk {
+func (r *MissingBuildInfrastructureRule) createRisk(technicalAsset *types.TechnicalAsset, impact types.RiskExploitationImpact) types.Risk {
 	title := "<b>Missing Build Infrastructure</b> in the threat model (referencing asset <b>" + technicalAsset.Title + "</b> as an example)"
 	risk := types.Risk{
 		CategoryId:                   r.Category().Id,

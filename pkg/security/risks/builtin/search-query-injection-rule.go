@@ -66,7 +66,7 @@ func (r *SearchQueryInjectionRule) GenerateRisks(input *types.ParsedModel) []typ
 	return risks
 }
 
-func (r *SearchQueryInjectionRule) createRisk(input *types.ParsedModel, technicalAsset types.TechnicalAsset, incomingFlow types.CommunicationLink, likelihood types.RiskExploitationLikelihood) types.Risk {
+func (r *SearchQueryInjectionRule) createRisk(input *types.ParsedModel, technicalAsset *types.TechnicalAsset, incomingFlow *types.CommunicationLink, likelihood types.RiskExploitationLikelihood) types.Risk {
 	caller := input.TechnicalAssets[incomingFlow.SourceId]
 	title := "<b>Search Query Injection</b> risk at <b>" + caller.Title + "</b> against search engine server <b>" + technicalAsset.Title + "</b>" +
 		" via <b>" + incomingFlow.Title + "</b>"

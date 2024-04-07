@@ -87,8 +87,8 @@ func (r *UnguardedAccessFromInternetRule) GenerateRisks(input *types.ParsedModel
 	return risks
 }
 
-func (r *UnguardedAccessFromInternetRule) createRisk(dataStore types.TechnicalAsset, dataFlow types.CommunicationLink,
-	clientFromInternet types.TechnicalAsset, moreRisky bool) types.Risk {
+func (r *UnguardedAccessFromInternetRule) createRisk(dataStore *types.TechnicalAsset, dataFlow *types.CommunicationLink,
+	clientFromInternet *types.TechnicalAsset, moreRisky bool) types.Risk {
 	impact := types.LowImpact
 	if moreRisky || dataStore.RAA > 40 {
 		impact = types.MediumImpact

@@ -72,11 +72,11 @@ func (r *UnencryptedAssetRule) GenerateRisks(input *types.ParsedModel) []types.R
 // Simple routing assets like 'Reverse Proxy' or 'Load Balancer' usually don't have their own storage and thus have no
 // encryption requirement for the asset itself (though for the communication, but that's a different rule)
 
-func isEncryptionWaiver(asset types.TechnicalAsset) bool {
+func isEncryptionWaiver(asset *types.TechnicalAsset) bool {
 	return asset.Technologies.GetAttribute(types.IsNoStorageAtRest) || asset.Technologies.GetAttribute(types.IsEmbeddedComponent)
 }
 
-func (r *UnencryptedAssetRule) createRisk(technicalAsset types.TechnicalAsset, impact types.RiskExploitationImpact, requiresEndUserKey bool) types.Risk {
+func (r *UnencryptedAssetRule) createRisk(technicalAsset *types.TechnicalAsset, impact types.RiskExploitationImpact, requiresEndUserKey bool) types.Risk {
 	title := "<b>Unencrypted Technical Asset</b> named <b>" + technicalAsset.Title + "</b>"
 	if requiresEndUserKey {
 		title += " missing end user individual encryption with " + types.DataWithEndUserIndividualKey.String()

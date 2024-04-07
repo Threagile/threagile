@@ -72,7 +72,7 @@ func (r *MissingIdentityProviderIsolationRule) GenerateRisks(input *types.Parsed
 	return risks
 }
 
-func (r *MissingIdentityProviderIsolationRule) createRisk(techAsset types.TechnicalAsset, moreImpact bool, sameExecutionEnv bool) types.Risk {
+func (r *MissingIdentityProviderIsolationRule) createRisk(techAsset *types.TechnicalAsset, moreImpact bool, sameExecutionEnv bool) types.Risk {
 	impact := types.HighImpact
 	likelihood := types.Unlikely
 	others := "<b>in the same network segment</b>"

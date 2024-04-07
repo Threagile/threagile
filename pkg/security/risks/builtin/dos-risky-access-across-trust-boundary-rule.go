@@ -56,10 +56,10 @@ func (r *DosRiskyAccessAcrossTrustBoundaryRule) GenerateRisks(input *types.Parse
 					// Now try to walk a call chain up (1 hop only) to find a caller's caller used by human
 					callersCommLinks := input.IncomingTechnicalCommunicationLinksMappedByTargetId[sourceAsset.Id]
 					for _, callersCommLink := range callersCommLinks {
-						risks = r.checkRisk(input, technicalAsset, callersCommLink, sourceAsset.Title, risks)
+						risks = r.checkRisk(input, technicalAsset, callersCommLink, incomingAccess.Id, sourceAsset.Title, risks)
 					}
 				} else {
-					risks = r.checkRisk(input, technicalAsset, incomingAccess, "", risks)
+					risks = r.checkRisk(input, technicalAsset, incomingAccess, "", "", risks)
 				}
 			}
 		}
@@ -67,19 +67,19 @@ func (r *DosRiskyAccessAcrossTrustBoundaryRule) GenerateRisks(input *types.Parse
 	return risks
 }
 
-func (r *DosRiskyAccessAcrossTrustBoundaryRule) checkRisk(input *types.ParsedModel, technicalAsset types.TechnicalAsset, incomingAccess types.CommunicationLink, hopBetween string, risks []types.Risk) []types.Risk {
+func (r *DosRiskyAccessAcrossTrustBoundaryRule) checkRisk(input *types.ParsedModel, technicalAsset *types.TechnicalAsset, incomingAccess *types.CommunicationLink, linkId string, hopBetween string, risks []types.Risk) []types.Risk {
 	if incomingAccess.IsAcrossTrustBoundaryNetworkOnly(input) &&
 		!incomingAccess.Protocol.IsProcessLocal() && incomingAccess.Usage != types.DevOps {
 		highRisk := technicalAsset.Availability == types.MissionCritical &&
 			!incomingAccess.VPN && !incomingAccess.IpFiltered && !technicalAsset.Redundant
-		risks = append(risks, r.createRisk(technicalAsset, incomingAccess, hopBetween,
+		risks = append(risks, r.createRisk(technicalAsset, incomingAccess, linkId, hopBetween,
 			input.TechnicalAssets[incomingAccess.SourceId], highRisk))
 	}
 	return risks
 }
 
-func (r *DosRiskyAccessAcrossTrustBoundaryRule) createRisk(techAsset types.TechnicalAsset, dataFlow types.CommunicationLink, hopBetween string,
-	clientOutsideTrustBoundary types.TechnicalAsset, moreRisky bool) types.Risk {
+func (r *DosRiskyAccessAcrossTrustBoundaryRule) createRisk(techAsset *types.TechnicalAsset, dataFlow *types.CommunicationLink, linkId string, hopBetween string,
+	clientOutsideTrustBoundary *types.TechnicalAsset, moreRisky bool) types.Risk {
 	impact := types.LowImpact
 	if moreRisky {
 		impact = types.MediumImpact
@@ -100,5 +100,9 @@ func (r *DosRiskyAccessAcrossTrustBoundaryRule) createRisk(techAsset types.Techn
 		DataBreachTechnicalAssetIDs:     []string{},
 	}
 	risk.SyntheticId = risk.CategoryId + "@" + techAsset.Id + "@" + clientOutsideTrustBoundary.Id + "@" + dataFlow.Id
+	if dataFlow.Id != linkId {
+		risk.SyntheticId += "->" + linkId
+	}
+
 	return risk
 }

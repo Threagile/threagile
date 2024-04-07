@@ -35,7 +35,7 @@ type TechnicalAsset struct {
 	DataAssetsProcessed     []string              `json:"data_assets_processed,omitempty" yaml:"data_assets_processed,omitempty"`
 	DataAssetsStored        []string              `json:"data_assets_stored,omitempty" yaml:"data_assets_stored,omitempty"`
 	DataFormatsAccepted     []DataFormat          `json:"data_formats_accepted,omitempty" yaml:"data_formats_accepted,omitempty"`
-	CommunicationLinks      []CommunicationLink   `json:"communication_links,omitempty" yaml:"communication_links,omitempty"`
+	CommunicationLinks      []*CommunicationLink  `json:"communication_links,omitempty" yaml:"communication_links,omitempty"`
 	DiagramTweakOrder       int                   `json:"diagram_tweak_order,omitempty" yaml:"diagram_tweak_order,omitempty"`
 	// will be set by separate calculation step:
 	RAA float64 `json:"raa,omitempty" yaml:"raa,omitempty"`
@@ -72,13 +72,16 @@ func (what TechnicalAsset) IsTaggedWithAnyTraversingUp(model *ParsedModel, tags 
 func (what TechnicalAsset) IsSameTrustBoundary(parsedModel *ParsedModel, otherAssetId string) bool {
 	trustBoundaryOfMyAsset := parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[what.Id]
 	trustBoundaryOfOtherAsset := parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[otherAssetId]
+	if trustBoundaryOfMyAsset == nil || trustBoundaryOfOtherAsset == nil {
+		return trustBoundaryOfMyAsset == trustBoundaryOfOtherAsset
+	}
 	return trustBoundaryOfMyAsset.Id == trustBoundaryOfOtherAsset.Id
 }
 
 func (what TechnicalAsset) IsSameExecutionEnvironment(parsedModel *ParsedModel, otherAssetId string) bool {
 	trustBoundaryOfMyAsset := parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[what.Id]
 	trustBoundaryOfOtherAsset := parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[otherAssetId]
-	if trustBoundaryOfMyAsset.Type == ExecutionEnvironment && trustBoundaryOfOtherAsset.Type == ExecutionEnvironment {
+	if trustBoundaryOfMyAsset != nil && trustBoundaryOfMyAsset.Type == ExecutionEnvironment && trustBoundaryOfOtherAsset != nil && trustBoundaryOfOtherAsset.Type == ExecutionEnvironment {
 		return trustBoundaryOfMyAsset.Id == trustBoundaryOfOtherAsset.Id
 	}
 	return false
@@ -86,12 +89,15 @@ func (what TechnicalAsset) IsSameExecutionEnvironment(parsedModel *ParsedModel, 
 
 func (what TechnicalAsset) IsSameTrustBoundaryNetworkOnly(parsedModel *ParsedModel, otherAssetId string) bool {
 	trustBoundaryOfMyAsset := parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[what.Id]
-	if !trustBoundaryOfMyAsset.Type.IsNetworkBoundary() { // find and use the parent boundary then
+	if trustBoundaryOfMyAsset != nil && !trustBoundaryOfMyAsset.Type.IsNetworkBoundary() { // find and use the parent boundary then
 		trustBoundaryOfMyAsset = parsedModel.TrustBoundaries[trustBoundaryOfMyAsset.ParentTrustBoundaryID(parsedModel)]
 	}
 	trustBoundaryOfOtherAsset := parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[otherAssetId]
-	if !trustBoundaryOfOtherAsset.Type.IsNetworkBoundary() { // find and use the parent boundary then
+	if trustBoundaryOfOtherAsset != nil && !trustBoundaryOfOtherAsset.Type.IsNetworkBoundary() { // find and use the parent boundary then
 		trustBoundaryOfOtherAsset = parsedModel.TrustBoundaries[trustBoundaryOfOtherAsset.ParentTrustBoundaryID(parsedModel)]
+	}
+	if trustBoundaryOfMyAsset == nil || trustBoundaryOfOtherAsset == nil {
+		return trustBoundaryOfMyAsset == trustBoundaryOfOtherAsset
 	}
 	return trustBoundaryOfMyAsset.Id == trustBoundaryOfOtherAsset.Id
 }
@@ -139,8 +145,8 @@ func (what TechnicalAsset) HighestStoredConfidentiality(parsedModel *ParsedModel
 	return highest
 }
 
-func (what TechnicalAsset) DataAssetsProcessedSorted(parsedModel *ParsedModel) []DataAsset {
-	result := make([]DataAsset, 0)
+func (what TechnicalAsset) DataAssetsProcessedSorted(parsedModel *ParsedModel) []*DataAsset {
+	result := make([]*DataAsset, 0)
 	for _, assetID := range what.DataAssetsProcessed {
 		result = append(result, parsedModel.DataAssets[assetID])
 	}
@@ -148,8 +154,8 @@ func (what TechnicalAsset) DataAssetsProcessedSorted(parsedModel *ParsedModel) [
 	return result
 }
 
-func (what TechnicalAsset) DataAssetsStoredSorted(parsedModel *ParsedModel) []DataAsset {
-	result := make([]DataAsset, 0)
+func (what TechnicalAsset) DataAssetsStoredSorted(parsedModel *ParsedModel) []*DataAsset {
+	result := make([]*DataAsset, 0)
 	for _, assetID := range what.DataAssetsStored {
 		result = append(result, parsedModel.DataAssets[assetID])
 	}
@@ -164,8 +170,8 @@ func (what TechnicalAsset) DataFormatsAcceptedSorted() []DataFormat {
 	return result
 }
 
-func (what TechnicalAsset) CommunicationLinksSorted() []CommunicationLink {
-	result := make([]CommunicationLink, 0)
+func (what TechnicalAsset) CommunicationLinksSorted() []*CommunicationLink {
+	result := make([]*CommunicationLink, 0)
 	result = append(result, what.CommunicationLinks...)
 	sort.Sort(ByTechnicalCommunicationLinkTitleSort(result))
 	return result
@@ -289,10 +295,6 @@ func (what TechnicalAsset) HighestRiskSeverity() RiskSeverity {
 }
 */
 
-func (what TechnicalAsset) IsZero() bool {
-	return len(what.Id) == 0
-}
-
 func (what TechnicalAsset) ProcessesOrStoresDataAsset(dataAssetId string) bool {
 	return contains(what.DataAssetsProcessed, dataAssetId)
 }
@@ -349,7 +351,7 @@ func (what TechnicalAsset) GetTrustBoundaryId(model *ParsedModel) string {
 	return ""
 }
 
-func SortByTechnicalAssetRiskSeverityAndTitleStillAtRisk(assets []TechnicalAsset, parsedModel *ParsedModel) {
+func SortByTechnicalAssetRiskSeverityAndTitleStillAtRisk(assets []*TechnicalAsset, parsedModel *ParsedModel) {
 	sort.Slice(assets, func(i, j int) bool {
 		risksLeft := ReduceToOnlyStillAtRisk(parsedModel, assets[i].GeneratedRisks(parsedModel))
 		risksRight := ReduceToOnlyStillAtRisk(parsedModel, assets[j].GeneratedRisks(parsedModel))
@@ -378,7 +380,7 @@ func SortByTechnicalAssetRiskSeverityAndTitleStillAtRisk(assets []TechnicalAsset
 	})
 }
 
-type ByTechnicalAssetRAAAndTitleSort []TechnicalAsset
+type ByTechnicalAssetRAAAndTitleSort []*TechnicalAsset
 
 func (what ByTechnicalAssetRAAAndTitleSort) Len() int      { return len(what) }
 func (what ByTechnicalAssetRAAAndTitleSort) Swap(i, j int) { what[i], what[j] = what[j], what[i] }
@@ -406,7 +408,7 @@ func (what ByTechnicalAssetQuickWinsAndTitleSort) Less(i, j int) bool {
 }
 */
 
-type ByTechnicalAssetTitleSort []TechnicalAsset
+type ByTechnicalAssetTitleSort []*TechnicalAsset
 
 func (what ByTechnicalAssetTitleSort) Len() int      { return len(what) }
 func (what ByTechnicalAssetTitleSort) Swap(i, j int) { what[i], what[j] = what[j], what[i] }
@@ -414,7 +416,7 @@ func (what ByTechnicalAssetTitleSort) Less(i, j int) bool {
 	return what[i].Title < what[j].Title
 }
 
-type ByOrderAndIdSort []TechnicalAsset
+type ByOrderAndIdSort []*TechnicalAsset
 
 func (what ByOrderAndIdSort) Len() int      { return len(what) }
 func (what ByOrderAndIdSort) Swap(i, j int) { what[i], what[j] = what[j], what[i] }

@@ -119,7 +119,7 @@ func SortedKeysOfTrustBoundaries(model *ParsedModel) []string {
 	return keys
 }
 
-type ByTrustBoundaryTitleSort []TrustBoundary
+type ByTrustBoundaryTitleSort []*TrustBoundary
 
 func (what ByTrustBoundaryTitleSort) Len() int      { return len(what) }
 func (what ByTrustBoundaryTitleSort) Swap(i, j int) { what[i], what[j] = what[j], what[i] }
