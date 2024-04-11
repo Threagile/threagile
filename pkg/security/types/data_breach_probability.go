@@ -5,7 +5,9 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package types
 
 import (
+	"encoding/json"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"strings"
 )
 
@@ -60,4 +62,38 @@ func (what DataBreachProbability) Find(value string) (DataBreachProbability, err
 	}
 
 	return DataBreachProbability(0), fmt.Errorf("unknown data breach probability value %q", value)
+}
+
+func (what DataBreachProbability) MarshalJSON() ([]byte, error) {
+	return json.Marshal(what.String())
+}
+
+func (what *DataBreachProbability) UnmarshalJSON(data []byte) error {
+	var text string
+	unmarshalError := json.Unmarshal(data, &text)
+	if unmarshalError != nil {
+		return unmarshalError
+	}
+
+	value, findError := what.Find(text)
+	if findError != nil {
+		return findError
+	}
+
+	*what = value
+	return nil
+}
+
+func (what DataBreachProbability) MarshalYAML() (interface{}, error) {
+	return what.String(), nil
+}
+
+func (what *DataBreachProbability) UnmarshalYAML(node *yaml.Node) error {
+	value, findError := what.Find(node.Value)
+	if findError != nil {
+		return findError
+	}
+
+	*what = value
+	return nil
 }

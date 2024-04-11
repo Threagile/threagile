@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-func ParseModel(config *common.Config, modelInput *input.Model, builtinRiskRules map[string]risks.RiskRule, customRiskRules map[string]*CustomRisk) (*types.ParsedModel, error) {
+func ParseModel(config *common.Config, modelInput *input.Model, builtinRiskRules risks.RiskRules, customRiskRules risks.RiskRules) (*types.Model, error) {
 	technologies := make(types.TechnologyMap)
 	technologiesLoadError := technologies.LoadWithConfig(config, "technologies.yaml")
 	if technologiesLoadError != nil {
@@ -35,7 +35,7 @@ func ParseModel(config *common.Config, modelInput *input.Model, builtinRiskRules
 		}
 	}
 
-	parsedModel := types.ParsedModel{
+	parsedModel := types.Model{
 		ThreagileVersion:               modelInput.ThreagileVersion,
 		Title:                          modelInput.Title,
 		Author:                         modelInput.Author,
@@ -63,8 +63,8 @@ func ParseModel(config *common.Config, modelInput *input.Model, builtinRiskRules
 	parsedModel.AllSupportedTags = make(map[string]bool)
 	parsedModel.IncomingTechnicalCommunicationLinksMappedByTargetId = make(map[string][]*types.CommunicationLink)
 	parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId = make(map[string]*types.TrustBoundary)
-	parsedModel.GeneratedRisksByCategory = make(map[string][]types.Risk)
-	parsedModel.GeneratedRisksBySyntheticId = make(map[string]types.Risk)
+	parsedModel.GeneratedRisksByCategory = make(map[string][]*types.Risk)
+	parsedModel.GeneratedRisksBySyntheticId = make(map[string]*types.Risk)
 
 	if parsedModel.DiagramTweakNodesep == 0 {
 		parsedModel.DiagramTweakNodesep = 2
@@ -471,7 +471,7 @@ func ParseModel(config *common.Config, modelInput *input.Model, builtinRiskRules
 		parsedModel.TrustBoundaries[id] = trustBoundary
 		for _, technicalAsset := range trustBoundary.TechnicalAssetsInside {
 			parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[technicalAsset] = trustBoundary
-			//fmt.Println("Asset "+technicalAsset+" is directly in trust boundary "+trustBoundary.Id)
+			//fmt.Println("Asset "+technicalAsset+" is directly in trust boundary "+trustBoundary.ID)
 		}
 	}
 	err = parsedModel.CheckNestedTrustBoundariesExisting()
@@ -518,62 +518,62 @@ func ParseModel(config *common.Config, modelInput *input.Model, builtinRiskRules
 		parsedModel.SharedRuntimes[id] = sharedRuntime
 	}
 
-	parsedModel.BuiltInRiskCategories = make(map[string]types.RiskCategory)
 	for _, rule := range builtinRiskRules {
-		category := rule.Category()
-		parsedModel.BuiltInRiskCategories[category.Id] = category
+		parsedModel.BuiltInRiskCategories = append(parsedModel.BuiltInRiskCategories, rule.Category())
 	}
 
-	parsedModel.IndividualRiskCategories = make(map[string]types.RiskCategory)
 	for _, rule := range customRiskRules {
-		parsedModel.IndividualRiskCategories[rule.RiskCategory.Id] = rule.RiskCategory
+		parsedModel.CustomRiskCategories = append(parsedModel.CustomRiskCategories, rule.Category())
 	}
 
 	// Individual Risk Categories (just used as regular risk categories) ===============================================================================
-	//	parsedModel.IndividualRiskCategories = make(map[string]types.RiskCategory)
-	for title, individualCategory := range modelInput.IndividualRiskCategories {
-		id := fmt.Sprintf("%v", individualCategory.ID)
-
-		function, err := types.ParseRiskFunction(individualCategory.Function)
+	for _, customRiskCategoryCategory := range modelInput.CustomRiskCategories {
+		function, err := types.ParseRiskFunction(customRiskCategoryCategory.Function)
 		if err != nil {
-			return nil, fmt.Errorf("unknown 'function' value of individual risk category %q: %v", title, individualCategory.Function)
-		}
-		stride, err := types.ParseSTRIDE(individualCategory.STRIDE)
-		if err != nil {
-			return nil, fmt.Errorf("unknown 'stride' value of individual risk category  %q: %v", title, individualCategory.STRIDE)
+			return nil, fmt.Errorf("unknown 'function' value of individual risk category %q: %v", customRiskCategoryCategory.Title, customRiskCategoryCategory.Function)
 		}
 
-		cat := types.RiskCategory{
-			Id:                         id,
-			Title:                      title,
-			Description:                withDefault(fmt.Sprintf("%v", individualCategory.Description), title),
-			Impact:                     fmt.Sprintf("%v", individualCategory.Impact),
-			ASVS:                       fmt.Sprintf("%v", individualCategory.ASVS),
-			CheatSheet:                 fmt.Sprintf("%v", individualCategory.CheatSheet),
-			Action:                     fmt.Sprintf("%v", individualCategory.Action),
-			Mitigation:                 fmt.Sprintf("%v", individualCategory.Mitigation),
-			Check:                      fmt.Sprintf("%v", individualCategory.Check),
-			DetectionLogic:             fmt.Sprintf("%v", individualCategory.DetectionLogic),
-			RiskAssessment:             fmt.Sprintf("%v", individualCategory.RiskAssessment),
-			FalsePositives:             fmt.Sprintf("%v", individualCategory.FalsePositives),
+		stride, err := types.ParseSTRIDE(customRiskCategoryCategory.STRIDE)
+		if err != nil {
+			return nil, fmt.Errorf("unknown 'stride' value of individual risk category  %q: %v", customRiskCategoryCategory.Title, customRiskCategoryCategory.STRIDE)
+		}
+
+		cat := &types.RiskCategory{
+			ID:                         customRiskCategoryCategory.ID,
+			Title:                      customRiskCategoryCategory.Title,
+			Description:                customRiskCategoryCategory.Description,
+			Impact:                     customRiskCategoryCategory.Impact,
+			ASVS:                       customRiskCategoryCategory.ASVS,
+			CheatSheet:                 customRiskCategoryCategory.CheatSheet,
+			Action:                     customRiskCategoryCategory.Action,
+			Mitigation:                 customRiskCategoryCategory.Mitigation,
+			Check:                      customRiskCategoryCategory.Check,
+			DetectionLogic:             customRiskCategoryCategory.DetectionLogic,
+			RiskAssessment:             customRiskCategoryCategory.RiskAssessment,
+			FalsePositives:             customRiskCategoryCategory.FalsePositives,
 			Function:                   function,
 			STRIDE:                     stride,
-			ModelFailurePossibleReason: individualCategory.ModelFailurePossibleReason,
-			CWE:                        individualCategory.CWE,
+			ModelFailurePossibleReason: customRiskCategoryCategory.ModelFailurePossibleReason,
+			CWE:                        customRiskCategoryCategory.CWE,
 		}
-		err = checkIdSyntax(id)
+
+		if cat.Description == "" {
+			cat.Description = customRiskCategoryCategory.Title
+		}
+
+		err = checkIdSyntax(customRiskCategoryCategory.ID)
 		if err != nil {
 			return nil, err
 		}
-		if _, exists := parsedModel.IndividualRiskCategories[id]; exists {
-			return nil, fmt.Errorf("duplicate id used: %v", id)
+
+		if !parsedModel.CustomRiskCategories.Add(cat) {
+			return nil, fmt.Errorf("duplicate id used: %v", customRiskCategoryCategory.ID)
 		}
-		parsedModel.IndividualRiskCategories[id] = cat
 
 		// NOW THE INDIVIDUAL RISK INSTANCES:
 		//individualRiskInstances := make([]model.Risk, 0)
-		if individualCategory.RisksIdentified != nil { // TODO: also add syntax checks of input YAML when linked asset is not found or when synthetic-id is already used...
-			for title, individualRiskInstance := range individualCategory.RisksIdentified {
+		if customRiskCategoryCategory.RisksIdentified != nil { // TODO: also add syntax checks of input YAML when linked asset is not found or when synthetic-id is already used...
+			for title, individualRiskInstance := range customRiskCategoryCategory.RisksIdentified {
 				var mostRelevantDataAssetId, mostRelevantTechnicalAssetId, mostRelevantCommunicationLinkId, mostRelevantTrustBoundaryId, mostRelevantSharedRuntimeId string
 				var dataBreachProbability types.DataBreachProbability
 				var dataBreachTechnicalAssetIDs []string
@@ -647,10 +647,10 @@ func ParseModel(config *common.Config, modelInput *input.Model, builtinRiskRules
 					}
 				}
 
-				parsedModel.GeneratedRisksByCategory[cat.Id] = append(parsedModel.GeneratedRisksByCategory[cat.Id], types.Risk{
-					SyntheticId:                     createSyntheticId(cat.Id, mostRelevantDataAssetId, mostRelevantTechnicalAssetId, mostRelevantCommunicationLinkId, mostRelevantTrustBoundaryId, mostRelevantSharedRuntimeId),
-					Title:                           fmt.Sprintf("%v", title),
-					CategoryId:                      cat.Id,
+				parsedModel.GeneratedRisksByCategory[cat.ID] = append(parsedModel.GeneratedRisksByCategory[cat.ID], &types.Risk{
+					SyntheticId:                     createSyntheticId(cat.ID, mostRelevantDataAssetId, mostRelevantTechnicalAssetId, mostRelevantCommunicationLinkId, mostRelevantTrustBoundaryId, mostRelevantSharedRuntimeId),
+					Title:                           title,
+					CategoryId:                      cat.ID,
 					Severity:                        severity,
 					ExploitationLikelihood:          exploitationLikelihood,
 					ExploitationImpact:              exploitationImpact,
@@ -667,7 +667,7 @@ func ParseModel(config *common.Config, modelInput *input.Model, builtinRiskRules
 	}
 
 	// Risk Tracking ===============================================================================
-	parsedModel.RiskTracking = make(map[string]types.RiskTracking)
+	parsedModel.RiskTracking = make(map[string]*types.RiskTracking)
 	for syntheticRiskId, riskTracking := range modelInput.RiskTracking {
 		justification := fmt.Sprintf("%v", riskTracking.Justification)
 		checkedBy := fmt.Sprintf("%v", riskTracking.CheckedBy)
@@ -686,7 +686,7 @@ func ParseModel(config *common.Config, modelInput *input.Model, builtinRiskRules
 			return nil, fmt.Errorf("unknown 'status' value of risk tracking %q: %v", syntheticRiskId, riskTracking.Status)
 		}
 
-		tracking := types.RiskTracking{
+		tracking := &types.RiskTracking{
 			SyntheticRiskId: strings.TrimSpace(syntheticRiskId),
 			Justification:   justification,
 			CheckedBy:       checkedBy,

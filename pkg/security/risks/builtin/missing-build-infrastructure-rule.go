@@ -10,9 +10,9 @@ func NewMissingBuildInfrastructureRule() *MissingBuildInfrastructureRule {
 	return &MissingBuildInfrastructureRule{}
 }
 
-func (*MissingBuildInfrastructureRule) Category() types.RiskCategory {
-	return types.RiskCategory{
-		Id:    "missing-build-infrastructure",
+func (*MissingBuildInfrastructureRule) Category() *types.RiskCategory {
+	return &types.RiskCategory{
+		ID:    "missing-build-infrastructure",
 		Title: "Missing Build Infrastructure",
 		Description: "The modeled architecture does not contain a build infrastructure (devops-client, sourcecode-repo, build-pipeline, etc.), " +
 			"which might be the risk of a model missing critical assets (and thus not seeing their risks). " +
@@ -41,8 +41,8 @@ func (*MissingBuildInfrastructureRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *MissingBuildInfrastructureRule) GenerateRisks(input *types.ParsedModel) []types.Risk {
-	risks := make([]types.Risk, 0)
+func (r *MissingBuildInfrastructureRule) GenerateRisks(input *types.Model) []*types.Risk {
+	risks := make([]*types.Risk, 0)
 	hasCustomDevelopedParts, hasBuildPipeline, hasSourcecodeRepo, hasDevOpsClient := false, false, false, false
 	impact := types.LowImpact
 	var mostRelevantAsset *types.TechnicalAsset
@@ -85,10 +85,10 @@ func (r *MissingBuildInfrastructureRule) GenerateRisks(input *types.ParsedModel)
 	return risks
 }
 
-func (r *MissingBuildInfrastructureRule) createRisk(technicalAsset *types.TechnicalAsset, impact types.RiskExploitationImpact) types.Risk {
+func (r *MissingBuildInfrastructureRule) createRisk(technicalAsset *types.TechnicalAsset, impact types.RiskExploitationImpact) *types.Risk {
 	title := "<b>Missing Build Infrastructure</b> in the threat model (referencing asset <b>" + technicalAsset.Title + "</b> as an example)"
-	risk := types.Risk{
-		CategoryId:                   r.Category().Id,
+	risk := &types.Risk{
+		CategoryId:                   r.Category().ID,
 		Severity:                     types.CalculateSeverity(types.Unlikely, impact),
 		ExploitationLikelihood:       types.Unlikely,
 		ExploitationImpact:           impact,

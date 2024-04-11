@@ -38,7 +38,7 @@ type Config struct {
 
 	RAAPlugin         string
 	RiskRulesPlugins  []string
-	SkipRiskRules     string
+	SkipRiskRules     []string
 	ExecuteModelMacro string
 	RiskExcel         RiskExcelConfig
 
@@ -92,7 +92,7 @@ func (c *Config) Defaults(buildTimestamp string) *Config {
 
 		RAAPlugin:         RAAPluginName,
 		RiskRulesPlugins:  make([]string, 0),
-		SkipRiskRules:     "",
+		SkipRiskRules:     make([]string, 0),
 		ExecuteModelMacro: "",
 		RiskExcel: RiskExcelConfig{
 			HideColumns:   make([]string, 0),

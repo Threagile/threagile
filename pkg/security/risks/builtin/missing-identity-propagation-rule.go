@@ -10,9 +10,9 @@ func NewMissingIdentityPropagationRule() *MissingIdentityPropagationRule {
 	return &MissingIdentityPropagationRule{}
 }
 
-func (*MissingIdentityPropagationRule) Category() types.RiskCategory {
-	return types.RiskCategory{
-		Id:    "missing-identity-propagation",
+func (*MissingIdentityPropagationRule) Category() *types.RiskCategory {
+	return &types.RiskCategory{
+		ID:    "missing-identity-propagation",
 		Title: "Missing Identity Propagation",
 		Description: "Technical assets (especially multi-tenant systems), which usually process data for end users should " +
 			"authorize every request based on the identity of the end user when the data flow is authenticated (i.e. non-public). " +
@@ -45,8 +45,8 @@ func (*MissingIdentityPropagationRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *MissingIdentityPropagationRule) GenerateRisks(input *types.ParsedModel) []types.Risk {
-	risks := make([]types.Risk, 0)
+func (r *MissingIdentityPropagationRule) GenerateRisks(input *types.Model) []*types.Risk {
+	risks := make([]*types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
 		if technicalAsset.OutOfScope {
@@ -83,13 +83,13 @@ func (r *MissingIdentityPropagationRule) GenerateRisks(input *types.ParsedModel)
 	return risks
 }
 
-func (r *MissingIdentityPropagationRule) createRisk(input *types.ParsedModel, technicalAsset *types.TechnicalAsset, incomingAccess *types.CommunicationLink, moreRisky bool) types.Risk {
+func (r *MissingIdentityPropagationRule) createRisk(input *types.Model, technicalAsset *types.TechnicalAsset, incomingAccess *types.CommunicationLink, moreRisky bool) *types.Risk {
 	impact := types.LowImpact
 	if moreRisky {
 		impact = types.MediumImpact
 	}
-	risk := types.Risk{
-		CategoryId:             r.Category().Id,
+	risk := &types.Risk{
+		CategoryId:             r.Category().ID,
 		Severity:               types.CalculateSeverity(types.Unlikely, impact),
 		ExploitationLikelihood: types.Unlikely,
 		ExploitationImpact:     impact,

@@ -36,13 +36,13 @@ func (what CommunicationLink) IsTaggedWithBaseTag(baseTag string) bool {
 	return IsTaggedWithBaseTag(what.Tags, baseTag)
 }
 
-func (what CommunicationLink) IsAcrossTrustBoundary(parsedModel *ParsedModel) bool {
+func (what CommunicationLink) IsAcrossTrustBoundary(parsedModel *Model) bool {
 	trustBoundaryOfSourceAsset := parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[what.SourceId]
 	trustBoundaryOfTargetAsset := parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[what.TargetId]
 	return trustBoundaryOfSourceAsset.Id != trustBoundaryOfTargetAsset.Id
 }
 
-func (what CommunicationLink) IsAcrossTrustBoundaryNetworkOnly(parsedModel *ParsedModel) bool {
+func (what CommunicationLink) IsAcrossTrustBoundaryNetworkOnly(parsedModel *Model) bool {
 	trustBoundaryOfSourceAsset := parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[what.SourceId]
 	if !trustBoundaryOfSourceAsset.Type.IsNetworkBoundary() { // find and use the parent boundary then
 		trustBoundaryOfSourceAsset = parsedModel.TrustBoundaries[trustBoundaryOfSourceAsset.ParentTrustBoundaryID(parsedModel)]
@@ -54,7 +54,7 @@ func (what CommunicationLink) IsAcrossTrustBoundaryNetworkOnly(parsedModel *Pars
 	return trustBoundaryOfSourceAsset.Id != trustBoundaryOfTargetAsset.Id && trustBoundaryOfTargetAsset.Type.IsNetworkBoundary()
 }
 
-func (what CommunicationLink) HighestConfidentiality(parsedModel *ParsedModel) Confidentiality {
+func (what CommunicationLink) HighestConfidentiality(parsedModel *Model) Confidentiality {
 	highest := Public
 	for _, dataId := range what.DataAssetsSent {
 		dataAsset := parsedModel.DataAssets[dataId]
@@ -71,7 +71,7 @@ func (what CommunicationLink) HighestConfidentiality(parsedModel *ParsedModel) C
 	return highest
 }
 
-func (what CommunicationLink) HighestIntegrity(parsedModel *ParsedModel) Criticality {
+func (what CommunicationLink) HighestIntegrity(parsedModel *Model) Criticality {
 	highest := Archive
 	for _, dataId := range what.DataAssetsSent {
 		dataAsset := parsedModel.DataAssets[dataId]
@@ -88,7 +88,7 @@ func (what CommunicationLink) HighestIntegrity(parsedModel *ParsedModel) Critica
 	return highest
 }
 
-func (what CommunicationLink) HighestAvailability(parsedModel *ParsedModel) Criticality {
+func (what CommunicationLink) HighestAvailability(parsedModel *Model) Criticality {
 	highest := Archive
 	for _, dataId := range what.DataAssetsSent {
 		dataAsset := parsedModel.DataAssets[dataId]
@@ -105,7 +105,7 @@ func (what CommunicationLink) HighestAvailability(parsedModel *ParsedModel) Crit
 	return highest
 }
 
-func (what CommunicationLink) DataAssetsSentSorted(parsedModel *ParsedModel) []*DataAsset {
+func (what CommunicationLink) DataAssetsSentSorted(parsedModel *Model) []*DataAsset {
 	result := make([]*DataAsset, 0)
 	for _, assetID := range what.DataAssetsSent {
 		result = append(result, parsedModel.DataAssets[assetID])
@@ -114,7 +114,7 @@ func (what CommunicationLink) DataAssetsSentSorted(parsedModel *ParsedModel) []*
 	return result
 }
 
-func (what CommunicationLink) DataAssetsReceivedSorted(parsedModel *ParsedModel) []*DataAsset {
+func (what CommunicationLink) DataAssetsReceivedSorted(parsedModel *Model) []*DataAsset {
 	result := make([]*DataAsset, 0)
 	for _, assetID := range what.DataAssetsReceived {
 		result = append(result, parsedModel.DataAssets[assetID])

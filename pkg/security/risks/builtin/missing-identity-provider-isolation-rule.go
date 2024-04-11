@@ -10,9 +10,9 @@ func NewMissingIdentityProviderIsolationRule() *MissingIdentityProviderIsolation
 	return &MissingIdentityProviderIsolationRule{}
 }
 
-func (*MissingIdentityProviderIsolationRule) Category() types.RiskCategory {
-	return types.RiskCategory{
-		Id:    "missing-identity-provider-isolation",
+func (*MissingIdentityProviderIsolationRule) Category() *types.RiskCategory {
+	return &types.RiskCategory{
+		ID:    "missing-identity-provider-isolation",
 		Title: "Missing Identity Provider Isolation",
 		Description: "Highly sensitive identity provider assets and their identity data stores should be isolated from other assets " +
 			"by their own network segmentation trust-boundary (" + types.ExecutionEnvironment.String() + " boundaries do not count as network isolation).",
@@ -41,8 +41,8 @@ func (*MissingIdentityProviderIsolationRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *MissingIdentityProviderIsolationRule) GenerateRisks(input *types.ParsedModel) []types.Risk {
-	risks := make([]types.Risk, 0)
+func (r *MissingIdentityProviderIsolationRule) GenerateRisks(input *types.Model) []*types.Risk {
+	risks := make([]*types.Risk, 0)
 	for _, technicalAsset := range input.TechnicalAssets {
 		if !technicalAsset.OutOfScope && technicalAsset.Technologies.GetAttribute(types.IsIdentityRelated) {
 			moreImpact := technicalAsset.Confidentiality == types.StrictlyConfidential ||
@@ -72,7 +72,7 @@ func (r *MissingIdentityProviderIsolationRule) GenerateRisks(input *types.Parsed
 	return risks
 }
 
-func (r *MissingIdentityProviderIsolationRule) createRisk(techAsset *types.TechnicalAsset, moreImpact bool, sameExecutionEnv bool) types.Risk {
+func (r *MissingIdentityProviderIsolationRule) createRisk(techAsset *types.TechnicalAsset, moreImpact bool, sameExecutionEnv bool) *types.Risk {
 	impact := types.HighImpact
 	likelihood := types.Unlikely
 	others := "<b>in the same network segment</b>"
@@ -83,8 +83,8 @@ func (r *MissingIdentityProviderIsolationRule) createRisk(techAsset *types.Techn
 		likelihood = types.Likely
 		others = "<b>in the same execution environment</b>"
 	}
-	risk := types.Risk{
-		CategoryId:             r.Category().Id,
+	risk := &types.Risk{
+		CategoryId:             r.Category().ID,
 		Severity:               types.CalculateSeverity(likelihood, impact),
 		ExploitationLikelihood: likelihood,
 		ExploitationImpact:     impact,

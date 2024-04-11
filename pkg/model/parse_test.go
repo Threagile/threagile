@@ -17,7 +17,7 @@ import (
 )
 
 func TestDefaultInputNotFail(t *testing.T) {
-	parsedModel, err := ParseModel(&common.Config{}, createInputModel(make(map[string]input.TechnicalAsset), make(map[string]input.DataAsset)), make(map[string]risks.RiskRule), make(map[string]*CustomRisk))
+	parsedModel, err := ParseModel(&common.Config{}, createInputModel(make(map[string]input.TechnicalAsset), make(map[string]input.DataAsset)), make(risks.RiskRules), make(risks.RiskRules))
 
 	assert.NoError(t, err)
 	assert.NotNil(t, parsedModel)
@@ -27,7 +27,7 @@ func TestInferConfidentiality_NotSet_NoOthers_ExpectTODO(t *testing.T) {
 	ta := make(map[string]input.TechnicalAsset)
 	da := make(map[string]input.DataAsset)
 
-	_, err := ParseModel(&common.Config{}, createInputModel(ta, da), make(map[string]risks.RiskRule), make(map[string]*CustomRisk))
+	_, err := ParseModel(&common.Config{}, createInputModel(ta, da), make(risks.RiskRules), make(risks.RiskRules))
 	// TODO: rename test and check if everyone agree that by default it should be public if there are no other assets
 
 	assert.NoError(t, err)
@@ -58,7 +58,7 @@ func TestInferConfidentiality_ExpectHighestConfidentiality(t *testing.T) {
 	taWithPublicConfidentialityDataAsset.DataAssetsProcessed = append(taWithPublicConfidentialityDataAsset.DataAssetsProcessed, daPublicConfidentiality.ID)
 	ta[taWithPublicConfidentialityDataAsset.ID] = taWithPublicConfidentialityDataAsset
 
-	parsedModel, err := ParseModel(&common.Config{}, createInputModel(ta, da), make(map[string]risks.RiskRule), make(map[string]*CustomRisk))
+	parsedModel, err := ParseModel(&common.Config{}, createInputModel(ta, da), make(risks.RiskRules), make(risks.RiskRules))
 
 	assert.NoError(t, err)
 	assert.Equal(t, types.Confidential, parsedModel.TechnicalAssets[taWithConfidentialConfidentialityDataAsset.ID].Confidentiality)
@@ -70,7 +70,7 @@ func TestInferIntegrity_NotSet_NoOthers_ExpectTODO(t *testing.T) {
 	ta := make(map[string]input.TechnicalAsset)
 	da := make(map[string]input.DataAsset)
 
-	_, err := ParseModel(&common.Config{}, createInputModel(ta, da), make(map[string]risks.RiskRule), make(map[string]*CustomRisk))
+	_, err := ParseModel(&common.Config{}, createInputModel(ta, da), make(risks.RiskRules), make(risks.RiskRules))
 	// TODO: rename test and check if everyone agree that by default it should be public if there are no other assets
 
 	assert.NoError(t, err)
@@ -101,7 +101,7 @@ func TestInferIntegrity_ExpectHighestIntegrity(t *testing.T) {
 	taWithArchiveIntegrityDataAsset.DataAssetsProcessed = append(taWithArchiveIntegrityDataAsset.DataAssetsProcessed, daArchiveIntegrity.ID)
 	ta[taWithArchiveIntegrityDataAsset.ID] = taWithArchiveIntegrityDataAsset
 
-	parsedModel, err := ParseModel(&common.Config{}, createInputModel(ta, da), make(map[string]risks.RiskRule), make(map[string]*CustomRisk))
+	parsedModel, err := ParseModel(&common.Config{}, createInputModel(ta, da), make(risks.RiskRules), make(risks.RiskRules))
 
 	assert.NoError(t, err)
 	assert.Equal(t, types.Critical, parsedModel.TechnicalAssets[taWithCriticalIntegrityDataAsset.ID].Integrity)
@@ -113,7 +113,7 @@ func TestInferAvailability_NotSet_NoOthers_ExpectTODO(t *testing.T) {
 	ta := make(map[string]input.TechnicalAsset)
 	da := make(map[string]input.DataAsset)
 
-	_, err := ParseModel(&common.Config{}, createInputModel(ta, da), make(map[string]risks.RiskRule), make(map[string]*CustomRisk))
+	_, err := ParseModel(&common.Config{}, createInputModel(ta, da), make(risks.RiskRules), make(risks.RiskRules))
 
 	assert.NoError(t, err)
 }
@@ -143,7 +143,7 @@ func TestInferAvailability_ExpectHighestAvailability(t *testing.T) {
 	taWithArchiveAvailabilityDataAsset.DataAssetsProcessed = append(taWithArchiveAvailabilityDataAsset.DataAssetsProcessed, daArchiveAvailability.ID)
 	ta[taWithArchiveAvailabilityDataAsset.ID] = taWithArchiveAvailabilityDataAsset
 
-	parsedModel, err := ParseModel(&common.Config{}, createInputModel(ta, da), make(map[string]risks.RiskRule), make(map[string]*CustomRisk))
+	parsedModel, err := ParseModel(&common.Config{}, createInputModel(ta, da), make(risks.RiskRules), make(risks.RiskRules))
 
 	assert.NoError(t, err)
 	assert.Equal(t, types.Critical, parsedModel.TechnicalAssets[taWithCriticalAvailabilityDataAsset.ID].Availability)

@@ -48,7 +48,7 @@ func (m *AddVaultMacro) GetMacroDetails() MacroDetails {
 	}
 }
 
-func (m *AddVaultMacro) GetNextQuestion(parsedModel *types.ParsedModel) (nextQuestion MacroQuestion, err error) {
+func (m *AddVaultMacro) GetNextQuestion(parsedModel *types.Model) (nextQuestion MacroQuestion, err error) {
 	counter := len(m.questionsAnswered)
 	if counter > 5 && !m.withinTrustBoundary {
 		counter++
@@ -173,19 +173,19 @@ func (m *AddVaultMacro) GoBack() (message string, validResult bool, err error) {
 	return "Undo successful", true, nil
 }
 
-func (m *AddVaultMacro) GetFinalChangeImpact(modelInput *input.Model, parsedModel *types.ParsedModel) (changes []string, message string, validResult bool, err error) {
+func (m *AddVaultMacro) GetFinalChangeImpact(modelInput *input.Model, parsedModel *types.Model) (changes []string, message string, validResult bool, err error) {
 	changeLogCollector := make([]string, 0)
 	message, validResult, err = m.applyChange(modelInput, parsedModel, &changeLogCollector, true)
 	return changeLogCollector, message, validResult, err
 }
 
-func (m *AddVaultMacro) Execute(modelInput *input.Model, parsedModel *types.ParsedModel) (message string, validResult bool, err error) {
+func (m *AddVaultMacro) Execute(modelInput *input.Model, parsedModel *types.Model) (message string, validResult bool, err error) {
 	changeLogCollector := make([]string, 0)
 	message, validResult, err = m.applyChange(modelInput, parsedModel, &changeLogCollector, false)
 	return message, validResult, err
 }
 
-func (m *AddVaultMacro) applyChange(modelInput *input.Model, parsedModel *types.ParsedModel, changeLogCollector *[]string, dryRun bool) (message string, validResult bool, err error) {
+func (m *AddVaultMacro) applyChange(modelInput *input.Model, parsedModel *types.Model, changeLogCollector *[]string, dryRun bool) (message string, validResult bool, err error) {
 	modelInput.AddTagToModelInput(m.macroState["vault-name"][0], dryRun, changeLogCollector)
 
 	var serverSideTechAssets = make([]string, 0)

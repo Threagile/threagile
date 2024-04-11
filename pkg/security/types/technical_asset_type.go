@@ -5,7 +5,9 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package types
 
 import (
+	"encoding/json"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"strings"
 )
 
@@ -48,4 +50,48 @@ func ParseTechnicalAssetType(value string) (technicalAssetType TechnicalAssetTyp
 		}
 	}
 	return technicalAssetType, fmt.Errorf("unable to parse into type: %v", value)
+}
+
+func (what TechnicalAssetType) MarshalJSON() ([]byte, error) {
+	return json.Marshal(what.String())
+}
+
+func (what *TechnicalAssetType) UnmarshalJSON(data []byte) error {
+	var text string
+	unmarshalError := json.Unmarshal(data, &text)
+	if unmarshalError != nil {
+		return unmarshalError
+	}
+
+	value, findError := what.find(text)
+	if findError != nil {
+		return findError
+	}
+
+	*what = value
+	return nil
+}
+
+func (what TechnicalAssetType) MarshalYAML() (interface{}, error) {
+	return what.String(), nil
+}
+
+func (what *TechnicalAssetType) UnmarshalYAML(node *yaml.Node) error {
+	value, findError := what.find(node.Value)
+	if findError != nil {
+		return findError
+	}
+
+	*what = value
+	return nil
+}
+
+func (what TechnicalAssetType) find(value string) (TechnicalAssetType, error) {
+	for index, description := range TechnicalAssetTypeDescription {
+		if strings.EqualFold(value, description.Name) {
+			return TechnicalAssetType(index), nil
+		}
+	}
+
+	return TechnicalAssetType(0), fmt.Errorf("unknown technical asset type value %q", value)
 }

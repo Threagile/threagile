@@ -16,7 +16,7 @@ type Scope struct {
 	returnValue Value
 }
 
-func (what *Scope) Init(model *types.ParsedModel, risk *types.RiskCategory, methods map[string]Statement) error {
+func (what *Scope) Init(model *types.Model, risk *types.RiskCategory, methods map[string]Statement) error {
 	if model != nil {
 		data, marshalError := json.Marshal(model)
 		if marshalError != nil {

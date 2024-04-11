@@ -15,25 +15,24 @@ type Risk struct {
 	MostRelevantCommunicationLinkId string                     `yaml:"most_relevant_communication_link,omitempty" json:"most_relevant_communication_link,omitempty"`
 	DataBreachProbability           DataBreachProbability      `yaml:"data_breach_probability,omitempty" json:"data_breach_probability,omitempty"`
 	DataBreachTechnicalAssetIDs     []string                   `yaml:"data_breach_technical_assets,omitempty" json:"data_breach_technical_assets,omitempty"`
-	// TODO: refactor all "Id" here to "ID"?
+	// TODO: refactor all "ID" here to "ID"?
 }
 
-func (what Risk) GetRiskTracking(model *ParsedModel) RiskTracking { // TODO: Unify function naming regarding Get etc.
-	var result RiskTracking
+func (what Risk) GetRiskTracking(model *Model) *RiskTracking { // TODO: Unify function naming regarding Get etc.
 	if riskTracking, ok := model.RiskTracking[what.SyntheticId]; ok {
-		result = riskTracking
+		return riskTracking
 	}
-	return result
+	return nil
 }
 
-func (what Risk) GetRiskTrackingStatusDefaultingUnchecked(model *ParsedModel) RiskStatus {
+func (what Risk) GetRiskTrackingWithDefault(model *Model) RiskTracking { // TODO: Unify function naming regarding Get etc.
 	if riskTracking, ok := model.RiskTracking[what.SyntheticId]; ok {
-		return riskTracking.Status
+		return *riskTracking
 	}
-	return Unchecked
+	return RiskTracking{}
 }
 
-func (what Risk) IsRiskTracked(model *ParsedModel) bool {
+func (what Risk) IsRiskTracked(model *Model) bool {
 	if _, ok := model.RiskTracking[what.SyntheticId]; ok {
 		return true
 	}

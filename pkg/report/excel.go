@@ -12,7 +12,7 @@ import (
 	"unicode/utf8"
 )
 
-func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string, config *common.Config) error {
+func WriteRisksExcelToFile(parsedModel *types.Model, filename string, config *common.Config) error {
 	columns := new(ExcelColumns).GetColumns()
 	excel := excelize.NewFile()
 	sheetName := parsedModel.Title
@@ -98,12 +98,10 @@ func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string, conf
 			}
 
 			date := ""
-			riskTracking := risk.GetRiskTracking(parsedModel)
+			riskTracking := risk.GetRiskTrackingWithDefault(parsedModel)
 			if !riskTracking.Date.IsZero() {
 				date = riskTracking.Date.Format("2006-01-02")
 			}
-
-			riskTrackingStatus := risk.GetRiskTrackingStatusDefaultingUnchecked(parsedModel)
 
 			riskItems = append(riskItems, RiskItem{
 				Columns: []string{
@@ -122,13 +120,13 @@ func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string, conf
 					category.Mitigation,
 					category.Check,
 					risk.SyntheticId,
-					riskTrackingStatus.Title(),
+					riskTracking.Status.Title(),
 					riskTracking.Justification,
 					date,
 					riskTracking.CheckedBy,
 					riskTracking.Ticket,
 				},
-				Status:   riskTrackingStatus,
+				Status:   riskTracking.Status,
 				Severity: risk.Severity,
 			})
 		}
@@ -246,7 +244,7 @@ func WriteRisksExcelToFile(parsedModel *types.ParsedModel, filename string, conf
 	return nil
 }
 
-func WriteTagsExcelToFile(parsedModel *types.ParsedModel, filename string) error { // TODO: eventually when len(sortedTagsAvailable) == 0 is: write a hint in the Excel that no tags are used
+func WriteTagsExcelToFile(parsedModel *types.Model, filename string) error { // TODO: eventually when len(sortedTagsAvailable) == 0 is: write a hint in the Excel that no tags are used
 	excelRow := 0
 	excel := excelize.NewFile()
 	sheetName := parsedModel.Title
@@ -377,7 +375,7 @@ func WriteTagsExcelToFile(parsedModel *types.ParsedModel, filename string) error
 	return nil
 }
 
-func sortedTrustBoundariesByTitle(parsedModel *types.ParsedModel) []*types.TrustBoundary {
+func sortedTrustBoundariesByTitle(parsedModel *types.Model) []*types.TrustBoundary {
 	boundaries := make([]*types.TrustBoundary, 0)
 	for _, boundary := range parsedModel.TrustBoundaries {
 		boundaries = append(boundaries, boundary)
@@ -386,7 +384,7 @@ func sortedTrustBoundariesByTitle(parsedModel *types.ParsedModel) []*types.Trust
 	return boundaries
 }
 
-func sortedDataAssetsByTitle(parsedModel *types.ParsedModel) []*types.DataAsset {
+func sortedDataAssetsByTitle(parsedModel *types.Model) []*types.DataAsset {
 	assets := make([]*types.DataAsset, 0)
 	for _, asset := range parsedModel.DataAssets {
 		assets = append(assets, asset)
@@ -395,7 +393,7 @@ func sortedDataAssetsByTitle(parsedModel *types.ParsedModel) []*types.DataAsset 
 	return assets
 }
 
-func writeRow(excel *excelize.File, excelRow *int, sheetName string, axis string, styleBlackLeftBold int, styleBlackCenter int,
+func writeRow(excel *excelize.File, excelRow *int, sheetName string, _ string, styleBlackLeftBold int, styleBlackCenter int,
 	sortedTags []string, assetTitle string, tagsUsed []string) error {
 	*excelRow++
 

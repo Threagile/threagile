@@ -78,7 +78,7 @@ func (what *Threagile) explainRules(cmd *cobra.Command, _ []string) error {
 	cmd.Println("----------------------")
 	customRiskRules := model.LoadCustomRiskRules(strings.Split(what.flags.customRiskRulesPluginFlag, ","), common.DefaultProgressReporter{Verbose: what.flags.verboseFlag})
 	for _, rule := range customRiskRules {
-		cmd.Printf("%v: %v\n", rule.Category().Id, rule.Category().Description)
+		cmd.Printf("%v: %v\n", rule.Category().ID, rule.Category().Description)
 	}
 	cmd.Println()
 	cmd.Println("--------------------")
@@ -86,7 +86,7 @@ func (what *Threagile) explainRules(cmd *cobra.Command, _ []string) error {
 	cmd.Println("--------------------")
 	cmd.Println()
 	for _, rule := range risks.GetBuiltInRiskRules() {
-		cmd.Printf("%v: %v\n", rule.Category().Id, rule.Category().Description)
+		cmd.Printf("%v: %v\n", rule.Category().ID, rule.Category().Description)
 	}
 	cmd.Println()
 

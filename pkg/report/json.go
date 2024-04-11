@@ -8,7 +8,7 @@ import (
 	"github.com/threagile/threagile/pkg/security/types"
 )
 
-func WriteRisksJSON(parsedModel *types.ParsedModel, filename string) error {
+func WriteRisksJSON(parsedModel *types.Model, filename string) error {
 	/*
 		remainingRisks := make([]model.Risk, 0)
 		for _, category := range model.SortedRiskCategories() {
@@ -31,7 +31,7 @@ func WriteRisksJSON(parsedModel *types.ParsedModel, filename string) error {
 
 // TODO: also a "data assets" json?
 
-func WriteTechnicalAssetsJSON(parsedModel *types.ParsedModel, filename string) error {
+func WriteTechnicalAssetsJSON(parsedModel *types.Model, filename string) error {
 	jsonBytes, err := json.Marshal(parsedModel.TechnicalAssets)
 	if err != nil {
 		return fmt.Errorf("failed to marshal technical assets to JSON: %w", err)
@@ -43,7 +43,7 @@ func WriteTechnicalAssetsJSON(parsedModel *types.ParsedModel, filename string) e
 	return nil
 }
 
-func WriteStatsJSON(parsedModel *types.ParsedModel, filename string) error {
+func WriteStatsJSON(parsedModel *types.Model, filename string) error {
 	jsonBytes, err := json.Marshal(types.OverallRiskStatistics(parsedModel))
 	if err != nil {
 		return fmt.Errorf("failed to marshal stats to JSON: %w", err)

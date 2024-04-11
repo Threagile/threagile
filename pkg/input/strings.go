@@ -2,6 +2,7 @@ package input
 
 import (
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"slices"
 	"strings"
 )
@@ -61,4 +62,38 @@ func (what *Strings) MergeUniqueSlice(first []string, second []string) []string 
 	}
 
 	return first
+}
+
+func (what *Strings) AddLineNumbers(script any) string {
+	text, isString := script.(string)
+	if !isString {
+		data, _ := yaml.Marshal(script)
+		text = string(data)
+	}
+
+	lines := strings.Split(text, "\n")
+	for n, line := range lines {
+		lines[n] = fmt.Sprintf("%3d:\t%v", n+1, line)
+	}
+
+	return strings.Join(lines, "\n")
+}
+
+func (what *Strings) IndentPrintf(level int, script any) string {
+	text, isString := script.(string)
+	if !isString {
+		data, _ := yaml.Marshal(script)
+		text = string(data)
+	}
+
+	lines := strings.Split(text, "\n")
+	for n, line := range lines {
+		lines[n] = strings.Repeat("    ", level) + line
+	}
+
+	return strings.Join(lines, "\n")
+}
+
+func (what *Strings) IndentLine(level int, format string, params ...any) string {
+	return strings.Repeat("    ", level) + fmt.Sprintf(format, params...)
 }

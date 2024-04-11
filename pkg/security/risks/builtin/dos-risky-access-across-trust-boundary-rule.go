@@ -10,9 +10,9 @@ func NewDosRiskyAccessAcrossTrustBoundaryRule() *DosRiskyAccessAcrossTrustBounda
 	return &DosRiskyAccessAcrossTrustBoundaryRule{}
 }
 
-func (*DosRiskyAccessAcrossTrustBoundaryRule) Category() types.RiskCategory {
-	return types.RiskCategory{
-		Id:    "dos-risky-access-across-trust-boundary",
+func (*DosRiskyAccessAcrossTrustBoundaryRule) Category() *types.RiskCategory {
+	return &types.RiskCategory{
+		ID:    "dos-risky-access-across-trust-boundary",
 		Title: "DoS-risky Access Across Trust-Boundary",
 		Description: "Assets accessed across trust boundaries with critical or mission-critical availability rating " +
 			"are more prone to Denial-of-Service (DoS) risks.",
@@ -44,8 +44,8 @@ func (*DosRiskyAccessAcrossTrustBoundaryRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *DosRiskyAccessAcrossTrustBoundaryRule) GenerateRisks(input *types.ParsedModel) []types.Risk {
-	risks := make([]types.Risk, 0)
+func (r *DosRiskyAccessAcrossTrustBoundaryRule) GenerateRisks(input *types.Model) []*types.Risk {
+	risks := make([]*types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
 		if !technicalAsset.OutOfScope && !technicalAsset.Technologies.GetAttribute(types.LoadBalancer) &&
@@ -67,7 +67,7 @@ func (r *DosRiskyAccessAcrossTrustBoundaryRule) GenerateRisks(input *types.Parse
 	return risks
 }
 
-func (r *DosRiskyAccessAcrossTrustBoundaryRule) checkRisk(input *types.ParsedModel, technicalAsset *types.TechnicalAsset, incomingAccess *types.CommunicationLink, linkId string, hopBetween string, risks []types.Risk) []types.Risk {
+func (r *DosRiskyAccessAcrossTrustBoundaryRule) checkRisk(input *types.Model, technicalAsset *types.TechnicalAsset, incomingAccess *types.CommunicationLink, linkId string, hopBetween string, risks []*types.Risk) []*types.Risk {
 	if incomingAccess.IsAcrossTrustBoundaryNetworkOnly(input) &&
 		!incomingAccess.Protocol.IsProcessLocal() && incomingAccess.Usage != types.DevOps {
 		highRisk := technicalAsset.Availability == types.MissionCritical &&
@@ -79,7 +79,7 @@ func (r *DosRiskyAccessAcrossTrustBoundaryRule) checkRisk(input *types.ParsedMod
 }
 
 func (r *DosRiskyAccessAcrossTrustBoundaryRule) createRisk(techAsset *types.TechnicalAsset, dataFlow *types.CommunicationLink, linkId string, hopBetween string,
-	clientOutsideTrustBoundary *types.TechnicalAsset, moreRisky bool) types.Risk {
+	clientOutsideTrustBoundary *types.TechnicalAsset, moreRisky bool) *types.Risk {
 	impact := types.LowImpact
 	if moreRisky {
 		impact = types.MediumImpact
@@ -87,8 +87,8 @@ func (r *DosRiskyAccessAcrossTrustBoundaryRule) createRisk(techAsset *types.Tech
 	if len(hopBetween) > 0 {
 		hopBetween = " forwarded via <b>" + hopBetween + "</b>"
 	}
-	risk := types.Risk{
-		CategoryId:             r.Category().Id,
+	risk := &types.Risk{
+		CategoryId:             r.Category().ID,
 		Severity:               types.CalculateSeverity(types.Unlikely, impact),
 		ExploitationLikelihood: types.Unlikely,
 		ExploitationImpact:     impact,

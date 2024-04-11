@@ -51,7 +51,7 @@ func (what TechnicalAsset) IsTaggedWithBaseTag(baseTag string) bool {
 
 // first use the tag(s) of the asset itself, then their trust boundaries (recursively up) and then their shared runtime
 
-func (what TechnicalAsset) IsTaggedWithAnyTraversingUp(model *ParsedModel, tags ...string) bool {
+func (what TechnicalAsset) IsTaggedWithAnyTraversingUp(model *Model, tags ...string) bool {
 	if containsCaseInsensitiveAny(what.Tags, tags...) {
 		return true
 	}
@@ -69,7 +69,7 @@ func (what TechnicalAsset) IsTaggedWithAnyTraversingUp(model *ParsedModel, tags 
 	return false
 }
 
-func (what TechnicalAsset) IsSameTrustBoundary(parsedModel *ParsedModel, otherAssetId string) bool {
+func (what TechnicalAsset) IsSameTrustBoundary(parsedModel *Model, otherAssetId string) bool {
 	trustBoundaryOfMyAsset := parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[what.Id]
 	trustBoundaryOfOtherAsset := parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[otherAssetId]
 	if trustBoundaryOfMyAsset == nil || trustBoundaryOfOtherAsset == nil {
@@ -78,7 +78,7 @@ func (what TechnicalAsset) IsSameTrustBoundary(parsedModel *ParsedModel, otherAs
 	return trustBoundaryOfMyAsset.Id == trustBoundaryOfOtherAsset.Id
 }
 
-func (what TechnicalAsset) IsSameExecutionEnvironment(parsedModel *ParsedModel, otherAssetId string) bool {
+func (what TechnicalAsset) IsSameExecutionEnvironment(parsedModel *Model, otherAssetId string) bool {
 	trustBoundaryOfMyAsset := parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[what.Id]
 	trustBoundaryOfOtherAsset := parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[otherAssetId]
 	if trustBoundaryOfMyAsset != nil && trustBoundaryOfMyAsset.Type == ExecutionEnvironment && trustBoundaryOfOtherAsset != nil && trustBoundaryOfOtherAsset.Type == ExecutionEnvironment {
@@ -87,7 +87,7 @@ func (what TechnicalAsset) IsSameExecutionEnvironment(parsedModel *ParsedModel, 
 	return false
 }
 
-func (what TechnicalAsset) IsSameTrustBoundaryNetworkOnly(parsedModel *ParsedModel, otherAssetId string) bool {
+func (what TechnicalAsset) IsSameTrustBoundaryNetworkOnly(parsedModel *Model, otherAssetId string) bool {
 	trustBoundaryOfMyAsset := parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[what.Id]
 	if trustBoundaryOfMyAsset != nil && !trustBoundaryOfMyAsset.Type.IsNetworkBoundary() { // find and use the parent boundary then
 		trustBoundaryOfMyAsset = parsedModel.TrustBoundaries[trustBoundaryOfMyAsset.ParentTrustBoundaryID(parsedModel)]
@@ -108,7 +108,7 @@ func (what TechnicalAsset) HighestSensitivityScore() float64 {
 		what.Availability.AttackerAttractivenessForAsset()
 }
 
-func (what TechnicalAsset) HighestConfidentiality(model *ParsedModel) Confidentiality {
+func (what TechnicalAsset) HighestConfidentiality(model *Model) Confidentiality {
 	highest := what.Confidentiality
 	highestProcessed := what.HighestProcessedConfidentiality(model)
 	if highest < highestProcessed {
@@ -123,7 +123,7 @@ func (what TechnicalAsset) HighestConfidentiality(model *ParsedModel) Confidenti
 	return highest
 }
 
-func (what TechnicalAsset) HighestProcessedConfidentiality(parsedModel *ParsedModel) Confidentiality {
+func (what TechnicalAsset) HighestProcessedConfidentiality(parsedModel *Model) Confidentiality {
 	highest := what.Confidentiality
 	for _, dataId := range what.DataAssetsProcessed {
 		dataAsset := parsedModel.DataAssets[dataId]
@@ -134,7 +134,7 @@ func (what TechnicalAsset) HighestProcessedConfidentiality(parsedModel *ParsedMo
 	return highest
 }
 
-func (what TechnicalAsset) HighestStoredConfidentiality(parsedModel *ParsedModel) Confidentiality {
+func (what TechnicalAsset) HighestStoredConfidentiality(parsedModel *Model) Confidentiality {
 	highest := what.Confidentiality
 	for _, dataId := range what.DataAssetsStored {
 		dataAsset := parsedModel.DataAssets[dataId]
@@ -145,7 +145,7 @@ func (what TechnicalAsset) HighestStoredConfidentiality(parsedModel *ParsedModel
 	return highest
 }
 
-func (what TechnicalAsset) DataAssetsProcessedSorted(parsedModel *ParsedModel) []*DataAsset {
+func (what TechnicalAsset) DataAssetsProcessedSorted(parsedModel *Model) []*DataAsset {
 	result := make([]*DataAsset, 0)
 	for _, assetID := range what.DataAssetsProcessed {
 		result = append(result, parsedModel.DataAssets[assetID])
@@ -154,7 +154,7 @@ func (what TechnicalAsset) DataAssetsProcessedSorted(parsedModel *ParsedModel) [
 	return result
 }
 
-func (what TechnicalAsset) DataAssetsStoredSorted(parsedModel *ParsedModel) []*DataAsset {
+func (what TechnicalAsset) DataAssetsStoredSorted(parsedModel *Model) []*DataAsset {
 	result := make([]*DataAsset, 0)
 	for _, assetID := range what.DataAssetsStored {
 		result = append(result, parsedModel.DataAssets[assetID])
@@ -177,7 +177,7 @@ func (what TechnicalAsset) CommunicationLinksSorted() []*CommunicationLink {
 	return result
 }
 
-func (what TechnicalAsset) HighestIntegrity(model *ParsedModel) Criticality {
+func (what TechnicalAsset) HighestIntegrity(model *Model) Criticality {
 	highest := what.Integrity
 	highestProcessed := what.HighestProcessedIntegrity(model)
 	if highest < highestProcessed {
@@ -192,7 +192,7 @@ func (what TechnicalAsset) HighestIntegrity(model *ParsedModel) Criticality {
 	return highest
 }
 
-func (what TechnicalAsset) HighestProcessedIntegrity(model *ParsedModel) Criticality {
+func (what TechnicalAsset) HighestProcessedIntegrity(model *Model) Criticality {
 	highest := what.Integrity
 	for _, dataId := range what.DataAssetsProcessed {
 		dataAsset := model.DataAssets[dataId]
@@ -203,7 +203,7 @@ func (what TechnicalAsset) HighestProcessedIntegrity(model *ParsedModel) Critica
 	return highest
 }
 
-func (what TechnicalAsset) HighestStoredIntegrity(model *ParsedModel) Criticality {
+func (what TechnicalAsset) HighestStoredIntegrity(model *Model) Criticality {
 	highest := what.Integrity
 	for _, dataId := range what.DataAssetsStored {
 		dataAsset := model.DataAssets[dataId]
@@ -214,7 +214,7 @@ func (what TechnicalAsset) HighestStoredIntegrity(model *ParsedModel) Criticalit
 	return highest
 }
 
-func (what TechnicalAsset) HighestAvailability(model *ParsedModel) Criticality {
+func (what TechnicalAsset) HighestAvailability(model *Model) Criticality {
 	highest := what.Availability
 	highestProcessed := what.HighestProcessedAvailability(model)
 	if highest < highestProcessed {
@@ -229,7 +229,7 @@ func (what TechnicalAsset) HighestAvailability(model *ParsedModel) Criticality {
 	return highest
 }
 
-func (what TechnicalAsset) HighestProcessedAvailability(model *ParsedModel) Criticality {
+func (what TechnicalAsset) HighestProcessedAvailability(model *Model) Criticality {
 	highest := what.Availability
 	for _, dataId := range what.DataAssetsProcessed {
 		dataAsset := model.DataAssets[dataId]
@@ -240,7 +240,7 @@ func (what TechnicalAsset) HighestProcessedAvailability(model *ParsedModel) Crit
 	return highest
 }
 
-func (what TechnicalAsset) HighestStoredAvailability(model *ParsedModel) Criticality {
+func (what TechnicalAsset) HighestStoredAvailability(model *Model) Criticality {
 	highest := what.Availability
 	for _, dataId := range what.DataAssetsStored {
 		dataAsset := model.DataAssets[dataId]
@@ -251,7 +251,7 @@ func (what TechnicalAsset) HighestStoredAvailability(model *ParsedModel) Critica
 	return highest
 }
 
-func (what TechnicalAsset) HasDirectConnection(parsedModel *ParsedModel, otherAssetId string) bool {
+func (what TechnicalAsset) HasDirectConnection(parsedModel *Model, otherAssetId string) bool {
 	for _, dataFlow := range parsedModel.IncomingTechnicalCommunicationLinksMappedByTargetId[what.Id] {
 		if dataFlow.SourceId == otherAssetId {
 			return true
@@ -266,8 +266,8 @@ func (what TechnicalAsset) HasDirectConnection(parsedModel *ParsedModel, otherAs
 	return false
 }
 
-func (what TechnicalAsset) GeneratedRisks(parsedModel *ParsedModel) []Risk {
-	resultingRisks := make([]Risk, 0)
+func (what TechnicalAsset) GeneratedRisks(parsedModel *Model) []*Risk {
+	resultingRisks := make([]*Risk, 0)
 	if len(SortedRiskCategories(parsedModel)) == 0 {
 		fmt.Println("Uh, strange, no risks generated (yet?) and asking for them by tech asset...")
 	}
@@ -340,7 +340,7 @@ func (what TechnicalAsset) QuickWins() float64 {
 }
 */
 
-func (what TechnicalAsset) GetTrustBoundaryId(model *ParsedModel) string {
+func (what TechnicalAsset) GetTrustBoundaryId(model *Model) string {
 	for _, trustBoundary := range model.TrustBoundaries {
 		for _, techAssetInside := range trustBoundary.TechnicalAssetsInside {
 			if techAssetInside == what.Id {
@@ -351,7 +351,7 @@ func (what TechnicalAsset) GetTrustBoundaryId(model *ParsedModel) string {
 	return ""
 }
 
-func SortByTechnicalAssetRiskSeverityAndTitleStillAtRisk(assets []*TechnicalAsset, parsedModel *ParsedModel) {
+func SortByTechnicalAssetRiskSeverityAndTitleStillAtRisk(assets []*TechnicalAsset, parsedModel *Model) {
 	sort.Slice(assets, func(i, j int) bool {
 		risksLeft := ReduceToOnlyStillAtRisk(parsedModel, assets[i].GeneratedRisks(parsedModel))
 		risksRight := ReduceToOnlyStillAtRisk(parsedModel, assets[j].GeneratedRisks(parsedModel))

@@ -1239,12 +1239,10 @@ shared_runtimes:
 
 
 
+custom_risk_categories: # used for adding custom risk categories
 
-individual_risk_categories: # used for adding custom manually identified risks
-
-
-  Some Individual Risk Example:
-    id: something-strange
+  - id: something-strange
+    title: Some Individual Risk Example
     description: Some text describing the risk category...
     impact: Some text describing the impact...
     asvs: V0 - Something Strange
@@ -1259,6 +1257,7 @@ individual_risk_categories: # used for adding custom manually identified risks
     false_positives: Some text describing the most common types of false positives...
     model_failure_possible_reason: false
     cwe: 693
+    is_built_in: true
     risks_identified:
       <b>Example Individual Risk</b> at <b>Database</b>:
         severity: critical # values: low, medium, elevated, high, critical
@@ -1290,8 +1289,8 @@ individual_risk_categories: # used for adding custom manually identified risks
 # For risk tracking each risk-id needs to be defined (the string with the @ sign in it). These unique risk IDs
 # are visible in the PDF report (the small grey string under each risk), the Excel (column "ID"), as well as the JSON responses.
 # Some risk IDs have only one @ sign in them, while others multiple. The idea is to allow for unique but still speaking IDs.
-# Therefore each risk instance creates its individual ID by taking all affected elements causing the risk to be within an @-delimited part.
-# Using wildcards (the * sign) for parts delimited by @ signs allows to handle groups of certain risks at once. Best is to lookup the IDs
+# Therefore, each risk instance creates its individual ID by taking all affected elements causing the risk to be within an @-delimited part.
+# Using wildcards (the * sign) for parts delimited by @ signs allows to handle groups of certain risks at once. Best is to look up the IDs
 # to use in the created Excel file. Alternatively a model macro "seed-risk-tracking" is available that helps in initially
 # seeding the risk tracking part here based on already identified and not yet handled risks.
 risk_tracking:

@@ -5,7 +5,9 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package types
 
 import (
+	"encoding/json"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"strings"
 )
 
@@ -62,4 +64,38 @@ func (what EncryptionStyle) Find(value string) (EncryptionStyle, error) {
 	}
 
 	return EncryptionStyle(0), fmt.Errorf("unknown encryption style value %q", value)
+}
+
+func (what EncryptionStyle) MarshalJSON() ([]byte, error) {
+	return json.Marshal(what.String())
+}
+
+func (what *EncryptionStyle) UnmarshalJSON(data []byte) error {
+	var text string
+	unmarshalError := json.Unmarshal(data, &text)
+	if unmarshalError != nil {
+		return unmarshalError
+	}
+
+	value, findError := what.Find(text)
+	if findError != nil {
+		return findError
+	}
+
+	*what = value
+	return nil
+}
+
+func (what EncryptionStyle) MarshalYAML() (interface{}, error) {
+	return what.String(), nil
+}
+
+func (what *EncryptionStyle) UnmarshalYAML(node *yaml.Node) error {
+	value, findError := what.Find(node.Value)
+	if findError != nil {
+		return findError
+	}
+
+	*what = value
+	return nil
 }

@@ -20,7 +20,7 @@ func (*PrettyPrintMacro) GetMacroDetails() MacroDetails {
 	}
 }
 
-func (*PrettyPrintMacro) GetNextQuestion(_ *types.ParsedModel) (nextQuestion MacroQuestion, err error) {
+func (*PrettyPrintMacro) GetNextQuestion(_ *types.Model) (nextQuestion MacroQuestion, err error) {
 	return NoMoreQuestions(), nil
 }
 
@@ -32,10 +32,10 @@ func (*PrettyPrintMacro) GoBack() (message string, validResult bool, err error) 
 	return "Cannot go back further", false, nil
 }
 
-func (*PrettyPrintMacro) GetFinalChangeImpact(_ *input.Model, _ *types.ParsedModel) (changes []string, message string, validResult bool, err error) {
+func (*PrettyPrintMacro) GetFinalChangeImpact(_ *input.Model, _ *types.Model) (changes []string, message string, validResult bool, err error) {
 	return []string{"pretty-printing the model file"}, "Changeset valid", true, err
 }
 
-func (*PrettyPrintMacro) Execute(_ *input.Model, _ *types.ParsedModel) (message string, validResult bool, err error) {
+func (*PrettyPrintMacro) Execute(_ *input.Model, _ *types.Model) (message string, validResult bool, err error) {
 	return "Model pretty printing successful", true, nil
 }

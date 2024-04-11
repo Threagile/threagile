@@ -24,7 +24,7 @@ func (what SharedRuntime) IsTaggedWithBaseTag(baseTag string) bool {
 	return IsTaggedWithBaseTag(what.Tags, baseTag)
 }
 
-func (what SharedRuntime) HighestConfidentiality(model *ParsedModel) Confidentiality {
+func (what SharedRuntime) HighestConfidentiality(model *Model) Confidentiality {
 	highest := Public
 	for _, id := range what.TechnicalAssetsRunning {
 		techAsset := model.TechnicalAssets[id]
@@ -35,7 +35,7 @@ func (what SharedRuntime) HighestConfidentiality(model *ParsedModel) Confidentia
 	return highest
 }
 
-func (what SharedRuntime) HighestIntegrity(model *ParsedModel) Criticality {
+func (what SharedRuntime) HighestIntegrity(model *Model) Criticality {
 	highest := Archive
 	for _, id := range what.TechnicalAssetsRunning {
 		techAsset := model.TechnicalAssets[id]
@@ -46,7 +46,7 @@ func (what SharedRuntime) HighestIntegrity(model *ParsedModel) Criticality {
 	return highest
 }
 
-func (what SharedRuntime) HighestAvailability(model *ParsedModel) Criticality {
+func (what SharedRuntime) HighestAvailability(model *Model) Criticality {
 	highest := Archive
 	for _, id := range what.TechnicalAssetsRunning {
 		techAsset := model.TechnicalAssets[id]
@@ -57,7 +57,7 @@ func (what SharedRuntime) HighestAvailability(model *ParsedModel) Criticality {
 	return highest
 }
 
-func (what SharedRuntime) TechnicalAssetWithHighestRAA(model *ParsedModel) *TechnicalAsset {
+func (what SharedRuntime) TechnicalAssetWithHighestRAA(model *Model) *TechnicalAsset {
 	result := model.TechnicalAssets[what.TechnicalAssetsRunning[0]]
 	for _, asset := range what.TechnicalAssetsRunning {
 		candidate := model.TechnicalAssets[asset]
@@ -70,7 +70,7 @@ func (what SharedRuntime) TechnicalAssetWithHighestRAA(model *ParsedModel) *Tech
 
 // as in Go ranging over map is random order, range over them in sorted (hence reproducible) way:
 
-func SortedKeysOfSharedRuntime(model *ParsedModel) []string {
+func SortedKeysOfSharedRuntime(model *Model) []string {
 	keys := make([]string, 0)
 	for k := range model.SharedRuntimes {
 		keys = append(keys, k)

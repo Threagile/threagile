@@ -10,9 +10,9 @@ func NewMissingVaultRule() *MissingVaultRule {
 	return &MissingVaultRule{}
 }
 
-func (*MissingVaultRule) Category() types.RiskCategory {
-	return types.RiskCategory{
-		Id:    "missing-vault",
+func (*MissingVaultRule) Category() *types.RiskCategory {
+	return &types.RiskCategory{
+		ID:    "missing-vault",
 		Title: "Missing Vault (Secret Storage)",
 		Description: "In order to avoid the risk of secret leakage via config files (when attacked through vulnerabilities being able to " +
 			"read files like Path-Traversal and others), it is best practice to use a separate hardened process with proper authentication, " +
@@ -40,8 +40,8 @@ func (*MissingVaultRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *MissingVaultRule) GenerateRisks(input *types.ParsedModel) []types.Risk {
-	risks := make([]types.Risk, 0)
+func (r *MissingVaultRule) GenerateRisks(input *types.Model) []*types.Risk {
+	risks := make([]*types.Risk, 0)
 	hasVault := false
 	var mostRelevantAsset *types.TechnicalAsset
 	impact := types.LowImpact
@@ -71,10 +71,10 @@ func (r *MissingVaultRule) GenerateRisks(input *types.ParsedModel) []types.Risk 
 	return risks
 }
 
-func (r *MissingVaultRule) createRisk(technicalAsset *types.TechnicalAsset, impact types.RiskExploitationImpact) types.Risk {
+func (r *MissingVaultRule) createRisk(technicalAsset *types.TechnicalAsset, impact types.RiskExploitationImpact) *types.Risk {
 	title := "<b>Missing Vault (Secret Storage)</b> in the threat model (referencing asset <b>" + technicalAsset.Title + "</b> as an example)"
-	risk := types.Risk{
-		CategoryId:                   r.Category().Id,
+	risk := &types.Risk{
+		CategoryId:                   r.Category().ID,
 		Severity:                     types.CalculateSeverity(types.Unlikely, impact),
 		ExploitationLikelihood:       types.Unlikely,
 		ExploitationImpact:           impact,

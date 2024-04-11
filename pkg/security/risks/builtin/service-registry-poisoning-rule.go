@@ -10,9 +10,9 @@ func NewServiceRegistryPoisoningRule() *ServiceRegistryPoisoningRule {
 	return &ServiceRegistryPoisoningRule{}
 }
 
-func (*ServiceRegistryPoisoningRule) Category() types.RiskCategory {
-	return types.RiskCategory{
-		Id:          "service-registry-poisoning",
+func (*ServiceRegistryPoisoningRule) Category() *types.RiskCategory {
+	return &types.RiskCategory{
+		ID:          "service-registry-poisoning",
 		Title:       "Service Registry Poisoning",
 		Description: "When a service registry used for discovery of trusted service endpoints Service Registry Poisoning risks might arise.",
 		Impact: "If this risk remains unmitigated, attackers might be able to poison the service registry with malicious service endpoints or " +
@@ -38,8 +38,8 @@ func (*ServiceRegistryPoisoningRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *ServiceRegistryPoisoningRule) GenerateRisks(input *types.ParsedModel) []types.Risk {
-	risks := make([]types.Risk, 0)
+func (r *ServiceRegistryPoisoningRule) GenerateRisks(input *types.Model) []*types.Risk {
+	risks := make([]*types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
 		if !technicalAsset.OutOfScope && technicalAsset.Technologies.GetAttribute(types.ServiceRegistry) {
@@ -50,7 +50,7 @@ func (r *ServiceRegistryPoisoningRule) GenerateRisks(input *types.ParsedModel) [
 	return risks
 }
 
-func (r *ServiceRegistryPoisoningRule) createRisk(input *types.ParsedModel, technicalAsset *types.TechnicalAsset, incomingFlows []*types.CommunicationLink) types.Risk {
+func (r *ServiceRegistryPoisoningRule) createRisk(input *types.Model, technicalAsset *types.TechnicalAsset, incomingFlows []*types.CommunicationLink) *types.Risk {
 	title := "<b>Service Registry Poisoning</b> risk at <b>" + technicalAsset.Title + "</b>"
 	impact := types.LowImpact
 
@@ -64,8 +64,8 @@ func (r *ServiceRegistryPoisoningRule) createRisk(input *types.ParsedModel, tech
 		}
 	}
 
-	risk := types.Risk{
-		CategoryId:                   r.Category().Id,
+	risk := &types.Risk{
+		CategoryId:                   r.Category().ID,
 		Severity:                     types.CalculateSeverity(types.Unlikely, impact),
 		ExploitationLikelihood:       types.Unlikely,
 		ExploitationImpact:           impact,

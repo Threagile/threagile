@@ -10,9 +10,9 @@ func NewSqlNoSqlInjectionRule() *SqlNoSqlInjectionRule {
 	return &SqlNoSqlInjectionRule{}
 }
 
-func (*SqlNoSqlInjectionRule) Category() types.RiskCategory {
-	return types.RiskCategory{
-		Id:    "sql-nosql-injection",
+func (*SqlNoSqlInjectionRule) Category() *types.RiskCategory {
+	return &types.RiskCategory{
+		ID:    "sql-nosql-injection",
 		Title: "SQL/NoSQL-Injection",
 		Description: "When a database is accessed via database access protocols SQL/NoSQL-Injection risks might arise. " +
 			"The risk rating depends on the sensitivity technical asset itself and of the data assets processed.",
@@ -38,8 +38,8 @@ func (*SqlNoSqlInjectionRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *SqlNoSqlInjectionRule) GenerateRisks(input *types.ParsedModel) []types.Risk {
-	risks := make([]types.Risk, 0)
+func (r *SqlNoSqlInjectionRule) GenerateRisks(input *types.Model) []*types.Risk {
+	risks := make([]*types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
 		incomingFlows := input.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id]
@@ -56,7 +56,7 @@ func (r *SqlNoSqlInjectionRule) GenerateRisks(input *types.ParsedModel) []types.
 	return risks
 }
 
-func (r *SqlNoSqlInjectionRule) createRisk(input *types.ParsedModel, technicalAsset *types.TechnicalAsset, incomingFlow *types.CommunicationLink) types.Risk {
+func (r *SqlNoSqlInjectionRule) createRisk(input *types.Model, technicalAsset *types.TechnicalAsset, incomingFlow *types.CommunicationLink) *types.Risk {
 	caller := input.TechnicalAssets[incomingFlow.SourceId]
 	title := "<b>SQL/NoSQL-Injection</b> risk at <b>" + caller.Title + "</b> against database <b>" + technicalAsset.Title + "</b>" +
 		" via <b>" + incomingFlow.Title + "</b>"
@@ -68,8 +68,8 @@ func (r *SqlNoSqlInjectionRule) createRisk(input *types.ParsedModel, technicalAs
 	if incomingFlow.Usage == types.DevOps {
 		likelihood = types.Likely
 	}
-	risk := types.Risk{
-		CategoryId:                      r.Category().Id,
+	risk := &types.Risk{
+		CategoryId:                      r.Category().ID,
 		Severity:                        types.CalculateSeverity(likelihood, impact),
 		ExploitationLikelihood:          likelihood,
 		ExploitationImpact:              impact,

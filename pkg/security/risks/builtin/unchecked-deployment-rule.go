@@ -10,9 +10,9 @@ func NewUncheckedDeploymentRule() *UncheckedDeploymentRule {
 	return &UncheckedDeploymentRule{}
 }
 
-func (*UncheckedDeploymentRule) Category() types.RiskCategory {
-	return types.RiskCategory{
-		Id:    "unchecked-deployment",
+func (*UncheckedDeploymentRule) Category() *types.RiskCategory {
+	return &types.RiskCategory{
+		ID:    "unchecked-deployment",
 		Title: "Unchecked Deployment",
 		Description: "For each build-pipeline component Unchecked Deployment risks might arise when the build-pipeline " +
 			"does not include established DevSecOps best-practices. DevSecOps best-practices scan as part of CI/CD pipelines for " +
@@ -41,8 +41,8 @@ func (*UncheckedDeploymentRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *UncheckedDeploymentRule) GenerateRisks(input *types.ParsedModel) []types.Risk {
-	risks := make([]types.Risk, 0)
+func (r *UncheckedDeploymentRule) GenerateRisks(input *types.Model) []*types.Risk {
+	risks := make([]*types.Risk, 0)
 	for _, technicalAsset := range input.TechnicalAssets {
 		if technicalAsset.Technologies.GetAttribute(types.IsDevelopmentRelevant) {
 			risks = append(risks, r.createRisk(input, technicalAsset))
@@ -51,7 +51,7 @@ func (r *UncheckedDeploymentRule) GenerateRisks(input *types.ParsedModel) []type
 	return risks
 }
 
-func (r *UncheckedDeploymentRule) createRisk(input *types.ParsedModel, technicalAsset *types.TechnicalAsset) types.Risk {
+func (r *UncheckedDeploymentRule) createRisk(input *types.Model, technicalAsset *types.TechnicalAsset) *types.Risk {
 	title := "<b>Unchecked Deployment</b> risk at <b>" + technicalAsset.Title + "</b>"
 	// impact is depending on highest rating
 	impact := types.LowImpact
@@ -81,8 +81,8 @@ func (r *UncheckedDeploymentRule) createRisk(input *types.ParsedModel, technical
 		dataBreachTechnicalAssetIDs = append(dataBreachTechnicalAssetIDs, key)
 	}
 	// create risk
-	risk := types.Risk{
-		CategoryId:                   r.Category().Id,
+	risk := &types.Risk{
+		CategoryId:                   r.Category().ID,
 		Severity:                     types.CalculateSeverity(types.Unlikely, impact),
 		ExploitationLikelihood:       types.Unlikely,
 		ExploitationImpact:           impact,

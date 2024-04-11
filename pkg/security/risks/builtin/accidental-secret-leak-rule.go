@@ -12,9 +12,9 @@ func NewAccidentalSecretLeakRule() *AccidentalSecretLeakRule {
 	return &AccidentalSecretLeakRule{}
 }
 
-func (*AccidentalSecretLeakRule) Category() types.RiskCategory {
-	return types.RiskCategory{
-		Id:    "accidental-secret-leak",
+func (*AccidentalSecretLeakRule) Category() *types.RiskCategory {
+	return &types.RiskCategory{
+		ID:    "accidental-secret-leak",
 		Title: "Accidental Secret Leak",
 		Description: "Sourcecode repositories (including their histories) as well as artifact registries can accidentally contain secrets like " +
 			"checked-in or packaged-in passwords, API tokens, certificates, crypto keys, etc.",
@@ -43,12 +43,12 @@ func (*AccidentalSecretLeakRule) SupportedTags() []string {
 	return []string{"git", "nexus"}
 }
 
-func (r *AccidentalSecretLeakRule) GenerateRisks(parsedModel *types.ParsedModel) []types.Risk {
-	risks := make([]types.Risk, 0)
+func (r *AccidentalSecretLeakRule) GenerateRisks(parsedModel *types.Model) []*types.Risk {
+	risks := make([]*types.Risk, 0)
 	for _, id := range parsedModel.SortedTechnicalAssetIDs() {
 		techAsset := parsedModel.TechnicalAssets[id]
 		if !techAsset.OutOfScope && techAsset.Technologies.GetAttribute(types.MayContainSecrets) {
-			var risk types.Risk
+			var risk *types.Risk
 			if techAsset.IsTaggedWithAny("git") {
 				risk = r.createRisk(parsedModel, techAsset, "Git", "Git Leak Prevention")
 			} else {
@@ -60,7 +60,7 @@ func (r *AccidentalSecretLeakRule) GenerateRisks(parsedModel *types.ParsedModel)
 	return risks
 }
 
-func (r *AccidentalSecretLeakRule) createRisk(parsedModel *types.ParsedModel, technicalAsset *types.TechnicalAsset, prefix, details string) types.Risk {
+func (r *AccidentalSecretLeakRule) createRisk(parsedModel *types.Model, technicalAsset *types.TechnicalAsset, prefix, details string) *types.Risk {
 	if len(prefix) > 0 {
 		prefix = " (" + prefix + ")"
 	}
@@ -80,8 +80,8 @@ func (r *AccidentalSecretLeakRule) createRisk(parsedModel *types.ParsedModel, te
 		impact = types.HighImpact
 	}
 	// create risk
-	risk := types.Risk{
-		CategoryId:                   r.Category().Id,
+	risk := &types.Risk{
+		CategoryId:                   r.Category().ID,
 		Severity:                     types.CalculateSeverity(types.Unlikely, impact),
 		ExploitationLikelihood:       types.Unlikely,
 		ExploitationImpact:           impact,
@@ -94,8 +94,8 @@ func (r *AccidentalSecretLeakRule) createRisk(parsedModel *types.ParsedModel, te
 	return risk
 }
 
-func (r *AccidentalSecretLeakRule) MatchRisk(parsedModel *types.ParsedModel, risk string) bool {
-	categoryId := r.Category().Id
+func (r *AccidentalSecretLeakRule) MatchRisk(parsedModel *types.Model, risk string) bool {
+	categoryId := r.Category().ID
 	for _, id := range parsedModel.SortedTechnicalAssetIDs() {
 		techAsset := parsedModel.TechnicalAssets[id]
 		if strings.EqualFold(risk, categoryId+"@"+techAsset.Id) || strings.EqualFold(risk, categoryId+"@*") {
@@ -106,8 +106,8 @@ func (r *AccidentalSecretLeakRule) MatchRisk(parsedModel *types.ParsedModel, ris
 	return false
 }
 
-func (r *AccidentalSecretLeakRule) ExplainRisk(parsedModel *types.ParsedModel, risk string) []string {
-	categoryId := r.Category().Id
+func (r *AccidentalSecretLeakRule) ExplainRisk(parsedModel *types.Model, risk string) []string {
+	categoryId := r.Category().ID
 	explanation := make([]string, 0)
 	for _, id := range parsedModel.SortedTechnicalAssetIDs() {
 		techAsset := parsedModel.TechnicalAssets[id]
@@ -138,7 +138,7 @@ func (r *AccidentalSecretLeakRule) ExplainRisk(parsedModel *types.ParsedModel, r
 	return explanation
 }
 
-func (r *AccidentalSecretLeakRule) explainRisk(parsedModel *types.ParsedModel, technicalAsset *types.TechnicalAsset) []string {
+func (r *AccidentalSecretLeakRule) explainRisk(parsedModel *types.Model, technicalAsset *types.TechnicalAsset) []string {
 	explanation := make([]string, 0)
 	impact := types.LowImpact
 	if technicalAsset.HighestProcessedConfidentiality(parsedModel) == types.StrictlyConfidential ||

@@ -24,7 +24,7 @@ func (*removeUnusedTagsMacro) GetMacroDetails() MacroDetails {
 	}
 }
 
-func (*removeUnusedTagsMacro) GetNextQuestion(*types.ParsedModel) (nextQuestion MacroQuestion, err error) {
+func (*removeUnusedTagsMacro) GetNextQuestion(*types.Model) (nextQuestion MacroQuestion, err error) {
 	return NoMoreQuestions(), nil
 }
 
@@ -36,11 +36,11 @@ func (*removeUnusedTagsMacro) GoBack() (message string, validResult bool, err er
 	return "Cannot go back further", false, nil
 }
 
-func (*removeUnusedTagsMacro) GetFinalChangeImpact(_ *input.Model, _ *types.ParsedModel) (changes []string, message string, validResult bool, err error) {
+func (*removeUnusedTagsMacro) GetFinalChangeImpact(_ *input.Model, _ *types.Model) (changes []string, message string, validResult bool, err error) {
 	return []string{"remove unused tags from the model file"}, "Changeset valid", true, err
 }
 
-func (*removeUnusedTagsMacro) Execute(modelInput *input.Model, parsedModel *types.ParsedModel) (message string, validResult bool, err error) {
+func (*removeUnusedTagsMacro) Execute(modelInput *input.Model, parsedModel *types.Model) (message string, validResult bool, err error) {
 	modelInput.TagsAvailable = parsedModel.TagsAvailable
 	for _, asset := range parsedModel.DataAssets {
 		modelInput.TagsAvailable = append(modelInput.TagsAvailable, asset.Tags...)

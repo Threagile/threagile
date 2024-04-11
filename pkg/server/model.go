@@ -507,14 +507,14 @@ func (s *server) deleteDataAsset(ginContext *gin.Context) {
 						}
 					}
 				}
-				for individualRiskCatTitle, individualRiskCat := range modelInput.IndividualRiskCategories {
+				for _, individualRiskCat := range modelInput.CustomRiskCategories {
 					if individualRiskCat.RisksIdentified != nil {
 						for individualRiskInstanceTitle, individualRiskInstance := range individualRiskCat.RisksIdentified {
 							if individualRiskInstance.MostRelevantDataAsset == dataAsset.ID { // apply the removal
 								referencesDeleted = true
-								x := modelInput.IndividualRiskCategories[individualRiskCatTitle].RisksIdentified[individualRiskInstanceTitle]
+								x := individualRiskCat.RisksIdentified[individualRiskInstanceTitle]
 								x.MostRelevantDataAsset = "" // TODO needs more testing
-								modelInput.IndividualRiskCategories[individualRiskCatTitle].RisksIdentified[individualRiskInstanceTitle] = x
+								individualRiskCat.RisksIdentified[individualRiskInstanceTitle] = x
 							}
 						}
 					}
@@ -603,13 +603,13 @@ func (s *server) setDataAsset(ginContext *gin.Context) {
 							}
 						}
 					}
-					for individualRiskCatTitle, individualRiskCat := range modelInput.IndividualRiskCategories {
+					for _, individualRiskCat := range modelInput.CustomRiskCategories {
 						if individualRiskCat.RisksIdentified != nil {
 							for individualRiskInstanceTitle, individualRiskInstance := range individualRiskCat.RisksIdentified {
 								if individualRiskInstance.MostRelevantDataAsset == dataAsset.ID { // apply the ID change
-									x := modelInput.IndividualRiskCategories[individualRiskCatTitle].RisksIdentified[individualRiskInstanceTitle]
+									x := individualRiskCat.RisksIdentified[individualRiskInstanceTitle]
 									x.MostRelevantDataAsset = dataAssetInput.ID // TODO needs more testing
-									modelInput.IndividualRiskCategories[individualRiskCatTitle].RisksIdentified[individualRiskInstanceTitle] = x
+									individualRiskCat.RisksIdentified[individualRiskInstanceTitle] = x
 								}
 							}
 						}
@@ -777,13 +777,13 @@ func (s *server) setSharedRuntime(ginContext *gin.Context) {
 				modelInput.SharedRuntimes[payload.Title] = sharedRuntimeInput
 				idChanged := sharedRuntimeInput.ID != sharedRuntime.ID
 				if idChanged { // ID-CHANGE-PROPAGATION
-					for individualRiskCatTitle, individualRiskCat := range modelInput.IndividualRiskCategories {
+					for _, individualRiskCat := range modelInput.CustomRiskCategories {
 						if individualRiskCat.RisksIdentified != nil {
 							for individualRiskInstanceTitle, individualRiskInstance := range individualRiskCat.RisksIdentified {
 								if individualRiskInstance.MostRelevantSharedRuntime == sharedRuntime.ID { // apply the ID change
-									x := modelInput.IndividualRiskCategories[individualRiskCatTitle].RisksIdentified[individualRiskInstanceTitle]
+									x := individualRiskCat.RisksIdentified[individualRiskInstanceTitle]
 									x.MostRelevantSharedRuntime = sharedRuntimeInput.ID // TODO needs more testing
-									modelInput.IndividualRiskCategories[individualRiskCatTitle].RisksIdentified[individualRiskInstanceTitle] = x
+									individualRiskCat.RisksIdentified[individualRiskInstanceTitle] = x
 								}
 							}
 						}
@@ -928,14 +928,14 @@ func (s *server) deleteSharedRuntime(ginContext *gin.Context) {
 		for title, sharedRuntime := range modelInput.SharedRuntimes {
 			if sharedRuntime.ID == ginContext.Param("shared-runtime-id") {
 				// also remove all usages of this shared runtime !!
-				for individualRiskCatTitle, individualRiskCat := range modelInput.IndividualRiskCategories {
+				for _, individualRiskCat := range modelInput.CustomRiskCategories {
 					if individualRiskCat.RisksIdentified != nil {
 						for individualRiskInstanceTitle, individualRiskInstance := range individualRiskCat.RisksIdentified {
 							if individualRiskInstance.MostRelevantSharedRuntime == sharedRuntime.ID { // apply the removal
 								referencesDeleted = true
-								x := modelInput.IndividualRiskCategories[individualRiskCatTitle].RisksIdentified[individualRiskInstanceTitle]
+								x := individualRiskCat.RisksIdentified[individualRiskInstanceTitle]
 								x.MostRelevantSharedRuntime = "" // TODO needs more testing
-								modelInput.IndividualRiskCategories[individualRiskCatTitle].RisksIdentified[individualRiskInstanceTitle] = x
+								individualRiskCat.RisksIdentified[individualRiskInstanceTitle] = x
 							}
 						}
 					}

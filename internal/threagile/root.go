@@ -72,7 +72,7 @@ func (what *Threagile) initRoot() *Threagile {
 
 	what.rootCmd.PersistentFlags().StringVar(&what.flags.customRiskRulesPluginFlag, customRiskRulesPluginFlagName, strings.Join(defaultConfig.RiskRulesPlugins, ","), "comma-separated list of plugins file names with custom risk rules to load")
 	what.rootCmd.PersistentFlags().IntVar(&what.flags.diagramDpiFlag, diagramDpiFlagName, defaultConfig.DiagramDPI, "DPI used to render: maximum is "+fmt.Sprintf("%d", common.MaxGraphvizDPI)+"")
-	what.rootCmd.PersistentFlags().StringVar(&what.flags.skipRiskRulesFlag, skipRiskRulesFlagName, defaultConfig.SkipRiskRules, "comma-separated list of risk rules (by their ID) to skip")
+	what.rootCmd.PersistentFlags().StringVar(&what.flags.skipRiskRulesFlag, skipRiskRulesFlagName, strings.Join(defaultConfig.SkipRiskRules, ","), "comma-separated list of risk rules (by their ID) to skip")
 	what.rootCmd.PersistentFlags().BoolVar(&what.flags.ignoreOrphanedRiskTrackingFlag, ignoreOrphanedRiskTrackingFlagName, defaultConfig.IgnoreOrphanedRiskTracking, "ignore orphaned risk tracking (just log them) not matching a concrete risk")
 	what.rootCmd.PersistentFlags().StringVar(&what.flags.templateFileNameFlag, templateFileNameFlagName, defaultConfig.TemplateFilename, "background pdf file")
 
@@ -264,7 +264,7 @@ func (what *Threagile) readConfig(cmd *cobra.Command, buildTimestamp string) *co
 		cfg.RiskRulesPlugins = strings.Split(what.flags.customRiskRulesPluginFlag, ",")
 	}
 	if isFlagOverridden(flags, skipRiskRulesFlagName) {
-		cfg.SkipRiskRules = what.flags.skipRiskRulesFlag
+		cfg.SkipRiskRules = strings.Split(what.flags.skipRiskRulesFlag, ",")
 	}
 	if isFlagOverridden(flags, ignoreOrphanedRiskTrackingFlagName) {
 		cfg.IgnoreOrphanedRiskTracking = what.flags.ignoreOrphanedRiskTrackingFlag

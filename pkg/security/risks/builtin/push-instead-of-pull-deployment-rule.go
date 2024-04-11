@@ -10,9 +10,9 @@ func NewPushInsteadPullDeploymentRule() *PushInsteadPullDeploymentRule {
 	return &PushInsteadPullDeploymentRule{}
 }
 
-func (*PushInsteadPullDeploymentRule) Category() types.RiskCategory {
-	return types.RiskCategory{
-		Id:    "push-instead-of-pull-deployment",
+func (*PushInsteadPullDeploymentRule) Category() *types.RiskCategory {
+	return &types.RiskCategory{
+		ID:    "push-instead-of-pull-deployment",
 		Title: "Push instead of Pull Deployment",
 		Description: "When comparing push-based vs. pull-based deployments from a security perspective, pull-based " +
 			"deployments improve the overall security of the deployment targets. Every exposed interface of a production system to accept a deployment " +
@@ -41,8 +41,8 @@ func (*PushInsteadPullDeploymentRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *PushInsteadPullDeploymentRule) GenerateRisks(input *types.ParsedModel) []types.Risk {
-	risks := make([]types.Risk, 0)
+func (r *PushInsteadPullDeploymentRule) GenerateRisks(input *types.Model) []*types.Risk {
+	risks := make([]*types.Risk, 0)
 	impact := types.LowImpact
 	for _, buildPipeline := range input.TechnicalAssets {
 		if buildPipeline.Technologies.GetAttribute(types.BuildPipeline) {
@@ -63,10 +63,10 @@ func (r *PushInsteadPullDeploymentRule) GenerateRisks(input *types.ParsedModel) 
 	return risks
 }
 
-func (r *PushInsteadPullDeploymentRule) createRisk(buildPipeline *types.TechnicalAsset, deploymentTarget *types.TechnicalAsset, deploymentCommLink *types.CommunicationLink, impact types.RiskExploitationImpact) types.Risk {
+func (r *PushInsteadPullDeploymentRule) createRisk(buildPipeline *types.TechnicalAsset, deploymentTarget *types.TechnicalAsset, deploymentCommLink *types.CommunicationLink, impact types.RiskExploitationImpact) *types.Risk {
 	title := "<b>Push instead of Pull Deployment</b> at <b>" + deploymentTarget.Title + "</b> via build pipeline asset <b>" + buildPipeline.Title + "</b>"
-	risk := types.Risk{
-		CategoryId:                      r.Category().Id,
+	risk := &types.Risk{
+		CategoryId:                      r.Category().ID,
 		Severity:                        types.CalculateSeverity(types.Unlikely, impact),
 		ExploitationLikelihood:          types.Unlikely,
 		ExploitationImpact:              impact,

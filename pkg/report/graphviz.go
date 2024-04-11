@@ -14,7 +14,7 @@ import (
 	"github.com/threagile/threagile/pkg/security/types"
 )
 
-func WriteDataFlowDiagramGraphvizDOT(parsedModel *types.ParsedModel,
+func WriteDataFlowDiagramGraphvizDOT(parsedModel *types.Model,
 	diagramFilenameDOT string, dpi int, addModelTitle bool,
 	progressReporter progressReporter) (*os.File, error) {
 	progressReporter.Info("Writing data flow diagram input")
@@ -209,7 +209,7 @@ func WriteDataFlowDiagramGraphvizDOT(parsedModel *types.ParsedModel,
 		for _, dataFlow := range technicalAsset.CommunicationLinks {
 			sourceId := technicalAsset.Id
 			targetId := dataFlow.TargetId
-			//log.Println("About to add link from", sourceId, "to", targetId, "with id", dataFlow.Id)
+			//log.Println("About to add link from", sourceId, "to", targetId, "with id", dataFlow.ID)
 			var arrowStyle, arrowColor, readOrWriteHead, readOrWriteTail string
 			if dataFlow.Readonly {
 				readOrWriteHead = "empty"
@@ -272,7 +272,7 @@ func WriteDataFlowDiagramGraphvizDOT(parsedModel *types.ParsedModel,
 
 // Pen Widths:
 
-func determineArrowPenWidth(cl *types.CommunicationLink, parsedModel *types.ParsedModel) string {
+func determineArrowPenWidth(cl *types.CommunicationLink, parsedModel *types.Model) string {
 	if determineArrowColor(cl, parsedModel) == Pink {
 		return fmt.Sprintf("%f", 3.0)
 	}
@@ -282,7 +282,7 @@ func determineArrowPenWidth(cl *types.CommunicationLink, parsedModel *types.Pars
 	return fmt.Sprintf("%f", 1.5)
 }
 
-func determineLabelColor(cl *types.CommunicationLink, parsedModel *types.ParsedModel) string {
+func determineLabelColor(cl *types.CommunicationLink, parsedModel *types.Model) string {
 	// TODO: Just move into main.go and let the generated risk determine the color, don't duplicate the logic here
 	/*
 		if dataFlow.Protocol.IsEncrypted() {
@@ -325,7 +325,7 @@ func determineArrowLineStyle(cl *types.CommunicationLink) string {
 }
 
 // pink when model forgery attempt (i.e. nothing being sent and received)
-func determineArrowColor(cl *types.CommunicationLink, parsedModel *types.ParsedModel) string {
+func determineArrowColor(cl *types.CommunicationLink, parsedModel *types.Model) string {
 	// TODO: Just move into main.go and let the generated risk determine the color, don't duplicate the logic here
 	if len(cl.DataAssetsSent) == 0 && len(cl.DataAssetsReceived) == 0 ||
 		cl.Protocol == types.UnknownProtocol {
@@ -444,7 +444,7 @@ func GenerateDataFlowDiagramGraphvizImage(dotFile *os.File, targetDir string,
 	return nil
 }
 
-func makeDiagramSameRankNodeTweaks(parsedModel *types.ParsedModel) (string, error) {
+func makeDiagramSameRankNodeTweaks(parsedModel *types.Model) (string, error) {
 	// see https://stackoverflow.com/questions/25734244/how-do-i-place-nodes-on-the-same-level-in-dot
 	tweak := ""
 	if len(parsedModel.DiagramTweakSameRankAssets) > 0 {
@@ -470,7 +470,7 @@ func makeDiagramSameRankNodeTweaks(parsedModel *types.ParsedModel) (string, erro
 	return tweak, nil
 }
 
-func makeDiagramInvisibleConnectionsTweaks(parsedModel *types.ParsedModel) (string, error) {
+func makeDiagramInvisibleConnectionsTweaks(parsedModel *types.Model) (string, error) {
 	// see https://stackoverflow.com/questions/2476575/how-to-control-node-placement-in-graphviz-i-e-avoid-edge-crossings
 	tweak := ""
 	if len(parsedModel.DiagramTweakInvisibleConnectionsBetweenAssets) > 0 {
@@ -493,7 +493,7 @@ func makeDiagramInvisibleConnectionsTweaks(parsedModel *types.ParsedModel) (stri
 	return tweak, nil
 }
 
-func WriteDataAssetDiagramGraphvizDOT(parsedModel *types.ParsedModel, diagramFilenameDOT string, dpi int,
+func WriteDataAssetDiagramGraphvizDOT(parsedModel *types.Model, diagramFilenameDOT string, dpi int,
 	progressReporter progressReporter) (*os.File, error) {
 	progressReporter.Info("Writing data asset diagram input")
 
@@ -584,7 +584,7 @@ func WriteDataAssetDiagramGraphvizDOT(parsedModel *types.ParsedModel, diagramFil
 	return file, nil
 }
 
-func makeDataAssetNode(parsedModel *types.ParsedModel, dataAsset *types.DataAsset) string {
+func makeDataAssetNode(parsedModel *types.Model, dataAsset *types.DataAsset) string {
 	var color string
 	switch dataAsset.IdentifiedDataBreachProbabilityStillAtRisk(parsedModel) {
 	case types.Probable:
@@ -602,7 +602,7 @@ func makeDataAssetNode(parsedModel *types.ParsedModel, dataAsset *types.DataAsse
 	return "  " + hash(dataAsset.Id) + ` [ label=<<b>` + encode(dataAsset.Title) + `</b>> penwidth="3.0" style="filled" fillcolor="` + color + `" color="` + color + "\"\n  ]; "
 }
 
-func makeTechAssetNode(parsedModel *types.ParsedModel, technicalAsset *types.TechnicalAsset, simplified bool) string {
+func makeTechAssetNode(parsedModel *types.Model, technicalAsset *types.TechnicalAsset, simplified bool) string {
 	if simplified {
 		color := rgbHexColorOutOfScope()
 		if !technicalAsset.OutOfScope {
@@ -676,7 +676,7 @@ func determineShapeStyle(ta *types.TechnicalAsset) string {
 	return "filled"
 }
 
-func determineShapeFillColor(ta *types.TechnicalAsset, parsedModel *types.ParsedModel) string {
+func determineShapeFillColor(ta *types.TechnicalAsset, parsedModel *types.Model) string {
 	fillColor := VeryLightGray
 	if (len(ta.DataAssetsProcessed) == 0 && len(ta.DataAssetsStored) == 0) || ta.Technologies.IsUnknown() {
 		fillColor = LightPink // lightPink, because it's strange when too many technical assets process no data... some ok, but many in a diagram ist a sign of model forgery...
@@ -701,7 +701,7 @@ func determineShapeFillColor(ta *types.TechnicalAsset, parsedModel *types.Parsed
 	return fillColor
 }
 
-func determineShapeBorderPenWidth(ta *types.TechnicalAsset, parsedModel *types.ParsedModel) string {
+func determineShapeBorderPenWidth(ta *types.TechnicalAsset, parsedModel *types.Model) string {
 	if determineShapeBorderColor(ta, parsedModel) == Pink {
 		return fmt.Sprintf("%f", 3.5)
 	}
@@ -714,7 +714,7 @@ func determineShapeBorderPenWidth(ta *types.TechnicalAsset, parsedModel *types.P
 // red when mission-critical integrity, but still unauthenticated (non-readonly) channels access it
 // amber when critical integrity, but still unauthenticated (non-readonly) channels access it
 // pink when model forgery attempt (i.e. nothing being processed)
-func determineShapeBorderColor(ta *types.TechnicalAsset, parsedModel *types.ParsedModel) string {
+func determineShapeBorderColor(ta *types.TechnicalAsset, parsedModel *types.Model) string {
 	// Check for red
 	if ta.Confidentiality == types.StrictlyConfidential {
 		return Red
@@ -736,7 +736,7 @@ func determineShapeBorderColor(ta *types.TechnicalAsset, parsedModel *types.Pars
 	return Black
 	/*
 		if what.Integrity == MissionCritical {
-			for _, dataFlow := range IncomingTechnicalCommunicationLinksMappedByTargetId[what.Id] {
+			for _, dataFlow := range IncomingTechnicalCommunicationLinksMappedByTargetId[what.ID] {
 				if !dataFlow.Readonly && dataFlow.Authentication == NoneAuthentication {
 					return Red
 				}
@@ -744,7 +744,7 @@ func determineShapeBorderColor(ta *types.TechnicalAsset, parsedModel *types.Pars
 		}
 
 		if what.Integrity == Critical {
-			for _, dataFlow := range IncomingTechnicalCommunicationLinksMappedByTargetId[what.Id] {
+			for _, dataFlow := range IncomingTechnicalCommunicationLinksMappedByTargetId[what.ID] {
 				if !dataFlow.Readonly && dataFlow.Authentication == NoneAuthentication {
 					return Amber
 				}
@@ -775,7 +775,7 @@ func determineShapeBorderLineStyle(ta *types.TechnicalAsset) string {
 }
 
 // red when >= confidential data stored in unencrypted technical asset
-func determineTechnicalAssetLabelColor(ta *types.TechnicalAsset, model *types.ParsedModel) string {
+func determineTechnicalAssetLabelColor(ta *types.TechnicalAsset, model *types.Model) string {
 	// TODO: Just move into main.go and let the generated risk determine the color, don't duplicate the logic here
 	// Check for red
 	if ta.Integrity == types.MissionCritical {

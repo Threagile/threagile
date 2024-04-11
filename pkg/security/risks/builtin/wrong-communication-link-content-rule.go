@@ -10,9 +10,9 @@ func NewWrongCommunicationLinkContentRule() *WrongCommunicationLinkContentRule {
 	return &WrongCommunicationLinkContentRule{}
 }
 
-func (*WrongCommunicationLinkContentRule) Category() types.RiskCategory {
-	return types.RiskCategory{
-		Id:    "wrong-communication-link-content",
+func (*WrongCommunicationLinkContentRule) Category() *types.RiskCategory {
+	return &types.RiskCategory{
+		ID:    "wrong-communication-link-content",
 		Title: "Wrong Communication Link Content",
 		Description: "When a communication link is defined as readonly, but does not receive any data asset, " +
 			"or when it is defined as not readonly, but does not send any data asset, it is likely to be a model failure.",
@@ -37,8 +37,8 @@ func (*WrongCommunicationLinkContentRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *WrongCommunicationLinkContentRule) GenerateRisks(input *types.ParsedModel) []types.Risk {
-	risks := make([]types.Risk, 0)
+func (r *WrongCommunicationLinkContentRule) GenerateRisks(input *types.Model) []*types.Risk {
+	risks := make([]*types.Risk, 0)
 	for _, techAsset := range input.TechnicalAssets {
 		for _, commLink := range techAsset.CommunicationLinks {
 			// check readonly consistency
@@ -72,11 +72,11 @@ func (r *WrongCommunicationLinkContentRule) GenerateRisks(input *types.ParsedMod
 	return risks
 }
 
-func (r *WrongCommunicationLinkContentRule) createRisk(technicalAsset *types.TechnicalAsset, commLink *types.CommunicationLink, reason string) types.Risk {
+func (r *WrongCommunicationLinkContentRule) createRisk(technicalAsset *types.TechnicalAsset, commLink *types.CommunicationLink, reason string) *types.Risk {
 	title := "<b>Wrong Communication Link Content</b> " + reason + " at <b>" + technicalAsset.Title + "</b> " +
 		"regarding communication link <b>" + commLink.Title + "</b>"
-	risk := types.Risk{
-		CategoryId:                      r.Category().Id,
+	risk := &types.Risk{
+		CategoryId:                      r.Category().ID,
 		Severity:                        types.CalculateSeverity(types.Unlikely, types.LowImpact),
 		ExploitationLikelihood:          types.Unlikely,
 		ExploitationImpact:              types.LowImpact,

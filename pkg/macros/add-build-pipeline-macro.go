@@ -41,7 +41,7 @@ func (m *AddBuildPipeline) GetMacroDetails() MacroDetails {
 
 // TODO add question for type of machine (either physical, virtual, container, etc.)
 
-func (m *AddBuildPipeline) GetNextQuestion(model *types.ParsedModel) (nextQuestion MacroQuestion, err error) {
+func (m *AddBuildPipeline) GetNextQuestion(model *types.Model) (nextQuestion MacroQuestion, err error) {
 	counter := len(m.questionsAnswered)
 	if counter > 3 && !m.codeInspectionUsed {
 		counter++
@@ -257,19 +257,19 @@ func (m *AddBuildPipeline) GoBack() (message string, validResult bool, err error
 	return "Undo successful", true, nil
 }
 
-func (m *AddBuildPipeline) GetFinalChangeImpact(modelInput *input.Model, model *types.ParsedModel) (changes []string, message string, validResult bool, err error) {
+func (m *AddBuildPipeline) GetFinalChangeImpact(modelInput *input.Model, model *types.Model) (changes []string, message string, validResult bool, err error) {
 	changeLogCollector := make([]string, 0)
 	message, validResult, err = m.applyChange(modelInput, model, &changeLogCollector, true)
 	return changeLogCollector, message, validResult, err
 }
 
-func (m *AddBuildPipeline) Execute(modelInput *input.Model, model *types.ParsedModel) (message string, validResult bool, err error) {
+func (m *AddBuildPipeline) Execute(modelInput *input.Model, model *types.Model) (message string, validResult bool, err error) {
 	changeLogCollector := make([]string, 0)
 	message, validResult, err = m.applyChange(modelInput, model, &changeLogCollector, false)
 	return message, validResult, err
 }
 
-func (m *AddBuildPipeline) applyChange(modelInput *input.Model, parsedModel *types.ParsedModel, changeLogCollector *[]string, dryRun bool) (message string, validResult bool, err error) {
+func (m *AddBuildPipeline) applyChange(modelInput *input.Model, parsedModel *types.Model, changeLogCollector *[]string, dryRun bool) (message string, validResult bool, err error) {
 	var serverSideTechAssets = make([]string, 0)
 	// ################################################
 	modelInput.AddTagToModelInput(m.macroState["source-repository"][0], dryRun, changeLogCollector)

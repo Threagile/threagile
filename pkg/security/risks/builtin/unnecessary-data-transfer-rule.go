@@ -12,9 +12,9 @@ func NewUnnecessaryDataTransferRule() *UnnecessaryDataTransferRule {
 	return &UnnecessaryDataTransferRule{}
 }
 
-func (*UnnecessaryDataTransferRule) Category() types.RiskCategory {
-	return types.RiskCategory{
-		Id:    "unnecessary-data-transfer",
+func (*UnnecessaryDataTransferRule) Category() *types.RiskCategory {
+	return &types.RiskCategory{
+		ID:    "unnecessary-data-transfer",
 		Title: "Unnecessary Data Transfer",
 		Description: "When a technical asset sends or receives data assets, which it neither processes or stores this is " +
 			"an indicator for unnecessarily transferred data (or for an incomplete model). When the unnecessarily " +
@@ -45,8 +45,8 @@ func (*UnnecessaryDataTransferRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *UnnecessaryDataTransferRule) GenerateRisks(input *types.ParsedModel) []types.Risk {
-	risks := make([]types.Risk, 0)
+func (r *UnnecessaryDataTransferRule) GenerateRisks(input *types.Model) []*types.Risk {
+	risks := make([]*types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
 		if technicalAsset.OutOfScope {
@@ -74,12 +74,11 @@ func (r *UnnecessaryDataTransferRule) GenerateRisks(input *types.ParsedModel) []
 	return risks
 }
 
-func (r *UnnecessaryDataTransferRule) checkRisksAgainstTechnicalAsset(input *types.ParsedModel, risks []types.Risk, technicalAsset *types.TechnicalAsset,
-	dataFlow *types.CommunicationLink, inverseDirection bool) []types.Risk {
+func (r *UnnecessaryDataTransferRule) checkRisksAgainstTechnicalAsset(input *types.Model, risks []*types.Risk, technicalAsset *types.TechnicalAsset, dataFlow *types.CommunicationLink, inverseDirection bool) []*types.Risk {
 	for _, transferredDataAssetId := range dataFlow.DataAssetsSent {
 		if !technicalAsset.ProcessesOrStoresDataAsset(transferredDataAssetId) {
 			transferredDataAsset := input.DataAssets[transferredDataAssetId]
-			//fmt.Print("--->>> Checking "+technicalAsset.Id+": "+transferredDataAsset.Id+" sent via "+dataFlow.Id+"\n")
+			//fmt.Print("--->>> Checking "+technicalAsset.ID+": "+transferredDataAsset.ID+" sent via "+dataFlow.ID+"\n")
 			if transferredDataAsset.Confidentiality >= types.Confidential || transferredDataAsset.Integrity >= types.Critical {
 				commPartnerId := dataFlow.TargetId
 				if inverseDirection {
@@ -96,7 +95,7 @@ func (r *UnnecessaryDataTransferRule) checkRisksAgainstTechnicalAsset(input *typ
 	for _, transferredDataAssetId := range dataFlow.DataAssetsReceived {
 		if !technicalAsset.ProcessesOrStoresDataAsset(transferredDataAssetId) {
 			transferredDataAsset := input.DataAssets[transferredDataAssetId]
-			//fmt.Print("--->>> Checking "+technicalAsset.Id+": "+transferredDataAsset.Id+" received via "+dataFlow.Id+"\n")
+			//fmt.Print("--->>> Checking "+technicalAsset.ID+": "+transferredDataAsset.ID+" received via "+dataFlow.ID+"\n")
 			if transferredDataAsset.Confidentiality >= types.Confidential || transferredDataAsset.Integrity >= types.Critical {
 				commPartnerId := dataFlow.TargetId
 				if inverseDirection {
@@ -113,7 +112,7 @@ func (r *UnnecessaryDataTransferRule) checkRisksAgainstTechnicalAsset(input *typ
 	return risks
 }
 
-func isNewRisk(risks []types.Risk, risk types.Risk) bool {
+func isNewRisk(risks []*types.Risk, risk *types.Risk) bool {
 	for _, check := range risks {
 		if check.SyntheticId == risk.SyntheticId {
 			return false
@@ -122,7 +121,7 @@ func isNewRisk(risks []types.Risk, risk types.Risk) bool {
 	return true
 }
 
-func (r *UnnecessaryDataTransferRule) createRisk(technicalAsset *types.TechnicalAsset, dataAssetTransferred *types.DataAsset, commPartnerAsset *types.TechnicalAsset) types.Risk {
+func (r *UnnecessaryDataTransferRule) createRisk(technicalAsset *types.TechnicalAsset, dataAssetTransferred *types.DataAsset, commPartnerAsset *types.TechnicalAsset) *types.Risk {
 	moreRisky := dataAssetTransferred.Confidentiality == types.StrictlyConfidential || dataAssetTransferred.Integrity == types.MissionCritical
 
 	impact := types.LowImpact
@@ -132,8 +131,8 @@ func (r *UnnecessaryDataTransferRule) createRisk(technicalAsset *types.Technical
 
 	title := "<b>Unnecessary Data Transfer</b> of <b>" + dataAssetTransferred.Title + "</b> data at <b>" + technicalAsset.Title + "</b> " +
 		"from/to <b>" + commPartnerAsset.Title + "</b>"
-	risk := types.Risk{
-		CategoryId:                   r.Category().Id,
+	risk := &types.Risk{
+		CategoryId:                   r.Category().ID,
 		Severity:                     types.CalculateSeverity(types.Unlikely, impact),
 		ExploitationLikelihood:       types.Unlikely,
 		ExploitationImpact:           impact,

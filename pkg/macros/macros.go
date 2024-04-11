@@ -20,11 +20,11 @@ import (
 
 type Macros interface {
 	GetMacroDetails() MacroDetails
-	GetNextQuestion(model *types.ParsedModel) (nextQuestion MacroQuestion, err error)
+	GetNextQuestion(model *types.Model) (nextQuestion MacroQuestion, err error)
 	ApplyAnswer(questionID string, answer ...string) (message string, validResult bool, err error)
 	GoBack() (message string, validResult bool, err error)
-	GetFinalChangeImpact(modelInput *input.Model, model *types.ParsedModel) (changes []string, message string, validResult bool, err error)
-	Execute(modelInput *input.Model, model *types.ParsedModel) (message string, validResult bool, err error)
+	GetFinalChangeImpact(modelInput *input.Model, model *types.Model) (changes []string, message string, validResult bool, err error)
+	Execute(modelInput *input.Model, model *types.Model) (message string, validResult bool, err error)
 }
 
 func ListBuiltInMacros() []Macros {
@@ -55,7 +55,7 @@ func GetMacroByID(id string) (Macros, error) {
 	return nil, fmt.Errorf("unknown macro id: %v", id)
 }
 
-func ExecuteModelMacro(modelInput *input.Model, inputFile string, parsedModel *types.ParsedModel, macroID string) error {
+func ExecuteModelMacro(modelInput *input.Model, inputFile string, parsedModel *types.Model, macroID string) error {
 	macros, err := GetMacroByID(macroID)
 	if err != nil {
 		return err

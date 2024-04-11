@@ -13,10 +13,10 @@ import (
 
 type ReadResult struct {
 	ModelInput       *input.Model
-	ParsedModel      *types.ParsedModel
+	ParsedModel      *types.Model
 	IntroTextRAA     string
-	BuiltinRiskRules map[string]risks.RiskRule
-	CustomRiskRules  map[string]*CustomRisk
+	BuiltinRiskRules risks.RiskRules
+	CustomRiskRules  risks.RiskRules
 }
 
 func (what ReadResult) ExplainRisk(cfg *common.Config, risk string, reporter common.DefaultProgressReporter) error {
@@ -29,10 +29,7 @@ func ReadAndAnalyzeModel(config *common.Config, progressReporter types.ProgressR
 	progressReporter.Infof("Writing into output directory: %v", config.OutputFolder)
 	progressReporter.Infof("Parsing model: %v", config.InputFile)
 
-	builtinRiskRules := make(map[string]risks.RiskRule)
-	for _, rule := range risks.GetBuiltInRiskRules() {
-		builtinRiskRules[rule.Category().Id] = rule
-	}
+	builtinRiskRules := risks.GetBuiltInRiskRules()
 	customRiskRules := LoadCustomRiskRules(config.RiskRulesPlugins, progressReporter)
 
 	modelInput := new(input.Model).Defaults()
@@ -48,7 +45,7 @@ func ReadAndAnalyzeModel(config *common.Config, progressReporter types.ProgressR
 
 	introTextRAA := applyRAA(parsedModel, config.PluginFolder, config.RAAPlugin, progressReporter)
 
-	applyRiskGeneration(parsedModel, customRiskRules, builtinRiskRules, config.SkipRiskRules, progressReporter)
+	applyRiskGeneration(parsedModel, builtinRiskRules.Merge(customRiskRules), config.SkipRiskRules, progressReporter)
 	err := parsedModel.ApplyWildcardRiskTrackingEvaluation(config.IgnoreOrphanedRiskTracking, progressReporter)
 	if err != nil {
 		return nil, fmt.Errorf("unable to apply wildcard risk tracking evaluation: %v", err)
@@ -76,59 +73,30 @@ func ReadAndAnalyzeModel(config *common.Config, progressReporter types.ProgressR
 	}, nil
 }
 
-func applyRisk(parsedModel *types.ParsedModel, rule risks.RiskRule, skippedRules *map[string]bool) {
-	id := rule.Category().Id
-	_, ok := (*skippedRules)[id]
-
-	if ok {
-		fmt.Printf("Skipping risk rule %q\n", rule.Category().Id)
-		delete(*skippedRules, rule.Category().Id)
-	} else {
-		parsedModel.AddToListOfSupportedTags(rule.SupportedTags())
-		generatedRisks := rule.GenerateRisks(parsedModel)
-		if generatedRisks != nil {
-			if len(generatedRisks) > 0 {
-				parsedModel.GeneratedRisksByCategory[rule.Category().Id] = generatedRisks
-			}
-		} else {
-			fmt.Printf("Failed to generate risks for %q\n", id)
-		}
-	}
-}
-
-// TODO: refactor skipRiskRules to be a string array instead of a comma-separated string
-func applyRiskGeneration(parsedModel *types.ParsedModel, customRiskRules map[string]*CustomRisk,
-	builtinRiskRules map[string]risks.RiskRule,
-	skipRiskRules string,
+func applyRiskGeneration(parsedModel *types.Model, rules risks.RiskRules,
+	skipRiskRules []string,
 	progressReporter types.ProgressReporter) {
 	progressReporter.Info("Applying risk generation")
 
 	skippedRules := make(map[string]bool)
 	if len(skipRiskRules) > 0 {
-		for _, id := range strings.Split(skipRiskRules, ",") {
+		for _, id := range skipRiskRules {
 			skippedRules[id] = true
 		}
 	}
 
-	for _, rule := range builtinRiskRules {
-		applyRisk(parsedModel, rule, &skippedRules)
-	}
-
-	// NOW THE CUSTOM RISK RULES (if any)
-	for id, customRule := range customRiskRules {
+	for id, rule := range rules {
 		_, ok := skippedRules[id]
 		if ok {
-			progressReporter.Infof("Skipping custom risk rule: %v", id)
+			progressReporter.Infof("Skipping risk rule: %v", id)
 			delete(skippedRules, id)
-		} else {
-			progressReporter.Infof("Executing custom risk rule: %v", id)
-			parsedModel.AddToListOfSupportedTags(customRule.SupportedTags())
-			customRisks := customRule.GenerateRisks(parsedModel)
-			if len(customRisks) > 0 {
-				parsedModel.GeneratedRisksByCategory[customRule.RiskCategory.Id] = customRisks
-			}
+			continue
+		}
 
-			progressReporter.Infof("Added custom risks: %v", len(customRisks))
+		parsedModel.AddToListOfSupportedTags(rule.SupportedTags())
+		newRisks := rule.GenerateRisks(parsedModel)
+		if len(newRisks) > 0 {
+			parsedModel.GeneratedRisksByCategory[id] = newRisks
 		}
 	}
 
@@ -151,7 +119,7 @@ func applyRiskGeneration(parsedModel *types.ParsedModel, customRiskRules map[str
 	}
 }
 
-func applyRAA(parsedModel *types.ParsedModel, binFolder, raaPlugin string, progressReporter types.ProgressReporter) string {
+func applyRAA(parsedModel *types.Model, binFolder, raaPlugin string, progressReporter types.ProgressReporter) string {
 	progressReporter.Infof("Applying RAA calculation: %v", raaPlugin)
 
 	runner, loadError := new(runner).Load(filepath.Join(binFolder, raaPlugin))

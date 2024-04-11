@@ -12,9 +12,9 @@ func NewUnguardedAccessFromInternetRule() *UnguardedAccessFromInternetRule {
 	return &UnguardedAccessFromInternetRule{}
 }
 
-func (*UnguardedAccessFromInternetRule) Category() types.RiskCategory {
-	return types.RiskCategory{
-		Id:    "unguarded-access-from-internet",
+func (*UnguardedAccessFromInternetRule) Category() *types.RiskCategory {
+	return &types.RiskCategory{
+		ID:    "unguarded-access-from-internet",
 		Title: "Unguarded Access From Internet",
 		Description: "Internet-exposed assets must be guarded by a protecting service, application, " +
 			"or reverse-proxy.",
@@ -50,8 +50,8 @@ func (*UnguardedAccessFromInternetRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *UnguardedAccessFromInternetRule) GenerateRisks(input *types.ParsedModel) []types.Risk {
-	risks := make([]types.Risk, 0)
+func (r *UnguardedAccessFromInternetRule) GenerateRisks(input *types.Model) []*types.Risk {
+	risks := make([]*types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
 		if !technicalAsset.OutOfScope {
@@ -88,13 +88,13 @@ func (r *UnguardedAccessFromInternetRule) GenerateRisks(input *types.ParsedModel
 }
 
 func (r *UnguardedAccessFromInternetRule) createRisk(dataStore *types.TechnicalAsset, dataFlow *types.CommunicationLink,
-	clientFromInternet *types.TechnicalAsset, moreRisky bool) types.Risk {
+	clientFromInternet *types.TechnicalAsset, moreRisky bool) *types.Risk {
 	impact := types.LowImpact
 	if moreRisky || dataStore.RAA > 40 {
 		impact = types.MediumImpact
 	}
-	risk := types.Risk{
-		CategoryId:             r.Category().Id,
+	risk := &types.Risk{
+		CategoryId:             r.Category().ID,
 		Severity:               types.CalculateSeverity(types.VeryLikely, impact),
 		ExploitationLikelihood: types.VeryLikely,
 		ExploitationImpact:     impact,

@@ -1,140 +1,140 @@
-individual_risk_categories:
-  accidental-secret-leak:
-    id: accidental-secret-leak
-    title: Accidental Secret Leak
-    function: operations
-    stride: information-disclosure
-    cwe: 200
-    description:
-      Sourcecode repositories (including their histories) as well as artifact registries can accidentally contain
-      secrets like checked-in or packaged-in passwords, API tokens, certificates, crypto keys, etc.
-    impact:
-      If this risk is unmitigated, attackers which have access to affected sourcecode repositories or artifact
-      registries might find secrets accidentally checked-in.
-    asvs:
-      V14 - Configuration Verification Requirements
-    cheat_sheet:
-      https://cheatsheetseries.owasp.org/cheatsheets/Attack_Surface_Analysis_Cheat_Sheet.html
-    action:
-      Build Pipeline Hardening
-    mitigation:
-      Establish measures preventing accidental check-in or package-in of secrets into sourcecode repositories and
-      artifact registries. This starts by using good .gitignore and .dockerignore files, but does not stop there.
-      See for example tools like <i>\"git-secrets\"</i> or <i>\"Talisman\"</i> to have check-in preventive measures for
-      secrets. Consider also to regularly scan your repositories for secrets accidentally checked-in using
-      scanning tools like <i>"gitleaks"</i> or <i>"gitrob"</i>.
-    check:
-      Are recommendations from the linked cheat sheet and referenced ASVS chapter applied?
-    detection_logic:
-      In-scope sourcecode repositories and artifact registries.
-    risk_assessment:
-      The risk rating depends on the sensitivity of the technical asset itself and of the data assets processed.
-    false_positives:
-      Usually no false positives.
+id: accidental-secret-leak
+title: Accidental Secret Leak
+function: operations
+stride: information-disclosure
+cwe: 200
+description:
+  Sourcecode repositories (including their histories) as well as artifact registries can accidentally contain
+  secrets like checked-in or packaged-in passwords, API tokens, certificates, crypto keys, etc.
+impact:
+  If this risk is unmitigated, attackers which have access to affected sourcecode repositories or artifact
+  registries might find secrets accidentally checked-in.
+asvs:
+  V14 - Configuration Verification Requirements
+cheat_sheet:
+  https://cheatsheetseries.owasp.org/cheatsheets/Attack_Surface_Analysis_Cheat_Sheet.html
+action:
+  Build Pipeline Hardening
+mitigation:
+  Establish measures preventing accidental check-in or package-in of secrets into sourcecode repositories and
+  artifact registries. This starts by using good .gitignore and .dockerignore files, but does not stop there.
+  See for example tools like <i>\"git-secrets\"</i> or <i>\"Talisman\"</i> to have check-in preventive measures for
+  secrets. Consider also to regularly scan your repositories for secrets accidentally checked-in using
+  scanning tools like <i>"gitleaks"</i> or <i>"gitrob"</i>.
+check:
+  Are recommendations from the linked cheat sheet and referenced ASVS chapter applied?
+detection_logic:
+  In-scope sourcecode repositories and artifact registries.
+risk_assessment:
+  The risk rating depends on the sensitivity of the technical asset itself and of the data assets processed.
+false_positives:
+  Usually no false positives.
+is_built_in: true
 
-    risk:
-      parameter: tech_asset
-      id: "{$risk.id}@{tech_asset.id}"
-      title: "get_title({tech_asset})"
-      severity: "calculate_severity(unlikely, get_impact({tech_asset}))"
-      exploitation_likelihood: unlikely
-      exploitation_impact: "get_impact({tech_asset})"
-      data_breach_probability: probable
-      data_breach_technical_assets:
-        - "{tech_asset.id}"
-      most_relevant_data_asset: "{tech_asset.id}"
+script:
+  risk:
+    parameter: tech_asset
+    id: "{$risk.id}@{tech_asset.id}"
+    title: "get_title({tech_asset})"
+    severity: "calculate_severity(unlikely, get_impact({tech_asset}))"
+    exploitation_likelihood: unlikely
+    exploitation_impact: "get_impact({tech_asset})"
+    data_breach_probability: probable
+    data_breach_technical_assets:
+      - "{tech_asset.id}"
+    most_relevant_data_asset: "{tech_asset.id}"
 
-    match:
-      parameter: tech_asset
+  match:
+    parameter: tech_asset
+    do:
+      if:
+        and:
+          - false: "{tech_asset.out_of_scope}"
+          - contains:
+              item: "{tech_asset.technology}"
+              in:
+                - sourcecode-repository
+                - artifact-registry
+        then:
+          return: true
+
+  utils:
+    get_title:
+      parameters:
+        - tech_asset
       do:
-        if:
-          and:
-            - false: "{tech_asset.out_of_scope}"
-            - contains:
-                item: "{tech_asset.technology}"
-                in:
-                  - sourcecode-repository
-                  - artifact-registry
-          then:
-            return: true
+        - if:
+            contains:
+              item: git
+              in: "{tech_asset.tags}"
+            then:
+              - return:
+                  "<b>Accidental Secret Leak(Git)</b> risk at <b>{tech_asset.title}</b>: <u>Git Leak Prevention</u>"
+            else:
+              - return:
+                  "<b>Accidental Secret Leak</b> risk at <b>{tech_asset.title}"
 
-    utils:
-      get_title:
-        parameters:
-          - tech_asset
-        do:
-          - if:
-              contains:
-                item: git
-                in: "{tech_asset.tags}"
-              then:
-                - return:
-                    "<b>Accidental Secret Leak(Git)</b> risk at <b>{tech_asset.title}</b>: <u>Git Leak Prevention</u>"
-              else:
-                - return:
-                    "<b>Accidental Secret Leak</b> risk at <b>{tech_asset.title}"
+    get_impact:
+      parameters:
+        - tech_asset
+      do:
+        - assign:
+            - impact: low
+            - highest_confidentiality: "get_highest({tech_asset}, confidentiality)"
+            - highest_integrity: "get_highest({tech_asset}, integrity)"
+            - highest_availability: "get_highest({tech_asset}, availability)"
+        - if:
+            or:
+              - equal-or-greater:
+                  as: confidentiality
+                  first: "{highest_confidentiality}"
+                  second: confidential
+              - equal-or-greater:
+                  as: integrity
+                  first: "{highest_integrity}"
+                  second: critical
+              - equal-or-greater:
+                  as: availability
+                  first: "{highest_availability}"
+                  second: critical
+            then:
+              - assign:
+                  impact: medium
+        - if:
+            or:
+              - equal-or-greater:
+                  as: confidentiality
+                  first: "{highest_confidentiality}"
+                  second: strictly-confidential
+              - equal-or-greater:
+                  as: integrity
+                  first: "{highest_integrity}"
+                  second: mission-critical
+              - equal-or-greater:
+                  as: availability
+                  first: "{highest_availability}"
+                  second: mission-critical
+            then:
+              - assign:
+                  impact: high
+        - return: "{impact}"
 
-      get_impact:
-        parameters:
-          - tech_asset
-        do:
-          - assign:
-              - impact: low
-              - highest_confidentiality: "get_highest({tech_asset}, confidentiality)"
-              - highest_integrity: "get_highest({tech_asset}, integrity)"
-              - highest_availability: "get_highest({tech_asset}, availability)"
-          - if:
-              or:
-                - equal-or-greater:
-                    as: confidentiality
-                    first: "{highest_confidentiality}"
-                    second: confidential
-                - equal-or-greater:
-                    as: integrity
-                    first: "{highest_integrity}"
-                    second: critical
-                - equal-or-greater:
-                    as: availability
-                    first: "{highest_availability}"
-                    second: critical
-              then:
-                - assign:
-                    impact: medium
-          - if:
-              or:
-                - equal-or-greater:
-                    as: confidentiality
-                    first: "{highest_confidentiality}"
-                    second: strictly-confidential
-                - equal-or-greater:
-                    as: integrity
-                    first: "{highest_integrity}"
-                    second: mission-critical
-                - equal-or-greater:
-                    as: availability
-                    first: "{highest_availability}"
-                    second: mission-critical
-              then:
-                - assign:
-                    impact: high
-          - return: "{impact}"
-
-      get_highest:
-        parameters:
-          - tech_asset
-          - "type"
-        do:
-          - assign:
-              - value: "{tech_asset.{type}}"
-          - loop:
-              in: "{tech_asset.data_assets_processed}"
-              item: data_id
-              do:
-                if:
-                  greater:
-                    first: "{$model.data_assets.{data_id}.{type}}"
-                    second: "{value}"
-                  then:
-                    - assign:
-                        value: "{$model.data_assets.{data_id}.{type}}"
-          - return: "{value}"
+    get_highest:
+      parameters:
+        - tech_asset
+        - "type"
+      do:
+        - assign:
+            - value: "{tech_asset.{type}}"
+        - loop:
+            in: "{tech_asset.data_assets_processed}"
+            item: data_id
+            do:
+              if:
+                greater:
+                  first: "{$model.data_assets.{data_id}.{type}}"
+                  second: "{value}"
+                then:
+                  - assign:
+                      value: "{$model.data_assets.{data_id}.{type}}"
+        - return: "{value}"

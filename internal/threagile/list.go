@@ -33,7 +33,7 @@ func (what *Threagile) initList() *Threagile {
 			cmd.Println("--------------------")
 			cmd.Println()
 			for _, rule := range risks.GetBuiltInRiskRules() {
-				cmd.Println(rule.Category().Id, "-->", rule.Category().Title, "--> with tags:", rule.SupportedTags())
+				cmd.Println(rule.Category().ID, "-->", rule.Category().Title, "--> with tags:", rule.SupportedTags())
 			}
 
 			return nil

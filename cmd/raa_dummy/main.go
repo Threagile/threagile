@@ -23,7 +23,7 @@ func main() {
 		os.Exit(-2)
 	}
 
-	var input types.ParsedModel
+	var input types.Model
 	inError := json.Unmarshal(inData, &input)
 	if inError != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "failed to parse model: %v\n", inError)
@@ -44,7 +44,7 @@ func main() {
 
 // used from run caller:
 
-func CalculateRAA(input *types.ParsedModel) string {
+func CalculateRAA(input *types.Model) string {
 	for techAssetID, techAsset := range input.TechnicalAssets {
 		nBig, randError := rand.Int(rand.Reader, big.NewInt(100))
 		if randError != nil {

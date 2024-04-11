@@ -10,9 +10,9 @@ func NewMissingIdentityStoreRule() *MissingIdentityStoreRule {
 	return &MissingIdentityStoreRule{}
 }
 
-func (*MissingIdentityStoreRule) Category() types.RiskCategory {
-	return types.RiskCategory{
-		Id:    "missing-identity-store",
+func (*MissingIdentityStoreRule) Category() *types.RiskCategory {
+	return &types.RiskCategory{
+		ID:    "missing-identity-store",
 		Title: "Missing Identity Store",
 		Description: "The modeled architecture does not contain an identity store, which might be the risk of a model missing " +
 			"critical assets (and thus not seeing their risks).",
@@ -39,8 +39,8 @@ func (*MissingIdentityStoreRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *MissingIdentityStoreRule) GenerateRisks(input *types.ParsedModel) []types.Risk {
-	risks := make([]types.Risk, 0)
+func (r *MissingIdentityStoreRule) GenerateRisks(input *types.Model) []*types.Risk {
+	risks := make([]*types.Risk, 0)
 	for _, technicalAsset := range input.TechnicalAssets {
 		if !technicalAsset.OutOfScope && technicalAsset.Technologies.GetAttribute(types.IsIdentityStore) {
 			// everything fine, no risk, as we have an in-scope identity store in the model
@@ -83,10 +83,10 @@ func (r *MissingIdentityStoreRule) GenerateRisks(input *types.ParsedModel) []typ
 	return risks
 }
 
-func (r *MissingIdentityStoreRule) createRisk(technicalAsset *types.TechnicalAsset, impact types.RiskExploitationImpact) types.Risk {
+func (r *MissingIdentityStoreRule) createRisk(technicalAsset *types.TechnicalAsset, impact types.RiskExploitationImpact) *types.Risk {
 	title := "<b>Missing Identity Store</b> in the threat model (referencing asset <b>" + technicalAsset.Title + "</b> as an example)"
-	risk := types.Risk{
-		CategoryId:                   r.Category().Id,
+	risk := &types.Risk{
+		CategoryId:                   r.Category().ID,
 		Severity:                     types.CalculateSeverity(types.Unlikely, impact),
 		ExploitationLikelihood:       types.Unlikely,
 		ExploitationImpact:           impact,

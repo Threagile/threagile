@@ -10,9 +10,9 @@ func NewSearchQueryInjectionRule() *SearchQueryInjectionRule {
 	return &SearchQueryInjectionRule{}
 }
 
-func (*SearchQueryInjectionRule) Category() types.RiskCategory {
-	return types.RiskCategory{
-		Id:    "search-query-injection",
+func (*SearchQueryInjectionRule) Category() *types.RiskCategory {
+	return &types.RiskCategory{
+		ID:    "search-query-injection",
 		Title: "Search-Query Injection",
 		Description: "When a search engine server is accessed Search-Query Injection risks might arise." +
 			"<br><br>See for example <a href=\"https://github.com/veracode-research/solr-injection\">https://github.com/veracode-research/solr-injection</a> and " +
@@ -42,8 +42,8 @@ func (*SearchQueryInjectionRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *SearchQueryInjectionRule) GenerateRisks(input *types.ParsedModel) []types.Risk {
-	risks := make([]types.Risk, 0)
+func (r *SearchQueryInjectionRule) GenerateRisks(input *types.Model) []*types.Risk {
+	risks := make([]*types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
 		if technicalAsset.Technologies.GetAttribute(types.IsSearchRelated) {
@@ -66,7 +66,7 @@ func (r *SearchQueryInjectionRule) GenerateRisks(input *types.ParsedModel) []typ
 	return risks
 }
 
-func (r *SearchQueryInjectionRule) createRisk(input *types.ParsedModel, technicalAsset *types.TechnicalAsset, incomingFlow *types.CommunicationLink, likelihood types.RiskExploitationLikelihood) types.Risk {
+func (r *SearchQueryInjectionRule) createRisk(input *types.Model, technicalAsset *types.TechnicalAsset, incomingFlow *types.CommunicationLink, likelihood types.RiskExploitationLikelihood) *types.Risk {
 	caller := input.TechnicalAssets[incomingFlow.SourceId]
 	title := "<b>Search Query Injection</b> risk at <b>" + caller.Title + "</b> against search engine server <b>" + technicalAsset.Title + "</b>" +
 		" via <b>" + incomingFlow.Title + "</b>"
@@ -76,8 +76,8 @@ func (r *SearchQueryInjectionRule) createRisk(input *types.ParsedModel, technica
 	} else if technicalAsset.HighestProcessedConfidentiality(input) <= types.Internal && technicalAsset.HighestProcessedIntegrity(input) == types.Operational {
 		impact = types.LowImpact
 	}
-	risk := types.Risk{
-		CategoryId:                      r.Category().Id,
+	risk := &types.Risk{
+		CategoryId:                      r.Category().ID,
 		Severity:                        types.CalculateSeverity(likelihood, impact),
 		ExploitationLikelihood:          likelihood,
 		ExploitationImpact:              impact,

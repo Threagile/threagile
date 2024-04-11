@@ -12,9 +12,9 @@ func NewMissingAuthenticationSecondFactorRule(missingAuthenticationRule *Missing
 	return &MissingAuthenticationSecondFactorRule{missingAuthenticationRule: missingAuthenticationRule}
 }
 
-func (*MissingAuthenticationSecondFactorRule) Category() types.RiskCategory {
-	return types.RiskCategory{
-		Id:    "missing-authentication-second-factor",
+func (*MissingAuthenticationSecondFactorRule) Category() *types.RiskCategory {
+	return &types.RiskCategory{
+		ID:    "missing-authentication-second-factor",
 		Title: "Missing Two-Factor Authentication (2FA)",
 		Description: "Technical assets (especially multi-tenant systems) should authenticate incoming requests with " +
 			"two-factor (2FA) authentication when the asset processes or stores highly sensitive data (in terms of confidentiality, integrity, and availability) and is accessed by humans.",
@@ -41,8 +41,8 @@ func (*MissingAuthenticationSecondFactorRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *MissingAuthenticationSecondFactorRule) GenerateRisks(input *types.ParsedModel) []types.Risk {
-	risks := make([]types.Risk, 0)
+func (r *MissingAuthenticationSecondFactorRule) GenerateRisks(input *types.Model) []*types.Risk {
+	risks := make([]*types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
 		if technicalAsset.OutOfScope ||

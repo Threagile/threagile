@@ -10,9 +10,9 @@ func NewMissingWafRule() *MissingWafRule {
 	return &MissingWafRule{}
 }
 
-func (*MissingWafRule) Category() types.RiskCategory {
-	return types.RiskCategory{
-		Id:    "missing-waf",
+func (*MissingWafRule) Category() *types.RiskCategory {
+	return &types.RiskCategory{
+		ID:    "missing-waf",
 		Title: "Missing Web Application Firewall (WAF)",
 		Description: "To have a first line of filtering defense, security architectures with web-services or web-applications should include a WAF in front of them. " +
 			"Even though a WAF is not a replacement for security (all components must be secure even without a WAF) it adds another layer of defense to the overall " +
@@ -39,8 +39,8 @@ func (*MissingWafRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *MissingWafRule) GenerateRisks(input *types.ParsedModel) []types.Risk {
-	risks := make([]types.Risk, 0)
+func (r *MissingWafRule) GenerateRisks(input *types.Model) []*types.Risk {
+	risks := make([]*types.Risk, 0)
 	for _, technicalAsset := range input.TechnicalAssets {
 		if !technicalAsset.OutOfScope &&
 			(technicalAsset.Technologies.GetAttribute(types.WebApplication) || technicalAsset.Technologies.GetAttribute(types.IsWebService)) {
@@ -57,7 +57,7 @@ func (r *MissingWafRule) GenerateRisks(input *types.ParsedModel) []types.Risk {
 	return risks
 }
 
-func (r *MissingWafRule) createRisk(input *types.ParsedModel, technicalAsset *types.TechnicalAsset) types.Risk {
+func (r *MissingWafRule) createRisk(input *types.Model, technicalAsset *types.TechnicalAsset) *types.Risk {
 	title := "<b>Missing Web Application Firewall (WAF)</b> risk at <b>" + technicalAsset.Title + "</b>"
 	likelihood := types.Unlikely
 	impact := types.LowImpact
@@ -66,8 +66,8 @@ func (r *MissingWafRule) createRisk(input *types.ParsedModel, technicalAsset *ty
 		technicalAsset.HighestProcessedAvailability(input) == types.MissionCritical {
 		impact = types.MediumImpact
 	}
-	risk := types.Risk{
-		CategoryId:                   r.Category().Id,
+	risk := &types.Risk{
+		CategoryId:                   r.Category().ID,
 		Severity:                     types.CalculateSeverity(likelihood, impact),
 		ExploitationLikelihood:       likelihood,
 		ExploitationImpact:           impact,

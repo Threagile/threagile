@@ -10,9 +10,9 @@ func NewMissingAuthenticationRule() *MissingAuthenticationRule {
 	return &MissingAuthenticationRule{}
 }
 
-func (*MissingAuthenticationRule) Category() types.RiskCategory {
-	return types.RiskCategory{
-		Id:          "missing-authentication",
+func (*MissingAuthenticationRule) Category() *types.RiskCategory {
+	return &types.RiskCategory{
+		ID:          "missing-authentication",
 		Title:       "Missing Authentication",
 		Description: "Technical assets (especially multi-tenant systems) should authenticate incoming requests when the asset processes sensitive data. ",
 		Impact:      "If this risk is unmitigated, attackers might be able to access or modify sensitive data in an unauthenticated way.",
@@ -39,8 +39,8 @@ func (*MissingAuthenticationRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *MissingAuthenticationRule) GenerateRisks(input *types.ParsedModel) []types.Risk {
-	risks := make([]types.Risk, 0)
+func (r *MissingAuthenticationRule) GenerateRisks(input *types.Model) []*types.Risk {
+	risks := make([]*types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
 		if technicalAsset.OutOfScope || technicalAsset.Technologies.GetAttribute(types.NoAuthenticationRequired) {
@@ -77,8 +77,8 @@ func (r *MissingAuthenticationRule) GenerateRisks(input *types.ParsedModel) []ty
 	return risks
 }
 
-func (r *MissingAuthenticationRule) createRisk(input *types.ParsedModel, technicalAsset *types.TechnicalAsset, incomingAccess, incomingAccessOrigin *types.CommunicationLink, hopBetween string,
-	impact types.RiskExploitationImpact, likelihood types.RiskExploitationLikelihood, twoFactor bool, category types.RiskCategory) types.Risk {
+func (r *MissingAuthenticationRule) createRisk(input *types.Model, technicalAsset *types.TechnicalAsset, incomingAccess, incomingAccessOrigin *types.CommunicationLink, hopBetween string,
+	impact types.RiskExploitationImpact, likelihood types.RiskExploitationLikelihood, twoFactor bool, category *types.RiskCategory) *types.Risk {
 	factorString := ""
 	if twoFactor {
 		factorString = "Two-Factor "
@@ -86,8 +86,8 @@ func (r *MissingAuthenticationRule) createRisk(input *types.ParsedModel, technic
 	if len(hopBetween) > 0 {
 		hopBetween = "forwarded via <b>" + hopBetween + "</b> "
 	}
-	risk := types.Risk{
-		CategoryId:             category.Id,
+	risk := &types.Risk{
+		CategoryId:             category.ID,
 		Severity:               types.CalculateSeverity(likelihood, impact),
 		ExploitationLikelihood: likelihood,
 		ExploitationImpact:     impact,

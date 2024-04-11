@@ -10,9 +10,9 @@ func NewXmlExternalEntityRule() *XmlExternalEntityRule {
 	return &XmlExternalEntityRule{}
 }
 
-func (*XmlExternalEntityRule) Category() types.RiskCategory {
-	return types.RiskCategory{
-		Id:          "xml-external-entity",
+func (*XmlExternalEntityRule) Category() *types.RiskCategory {
+	return &types.RiskCategory{
+		ID:          "xml-external-entity",
 		Title:       "XML External Entity (XXE)",
 		Description: "When a technical asset accepts data in XML format, XML External Entity (XXE) risks might arise.",
 		Impact: "If this risk is unmitigated, attackers might be able to read sensitive files (configuration data, key/credential files, deployment files, " +
@@ -40,8 +40,8 @@ func (*XmlExternalEntityRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *XmlExternalEntityRule) GenerateRisks(input *types.ParsedModel) []types.Risk {
-	risks := make([]types.Risk, 0)
+func (r *XmlExternalEntityRule) GenerateRisks(input *types.Model) []*types.Risk {
+	risks := make([]*types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
 		if technicalAsset.OutOfScope {
@@ -56,7 +56,7 @@ func (r *XmlExternalEntityRule) GenerateRisks(input *types.ParsedModel) []types.
 	return risks
 }
 
-func (r *XmlExternalEntityRule) createRisk(parsedModel *types.ParsedModel, technicalAsset *types.TechnicalAsset) types.Risk {
+func (r *XmlExternalEntityRule) createRisk(parsedModel *types.Model, technicalAsset *types.TechnicalAsset) *types.Risk {
 	title := "<b>XML External Entity (XXE)</b> risk at <b>" + technicalAsset.Title + "</b>"
 	impact := types.MediumImpact
 	if technicalAsset.HighestProcessedConfidentiality(parsedModel) == types.StrictlyConfidential ||
@@ -64,8 +64,8 @@ func (r *XmlExternalEntityRule) createRisk(parsedModel *types.ParsedModel, techn
 		technicalAsset.HighestProcessedAvailability(parsedModel) == types.MissionCritical {
 		impact = types.HighImpact
 	}
-	risk := types.Risk{
-		CategoryId:                   r.Category().Id,
+	risk := &types.Risk{
+		CategoryId:                   r.Category().ID,
 		Severity:                     types.CalculateSeverity(types.VeryLikely, impact),
 		ExploitationLikelihood:       types.VeryLikely,
 		ExploitationImpact:           impact,

@@ -10,9 +10,9 @@ func NewLdapInjectionRule() *LdapInjectionRule {
 	return &LdapInjectionRule{}
 }
 
-func (*LdapInjectionRule) Category() types.RiskCategory {
-	return types.RiskCategory{
-		Id:    "ldap-injection",
+func (*LdapInjectionRule) Category() *types.RiskCategory {
+	return &types.RiskCategory{
+		ID:    "ldap-injection",
 		Title: "LDAP-Injection",
 		Description: "When an LDAP server is accessed LDAP-Injection risks might arise. " +
 			"The risk rating depends on the sensitivity of the LDAP server itself and of the data assets processed.",
@@ -39,8 +39,8 @@ func (*LdapInjectionRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *LdapInjectionRule) GenerateRisks(input *types.ParsedModel) []types.Risk {
-	risks := make([]types.Risk, 0)
+func (r *LdapInjectionRule) GenerateRisks(input *types.Model) []*types.Risk {
+	risks := make([]*types.Risk, 0)
 	for _, technicalAsset := range input.TechnicalAssets {
 		incomingFlows := input.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id]
 		for _, incomingFlow := range incomingFlows {
@@ -59,7 +59,7 @@ func (r *LdapInjectionRule) GenerateRisks(input *types.ParsedModel) []types.Risk
 	return risks
 }
 
-func (r *LdapInjectionRule) createRisk(input *types.ParsedModel, technicalAsset *types.TechnicalAsset, incomingFlow *types.CommunicationLink, likelihood types.RiskExploitationLikelihood) types.Risk {
+func (r *LdapInjectionRule) createRisk(input *types.Model, technicalAsset *types.TechnicalAsset, incomingFlow *types.CommunicationLink, likelihood types.RiskExploitationLikelihood) *types.Risk {
 	caller := input.TechnicalAssets[incomingFlow.SourceId]
 	title := "<b>LDAP-Injection</b> risk at <b>" + caller.Title + "</b> against LDAP server <b>" + technicalAsset.Title + "</b>" +
 		" via <b>" + incomingFlow.Title + "</b>"
@@ -67,8 +67,8 @@ func (r *LdapInjectionRule) createRisk(input *types.ParsedModel, technicalAsset 
 	if technicalAsset.HighestProcessedConfidentiality(input) == types.StrictlyConfidential || technicalAsset.HighestProcessedIntegrity(input) == types.MissionCritical {
 		impact = types.HighImpact
 	}
-	risk := types.Risk{
-		CategoryId:                      r.Category().Id,
+	risk := &types.Risk{
+		CategoryId:                      r.Category().ID,
 		Severity:                        types.CalculateSeverity(likelihood, impact),
 		ExploitationLikelihood:          likelihood,
 		ExploitationImpact:              impact,

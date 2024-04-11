@@ -2,10 +2,12 @@ package input
 
 import (
 	"fmt"
+	"strings"
 )
 
-type IndividualRiskCategory struct {
+type RiskCategory struct {
 	ID                         string                    `yaml:"id,omitempty" json:"id,omitempty"`
+	Title                      string                    `json:"title,omitempty" yaml:"title,omitempty"`
 	Description                string                    `yaml:"description,omitempty" json:"description,omitempty"`
 	Impact                     string                    `yaml:"impact,omitempty" json:"impact,omitempty"`
 	ASVS                       string                    `yaml:"asvs,omitempty" json:"asvs,omitempty"`
@@ -23,7 +25,9 @@ type IndividualRiskCategory struct {
 	RisksIdentified            map[string]RiskIdentified `yaml:"risks_identified,omitempty" json:"risks_identified,omitempty"`
 }
 
-func (what *IndividualRiskCategory) Merge(other IndividualRiskCategory) error {
+type RiskCategories []*RiskCategory
+
+func (what *RiskCategory) Merge(other RiskCategory) error {
 	var mergeError error
 	what.ID, mergeError = new(Strings).MergeSingleton(what.ID, other.ID)
 	if mergeError != nil {
@@ -106,20 +110,16 @@ func (what *IndividualRiskCategory) Merge(other IndividualRiskCategory) error {
 	return nil
 }
 
-func (what *IndividualRiskCategory) MergeMap(first map[string]IndividualRiskCategory, second map[string]IndividualRiskCategory) (map[string]IndividualRiskCategory, error) {
-	for mapKey, mapValue := range second {
-		mapItem, ok := first[mapKey]
-		if ok {
-			mergeError := mapItem.Merge(mapValue)
-			if mergeError != nil {
-				return first, fmt.Errorf("failed to merge risk category %q: %v", mapKey, mergeError)
+func (what *RiskCategories) Add(items ...*RiskCategory) error {
+	for _, item := range items {
+		for _, value := range *what {
+			if strings.EqualFold(value.ID, item.ID) {
+				return fmt.Errorf("duplicate item %q in risk category list", value.ID)
 			}
-
-			first[mapKey] = mapItem
-		} else {
-			first[mapKey] = mapValue
 		}
+
+		*what = append(*what, item)
 	}
 
-	return first, nil
+	return nil
 }

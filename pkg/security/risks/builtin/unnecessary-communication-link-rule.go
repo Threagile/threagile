@@ -10,9 +10,9 @@ func NewUnnecessaryCommunicationLinkRule() *UnnecessaryCommunicationLinkRule {
 	return &UnnecessaryCommunicationLinkRule{}
 }
 
-func (*UnnecessaryCommunicationLinkRule) Category() types.RiskCategory {
-	return types.RiskCategory{
-		Id:    "unnecessary-communication-link",
+func (*UnnecessaryCommunicationLinkRule) Category() *types.RiskCategory {
+	return &types.RiskCategory{
+		ID:    "unnecessary-communication-link",
 		Title: "Unnecessary Communication Link",
 		Description: "When a technical communication link does not send or receive any data assets, this is " +
 			"an indicator for an unnecessary communication link (or for an incomplete model).",
@@ -36,8 +36,8 @@ func (*UnnecessaryCommunicationLinkRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *UnnecessaryCommunicationLinkRule) GenerateRisks(input *types.ParsedModel) []types.Risk {
-	risks := make([]types.Risk, 0)
+func (r *UnnecessaryCommunicationLinkRule) GenerateRisks(input *types.Model) []*types.Risk {
+	risks := make([]*types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
 		for _, commLink := range technicalAsset.CommunicationLinks {
@@ -51,10 +51,10 @@ func (r *UnnecessaryCommunicationLinkRule) GenerateRisks(input *types.ParsedMode
 	return risks
 }
 
-func (r *UnnecessaryCommunicationLinkRule) createRisk(technicalAsset *types.TechnicalAsset, commLink *types.CommunicationLink) types.Risk {
+func (r *UnnecessaryCommunicationLinkRule) createRisk(technicalAsset *types.TechnicalAsset, commLink *types.CommunicationLink) *types.Risk {
 	title := "<b>Unnecessary Communication Link</b> titled <b>" + commLink.Title + "</b> at technical asset <b>" + technicalAsset.Title + "</b>"
-	risk := types.Risk{
-		CategoryId:                      r.Category().Id,
+	risk := &types.Risk{
+		CategoryId:                      r.Category().ID,
 		Severity:                        types.CalculateSeverity(types.Unlikely, types.LowImpact),
 		ExploitationLikelihood:          types.Unlikely,
 		ExploitationImpact:              types.LowImpact,

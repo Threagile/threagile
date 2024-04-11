@@ -12,9 +12,9 @@ func NewUnnecessaryDataAssetRule() *UnnecessaryDataAssetRule {
 	return &UnnecessaryDataAssetRule{}
 }
 
-func (*UnnecessaryDataAssetRule) Category() types.RiskCategory {
-	return types.RiskCategory{
-		Id:    "unnecessary-data-asset",
+func (*UnnecessaryDataAssetRule) Category() *types.RiskCategory {
+	return &types.RiskCategory{
+		ID:    "unnecessary-data-asset",
 		Title: "Unnecessary Data Asset",
 		Description: "When a data asset is not processed by any data assets and also not transferred by any " +
 			"communication links, this is an indicator for an unnecessary data asset (or for an incomplete model).",
@@ -40,8 +40,8 @@ func (*UnnecessaryDataAssetRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *UnnecessaryDataAssetRule) GenerateRisks(input *types.ParsedModel) []types.Risk {
-	risks := make([]types.Risk, 0)
+func (r *UnnecessaryDataAssetRule) GenerateRisks(input *types.Model) []*types.Risk {
+	risks := make([]*types.Risk, 0)
 	// first create them in memory - otherwise in Go ranging over map is random order
 	// range over them in sorted (hence re-producible) way:
 	unusedDataAssetIDs := make(map[string]bool)
@@ -75,11 +75,11 @@ func (r *UnnecessaryDataAssetRule) GenerateRisks(input *types.ParsedModel) []typ
 	return risks
 }
 
-func (r *UnnecessaryDataAssetRule) createRisk(input *types.ParsedModel, unusedDataAssetID string) types.Risk {
+func (r *UnnecessaryDataAssetRule) createRisk(input *types.Model, unusedDataAssetID string) *types.Risk {
 	unusedDataAsset := input.DataAssets[unusedDataAssetID]
 	title := "<b>Unnecessary Data Asset</b> named <b>" + unusedDataAsset.Title + "</b>"
-	risk := types.Risk{
-		CategoryId:                  r.Category().Id,
+	risk := &types.Risk{
+		CategoryId:                  r.Category().ID,
 		Severity:                    types.CalculateSeverity(types.Unlikely, types.LowImpact),
 		ExploitationLikelihood:      types.Unlikely,
 		ExploitationImpact:          types.LowImpact,

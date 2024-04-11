@@ -10,9 +10,9 @@ func NewIncompleteModelRule() *IncompleteModelRule {
 	return &IncompleteModelRule{}
 }
 
-func (*IncompleteModelRule) Category() types.RiskCategory {
-	return types.RiskCategory{
-		Id:    "incomplete-model",
+func (*IncompleteModelRule) Category() *types.RiskCategory {
+	return &types.RiskCategory{
+		ID:    "incomplete-model",
 		Title: "Incomplete Model",
 		Description: "When the threat model contains unknown technologies or transfers data over unknown protocols, this is " +
 			"an indicator for an incomplete model.",
@@ -36,8 +36,8 @@ func (*IncompleteModelRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *IncompleteModelRule) GenerateRisks(input *types.ParsedModel) []types.Risk {
-	risks := make([]types.Risk, 0)
+func (r *IncompleteModelRule) GenerateRisks(input *types.Model) []*types.Risk {
+	risks := make([]*types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
 		if !technicalAsset.OutOfScope {
@@ -54,10 +54,10 @@ func (r *IncompleteModelRule) GenerateRisks(input *types.ParsedModel) []types.Ri
 	return risks
 }
 
-func (r *IncompleteModelRule) createRiskTechAsset(technicalAsset *types.TechnicalAsset) types.Risk {
+func (r *IncompleteModelRule) createRiskTechAsset(technicalAsset *types.TechnicalAsset) *types.Risk {
 	title := "<b>Unknown Technology</b> specified at technical asset <b>" + technicalAsset.Title + "</b>"
-	risk := types.Risk{
-		CategoryId:                   r.Category().Id,
+	risk := &types.Risk{
+		CategoryId:                   r.Category().ID,
 		Severity:                     types.CalculateSeverity(types.Unlikely, types.LowImpact),
 		ExploitationLikelihood:       types.Unlikely,
 		ExploitationImpact:           types.LowImpact,
@@ -70,10 +70,10 @@ func (r *IncompleteModelRule) createRiskTechAsset(technicalAsset *types.Technica
 	return risk
 }
 
-func (r *IncompleteModelRule) createRiskCommLink(technicalAsset *types.TechnicalAsset, commLink *types.CommunicationLink) types.Risk {
+func (r *IncompleteModelRule) createRiskCommLink(technicalAsset *types.TechnicalAsset, commLink *types.CommunicationLink) *types.Risk {
 	title := "<b>Unknown Protocol</b> specified for communication link <b>" + commLink.Title + "</b> at technical asset <b>" + technicalAsset.Title + "</b>"
-	risk := types.Risk{
-		CategoryId:                      r.Category().Id,
+	risk := &types.Risk{
+		CategoryId:                      r.Category().ID,
 		Severity:                        types.CalculateSeverity(types.Unlikely, types.LowImpact),
 		ExploitationLikelihood:          types.Unlikely,
 		ExploitationImpact:              types.LowImpact,

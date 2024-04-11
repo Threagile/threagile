@@ -1051,8 +1051,8 @@
       ]
     }
   },
-  "individual_risk_categories": {
-    "something-strange": {
+  "custom_risk_categories": [
+    {
       "id": "something-strange",
       "title": "Some Individual Risk Example",
       "description": "Some text describing the risk category...",
@@ -1066,9 +1066,10 @@
       "risk_assessment": "Some text describing the risk assessment...",
       "false_positives": "Some text describing the most common types of false positives...",
       "stride": "repudiation",
-      "cwe": 693
+      "cwe": 693,
+      "is_built_in": true
     }
-  },
+  ],
   "built_in_risk_categories": {
     "accidental-secret-leak": {
       "id": "accidental-secret-leak",

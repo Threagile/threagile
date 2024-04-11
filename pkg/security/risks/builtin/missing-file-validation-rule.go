@@ -10,9 +10,9 @@ func NewMissingFileValidationRule() *MissingFileValidationRule {
 	return &MissingFileValidationRule{}
 }
 
-func (*MissingFileValidationRule) Category() types.RiskCategory {
-	return types.RiskCategory{
-		Id:          "missing-file-validation",
+func (*MissingFileValidationRule) Category() *types.RiskCategory {
+	return &types.RiskCategory{
+		ID:          "missing-file-validation",
 		Title:       "Missing File Validation",
 		Description: "When a technical asset accepts files, these input files should be strictly validated about filename and type.",
 		Impact:      "If this risk is unmitigated, attackers might be able to provide malicious files to the application.",
@@ -40,8 +40,8 @@ func (*MissingFileValidationRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *MissingFileValidationRule) GenerateRisks(input *types.ParsedModel) []types.Risk {
-	risks := make([]types.Risk, 0)
+func (r *MissingFileValidationRule) GenerateRisks(input *types.Model) []*types.Risk {
+	risks := make([]*types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
 		if technicalAsset.OutOfScope || !technicalAsset.CustomDevelopedParts {
@@ -56,7 +56,7 @@ func (r *MissingFileValidationRule) GenerateRisks(input *types.ParsedModel) []ty
 	return risks
 }
 
-func (r *MissingFileValidationRule) createRisk(input *types.ParsedModel, technicalAsset *types.TechnicalAsset) types.Risk {
+func (r *MissingFileValidationRule) createRisk(input *types.Model, technicalAsset *types.TechnicalAsset) *types.Risk {
 	title := "<b>Missing File Validation</b> risk at <b>" + technicalAsset.Title + "</b>"
 	impact := types.LowImpact
 	if technicalAsset.HighestProcessedConfidentiality(input) == types.StrictlyConfidential ||
@@ -64,8 +64,8 @@ func (r *MissingFileValidationRule) createRisk(input *types.ParsedModel, technic
 		technicalAsset.HighestProcessedAvailability(input) == types.MissionCritical {
 		impact = types.MediumImpact
 	}
-	risk := types.Risk{
-		CategoryId:                   r.Category().Id,
+	risk := &types.Risk{
+		CategoryId:                   r.Category().ID,
 		Severity:                     types.CalculateSeverity(types.VeryLikely, impact),
 		ExploitationLikelihood:       types.VeryLikely,
 		ExploitationImpact:           impact,

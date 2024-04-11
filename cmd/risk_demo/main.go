@@ -16,8 +16,6 @@ type customRiskRule string
 
 // exported as symbol (here simply as variable to interface to bundle many functions under one symbol) named "RiskRule"
 
-var CustomRiskRule customRiskRule
-
 func main() {
 	getInfo := flag.Bool("get-info", false, "get rule info")
 	generateRisks := flag.Bool("generate-risks", false, "generate risks")
@@ -25,8 +23,7 @@ func main() {
 
 	if *getInfo {
 		rule := new(customRiskRule)
-		category := rule.Category()
-		riskData, marshalError := json.Marshal(new(model.CustomRisk).Init(category.Id, category, rule.SupportedTags()))
+		riskData, marshalError := json.Marshal(new(model.CustomRiskCategory).Init(rule.Category(), rule.SupportedTags()))
 
 		if marshalError != nil {
 			_, _ = fmt.Fprintf(os.Stderr, "failed to print risk data: %v", marshalError)
@@ -45,7 +42,7 @@ func main() {
 			os.Exit(-2)
 		}
 
-		var input types.ParsedModel
+		var input types.Model
 		inError := json.Unmarshal(inData, &input)
 		if inError != nil {
 			_, _ = fmt.Fprintf(os.Stderr, "failed to parse model: %v\n", inError)
@@ -67,9 +64,9 @@ func main() {
 	os.Exit(-2)
 }
 
-func (r customRiskRule) Category() types.RiskCategory {
-	return types.RiskCategory{
-		Id:                         "demo",
+func (r customRiskRule) Category() *types.RiskCategory {
+	return &types.RiskCategory{
+		ID:                         "demo",
 		Title:                      "Just a Demo",
 		Description:                "Demo Description",
 		Impact:                     "Demo Impact",
@@ -92,7 +89,7 @@ func (r customRiskRule) SupportedTags() []string {
 	return []string{"demo tag"}
 }
 
-func (r customRiskRule) GenerateRisks(parsedModel *types.ParsedModel) []types.Risk {
+func (r customRiskRule) GenerateRisks(parsedModel *types.Model) []types.Risk {
 	generatedRisks := make([]types.Risk, 0)
 	for _, techAsset := range parsedModel.TechnicalAssets {
 		generatedRisks = append(generatedRisks, createRisk(techAsset))
@@ -101,8 +98,9 @@ func (r customRiskRule) GenerateRisks(parsedModel *types.ParsedModel) []types.Ri
 }
 
 func createRisk(technicalAsset *types.TechnicalAsset) types.Risk {
+	category := new(customRiskRule).Category()
 	risk := types.Risk{
-		CategoryId:                   CustomRiskRule.Category().Id,
+		CategoryId:                   category.ID,
 		Severity:                     types.CalculateSeverity(types.VeryLikely, types.MediumImpact),
 		ExploitationLikelihood:       types.VeryLikely,
 		ExploitationImpact:           types.MediumImpact,

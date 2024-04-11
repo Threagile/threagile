@@ -18,7 +18,7 @@ type TrustBoundary struct {
 	TrustBoundariesNested []string          `json:"trust_boundaries_nested,omitempty" yaml:"trust_boundaries_nested,omitempty"`
 }
 
-func (what TrustBoundary) RecursivelyAllTechnicalAssetIDsInside(model *ParsedModel) []string {
+func (what TrustBoundary) RecursivelyAllTechnicalAssetIDsInside(model *Model) []string {
 	result := make([]string, 0)
 	what.addAssetIDsRecursively(model, &result)
 	return result
@@ -32,7 +32,7 @@ func (what TrustBoundary) IsTaggedWithBaseTag(baseTag string) bool {
 	return IsTaggedWithBaseTag(what.Tags, baseTag)
 }
 
-func (what TrustBoundary) IsTaggedWithAnyTraversingUp(model *ParsedModel, tags ...string) bool {
+func (what TrustBoundary) IsTaggedWithAnyTraversingUp(model *Model, tags ...string) bool {
 	if what.IsTaggedWithAny(tags...) {
 		return true
 	}
@@ -43,7 +43,7 @@ func (what TrustBoundary) IsTaggedWithAnyTraversingUp(model *ParsedModel, tags .
 	return false
 }
 
-func (what TrustBoundary) ParentTrustBoundaryID(model *ParsedModel) string {
+func (what TrustBoundary) ParentTrustBoundaryID(model *Model) string {
 	var result string
 	for _, candidate := range model.TrustBoundaries {
 		if contains(candidate.TrustBoundariesNested, what.Id) {
@@ -54,7 +54,7 @@ func (what TrustBoundary) ParentTrustBoundaryID(model *ParsedModel) string {
 	return result
 }
 
-func (what TrustBoundary) HighestConfidentiality(model *ParsedModel) Confidentiality {
+func (what TrustBoundary) HighestConfidentiality(model *Model) Confidentiality {
 	highest := Public
 	for _, id := range what.RecursivelyAllTechnicalAssetIDsInside(model) {
 		techAsset := model.TechnicalAssets[id]
@@ -65,7 +65,7 @@ func (what TrustBoundary) HighestConfidentiality(model *ParsedModel) Confidentia
 	return highest
 }
 
-func (what TrustBoundary) HighestIntegrity(model *ParsedModel) Criticality {
+func (what TrustBoundary) HighestIntegrity(model *Model) Criticality {
 	highest := Archive
 	for _, id := range what.RecursivelyAllTechnicalAssetIDsInside(model) {
 		techAsset := model.TechnicalAssets[id]
@@ -76,7 +76,7 @@ func (what TrustBoundary) HighestIntegrity(model *ParsedModel) Criticality {
 	return highest
 }
 
-func (what TrustBoundary) HighestAvailability(model *ParsedModel) Criticality {
+func (what TrustBoundary) HighestAvailability(model *Model) Criticality {
 	highest := Archive
 	for _, id := range what.RecursivelyAllTechnicalAssetIDsInside(model) {
 		techAsset := model.TechnicalAssets[id]
@@ -87,20 +87,20 @@ func (what TrustBoundary) HighestAvailability(model *ParsedModel) Criticality {
 	return highest
 }
 
-func (what TrustBoundary) AllParentTrustBoundaryIDs(model *ParsedModel) []string {
+func (what TrustBoundary) AllParentTrustBoundaryIDs(model *Model) []string {
 	result := make([]string, 0)
 	what.addTrustBoundaryIDsRecursively(model, &result)
 	return result
 }
 
-func (what TrustBoundary) addAssetIDsRecursively(model *ParsedModel, result *[]string) {
+func (what TrustBoundary) addAssetIDsRecursively(model *Model, result *[]string) {
 	*result = append(*result, what.TechnicalAssetsInside...)
 	for _, nestedBoundaryID := range what.TrustBoundariesNested {
 		model.TrustBoundaries[nestedBoundaryID].addAssetIDsRecursively(model, result)
 	}
 }
 
-func (what TrustBoundary) addTrustBoundaryIDsRecursively(model *ParsedModel, result *[]string) {
+func (what TrustBoundary) addTrustBoundaryIDsRecursively(model *Model, result *[]string) {
 	*result = append(*result, what.Id)
 	parentID := what.ParentTrustBoundaryID(model)
 	if len(parentID) > 0 {
@@ -110,7 +110,7 @@ func (what TrustBoundary) addTrustBoundaryIDsRecursively(model *ParsedModel, res
 
 // as in Go ranging over map is random order, range over them in sorted (hence reproducible) way:
 
-func SortedKeysOfTrustBoundaries(model *ParsedModel) []string {
+func SortedKeysOfTrustBoundaries(model *Model) []string {
 	keys := make([]string, 0)
 	for k := range model.TrustBoundaries {
 		keys = append(keys, k)

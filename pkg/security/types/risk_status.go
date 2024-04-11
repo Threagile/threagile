@@ -5,7 +5,9 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package types
 
 import (
+	"encoding/json"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"strings"
 )
 
@@ -65,4 +67,48 @@ func (what RiskStatus) Title() string {
 
 func (what RiskStatus) IsStillAtRisk() bool {
 	return what == Unchecked || what == InDiscussion || what == Accepted || what == InProgress
+}
+
+func (what RiskStatus) MarshalJSON() ([]byte, error) {
+	return json.Marshal(what.String())
+}
+
+func (what *RiskStatus) UnmarshalJSON(data []byte) error {
+	var text string
+	unmarshalError := json.Unmarshal(data, &text)
+	if unmarshalError != nil {
+		return unmarshalError
+	}
+
+	value, findError := what.find(text)
+	if findError != nil {
+		return findError
+	}
+
+	*what = value
+	return nil
+}
+
+func (what RiskStatus) MarshalYAML() (interface{}, error) {
+	return what.String(), nil
+}
+
+func (what *RiskStatus) UnmarshalYAML(node *yaml.Node) error {
+	value, findError := what.find(node.Value)
+	if findError != nil {
+		return findError
+	}
+
+	*what = value
+	return nil
+}
+
+func (what RiskStatus) find(value string) (RiskStatus, error) {
+	for index, description := range RiskStatusTypeDescription {
+		if strings.EqualFold(value, description.Name) {
+			return RiskStatus(index), nil
+		}
+	}
+
+	return RiskStatus(0), fmt.Errorf("unknown risk status value %q", value)
 }

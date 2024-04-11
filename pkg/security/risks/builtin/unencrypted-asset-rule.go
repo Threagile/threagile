@@ -10,9 +10,9 @@ func NewUnencryptedAssetRule() *UnencryptedAssetRule {
 	return &UnencryptedAssetRule{}
 }
 
-func (*UnencryptedAssetRule) Category() types.RiskCategory {
-	return types.RiskCategory{
-		Id:    "unencrypted-asset",
+func (*UnencryptedAssetRule) Category() *types.RiskCategory {
+	return &types.RiskCategory{
+		ID:    "unencrypted-asset",
 		Title: "Unencrypted Technical Assets",
 		Description: "Due to the confidentiality rating of the technical asset itself and/or the stored data assets " +
 			"this technical asset must be encrypted. The risk rating depends on the sensitivity technical asset itself and of the data assets stored.",
@@ -44,8 +44,8 @@ func (*UnencryptedAssetRule) SupportedTags() []string {
 
 // check for technical assets that should be encrypted due to their confidentiality
 
-func (r *UnencryptedAssetRule) GenerateRisks(input *types.ParsedModel) []types.Risk {
-	risks := make([]types.Risk, 0)
+func (r *UnencryptedAssetRule) GenerateRisks(input *types.Model) []*types.Risk {
+	risks := make([]*types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
 		if !technicalAsset.OutOfScope && !isEncryptionWaiver(technicalAsset) && len(technicalAsset.DataAssetsStored) > 0 &&
@@ -76,13 +76,13 @@ func isEncryptionWaiver(asset *types.TechnicalAsset) bool {
 	return asset.Technologies.GetAttribute(types.IsNoStorageAtRest) || asset.Technologies.GetAttribute(types.IsEmbeddedComponent)
 }
 
-func (r *UnencryptedAssetRule) createRisk(technicalAsset *types.TechnicalAsset, impact types.RiskExploitationImpact, requiresEndUserKey bool) types.Risk {
+func (r *UnencryptedAssetRule) createRisk(technicalAsset *types.TechnicalAsset, impact types.RiskExploitationImpact, requiresEndUserKey bool) *types.Risk {
 	title := "<b>Unencrypted Technical Asset</b> named <b>" + technicalAsset.Title + "</b>"
 	if requiresEndUserKey {
 		title += " missing end user individual encryption with " + types.DataWithEndUserIndividualKey.String()
 	}
-	risk := types.Risk{
-		CategoryId:                   r.Category().Id,
+	risk := &types.Risk{
+		CategoryId:                   r.Category().ID,
 		Severity:                     types.CalculateSeverity(types.Unlikely, impact),
 		ExploitationLikelihood:       types.Unlikely,
 		ExploitationImpact:           impact,

@@ -10,9 +10,9 @@ func NewUnencryptedCommunicationRule() *UnencryptedCommunicationRule {
 	return &UnencryptedCommunicationRule{}
 }
 
-func (*UnencryptedCommunicationRule) Category() types.RiskCategory {
-	return types.RiskCategory{
-		Id:    "unencrypted-communication",
+func (*UnencryptedCommunicationRule) Category() *types.RiskCategory {
+	return &types.RiskCategory{
+		ID:    "unencrypted-communication",
 		Title: "Unencrypted Communication",
 		Description: "Due to the confidentiality and/or integrity rating of the data assets transferred over the " +
 			"communication link this connection must be encrypted.",
@@ -40,8 +40,8 @@ func (*UnencryptedCommunicationRule) SupportedTags() []string {
 
 // check for communication links that should be encrypted due to their confidentiality and/or integrity
 
-func (r *UnencryptedCommunicationRule) GenerateRisks(input *types.ParsedModel) []types.Risk {
-	risks := make([]types.Risk, 0)
+func (r *UnencryptedCommunicationRule) GenerateRisks(input *types.Model) []*types.Risk {
+	risks := make([]*types.Risk, 0)
 	for _, technicalAsset := range input.TechnicalAssets {
 		for _, dataFlow := range technicalAsset.CommunicationLinks {
 			transferringAuthData := dataFlow.Authentication != types.NoneAuthentication
@@ -83,7 +83,7 @@ func (r *UnencryptedCommunicationRule) GenerateRisks(input *types.ParsedModel) [
 	return risks
 }
 
-func (r *UnencryptedCommunicationRule) createRisk(input *types.ParsedModel, technicalAsset *types.TechnicalAsset, dataFlow *types.CommunicationLink, highRisk bool, transferringAuthData bool) types.Risk {
+func (r *UnencryptedCommunicationRule) createRisk(input *types.Model, technicalAsset *types.TechnicalAsset, dataFlow *types.CommunicationLink, highRisk bool, transferringAuthData bool) *types.Risk {
 	impact := types.MediumImpact
 	if highRisk {
 		impact = types.HighImpact
@@ -101,8 +101,8 @@ func (r *UnencryptedCommunicationRule) createRisk(input *types.ParsedModel, tech
 	if dataFlow.IsAcrossTrustBoundaryNetworkOnly(input) {
 		likelihood = types.Likely
 	}
-	risk := types.Risk{
-		CategoryId:                      r.Category().Id,
+	risk := &types.Risk{
+		CategoryId:                      r.Category().ID,
 		Severity:                        types.CalculateSeverity(likelihood, impact),
 		ExploitationLikelihood:          likelihood,
 		ExploitationImpact:              impact,

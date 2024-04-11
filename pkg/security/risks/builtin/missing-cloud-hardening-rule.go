@@ -13,9 +13,9 @@ func NewMissingCloudHardeningRule() *MissingCloudHardeningRule {
 	return &MissingCloudHardeningRule{}
 }
 
-func (*MissingCloudHardeningRule) Category() types.RiskCategory {
-	return types.RiskCategory{
-		Id:    "missing-cloud-hardening",
+func (*MissingCloudHardeningRule) Category() *types.RiskCategory {
+	return &types.RiskCategory{
+		ID:    "missing-cloud-hardening",
 		Title: "Missing Cloud Hardening",
 		Description: "Cloud components should be hardened according to the cloud vendor best practices. This affects their " +
 			"configuration, auditing, and further areas.",
@@ -57,8 +57,8 @@ func (*MissingCloudHardeningRule) SupportedTags() []string {
 	return res
 }
 
-func (r *MissingCloudHardeningRule) GenerateRisks(input *types.ParsedModel) []types.Risk {
-	risks := make([]types.Risk, 0)
+func (r *MissingCloudHardeningRule) GenerateRisks(input *types.Model) []*types.Risk {
+	risks := make([]*types.Risk, 0)
 
 	sharedRuntimesWithUnspecificCloudRisks := make(map[string]bool)
 	trustBoundariesWithUnspecificCloudRisks := make(map[string]bool)
@@ -348,7 +348,7 @@ func addAccordingToBaseTag(techAsset *types.TechnicalAsset, tags []string,
 	}
 }
 
-func findMostSensitiveTechnicalAsset(input *types.ParsedModel, techAssets map[string]bool) *types.TechnicalAsset {
+func findMostSensitiveTechnicalAsset(input *types.Model, techAssets map[string]bool) *types.TechnicalAsset {
 	var mostRelevantAsset *types.TechnicalAsset
 	keys := make([]string, 0, len(techAssets))
 	for k := range techAssets {
@@ -364,7 +364,7 @@ func findMostSensitiveTechnicalAsset(input *types.ParsedModel, techAssets map[st
 	return mostRelevantAsset
 }
 
-func (r *MissingCloudHardeningRule) createRiskForSharedRuntime(input *types.ParsedModel, sharedRuntime *types.SharedRuntime, prefix, details string) types.Risk {
+func (r *MissingCloudHardeningRule) createRiskForSharedRuntime(input *types.Model, sharedRuntime *types.SharedRuntime, prefix, details string) *types.Risk {
 	id := ""
 	if len(prefix) > 0 {
 		id = "@" + strings.ToLower(prefix)
@@ -386,8 +386,8 @@ func (r *MissingCloudHardeningRule) createRiskForSharedRuntime(input *types.Pars
 		impact = types.VeryHighImpact
 	}
 	// create risk
-	risk := types.Risk{
-		CategoryId:                  r.Category().Id,
+	risk := &types.Risk{
+		CategoryId:                  r.Category().ID,
 		Severity:                    types.CalculateSeverity(types.Unlikely, impact),
 		ExploitationLikelihood:      types.Unlikely,
 		ExploitationImpact:          impact,
@@ -400,7 +400,7 @@ func (r *MissingCloudHardeningRule) createRiskForSharedRuntime(input *types.Pars
 	return risk
 }
 
-func (r *MissingCloudHardeningRule) createRiskForTrustBoundary(parsedModel *types.ParsedModel, trustBoundary *types.TrustBoundary, prefix, details string) types.Risk {
+func (r *MissingCloudHardeningRule) createRiskForTrustBoundary(parsedModel *types.Model, trustBoundary *types.TrustBoundary, prefix, details string) *types.Risk {
 	id := ""
 	if len(prefix) > 0 {
 		id = "@" + strings.ToLower(prefix)
@@ -422,8 +422,8 @@ func (r *MissingCloudHardeningRule) createRiskForTrustBoundary(parsedModel *type
 		impact = types.VeryHighImpact
 	}
 	// create risk
-	risk := types.Risk{
-		CategoryId:                  r.Category().Id,
+	risk := &types.Risk{
+		CategoryId:                  r.Category().ID,
 		Severity:                    types.CalculateSeverity(types.Unlikely, impact),
 		ExploitationLikelihood:      types.Unlikely,
 		ExploitationImpact:          impact,
@@ -436,7 +436,7 @@ func (r *MissingCloudHardeningRule) createRiskForTrustBoundary(parsedModel *type
 	return risk
 }
 
-func (r *MissingCloudHardeningRule) createRiskForTechnicalAsset(parsedModel *types.ParsedModel, technicalAsset *types.TechnicalAsset, prefix, details string) types.Risk {
+func (r *MissingCloudHardeningRule) createRiskForTechnicalAsset(parsedModel *types.Model, technicalAsset *types.TechnicalAsset, prefix, details string) *types.Risk {
 	id := ""
 	if len(prefix) > 0 {
 		id = "@" + strings.ToLower(prefix)
@@ -458,8 +458,8 @@ func (r *MissingCloudHardeningRule) createRiskForTechnicalAsset(parsedModel *typ
 		impact = types.VeryHighImpact
 	}
 	// create risk
-	risk := types.Risk{
-		CategoryId:                   r.Category().Id,
+	risk := &types.Risk{
+		CategoryId:                   r.Category().ID,
 		Severity:                     types.CalculateSeverity(types.Unlikely, impact),
 		ExploitationLikelihood:       types.Unlikely,
 		ExploitationImpact:           impact,

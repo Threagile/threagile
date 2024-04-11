@@ -10,9 +10,9 @@ func NewWrongTrustBoundaryContentRule() *WrongTrustBoundaryContentRule {
 	return &WrongTrustBoundaryContentRule{}
 }
 
-func (*WrongTrustBoundaryContentRule) Category() types.RiskCategory {
-	return types.RiskCategory{
-		Id:    "wrong-trust-boundary-content",
+func (*WrongTrustBoundaryContentRule) Category() *types.RiskCategory {
+	return &types.RiskCategory{
+		ID:    "wrong-trust-boundary-content",
 		Title: "Wrong Trust Boundary Content",
 		Description: "When a trust boundary of type " + types.NetworkPolicyNamespaceIsolation.String() + " contains " +
 			"non-container assets it is likely to be a model failure.",
@@ -36,8 +36,8 @@ func (*WrongTrustBoundaryContentRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *WrongTrustBoundaryContentRule) GenerateRisks(input *types.ParsedModel) []types.Risk {
-	risks := make([]types.Risk, 0)
+func (r *WrongTrustBoundaryContentRule) GenerateRisks(input *types.Model) []*types.Risk {
+	risks := make([]*types.Risk, 0)
 	for _, trustBoundary := range input.TrustBoundaries {
 		if trustBoundary.Type == types.NetworkPolicyNamespaceIsolation {
 			for _, techAssetID := range trustBoundary.TechnicalAssetsInside {
@@ -51,10 +51,10 @@ func (r *WrongTrustBoundaryContentRule) GenerateRisks(input *types.ParsedModel) 
 	return risks
 }
 
-func (r *WrongTrustBoundaryContentRule) createRisk(technicalAsset *types.TechnicalAsset) types.Risk {
+func (r *WrongTrustBoundaryContentRule) createRisk(technicalAsset *types.TechnicalAsset) *types.Risk {
 	title := "<b>Wrong Trust Boundary Content</b> (non-container asset inside container trust boundary) at <b>" + technicalAsset.Title + "</b>"
-	risk := types.Risk{
-		CategoryId:                   r.Category().Id,
+	risk := &types.Risk{
+		CategoryId:                   r.Category().ID,
 		Severity:                     types.CalculateSeverity(types.Unlikely, types.LowImpact),
 		ExploitationLikelihood:       types.Unlikely,
 		ExploitationImpact:           types.LowImpact,

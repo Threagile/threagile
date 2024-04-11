@@ -16,7 +16,6 @@ import (
 	"github.com/jung-kurt/gofpdf"
 	"github.com/jung-kurt/gofpdf/contrib/gofpdi"
 	"github.com/threagile/threagile/pkg/docs"
-	"github.com/threagile/threagile/pkg/model"
 	"github.com/threagile/threagile/pkg/security/risks"
 	"github.com/threagile/threagile/pkg/security/types"
 	"github.com/wcharczuk/go-chart"
@@ -54,13 +53,13 @@ func (r *pdfReporter) WriteReportPDF(reportFilename string,
 	dataFlowDiagramFilenamePNG string,
 	dataAssetDiagramFilenamePNG string,
 	modelFilename string,
-	skipRiskRules string,
+	skipRiskRules []string,
 	buildTimestamp string,
 	modelHash string,
 	introTextRAA string,
-	customRiskRules map[string]*model.CustomRisk,
+	customRiskRules risks.RiskRules,
 	tempFolder string,
-	model *types.ParsedModel) error {
+	model *types.Model) error {
 	defer func() {
 		value := recover()
 		if value != nil {
@@ -113,7 +112,7 @@ func (r *pdfReporter) WriteReportPDF(reportFilename string,
 	return nil
 }
 
-func (r *pdfReporter) createPdfAndInitMetadata(model *types.ParsedModel) {
+func (r *pdfReporter) createPdfAndInitMetadata(model *types.Model) {
 	r.pdf = gofpdf.New("P", "mm", "A4", "")
 	r.pdf.SetCreator(model.Author.Homepage, true)
 	r.pdf.SetAuthor(model.Author.Name, true)
@@ -148,7 +147,7 @@ func (r *pdfReporter) createPdfAndInitMetadata(model *types.ParsedModel) {
 	r.linkCounter = 1 // link counting starts at 1 via r.pdf.AddLink
 }
 
-func (r *pdfReporter) addBreadcrumb(parsedModel *types.ParsedModel) {
+func (r *pdfReporter) addBreadcrumb(parsedModel *types.Model) {
 	if len(r.currentChapterTitleBreadcrumb) > 0 {
 		uni := r.pdf.UnicodeTranslatorFromDescriptor("")
 		r.pdf.SetFont("Helvetica", "", 10)
@@ -173,7 +172,7 @@ func (r *pdfReporter) parseBackgroundTemplate(templateFilename string) {
 	r.diagramLegendTemplateId = gofpdi.ImportPage(r.pdf, templateFilename, 3, "/MediaBox")
 }
 
-func (r *pdfReporter) createCover(parsedModel *types.ParsedModel) {
+func (r *pdfReporter) createCover(parsedModel *types.Model) {
 	uni := r.pdf.UnicodeTranslatorFromDescriptor("")
 	r.pdf.AddPage()
 	gofpdi.UseImportedTemplate(r.pdf, r.coverTemplateId, 0, 0, 0, 300)
@@ -195,7 +194,7 @@ func (r *pdfReporter) createCover(parsedModel *types.ParsedModel) {
 	r.pdf.SetTextColor(0, 0, 0)
 }
 
-func (r *pdfReporter) createTableOfContents(parsedModel *types.ParsedModel) {
+func (r *pdfReporter) createTableOfContents(parsedModel *types.Model) {
 	uni := r.pdf.UnicodeTranslatorFromDescriptor("")
 	r.pdf.AddPage()
 	r.currentChapterTitleBreadcrumb = "Table of Contents"
@@ -418,10 +417,10 @@ func (r *pdfReporter) createTableOfContents(parsedModel *types.ParsedModel) {
 				suffix += "s"
 			}
 			r.pdf.Text(11, y, "    "+uni(category.Title)+": "+suffix)
-			r.pdf.Text(175, y, "{"+category.Id+"}")
+			r.pdf.Text(175, y, "{"+category.ID+"}")
 			r.pdf.Line(15.6, y+1.3, 11+171.5, y+1.3)
-			r.tocLinkIdByAssetId[category.Id] = r.pdf.AddLink()
-			r.pdf.Link(10, y-5, 172.5, 6.5, r.tocLinkIdByAssetId[category.Id])
+			r.tocLinkIdByAssetId[category.ID] = r.pdf.AddLink()
+			r.pdf.Link(10, y-5, 172.5, 6.5, r.tocLinkIdByAssetId[category.ID])
 		}
 	}
 
@@ -638,7 +637,7 @@ func (r *pdfReporter) createTableOfContents(parsedModel *types.ParsedModel) {
 	// by the current page number. --> See the "r.pdf.RegisterAlias()" calls during the PDF creation in this file
 }
 
-func sortedTechnicalAssetsByRiskSeverityAndTitle(parsedModel *types.ParsedModel) []*types.TechnicalAsset {
+func sortedTechnicalAssetsByRiskSeverityAndTitle(parsedModel *types.Model) []*types.TechnicalAsset {
 	assets := make([]*types.TechnicalAsset, 0)
 	for _, asset := range parsedModel.TechnicalAssets {
 		assets = append(assets, asset)
@@ -647,7 +646,7 @@ func sortedTechnicalAssetsByRiskSeverityAndTitle(parsedModel *types.ParsedModel)
 	return assets
 }
 
-func sortedDataAssetsByDataBreachProbabilityAndTitle(parsedModel *types.ParsedModel) []*types.DataAsset {
+func sortedDataAssetsByDataBreachProbabilityAndTitle(parsedModel *types.Model) []*types.DataAsset {
 	assets := make([]*types.DataAsset, 0)
 	for _, asset := range parsedModel.DataAssets {
 		assets = append(assets, asset)
@@ -669,7 +668,7 @@ func (r *pdfReporter) defineLinkTarget(alias string) {
 	r.linkCounter++
 }
 
-func (r *pdfReporter) createDisclaimer(parsedModel *types.ParsedModel) {
+func (r *pdfReporter) createDisclaimer(parsedModel *types.Model) {
 	r.pdf.AddPage()
 	r.currentChapterTitleBreadcrumb = "Disclaimer"
 	r.defineLinkTarget("{disclaimer}")
@@ -722,7 +721,7 @@ func (r *pdfReporter) createDisclaimer(parsedModel *types.ParsedModel) {
 	r.pdfColorBlack()
 }
 
-func (r *pdfReporter) createManagementSummary(parsedModel *types.ParsedModel, tempFolder string) error {
+func (r *pdfReporter) createManagementSummary(parsedModel *types.Model, tempFolder string) error {
 	uni := r.pdf.UnicodeTranslatorFromDescriptor("")
 	r.pdf.SetTextColor(0, 0, 0)
 	title := "Management Summary"
@@ -917,7 +916,7 @@ func (r *pdfReporter) createManagementSummary(parsedModel *types.ParsedModel, te
 	return nil
 }
 
-func (r *pdfReporter) createRiskMitigationStatus(parsedModel *types.ParsedModel, tempFolder string) error {
+func (r *pdfReporter) createRiskMitigationStatus(parsedModel *types.Model, tempFolder string) error {
 	r.pdf.SetTextColor(0, 0, 0)
 	stillAtRisk := types.FilteredByStillAtRisk(parsedModel)
 	count := len(stillAtRisk)
@@ -1274,15 +1273,15 @@ func makeColor(hexColor string) drawing.Color {
 	return drawing.ColorFromHex(hexColor[i:]) // = remove first char, which is # in rgb hex here
 }
 
-func (r *pdfReporter) createImpactInitialRisks(parsedModel *types.ParsedModel) {
+func (r *pdfReporter) createImpactInitialRisks(parsedModel *types.Model) {
 	r.renderImpactAnalysis(parsedModel, true)
 }
 
-func (r *pdfReporter) createImpactRemainingRisks(parsedModel *types.ParsedModel) {
+func (r *pdfReporter) createImpactRemainingRisks(parsedModel *types.Model) {
 	r.renderImpactAnalysis(parsedModel, false)
 }
 
-func (r *pdfReporter) renderImpactAnalysis(parsedModel *types.ParsedModel, initialRisks bool) {
+func (r *pdfReporter) renderImpactAnalysis(parsedModel *types.Model, initialRisks bool) {
 	r.pdf.SetTextColor(0, 0, 0)
 	count, catCount := types.TotalRiskCount(parsedModel), len(parsedModel.GeneratedRisksByCategory)
 	if !initialRisks {
@@ -1342,7 +1341,7 @@ func (r *pdfReporter) renderImpactAnalysis(parsedModel *types.ParsedModel, initi
 	r.pdf.SetDashPattern([]float64{}, 0)
 }
 
-func (r *pdfReporter) createOutOfScopeAssets(parsedModel *types.ParsedModel) {
+func (r *pdfReporter) createOutOfScopeAssets(parsedModel *types.Model) {
 	uni := r.pdf.UnicodeTranslatorFromDescriptor("")
 	r.pdf.SetTextColor(0, 0, 0)
 	assets := "Assets"
@@ -1405,7 +1404,7 @@ func (r *pdfReporter) createOutOfScopeAssets(parsedModel *types.ParsedModel) {
 	r.pdf.SetDashPattern([]float64{}, 0)
 }
 
-func sortedTechnicalAssetsByRAAAndTitle(parsedModel *types.ParsedModel) []*types.TechnicalAsset {
+func sortedTechnicalAssetsByRAAAndTitle(parsedModel *types.Model) []*types.TechnicalAsset {
 	assets := make([]*types.TechnicalAsset, 0)
 	for _, asset := range parsedModel.TechnicalAssets {
 		assets = append(assets, asset)
@@ -1414,7 +1413,7 @@ func sortedTechnicalAssetsByRAAAndTitle(parsedModel *types.ParsedModel) []*types
 	return assets
 }
 
-func (r *pdfReporter) createModelFailures(parsedModel *types.ParsedModel) {
+func (r *pdfReporter) createModelFailures(parsedModel *types.Model) {
 	r.pdf.SetTextColor(0, 0, 0)
 	modelFailures := types.FlattenRiskSlice(types.FilterByModelFailures(parsedModel, parsedModel.GeneratedRisksByCategory))
 	risksStr := "Risks"
@@ -1465,7 +1464,7 @@ func (r *pdfReporter) createModelFailures(parsedModel *types.ParsedModel) {
 	r.pdf.SetDashPattern([]float64{}, 0)
 }
 
-func (r *pdfReporter) createRAA(parsedModel *types.ParsedModel, introTextRAA string) {
+func (r *pdfReporter) createRAA(parsedModel *types.Model, introTextRAA string) {
 	uni := r.pdf.UnicodeTranslatorFromDescriptor("")
 	r.pdf.SetTextColor(0, 0, 0)
 	chapTitle := "RAA Analysis"
@@ -1603,7 +1602,7 @@ func createDataRiskQuickWins() {
 		strBuilder.WriteString(uni(technicalAsset.Description))
 		html.Write(5, strBuilder.String())
 		strBuilder.Reset()
-		r.pdf.Link(9, posY, 190, r.pdf.GetY()-posY+4, tocLinkIdByAssetId[technicalAsset.Id])
+		r.pdf.Link(9, posY, 190, r.pdf.GetY()-posY+4, tocLinkIdByAssetId[technicalAsset.ID])
 	}
 
 	r.pdf.SetDrawColor(0, 0, 0)
@@ -1611,12 +1610,12 @@ func createDataRiskQuickWins() {
 }
 */
 
-func (r *pdfReporter) addCategories(parsedModel *types.ParsedModel, riskCategories []types.RiskCategory, severity types.RiskSeverity, bothInitialAndRemainingRisks bool, initialRisks bool, describeImpact bool, describeDescription bool) {
+func (r *pdfReporter) addCategories(parsedModel *types.Model, riskCategories []*types.RiskCategory, severity types.RiskSeverity, bothInitialAndRemainingRisks bool, initialRisks bool, describeImpact bool, describeDescription bool) {
 	html := r.pdf.HTMLBasicNew()
 	var strBuilder strings.Builder
 	sort.Sort(types.ByRiskCategoryTitleSort(riskCategories))
 	for _, riskCategory := range riskCategories {
-		risksStr := parsedModel.GeneratedRisksByCategory[riskCategory.Id]
+		risksStr := parsedModel.GeneratedRisksByCategory[riskCategory.ID]
 		if !initialRisks {
 			risksStr = types.ReduceToOnlyStillAtRisk(parsedModel, risksStr)
 		}
@@ -1704,7 +1703,7 @@ func (r *pdfReporter) addCategories(parsedModel *types.ParsedModel, riskCategori
 		}
 		html.Write(5, strBuilder.String())
 		strBuilder.Reset()
-		r.pdf.Link(9, posY, 190, r.pdf.GetY()-posY+4, r.tocLinkIdByAssetId[riskCategory.Id])
+		r.pdf.Link(9, posY, 190, r.pdf.GetY()-posY+4, r.tocLinkIdByAssetId[riskCategory.ID])
 	}
 }
 
@@ -1717,7 +1716,7 @@ func firstParagraph(text string) string {
 	return match[1]
 }
 
-func (r *pdfReporter) createAssignmentByFunction(parsedModel *types.ParsedModel) {
+func (r *pdfReporter) createAssignmentByFunction(parsedModel *types.Model) {
 	r.pdf.SetTextColor(0, 0, 0)
 	title := "Assignment by Function"
 	r.addHeadline(title, false)
@@ -1863,7 +1862,7 @@ func (r *pdfReporter) createAssignmentByFunction(parsedModel *types.ParsedModel)
 	r.pdf.SetDashPattern([]float64{}, 0)
 }
 
-func (r *pdfReporter) createSTRIDE(parsedModel *types.ParsedModel) {
+func (r *pdfReporter) createSTRIDE(parsedModel *types.Model) {
 	r.pdf.SetTextColor(0, 0, 0)
 	title := "STRIDE Classification of Identified Risks"
 	r.addHeadline(title, false)
@@ -2068,7 +2067,7 @@ func (r *pdfReporter) createSTRIDE(parsedModel *types.ParsedModel) {
 	r.pdf.SetDashPattern([]float64{}, 0)
 }
 
-func (r *pdfReporter) createSecurityRequirements(parsedModel *types.ParsedModel) {
+func (r *pdfReporter) createSecurityRequirements(parsedModel *types.Model) {
 	uni := r.pdf.UnicodeTranslatorFromDescriptor("")
 	r.pdf.SetTextColor(0, 0, 0)
 	chapTitle := "Security Requirements"
@@ -2100,7 +2099,7 @@ func (r *pdfReporter) createSecurityRequirements(parsedModel *types.ParsedModel)
 		"taken into account as well. Also custom individual security requirements might exist for the project.</i>")
 }
 
-func sortedKeysOfSecurityRequirements(parsedModel *types.ParsedModel) []string {
+func sortedKeysOfSecurityRequirements(parsedModel *types.Model) []string {
 	keys := make([]string, 0)
 	for k := range parsedModel.SecurityRequirements {
 		keys = append(keys, k)
@@ -2109,7 +2108,7 @@ func sortedKeysOfSecurityRequirements(parsedModel *types.ParsedModel) []string {
 	return keys
 }
 
-func (r *pdfReporter) createAbuseCases(parsedModel *types.ParsedModel) {
+func (r *pdfReporter) createAbuseCases(parsedModel *types.Model) {
 	r.pdf.SetTextColor(0, 0, 0)
 	chapTitle := "Abuse Cases"
 	r.addHeadline(chapTitle, false)
@@ -2140,7 +2139,7 @@ func (r *pdfReporter) createAbuseCases(parsedModel *types.ParsedModel) {
 		"taken into account as well. Also custom individual abuse cases might exist for the project.</i>")
 }
 
-func sortedKeysOfAbuseCases(parsedModel *types.ParsedModel) []string {
+func sortedKeysOfAbuseCases(parsedModel *types.Model) []string {
 	keys := make([]string, 0)
 	for k := range parsedModel.AbuseCases {
 		keys = append(keys, k)
@@ -2149,7 +2148,7 @@ func sortedKeysOfAbuseCases(parsedModel *types.ParsedModel) []string {
 	return keys
 }
 
-func (r *pdfReporter) createQuestions(parsedModel *types.ParsedModel) {
+func (r *pdfReporter) createQuestions(parsedModel *types.Model) {
 	uni := r.pdf.UnicodeTranslatorFromDescriptor("")
 	r.pdf.SetTextColor(0, 0, 0)
 	questions := "Questions"
@@ -2197,7 +2196,7 @@ func (r *pdfReporter) createQuestions(parsedModel *types.ParsedModel) {
 	}
 }
 
-func sortedKeysOfQuestions(parsedModel *types.ParsedModel) []string {
+func sortedKeysOfQuestions(parsedModel *types.Model) []string {
 	keys := make([]string, 0)
 	for k := range parsedModel.Questions {
 		keys = append(keys, k)
@@ -2206,7 +2205,7 @@ func sortedKeysOfQuestions(parsedModel *types.ParsedModel) []string {
 	return keys
 }
 
-func (r *pdfReporter) createTagListing(parsedModel *types.ParsedModel) {
+func (r *pdfReporter) createTagListing(parsedModel *types.Model) {
 	r.pdf.SetTextColor(0, 0, 0)
 	chapTitle := "Tag Listing"
 	r.addHeadline(chapTitle, false)
@@ -2274,7 +2273,7 @@ func (r *pdfReporter) createTagListing(parsedModel *types.ParsedModel) {
 	}
 }
 
-func sortedSharedRuntimesByTitle(parsedModel *types.ParsedModel) []*types.SharedRuntime {
+func sortedSharedRuntimesByTitle(parsedModel *types.Model) []*types.SharedRuntime {
 	result := make([]*types.SharedRuntime, 0)
 	for _, runtime := range parsedModel.SharedRuntimes {
 		result = append(result, runtime)
@@ -2283,7 +2282,7 @@ func sortedSharedRuntimesByTitle(parsedModel *types.ParsedModel) []*types.Shared
 	return result
 }
 
-func sortedTechnicalAssetsByTitle(parsedModel *types.ParsedModel) []*types.TechnicalAsset {
+func sortedTechnicalAssetsByTitle(parsedModel *types.Model) []*types.TechnicalAsset {
 	assets := make([]*types.TechnicalAsset, 0)
 	for _, asset := range parsedModel.TechnicalAssets {
 		assets = append(assets, asset)
@@ -2292,7 +2291,7 @@ func sortedTechnicalAssetsByTitle(parsedModel *types.ParsedModel) []*types.Techn
 	return assets
 }
 
-func (r *pdfReporter) createRiskCategories(parsedModel *types.ParsedModel) {
+func (r *pdfReporter) createRiskCategories(parsedModel *types.Model) {
 	uni := r.pdf.UnicodeTranslatorFromDescriptor("")
 	// category title
 	title := "Identified Risks by Vulnerability category"
@@ -2344,7 +2343,7 @@ func (r *pdfReporter) createRiskCategories(parsedModel *types.ParsedModel) {
 		title := category.Title + ": " + suffix
 		r.addHeadline(uni(title), true)
 		r.pdfColorBlack()
-		r.defineLinkTarget("{" + category.Id + "}")
+		r.defineLinkTarget("{" + category.ID + "}")
 		r.currentChapterTitleBreadcrumb = title
 
 		// category details
@@ -2482,7 +2481,7 @@ func (r *pdfReporter) createRiskCategories(parsedModel *types.ParsedModel) {
 			default:
 				r.pdfColorBlack()
 			}
-			if !risk.GetRiskTrackingStatusDefaultingUnchecked(parsedModel).IsStillAtRisk() {
+			if !risk.RiskStatus.IsStillAtRisk() {
 				r.pdfColorBlack()
 			}
 			posY := r.pdf.GetY()
@@ -2512,9 +2511,9 @@ func (r *pdfReporter) createRiskCategories(parsedModel *types.ParsedModel) {
 	}
 }
 
-func (r *pdfReporter) writeRiskTrackingStatus(parsedModel *types.ParsedModel, risk types.Risk) {
+func (r *pdfReporter) writeRiskTrackingStatus(parsedModel *types.Model, risk *types.Risk) {
 	uni := r.pdf.UnicodeTranslatorFromDescriptor("")
-	tracking := risk.GetRiskTracking(parsedModel)
+	tracking := risk.GetRiskTrackingWithDefault(parsedModel)
 	r.pdfColorBlack()
 	r.pdf.CellFormat(10, 6, "", "0", 0, "", false, 0, "")
 	switch tracking.Status {
@@ -2559,7 +2558,7 @@ func (r *pdfReporter) writeRiskTrackingStatus(parsedModel *types.ParsedModel, ri
 	r.pdfColorBlack()
 }
 
-func (r *pdfReporter) createTechnicalAssets(parsedModel *types.ParsedModel) {
+func (r *pdfReporter) createTechnicalAssets(parsedModel *types.Model) {
 	uni := r.pdf.UnicodeTranslatorFromDescriptor("")
 	// category title
 	title := "Identified Risks by Technical Asset"
@@ -2706,7 +2705,7 @@ func (r *pdfReporter) createTechnicalAssets(parsedModel *types.ParsedModel) {
 				default:
 					r.pdfColorBlack()
 				}
-				if !risk.GetRiskTrackingStatusDefaultingUnchecked(parsedModel).IsStillAtRisk() {
+				if !risk.RiskStatus.IsStillAtRisk() {
 					r.pdfColorBlack()
 				}
 				posY := r.pdf.GetY()
@@ -3371,7 +3370,7 @@ func (r *pdfReporter) createTechnicalAssets(parsedModel *types.ParsedModel) {
 	}
 }
 
-func (r *pdfReporter) createDataAssets(parsedModel *types.ParsedModel) {
+func (r *pdfReporter) createDataAssets(parsedModel *types.Model) {
 	uni := r.pdf.UnicodeTranslatorFromDescriptor("")
 	title := "Identified Data Breach Probabilities by Data Asset"
 	r.pdfColorBlack()
@@ -3707,7 +3706,7 @@ func (r *pdfReporter) createDataAssets(parsedModel *types.ParsedModel) {
 					r.pdf.SetFont("Helvetica", "", fontSizeSmall)
 					r.pdf.MultiCell(185, 6, uni(techAssetResponsible.Title)+": "+strconv.Itoa(len(risksResponsibleStillAtRisk))+" / "+strconv.Itoa(len(risksResponsible))+" "+riskStr, "0", "0", false)
 					r.pdf.SetFont("Helvetica", "", fontSizeBody)
-					r.pdf.Link(20, posY, 180, r.pdf.GetY()-posY, tocLinkIdByAssetId[techAssetResponsible.Id])
+					r.pdf.Link(20, posY, 180, r.pdf.GetY()-posY, tocLinkIdByAssetId[techAssetResponsible.ID])
 				}
 				r.pdfColorBlack()
 			}
@@ -3777,7 +3776,7 @@ func (r *pdfReporter) createDataAssets(parsedModel *types.ParsedModel) {
 				default:
 					r.pdfColorBlack()
 				}
-				if !dataBreachRisk.GetRiskTrackingStatusDefaultingUnchecked(parsedModel).IsStillAtRisk() {
+				if !dataBreachRisk.RiskStatus.IsStillAtRisk() {
 					r.pdfColorBlack()
 				}
 				r.pdf.CellFormat(10, 6, "", "0", 0, "", false, 0, "")
@@ -3792,7 +3791,7 @@ func (r *pdfReporter) createDataAssets(parsedModel *types.ParsedModel) {
 	}
 }
 
-func (r *pdfReporter) createTrustBoundaries(parsedModel *types.ParsedModel) {
+func (r *pdfReporter) createTrustBoundaries(parsedModel *types.Model) {
 	uni := r.pdf.UnicodeTranslatorFromDescriptor("")
 	title := "Trust Boundaries"
 	r.pdfColorBlack()
@@ -3911,7 +3910,7 @@ func (r *pdfReporter) createTrustBoundaries(parsedModel *types.ParsedModel) {
 	}
 }
 
-func questionsUnanswered(parsedModel *types.ParsedModel) int {
+func questionsUnanswered(parsedModel *types.Model) int {
 	result := 0
 	for _, answer := range parsedModel.Questions {
 		if len(strings.TrimSpace(answer)) == 0 {
@@ -3921,7 +3920,7 @@ func questionsUnanswered(parsedModel *types.ParsedModel) int {
 	return result
 }
 
-func (r *pdfReporter) createSharedRuntimes(parsedModel *types.ParsedModel) {
+func (r *pdfReporter) createSharedRuntimes(parsedModel *types.Model) {
 	uni := r.pdf.UnicodeTranslatorFromDescriptor("")
 	title := "Shared Runtimes"
 	r.pdfColorBlack()
@@ -4002,7 +4001,7 @@ func (r *pdfReporter) createSharedRuntimes(parsedModel *types.ParsedModel) {
 	}
 }
 
-func (r *pdfReporter) createRiskRulesChecked(parsedModel *types.ParsedModel, modelFilename string, skipRiskRules string, buildTimestamp string, modelHash string, customRiskRules map[string]*model.CustomRisk) {
+func (r *pdfReporter) createRiskRulesChecked(parsedModel *types.Model, modelFilename string, skipRiskRules []string, buildTimestamp string, modelHash string, customRiskRules risks.RiskRules) {
 	r.pdf.SetTextColor(0, 0, 0)
 	title := "Risk Rules Checked by Threagile"
 	r.addHeadline(title, false)
@@ -4031,14 +4030,13 @@ func (r *pdfReporter) createRiskRulesChecked(parsedModel *types.ParsedModel, mod
 	strBuilder.Reset()
 
 	// TODO use the new run system to discover risk rules instead of hard-coding them here:
-	skippedRules := strings.Split(skipRiskRules, ",")
 	skipped := ""
 	r.pdf.Ln(-1)
 
 	for id, customRule := range customRiskRules {
 		r.pdf.Ln(-1)
 		r.pdf.SetFont("Helvetica", "B", fontSizeBody)
-		if contains(skippedRules, id) {
+		if contains(skipRiskRules, id) {
 			skipped = "SKIPPED - "
 		} else {
 			skipped = ""
@@ -4074,14 +4072,14 @@ func (r *pdfReporter) createRiskRulesChecked(parsedModel *types.ParsedModel, mod
 		r.pdf.MultiCell(160, 6, customRule.Category().RiskAssessment, "0", "0", false)
 	}
 
-	for _, key := range sortedKeysOfIndividualRiskCategories(parsedModel) {
-		individualRiskCategory := parsedModel.IndividualRiskCategories[key]
+	sort.Sort(types.ByRiskCategoryTitleSort(parsedModel.CustomRiskCategories))
+	for _, individualRiskCategory := range parsedModel.CustomRiskCategories {
 		r.pdf.Ln(-1)
 		r.pdf.SetFont("Helvetica", "B", fontSizeBody)
 		r.pdf.CellFormat(190, 3, individualRiskCategory.Title, "0", 0, "", false, 0, "")
 		r.pdf.Ln(-1)
 		r.pdf.SetFont("Helvetica", "", fontSizeSmall)
-		r.pdf.CellFormat(190, 6, individualRiskCategory.Id, "0", 0, "", false, 0, "")
+		r.pdf.CellFormat(190, 6, individualRiskCategory.ID, "0", 0, "", false, 0, "")
 		r.pdf.Ln(-1)
 		r.pdf.SetFont("Helvetica", "I", fontSizeBody)
 		r.pdf.CellFormat(190, 6, "Individual Risk category", "0", 0, "", false, 0, "")
@@ -4112,7 +4110,7 @@ func (r *pdfReporter) createRiskRulesChecked(parsedModel *types.ParsedModel, mod
 	for _, rule := range risks.GetBuiltInRiskRules() {
 		r.pdf.Ln(-1)
 		r.pdf.SetFont("Helvetica", "B", fontSizeBody)
-		if contains(skippedRules, rule.Category().Id) {
+		if contains(skipRiskRules, rule.Category().ID) {
 			skipped = "SKIPPED - "
 		} else {
 			skipped = ""
@@ -4120,7 +4118,7 @@ func (r *pdfReporter) createRiskRulesChecked(parsedModel *types.ParsedModel, mod
 		r.pdf.CellFormat(190, 3, skipped+rule.Category().Title, "0", 0, "", false, 0, "")
 		r.pdf.Ln(-1)
 		r.pdf.SetFont("Helvetica", "", fontSizeSmall)
-		r.pdf.CellFormat(190, 6, rule.Category().Id, "0", 0, "", false, 0, "")
+		r.pdf.CellFormat(190, 6, rule.Category().ID, "0", 0, "", false, 0, "")
 		r.pdf.Ln(-1)
 		r.pdf.SetFont("Helvetica", "", fontSizeBody)
 		r.pdfColorGray()
@@ -4146,7 +4144,7 @@ func (r *pdfReporter) createRiskRulesChecked(parsedModel *types.ParsedModel, mod
 	}
 }
 
-func (r *pdfReporter) createTargetDescription(parsedModel *types.ParsedModel, baseFolder string) error {
+func (r *pdfReporter) createTargetDescription(parsedModel *types.Model, baseFolder string) error {
 	uni := r.pdf.UnicodeTranslatorFromDescriptor("")
 	r.pdf.SetTextColor(0, 0, 0)
 	title := "Application Overview"
@@ -4396,15 +4394,6 @@ func (r *pdfReporter) embedDataFlowDiagram(diagramFilenamePNG string, tempFolder
 		r.pdf.AddPage()
 		gofpdi.UseImportedTemplate(r.pdf, r.diagramLegendTemplateId, 0, 0, 0, 300)
 	}
-}
-
-func sortedKeysOfIndividualRiskCategories(parsedModel *types.ParsedModel) []string {
-	keys := make([]string, 0)
-	for k := range parsedModel.IndividualRiskCategories {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	return keys
 }
 
 func (r *pdfReporter) embedDataRiskMapping(diagramFilenamePNG string, tempFolder string) {

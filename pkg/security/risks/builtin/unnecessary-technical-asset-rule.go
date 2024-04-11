@@ -10,9 +10,9 @@ func NewUnnecessaryTechnicalAssetRule() *UnnecessaryTechnicalAssetRule {
 	return &UnnecessaryTechnicalAssetRule{}
 }
 
-func (*UnnecessaryTechnicalAssetRule) Category() types.RiskCategory {
-	return types.RiskCategory{
-		Id:    "unnecessary-technical-asset",
+func (*UnnecessaryTechnicalAssetRule) Category() *types.RiskCategory {
+	return &types.RiskCategory{
+		ID:    "unnecessary-technical-asset",
 		Title: "Unnecessary Technical Asset",
 		Description: "When a technical asset does not process any data assets, this is " +
 			"an indicator for an unnecessary technical asset (or for an incomplete model). " +
@@ -37,8 +37,8 @@ func (*UnnecessaryTechnicalAssetRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *UnnecessaryTechnicalAssetRule) GenerateRisks(input *types.ParsedModel) []types.Risk {
-	risks := make([]types.Risk, 0)
+func (r *UnnecessaryTechnicalAssetRule) GenerateRisks(input *types.Model) []*types.Risk {
+	risks := make([]*types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
 		if len(technicalAsset.DataAssetsProcessed) == 0 && len(technicalAsset.DataAssetsStored) == 0 ||
@@ -49,10 +49,10 @@ func (r *UnnecessaryTechnicalAssetRule) GenerateRisks(input *types.ParsedModel) 
 	return risks
 }
 
-func (r *UnnecessaryTechnicalAssetRule) createRisk(technicalAsset *types.TechnicalAsset) types.Risk {
+func (r *UnnecessaryTechnicalAssetRule) createRisk(technicalAsset *types.TechnicalAsset) *types.Risk {
 	title := "<b>Unnecessary Technical Asset</b> named <b>" + technicalAsset.Title + "</b>"
-	risk := types.Risk{
-		CategoryId:                   r.Category().Id,
+	risk := &types.Risk{
+		CategoryId:                   r.Category().ID,
 		Severity:                     types.CalculateSeverity(types.Unlikely, types.LowImpact),
 		ExploitationLikelihood:       types.Unlikely,
 		ExploitationImpact:           types.LowImpact,

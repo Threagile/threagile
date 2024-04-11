@@ -10,9 +10,9 @@ func NewUnguardedDirectDatastoreAccessRule() *UnguardedDirectDatastoreAccessRule
 	return &UnguardedDirectDatastoreAccessRule{}
 }
 
-func (*UnguardedDirectDatastoreAccessRule) Category() types.RiskCategory {
-	return types.RiskCategory{
-		Id:          "unguarded-direct-datastore-access",
+func (*UnguardedDirectDatastoreAccessRule) Category() *types.RiskCategory {
+	return &types.RiskCategory{
+		ID:          "unguarded-direct-datastore-access",
 		Title:       "Unguarded Direct Datastore Access",
 		Description: "Data stores accessed across trust boundaries must be guarded by some protecting service or application.",
 		Impact:      "If this risk is unmitigated, attackers might be able to directly attack sensitive data stores without any protecting components in-between.",
@@ -42,8 +42,8 @@ func (*UnguardedDirectDatastoreAccessRule) SupportedTags() []string {
 
 // check for data stores that should not be accessed directly across trust boundaries
 
-func (r *UnguardedDirectDatastoreAccessRule) GenerateRisks(input *types.ParsedModel) []types.Risk {
-	risks := make([]types.Risk, 0)
+func (r *UnguardedDirectDatastoreAccessRule) GenerateRisks(input *types.Model) []*types.Risk {
+	risks := make([]*types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
 		if !technicalAsset.OutOfScope && technicalAsset.Type == types.Datastore {
@@ -68,7 +68,7 @@ func (r *UnguardedDirectDatastoreAccessRule) GenerateRisks(input *types.ParsedMo
 	return risks
 }
 
-func isSharingSameParentTrustBoundary(input *types.ParsedModel, left, right *types.TechnicalAsset) bool {
+func isSharingSameParentTrustBoundary(input *types.Model, left, right *types.TechnicalAsset) bool {
 	tbIDLeft, tbIDRight := left.GetTrustBoundaryId(input), right.GetTrustBoundaryId(input)
 	if len(tbIDLeft) == 0 && len(tbIDRight) > 0 {
 		return false
@@ -99,13 +99,13 @@ func fileServerAccessViaFTP(technicalAsset *types.TechnicalAsset, incomingAccess
 		(incomingAccess.Protocol == types.FTP || incomingAccess.Protocol == types.FTPS || incomingAccess.Protocol == types.SFTP)
 }
 
-func (r *UnguardedDirectDatastoreAccessRule) createRisk(dataStore *types.TechnicalAsset, dataFlow *types.CommunicationLink, clientOutsideTrustBoundary *types.TechnicalAsset, moreRisky bool) types.Risk {
+func (r *UnguardedDirectDatastoreAccessRule) createRisk(dataStore *types.TechnicalAsset, dataFlow *types.CommunicationLink, clientOutsideTrustBoundary *types.TechnicalAsset, moreRisky bool) *types.Risk {
 	impact := types.LowImpact
 	if moreRisky || dataStore.RAA > 40 {
 		impact = types.MediumImpact
 	}
-	risk := types.Risk{
-		CategoryId:             r.Category().Id,
+	risk := &types.Risk{
+		CategoryId:             r.Category().ID,
 		Severity:               types.CalculateSeverity(types.Likely, impact),
 		ExploitationLikelihood: types.Likely,
 		ExploitationImpact:     impact,

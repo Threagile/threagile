@@ -4,8 +4,9 @@ import (
 	"github.com/threagile/threagile/pkg/security/risks/builtin"
 )
 
-func GetBuiltInRiskRules() []RiskRule {
-	return []RiskRule{
+func GetBuiltInRiskRules() RiskRules {
+	rules := make(RiskRules)
+	for _, rule := range []RiskRule{
 		builtin.NewAccidentalSecretLeakRule(),
 		builtin.NewCodeBackdooringRule(),
 		builtin.NewContainerBaseImageBackdooringRule(),
@@ -48,5 +49,9 @@ func GetBuiltInRiskRules() []RiskRule {
 		builtin.NewWrongCommunicationLinkContentRule(),
 		builtin.NewWrongTrustBoundaryContentRule(),
 		builtin.NewXmlExternalEntityRule(),
+	} {
+		rules[rule.Category().ID] = rule
 	}
+
+	return rules
 }

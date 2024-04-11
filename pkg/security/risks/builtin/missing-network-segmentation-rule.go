@@ -14,9 +14,9 @@ func NewMissingNetworkSegmentationRule() *MissingNetworkSegmentationRule {
 	return &MissingNetworkSegmentationRule{raaLimit: 50}
 }
 
-func (*MissingNetworkSegmentationRule) Category() types.RiskCategory {
-	return types.RiskCategory{
-		Id:    "missing-network-segmentation",
+func (*MissingNetworkSegmentationRule) Category() *types.RiskCategory {
+	return &types.RiskCategory{
+		ID:    "missing-network-segmentation",
 		Title: "Missing Network Segmentation",
 		Description: "Highly sensitive assets and/or data stores residing in the same network segment than other " +
 			"lower sensitive assets (like webservers or content management systems etc.) should be better protected " +
@@ -48,8 +48,8 @@ func (*MissingNetworkSegmentationRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *MissingNetworkSegmentationRule) GenerateRisks(input *types.ParsedModel) []types.Risk {
-	risks := make([]types.Risk, 0)
+func (r *MissingNetworkSegmentationRule) GenerateRisks(input *types.Model) []*types.Risk {
+	risks := make([]*types.Risk, 0)
 	// first create them in memory (see the link replacement below for nested trust boundaries) - otherwise in Go ranging over map is random order
 	// range over them in sorted (hence re-producible) way:
 	keys := make([]string, 0)
@@ -92,13 +92,13 @@ func (r *MissingNetworkSegmentationRule) GenerateRisks(input *types.ParsedModel)
 	return risks
 }
 
-func (r *MissingNetworkSegmentationRule) createRisk(techAsset *types.TechnicalAsset, moreRisky bool) types.Risk {
+func (r *MissingNetworkSegmentationRule) createRisk(techAsset *types.TechnicalAsset, moreRisky bool) *types.Risk {
 	impact := types.LowImpact
 	if moreRisky {
 		impact = types.MediumImpact
 	}
-	risk := types.Risk{
-		CategoryId:             r.Category().Id,
+	risk := &types.Risk{
+		CategoryId:             r.Category().ID,
 		Severity:               types.CalculateSeverity(types.Unlikely, impact),
 		ExploitationLikelihood: types.Unlikely,
 		ExploitationImpact:     impact,
