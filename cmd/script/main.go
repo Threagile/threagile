@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	scriptFilename := filepath.Join("test", "risk-category.yaml")
+	scriptFilename := filepath.Clean(filepath.Join("test", "risk-category.yaml"))
 	ruleData, ruleReadError := os.ReadFile(scriptFilename)
 	if ruleReadError != nil {
 		fmt.Printf("error reading risk category: %v\n", ruleReadError)
@@ -23,7 +23,7 @@ func main() {
 		return
 	}
 
-	modelFilename := filepath.Join("test", "parsed-model.yaml")
+	modelFilename := filepath.Clean(filepath.Join("test", "parsed-model.yaml"))
 	modelData, modelReadError := os.ReadFile(modelFilename)
 	if modelReadError != nil {
 		fmt.Printf("error reading model: %v\n", modelReadError)
