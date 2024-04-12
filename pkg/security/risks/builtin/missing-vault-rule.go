@@ -60,6 +60,9 @@ func (r *MissingVaultRule) GenerateRisks(input *types.Model) []*types.Risk {
 			techAsset.Availability >= types.Critical {
 			impact = types.MediumImpact
 		}
+		if mostRelevantAsset == nil {
+			mostRelevantAsset = techAsset
+		}
 		// just for referencing the most interesting asset
 		if mostRelevantAsset != nil && techAsset.HighestSensitivityScore() > mostRelevantAsset.HighestSensitivityScore() {
 			mostRelevantAsset = techAsset
