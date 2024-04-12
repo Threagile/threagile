@@ -41,14 +41,14 @@ func (*UncheckedDeploymentRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *UncheckedDeploymentRule) GenerateRisks(input *types.Model) []*types.Risk {
+func (r *UncheckedDeploymentRule) GenerateRisks(input *types.Model) ([]*types.Risk, error) {
 	risks := make([]*types.Risk, 0)
 	for _, technicalAsset := range input.TechnicalAssets {
 		if technicalAsset.Technologies.GetAttribute(types.IsDevelopmentRelevant) {
 			risks = append(risks, r.createRisk(input, technicalAsset))
 		}
 	}
-	return risks
+	return risks, nil
 }
 
 func (r *UncheckedDeploymentRule) createRisk(input *types.Model, technicalAsset *types.TechnicalAsset) *types.Risk {

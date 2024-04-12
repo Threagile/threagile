@@ -57,7 +57,7 @@ func (*MissingCloudHardeningRule) SupportedTags() []string {
 	return res
 }
 
-func (r *MissingCloudHardeningRule) GenerateRisks(input *types.Model) []*types.Risk {
+func (r *MissingCloudHardeningRule) GenerateRisks(input *types.Model) ([]*types.Risk, error) {
 	risks := make([]*types.Risk, 0)
 
 	sharedRuntimesWithUnspecificCloudRisks := make(map[string]bool)
@@ -274,7 +274,7 @@ func (r *MissingCloudHardeningRule) GenerateRisks(input *types.Model) []*types.R
 		// TODO add more tag-specific risks like also for aws:lambda etc. here
 	}
 
-	return risks
+	return risks, nil
 }
 
 func (r *MissingCloudHardeningRule) addTrustBoundaryAccordingToBaseTag(trustBoundary *types.TrustBoundary,

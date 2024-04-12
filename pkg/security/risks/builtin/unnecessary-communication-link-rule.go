@@ -36,7 +36,7 @@ func (*UnnecessaryCommunicationLinkRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *UnnecessaryCommunicationLinkRule) GenerateRisks(input *types.Model) []*types.Risk {
+func (r *UnnecessaryCommunicationLinkRule) GenerateRisks(input *types.Model) ([]*types.Risk, error) {
 	risks := make([]*types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
@@ -48,7 +48,7 @@ func (r *UnnecessaryCommunicationLinkRule) GenerateRisks(input *types.Model) []*
 			}
 		}
 	}
-	return risks
+	return risks, nil
 }
 
 func (r *UnnecessaryCommunicationLinkRule) createRisk(technicalAsset *types.TechnicalAsset, commLink *types.CommunicationLink) *types.Risk {

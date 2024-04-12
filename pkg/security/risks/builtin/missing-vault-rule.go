@@ -40,7 +40,7 @@ func (*MissingVaultRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *MissingVaultRule) GenerateRisks(input *types.Model) []*types.Risk {
+func (r *MissingVaultRule) GenerateRisks(input *types.Model) ([]*types.Risk, error) {
 	risks := make([]*types.Risk, 0)
 	hasVault := false
 	var mostRelevantAsset *types.TechnicalAsset
@@ -68,7 +68,7 @@ func (r *MissingVaultRule) GenerateRisks(input *types.Model) []*types.Risk {
 	if !hasVault {
 		risks = append(risks, r.createRisk(mostRelevantAsset, impact))
 	}
-	return risks
+	return risks, nil
 }
 
 func (r *MissingVaultRule) createRisk(technicalAsset *types.TechnicalAsset, impact types.RiskExploitationImpact) *types.Risk {

@@ -41,7 +41,7 @@ func (*MissingBuildInfrastructureRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *MissingBuildInfrastructureRule) GenerateRisks(input *types.Model) []*types.Risk {
+func (r *MissingBuildInfrastructureRule) GenerateRisks(input *types.Model) ([]*types.Risk, error) {
 	risks := make([]*types.Risk, 0)
 	hasCustomDevelopedParts, hasBuildPipeline, hasSourcecodeRepo, hasDevOpsClient := false, false, false, false
 	impact := types.LowImpact
@@ -82,7 +82,7 @@ func (r *MissingBuildInfrastructureRule) GenerateRisks(input *types.Model) []*ty
 	if hasCustomDevelopedParts && !hasBuildInfrastructure {
 		risks = append(risks, r.createRisk(mostRelevantAsset, impact))
 	}
-	return risks
+	return risks, nil
 }
 
 func (r *MissingBuildInfrastructureRule) createRisk(technicalAsset *types.TechnicalAsset, impact types.RiskExploitationImpact) *types.Risk {

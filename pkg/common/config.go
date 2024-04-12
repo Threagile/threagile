@@ -2,6 +2,7 @@ package common
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -157,39 +158,49 @@ func (c *Config) Load(configFilename string) error {
 
 	c.Merge(config, values)
 
+	errorList := make([]error, 0)
 	c.TempFolder = c.CleanPath(c.TempFolder)
 	tempDirError := os.MkdirAll(c.TempFolder, 0700)
 	if tempDirError != nil {
-		return fmt.Errorf("failed to create temp dir %q: %v", c.TempFolder, tempDirError)
+		errorList = append(errorList, fmt.Errorf("failed to create temp dir %q: %v", c.TempFolder, tempDirError))
 	}
 
 	c.OutputFolder = c.CleanPath(c.OutputFolder)
 	outDirError := os.MkdirAll(c.OutputFolder, 0700)
 	if outDirError != nil {
-		return fmt.Errorf("failed to create output dir %q: %v", c.OutputFolder, outDirError)
+		errorList = append(errorList, fmt.Errorf("failed to create output dir %q: %v", c.OutputFolder, outDirError))
 	}
 
 	c.AppFolder = c.CleanPath(c.AppFolder)
 	appDirError := c.checkDir(c.AppFolder, "app")
 	if appDirError != nil {
-		return appDirError
+		errorList = append(errorList, appDirError)
 	}
 
 	c.PluginFolder = c.CleanPath(c.PluginFolder)
 	binDirError := c.checkDir(c.PluginFolder, "plugin")
 	if binDirError != nil {
-		return binDirError
+		errorList = append(errorList, binDirError)
 	}
 
 	c.DataFolder = c.CleanPath(c.DataFolder)
 	dataDirError := c.checkDir(c.DataFolder, "data")
 	if dataDirError != nil {
-		return dataDirError
+		errorList = append(errorList, dataDirError)
 	}
 
 	c.TechnologyFilename = c.CleanPath(c.TechnologyFilename)
 
-	return c.CheckServerFolder()
+	serverFolderError := c.CheckServerFolder()
+	if serverFolderError != nil {
+		errorList = append(errorList, serverFolderError)
+	}
+
+	if len(errorList) > 0 {
+		return errors.Join(errorList...)
+	}
+
+	return nil
 }
 
 func (c *Config) CheckServerFolder() error {

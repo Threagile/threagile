@@ -45,7 +45,7 @@ func (*UnnecessaryDataTransferRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *UnnecessaryDataTransferRule) GenerateRisks(input *types.Model) []*types.Risk {
+func (r *UnnecessaryDataTransferRule) GenerateRisks(input *types.Model) ([]*types.Risk, error) {
 	risks := make([]*types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
@@ -71,7 +71,7 @@ func (r *UnnecessaryDataTransferRule) GenerateRisks(input *types.Model) []*types
 			risks = r.checkRisksAgainstTechnicalAsset(input, risks, technicalAsset, incomingDataFlow, true)
 		}
 	}
-	return risks
+	return risks, nil
 }
 
 func (r *UnnecessaryDataTransferRule) checkRisksAgainstTechnicalAsset(input *types.Model, risks []*types.Risk, technicalAsset *types.TechnicalAsset, dataFlow *types.CommunicationLink, inverseDirection bool) []*types.Risk {

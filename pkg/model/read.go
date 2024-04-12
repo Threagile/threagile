@@ -43,6 +43,14 @@ func ReadAndAnalyzeModel(config *common.Config, progressReporter types.ProgressR
 		return nil, fmt.Errorf("unable to parse model yaml: %v", parseError)
 	}
 
+	/**
+	jsonData, _ := json.MarshalIndent(parsedModel, "", "  ")
+	_ = os.WriteFile("parsed-model.json", jsonData, 0600)
+
+	yamlData, _ := yaml.Marshal(parsedModel)
+	_ = os.WriteFile("parsed-model.yaml", yamlData, 0600)
+	/**/
+
 	introTextRAA := applyRAA(parsedModel, config.PluginFolder, config.RAAPlugin, progressReporter)
 
 	applyRiskGeneration(parsedModel, builtinRiskRules.Merge(customRiskRules), config.SkipRiskRules, progressReporter)
@@ -55,14 +63,6 @@ func ReadAndAnalyzeModel(config *common.Config, progressReporter types.ProgressR
 	if err != nil {
 		return nil, fmt.Errorf("unable to check risk tracking: %v", err)
 	}
-
-	/*
-		jsonData, _ := json.MarshalIndent(parsedModel, "", "  ")
-		_ = os.WriteFile("parsed-model.json", jsonData, 0600)
-
-		yamlData, _ := yaml.Marshal(parsedModel)
-		_ = os.WriteFile("parsed-model.yaml", yamlData, 0600)
-	*/
 
 	return &ReadResult{
 		ModelInput:       modelInput,
@@ -94,7 +94,12 @@ func applyRiskGeneration(parsedModel *types.Model, rules risks.RiskRules,
 		}
 
 		parsedModel.AddToListOfSupportedTags(rule.SupportedTags())
-		newRisks := rule.GenerateRisks(parsedModel)
+		newRisks, riskError := rule.GenerateRisks(parsedModel)
+		if riskError != nil {
+			progressReporter.Warnf("Error generating risks for %q: %v", id, riskError)
+			continue
+		}
+
 		if len(newRisks) > 0 {
 			parsedModel.GeneratedRisksByCategory[id] = newRisks
 		}

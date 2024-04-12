@@ -16,19 +16,7 @@ type Scope struct {
 	returnValue Value
 }
 
-func (what *Scope) Init(model *types.Model, risk *types.RiskCategory, methods map[string]Statement) error {
-	if model != nil {
-		data, marshalError := json.Marshal(model)
-		if marshalError != nil {
-			return marshalError
-		}
-
-		unmarshalError := json.Unmarshal(data, &what.Model)
-		if unmarshalError != nil {
-			return unmarshalError
-		}
-	}
-
+func (what *Scope) Init(risk *types.RiskCategory, methods map[string]Statement) error {
 	if risk != nil {
 		data, marshalError := json.Marshal(risk)
 		if marshalError != nil {
@@ -42,6 +30,22 @@ func (what *Scope) Init(model *types.Model, risk *types.RiskCategory, methods ma
 	}
 
 	what.Methods = methods
+
+	return nil
+}
+
+func (what *Scope) SetModel(model *types.Model) error {
+	if model != nil {
+		data, marshalError := json.Marshal(model)
+		if marshalError != nil {
+			return marshalError
+		}
+
+		unmarshalError := json.Unmarshal(data, &what.Model)
+		if unmarshalError != nil {
+			return unmarshalError
+		}
+	}
 
 	return nil
 }

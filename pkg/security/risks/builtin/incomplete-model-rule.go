@@ -36,7 +36,7 @@ func (*IncompleteModelRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *IncompleteModelRule) GenerateRisks(input *types.Model) []*types.Risk {
+func (r *IncompleteModelRule) GenerateRisks(input *types.Model) ([]*types.Risk, error) {
 	risks := make([]*types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
@@ -51,7 +51,7 @@ func (r *IncompleteModelRule) GenerateRisks(input *types.Model) []*types.Risk {
 			}
 		}
 	}
-	return risks
+	return risks, nil
 }
 
 func (r *IncompleteModelRule) createRiskTechAsset(technicalAsset *types.TechnicalAsset) *types.Risk {

@@ -41,7 +41,7 @@ func (*MissingVaultIsolationRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *MissingVaultIsolationRule) GenerateRisks(input *types.Model) []*types.Risk {
+func (r *MissingVaultIsolationRule) GenerateRisks(input *types.Model) ([]*types.Risk, error) {
 	risks := make([]*types.Risk, 0)
 	for _, technicalAsset := range input.TechnicalAssets {
 		if !technicalAsset.OutOfScope && technicalAsset.Technologies.GetAttribute(types.Vault) {
@@ -69,7 +69,7 @@ func (r *MissingVaultIsolationRule) GenerateRisks(input *types.Model) []*types.R
 			}
 		}
 	}
-	return risks
+	return risks, nil
 }
 
 func isVaultStorage(parsedModel *types.Model, vault *types.TechnicalAsset, storage *types.TechnicalAsset) bool {

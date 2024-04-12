@@ -40,7 +40,7 @@ func (*UnencryptedCommunicationRule) SupportedTags() []string {
 
 // check for communication links that should be encrypted due to their confidentiality and/or integrity
 
-func (r *UnencryptedCommunicationRule) GenerateRisks(input *types.Model) []*types.Risk {
+func (r *UnencryptedCommunicationRule) GenerateRisks(input *types.Model) ([]*types.Risk, error) {
 	risks := make([]*types.Risk, 0)
 	for _, technicalAsset := range input.TechnicalAssets {
 		for _, dataFlow := range technicalAsset.CommunicationLinks {
@@ -80,7 +80,7 @@ func (r *UnencryptedCommunicationRule) GenerateRisks(input *types.Model) []*type
 			}
 		}
 	}
-	return risks
+	return risks, nil
 }
 
 func (r *UnencryptedCommunicationRule) createRisk(input *types.Model, technicalAsset *types.TechnicalAsset, dataFlow *types.CommunicationLink, highRisk bool, transferringAuthData bool) *types.Risk {

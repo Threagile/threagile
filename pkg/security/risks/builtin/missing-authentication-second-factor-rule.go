@@ -41,7 +41,7 @@ func (*MissingAuthenticationSecondFactorRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *MissingAuthenticationSecondFactorRule) GenerateRisks(input *types.Model) []*types.Risk {
+func (r *MissingAuthenticationSecondFactorRule) GenerateRisks(input *types.Model) ([]*types.Risk, error) {
 	risks := make([]*types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
@@ -87,5 +87,5 @@ func (r *MissingAuthenticationSecondFactorRule) GenerateRisks(input *types.Model
 			}
 		}
 	}
-	return risks
+	return risks, nil
 }

@@ -43,7 +43,7 @@ func (*AccidentalSecretLeakRule) SupportedTags() []string {
 	return []string{"git", "nexus"}
 }
 
-func (r *AccidentalSecretLeakRule) GenerateRisks(parsedModel *types.Model) []*types.Risk {
+func (r *AccidentalSecretLeakRule) GenerateRisks(parsedModel *types.Model) ([]*types.Risk, error) {
 	risks := make([]*types.Risk, 0)
 	for _, id := range parsedModel.SortedTechnicalAssetIDs() {
 		techAsset := parsedModel.TechnicalAssets[id]
@@ -57,7 +57,7 @@ func (r *AccidentalSecretLeakRule) GenerateRisks(parsedModel *types.Model) []*ty
 			risks = append(risks, risk)
 		}
 	}
-	return risks
+	return risks, nil
 }
 
 func (r *AccidentalSecretLeakRule) createRisk(parsedModel *types.Model, technicalAsset *types.TechnicalAsset, prefix, details string) *types.Risk {

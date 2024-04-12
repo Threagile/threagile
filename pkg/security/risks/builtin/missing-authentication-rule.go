@@ -39,7 +39,7 @@ func (*MissingAuthenticationRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *MissingAuthenticationRule) GenerateRisks(input *types.Model) []*types.Risk {
+func (r *MissingAuthenticationRule) GenerateRisks(input *types.Model) ([]*types.Risk, error) {
 	risks := make([]*types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
@@ -74,7 +74,7 @@ func (r *MissingAuthenticationRule) GenerateRisks(input *types.Model) []*types.R
 			}
 		}
 	}
-	return risks
+	return risks, nil
 }
 
 func (r *MissingAuthenticationRule) createRisk(input *types.Model, technicalAsset *types.TechnicalAsset, incomingAccess, incomingAccessOrigin *types.CommunicationLink, hopBetween string,

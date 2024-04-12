@@ -43,7 +43,7 @@ func (*MissingHardeningRule) SupportedTags() []string {
 	return []string{"tomcat"}
 }
 
-func (r *MissingHardeningRule) GenerateRisks(input *types.Model) []*types.Risk {
+func (r *MissingHardeningRule) GenerateRisks(input *types.Model) ([]*types.Risk, error) {
 	risks := make([]*types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
@@ -54,7 +54,7 @@ func (r *MissingHardeningRule) GenerateRisks(input *types.Model) []*types.Risk {
 			}
 		}
 	}
-	return risks
+	return risks, nil
 }
 
 func (r *MissingHardeningRule) createRisk(input *types.Model, technicalAsset *types.TechnicalAsset) *types.Risk {

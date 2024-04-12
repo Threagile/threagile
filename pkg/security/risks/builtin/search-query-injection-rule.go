@@ -42,7 +42,7 @@ func (*SearchQueryInjectionRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *SearchQueryInjectionRule) GenerateRisks(input *types.Model) []*types.Risk {
+func (r *SearchQueryInjectionRule) GenerateRisks(input *types.Model) ([]*types.Risk, error) {
 	risks := make([]*types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
@@ -63,7 +63,7 @@ func (r *SearchQueryInjectionRule) GenerateRisks(input *types.Model) []*types.Ri
 			}
 		}
 	}
-	return risks
+	return risks, nil
 }
 
 func (r *SearchQueryInjectionRule) createRisk(input *types.Model, technicalAsset *types.TechnicalAsset, incomingFlow *types.CommunicationLink, likelihood types.RiskExploitationLikelihood) *types.Risk {

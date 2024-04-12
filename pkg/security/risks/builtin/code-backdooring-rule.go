@@ -46,7 +46,7 @@ func (*CodeBackdooringRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *CodeBackdooringRule) GenerateRisks(parsedModel *types.Model) []*types.Risk {
+func (r *CodeBackdooringRule) GenerateRisks(parsedModel *types.Model) ([]*types.Risk, error) {
 	risks := make([]*types.Risk, 0)
 	for _, id := range parsedModel.SortedTechnicalAssetIDs() {
 		technicalAsset := parsedModel.TechnicalAssets[id]
@@ -67,7 +67,7 @@ func (r *CodeBackdooringRule) GenerateRisks(parsedModel *types.Model) []*types.R
 			}
 		}
 	}
-	return risks
+	return risks, nil
 }
 
 func (r *CodeBackdooringRule) createRisk(input *types.Model, technicalAsset *types.TechnicalAsset, elevatedRisk bool) *types.Risk {

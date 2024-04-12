@@ -2,99 +2,52 @@ package main
 
 import (
 	"fmt"
-	"github.com/threagile/threagile/pkg/common"
-	"github.com/threagile/threagile/pkg/input"
-	"github.com/threagile/threagile/pkg/model"
 	"github.com/threagile/threagile/pkg/script"
-	"github.com/threagile/threagile/pkg/security/risks"
+	"github.com/threagile/threagile/pkg/security/types"
 	"gopkg.in/yaml.v3"
 	"os"
 	"path/filepath"
 )
 
 func main() {
-	ruleData, ruleReadError := os.ReadFile(filepath.Join("test", "risk-category.yaml"))
+	scriptFilename := filepath.Join("test", "risk-category.yaml")
+	ruleData, ruleReadError := os.ReadFile(scriptFilename)
 	if ruleReadError != nil {
 		fmt.Printf("error reading risk category: %v\n", ruleReadError)
 		return
 	}
 
-	scripts, parseError := new(script.Script).ParseScripts(ruleData)
+	newRule, parseError := new(script.RiskRule).ParseFromData(ruleData)
 	if parseError != nil {
-		fmt.Printf("error parsing scripts: %v\n", parseError)
+		fmt.Printf("error parsing scripts from %q: %v\n", scriptFilename, parseError)
 		return
 	}
 
-	modelData, modelReadError := os.ReadFile(filepath.Join("test", "parsed-model.yaml"))
+	modelFilename := filepath.Join("test", "parsed-model.yaml")
+	modelData, modelReadError := os.ReadFile(modelFilename)
 	if modelReadError != nil {
 		fmt.Printf("error reading model: %v\n", modelReadError)
 		return
 	}
 
-	inputModel := new(input.Model)
-	modelUnmarshalError := yaml.Unmarshal(modelData, inputModel)
+	parsedModel := new(types.Model)
+	modelUnmarshalError := yaml.Unmarshal(modelData, parsedModel)
 	if modelUnmarshalError != nil {
-		fmt.Printf("error parsing model: %v\n", modelUnmarshalError)
+		fmt.Printf("error parsing model from %q: %v\n", modelFilename, modelUnmarshalError)
 		return
 	}
 
-	/*
-		categoriesModel := new(input.Model)
-		riskUnmarshalError := yaml.Unmarshal(riskData, categoriesModel)
-		if riskUnmarshalError != nil {
-			fmt.Printf("error parsing risk category: %v\n", riskUnmarshalError)
-			return
-		}
-	*/
-
-	parsedModel, modelError := model.ParseModel(&common.Config{}, inputModel, make(risks.RiskRules), make(risks.RiskRules))
-	if modelError != nil {
-		fmt.Printf("error importing model: %v\n", modelError)
+	risks, riskError := newRule.GenerateRisks(parsedModel)
+	if riskError != nil {
+		fmt.Printf("error generating risks for %q: %v\n", newRule.Category().ID, riskError)
 		return
 	}
 
-	_ = parsedModel
-	_ = scripts
-	/*
-		var risk types.RiskCategory
-		if categoriesModel.CustomRiskCategories != nil {
-			for _, item := range categoriesModel.CustomRiskCategories {
-				risk = item
-			}
-		}
+	printedRisks, printError := yaml.Marshal(risks)
+	if printError != nil {
+		fmt.Printf("error printing risks for %q: %v\n", newRule.Category().ID, printError)
+		return
+	}
 
-		if len(categoriesModel.CustomRiskCategories) == 0 {
-			fmt.Printf("no risk categories\n")
-			return
-		}
-
-		for name, script := range scripts {
-			scope := new(script.Scope)
-			addError := scope.Init(parsedModel, &risk, script.Utils())
-			if addError != nil {
-				fmt.Printf("error adding model to scope for %q: %v\n", name, addError)
-				return
-			}
-
-			risks, errorLiteral, riskError := script.GenerateRisks(scope)
-			if riskError != nil {
-				fmt.Printf("error generating risks for %q: %v\n", name, riskError)
-
-				if len(errorLiteral) > 0 {
-					fmt.Printf("in:\n%v\n", script.IndentPrintf(1, errorLiteral))
-				}
-
-				return
-			}
-
-			printedRisks, printError := yaml.Marshal(risks)
-			if printError != nil {
-				fmt.Printf("error printing risks for %q: %v\n", name, printError)
-				return
-			}
-
-			fmt.Printf("generated risks for %q: \n%v\n", name, string(printedRisks))
-		}
-
-	*/
+	fmt.Printf("generated risks for %q: \n%v\n", newRule.Category().ID, string(printedRisks))
 }

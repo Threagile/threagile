@@ -41,7 +41,7 @@ func (*ServerSideRequestForgeryRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *ServerSideRequestForgeryRule) GenerateRisks(input *types.Model) []*types.Risk {
+func (r *ServerSideRequestForgeryRule) GenerateRisks(input *types.Model) ([]*types.Risk, error) {
 	risks := make([]*types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
@@ -54,7 +54,7 @@ func (r *ServerSideRequestForgeryRule) GenerateRisks(input *types.Model) []*type
 			}
 		}
 	}
-	return risks
+	return risks, nil
 }
 
 func (r *ServerSideRequestForgeryRule) createRisk(input *types.Model, technicalAsset *types.TechnicalAsset, outgoingFlow *types.CommunicationLink) *types.Risk {

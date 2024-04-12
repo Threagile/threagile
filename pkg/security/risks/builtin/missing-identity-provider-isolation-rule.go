@@ -41,7 +41,7 @@ func (*MissingIdentityProviderIsolationRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *MissingIdentityProviderIsolationRule) GenerateRisks(input *types.Model) []*types.Risk {
+func (r *MissingIdentityProviderIsolationRule) GenerateRisks(input *types.Model) ([]*types.Risk, error) {
 	risks := make([]*types.Risk, 0)
 	for _, technicalAsset := range input.TechnicalAssets {
 		if !technicalAsset.OutOfScope && technicalAsset.Technologies.GetAttribute(types.IsIdentityRelated) {
@@ -69,7 +69,7 @@ func (r *MissingIdentityProviderIsolationRule) GenerateRisks(input *types.Model)
 			}
 		}
 	}
-	return risks
+	return risks, nil
 }
 
 func (r *MissingIdentityProviderIsolationRule) createRisk(techAsset *types.TechnicalAsset, moreImpact bool, sameExecutionEnv bool) *types.Risk {

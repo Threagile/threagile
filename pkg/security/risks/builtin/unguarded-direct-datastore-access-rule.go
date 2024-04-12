@@ -42,7 +42,7 @@ func (*UnguardedDirectDatastoreAccessRule) SupportedTags() []string {
 
 // check for data stores that should not be accessed directly across trust boundaries
 
-func (r *UnguardedDirectDatastoreAccessRule) GenerateRisks(input *types.Model) []*types.Risk {
+func (r *UnguardedDirectDatastoreAccessRule) GenerateRisks(input *types.Model) ([]*types.Risk, error) {
 	risks := make([]*types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
@@ -65,7 +65,7 @@ func (r *UnguardedDirectDatastoreAccessRule) GenerateRisks(input *types.Model) [
 			}
 		}
 	}
-	return risks
+	return risks, nil
 }
 
 func isSharingSameParentTrustBoundary(input *types.Model, left, right *types.TechnicalAsset) bool {

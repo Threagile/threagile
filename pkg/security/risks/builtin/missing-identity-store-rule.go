@@ -39,12 +39,12 @@ func (*MissingIdentityStoreRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *MissingIdentityStoreRule) GenerateRisks(input *types.Model) []*types.Risk {
+func (r *MissingIdentityStoreRule) GenerateRisks(input *types.Model) ([]*types.Risk, error) {
 	risks := make([]*types.Risk, 0)
 	for _, technicalAsset := range input.TechnicalAssets {
 		if !technicalAsset.OutOfScope && technicalAsset.Technologies.GetAttribute(types.IsIdentityStore) {
 			// everything fine, no risk, as we have an in-scope identity store in the model
-			return risks
+			return risks, nil
 		}
 	}
 	// now check if we have end user identity authorized communication links, then it's a risk
@@ -80,7 +80,7 @@ func (r *MissingIdentityStoreRule) GenerateRisks(input *types.Model) []*types.Ri
 	if riskIdentified {
 		risks = append(risks, r.createRisk(mostRelevantAsset, impact))
 	}
-	return risks
+	return risks, nil
 }
 
 func (r *MissingIdentityStoreRule) createRisk(technicalAsset *types.TechnicalAsset, impact types.RiskExploitationImpact) *types.Risk {

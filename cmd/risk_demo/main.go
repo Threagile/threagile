@@ -49,7 +49,12 @@ func main() {
 			os.Exit(-2)
 		}
 
-		generatedRisks := new(customRiskRule).GenerateRisks(&input)
+		generatedRisks, riskError := new(customRiskRule).GenerateRisks(&input)
+		if riskError != nil {
+			_, _ = fmt.Fprintf(os.Stderr, "failed to generate risks: %v\n", riskError)
+			os.Exit(-2)
+		}
+
 		outData, marshalError := json.Marshal(generatedRisks)
 		if marshalError != nil {
 			_, _ = fmt.Fprintf(os.Stderr, "failed to print generated risks: %v\n", marshalError)
@@ -89,17 +94,17 @@ func (r customRiskRule) SupportedTags() []string {
 	return []string{"demo tag"}
 }
 
-func (r customRiskRule) GenerateRisks(parsedModel *types.Model) []types.Risk {
-	generatedRisks := make([]types.Risk, 0)
+func (r customRiskRule) GenerateRisks(parsedModel *types.Model) ([]*types.Risk, error) {
+	generatedRisks := make([]*types.Risk, 0)
 	for _, techAsset := range parsedModel.TechnicalAssets {
 		generatedRisks = append(generatedRisks, createRisk(techAsset))
 	}
-	return generatedRisks
+	return generatedRisks, nil
 }
 
-func createRisk(technicalAsset *types.TechnicalAsset) types.Risk {
+func createRisk(technicalAsset *types.TechnicalAsset) *types.Risk {
 	category := new(customRiskRule).Category()
-	risk := types.Risk{
+	risk := &types.Risk{
 		CategoryId:                   category.ID,
 		Severity:                     types.CalculateSeverity(types.VeryLikely, types.MediumImpact),
 		ExploitationLikelihood:       types.VeryLikely,

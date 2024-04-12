@@ -38,7 +38,7 @@ func (*SqlNoSqlInjectionRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *SqlNoSqlInjectionRule) GenerateRisks(input *types.Model) []*types.Risk {
+func (r *SqlNoSqlInjectionRule) GenerateRisks(input *types.Model) ([]*types.Risk, error) {
 	risks := make([]*types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
@@ -53,7 +53,7 @@ func (r *SqlNoSqlInjectionRule) GenerateRisks(input *types.Model) []*types.Risk 
 			}
 		}
 	}
-	return risks
+	return risks, nil
 }
 
 func (r *SqlNoSqlInjectionRule) createRisk(input *types.Model, technicalAsset *types.TechnicalAsset, incomingFlow *types.CommunicationLink) *types.Risk {

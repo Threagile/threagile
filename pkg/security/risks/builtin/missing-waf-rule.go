@@ -39,7 +39,7 @@ func (*MissingWafRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *MissingWafRule) GenerateRisks(input *types.Model) []*types.Risk {
+func (r *MissingWafRule) GenerateRisks(input *types.Model) ([]*types.Risk, error) {
 	risks := make([]*types.Risk, 0)
 	for _, technicalAsset := range input.TechnicalAssets {
 		if !technicalAsset.OutOfScope &&
@@ -54,7 +54,7 @@ func (r *MissingWafRule) GenerateRisks(input *types.Model) []*types.Risk {
 			}
 		}
 	}
-	return risks
+	return risks, nil
 }
 
 func (r *MissingWafRule) createRisk(input *types.Model, technicalAsset *types.TechnicalAsset) *types.Risk {

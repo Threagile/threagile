@@ -70,31 +70,46 @@ func (what TechnicalAsset) IsTaggedWithAnyTraversingUp(model *Model, tags ...str
 }
 
 func (what TechnicalAsset) IsSameTrustBoundary(parsedModel *Model, otherAssetId string) bool {
-	trustBoundaryOfMyAsset := parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[what.Id]
-	trustBoundaryOfOtherAsset := parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[otherAssetId]
-	if trustBoundaryOfMyAsset == nil || trustBoundaryOfOtherAsset == nil {
-		return trustBoundaryOfMyAsset == trustBoundaryOfOtherAsset
+	trustBoundaryOfMyAsset, trustBoundaryOfMyAssetOk := parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[what.Id]
+	trustBoundaryOfOtherAsset, trustBoundaryOfOtherAssetOk := parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[otherAssetId]
+	if trustBoundaryOfMyAssetOk != trustBoundaryOfOtherAssetOk {
+		return false
+	}
+	if !trustBoundaryOfMyAssetOk && !trustBoundaryOfOtherAssetOk {
+		return true
 	}
 	return trustBoundaryOfMyAsset.Id == trustBoundaryOfOtherAsset.Id
 }
 
 func (what TechnicalAsset) IsSameExecutionEnvironment(parsedModel *Model, otherAssetId string) bool {
-	trustBoundaryOfMyAsset := parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[what.Id]
-	trustBoundaryOfOtherAsset := parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[otherAssetId]
-	if trustBoundaryOfMyAsset != nil && trustBoundaryOfMyAsset.Type == ExecutionEnvironment && trustBoundaryOfOtherAsset != nil && trustBoundaryOfOtherAsset.Type == ExecutionEnvironment {
+	trustBoundaryOfMyAsset, trustBoundaryOfMyAssetOk := parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[what.Id]
+	trustBoundaryOfOtherAsset, trustBoundaryOfOtherAssetOk := parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[otherAssetId]
+	if trustBoundaryOfMyAssetOk != trustBoundaryOfOtherAssetOk {
+		return false
+	}
+	if !trustBoundaryOfMyAssetOk && !trustBoundaryOfOtherAssetOk {
+		return true
+	}
+	if trustBoundaryOfMyAsset.Type == ExecutionEnvironment && trustBoundaryOfOtherAsset.Type == ExecutionEnvironment {
 		return trustBoundaryOfMyAsset.Id == trustBoundaryOfOtherAsset.Id
 	}
 	return false
 }
 
 func (what TechnicalAsset) IsSameTrustBoundaryNetworkOnly(parsedModel *Model, otherAssetId string) bool {
-	trustBoundaryOfMyAsset := parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[what.Id]
+	trustBoundaryOfMyAsset, trustBoundaryOfMyAssetOk := parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[what.Id]
 	if trustBoundaryOfMyAsset != nil && !trustBoundaryOfMyAsset.Type.IsNetworkBoundary() { // find and use the parent boundary then
-		trustBoundaryOfMyAsset = parsedModel.TrustBoundaries[trustBoundaryOfMyAsset.ParentTrustBoundaryID(parsedModel)]
+		trustBoundaryOfMyAsset, trustBoundaryOfMyAssetOk = parsedModel.TrustBoundaries[trustBoundaryOfMyAsset.ParentTrustBoundaryID(parsedModel)]
 	}
-	trustBoundaryOfOtherAsset := parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[otherAssetId]
+	trustBoundaryOfOtherAsset, trustBoundaryOfOtherAssetOk := parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[otherAssetId]
 	if trustBoundaryOfOtherAsset != nil && !trustBoundaryOfOtherAsset.Type.IsNetworkBoundary() { // find and use the parent boundary then
-		trustBoundaryOfOtherAsset = parsedModel.TrustBoundaries[trustBoundaryOfOtherAsset.ParentTrustBoundaryID(parsedModel)]
+		trustBoundaryOfOtherAsset, trustBoundaryOfOtherAssetOk = parsedModel.TrustBoundaries[trustBoundaryOfOtherAsset.ParentTrustBoundaryID(parsedModel)]
+	}
+	if trustBoundaryOfMyAssetOk != trustBoundaryOfOtherAssetOk {
+		return false
+	}
+	if !trustBoundaryOfMyAssetOk && !trustBoundaryOfOtherAssetOk {
+		return true
 	}
 	if trustBoundaryOfMyAsset == nil || trustBoundaryOfOtherAsset == nil {
 		return trustBoundaryOfMyAsset == trustBoundaryOfOtherAsset

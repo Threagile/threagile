@@ -41,7 +41,7 @@ func (*PathTraversalRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *PathTraversalRule) GenerateRisks(input *types.Model) []*types.Risk {
+func (r *PathTraversalRule) GenerateRisks(input *types.Model) ([]*types.Risk, error) {
 	risks := make([]*types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
@@ -60,7 +60,7 @@ func (r *PathTraversalRule) GenerateRisks(input *types.Model) []*types.Risk {
 			risks = append(risks, r.createRisk(input, technicalAsset, incomingFlow, likelihood))
 		}
 	}
-	return risks
+	return risks, nil
 }
 
 func (r *PathTraversalRule) createRisk(input *types.Model, technicalAsset *types.TechnicalAsset, incomingFlow *types.CommunicationLink, likelihood types.RiskExploitationLikelihood) *types.Risk {

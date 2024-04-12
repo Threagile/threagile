@@ -3,7 +3,6 @@ package model
 import (
 	"fmt"
 	"github.com/threagile/threagile/pkg/security/risks"
-	"log"
 	"strings"
 
 	"github.com/threagile/threagile/pkg/security/types"
@@ -33,18 +32,18 @@ func (what *CustomRiskCategory) SupportedTags() []string {
 	return what.Tags
 }
 
-func (what *CustomRiskCategory) GenerateRisks(parsedModel *types.Model) []*types.Risk {
+func (what *CustomRiskCategory) GenerateRisks(parsedModel *types.Model) ([]*types.Risk, error) {
 	if what.runner == nil {
-		return nil
+		return nil, nil
 	}
 
 	generatedRisks := make([]*types.Risk, 0)
 	runError := what.runner.Run(parsedModel, &generatedRisks, "-generate-risks")
 	if runError != nil {
-		log.Fatalf("Failed to generate risks for custom risk rule %q: %v\n", what.runner.Filename, runError)
+		return nil, fmt.Errorf("Failed to generate risks for custom risk rule %q: %v\n", what.runner.Filename, runError)
 	}
 
-	return generatedRisks
+	return generatedRisks, nil
 }
 
 func LoadCustomRiskRules(pluginFiles []string, reporter types.ProgressReporter) risks.RiskRules {

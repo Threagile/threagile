@@ -37,7 +37,7 @@ func (*WrongCommunicationLinkContentRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *WrongCommunicationLinkContentRule) GenerateRisks(input *types.Model) []*types.Risk {
+func (r *WrongCommunicationLinkContentRule) GenerateRisks(input *types.Model) ([]*types.Risk, error) {
 	risks := make([]*types.Risk, 0)
 	for _, techAsset := range input.TechnicalAssets {
 		for _, commLink := range techAsset.CommunicationLinks {
@@ -69,7 +69,7 @@ func (r *WrongCommunicationLinkContentRule) GenerateRisks(input *types.Model) []
 			}
 		}
 	}
-	return risks
+	return risks, nil
 }
 
 func (r *WrongCommunicationLinkContentRule) createRisk(technicalAsset *types.TechnicalAsset, commLink *types.CommunicationLink, reason string) *types.Risk {

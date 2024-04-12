@@ -41,7 +41,7 @@ func (*PushInsteadPullDeploymentRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *PushInsteadPullDeploymentRule) GenerateRisks(input *types.Model) []*types.Risk {
+func (r *PushInsteadPullDeploymentRule) GenerateRisks(input *types.Model) ([]*types.Risk, error) {
 	risks := make([]*types.Risk, 0)
 	impact := types.LowImpact
 	for _, buildPipeline := range input.TechnicalAssets {
@@ -60,7 +60,7 @@ func (r *PushInsteadPullDeploymentRule) GenerateRisks(input *types.Model) []*typ
 			}
 		}
 	}
-	return risks
+	return risks, nil
 }
 
 func (r *PushInsteadPullDeploymentRule) createRisk(buildPipeline *types.TechnicalAsset, deploymentTarget *types.TechnicalAsset, deploymentCommLink *types.CommunicationLink, impact types.RiskExploitationImpact) *types.Risk {

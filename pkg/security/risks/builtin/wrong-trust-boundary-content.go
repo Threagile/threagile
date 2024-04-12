@@ -36,7 +36,7 @@ func (*WrongTrustBoundaryContentRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *WrongTrustBoundaryContentRule) GenerateRisks(input *types.Model) []*types.Risk {
+func (r *WrongTrustBoundaryContentRule) GenerateRisks(input *types.Model) ([]*types.Risk, error) {
 	risks := make([]*types.Risk, 0)
 	for _, trustBoundary := range input.TrustBoundaries {
 		if trustBoundary.Type == types.NetworkPolicyNamespaceIsolation {
@@ -48,7 +48,7 @@ func (r *WrongTrustBoundaryContentRule) GenerateRisks(input *types.Model) []*typ
 			}
 		}
 	}
-	return risks
+	return risks, nil
 }
 
 func (r *WrongTrustBoundaryContentRule) createRisk(technicalAsset *types.TechnicalAsset) *types.Risk {

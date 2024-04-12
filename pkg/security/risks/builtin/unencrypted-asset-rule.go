@@ -44,7 +44,7 @@ func (*UnencryptedAssetRule) SupportedTags() []string {
 
 // check for technical assets that should be encrypted due to their confidentiality
 
-func (r *UnencryptedAssetRule) GenerateRisks(input *types.Model) []*types.Risk {
+func (r *UnencryptedAssetRule) GenerateRisks(input *types.Model) ([]*types.Risk, error) {
 	risks := make([]*types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
@@ -66,7 +66,7 @@ func (r *UnencryptedAssetRule) GenerateRisks(input *types.Model) []*types.Risk {
 			}
 		}
 	}
-	return risks
+	return risks, nil
 }
 
 // Simple routing assets like 'Reverse Proxy' or 'Load Balancer' usually don't have their own storage and thus have no

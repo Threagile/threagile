@@ -40,7 +40,7 @@ func (*CrossSiteScriptingRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *CrossSiteScriptingRule) GenerateRisks(input *types.Model) []*types.Risk {
+func (r *CrossSiteScriptingRule) GenerateRisks(input *types.Model) ([]*types.Risk, error) {
 	risks := make([]*types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
@@ -49,7 +49,7 @@ func (r *CrossSiteScriptingRule) GenerateRisks(input *types.Model) []*types.Risk
 		}
 		risks = append(risks, r.createRisk(input, technicalAsset))
 	}
-	return risks
+	return risks, nil
 }
 
 func (r *CrossSiteScriptingRule) createRisk(parsedModel *types.Model, technicalAsset *types.TechnicalAsset) *types.Risk {

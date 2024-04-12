@@ -40,7 +40,7 @@ func (*MissingFileValidationRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *MissingFileValidationRule) GenerateRisks(input *types.Model) []*types.Risk {
+func (r *MissingFileValidationRule) GenerateRisks(input *types.Model) ([]*types.Risk, error) {
 	risks := make([]*types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
@@ -53,7 +53,7 @@ func (r *MissingFileValidationRule) GenerateRisks(input *types.Model) []*types.R
 			}
 		}
 	}
-	return risks
+	return risks, nil
 }
 
 func (r *MissingFileValidationRule) createRisk(input *types.Model, technicalAsset *types.TechnicalAsset) *types.Risk {

@@ -42,7 +42,7 @@ func (*CrossSiteRequestForgeryRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *CrossSiteRequestForgeryRule) GenerateRisks(parsedModel *types.Model) []*types.Risk {
+func (r *CrossSiteRequestForgeryRule) GenerateRisks(parsedModel *types.Model) ([]*types.Risk, error) {
 	risks := make([]*types.Risk, 0)
 	for _, id := range parsedModel.SortedTechnicalAssetIDs() {
 		technicalAsset := parsedModel.TechnicalAssets[id]
@@ -60,7 +60,7 @@ func (r *CrossSiteRequestForgeryRule) GenerateRisks(parsedModel *types.Model) []
 			}
 		}
 	}
-	return risks
+	return risks, nil
 }
 
 func (r *CrossSiteRequestForgeryRule) createRisk(parsedModel *types.Model, technicalAsset *types.TechnicalAsset, incomingFlow *types.CommunicationLink, likelihood types.RiskExploitationLikelihood) *types.Risk {

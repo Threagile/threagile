@@ -50,7 +50,7 @@ func (*UnguardedAccessFromInternetRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *UnguardedAccessFromInternetRule) GenerateRisks(input *types.Model) []*types.Risk {
+func (r *UnguardedAccessFromInternetRule) GenerateRisks(input *types.Model) ([]*types.Risk, error) {
 	risks := make([]*types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
@@ -84,7 +84,7 @@ func (r *UnguardedAccessFromInternetRule) GenerateRisks(input *types.Model) []*t
 			}
 		}
 	}
-	return risks
+	return risks, nil
 }
 
 func (r *UnguardedAccessFromInternetRule) createRisk(dataStore *types.TechnicalAsset, dataFlow *types.CommunicationLink,

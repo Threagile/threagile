@@ -48,7 +48,7 @@ func (*MissingNetworkSegmentationRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *MissingNetworkSegmentationRule) GenerateRisks(input *types.Model) []*types.Risk {
+func (r *MissingNetworkSegmentationRule) GenerateRisks(input *types.Model) ([]*types.Risk, error) {
 	risks := make([]*types.Risk, 0)
 	// first create them in memory (see the link replacement below for nested trust boundaries) - otherwise in Go ranging over map is random order
 	// range over them in sorted (hence re-producible) way:
@@ -89,7 +89,7 @@ func (r *MissingNetworkSegmentationRule) GenerateRisks(input *types.Model) []*ty
 			}
 		}
 	}
-	return risks
+	return risks, nil
 }
 
 func (r *MissingNetworkSegmentationRule) createRisk(techAsset *types.TechnicalAsset, moreRisky bool) *types.Risk {

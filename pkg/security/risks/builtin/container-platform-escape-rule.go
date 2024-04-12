@@ -46,7 +46,7 @@ func (*ContainerPlatformEscapeRule) SupportedTags() []string {
 	return []string{"docker", "kubernetes", "openshift"}
 }
 
-func (r *ContainerPlatformEscapeRule) GenerateRisks(parsedModel *types.Model) []*types.Risk {
+func (r *ContainerPlatformEscapeRule) GenerateRisks(parsedModel *types.Model) ([]*types.Risk, error) {
 	risks := make([]*types.Risk, 0)
 	for _, id := range parsedModel.SortedTechnicalAssetIDs() {
 		technicalAsset := parsedModel.TechnicalAssets[id]
@@ -54,7 +54,7 @@ func (r *ContainerPlatformEscapeRule) GenerateRisks(parsedModel *types.Model) []
 			risks = append(risks, r.createRisk(parsedModel, technicalAsset))
 		}
 	}
-	return risks
+	return risks, nil
 }
 
 func (r *ContainerPlatformEscapeRule) createRisk(parsedModel *types.Model, technicalAsset *types.TechnicalAsset) *types.Risk {

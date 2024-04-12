@@ -44,7 +44,7 @@ func (*MixedTargetsOnSharedRuntimeRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *MixedTargetsOnSharedRuntimeRule) GenerateRisks(input *types.Model) []*types.Risk {
+func (r *MixedTargetsOnSharedRuntimeRule) GenerateRisks(input *types.Model) ([]*types.Risk, error) {
 	risks := make([]*types.Risk, 0)
 	// as in Go ranging over map is random order, range over them in sorted (hence reproducible) way:
 	keys := make([]string, 0)
@@ -76,7 +76,7 @@ func (r *MixedTargetsOnSharedRuntimeRule) GenerateRisks(input *types.Model) []*t
 			risks = append(risks, r.createRisk(input, sharedRuntime))
 		}
 	}
-	return risks
+	return risks, nil
 }
 
 func (r *MixedTargetsOnSharedRuntimeRule) createRisk(input *types.Model, sharedRuntime *types.SharedRuntime) *types.Risk {

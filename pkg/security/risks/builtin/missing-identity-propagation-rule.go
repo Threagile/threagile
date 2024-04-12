@@ -45,7 +45,7 @@ func (*MissingIdentityPropagationRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *MissingIdentityPropagationRule) GenerateRisks(input *types.Model) []*types.Risk {
+func (r *MissingIdentityPropagationRule) GenerateRisks(input *types.Model) ([]*types.Risk, error) {
 	risks := make([]*types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
@@ -80,7 +80,7 @@ func (r *MissingIdentityPropagationRule) GenerateRisks(input *types.Model) []*ty
 			}
 		}
 	}
-	return risks
+	return risks, nil
 }
 
 func (r *MissingIdentityPropagationRule) createRisk(input *types.Model, technicalAsset *types.TechnicalAsset, incomingAccess *types.CommunicationLink, moreRisky bool) *types.Risk {

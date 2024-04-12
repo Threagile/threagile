@@ -41,7 +41,7 @@ func (*ContainerBaseImageBackdooringRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *ContainerBaseImageBackdooringRule) GenerateRisks(parsedModel *types.Model) []*types.Risk {
+func (r *ContainerBaseImageBackdooringRule) GenerateRisks(parsedModel *types.Model) ([]*types.Risk, error) {
 	risks := make([]*types.Risk, 0)
 	for _, id := range parsedModel.SortedTechnicalAssetIDs() {
 		technicalAsset := parsedModel.TechnicalAssets[id]
@@ -49,7 +49,7 @@ func (r *ContainerBaseImageBackdooringRule) GenerateRisks(parsedModel *types.Mod
 			risks = append(risks, r.createRisk(parsedModel, technicalAsset))
 		}
 	}
-	return risks
+	return risks, nil
 }
 
 func (r *ContainerBaseImageBackdooringRule) createRisk(parsedModel *types.Model, technicalAsset *types.TechnicalAsset) *types.Risk {

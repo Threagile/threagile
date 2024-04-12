@@ -40,7 +40,7 @@ func (*XmlExternalEntityRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *XmlExternalEntityRule) GenerateRisks(input *types.Model) []*types.Risk {
+func (r *XmlExternalEntityRule) GenerateRisks(input *types.Model) ([]*types.Risk, error) {
 	risks := make([]*types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
@@ -53,7 +53,7 @@ func (r *XmlExternalEntityRule) GenerateRisks(input *types.Model) []*types.Risk 
 			}
 		}
 	}
-	return risks
+	return risks, nil
 }
 
 func (r *XmlExternalEntityRule) createRisk(parsedModel *types.Model, technicalAsset *types.TechnicalAsset) *types.Risk {

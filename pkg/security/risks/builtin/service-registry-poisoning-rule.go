@@ -38,7 +38,7 @@ func (*ServiceRegistryPoisoningRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *ServiceRegistryPoisoningRule) GenerateRisks(input *types.Model) []*types.Risk {
+func (r *ServiceRegistryPoisoningRule) GenerateRisks(input *types.Model) ([]*types.Risk, error) {
 	risks := make([]*types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
@@ -47,7 +47,7 @@ func (r *ServiceRegistryPoisoningRule) GenerateRisks(input *types.Model) []*type
 			risks = append(risks, r.createRisk(input, technicalAsset, incomingFlows))
 		}
 	}
-	return risks
+	return risks, nil
 }
 
 func (r *ServiceRegistryPoisoningRule) createRisk(input *types.Model, technicalAsset *types.TechnicalAsset, incomingFlows []*types.CommunicationLink) *types.Risk {

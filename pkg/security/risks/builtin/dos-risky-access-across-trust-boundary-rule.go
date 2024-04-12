@@ -44,7 +44,7 @@ func (*DosRiskyAccessAcrossTrustBoundaryRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *DosRiskyAccessAcrossTrustBoundaryRule) GenerateRisks(input *types.Model) []*types.Risk {
+func (r *DosRiskyAccessAcrossTrustBoundaryRule) GenerateRisks(input *types.Model) ([]*types.Risk, error) {
 	risks := make([]*types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
@@ -64,7 +64,7 @@ func (r *DosRiskyAccessAcrossTrustBoundaryRule) GenerateRisks(input *types.Model
 			}
 		}
 	}
-	return risks
+	return risks, nil
 }
 
 func (r *DosRiskyAccessAcrossTrustBoundaryRule) checkRisk(input *types.Model, technicalAsset *types.TechnicalAsset, incomingAccess *types.CommunicationLink, linkId string, hopBetween string, risks []*types.Risk) []*types.Risk {

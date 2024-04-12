@@ -39,7 +39,7 @@ func (*LdapInjectionRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *LdapInjectionRule) GenerateRisks(input *types.Model) []*types.Risk {
+func (r *LdapInjectionRule) GenerateRisks(input *types.Model) ([]*types.Risk, error) {
 	risks := make([]*types.Risk, 0)
 	for _, technicalAsset := range input.TechnicalAssets {
 		incomingFlows := input.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id]
@@ -56,7 +56,7 @@ func (r *LdapInjectionRule) GenerateRisks(input *types.Model) []*types.Risk {
 			}
 		}
 	}
-	return risks
+	return risks, nil
 }
 
 func (r *LdapInjectionRule) createRisk(input *types.Model, technicalAsset *types.TechnicalAsset, incomingFlow *types.CommunicationLink, likelihood types.RiskExploitationLikelihood) *types.Risk {

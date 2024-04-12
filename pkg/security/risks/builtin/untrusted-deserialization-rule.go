@@ -42,7 +42,7 @@ func (*UntrustedDeserializationRule) SupportedTags() []string {
 	return []string{}
 }
 
-func (r *UntrustedDeserializationRule) GenerateRisks(input *types.Model) []*types.Risk {
+func (r *UntrustedDeserializationRule) GenerateRisks(input *types.Model) ([]*types.Risk, error) {
 	risks := make([]*types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
@@ -74,7 +74,7 @@ func (r *UntrustedDeserializationRule) GenerateRisks(input *types.Model) []*type
 			risks = append(risks, r.createRisk(input, technicalAsset, acrossTrustBoundary, commLinkTitle))
 		}
 	}
-	return risks
+	return risks, nil
 }
 
 func (r *UntrustedDeserializationRule) createRisk(parsedModel *types.Model, technicalAsset *types.TechnicalAsset, acrossTrustBoundary bool, commLinkTitle string) *types.Risk {

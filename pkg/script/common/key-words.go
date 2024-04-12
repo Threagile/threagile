@@ -1,9 +1,10 @@
 package common
 
 const (
-	Risk  = "risk"
-	Match = "match"
-	Utils = "utils"
+	Script = "script"
+	Risk   = "risk"
+	Match  = "match"
+	Utils  = "utils"
 
 	Assign = "assign"
 	Loop   = "loop"

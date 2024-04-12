@@ -17,13 +17,32 @@ type Script struct {
 	utils map[string]*statements.MethodStatement
 }
 
-func (what *Script) ParseScripts(text []byte) (map[string]Script, error) {
+func (what *Script) NewScope(risk *types.RiskCategory) (*common.Scope, error) {
+	methods := make(map[string]common.Statement)
+	for name, method := range what.utils {
+		methods[name] = method
+	}
+
+	scope := new(common.Scope)
+	scopeError := scope.Init(risk, methods)
+	if scopeError != nil {
+		return scope, fmt.Errorf("error initializing scope: %v\n", scopeError)
+	}
+
+	return scope, nil
+}
+
+func (what *Script) ParseScriptsFromData(text []byte) (map[string]*Script, error) {
 	items := make(map[string]any)
 	parseError := yaml.Unmarshal(text, &items)
 	if parseError != nil {
 		return nil, parseError
 	}
 
+	return what.ParseScripts(items)
+}
+
+func (what *Script) ParseScripts(items map[string]any) (map[string]*Script, error) {
 	for key, value := range items {
 		switch strings.ToLower(key) {
 		case "individual_risk_categories":
@@ -32,7 +51,7 @@ func (what *Script) ParseScripts(text []byte) (map[string]Script, error) {
 				return nil, fmt.Errorf("unexpected format %T in risk definition", value)
 			}
 
-			scripts := make(map[string]Script)
+			scripts := make(map[string]*Script)
 			for scriptID, riskScript := range riskScripts {
 				risk, ok := riskScript.(map[string]any)
 				if !ok {
@@ -44,7 +63,7 @@ func (what *Script) ParseScripts(text []byte) (map[string]Script, error) {
 					return nil, fmt.Errorf("failed to parse script of risk definition for %q: %v", scriptID, scriptError)
 				}
 
-				scripts[scriptID] = *script
+				scripts[scriptID] = script
 			}
 
 			return scripts, nil
@@ -55,6 +74,43 @@ func (what *Script) ParseScripts(text []byte) (map[string]Script, error) {
 	}
 
 	return nil, fmt.Errorf("no scripts found")
+}
+
+func (what *Script) ParseCategoryFromData(text []byte) (*Script, error) {
+	items := make(map[string]any)
+	parseError := yaml.Unmarshal(text, &items)
+	if parseError != nil {
+		return nil, parseError
+	}
+
+	return what.ParseCategory(items)
+}
+
+func (what *Script) ParseCategory(script map[string]any) (*Script, error) {
+	for key, value := range script {
+		switch strings.ToLower(key) {
+		case common.Script:
+			switch castValue := value.(type) {
+			case map[string]any:
+				return what.ParseScript(castValue)
+
+			default:
+				return what, fmt.Errorf("failed to parse %q: unexpected script type %T\nscript:\n%v", key, value, new(input.Strings).AddLineNumbers(value))
+			}
+		}
+	}
+
+	return what, nil
+}
+
+func (what *Script) ParseScriptFromData(text []byte) (*Script, error) {
+	items := make(map[string]any)
+	parseError := yaml.Unmarshal(text, &items)
+	if parseError != nil {
+		return nil, parseError
+	}
+
+	return what.ParseScript(items)
 }
 
 func (what *Script) ParseScript(script map[string]any) (*Script, error) {
@@ -90,7 +146,7 @@ func (what *Script) ParseScript(script map[string]any) (*Script, error) {
 	return what, nil
 }
 
-func (what *Script) GenerateRisks(scope *common.Scope) (map[string]*types.Risk, string, error) {
+func (what *Script) GenerateRisks(scope *common.Scope) ([]*types.Risk, string, error) {
 	value, valueOk := what.getItem(scope.Model, "technical_assets")
 	if !valueOk {
 		return nil, "", fmt.Errorf("no technical assets in scope")
@@ -101,7 +157,7 @@ func (what *Script) GenerateRisks(scope *common.Scope) (map[string]*types.Risk, 
 		return nil, "", fmt.Errorf("unexpected format of technical assets %T", techAssets)
 	}
 
-	risks := make(map[string]*types.Risk)
+	risks := make([]*types.Risk, 0)
 	for _, techAsset := range techAssets {
 		matchScope, matchCloneError := scope.Clone()
 		if matchCloneError != nil {
@@ -126,7 +182,7 @@ func (what *Script) GenerateRisks(scope *common.Scope) (map[string]*types.Risk, 
 				return nil, errorRiskLiteral, riskError
 			}
 
-			risks[risk.SyntheticId] = risk
+			risks = append(risks, risk)
 		}
 	}
 
