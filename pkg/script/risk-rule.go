@@ -13,7 +13,7 @@ type RiskRule struct {
 	risks.RiskRule
 	category      types.RiskCategory
 	supportedTags []string
-	script        Script
+	script        *Script
 }
 
 func (what *RiskRule) Init() *RiskRule {
@@ -21,18 +21,31 @@ func (what *RiskRule) Init() *RiskRule {
 }
 
 func (what *RiskRule) ParseFromData(text []byte) (*RiskRule, error) {
-	items := make(map[string]any)
-	parseError := yaml.Unmarshal(text, &items)
-	if parseError != nil {
-		return nil, parseError
+	categoryError := yaml.Unmarshal(text, &what.category)
+	if categoryError != nil {
+		return nil, categoryError
 	}
 
-	return what.Parse(items)
-}
+	var rule struct {
+		Category      string         `yaml:"category"`
+		SupportedTags []string       `yaml:"supported-tags"`
+		Script        map[string]any `yaml:"script"`
+	}
 
-func (what *RiskRule) Parse(items map[string]any) (*RiskRule, error) {
-	// todo
-	return nil, fmt.Errorf("not implemented")
+	ruleError := yaml.Unmarshal(text, &rule)
+	if ruleError != nil {
+		return nil, ruleError
+	}
+
+	what.supportedTags = rule.SupportedTags
+	script, scriptError := new(Script).ParseScript(rule.Script)
+	if scriptError != nil {
+		return nil, scriptError
+	}
+
+	what.script = script
+
+	return what, nil
 }
 
 func (what *RiskRule) Category() *types.RiskCategory {

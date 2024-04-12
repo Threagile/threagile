@@ -3,6 +3,7 @@ package common
 import (
 	"encoding/json"
 	"github.com/threagile/threagile/pkg/security/types"
+	"gopkg.in/yaml.v3"
 	"strings"
 )
 
@@ -18,12 +19,12 @@ type Scope struct {
 
 func (what *Scope) Init(risk *types.RiskCategory, methods map[string]Statement) error {
 	if risk != nil {
-		data, marshalError := json.Marshal(risk)
+		data, marshalError := yaml.Marshal(risk)
 		if marshalError != nil {
 			return marshalError
 		}
 
-		unmarshalError := json.Unmarshal(data, &what.Risk)
+		unmarshalError := yaml.Unmarshal(data, &what.Risk)
 		if unmarshalError != nil {
 			return unmarshalError
 		}
