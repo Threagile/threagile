@@ -37,19 +37,50 @@ func (what CommunicationLink) IsTaggedWithBaseTag(baseTag string) bool {
 }
 
 func (what CommunicationLink) IsAcrossTrustBoundary(parsedModel *Model) bool {
-	trustBoundaryOfSourceAsset := parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[what.SourceId]
-	trustBoundaryOfTargetAsset := parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[what.TargetId]
+	if parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId == nil {
+		return false
+	}
+
+	trustBoundaryOfSourceAsset, found := parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[what.SourceId]
+	if !found {
+		return false
+	}
+
+	trustBoundaryOfTargetAsset, found := parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[what.TargetId]
+	if !found {
+		return false
+	}
+
 	return trustBoundaryOfSourceAsset.Id != trustBoundaryOfTargetAsset.Id
 }
 
 func (what CommunicationLink) IsAcrossTrustBoundaryNetworkOnly(parsedModel *Model) bool {
-	trustBoundaryOfSourceAsset := parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[what.SourceId]
-	if !trustBoundaryOfSourceAsset.Type.IsNetworkBoundary() { // find and use the parent boundary then
-		trustBoundaryOfSourceAsset = parsedModel.TrustBoundaries[trustBoundaryOfSourceAsset.ParentTrustBoundaryID(parsedModel)]
+	if parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId == nil {
+		return false
 	}
-	trustBoundaryOfTargetAsset := parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[what.TargetId]
+
+	trustBoundaryOfSourceAsset, found := parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[what.SourceId]
+	if !found {
+		return false
+	}
+	if !trustBoundaryOfSourceAsset.Type.IsNetworkBoundary() { // find and use the parent boundary then
+		// TODO: what if parent is also network boundary or not exist, shall it not be recursive up until find network boundary or nil
+		trustBoundaryOfSourceAsset, found = parsedModel.TrustBoundaries[trustBoundaryOfSourceAsset.ParentTrustBoundaryID(parsedModel)]
+		if !found {
+			return false
+		}
+	}
+
+	trustBoundaryOfTargetAsset, found := parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[what.TargetId]
+	if !found {
+		return false
+	}
 	if !trustBoundaryOfTargetAsset.Type.IsNetworkBoundary() { // find and use the parent boundary then
-		trustBoundaryOfTargetAsset = parsedModel.TrustBoundaries[trustBoundaryOfTargetAsset.ParentTrustBoundaryID(parsedModel)]
+		// TODO: what if parent is also network boundary or not exist, shall it not be recursive up until find network boundary or nil
+		trustBoundaryOfTargetAsset, found = parsedModel.TrustBoundaries[trustBoundaryOfTargetAsset.ParentTrustBoundaryID(parsedModel)]
+		if !found {
+			return false
+		}
 	}
 	return trustBoundaryOfSourceAsset.Id != trustBoundaryOfTargetAsset.Id && trustBoundaryOfTargetAsset.Type.IsNetworkBoundary()
 }
