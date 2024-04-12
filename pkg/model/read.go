@@ -1,7 +1,10 @@
 package model
 
 import (
+	"encoding/json"
 	"fmt"
+	"gopkg.in/yaml.v3"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -43,7 +46,7 @@ func ReadAndAnalyzeModel(config *common.Config, progressReporter types.ProgressR
 		return nil, fmt.Errorf("unable to parse model yaml: %v", parseError)
 	}
 
-	/**
+	/**/
 	jsonData, _ := json.MarshalIndent(parsedModel, "", "  ")
 	_ = os.WriteFile("parsed-model.json", jsonData, 0600)
 

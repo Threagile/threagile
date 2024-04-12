@@ -61,7 +61,7 @@ func (r *MissingVaultRule) GenerateRisks(input *types.Model) ([]*types.Risk, err
 			impact = types.MediumImpact
 		}
 		// just for referencing the most interesting asset
-		if mostRelevantAsset != nil && techAsset.HighestSensitivityScore() > mostRelevantAsset.HighestSensitivityScore() {
+		if mostRelevantAsset == nil || techAsset.HighestSensitivityScore() > mostRelevantAsset.HighestSensitivityScore() {
 			mostRelevantAsset = techAsset
 		}
 	}
@@ -72,7 +72,10 @@ func (r *MissingVaultRule) GenerateRisks(input *types.Model) ([]*types.Risk, err
 }
 
 func (r *MissingVaultRule) createRisk(technicalAsset *types.TechnicalAsset, impact types.RiskExploitationImpact) *types.Risk {
-	title := "<b>Missing Vault (Secret Storage)</b> in the threat model (referencing asset <b>" + technicalAsset.Title + "</b> as an example)"
+	title := "<b>Missing Vault (Secret Storage)</b> in the threat model"
+	if technicalAsset != nil {
+		title += " (referencing asset <b>" + technicalAsset.Title + "</b> as an example)"
+	}
 	risk := &types.Risk{
 		CategoryId:                   r.Category().ID,
 		Severity:                     types.CalculateSeverity(types.Unlikely, impact),
