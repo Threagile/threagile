@@ -178,9 +178,9 @@ func (c *Config) Load(configFilename string) error {
 	}
 
 	c.PluginFolder = c.CleanPath(c.PluginFolder)
-	binDirError := c.checkDir(c.PluginFolder, "plugin")
-	if binDirError != nil {
-		errorList = append(errorList, binDirError)
+	pluginDirError := c.checkDir(c.PluginFolder, "plugin")
+	if pluginDirError != nil {
+		errorList = append(errorList, pluginDirError)
 	}
 
 	c.DataFolder = c.CleanPath(c.DataFolder)
