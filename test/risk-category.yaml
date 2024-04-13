@@ -47,16 +47,20 @@ script:
   match:
     parameter: tech_asset
     do:
-      if:
-        and:
-          - false: "{tech_asset.out_of_scope}"
-          - contains:
-              item: "{tech_asset.technology}"
-              in:
-                - sourcecode-repository
-                - artifact-registry
-        then:
-          return: true
+      - if:
+          "true": "{tech_asset.out_of_scope}"
+          then:
+            return: false
+      - loop:
+          item: technology
+          in: "{tech_asset.technologies}"
+          do:
+            if:
+              or:
+                - true: "{technology.attributes.sourcecode-repository}"
+                - true: "{technology.attributes.artifact-registry}"
+              then:
+                return: true
 
   utils:
     get_title:

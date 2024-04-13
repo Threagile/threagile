@@ -13,9 +13,7 @@ type TrueExpression struct {
 func (what *TrueExpression) ParseBool(script any) (common.BoolExpression, any, error) {
 	what.literal = common.ToLiteral(script)
 
-	what.literal = common.ToLiteral(script)
-
-	item, errorScript, itemError := new(ExpressionList).ParseAny(script.(map[string]any))
+	item, errorScript, itemError := new(ExpressionList).ParseAny(script)
 	if itemError != nil {
 		return nil, errorScript, fmt.Errorf("failed to parse true-expression: %v", itemError)
 	}
