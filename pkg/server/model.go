@@ -1309,12 +1309,12 @@ func (s *server) backupModelToHistory(modelFolder string, changeReasonForHistory
 		return err
 	}
 	historyFile := filepath.Join(historyFolder, time.Now().Format("2006-01-02 15:04:05")+" "+changeReasonForHistory+".backup")
-	err = os.WriteFile(historyFile, inputModel, 0400)
+	err = os.WriteFile(filepath.Clean(historyFile), inputModel, 0400)
 	if err != nil {
 		return err
 	}
 	// now delete any old files if over limit to keep
-	files, err := os.ReadDir(historyFolder)
+	files, err := os.ReadDir(filepath.Clean(historyFolder))
 	if err != nil {
 		return err
 	}
@@ -1328,7 +1328,7 @@ func (s *server) backupModelToHistory(modelFolder string, changeReasonForHistory
 			if file.Name() != filepath.Clean(file.Name()) {
 				return fmt.Errorf("weird file name %v", file.Name())
 			}
-			err = os.Remove(filepath.Join(historyFolder, file.Name()))
+			err = os.Remove(filepath.Clean(filepath.Join(historyFolder, file.Name())))
 			if err != nil {
 				return err
 			}
