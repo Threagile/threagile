@@ -570,7 +570,8 @@
                 "xml",
                 "serialization",
                 "file",
-                "csv"
+                "csv",
+                "yaml"
               ]
             }
           },
