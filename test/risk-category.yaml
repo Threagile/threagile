@@ -44,11 +44,11 @@ script:
       - "{tech_asset.id}"
     most_relevant_data_asset: "{tech_asset.id}"
 
-  match:
+  match-old:
     parameter: tech_asset
     do:
       - if:
-          "true": "{tech_asset.out_of_scope}"
+          true: "{tech_asset.out_of_scope}"
           then:
             return: false
       - loop:
@@ -61,6 +61,20 @@ script:
                 - true: "{technology.attributes.artifact-registry}"
               then:
                 return: true
+
+  match:
+    parameter: tech_asset
+    do:
+      - if:
+          and:
+            - false: "{tech_asset.out_of_scope}"
+            - any:
+                in: "{tech_asset.technologies}"
+                or:
+                  - true: "{.attributes.sourcecode-repository}"
+                  - true: "{.attributes.artifact-registry}"
+          then:
+            return: true
 
   utils:
     get_title:

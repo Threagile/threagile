@@ -66,6 +66,9 @@ func (what *LoopStatement) Parse(script any) (common.Statement, any, error) {
 }
 
 func (what *LoopStatement) Run(scope *common.Scope) (string, error) {
+	oldIterator := scope.SwapIterator(nil)
+	defer scope.SetIterator(oldIterator)
+
 	value, errorEvalLiteral, evalError := what.in.EvalAny(scope)
 	if evalError != nil {
 		return errorEvalLiteral, evalError
@@ -78,6 +81,7 @@ func (what *LoopStatement) Run(scope *common.Scope) (string, error) {
 				scope.Set(what.index, index)
 			}
 
+			scope.SetIterator(item)
 			if len(what.item) > 0 {
 				scope.Set(what.item, item)
 			}
@@ -94,6 +98,7 @@ func (what *LoopStatement) Run(scope *common.Scope) (string, error) {
 				scope.Set(what.index, name)
 			}
 
+			scope.SetIterator(item)
 			if len(what.item) > 0 {
 				scope.Set(what.item, item)
 			}

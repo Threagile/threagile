@@ -16,51 +16,64 @@ type IfStatement struct {
 func (what *IfStatement) Parse(script any) (common.Statement, any, error) {
 	what.literal = common.ToLiteral(script)
 
-	switch script.(type) {
+	switch castScript := script.(type) {
+	case map[any]any:
+		for key, value := range castScript {
+			statement, errorScript, parseError := what.parse(key, value, script)
+			if parseError != nil {
+				return statement, errorScript, parseError
+			}
+		}
+
 	case map[string]any:
-		for key, value := range script.(map[string]any) {
-			switch key {
-			case common.Then:
-				item, errorScript, itemError := new(StatementList).Parse(value)
-				if itemError != nil {
-					return nil, errorScript, fmt.Errorf("failed to parse %q of if-statement: %v", key, itemError)
-				}
-
-				what.yesPath = item
-
-			case common.Else:
-				item, errorScript, itemError := new(StatementList).Parse(value)
-				if itemError != nil {
-					return nil, errorScript, fmt.Errorf("failed to parse %q of if-statement: %v", key, itemError)
-				}
-
-				what.noPath = item
-
-			default:
-				if what.expression != nil {
-					return nil, script, fmt.Errorf("if-statement has multiple expressions")
-				}
-
-				expression := map[string]any{
-					key: value,
-				}
-
-				item, errorScript, itemError := new(expressions.ExpressionList).ParseExpression(expression)
-				if itemError != nil {
-					return nil, errorScript, fmt.Errorf("failed to parse expression of if-statement: %v", itemError)
-				}
-
-				boolItem, ok := item.(common.BoolExpression)
-				if !ok {
-					return nil, script, fmt.Errorf("expression of if-statement is not a bool expression: %v", itemError)
-				}
-
-				what.expression = boolItem
+		for key, value := range castScript {
+			statement, errorScript, parseError := what.parse(key, value, script)
+			if parseError != nil {
+				return statement, errorScript, parseError
 			}
 		}
 
 	default:
 		return nil, script, fmt.Errorf("failed to parse if-statement: expected map[string]any, got %T", script)
+	}
+
+	return what, nil, nil
+}
+
+func (what *IfStatement) parse(key any, value any, script any) (common.Statement, any, error) {
+	switch key {
+	case common.Then:
+		item, errorScript, itemError := new(StatementList).Parse(value)
+		if itemError != nil {
+			return nil, errorScript, fmt.Errorf("failed to parse %q of if-statement: %v", key, itemError)
+		}
+
+		what.yesPath = item
+
+	case common.Else:
+		item, errorScript, itemError := new(StatementList).Parse(value)
+		if itemError != nil {
+			return nil, errorScript, fmt.Errorf("failed to parse %q of if-statement: %v", key, itemError)
+		}
+
+		what.noPath = item
+
+	default:
+		if what.expression != nil {
+			return nil, script, fmt.Errorf("if-statement has multiple expressions")
+		}
+
+		item, errorScript, itemError := new(expressions.ExpressionList).ParseExpression(map[string]any{fmt.Sprintf("%v", key): value})
+		if itemError != nil {
+			return nil, errorScript, fmt.Errorf("failed to parse expression of if-statement: %v", itemError)
+		}
+
+		boolItem, ok := item.(common.BoolExpression)
+		if !ok {
+			return nil, script, fmt.Errorf("expression of if-statement is not a bool expression: %v", itemError)
+		}
+
+		what.expression = boolItem
 	}
 
 	return what, nil, nil

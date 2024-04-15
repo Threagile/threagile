@@ -24,8 +24,11 @@ const (
 	Then = "then"
 	Else = "else"
 
+	All            = "all"
 	And            = "and"
+	Any            = "any"
 	Contains       = "contains"
+	Count          = "count"
 	Equal          = "equal"
 	EqualOrGreater = "equal-or-greater"
 	EqualOrLess    = "equal-or-less"

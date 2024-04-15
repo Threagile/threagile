@@ -13,11 +13,20 @@ type ExpressionList struct {
 func (what *ExpressionList) ParseExpression(script map[string]any) (common.Expression, any, error) {
 	for key, value := range script {
 		switch key {
+		case common.All:
+			return new(AllExpression).ParseBool(value)
+
+		case common.Any:
+			return new(AnyExpression).ParseBool(value)
+
 		case common.And:
 			return new(AndExpression).ParseBool(value)
 
 		case common.Contains:
 			return new(ContainsExpression).ParseBool(value)
+
+		case common.Count:
+			return new(CountExpression).ParseDecimal(value)
 
 		case common.Equal:
 			return new(EqualExpression).ParseBool(value)
