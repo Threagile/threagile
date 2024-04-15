@@ -19,6 +19,7 @@ const (
 	Serialization
 	File
 	CSV
+	YAML
 )
 
 func DataFormatValues() []TypeEnum {
@@ -28,6 +29,7 @@ func DataFormatValues() []TypeEnum {
 		Serialization,
 		File,
 		CSV,
+		YAML,
 	}
 }
 
@@ -37,6 +39,7 @@ var DataFormatTypeDescription = [...]TypeDescription{
 	{"serialization", "Serialized program objects"},
 	{"file", "Specific file types for data"},
 	{"csv", "CSV"},
+	{"yaml", "YAML"},
 }
 
 func ParseDataFormat(value string) (dataFormat DataFormat, err error) {
@@ -59,12 +62,12 @@ func (what DataFormat) Explain() string {
 }
 
 func (what DataFormat) Title() string {
-	return [...]string{"JSON", "XML", "Serialization", "File", "CSV"}[what]
+	return [...]string{"JSON", "XML", "Serialization", "File", "CSV", "YAML"}[what]
 }
 
 func (what DataFormat) Description() string {
 	return [...]string{"JSON marshalled object data", "XML structured data", "Serialization-based object graphs",
-		"File input/uploads", "CSV tabular data"}[what]
+		"File input/uploads", "CSV tabular data", "YAML structured configuration format"}[what]
 }
 
 type ByDataFormatAcceptedSort []DataFormat

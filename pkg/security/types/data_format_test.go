@@ -39,6 +39,10 @@ func TestParseDataFormat(t *testing.T) {
 			input:    "csv",
 			expected: CSV,
 		},
+		"yaml": {
+			input:    "yaml",
+			expected: YAML,
+		},
 		"unknown": {
 			input:         "unknown",
 			expectedError: fmt.Errorf("unable to parse into type: unknown"),
