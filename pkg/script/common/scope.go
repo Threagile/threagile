@@ -38,12 +38,12 @@ func (what *Scope) Init(risk *types.RiskCategory, methods map[string]Statement) 
 
 func (what *Scope) SetModel(model *types.Model) error {
 	if model != nil {
-		data, marshalError := json.Marshal(model)
+		data, marshalError := yaml.Marshal(model)
 		if marshalError != nil {
 			return marshalError
 		}
 
-		unmarshalError := json.Unmarshal(data, &what.Model)
+		unmarshalError := yaml.Unmarshal(data, &what.Model)
 		if unmarshalError != nil {
 			return unmarshalError
 		}

@@ -15,8 +15,8 @@ type ReadResult struct {
 	ModelInput       *input.Model
 	ParsedModel      *types.Model
 	IntroTextRAA     string
-	BuiltinRiskRules risks.RiskRules
-	CustomRiskRules  risks.RiskRules
+	BuiltinRiskRules types.RiskRules
+	CustomRiskRules  types.RiskRules
 }
 
 func (what ReadResult) ExplainRisk(cfg *common.Config, risk string, reporter common.DefaultProgressReporter) error {
@@ -73,7 +73,7 @@ func ReadAndAnalyzeModel(config *common.Config, progressReporter types.ProgressR
 	}, nil
 }
 
-func applyRiskGeneration(parsedModel *types.Model, rules risks.RiskRules,
+func applyRiskGeneration(parsedModel *types.Model, rules types.RiskRules,
 	skipRiskRules []string,
 	progressReporter types.ProgressReporter) {
 	progressReporter.Info("Applying risk generation")

@@ -57,7 +57,7 @@ func (r *pdfReporter) WriteReportPDF(reportFilename string,
 	buildTimestamp string,
 	modelHash string,
 	introTextRAA string,
-	customRiskRules risks.RiskRules,
+	customRiskRules types.RiskRules,
 	tempFolder string,
 	model *types.Model) error {
 	defer func() {
@@ -4001,7 +4001,7 @@ func (r *pdfReporter) createSharedRuntimes(parsedModel *types.Model) {
 	}
 }
 
-func (r *pdfReporter) createRiskRulesChecked(parsedModel *types.Model, modelFilename string, skipRiskRules []string, buildTimestamp string, modelHash string, customRiskRules risks.RiskRules) {
+func (r *pdfReporter) createRiskRulesChecked(parsedModel *types.Model, modelFilename string, skipRiskRules []string, buildTimestamp string, modelHash string, customRiskRules types.RiskRules) {
 	r.pdf.SetTextColor(0, 0, 0)
 	title := "Risk Rules Checked by Threagile"
 	r.addHeadline(title, false)

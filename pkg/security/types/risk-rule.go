@@ -1,11 +1,9 @@
-package risks
-
-import "github.com/threagile/threagile/pkg/security/types"
+package types
 
 type RiskRule interface {
-	Category() *types.RiskCategory
+	Category() *RiskCategory
 	SupportedTags() []string
-	GenerateRisks(*types.Model) ([]*types.Risk, error)
+	GenerateRisks(*Model) ([]*Risk, error)
 }
 
 type RiskRules map[string]RiskRule

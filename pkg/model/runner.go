@@ -4,8 +4,8 @@ package model
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"os"
 	"os/exec"
 )
@@ -61,9 +61,9 @@ func (p *runner) Run(in any, out any, parameters ...string) error {
 		return startError
 	}
 
-	inData, inError := json.MarshalIndent(p.In, "", "  ")
+	inData, inError := yaml.Marshal(p.In)
 	if inError != nil {
-		return inError
+		return fmt.Errorf("error encoding input data: %w", inError)
 	}
 
 	_, writeError := stdin.Write(inData)
@@ -83,10 +83,12 @@ func (p *runner) Run(in any, out any, parameters ...string) error {
 	}
 
 	stdout := stdoutBuf.Bytes()
-	unmarshalError := json.Unmarshal(stdout, &p.Out)
+	unmarshalError := yaml.Unmarshal(stdout, p.Out)
 	if unmarshalError != nil {
 		return unmarshalError
 	}
+
+	// _ = os.WriteFile(fmt.Sprintf("%v.yaml", rand.Int31()), stdout, 0644)
 
 	return nil
 }

@@ -1,9 +1,9 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"io"
 	"os"
 	"sort"
@@ -34,23 +34,23 @@ func main() {
 		}
 	}
 
-	//	_ = os.WriteFile("raa_in.json", data, 0644)
+	// _ = os.WriteFile("raa_in.yaml", data, 0644)
 
 	var input types.Model
-	parseError := json.Unmarshal(data, &input)
+	parseError := yaml.Unmarshal(data, &input)
 	if parseError != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "failed to parse model: %v\n", parseError)
 		os.Exit(-2)
 	}
 
 	text := CalculateRAA(&input)
-	outData, marshalError := json.MarshalIndent(input, "", "  ")
+	outData, marshalError := yaml.Marshal(input)
 	if marshalError != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "failed to print model: %v\n", marshalError)
 		os.Exit(-2)
 	}
 
-	//	_ = os.WriteFile("raa_out.json", outData, 0644)
+	// _ = os.WriteFile("raa_out.yaml", outData, 0644)
 
 	var outputFile io.Writer = os.Stdout
 	if len(*outputFilename) > 0 {

@@ -35,7 +35,7 @@ type server struct {
 	mapFolderNameToTokenHash       map[string]string
 	extremeShortTimeoutsForTesting bool
 	locksByFolderName              map[string]*sync.Mutex
-	customRiskRules                risks.RiskRules
+	customRiskRules                types.RiskRules
 }
 
 func RunServer(config *common.Config) {

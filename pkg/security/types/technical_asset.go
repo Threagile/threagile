@@ -37,8 +37,7 @@ type TechnicalAsset struct {
 	DataFormatsAccepted     []DataFormat          `json:"data_formats_accepted,omitempty" yaml:"data_formats_accepted,omitempty"`
 	CommunicationLinks      []*CommunicationLink  `json:"communication_links,omitempty" yaml:"communication_links,omitempty"`
 	DiagramTweakOrder       int                   `json:"diagram_tweak_order,omitempty" yaml:"diagram_tweak_order,omitempty"`
-	// will be set by separate calculation step:
-	RAA float64 `json:"raa,omitempty" yaml:"raa,omitempty"`
+	RAA                     float64               `json:"raa,omitempty" yaml:"raa,omitempty"` // will be set by separate calculation step
 }
 
 func (what TechnicalAsset) IsTaggedWithAny(tags ...string) bool {

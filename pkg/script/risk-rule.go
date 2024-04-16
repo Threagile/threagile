@@ -1,16 +1,18 @@
 package script
 
 import (
+	"embed"
 	"fmt"
 	"github.com/threagile/threagile/pkg/input"
-	"github.com/threagile/threagile/pkg/security/risks"
 	"github.com/threagile/threagile/pkg/security/types"
 	"gopkg.in/yaml.v3"
+	"io/fs"
+	"path/filepath"
 	"strings"
 )
 
 type RiskRule struct {
-	risks.RiskRule
+	types.RiskRule
 	category      types.RiskCategory
 	supportedTags []string
 	script        *Script
@@ -80,4 +82,32 @@ func (what *RiskRule) GenerateRisks(parsedModel *types.Model) ([]*types.Risk, er
 	}
 
 	return newRisks, nil
+}
+
+func (what *RiskRule) Load(fileSystem embed.FS, path string, entry fs.DirEntry) error {
+	if entry.IsDir() {
+		return nil
+	}
+
+	loadError := what.loadRiskRule(fileSystem, path)
+	if loadError != nil {
+		return loadError
+	}
+
+	return nil
+}
+
+func (what *RiskRule) loadRiskRule(fileSystem embed.FS, filename string) error {
+	scriptFilename := filepath.Clean(filename)
+	ruleData, ruleReadError := fileSystem.ReadFile(scriptFilename)
+	if ruleReadError != nil {
+		return fmt.Errorf("error reading risk category: %w\n", ruleReadError)
+	}
+
+	_, parseError := what.ParseFromData(ruleData)
+	if parseError != nil {
+		return fmt.Errorf("error parsing scripts from %q: %w\n", scriptFilename, parseError)
+	}
+
+	return nil
 }

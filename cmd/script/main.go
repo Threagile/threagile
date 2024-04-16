@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/threagile/threagile/pkg/script"
+	"github.com/threagile/threagile/pkg/security/risks"
 	"github.com/threagile/threagile/pkg/security/types"
 	"gopkg.in/yaml.v3"
 	"os"
@@ -10,6 +11,14 @@ import (
 )
 
 func main() {
+	rules, loadError := risks.GetScriptRiskRules()
+	if loadError != nil {
+		fmt.Printf("error loading risk rules: %v\n", loadError)
+		return
+	}
+
+	_ = rules
+
 	scriptFilename := filepath.Clean(filepath.Join("test", "risk-category.yaml"))
 	ruleData, ruleReadError := os.ReadFile(scriptFilename)
 	if ruleReadError != nil {

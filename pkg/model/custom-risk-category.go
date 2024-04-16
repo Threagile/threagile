@@ -2,7 +2,6 @@ package model
 
 import (
 	"fmt"
-	"github.com/threagile/threagile/pkg/security/risks"
 	"strings"
 
 	"github.com/threagile/threagile/pkg/security/types"
@@ -46,9 +45,9 @@ func (what *CustomRiskCategory) GenerateRisks(parsedModel *types.Model) ([]*type
 	return generatedRisks, nil
 }
 
-func LoadCustomRiskRules(pluginFiles []string, reporter types.ProgressReporter) risks.RiskRules {
+func LoadCustomRiskRules(pluginFiles []string, reporter types.ProgressReporter) types.RiskRules {
 	customRiskRuleList := make([]string, 0)
-	customRiskRules := make(risks.RiskRules)
+	customRiskRules := make(types.RiskRules)
 	if len(pluginFiles) > 0 {
 		reporter.Info("Loading custom risk rules:", strings.Join(pluginFiles, ", "))
 

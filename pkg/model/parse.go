@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/threagile/threagile/pkg/common"
 	"github.com/threagile/threagile/pkg/input"
-	"github.com/threagile/threagile/pkg/security/risks"
 	"github.com/threagile/threagile/pkg/security/types"
 	"path/filepath"
 	"regexp"
@@ -12,7 +11,7 @@ import (
 	"time"
 )
 
-func ParseModel(config *common.Config, modelInput *input.Model, builtinRiskRules risks.RiskRules, customRiskRules risks.RiskRules) (*types.Model, error) {
+func ParseModel(config *common.Config, modelInput *input.Model, builtinRiskRules types.RiskRules, customRiskRules types.RiskRules) (*types.Model, error) {
 	technologies := make(types.TechnologyMap)
 	technologiesLoadError := technologies.LoadWithConfig(config, "technologies.yaml")
 	if technologiesLoadError != nil {
