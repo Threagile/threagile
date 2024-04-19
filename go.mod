@@ -59,6 +59,6 @@ require (
 	github.com/xuri/nfp v0.0.0-20240318013403-ab9948c2c4a7 // indirect
 	golang.org/x/arch v0.7.0 // indirect
 	golang.org/x/image v0.15.0 // indirect
-	golang.org/x/net v0.22.0 // indirect
+	golang.org/x/net v0.23.0 // indirect
 	google.golang.org/protobuf v1.33.0 // indirect
 )
