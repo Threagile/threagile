@@ -1,7 +1,6 @@
 package script
 
 import (
-	"embed"
 	"fmt"
 	"github.com/threagile/threagile/pkg/input"
 	"github.com/threagile/threagile/pkg/security/types"
@@ -84,7 +83,7 @@ func (what *RiskRule) GenerateRisks(parsedModel *types.Model) ([]*types.Risk, er
 	return newRisks, nil
 }
 
-func (what *RiskRule) Load(fileSystem embed.FS, path string, entry fs.DirEntry) error {
+func (what *RiskRule) Load(fileSystem fs.FS, path string, entry fs.DirEntry) error {
 	if entry.IsDir() {
 		return nil
 	}
@@ -97,9 +96,10 @@ func (what *RiskRule) Load(fileSystem embed.FS, path string, entry fs.DirEntry) 
 	return nil
 }
 
-func (what *RiskRule) loadRiskRule(fileSystem embed.FS, filename string) error {
+func (what *RiskRule) loadRiskRule(fileSystem fs.FS, filename string) error {
 	scriptFilename := filepath.Clean(filename)
-	ruleData, ruleReadError := fileSystem.ReadFile(scriptFilename)
+
+	ruleData, ruleReadError := fs.ReadFile(fileSystem, scriptFilename)
 	if ruleReadError != nil {
 		return fmt.Errorf("error reading risk category: %w\n", ruleReadError)
 	}

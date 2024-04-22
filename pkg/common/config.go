@@ -147,13 +147,13 @@ func (c *Config) Load(configFilename string) error {
 	values := make(map[string]any)
 	parseError := json.Unmarshal(data, &values)
 	if parseError != nil {
-		return fmt.Errorf("failed to parse config file %q: %v", configFilename, parseError)
+		return fmt.Errorf("failed to parse config file %q: %w", configFilename, parseError)
 	}
 
 	var config Config
 	unmarshalError := json.Unmarshal(data, &config)
 	if unmarshalError != nil {
-		return fmt.Errorf("failed to parse config file %q: %v", configFilename, unmarshalError)
+		return fmt.Errorf("failed to parse config file %q: %w", configFilename, unmarshalError)
 	}
 
 	c.Merge(config, values)
@@ -162,13 +162,13 @@ func (c *Config) Load(configFilename string) error {
 	c.TempFolder = c.CleanPath(c.TempFolder)
 	tempDirError := os.MkdirAll(c.TempFolder, 0700)
 	if tempDirError != nil {
-		errorList = append(errorList, fmt.Errorf("failed to create temp dir %q: %v", c.TempFolder, tempDirError))
+		errorList = append(errorList, fmt.Errorf("failed to create temp dir %q: %w", c.TempFolder, tempDirError))
 	}
 
 	c.OutputFolder = c.CleanPath(c.OutputFolder)
 	outDirError := os.MkdirAll(c.OutputFolder, 0700)
 	if outDirError != nil {
-		errorList = append(errorList, fmt.Errorf("failed to create output dir %q: %v", c.OutputFolder, outDirError))
+		errorList = append(errorList, fmt.Errorf("failed to create output dir %q: %w", c.OutputFolder, outDirError))
 	}
 
 	c.AppFolder = c.CleanPath(c.AppFolder)
