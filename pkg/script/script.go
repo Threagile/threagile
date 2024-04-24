@@ -12,8 +12,9 @@ import (
 )
 
 type Script struct {
+	id    map[string]any
 	match common.Statement
-	risk  map[string]any
+	data  map[string]any
 	utils map[string]*statements.MethodStatement
 }
 
@@ -48,19 +49,19 @@ func (what *Script) ParseScripts(items map[string]any) (map[string]*Script, erro
 		case "individual_risk_categories":
 			riskScripts, ok := value.(map[string]any)
 			if !ok {
-				return nil, fmt.Errorf("unexpected format %T in risk definition", value)
+				return nil, fmt.Errorf("unexpected format %T in data definition", value)
 			}
 
 			scripts := make(map[string]*Script)
 			for scriptID, riskScript := range riskScripts {
 				risk, ok := riskScript.(map[string]any)
 				if !ok {
-					return nil, fmt.Errorf("unexpected format %T in risk definition for %q", riskScript, scriptID)
+					return nil, fmt.Errorf("unexpected format %T in data definition for %q", riskScript, scriptID)
 				}
 
 				script, scriptError := new(Script).ParseScript(risk)
 				if scriptError != nil {
-					return nil, fmt.Errorf("failed to parse script of risk definition for %q: %v", scriptID, scriptError)
+					return nil, fmt.Errorf("failed to parse script of data definition for %q: %v", scriptID, scriptError)
 				}
 
 				scripts[scriptID] = script
@@ -69,7 +70,7 @@ func (what *Script) ParseScripts(items map[string]any) (map[string]*Script, erro
 			return scripts, nil
 
 		default:
-			return nil, fmt.Errorf("unexpected key %q in risk definition", key)
+			return nil, fmt.Errorf("unexpected key %q in data definition", key)
 		}
 	}
 
@@ -89,7 +90,7 @@ func (what *Script) ParseCategoryFromData(text []byte) (*Script, error) {
 func (what *Script) ParseCategory(script map[string]any) (*Script, error) {
 	for key, value := range script {
 		switch strings.ToLower(key) {
-		case common.Script:
+		case common.Risk:
 			switch castValue := value.(type) {
 			case map[string]any:
 				return what.ParseScript(castValue)
@@ -116,10 +117,18 @@ func (what *Script) ParseScriptFromData(text []byte) (*Script, error) {
 func (what *Script) ParseScript(script map[string]any) (*Script, error) {
 	for key, value := range script {
 		switch strings.ToLower(key) {
-		case common.Risk:
+		case common.ID:
+			stringItem, ok := value.(map[string]any)
+			if !ok {
+				return nil, fmt.Errorf("ID expression is not a script (map[string]any)")
+			}
+
+			what.id = stringItem
+
+		case common.Data:
 			switch castValue := value.(type) {
 			case map[string]any:
-				what.risk = castValue
+				what.data = castValue
 
 			default:
 				return what, fmt.Errorf("failed to parse %q: unexpected script type %T\nscript:\n%v", key, value, new(input.Strings).AddLineNumbers(value))
@@ -146,6 +155,36 @@ func (what *Script) ParseScript(script map[string]any) (*Script, error) {
 	return what, nil
 }
 
+func (what *Script) GetTechnicalAssetsByRiskID(scope *common.Scope, riskID string) ([]any, error) {
+	value, valueOk := what.getItem(scope.Model, "technical_assets")
+	if !valueOk {
+		return nil, fmt.Errorf("no technical assets in scope")
+	}
+
+	techAssets, techAssetsOk := value.(map[string]any)
+	if !techAssetsOk {
+		return nil, fmt.Errorf("unexpected format of technical assets %T", techAssets)
+	}
+
+	matchingTechAssets := make([]any, 0)
+	for techAssetName, techAsset := range techAssets {
+		_ = techAssetName
+
+		isMatch, _, matchError := what.matchRisk(scope, techAsset)
+		if matchError != nil {
+			return nil, matchError
+		}
+
+		if !isMatch {
+			continue
+		}
+
+		matchingTechAssets = append(matchingTechAssets, techAsset)
+	}
+
+	return matchingTechAssets, nil
+}
+
 func (what *Script) GenerateRisks(scope *common.Scope) ([]*types.Risk, string, error) {
 	value, valueOk := what.getItem(scope.Model, "technical_assets")
 	if !valueOk {
@@ -158,41 +197,54 @@ func (what *Script) GenerateRisks(scope *common.Scope) ([]*types.Risk, string, e
 	}
 
 	risks := make([]*types.Risk, 0)
-	for _, techAsset := range techAssets {
-		matchScope, matchCloneError := scope.Clone()
-		if matchCloneError != nil {
-			return nil, "", fmt.Errorf("failed to clone scope: %v", matchCloneError)
-		}
+	for techAssetName, techAsset := range techAssets {
+		_ = techAssetName
 
-		matchScope.Args = append(matchScope.Args, techAsset)
-		isMatch, errorMatchLiteral, matchError := what.matchRisk(matchScope)
+		isMatch, errorMatchLiteral, matchError := what.matchRisk(scope, techAsset)
 		if matchError != nil {
 			return nil, errorMatchLiteral, matchError
 		}
 
-		if isMatch {
-			riskScope, riskCloneError := scope.Clone()
-			if riskCloneError != nil {
-				return nil, "", fmt.Errorf("failed to clone scope: %v", riskCloneError)
-			}
-
-			riskScope.Args = append(riskScope.Args, techAsset)
-			risk, errorRiskLiteral, riskError := what.generateRisk(riskScope)
-			if riskError != nil {
-				return nil, errorRiskLiteral, riskError
-			}
-
-			risks = append(risks, risk)
+		if !isMatch {
+			continue
 		}
+
+		risk, errorRiskLiteral, riskError := what.generateRisk(scope, techAsset)
+		if riskError != nil {
+			return nil, errorRiskLiteral, riskError
+		}
+
+		if risk == nil {
+			continue
+		}
+
+		riskId, errorGetIDLiteral, errorId := what.getRiskID(scope, techAsset)
+		if errorId != nil {
+			return nil, errorGetIDLiteral, errorId
+		}
+
+		risk.SyntheticId = riskId
+		if len(risk.SyntheticId) == 0 {
+			risk.SyntheticId = risk.CategoryId + "@" + risk.MostRelevantDataAssetId
+		}
+
+		risks = append(risks, risk)
 	}
 
 	return risks, "", nil
 }
 
-func (what *Script) matchRisk(scope *common.Scope) (bool, string, error) {
+func (what *Script) matchRisk(outerScope *common.Scope, techAsset any) (bool, string, error) {
 	if what.match == nil {
 		return false, "", nil
 	}
+
+	scope, cloneError := outerScope.Clone()
+	if cloneError != nil {
+		return false, "", fmt.Errorf("failed to clone scope: %v", cloneError)
+	}
+
+	scope.Args = append(scope.Args, techAsset)
 
 	errorLiteral, runError := what.match.Run(scope)
 	if runError != nil {
@@ -207,12 +259,19 @@ func (what *Script) matchRisk(scope *common.Scope) (bool, string, error) {
 	return false, "", nil
 }
 
-func (what *Script) generateRisk(scope *common.Scope) (*types.Risk, string, error) {
-	if what.risk == nil {
-		return nil, "", fmt.Errorf("no risk template")
+func (what *Script) generateRisk(outerScope *common.Scope, techAsset any) (*types.Risk, string, error) {
+	if what.data == nil {
+		return nil, "", fmt.Errorf("no data template")
 	}
 
-	parameter, ok := what.risk[common.Parameter]
+	scope, cloneError := outerScope.Clone()
+	if cloneError != nil {
+		return nil, "", fmt.Errorf("failed to clone scope: %v", cloneError)
+	}
+
+	scope.Args = append(scope.Args, techAsset)
+
+	parameter, ok := what.data[common.Parameter]
 	if ok {
 		switch castParameter := parameter.(type) {
 		case string:
@@ -232,7 +291,7 @@ func (what *Script) generateRisk(scope *common.Scope) (*types.Risk, string, erro
 	}
 
 	riskMap := make(map[string]any)
-	for name, value := range what.risk {
+	for name, value := range what.data {
 		expression, errorParseLiteral, parseError := new(expressions.ValueExpression).ParseValue(value)
 		if parseError != nil {
 			return nil, common.ToLiteral(errorParseLiteral), fmt.Errorf("failed to parse field value: %v", parseError)
@@ -248,23 +307,67 @@ func (what *Script) generateRisk(scope *common.Scope) (*types.Risk, string, erro
 
 	riskData, marshalError := yaml.Marshal(&riskMap)
 	if marshalError != nil {
-		return nil, common.ToLiteral(riskMap), fmt.Errorf("failed to print risk: %v", marshalError)
+		return nil, common.ToLiteral(riskMap), fmt.Errorf("failed to print data: %v", marshalError)
 	}
 
 	var risk types.Risk
 	unmarshalError := yaml.Unmarshal(riskData, &risk)
 	if unmarshalError != nil {
-		return nil, string(riskData), fmt.Errorf("failed to parse risk: %v", unmarshalError)
+		return nil, string(riskData), fmt.Errorf("failed to parse data: %v", unmarshalError)
 	}
 
 	risk.CategoryId, _ = what.getItemString(scope.Risk, "id")
-	risk.SyntheticId, _ = what.getItemString(riskMap, "id")
-
-	if len(risk.SyntheticId) == 0 {
-		risk.SyntheticId = risk.CategoryId + "@" + risk.MostRelevantDataAssetId
-	}
 
 	return &risk, "", nil
+}
+
+func (what *Script) getRiskID(outerScope *common.Scope, techAsset any) (string, string, error) {
+	if len(what.id) == 0 {
+		return "", "", fmt.Errorf("no ID expression")
+	}
+
+	scope, cloneError := outerScope.Clone()
+	if cloneError != nil {
+		return "", "", fmt.Errorf("failed to clone scope: %v", cloneError)
+	}
+
+	scope.Args = append(scope.Args, techAsset)
+
+	parameter, parameterOk := what.id[common.Parameter]
+	if parameterOk {
+		switch castParameter := parameter.(type) {
+		case string:
+			if len(scope.Args) != 1 {
+				return "", common.ToLiteral(parameter), fmt.Errorf("expected single parameter, got %d", len(scope.Args))
+			}
+
+			if scope.Vars == nil {
+				scope.Vars = make(map[string]common.Value)
+			}
+
+			scope.Vars[castParameter] = scope.Args[0]
+
+		default:
+			return "", common.ToLiteral(parameter), fmt.Errorf("unexpected parameter format %T", parameter)
+		}
+	}
+
+	id, idOk := what.id[common.ID]
+	if idOk {
+		expression, errorParseLiteral, parseError := new(expressions.ValueExpression).ParseValue(id)
+		if parseError != nil {
+			return "", common.ToLiteral(errorParseLiteral), fmt.Errorf("failed to parse ID expression: %v", parseError)
+		}
+
+		value, errorEvalLiteral, evalError := expression.EvalString(scope)
+		if evalError != nil {
+			return "", errorEvalLiteral, evalError
+		}
+
+		return value, "", nil
+	}
+
+	return "", "", nil
 }
 
 func (what *Script) getItemString(value any, path ...string) (string, bool) {

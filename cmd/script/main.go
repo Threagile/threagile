@@ -1,9 +1,9 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"github.com/threagile/threagile/pkg/script"
-	"github.com/threagile/threagile/pkg/security/risks"
 	"github.com/threagile/threagile/pkg/security/types"
 	"gopkg.in/yaml.v3"
 	"os"
@@ -11,15 +11,15 @@ import (
 )
 
 func main() {
-	rules, loadError := risks.GetScriptRiskRules()
-	if loadError != nil {
-		fmt.Printf("error loading risk rules: %v\n", loadError)
-		return
+	var scriptFilename string
+	flag.StringVar(&scriptFilename, "script", "", "script file")
+	flag.Parse()
+
+	if len(scriptFilename) == 0 {
+		scriptFilename = filepath.Join("test", "risk-category.yaml")
 	}
 
-	_ = rules
-
-	scriptFilename := filepath.Clean(filepath.Join("test", "risk-category.yaml"))
+	scriptFilename = filepath.Clean(scriptFilename)
 	ruleData, ruleReadError := os.ReadFile(scriptFilename)
 	if ruleReadError != nil {
 		fmt.Printf("error reading risk category: %v\n", ruleReadError)
@@ -46,17 +46,34 @@ func main() {
 		return
 	}
 
-	risks, riskError := newRule.GenerateRisks(parsedModel)
+	generatedRisks, riskError := newRule.GenerateRisks(parsedModel)
 	if riskError != nil {
 		fmt.Printf("error generating risks for %q: %v\n", newRule.Category().ID, riskError)
 		return
 	}
 
-	printedRisks, printError := yaml.Marshal(risks)
+	printedRisks, printError := yaml.Marshal(generatedRisks)
 	if printError != nil {
 		fmt.Printf("error printing risks for %q: %v\n", newRule.Category().ID, printError)
 		return
 	}
 
 	fmt.Printf("generated risks for %q: \n%v\n", newRule.Category().ID, string(printedRisks))
+
+	for _, risk := range generatedRisks {
+		assets, assetsError := newRule.GetTechnicalAssetsByRiskID(parsedModel, risk.SyntheticId)
+		if assetsError != nil {
+			fmt.Printf("failed to get assets for risk %q: %v\n", risk.SyntheticId, assetsError)
+			return
+		}
+
+		if len(assets) > 0 {
+			fmt.Printf("found %d asset(s) for risk %q\n", len(assets), risk.SyntheticId)
+			for _, asset := range assets {
+				fmt.Printf("  - %v\n", asset.Title)
+			}
+		} else {
+			fmt.Printf("no assets found for risk %q\n", risk.SyntheticId)
+		}
+	}
 }
