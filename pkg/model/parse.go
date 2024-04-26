@@ -186,9 +186,6 @@ func ParseModel(config *common.Config, modelInput *input.Model, builtinRiskRules
 			technicalAssetTechnologies = append(technicalAssetTechnologies, technicalAssetTechnology)
 		}
 
-		if err != nil {
-			return nil, fmt.Errorf("unknown 'technology' value of technical asset %q: %v", title, asset.Technology)
-		}
 		encryption, err := types.ParseEncryptionStyle(asset.Encryption)
 		if err != nil {
 			return nil, fmt.Errorf("unknown 'encryption' value of technical asset %q: %v", title, asset.Encryption)
