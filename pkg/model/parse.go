@@ -286,9 +286,6 @@ func ParseModel(config *common.Config, modelInput *input.Model, builtinRiskRules
 				}
 
 				dataFlowTitle := fmt.Sprintf("%v", commLinkTitle)
-				if err != nil {
-					return nil, err
-				}
 				commLinkId, err := createDataFlowId(id, dataFlowTitle)
 				if err != nil {
 					return nil, err
