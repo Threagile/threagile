@@ -3,6 +3,7 @@ package report
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -40,9 +41,22 @@ func (c *GenerateCommands) Defaults() *GenerateCommands {
 func Generate(config *common.Config, readResult *model.ReadResult, commands *GenerateCommands, progressReporter progressReporter) error {
 	generateDataFlowDiagram := commands.DataFlowDiagram
 	generateDataAssetsDiagram := commands.DataAssetDiagram
+
 	if commands.ReportPDF { // as the PDF report includes both diagrams
-		generateDataFlowDiagram = true
-		generateDataAssetsDiagram = true
+		if ! generateDataFlowDiagram {
+			dataFlowFile := filepath.Join(config.OutputFolder, config.DataFlowDiagramFilenamePNG)
+			if _, err := os.Stat(dataFlowFile); errors.Is(err, os.ErrNotExist) {
+				progressReporter.Warn("Forcibly create the needed Data-Flow Diagram file to enable report generation.")
+				generateDataFlowDiagram = true
+			}
+		}
+		if ! generateDataAssetsDiagram {
+			dataAssetFile := filepath.Join(config.OutputFolder, config.DataAssetDiagramFilenamePNG)
+			if _, err := os.Stat(dataAssetFile); errors.Is(err, os.ErrNotExist) {
+				progressReporter.Warn("Forcibly create the needed Data-Asset Diagram file to enable report generation.")
+				generateDataAssetsDiagram = true
+			}
+		}
 	}
 
 	diagramDPI := config.DiagramDPI
