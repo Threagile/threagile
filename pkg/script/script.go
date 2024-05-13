@@ -298,7 +298,7 @@ func (what *Script) generateRisk(outerScope *common.Scope, techAsset any) (*type
 		}
 
 		newValue, errorEvalLiteral, evalError := expression.EvalAny(scope)
-		if parseError != nil {
+		if evalError != nil {
 			return nil, errorEvalLiteral, fmt.Errorf("failed to eval field value: %v", evalError)
 		}
 
