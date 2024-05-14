@@ -394,6 +394,9 @@ func ParseModel(config *common.Config, modelInput *input.Model, builtinRiskRules
 				continue
 			}
 			targetTechAsset := parsedModel.TechnicalAssets[commLink.TargetId]
+			if targetTechAsset == nil {
+				return nil, fmt.Errorf("missing target technical asset %q for communication link: %q", commLink.TargetId, commLink.Title)
+			}
 			dataAssetsProcessedByTarget := targetTechAsset.DataAssetsProcessed
 			for _, dataAssetSent := range commLink.DataAssetsSent {
 				if !contains(dataAssetsProcessedByTarget, dataAssetSent) {
