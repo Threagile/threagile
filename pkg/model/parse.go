@@ -2,13 +2,14 @@ package model
 
 import (
 	"fmt"
-	"github.com/threagile/threagile/pkg/common"
-	"github.com/threagile/threagile/pkg/input"
-	"github.com/threagile/threagile/pkg/security/types"
 	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/threagile/threagile/pkg/common"
+	"github.com/threagile/threagile/pkg/input"
+	"github.com/threagile/threagile/pkg/security/types"
 )
 
 func ParseModel(config *common.Config, modelInput *input.Model, builtinRiskRules types.RiskRules, customRiskRules types.RiskRules) (*types.Model, error) {
@@ -177,7 +178,12 @@ func ParseModel(config *common.Config, modelInput *input.Model, builtinRiskRules
 		}
 
 		technicalAssetTechnologies := make([]*types.Technology, 0)
-		for _, technologyName := range append(asset.Technologies, asset.Technology) {
+
+		allTechnologies := asset.Technologies
+		if asset.Technology != "" {
+			allTechnologies = append(allTechnologies, asset.Technology)
+		}
+		for _, technologyName := range allTechnologies {
 			technicalAssetTechnology := technologies.Get(technologyName)
 			if technicalAssetTechnology == nil {
 				return nil, fmt.Errorf("unknown 'technology' value of technical asset %q: %v", title, asset.Technology)
