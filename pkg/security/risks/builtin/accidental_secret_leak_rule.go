@@ -48,15 +48,17 @@ func (r *AccidentalSecretLeakRule) GenerateRisks(parsedModel *types.Model) ([]*t
 	risks := make([]*types.Risk, 0)
 	for _, id := range parsedModel.SortedTechnicalAssetIDs() {
 		techAsset := parsedModel.TechnicalAssets[id]
-		if !techAsset.OutOfScope && techAsset.Technologies.GetAttribute(types.MayContainSecrets) {
-			var risk *types.Risk
-			if techAsset.IsTaggedWithAny("git") {
-				risk = r.createRisk(parsedModel, techAsset, "Git", "Git Leak Prevention")
-			} else {
-				risk = r.createRisk(parsedModel, techAsset, "", "")
-			}
-			risks = append(risks, risk)
+		if techAsset.OutOfScope || !techAsset.Technologies.GetAttribute(types.MayContainSecrets) {
+			continue
 		}
+
+		var risk *types.Risk
+		if techAsset.IsTaggedWithAny("git") {
+			risk = r.createRisk(parsedModel, techAsset, "Git", "Git Leak Prevention")
+		} else {
+			risk = r.createRisk(parsedModel, techAsset, "", "")
+		}
+		risks = append(risks, risk)
 	}
 	return risks, nil
 }
@@ -70,14 +72,17 @@ func (r *AccidentalSecretLeakRule) createRisk(parsedModel *types.Model, technica
 		title += ": <u>" + details + "</u>"
 	}
 	impact := types.LowImpact
-	if technicalAsset.HighestProcessedConfidentiality(parsedModel) >= types.Confidential ||
-		technicalAsset.HighestProcessedIntegrity(parsedModel) >= types.Critical ||
-		technicalAsset.HighestProcessedAvailability(parsedModel) >= types.Critical {
+	highestProcessedConfidentiality := technicalAsset.HighestProcessedConfidentiality(parsedModel)
+	highestProcessedIntegrity := technicalAsset.HighestProcessedIntegrity(parsedModel)
+	highestProcessedAvailability := technicalAsset.HighestProcessedAvailability(parsedModel)
+	if highestProcessedConfidentiality >= types.Confidential ||
+		highestProcessedIntegrity >= types.Critical ||
+		highestProcessedAvailability >= types.Critical {
 		impact = types.MediumImpact
 	}
-	if technicalAsset.HighestProcessedConfidentiality(parsedModel) == types.StrictlyConfidential ||
-		technicalAsset.HighestProcessedIntegrity(parsedModel) == types.MissionCritical ||
-		technicalAsset.HighestProcessedAvailability(parsedModel) == types.MissionCritical {
+	if highestProcessedConfidentiality == types.StrictlyConfidential ||
+		highestProcessedIntegrity == types.MissionCritical ||
+		highestProcessedAvailability == types.MissionCritical {
 		impact = types.HighImpact
 	}
 	// create risk
