@@ -31,41 +31,6 @@ func (what DataAsset) IsTaggedWithBaseTag(baseTag string) bool {
 	return IsTaggedWithBaseTag(what.Tags, baseTag)
 }
 
-/*
-func (what DataAsset) IsAtRisk() bool {
-	for _, techAsset := range what.ProcessedByTechnicalAssetsSorted() {
-		if len(ReduceToOnlyStillAtRisk(techAsset.GeneratedRisks())) > 0 {
-			return true
-		}
-	}
-	for _, techAsset := range what.StoredByTechnicalAssetsSorted() {
-		if len(ReduceToOnlyStillAtRisk(techAsset.GeneratedRisks())) > 0 {
-			return true
-		}
-	}
-	return false
-}
-*/
-
-/*
-func (what DataAsset) IdentifiedRiskSeverityStillAtRisk() RiskSeverity {
-	highestRiskSeverity := Low
-	for _, techAsset := range what.ProcessedByTechnicalAssetsSorted() {
-		candidateSeverity := HighestSeverityStillAtRisk(ReduceToOnlyStillAtRisk(techAsset.GeneratedRisks()))
-		if candidateSeverity > highestRiskSeverity {
-			highestRiskSeverity = candidateSeverity
-		}
-	}
-	for _, techAsset := range what.StoredByTechnicalAssetsSorted() {
-		candidateSeverity := HighestSeverityStillAtRisk(ReduceToOnlyStillAtRisk(techAsset.GeneratedRisks()))
-		if candidateSeverity > highestRiskSeverity {
-			highestRiskSeverity = candidateSeverity
-		}
-	}
-	return highestRiskSeverity
-}
-*/
-
 func (what DataAsset) IdentifiedRisksByResponsibleTechnicalAssetId(model *Model) map[string][]*Risk {
 	uniqueTechAssetIDsResponsibleForThisDataAsset := make(map[string]interface{})
 	for _, techAsset := range what.ProcessedByTechnicalAssetsSorted(model) {
