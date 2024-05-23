@@ -29,7 +29,7 @@ func (*CrossSiteRequestForgeryRule) Category() *types.RiskCategory {
 		STRIDE:         types.Spoofing,
 		DetectionLogic: "In-scope web applications accessed via typical web access protocols.",
 		RiskAssessment: "The risk rating depends on the integrity rating of the data sent across the communication link.",
-		FalsePositives: "Web applications passing the authentication sate via custom headers instead of cookies can " +
+		FalsePositives: "Web applications passing the authentication state via custom headers instead of cookies can " +
 			"eventually be false positives. Also when the web application " +
 			"is not accessed via a browser-like component (i.e not by a human user initiating the request that " +
 			"gets passed through all components until it reaches the web application) this can be considered a false positive.",
