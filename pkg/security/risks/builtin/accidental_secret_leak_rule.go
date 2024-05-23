@@ -2,8 +2,9 @@ package builtin
 
 import (
 	"fmt"
-	"github.com/threagile/threagile/pkg/security/types"
 	"strings"
+
+	"github.com/threagile/threagile/pkg/security/types"
 )
 
 type AccidentalSecretLeakRule struct{}
