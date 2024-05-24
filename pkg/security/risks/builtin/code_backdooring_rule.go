@@ -52,7 +52,7 @@ func (r *CodeBackdooringRule) GenerateRisks(parsedModel *types.Model) ([]*types.
 		technicalAsset := parsedModel.TechnicalAssets[id]
 		if !technicalAsset.OutOfScope && technicalAsset.Technologies.GetAttribute(types.IsDevelopmentRelevant) {
 			if technicalAsset.Internet {
-				risks = append(risks, r.createRisk(parsedModel, technicalAsset, true))
+				risks = append(risks, r.createRisk(parsedModel, technicalAsset))
 				continue
 			}
 
@@ -61,7 +61,7 @@ func (r *CodeBackdooringRule) GenerateRisks(parsedModel *types.Model) ([]*types.
 			for _, callerLink := range parsedModel.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id] {
 				caller := parsedModel.TechnicalAssets[callerLink.SourceId]
 				if (!callerLink.VPN && caller.Internet) || caller.OutOfScope {
-					risks = append(risks, r.createRisk(parsedModel, technicalAsset, true))
+					risks = append(risks, r.createRisk(parsedModel, technicalAsset))
 					break
 				}
 			}
@@ -70,18 +70,13 @@ func (r *CodeBackdooringRule) GenerateRisks(parsedModel *types.Model) ([]*types.
 	return risks, nil
 }
 
-func (r *CodeBackdooringRule) createRisk(input *types.Model, technicalAsset *types.TechnicalAsset, elevatedRisk bool) *types.Risk {
+func (r *CodeBackdooringRule) createRisk(input *types.Model, technicalAsset *types.TechnicalAsset) *types.Risk {
 	title := "<b>Code Backdooring</b> risk at <b>" + technicalAsset.Title + "</b>"
 	impact := types.LowImpact
 	if !technicalAsset.Technologies.GetAttribute(types.CodeInspectionPlatform) {
-		if elevatedRisk {
-			impact = types.MediumImpact
-		}
+		impact = types.MediumImpact
 		if technicalAsset.HighestProcessedConfidentiality(input) >= types.Confidential || technicalAsset.HighestProcessedIntegrity(input) >= types.Critical {
-			impact = types.MediumImpact
-			if elevatedRisk {
-				impact = types.HighImpact
-			}
+			impact = types.HighImpact
 		}
 	}
 	// data breach at all deployment targets

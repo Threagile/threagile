@@ -7,7 +7,7 @@ import (
 	"github.com/threagile/threagile/pkg/security/types"
 )
 
-func TestGenerateRisksEmptyModelNotRisksCreated(t *testing.T) {
+func TestAccidentalSecretLeakRuleGenerateRisksEmptyModelNotRisksCreated(t *testing.T) {
 	rule := NewAccidentalSecretLeakRule()
 
 	risks, err := rule.GenerateRisks(&types.Model{})
@@ -16,7 +16,7 @@ func TestGenerateRisksEmptyModelNotRisksCreated(t *testing.T) {
 	assert.Empty(t, risks)
 }
 
-func TestGenerateRisksOutOfScopeNotRisksCreated(t *testing.T) {
+func TestAccidentalSecretLeakRuleGenerateRisksOutOfScopeNotRisksCreated(t *testing.T) {
 	rule := NewAccidentalSecretLeakRule()
 
 	risks, err := rule.GenerateRisks(&types.Model{
@@ -31,7 +31,7 @@ func TestGenerateRisksOutOfScopeNotRisksCreated(t *testing.T) {
 	assert.Empty(t, risks)
 }
 
-func TestGenerateRisksTechAssetNotContainSecretsNotRisksCreated(t *testing.T) {
+func TestAccidentalSecretLeakRuleGenerateRisksTechAssetNotContainSecretsNotRisksCreated(t *testing.T) {
 	rule := NewAccidentalSecretLeakRule()
 
 	risks, err := rule.GenerateRisks(&types.Model{
@@ -54,7 +54,7 @@ func TestGenerateRisksTechAssetNotContainSecretsNotRisksCreated(t *testing.T) {
 	assert.Empty(t, risks)
 }
 
-func TestGenerateRisksTechAssetGitContainSecretsRisksCreated(t *testing.T) {
+func TestAccidentalSecretLeakRuleGenerateRisksTechAssetGitContainSecretsRisksCreated(t *testing.T) {
 	rule := NewAccidentalSecretLeakRule()
 
 	risks, err := rule.GenerateRisks(&types.Model{
@@ -78,7 +78,7 @@ func TestGenerateRisksTechAssetGitContainSecretsRisksCreated(t *testing.T) {
 	assert.Contains(t, risks[0].Title, "Accidental Secret Leak (Git)")
 }
 
-func TestGenerateRisksTechAssetNotGitContainSecretsRisksCreated(t *testing.T) {
+func TestAccidentalSecretLeakRuleGenerateRisksTechAssetNotGitContainSecretsRisksCreated(t *testing.T) {
 	rule := NewAccidentalSecretLeakRule()
 
 	risks, err := rule.GenerateRisks(&types.Model{
@@ -101,7 +101,7 @@ func TestGenerateRisksTechAssetNotGitContainSecretsRisksCreated(t *testing.T) {
 	assert.Equal(t, "<b>Accidental Secret Leak</b> risk at <b></b>", risks[0].Title)
 }
 
-func TestGenerateRisksTechAssetProcessStrictlyConfidentialDataAssetHighImpactRiskCreated(t *testing.T) {
+func TestAccidentalSecretLeakRuleGenerateRisksTechAssetProcessStrictlyConfidentialDataAssetHighImpactRiskCreated(t *testing.T) {
 	rule := NewAccidentalSecretLeakRule()
 
 	risks, err := rule.GenerateRisks(&types.Model{
