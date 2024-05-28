@@ -2,7 +2,6 @@ package types
 
 import (
 	"embed"
-	_ "embed"
 	"fmt"
 	"os"
 	"path/filepath"
