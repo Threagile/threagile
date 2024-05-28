@@ -23,27 +23,27 @@ func (what *CommunicationLink) Merge(other CommunicationLink) error {
 	var mergeError error
 	what.Target, mergeError = new(Strings).MergeSingleton(what.Target, other.Target)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge target: %v", mergeError)
+		return fmt.Errorf("failed to merge target: %w", mergeError)
 	}
 
 	what.Description, mergeError = new(Strings).MergeSingleton(what.Description, other.Description)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge description: %v", mergeError)
+		return fmt.Errorf("failed to merge description: %w", mergeError)
 	}
 
 	what.Protocol, mergeError = new(Strings).MergeSingleton(what.Protocol, other.Protocol)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge protocol: %v", mergeError)
+		return fmt.Errorf("failed to merge protocol: %w", mergeError)
 	}
 
 	what.Authentication, mergeError = new(Strings).MergeSingleton(what.Authentication, other.Authentication)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge authentication: %v", mergeError)
+		return fmt.Errorf("failed to merge authentication: %w", mergeError)
 	}
 
 	what.Authorization, mergeError = new(Strings).MergeSingleton(what.Authorization, other.Authorization)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge authorization: %v", mergeError)
+		return fmt.Errorf("failed to merge authorization: %w", mergeError)
 	}
 
 	what.Tags = new(Strings).MergeUniqueSlice(what.Tags, other.Tags)
@@ -62,7 +62,7 @@ func (what *CommunicationLink) Merge(other CommunicationLink) error {
 
 	what.Usage, mergeError = new(Strings).MergeSingleton(what.Usage, other.Usage)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge usage: %v", mergeError)
+		return fmt.Errorf("failed to merge usage: %w", mergeError)
 	}
 
 	what.DataAssetsSent = new(Strings).MergeUniqueSlice(what.DataAssetsSent, other.DataAssetsSent)
@@ -86,7 +86,7 @@ func (what *CommunicationLink) MergeMap(first map[string]CommunicationLink, seco
 		if ok {
 			mergeError := mapItem.Merge(mapValue)
 			if mergeError != nil {
-				return first, fmt.Errorf("failed to merge commuinication link %q: %v", mapKey, mergeError)
+				return first, fmt.Errorf("failed to merge commuinication link %q: %w", mapKey, mergeError)
 			}
 
 			first[mapKey] = mapItem

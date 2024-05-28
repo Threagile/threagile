@@ -22,7 +22,7 @@ func (what *EqualOrLessExpression) ParseBool(script any) (common.BoolExpression,
 			case common.First:
 				item, errorScript, itemError := new(ValueExpression).ParseValue(value)
 				if itemError != nil {
-					return nil, errorScript, fmt.Errorf("failed to parse %q of equal-expression: %v", key, itemError)
+					return nil, errorScript, fmt.Errorf("failed to parse %q of equal-expression: %w", key, itemError)
 				}
 
 				what.first = item
@@ -30,7 +30,7 @@ func (what *EqualOrLessExpression) ParseBool(script any) (common.BoolExpression,
 			case common.Second:
 				item, errorScript, itemError := new(ValueExpression).ParseValue(value)
 				if itemError != nil {
-					return nil, errorScript, fmt.Errorf("failed to parse %q of equal-expression: %v", key, itemError)
+					return nil, errorScript, fmt.Errorf("failed to parse %q of equal-expression: %w", key, itemError)
 				}
 
 				what.second = item
@@ -59,26 +59,34 @@ func (what *EqualOrLessExpression) ParseAny(script any) (common.Expression, any,
 	return what.ParseBool(script)
 }
 
-func (what *EqualOrLessExpression) EvalBool(scope *common.Scope) (bool, string, error) {
+func (what *EqualOrLessExpression) EvalBool(scope *common.Scope) (*common.BoolValue, string, error) {
 	first, errorItemLiteral, itemError := what.first.EvalAny(scope)
 	if itemError != nil {
-		return false, errorItemLiteral, itemError
+		return common.EmptyBoolValue(), errorItemLiteral, itemError
 	}
 
 	second, errorInLiteral, evalError := what.second.EvalAny(scope)
 	if evalError != nil {
-		return false, errorInLiteral, evalError
+		return common.EmptyBoolValue(), errorInLiteral, evalError
 	}
 
 	compareValue, compareError := common.Compare(first, second, what.as)
 	if compareError != nil {
-		return false, what.Literal(), fmt.Errorf("failed to eval equal-expression: %v", compareError)
+		return common.EmptyBoolValue(), what.Literal(), fmt.Errorf("failed to compare equal-expression: %w", compareError)
 	}
 
-	return compareValue <= 0, "", nil
+	if common.IsSame(compareValue) {
+		return common.SomeBoolValue(true, common.NewHistory("value matches").From(compareValue.History())), "", nil
+	}
+
+	if common.IsLess(compareValue) {
+		return common.SomeBoolValue(true, common.NewHistory("value is less").From(compareValue.History())), "", nil
+	}
+
+	return common.SomeBoolValue(false, common.NewHistory("value is greater").From(compareValue.History())), "", nil
 }
 
-func (what *EqualOrLessExpression) EvalAny(scope *common.Scope) (any, string, error) {
+func (what *EqualOrLessExpression) EvalAny(scope *common.Scope) (common.Value, string, error) {
 	return what.EvalBool(scope)
 }
 

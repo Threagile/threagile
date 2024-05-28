@@ -6,101 +6,229 @@ import (
 	"strings"
 )
 
-func Compare(first any, second any, as string) (int, error) {
+func Compare(first Value, second Value, as string) (*DecimalValue, error) {
 	firstValue := first
 	secondValue := second
 	if len(as) > 0 {
 		var castError error
 		firstValue, castError = CastValue(firstValue, as)
 		if castError != nil {
-			return 0, fmt.Errorf("failed to cast value: %v", castError)
+			return EmptyDecimalValue(), fmt.Errorf("failed to cast value to %q: %w", as, castError)
 		}
 
 		secondValue, castError = CastValue(secondValue, as)
 		if castError != nil {
-			return 0, fmt.Errorf("failed to cast value: %v", castError)
+			return EmptyDecimalValue(), fmt.Errorf("failed to cast value to %q: %w", as, castError)
 		}
 	}
 
-	var firstDecimal decimal.Decimal
-	switch castValue := firstValue.(type) {
-	case bool:
-		secondBool, ok := secondValue.(bool)
-		if !ok {
-			return 0, fmt.Errorf("can't compare bool to %T", secondValue)
+	compatibilityError := checkComparability(firstValue, secondValue)
+	if compatibilityError != nil {
+		return EmptyDecimalValue(), compatibilityError
+	}
+
+	if isString(firstValue) {
+		if !isString(secondValue) {
+			return EmptyDecimalValue(), fmt.Errorf("can't compare string to %T", secondValue)
 		}
 
-		if firstValue.(bool) {
-			if secondBool {
-				return 0, nil
-			} else {
-				return 1, nil
-			}
-		} else {
-			if secondBool {
-				return -1, nil
-			} else {
-				return 0, nil
-			}
-		}
+		return compareStrings(firstValue, secondValue)
+	}
 
-	case decimal.Decimal:
-		firstDecimal = castValue
+	firstDecimal, firstDecimalError := toDecimal(firstValue)
+	if firstDecimalError != nil {
+		return EmptyDecimalValue(), firstDecimalError
+	}
 
-	case int:
-		firstDecimal = decimal.NewFromInt(int64(castValue))
+	secondDecimal, secondDecimalError := toDecimal(secondValue)
+	if secondDecimalError != nil {
+		return EmptyDecimalValue(), secondDecimalError
+	}
 
-	case int64:
-		firstDecimal = decimal.NewFromInt(castValue)
+	return SomeDecimalValue(decimal.NewFromInt(int64(firstDecimal.DecimalValue().Cmp(secondDecimal.DecimalValue()))), NewHistory("comparing values").From(firstDecimal.History(), secondDecimal.History())), nil
+}
 
-	case float64:
-		firstDecimal = decimal.NewFromFloat(castValue)
+func IsSame(value *DecimalValue) bool {
+	return value.DecimalValue().IsZero()
+}
 
-	case string, fmt.Stringer:
-		firstString := ""
-		switch castFirstValue := firstValue.(type) {
-		case string:
-			firstString = castFirstValue
+func IsGreater(value *DecimalValue) bool {
+	return value.DecimalValue().IsPositive()
+}
 
-		case fmt.Stringer:
-			firstString = castFirstValue.String()
-		}
+func IsLess(value *DecimalValue) bool {
+	return value.DecimalValue().IsNegative()
+}
 
-		secondString := ""
+func checkComparability(firstValue any, secondValue any) error {
+	switch castFirstValue := firstValue.(type) {
+	case BoolValue, *BoolValue, bool:
 		switch castSecondValue := secondValue.(type) {
-		case string:
-			secondString = castSecondValue
+		case BoolValue, *BoolValue, bool:
+			return nil
 
-		case fmt.Stringer:
-			secondString = castSecondValue.String()
+		case AnyValue:
+			return checkComparability(firstValue, castSecondValue.Value())
 
-		default:
-			return 0, fmt.Errorf("can't compare string to %T", secondValue)
+		case *AnyValue:
+			return checkComparability(firstValue, castSecondValue.Value())
 		}
 
-		return strings.Compare(firstString, secondString), nil
+	case DecimalValue, *DecimalValue, decimal.Decimal, int, int64, float64:
+		switch castSecondValue := secondValue.(type) {
+		case DecimalValue, *DecimalValue, decimal.Decimal, int, int64, float64:
+			return nil
 
-	default:
-		return 0, fmt.Errorf("can't compare %T to %T", firstValue, secondValue)
+		case AnyValue:
+			return checkComparability(firstValue, castSecondValue.Value())
+
+		case *AnyValue:
+			return checkComparability(firstValue, castSecondValue.Value())
+		}
+
+	case StringValue, *StringValue, string, fmt.Stringer:
+		switch castSecondValue := secondValue.(type) {
+		case StringValue, *StringValue, string, fmt.Stringer:
+			return nil
+
+		case AnyValue:
+			return checkComparability(firstValue, castSecondValue.Value())
+
+		case *AnyValue:
+			return checkComparability(firstValue, castSecondValue.Value())
+		}
+
+	case AnyValue:
+		return checkComparability(castFirstValue.Value(), secondValue)
+
+	case *AnyValue:
+		return checkComparability(castFirstValue.Value(), secondValue)
+
+	case nil:
+		return nil
 	}
 
-	var secondDecimal decimal.Decimal
-	switch castSecondValue := secondValue.(type) {
+	return fmt.Errorf("can't compare %T to %T", firstValue, secondValue)
+}
+
+func ToString(value any) (*StringValue, error) {
+	switch castValue := value.(type) {
+	case string:
+		return SomeStringValue(castValue, NewHistory("")), nil
+
+	case fmt.Stringer:
+		return SomeStringValue(castValue.String(), NewHistory("")), nil
+
+	case StringValue:
+		return &castValue, nil
+
+	case *StringValue:
+		return castValue, nil
+
+	case AnyValue:
+		aString, valueError := ToString(castValue.Value())
+		stringValue := SomeStringValue(aString.StringValue(), castValue.History())
+		if valueError != nil {
+			return stringValue, valueError
+		}
+
+		return stringValue, nil
+
+	case *AnyValue:
+		aString, valueError := ToString(castValue.Value())
+		stringValue := SomeStringValue(aString.StringValue(), castValue.History())
+		if valueError != nil {
+			return stringValue, valueError
+		}
+
+		return stringValue, nil
+
+	default:
+		return EmptyStringValue(), fmt.Errorf("expected string, got %T", value)
+	}
+}
+
+func toDecimal(value any) (*DecimalValue, error) {
+	switch castValue := value.(type) {
+	case BoolValue:
+		if castValue.BoolValue() {
+			return SomeDecimalValue(decimal.NewFromInt(1), NewHistory("is true").From(castValue.History())), nil
+		} else {
+			return SomeDecimalValue(decimal.NewFromInt(0), NewHistory("is false").From(castValue.History())), nil
+		}
+
+	case *BoolValue:
+		if castValue.BoolValue() {
+			return SomeDecimalValue(decimal.NewFromInt(1), NewHistory("is true").From(castValue.History())), nil
+		} else {
+			return SomeDecimalValue(decimal.NewFromInt(0), NewHistory("is false").From(castValue.History())), nil
+		}
+
+	case bool:
+		if castValue {
+			return SomeDecimalValue(decimal.NewFromInt(1), NewHistory("is true")), nil
+		} else {
+			return SomeDecimalValue(decimal.NewFromInt(0), NewHistory("is false")), nil
+		}
+
+	case DecimalValue:
+		return &castValue, nil
+
+	case *DecimalValue:
+		return castValue, nil
+
 	case decimal.Decimal:
-		secondDecimal = castSecondValue
+		return SomeDecimalValue(castValue, NewHistory("is %v", castValue)), nil
 
 	case int:
-		secondDecimal = decimal.NewFromInt(int64(castSecondValue))
+		return SomeDecimalValue(decimal.NewFromInt(int64(castValue)), NewHistory("is %v", castValue)), nil
 
 	case int64:
-		secondDecimal = decimal.NewFromInt(castSecondValue)
+		return SomeDecimalValue(decimal.NewFromInt(castValue), NewHistory("is %v", castValue)), nil
 
 	case float64:
-		secondDecimal = decimal.NewFromFloat(castSecondValue)
+		return SomeDecimalValue(decimal.NewFromFloat(castValue), NewHistory("is %v", castValue)), nil
+
+	case AnyValue:
+		return toDecimal(castValue.Value())
+
+	case *AnyValue:
+		return toDecimal(castValue.Value())
+
+	case nil:
+		return EmptyDecimalValue(), nil
 
 	default:
-		return 0, fmt.Errorf("can't compare decimal to %T", secondValue)
+		return EmptyDecimalValue(), fmt.Errorf("can't compare values of type %T", value)
+	}
+}
+
+func isString(value any) bool {
+	switch castValue := value.(type) {
+	case string, fmt.Stringer, StringValue, *StringValue:
+		return true
+
+	case AnyValue:
+		return isString(castValue.Value())
+
+	case *AnyValue:
+		return isString(castValue.Value())
+
+	default:
+		return false
+	}
+}
+
+func compareStrings(firstValue any, secondValue any) (*DecimalValue, error) {
+	firstStringValue, firstStringError := ToString(firstValue)
+	if firstStringError != nil {
+		return EmptyDecimalValue(), fmt.Errorf("error for first value: %w", firstStringError)
 	}
 
-	return firstDecimal.Cmp(secondDecimal), nil
+	secondStringValue, secondStringError := ToString(secondValue)
+	if secondStringError != nil {
+		return EmptyDecimalValue(), fmt.Errorf("error for second value: %w", secondStringError)
+	}
+
+	return SomeDecimalValue(decimal.NewFromInt(int64(strings.Compare(firstStringValue.StringValue(), secondStringValue.StringValue()))), NewHistory("comparing values").From(firstStringValue.History(), secondStringValue.History())), nil
 }

@@ -16,7 +16,7 @@ func ParseModel(config *common.Config, modelInput *input.Model, builtinRiskRules
 	technologies := make(types.TechnologyMap)
 	technologiesLoadError := technologies.LoadWithConfig(config, "technologies.yaml")
 	if technologiesLoadError != nil {
-		return nil, fmt.Errorf("error loading technologies: %v", technologiesLoadError)
+		return nil, fmt.Errorf("error loading technologies: %w", technologiesLoadError)
 	}
 
 	technologies.PropagateAttributes()

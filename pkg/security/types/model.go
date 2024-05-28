@@ -114,6 +114,8 @@ func (parsedModel *Model) ApplyWildcardRiskTrackingEvaluation(ignoreOrphanedRisk
 					Status:          riskTracking.Status,
 					Date:            riskTracking.Date,
 				}
+
+				progressReporter.Infof("  => %v", syntheticRiskId)
 			}
 		}
 

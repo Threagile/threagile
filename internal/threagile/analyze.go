@@ -22,12 +22,12 @@ func (what *Threagile) initAnalyze() *Threagile {
 
 			r, err := model.ReadAndAnalyzeModel(cfg, risks.GetBuiltInRiskRules(), progressReporter)
 			if err != nil {
-				return fmt.Errorf("failed to read and analyze model: %v", err)
+				return fmt.Errorf("failed to read and analyze model: %w", err)
 			}
 
 			err = report.Generate(cfg, r, commands, progressReporter)
 			if err != nil {
-				return fmt.Errorf("failed to generate reports: %v", err)
+				return fmt.Errorf("failed to generate reports: %w", err)
 			}
 			return nil
 		},

@@ -79,7 +79,7 @@ func (p *runner) Run(in any, out any, parameters ...string) error {
 	waitError := plugin.Wait()
 	p.ErrorOutput = stderrBuf.String()
 	if waitError != nil {
-		return fmt.Errorf("%v: %v", waitError, p.ErrorOutput)
+		return fmt.Errorf("%w: %v", waitError, p.ErrorOutput)
 	}
 
 	stdout := stdoutBuf.Bytes()

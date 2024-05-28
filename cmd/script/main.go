@@ -8,6 +8,7 @@ import (
 	"gopkg.in/yaml.v3"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func main() {
@@ -61,10 +62,11 @@ func main() {
 	fmt.Printf("generated risks for %q: \n%v\n", newRule.Category().ID, string(printedRisks))
 
 	for _, risk := range generatedRisks {
-		assets, assetsError := newRule.GetTechnicalAssetsByRiskID(parsedModel, risk.SyntheticId)
-		if assetsError != nil {
-			fmt.Printf("failed to get assets for risk %q: %v\n", risk.SyntheticId, assetsError)
-			return
+		assets := make([]*types.TechnicalAsset, 0)
+		for _, techAsset := range parsedModel.TechnicalAssets {
+			if strings.EqualFold(techAsset.Id, risk.MostRelevantTechnicalAssetId) {
+				assets = append(assets, techAsset)
+			}
 		}
 
 		if len(assets) > 0 {

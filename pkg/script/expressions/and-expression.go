@@ -15,7 +15,7 @@ func (what *AndExpression) ParseBool(script any) (common.BoolExpression, any, er
 
 	item, errorScript, itemError := new(ExpressionList).ParseAny(script)
 	if itemError != nil {
-		return nil, errorScript, fmt.Errorf("failed to parse and-expression list: %v", itemError)
+		return nil, errorScript, fmt.Errorf("failed to parse and-expression list: %w", itemError)
 	}
 
 	switch castItem := item.(type) {
@@ -23,7 +23,7 @@ func (what *AndExpression) ParseBool(script any) (common.BoolExpression, any, er
 		for _, expression := range castItem.Expressions() {
 			boolExpression, ok := expression.(common.BoolExpression)
 			if !ok {
-				return nil, script, fmt.Errorf("and-expression contains non-bool expression: %v", itemError)
+				return nil, script, fmt.Errorf("and-expression contains non-bool expression: %w", itemError)
 			}
 
 			what.expressions = append(what.expressions, boolExpression)
@@ -33,7 +33,7 @@ func (what *AndExpression) ParseBool(script any) (common.BoolExpression, any, er
 		what.expressions = append(what.expressions, castItem)
 
 	default:
-		return nil, script, fmt.Errorf("and-expression has non-bool expression: %v", itemError)
+		return nil, script, fmt.Errorf("and-expression has non-bool expression: %w", itemError)
 	}
 
 	return what, nil, nil
@@ -43,22 +43,25 @@ func (what *AndExpression) ParseAny(script any) (common.Expression, any, error) 
 	return what.ParseBool(script)
 }
 
-func (what *AndExpression) EvalBool(scope *common.Scope) (bool, string, error) {
+func (what *AndExpression) EvalBool(scope *common.Scope) (*common.BoolValue, string, error) {
+	histories := make([]common.History, 0)
 	for index, expression := range what.expressions {
 		value, errorLiteral, evalError := expression.EvalBool(scope)
 		if evalError != nil {
-			return false, errorLiteral, fmt.Errorf("%q: error evaluating and-expression #%v: %v", what.literal, index+1, evalError)
+			return common.EmptyBoolValue(), errorLiteral, fmt.Errorf("%q: error evaluating and-expression #%v: %w", what.literal, index+1, evalError)
 		}
 
-		if !value {
-			return false, "", nil
+		if !value.BoolValue() {
+			return common.SomeBoolValue(false, common.NewHistory("item %v (%v) is false", index, expression.Literal()).From(value.History())), "", nil
 		}
+
+		histories = append(histories, value.History())
 	}
 
-	return true, "", nil
+	return common.SomeBoolValue(true, common.NewHistory("all %d items are true", len(what.expressions)).From(histories...)), "", nil
 }
 
-func (what *AndExpression) EvalAny(scope *common.Scope) (any, string, error) {
+func (what *AndExpression) EvalAny(scope *common.Scope) (common.Value, string, error) {
 	return what.EvalBool(scope)
 }
 

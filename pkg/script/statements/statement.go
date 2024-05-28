@@ -13,7 +13,7 @@ func (what *Statement) Parse(name string, body any) (common.Statement, any, erro
 	case common.Assign:
 		statement, errorScript, parseError := new(AssignStatement).Parse(body)
 		if parseError != nil {
-			return nil, errorScript, fmt.Errorf("failed to parse %q-statement: %v", name, parseError)
+			return nil, errorScript, fmt.Errorf("failed to parse %q-statement: %w", name, parseError)
 		}
 
 		return statement, errorScript, parseError
@@ -21,7 +21,7 @@ func (what *Statement) Parse(name string, body any) (common.Statement, any, erro
 	case common.Loop:
 		statement, errorScript, parseError := new(LoopStatement).Parse(body)
 		if parseError != nil {
-			return nil, errorScript, fmt.Errorf("failed to parse %q-statement: %v", name, parseError)
+			return nil, errorScript, fmt.Errorf("failed to parse %q-statement: %w", name, parseError)
 		}
 
 		return statement, errorScript, parseError
@@ -29,7 +29,7 @@ func (what *Statement) Parse(name string, body any) (common.Statement, any, erro
 	case common.If:
 		statement, errorScript, parseError := new(IfStatement).Parse(body)
 		if parseError != nil {
-			return nil, errorScript, fmt.Errorf("failed to parse %q-statement: %v", name, parseError)
+			return nil, errorScript, fmt.Errorf("failed to parse %q-statement: %w", name, parseError)
 		}
 
 		return statement, errorScript, parseError
@@ -37,7 +37,7 @@ func (what *Statement) Parse(name string, body any) (common.Statement, any, erro
 	case common.Return:
 		statement, errorScript, parseError := new(ReturnStatement).Parse(body)
 		if parseError != nil {
-			return nil, errorScript, fmt.Errorf("failed to parse %q-statement: %v", name, parseError)
+			return nil, errorScript, fmt.Errorf("failed to parse %q-statement: %w", name, parseError)
 		}
 
 		return statement, errorScript, parseError

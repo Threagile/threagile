@@ -32,12 +32,12 @@ func ReadAndAnalyzeModel(config *common.Config, builtinRiskRules types.RiskRules
 	modelInput := new(input.Model).Defaults()
 	loadError := modelInput.Load(config.InputFile)
 	if loadError != nil {
-		return nil, fmt.Errorf("unable to load model yaml: %v", loadError)
+		return nil, fmt.Errorf("unable to load model yaml: %w", loadError)
 	}
 
 	parsedModel, parseError := ParseModel(config, modelInput, builtinRiskRules, customRiskRules)
 	if parseError != nil {
-		return nil, fmt.Errorf("unable to parse model yaml: %v", parseError)
+		return nil, fmt.Errorf("unable to parse model yaml: %w", parseError)
 	}
 
 	introTextRAA := applyRAA(parsedModel, progressReporter)
@@ -45,12 +45,12 @@ func ReadAndAnalyzeModel(config *common.Config, builtinRiskRules types.RiskRules
 	applyRiskGeneration(parsedModel, builtinRiskRules.Merge(customRiskRules), config.SkipRiskRules, progressReporter)
 	err := parsedModel.ApplyWildcardRiskTrackingEvaluation(config.IgnoreOrphanedRiskTracking, progressReporter)
 	if err != nil {
-		return nil, fmt.Errorf("unable to apply wildcard risk tracking evaluation: %v", err)
+		return nil, fmt.Errorf("unable to apply wildcard risk tracking evaluation: %w", err)
 	}
 
 	err = parsedModel.CheckRiskTracking(config.IgnoreOrphanedRiskTracking, progressReporter)
 	if err != nil {
-		return nil, fmt.Errorf("unable to check risk tracking: %v", err)
+		return nil, fmt.Errorf("unable to check risk tracking: %w", err)
 	}
 
 	return &ReadResult{

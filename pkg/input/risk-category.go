@@ -31,67 +31,67 @@ func (what *RiskCategory) Merge(other RiskCategory) error {
 	var mergeError error
 	what.ID, mergeError = new(Strings).MergeSingleton(what.ID, other.ID)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge id: %v", mergeError)
+		return fmt.Errorf("failed to merge id: %w", mergeError)
 	}
 
 	what.Description, mergeError = new(Strings).MergeSingleton(what.Description, other.Description)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge description: %v", mergeError)
+		return fmt.Errorf("failed to merge description: %w", mergeError)
 	}
 
 	what.Impact, mergeError = new(Strings).MergeSingleton(what.Impact, other.Impact)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge impact: %v", mergeError)
+		return fmt.Errorf("failed to merge impact: %w", mergeError)
 	}
 
 	what.ASVS, mergeError = new(Strings).MergeSingleton(what.ASVS, other.ASVS)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge asvs: %v", mergeError)
+		return fmt.Errorf("failed to merge asvs: %w", mergeError)
 	}
 
 	what.CheatSheet, mergeError = new(Strings).MergeSingleton(what.CheatSheet, other.CheatSheet)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge cheat_sheet: %v", mergeError)
+		return fmt.Errorf("failed to merge cheat_sheet: %w", mergeError)
 	}
 
 	what.Action, mergeError = new(Strings).MergeSingleton(what.Action, other.Action)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge action: %v", mergeError)
+		return fmt.Errorf("failed to merge action: %w", mergeError)
 	}
 
 	what.Mitigation, mergeError = new(Strings).MergeSingleton(what.Mitigation, other.Mitigation)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge mitigation: %v", mergeError)
+		return fmt.Errorf("failed to merge mitigation: %w", mergeError)
 	}
 
 	what.Check, mergeError = new(Strings).MergeSingleton(what.Check, other.Check)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge check: %v", mergeError)
+		return fmt.Errorf("failed to merge check: %w", mergeError)
 	}
 
 	what.Function, mergeError = new(Strings).MergeSingleton(what.Function, other.Function)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge function: %v", mergeError)
+		return fmt.Errorf("failed to merge function: %w", mergeError)
 	}
 
 	what.STRIDE, mergeError = new(Strings).MergeSingleton(what.STRIDE, other.STRIDE)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge STRIDE: %v", mergeError)
+		return fmt.Errorf("failed to merge STRIDE: %w", mergeError)
 	}
 
 	what.DetectionLogic, mergeError = new(Strings).MergeSingleton(what.DetectionLogic, other.DetectionLogic)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge detection_logic: %v", mergeError)
+		return fmt.Errorf("failed to merge detection_logic: %w", mergeError)
 	}
 
 	what.RiskAssessment, mergeError = new(Strings).MergeSingleton(what.RiskAssessment, other.RiskAssessment)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge risk_assessment: %v", mergeError)
+		return fmt.Errorf("failed to merge risk_assessment: %w", mergeError)
 	}
 
 	what.FalsePositives, mergeError = new(Strings).MergeSingleton(what.FalsePositives, other.FalsePositives)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge false_positives: %v", mergeError)
+		return fmt.Errorf("failed to merge false_positives: %w", mergeError)
 	}
 
 	if !what.ModelFailurePossibleReason {
@@ -104,7 +104,7 @@ func (what *RiskCategory) Merge(other RiskCategory) error {
 
 	what.RisksIdentified, mergeError = new(RiskIdentified).MergeMap(what.RisksIdentified, other.RisksIdentified)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge identified risks: %v", mergeError)
+		return fmt.Errorf("failed to merge identified risks: %w", mergeError)
 	}
 
 	return nil

@@ -46,7 +46,7 @@ func (what *MethodStatement) Parse(script any) (common.Statement, any, error) {
 			case common.Do:
 				item, errorScript, itemError := new(StatementList).Parse(value)
 				if itemError != nil {
-					return nil, errorScript, fmt.Errorf("failed to parse %q of method-statement: %v", key, itemError)
+					return nil, errorScript, fmt.Errorf("failed to parse %q of method-statement: %w", key, itemError)
 				}
 
 				what.body = item
@@ -75,7 +75,7 @@ func (what *MethodStatement) Run(scope *common.Scope) (string, error) {
 	if what.body != nil {
 		errorLiteral, runError := what.body.Run(scope)
 		if runError != nil {
-			return errorLiteral, fmt.Errorf("failed to run method: %v", runError)
+			return errorLiteral, fmt.Errorf("failed to run method: %w", runError)
 		}
 	}
 

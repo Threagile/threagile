@@ -21,12 +21,12 @@ func (what TechnologyMap) LoadWithConfig(config *common.Config, defaultFilename 
 	if statError == nil {
 		technologiesLoadError := what.LoadFromFile(technologiesFilename)
 		if technologiesLoadError != nil {
-			return fmt.Errorf("error loading technologies: %v", technologiesLoadError)
+			return fmt.Errorf("error loading technologies: %w", technologiesLoadError)
 		}
 	} else {
 		technologiesLoadError := what.LoadDefault()
 		if technologiesLoadError != nil {
-			return fmt.Errorf("error loading technologies: %v", technologiesLoadError)
+			return fmt.Errorf("error loading technologies: %w", technologiesLoadError)
 		}
 	}
 
@@ -34,7 +34,7 @@ func (what TechnologyMap) LoadWithConfig(config *common.Config, defaultFilename 
 		additionalTechnologies := make(TechnologyMap)
 		loadError := additionalTechnologies.LoadFromFile(config.TechnologyFilename)
 		if loadError != nil {
-			return fmt.Errorf("error loading additional technologies from %q: %v", config.TechnologyFilename, loadError)
+			return fmt.Errorf("error loading additional technologies from %q: %w", config.TechnologyFilename, loadError)
 		}
 
 		for name, technology := range additionalTechnologies {
@@ -82,7 +82,7 @@ func (what TechnologyMap) Save(filename string) error {
 
 	writeError := os.WriteFile(filename, data, 0600)
 	if writeError != nil {
-		return fmt.Errorf("error writing %q: %v", filename, writeError)
+		return fmt.Errorf("error writing %q: %w", filename, writeError)
 	}
 
 	return nil

@@ -211,7 +211,7 @@ func (c *Config) CheckServerFolder() error {
 
 		keyDirError := os.MkdirAll(filepath.Join(c.ServerFolder, c.KeyFolder), 0700)
 		if keyDirError != nil {
-			return fmt.Errorf("failed to create key dir %q: %v", filepath.Join(c.ServerFolder, c.KeyFolder), keyDirError)
+			return fmt.Errorf("failed to create key dir %q: %w", filepath.Join(c.ServerFolder, c.KeyFolder), keyDirError)
 		}
 	}
 
@@ -355,7 +355,7 @@ func (c *Config) CleanPath(path string) string {
 func (c *Config) checkDir(dir string, name string) error {
 	dirInfo, dirError := os.Stat(dir)
 	if dirError != nil {
-		return fmt.Errorf("%v folder %q not good: %v", name, dir, dirError)
+		return fmt.Errorf("%v folder %q not good: %w", name, dir, dirError)
 	}
 
 	if !dirInfo.IsDir() {

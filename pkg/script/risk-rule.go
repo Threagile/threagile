@@ -87,45 +87,6 @@ func (what *RiskRule) GenerateRisks(parsedModel *types.Model) ([]*types.Risk, er
 	return newRisks, nil
 }
 
-func (what *RiskRule) GetTechnicalAssetsByRiskID(parsedModel *types.Model, riskID string) ([]*types.TechnicalAsset, error) {
-	newScope, scopeError := what.script.NewScope(&what.category)
-	if scopeError != nil {
-		return nil, scopeError
-	}
-
-	modelError := newScope.SetModel(parsedModel)
-	if modelError != nil {
-		return nil, modelError
-	}
-
-	if what.script == nil {
-		return nil, fmt.Errorf("no script found in risk rule")
-	}
-
-	genericAssets, lookupError := what.script.GetTechnicalAssetsByRiskID(newScope, riskID)
-	if lookupError != nil {
-		return nil, lookupError
-	}
-
-	assets := make([]*types.TechnicalAsset, 0)
-	for _, genericAsset := range genericAssets {
-		asset := new(types.TechnicalAsset)
-		assetData, assetError := yaml.Marshal(genericAsset)
-		if assetError != nil {
-			return nil, assetError
-		}
-
-		unmarshalError := yaml.Unmarshal(assetData, asset)
-		if unmarshalError != nil {
-			return nil, unmarshalError
-		}
-
-		assets = append(assets, asset)
-	}
-
-	return assets, nil
-}
-
 func (what *RiskRule) Load(fileSystem fs.FS, path string, entry fs.DirEntry) error {
 	if entry.IsDir() {
 		return nil

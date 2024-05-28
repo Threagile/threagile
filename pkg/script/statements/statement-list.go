@@ -28,7 +28,7 @@ func (what *StatementList) Parse(script any) (common.Statement, any, error) {
 		for _, statement := range castScript {
 			item, errorScript, itemError := what.Parse(statement)
 			if itemError != nil {
-				return nil, errorScript, fmt.Errorf("failed to parse statement list: %v", itemError)
+				return nil, errorScript, fmt.Errorf("failed to parse statement list: %w", itemError)
 			}
 
 			what.statements = append(what.statements, item)
