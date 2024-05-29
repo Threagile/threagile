@@ -324,3 +324,43 @@ func TestMissingAuthenticationRuleGenerateRisksOperationalIntegrityRisksCreatedW
 	assert.Equal(t, "<b>Missing Authentication</b> covering communication link <b>User Access via Browser</b> from <b>User Interface</b> to <b>Test Technical Asset</b>", risks[0].Title)
 	assert.Equal(t, types.LowImpact, risks[0].ExploitationImpact)
 }
+
+func TestMissingAuthenticationRuleGenerateRisksProcessingConfidentialDataRisksCreated(t *testing.T) {
+	rule := NewMissingAuthenticationRule()
+
+	risks, err := rule.GenerateRisks(&types.Model{
+		TechnicalAssets: map[string]*types.TechnicalAsset{
+			"ta1": {
+				Id:                  "ta1",
+				Title:               "Test Technical Asset",
+				DataAssetsProcessed: []string{"confidential"},
+			},
+			"ta2": {
+				Id:    "ta2",
+				Title: "User Interface",
+			},
+		},
+		IncomingTechnicalCommunicationLinksMappedByTargetId: map[string][]*types.CommunicationLink{
+			"ta1": {
+				{
+					Title:          "User Access via Browser",
+					SourceId:       "ta2",
+					Authentication: types.NoneAuthentication,
+					Protocol:       types.HTTPS,
+				},
+			},
+		},
+		DataAssets: map[string]*types.DataAsset{
+			"confidential": {
+				Id:              "confidential",
+				Title:           "Confidential Data",
+				Confidentiality: types.Confidential,
+			},
+		},
+	})
+
+	assert.Nil(t, err)
+	assert.Len(t, risks, 1)
+	assert.Equal(t, "<b>Missing Authentication</b> covering communication link <b>User Access via Browser</b> from <b>User Interface</b> to <b>Test Technical Asset</b>", risks[0].Title)
+	assert.Equal(t, types.MediumImpact, risks[0].ExploitationImpact)
+}

@@ -47,34 +47,37 @@ func (r *MissingAuthenticationRule) GenerateRisks(input *types.Model) ([]*types.
 			continue
 		}
 
-		if technicalAsset.HighestProcessedConfidentiality(input) >= types.Confidential ||
-			technicalAsset.HighestProcessedIntegrity(input) >= types.Critical ||
-			technicalAsset.HighestProcessedAvailability(input) >= types.Critical ||
-			technicalAsset.MultiTenant {
-			// check each incoming data flow
-			commLinks := input.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id]
-			for _, commLink := range commLinks {
-				caller := input.TechnicalAssets[commLink.SourceId]
-				if caller.Technologies.GetAttribute(types.IsUnprotectedCommunicationsTolerated) || caller.Type == types.Datastore {
-					continue
-				}
-				highRisk := commLink.HighestConfidentiality(input) == types.StrictlyConfidential ||
-					commLink.HighestIntegrity(input) == types.MissionCritical
-				lowRisk := commLink.HighestConfidentiality(input) <= types.Internal &&
-					commLink.HighestIntegrity(input) == types.Operational
-				impact := types.MediumImpact
-				if highRisk {
-					impact = types.HighImpact
-				} else if lowRisk {
-					impact = types.LowImpact
-				}
-				if commLink.Authentication == types.NoneAuthentication && !commLink.Protocol.IsProcessLocal() {
-					risks = append(risks, r.createRisk(input, technicalAsset, commLink, commLink, "", impact, types.Likely, false, r.Category()))
-				}
+		if technicalAsset.HighestProcessedConfidentiality(input) < types.Confidential &&
+			technicalAsset.HighestProcessedIntegrity(input) < types.Critical &&
+			technicalAsset.HighestProcessedAvailability(input) < types.Critical &&
+			!technicalAsset.MultiTenant {
+			continue
+		}
+
+		// check each incoming data flow
+		commLinks := input.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id]
+		for _, commLink := range commLinks {
+			caller := input.TechnicalAssets[commLink.SourceId]
+			if caller.Technologies.GetAttribute(types.IsUnprotectedCommunicationsTolerated) || caller.Type == types.Datastore {
+				continue
+			}
+			impact := r.calculateImpact(commLink, input)
+			if commLink.Authentication == types.NoneAuthentication && !commLink.Protocol.IsProcessLocal() {
+				risks = append(risks, r.createRisk(input, technicalAsset, commLink, commLink, "", impact, types.Likely, false, r.Category()))
 			}
 		}
 	}
 	return risks, nil
+}
+
+func (r *MissingAuthenticationRule) calculateImpact(commLink *types.CommunicationLink, input *types.Model) types.RiskExploitationImpact {
+	if commLink.HighestConfidentiality(input) == types.StrictlyConfidential || commLink.HighestIntegrity(input) == types.MissionCritical {
+		return types.HighImpact
+	}
+	if commLink.HighestConfidentiality(input) <= types.Internal && commLink.HighestIntegrity(input) == types.Operational {
+		return types.LowImpact
+	}
+	return types.MediumImpact
 }
 
 func (r *MissingAuthenticationRule) createRisk(input *types.Model, technicalAsset *types.TechnicalAsset, incomingAccess, incomingAccessOrigin *types.CommunicationLink, hopBetween string,
