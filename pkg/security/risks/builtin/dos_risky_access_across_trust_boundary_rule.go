@@ -68,13 +68,18 @@ func (r *DosRiskyAccessAcrossTrustBoundaryRule) GenerateRisks(input *types.Model
 }
 
 func (r *DosRiskyAccessAcrossTrustBoundaryRule) checkRisk(input *types.Model, technicalAsset *types.TechnicalAsset, incomingAccess *types.CommunicationLink, linkId string, hopBetween string, risks []*types.Risk) []*types.Risk {
-	if incomingAccess.IsAcrossTrustBoundaryNetworkOnly(input) &&
-		!incomingAccess.Protocol.IsProcessLocal() && incomingAccess.Usage != types.DevOps {
-		highRisk := technicalAsset.Availability == types.MissionCritical &&
-			!incomingAccess.VPN && !incomingAccess.IpFiltered && !technicalAsset.Redundant
-		risks = append(risks, r.createRisk(technicalAsset, incomingAccess, linkId, hopBetween,
-			input.TechnicalAssets[incomingAccess.SourceId], highRisk))
+	if !incomingAccess.IsAcrossTrustBoundaryNetworkOnly(input) {
+		return risks
 	}
+	if incomingAccess.Usage == types.DevOps {
+		return risks
+	}
+	if incomingAccess.Protocol.IsProcessLocal() {
+		return risks
+	}
+
+	highRisk := technicalAsset.Availability == types.MissionCritical && !incomingAccess.VPN && !incomingAccess.IpFiltered && !technicalAsset.Redundant
+	risks = append(risks, r.createRisk(technicalAsset, incomingAccess, linkId, hopBetween, input.TechnicalAssets[incomingAccess.SourceId], highRisk))
 	return risks
 }
 
