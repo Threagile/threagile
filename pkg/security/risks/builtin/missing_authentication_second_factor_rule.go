@@ -50,38 +50,41 @@ func (r *MissingAuthenticationSecondFactorRule) GenerateRisks(input *types.Model
 			technicalAsset.Technologies.GetAttribute(types.IsUnprotectedCommunicationsTolerated) {
 			continue
 		}
-		if technicalAsset.HighestProcessedConfidentiality(input) >= types.Confidential ||
-			technicalAsset.HighestProcessedIntegrity(input) >= types.Critical ||
-			technicalAsset.HighestProcessedAvailability(input) >= types.Critical ||
-			technicalAsset.MultiTenant {
-			// check each incoming data flow
-			commLinks := input.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id]
-			for _, commLink := range commLinks {
-				caller := input.TechnicalAssets[commLink.SourceId]
-				if caller.Technologies.GetAttribute(types.IsUnprotectedCommunicationsTolerated) || caller.Type == types.Datastore {
-					continue
+
+		if technicalAsset.HighestProcessedConfidentiality(input) < types.Confidential &&
+			technicalAsset.HighestProcessedIntegrity(input) < types.Critical &&
+			technicalAsset.HighestProcessedAvailability(input) < types.Critical &&
+			!technicalAsset.MultiTenant {
+			continue
+		}
+
+		// check each incoming data flow
+		commLinks := input.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id]
+		for _, commLink := range commLinks {
+			caller := input.TechnicalAssets[commLink.SourceId]
+			if caller.Technologies.GetAttribute(types.IsUnprotectedCommunicationsTolerated) || caller.Type == types.Datastore {
+				continue
+			}
+			if caller.UsedAsClientByHuman {
+				moreRisky := commLink.HighestConfidentiality(input) >= types.Confidential ||
+					commLink.HighestIntegrity(input) >= types.Critical
+				if moreRisky && commLink.Authentication != types.TwoFactor {
+					risks = append(risks, r.missingAuthenticationRule.createRisk(input, technicalAsset, commLink, commLink, "", types.MediumImpact, types.Unlikely, true, r.Category()))
 				}
-				if caller.UsedAsClientByHuman {
-					moreRisky := commLink.HighestConfidentiality(input) >= types.Confidential ||
-						commLink.HighestIntegrity(input) >= types.Critical
-					if moreRisky && commLink.Authentication != types.TwoFactor {
-						risks = append(risks, r.missingAuthenticationRule.createRisk(input, technicalAsset, commLink, commLink, "", types.MediumImpact, types.Unlikely, true, r.Category()))
+			} else if caller.Technologies.GetAttribute(types.IsTrafficForwarding) {
+				// Now try to walk a call chain up (1 hop only) to find a caller's caller used by human
+				callersCommLinks := input.IncomingTechnicalCommunicationLinksMappedByTargetId[caller.Id]
+				for _, callersCommLink := range callersCommLinks {
+					callersCaller := input.TechnicalAssets[callersCommLink.SourceId]
+					if callersCaller.Technologies.GetAttribute(types.IsUnprotectedCommunicationsTolerated) || callersCaller.Type == types.Datastore ||
+						!callersCaller.UsedAsClientByHuman {
+						continue
 					}
-				} else if caller.Technologies.GetAttribute(types.IsTrafficForwarding) {
-					// Now try to walk a call chain up (1 hop only) to find a caller's caller used by human
-					callersCommLinks := input.IncomingTechnicalCommunicationLinksMappedByTargetId[caller.Id]
-					for _, callersCommLink := range callersCommLinks {
-						callersCaller := input.TechnicalAssets[callersCommLink.SourceId]
-						if callersCaller.Technologies.GetAttribute(types.IsUnprotectedCommunicationsTolerated) || callersCaller.Type == types.Datastore {
-							continue
-						}
-						if callersCaller.UsedAsClientByHuman {
-							moreRisky := callersCommLink.HighestConfidentiality(input) >= types.Confidential ||
-								callersCommLink.HighestIntegrity(input) >= types.Critical
-							if moreRisky && callersCommLink.Authentication != types.TwoFactor {
-								risks = append(risks, r.missingAuthenticationRule.createRisk(input, technicalAsset, commLink, callersCommLink, caller.Title, types.MediumImpact, types.Unlikely, true, r.Category()))
-							}
-						}
+
+					moreRisky := callersCommLink.HighestConfidentiality(input) >= types.Confidential ||
+						callersCommLink.HighestIntegrity(input) >= types.Critical
+					if moreRisky && callersCommLink.Authentication != types.TwoFactor {
+						risks = append(risks, r.missingAuthenticationRule.createRisk(input, technicalAsset, commLink, callersCommLink, caller.Title, types.MediumImpact, types.Unlikely, true, r.Category()))
 					}
 				}
 			}
