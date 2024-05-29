@@ -51,25 +51,23 @@ func (r *CrossSiteRequestForgeryRule) GenerateRisks(parsedModel *types.Model) ([
 		}
 		incomingFlows := parsedModel.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id]
 		for _, incomingFlow := range incomingFlows {
-			if incomingFlow.Protocol.IsPotentialWebAccessProtocol() {
-				likelihood := types.VeryLikely
-				if incomingFlow.Usage == types.DevOps {
-					likelihood = types.Likely
-				}
-				risks = append(risks, r.createRisk(parsedModel, technicalAsset, incomingFlow, likelihood))
+			if !incomingFlow.Protocol.IsPotentialWebAccessProtocol() {
+				continue
 			}
+			risks = append(risks, r.createRisk(parsedModel, technicalAsset, incomingFlow))
 		}
 	}
 	return risks, nil
 }
 
-func (r *CrossSiteRequestForgeryRule) createRisk(parsedModel *types.Model, technicalAsset *types.TechnicalAsset, incomingFlow *types.CommunicationLink, likelihood types.RiskExploitationLikelihood) *types.Risk {
+func (r *CrossSiteRequestForgeryRule) createRisk(parsedModel *types.Model, technicalAsset *types.TechnicalAsset, incomingFlow *types.CommunicationLink) *types.Risk {
 	sourceAsset := parsedModel.TechnicalAssets[incomingFlow.SourceId]
 	title := "<b>Cross-Site Request Forgery (CSRF)</b> risk at <b>" + technicalAsset.Title + "</b> via <b>" + incomingFlow.Title + "</b> from <b>" + sourceAsset.Title + "</b>"
 	impact := types.LowImpact
 	if incomingFlow.HighestIntegrity(parsedModel) == types.MissionCritical {
 		impact = types.MediumImpact
 	}
+	likelihood := r.likelihoodFromUsage(incomingFlow)
 	risk := &types.Risk{
 		CategoryId:                      r.Category().ID,
 		Severity:                        types.CalculateSeverity(likelihood, impact),
@@ -83,4 +81,11 @@ func (r *CrossSiteRequestForgeryRule) createRisk(parsedModel *types.Model, techn
 	}
 	risk.SyntheticId = risk.CategoryId + "@" + technicalAsset.Id + "@" + incomingFlow.Id
 	return risk
+}
+
+func (*CrossSiteRequestForgeryRule) likelihoodFromUsage(cl *types.CommunicationLink) types.RiskExploitationLikelihood {
+	if cl.Usage == types.DevOps {
+		return types.Likely
+	}
+	return types.VeryLikely
 }
