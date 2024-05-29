@@ -224,3 +224,44 @@ func TestCodeBackdooringRuleGenerateRisksTechAssetNotInternetButComingThroughVPN
 	assert.Nil(t, err)
 	assert.Empty(t, risks)
 }
+
+func TestCodeBackdooringRuleGenerateRisksTechAssetNotInternetButComingThroughVPNInternetButCallerOutOfScopeRisksNotCreated(t *testing.T) {
+	rule := NewCodeBackdooringRule()
+
+	risks, err := rule.GenerateRisks(&types.Model{
+		TechnicalAssets: map[string]*types.TechnicalAsset{
+			"git-lab-ci-cd": {
+				Id:    "git-lab-ci-cd",
+				Title: "GitLab CI/CD",
+				Technologies: types.TechnologyList{
+					{
+						Name: "build-pipeline",
+						Attributes: map[string]bool{
+							types.IsDevelopmentRelevant: true,
+						},
+					},
+				},
+			},
+			"vpn": {
+				Title:    "VPN",
+				Internet: true,
+			},
+			"out-of-scope": {
+				Title:      "Out of Scope",
+				OutOfScope: true,
+			},
+		},
+		IncomingTechnicalCommunicationLinksMappedByTargetId: map[string][]*types.CommunicationLink{
+			"git-lab-ci-cd": {
+				{
+					SourceId: "out-of-scope",
+					TargetId: "git-lab-ci-cd",
+					VPN:      false,
+				},
+			},
+		},
+	})
+
+	assert.Nil(t, err)
+	assert.Empty(t, risks)
+}
