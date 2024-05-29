@@ -111,3 +111,116 @@ func TestCodeBackdooringRuleGenerateRisksTechAssetProcessConfidentialityRisksCre
 	assert.Equal(t, "<b>Code Backdooring</b> risk at <b>GitLab CI/CD</b>", risks[0].Title)
 	assert.Equal(t, types.HighImpact, risks[0].ExploitationImpact)
 }
+
+func TestCodeBackdoogingRuleGenerateRisksTechAssetNotInternetButNotComingThroughVPNInternetRisksCreated(t *testing.T) {
+	rule := NewCodeBackdooringRule()
+
+	risks, err := rule.GenerateRisks(&types.Model{
+		TechnicalAssets: map[string]*types.TechnicalAsset{
+			"git-lab-ci-cd": {
+				Id:    "git-lab-ci-cd",
+				Title: "GitLab CI/CD",
+				Technologies: types.TechnologyList{
+					{
+						Name: "build-pipeline",
+						Attributes: map[string]bool{
+							types.IsDevelopmentRelevant: true,
+						},
+					},
+				},
+			},
+			"reverse-proxy": {
+				Title:    "Reverse Proxy",
+				Internet: true,
+			},
+		},
+		IncomingTechnicalCommunicationLinksMappedByTargetId: map[string][]*types.CommunicationLink{
+			"git-lab-ci-cd": {
+				{
+					SourceId: "reverse-proxy",
+					TargetId: "git-lab-ci-cd",
+					VPN:      false,
+				},
+			},
+		},
+	})
+
+	assert.Nil(t, err)
+	assert.NotEmpty(t, risks)
+	assert.Equal(t, "<b>Code Backdooring</b> risk at <b>GitLab CI/CD</b>", risks[0].Title)
+	assert.Equal(t, types.MediumImpact, risks[0].ExploitationImpact)
+}
+
+func TestCodeBackdooringRuleGenerateRisksTechAssetNotInternetButComingThroughVPNNoInternetRisksNotCreated(t *testing.T) {
+	rule := NewCodeBackdooringRule()
+
+	risks, err := rule.GenerateRisks(&types.Model{
+		TechnicalAssets: map[string]*types.TechnicalAsset{
+			"git-lab-ci-cd": {
+				Id:    "git-lab-ci-cd",
+				Title: "GitLab CI/CD",
+				Technologies: types.TechnologyList{
+					{
+						Name: "build-pipeline",
+						Attributes: map[string]bool{
+							types.IsDevelopmentRelevant: true,
+						},
+					},
+				},
+			},
+			"vpn": {
+				Title: "VPN",
+			},
+		},
+		IncomingTechnicalCommunicationLinksMappedByTargetId: map[string][]*types.CommunicationLink{
+			"git-lab-ci-cd": {
+				{
+					SourceId: "vpn",
+					TargetId: "git-lab-ci-cd",
+					VPN:      true,
+				},
+			},
+		},
+	})
+
+	assert.Nil(t, err)
+	assert.Empty(t, risks)
+}
+
+func TestCodeBackdooringRuleGenerateRisksTechAssetNotInternetButComingThroughVPNInternetButOutOfScopeRisksNotCreated(t *testing.T) {
+	rule := NewCodeBackdooringRule()
+
+	risks, err := rule.GenerateRisks(&types.Model{
+		TechnicalAssets: map[string]*types.TechnicalAsset{
+			"git-lab-ci-cd": {
+				Id:         "git-lab-ci-cd",
+				Title:      "GitLab CI/CD",
+				OutOfScope: true,
+				Technologies: types.TechnologyList{
+					{
+						Name: "build-pipeline",
+						Attributes: map[string]bool{
+							types.IsDevelopmentRelevant: true,
+						},
+					},
+				},
+			},
+			"vpn": {
+				Title:    "VPN",
+				Internet: true,
+			},
+		},
+		IncomingTechnicalCommunicationLinksMappedByTargetId: map[string][]*types.CommunicationLink{
+			"git-lab-ci-cd": {
+				{
+					SourceId: "vpn",
+					TargetId: "git-lab-ci-cd",
+					VPN:      true,
+				},
+			},
+		},
+	})
+
+	assert.Nil(t, err)
+	assert.Empty(t, risks)
+}
