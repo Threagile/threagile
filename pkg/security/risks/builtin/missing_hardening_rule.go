@@ -47,11 +47,13 @@ func (r *MissingHardeningRule) GenerateRisks(input *types.Model) ([]*types.Risk,
 	risks := make([]*types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
-		if !technicalAsset.OutOfScope {
-			if technicalAsset.RAA >= float64(r.raaLimit) || (technicalAsset.RAA >= float64(r.raaLimitReduced) &&
+		if technicalAsset.OutOfScope {
+			continue
+		}
+		if technicalAsset.RAA >= float64(r.raaLimit) ||
+			(technicalAsset.RAA >= float64(r.raaLimitReduced) &&
 				(technicalAsset.Type == types.Datastore || technicalAsset.Technologies.GetAttribute(types.IsHighValueTarget))) {
-				risks = append(risks, r.createRisk(input, technicalAsset))
-			}
+			risks = append(risks, r.createRisk(input, technicalAsset))
 		}
 	}
 	return risks, nil

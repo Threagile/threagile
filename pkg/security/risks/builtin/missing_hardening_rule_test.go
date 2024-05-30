@@ -16,6 +16,22 @@ func TestMissingHardeningRuleGenerateRisksEmptyModelNotRisksCreated(t *testing.T
 	assert.Empty(t, risks)
 }
 
+func TestMissingHardeningRuleGenerateRisksOutOfScopeNoRisksCreated(t *testing.T) {
+	rule := NewMissingHardeningRule()
+	risks, err := rule.GenerateRisks(&types.Model{
+		TechnicalAssets: map[string]*types.TechnicalAsset{
+			"ta1": {
+				Title:      "Test Technical Asset",
+				OutOfScope: true,
+				RAA:        100,
+			},
+		},
+	})
+
+	assert.Nil(t, err)
+	assert.Empty(t, risks)
+}
+
 type MissingHardeningRuleNoRisksTest struct {
 	raa                int
 	technicalAssetType types.TechnicalAssetType
