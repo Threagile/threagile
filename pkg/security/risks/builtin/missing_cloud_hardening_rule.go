@@ -84,27 +84,29 @@ func (r *MissingCloudHardeningRule) GenerateRisks(input *types.Model) ([]*types.
 
 	for _, trustBoundary := range input.TrustBoundaries {
 		taggedOuterTB := trustBoundary.IsTaggedWithAny(r.SupportedTags()...) // false = generic cloud risks only // true = cloud-individual risks
-		if taggedOuterTB || trustBoundary.Type.IsWithinCloud() {
-			r.addTrustBoundaryAccordingToBaseTag(trustBoundary, trustBoundariesWithUnspecificCloudRisks,
-				trustBoundaryIDsAWS, trustBoundaryIDsAzure, trustBoundaryIDsGCP, trustBoundaryIDsOCP)
-			for _, techAssetID := range trustBoundary.RecursivelyAllTechnicalAssetIDsInside(input) {
-				added := false
-				tA := input.TechnicalAssets[techAssetID]
-				if tA.IsTaggedWithAny(r.SupportedTags()...) {
-					addAccordingToBaseTag(tA, tA.Tags,
-						techAssetIDsWithSubtagSpecificCloudRisks,
-						techAssetIDsAWS, techAssetIDsAzure, techAssetIDsGCP, techAssetIDsOCP)
-					added = true
-				} else if taggedOuterTB {
-					addAccordingToBaseTag(tA, trustBoundary.Tags,
-						techAssetIDsWithSubtagSpecificCloudRisks,
-						techAssetIDsAWS, techAssetIDsAzure, techAssetIDsGCP, techAssetIDsOCP)
-					added = true
-				}
-				if !added {
-					techAssetsWithUnspecificCloudRisks[techAssetID] = true
-				}
+		if !taggedOuterTB && !trustBoundary.Type.IsWithinCloud() {
+			continue
+		}
+
+		r.addTrustBoundaryAccordingToBaseTag(trustBoundary, trustBoundariesWithUnspecificCloudRisks,
+			trustBoundaryIDsAWS, trustBoundaryIDsAzure, trustBoundaryIDsGCP, trustBoundaryIDsOCP)
+		for _, techAssetID := range trustBoundary.RecursivelyAllTechnicalAssetIDsInside(input) {
+			tA := input.TechnicalAssets[techAssetID]
+			if tA.IsTaggedWithAny(r.SupportedTags()...) {
+				addAccordingToBaseTag(tA, tA.Tags,
+					techAssetIDsWithSubtagSpecificCloudRisks,
+					techAssetIDsAWS, techAssetIDsAzure, techAssetIDsGCP, techAssetIDsOCP)
+				continue
 			}
+
+			if taggedOuterTB {
+				addAccordingToBaseTag(tA, trustBoundary.Tags,
+					techAssetIDsWithSubtagSpecificCloudRisks,
+					techAssetIDsAWS, techAssetIDsAzure, techAssetIDsGCP, techAssetIDsOCP)
+				continue
+			}
+
+			techAssetsWithUnspecificCloudRisks[techAssetID] = true
 		}
 	}
 
