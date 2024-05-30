@@ -44,29 +44,35 @@ func (*MissingIdentityProviderIsolationRule) SupportedTags() []string {
 func (r *MissingIdentityProviderIsolationRule) GenerateRisks(input *types.Model) ([]*types.Risk, error) {
 	risks := make([]*types.Risk, 0)
 	for _, technicalAsset := range input.TechnicalAssets {
-		if !technicalAsset.OutOfScope && technicalAsset.Technologies.GetAttribute(types.IsIdentityRelated) {
-			moreImpact := technicalAsset.Confidentiality == types.StrictlyConfidential ||
-				technicalAsset.Integrity == types.MissionCritical ||
-				technicalAsset.Availability == types.MissionCritical
-			sameExecutionEnv := false
-			createRiskEntry := false
-			// now check for any other same-network assets of non-identity-related types
-			for sparringAssetCandidateId := range input.TechnicalAssets { // so inner loop again over all assets
-				if technicalAsset.Id != sparringAssetCandidateId {
-					sparringAssetCandidate := input.TechnicalAssets[sparringAssetCandidateId]
-					if !sparringAssetCandidate.Technologies.GetAttribute(types.IsIdentityRelated) && !sparringAssetCandidate.Technologies.GetAttribute(types.IsCloseToHighValueTargetsTolerated) {
-						if technicalAsset.IsSameExecutionEnvironment(input, sparringAssetCandidateId) {
-							createRiskEntry = true
-							sameExecutionEnv = true
-						} else if technicalAsset.IsSameTrustBoundaryNetworkOnly(input, sparringAssetCandidateId) {
-							createRiskEntry = true
-						}
-					}
-				}
+		if technicalAsset.OutOfScope || !technicalAsset.Technologies.GetAttribute(types.IsIdentityRelated) {
+			continue
+		}
+
+		moreImpact := technicalAsset.Confidentiality == types.StrictlyConfidential ||
+			technicalAsset.Integrity == types.MissionCritical ||
+			technicalAsset.Availability == types.MissionCritical
+		sameExecutionEnv := false
+		createRiskEntry := false
+		// now check for any other same-network assets of non-identity-related types
+		for sparringAssetCandidateId := range input.TechnicalAssets { // so inner loop again over all assets
+			if technicalAsset.Id == sparringAssetCandidateId {
+				continue
 			}
-			if createRiskEntry {
-				risks = append(risks, r.createRisk(technicalAsset, moreImpact, sameExecutionEnv))
+			sparringAssetCandidate := input.TechnicalAssets[sparringAssetCandidateId]
+			if sparringAssetCandidate.Technologies.GetAttribute(types.IsIdentityRelated) ||
+				sparringAssetCandidate.Technologies.GetAttribute(types.IsCloseToHighValueTargetsTolerated) {
+				continue
 			}
+
+			if technicalAsset.IsSameExecutionEnvironment(input, sparringAssetCandidateId) {
+				createRiskEntry = true
+				sameExecutionEnv = true
+			} else if technicalAsset.IsSameTrustBoundaryNetworkOnly(input, sparringAssetCandidateId) {
+				createRiskEntry = true
+			}
+		}
+		if createRiskEntry {
+			risks = append(risks, r.createRisk(technicalAsset, moreImpact, sameExecutionEnv))
 		}
 	}
 	return risks, nil
