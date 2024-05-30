@@ -365,35 +365,6 @@ func (what TechnicalAsset) GetTrustBoundaryId(model *Model) string {
 	return ""
 }
 
-func SortByTechnicalAssetRiskSeverityAndTitleStillAtRisk(assets []*TechnicalAsset, parsedModel *Model) {
-	sort.Slice(assets, func(i, j int) bool {
-		risksLeft := ReduceToOnlyStillAtRisk(parsedModel, assets[i].GeneratedRisks(parsedModel))
-		risksRight := ReduceToOnlyStillAtRisk(parsedModel, assets[j].GeneratedRisks(parsedModel))
-		highestSeverityLeft := HighestSeverityStillAtRisk(parsedModel, risksLeft)
-		highestSeverityRight := HighestSeverityStillAtRisk(parsedModel, risksRight)
-		var result bool
-		if highestSeverityLeft == highestSeverityRight {
-			if len(risksLeft) == 0 && len(risksRight) > 0 {
-				return false
-			} else if len(risksLeft) > 0 && len(risksRight) == 0 {
-				return true
-			} else {
-				result = assets[i].Title < assets[j].Title
-			}
-		} else {
-			result = highestSeverityLeft > highestSeverityRight
-		}
-		if assets[i].OutOfScope && assets[j].OutOfScope {
-			result = assets[i].Title < assets[j].Title
-		} else if assets[i].OutOfScope {
-			result = false
-		} else if assets[j].OutOfScope {
-			result = true
-		}
-		return result
-	})
-}
-
 type ByTechnicalAssetRAAAndTitleSort []*TechnicalAsset
 
 func (what ByTechnicalAssetRAAAndTitleSort) Len() int      { return len(what) }

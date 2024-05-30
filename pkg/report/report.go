@@ -225,7 +225,7 @@ func (r *pdfReporter) createTableOfContents(parsedModel *types.Model) {
 
 	risksStr := "Risks"
 	catStr := "Categories"
-	count, catCount := types.TotalRiskCount(parsedModel), len(parsedModel.GeneratedRisksByCategory)
+	count, catCount := totalRiskCount(parsedModel), len(parsedModel.GeneratedRisksByCategory)
 	if count == 1 {
 		risksStr = "Risk"
 	}
@@ -247,7 +247,7 @@ func (r *pdfReporter) createTableOfContents(parsedModel *types.Model) {
 	y += 6
 	risksStr = "Risks"
 	catStr = "Categories"
-	count, catCount = len(types.FilteredByStillAtRisk(parsedModel)), len(types.CategoriesOfOnlyRisksStillAtRisk(parsedModel, parsedModel.GeneratedRisksByCategory))
+	count, catCount = len(filteredByStillAtRisk(parsedModel)), len(reduceToOnlyStillAtRisk(parsedModel.GeneratedRisksByCategory))
 	if count == 1 {
 		risksStr = "Risk"
 	}
@@ -338,13 +338,13 @@ func (r *pdfReporter) createTableOfContents(parsedModel *types.Model) {
 	r.pdf.Link(10, y-5, 172.5, 6.5, r.pdf.AddLink())
 
 	y += 6
-	modelFailures := types.FlattenRiskSlice(types.FilterByModelFailures(parsedModel, parsedModel.GeneratedRisksByCategory))
+	modelFailures := flattenRiskSlice(filterByModelFailures(parsedModel, parsedModel.GeneratedRisksByCategory))
 	risksStr = "Risks"
 	count = len(modelFailures)
 	if count == 1 {
 		risksStr = "Risk"
 	}
-	countStillAtRisk := len(types.ReduceToOnlyStillAtRisk(parsedModel, modelFailures))
+	countStillAtRisk := len(types.ReduceToOnlyStillAtRisk(modelFailures))
 	if countStillAtRisk > 0 {
 		colorModelFailure(r.pdf)
 	}
@@ -403,7 +403,7 @@ func (r *pdfReporter) createTableOfContents(parsedModel *types.Model) {
 			default:
 				r.pdfColorBlack()
 			}
-			if len(types.ReduceToOnlyStillAtRisk(parsedModel, newRisksStr)) == 0 {
+			if len(types.ReduceToOnlyStillAtRisk(newRisksStr)) == 0 {
 				r.pdfColorBlack()
 			}
 			y += 6
@@ -411,7 +411,7 @@ func (r *pdfReporter) createTableOfContents(parsedModel *types.Model) {
 				r.pageBreakInLists()
 				y = 40
 			}
-			countStillAtRisk := len(types.ReduceToOnlyStillAtRisk(parsedModel, newRisksStr))
+			countStillAtRisk := len(types.ReduceToOnlyStillAtRisk(newRisksStr))
 			suffix := strconv.Itoa(countStillAtRisk) + " / " + strconv.Itoa(len(newRisksStr)) + " Risk"
 			if len(newRisksStr) != 1 {
 				suffix += "s"
@@ -449,7 +449,7 @@ func (r *pdfReporter) createTableOfContents(parsedModel *types.Model) {
 				r.pageBreakInLists()
 				y = 40
 			}
-			countStillAtRisk := len(types.ReduceToOnlyStillAtRisk(parsedModel, newRisksStr))
+			countStillAtRisk := len(types.ReduceToOnlyStillAtRisk(newRisksStr))
 			suffix := strconv.Itoa(countStillAtRisk) + " / " + strconv.Itoa(len(newRisksStr)) + " Risk"
 			if len(newRisksStr) != 1 {
 				suffix += "s"
@@ -472,7 +472,7 @@ func (r *pdfReporter) createTableOfContents(parsedModel *types.Model) {
 				default:
 					r.pdfColorBlack()
 				}
-				if len(types.ReduceToOnlyStillAtRisk(parsedModel, newRisksStr)) == 0 {
+				if len(types.ReduceToOnlyStillAtRisk(newRisksStr)) == 0 {
 					r.pdfColorBlack()
 				}
 			}
@@ -509,12 +509,12 @@ func (r *pdfReporter) createTableOfContents(parsedModel *types.Model) {
 				y = 40
 			}
 			newRisksStr := dataAsset.IdentifiedDataBreachProbabilityRisks(parsedModel)
-			countStillAtRisk := len(types.ReduceToOnlyStillAtRisk(parsedModel, newRisksStr))
+			countStillAtRisk := len(types.ReduceToOnlyStillAtRisk(newRisksStr))
 			suffix := strconv.Itoa(countStillAtRisk) + " / " + strconv.Itoa(len(newRisksStr)) + " Risk"
 			if len(newRisksStr) != 1 {
 				suffix += "s"
 			}
-			switch dataAsset.IdentifiedDataBreachProbabilityStillAtRisk(parsedModel) {
+			switch identifiedDataBreachProbabilityStillAtRisk(parsedModel, dataAsset) {
 			case types.Probable:
 				colorHighRisk(r.pdf)
 			case types.Possible:
@@ -524,7 +524,7 @@ func (r *pdfReporter) createTableOfContents(parsedModel *types.Model) {
 			default:
 				r.pdfColorBlack()
 			}
-			if !dataAsset.IsDataBreachPotentialStillAtRisk(parsedModel) {
+			if !isDataBreachPotentialStillAtRisk(parsedModel, dataAsset) {
 				r.pdfColorBlack()
 			}
 			r.pdf.Text(11, y, "    "+uni(dataAsset.Title)+": "+suffix)
@@ -642,8 +642,37 @@ func sortedTechnicalAssetsByRiskSeverityAndTitle(parsedModel *types.Model) []*ty
 	for _, asset := range parsedModel.TechnicalAssets {
 		assets = append(assets, asset)
 	}
-	types.SortByTechnicalAssetRiskSeverityAndTitleStillAtRisk(assets, parsedModel)
+	sortByTechnicalAssetRiskSeverityAndTitleStillAtRisk(assets, parsedModel)
 	return assets
+}
+
+func sortByTechnicalAssetRiskSeverityAndTitleStillAtRisk(assets []*types.TechnicalAsset, parsedModel *types.Model) {
+	sort.Slice(assets, func(i, j int) bool {
+		risksLeft := types.ReduceToOnlyStillAtRisk(assets[i].GeneratedRisks(parsedModel))
+		risksRight := types.ReduceToOnlyStillAtRisk(assets[j].GeneratedRisks(parsedModel))
+		highestSeverityLeft := types.HighestSeverityStillAtRisk(parsedModel, risksLeft)
+		highestSeverityRight := types.HighestSeverityStillAtRisk(parsedModel, risksRight)
+		var result bool
+		if highestSeverityLeft == highestSeverityRight {
+			if len(risksLeft) == 0 && len(risksRight) > 0 {
+				return false
+			} else if len(risksLeft) > 0 && len(risksRight) == 0 {
+				return true
+			} else {
+				result = assets[i].Title < assets[j].Title
+			}
+		} else {
+			result = highestSeverityLeft > highestSeverityRight
+		}
+		if assets[i].OutOfScope && assets[j].OutOfScope {
+			result = assets[i].Title < assets[j].Title
+		} else if assets[i].OutOfScope {
+			result = false
+		} else if assets[j].OutOfScope {
+			result = true
+		}
+		return result
+	})
 }
 
 func sortedDataAssetsByDataBreachProbabilityAndTitle(parsedModel *types.Model) []*types.DataAsset {
@@ -652,8 +681,27 @@ func sortedDataAssetsByDataBreachProbabilityAndTitle(parsedModel *types.Model) [
 		assets = append(assets, asset)
 	}
 
-	types.SortByDataAssetDataBreachProbabilityAndTitleStillAtRisk(parsedModel, assets)
+	sortByDataAssetDataBreachProbabilityAndTitleStillAtRisk(parsedModel, assets)
 	return assets
+}
+
+func sortByDataAssetDataBreachProbabilityAndTitleStillAtRisk(parsedModel *types.Model, assets []*types.DataAsset) {
+	sort.Slice(assets, func(i, j int) bool {
+		risksLeft := identifiedDataBreachProbabilityRisksStillAtRisk(parsedModel, assets[i])
+		risksRight := identifiedDataBreachProbabilityRisksStillAtRisk(parsedModel, assets[j])
+		highestDataBreachProbabilityLeft := identifiedDataBreachProbabilityStillAtRisk(parsedModel, assets[i])
+		highestDataBreachProbabilityRight := identifiedDataBreachProbabilityStillAtRisk(parsedModel, assets[j])
+		if highestDataBreachProbabilityLeft == highestDataBreachProbabilityRight {
+			if len(risksLeft) == 0 && len(risksRight) > 0 {
+				return false
+			}
+			if len(risksLeft) > 0 && len(risksRight) == 0 {
+				return true
+			}
+			return assets[i].Title < assets[j].Title
+		}
+		return highestDataBreachProbabilityLeft > highestDataBreachProbabilityRight
+	})
 }
 
 func (r *pdfReporter) defineLinkTarget(alias string) {
@@ -728,18 +776,18 @@ func (r *pdfReporter) createManagementSummary(parsedModel *types.Model, tempFold
 	r.addHeadline(title, false)
 	r.defineLinkTarget("{management-summary}")
 	r.currentChapterTitleBreadcrumb = title
-	countCritical := len(types.FilteredByOnlyCriticalRisks(parsedModel))
-	countHigh := len(types.FilteredByOnlyHighRisks(parsedModel))
-	countElevated := len(types.FilteredByOnlyElevatedRisks(parsedModel))
-	countMedium := len(types.FilteredByOnlyMediumRisks(parsedModel))
-	countLow := len(types.FilteredByOnlyLowRisks(parsedModel))
+	countCritical := len(filteredBySeverity(parsedModel, types.CriticalSeverity))
+	countHigh := len(filteredBySeverity(parsedModel, types.HighSeverity))
+	countElevated := len(filteredBySeverity(parsedModel, types.ElevatedSeverity))
+	countMedium := len(filteredBySeverity(parsedModel, types.MediumSeverity))
+	countLow := len(filteredBySeverity(parsedModel, types.LowSeverity))
 
-	countStatusUnchecked := len(types.FilteredByRiskTrackingUnchecked(parsedModel))
-	countStatusInDiscussion := len(types.FilteredByRiskTrackingInDiscussion(parsedModel))
-	countStatusAccepted := len(types.FilteredByRiskTrackingAccepted(parsedModel))
-	countStatusInProgress := len(types.FilteredByRiskTrackingInProgress(parsedModel))
-	countStatusMitigated := len(types.FilteredByRiskTrackingMitigated(parsedModel))
-	countStatusFalsePositive := len(types.FilteredByRiskTrackingFalsePositive(parsedModel))
+	countStatusUnchecked := len(filteredByRiskStatus(parsedModel, types.Unchecked))
+	countStatusInDiscussion := len(filteredByRiskStatus(parsedModel, types.InDiscussion))
+	countStatusAccepted := len(filteredByRiskStatus(parsedModel, types.Accepted))
+	countStatusInProgress := len(filteredByRiskStatus(parsedModel, types.InProgress))
+	countStatusMitigated := len(filteredByRiskStatus(parsedModel, types.Mitigated))
+	countStatusFalsePositive := len(filteredByRiskStatus(parsedModel, types.FalsePositive))
 
 	html := r.pdf.HTMLBasicNew()
 	html.Write(5, "Threagile toolkit was used to model the architecture of \""+uni(parsedModel.Title)+"\" "+
@@ -755,7 +803,7 @@ func (r *pdfReporter) createManagementSummary(parsedModel *types.Model, tempFold
 		"the application in a Defense-in-Depth approach. Additionally, for each risk finding a "+
 		"link towards a matching OWASP Cheat Sheet or similar with technical details about how to implement a mitigation is given."+
 		"<br><br>"+
-		"In total <b>"+strconv.Itoa(types.TotalRiskCount(parsedModel))+" initial risks</b> in <b>"+strconv.Itoa(len(parsedModel.GeneratedRisksByCategory))+" categories</b> have "+
+		"In total <b>"+strconv.Itoa(totalRiskCount(parsedModel))+" initial risks</b> in <b>"+strconv.Itoa(len(parsedModel.GeneratedRisksByCategory))+" categories</b> have "+
 		"been identified during the threat modeling process:<br><br>") // TODO plural singular stuff risk/s category/ies has/have
 
 	r.pdf.SetFont("Helvetica", "B", fontSizeBody)
@@ -918,7 +966,7 @@ func (r *pdfReporter) createManagementSummary(parsedModel *types.Model, tempFold
 
 func (r *pdfReporter) createRiskMitigationStatus(parsedModel *types.Model, tempFolder string) error {
 	r.pdf.SetTextColor(0, 0, 0)
-	stillAtRisk := types.FilteredByStillAtRisk(parsedModel)
+	stillAtRisk := filteredByStillAtRisk(parsedModel)
 	count := len(stillAtRisk)
 	title := "Risk Mitigation"
 	r.addHeadline(title, false)
@@ -928,18 +976,18 @@ func (r *pdfReporter) createRiskMitigationStatus(parsedModel *types.Model, tempF
 	html := r.pdf.HTMLBasicNew()
 	html.Write(5, "The following chart gives a high-level overview of the risk tracking status (including mitigated risks):")
 
-	risksCritical := types.FilteredByOnlyCriticalRisks(parsedModel)
-	risksHigh := types.FilteredByOnlyHighRisks(parsedModel)
-	risksElevated := types.FilteredByOnlyElevatedRisks(parsedModel)
-	risksMedium := types.FilteredByOnlyMediumRisks(parsedModel)
-	risksLow := types.FilteredByOnlyLowRisks(parsedModel)
+	risksCritical := filteredBySeverity(parsedModel, types.CriticalSeverity)
+	risksHigh := filteredBySeverity(parsedModel, types.HighSeverity)
+	risksElevated := filteredBySeverity(parsedModel, types.ElevatedSeverity)
+	risksMedium := filteredBySeverity(parsedModel, types.MediumSeverity)
+	risksLow := filteredBySeverity(parsedModel, types.LowSeverity)
 
-	countStatusUnchecked := len(types.FilteredByRiskTrackingUnchecked(parsedModel))
-	countStatusInDiscussion := len(types.FilteredByRiskTrackingInDiscussion(parsedModel))
-	countStatusAccepted := len(types.FilteredByRiskTrackingAccepted(parsedModel))
-	countStatusInProgress := len(types.FilteredByRiskTrackingInProgress(parsedModel))
-	countStatusMitigated := len(types.FilteredByRiskTrackingMitigated(parsedModel))
-	countStatusFalsePositive := len(types.FilteredByRiskTrackingFalsePositive(parsedModel))
+	countStatusUnchecked := len(filteredByRiskStatus(parsedModel, types.Unchecked))
+	countStatusInDiscussion := len(filteredByRiskStatus(parsedModel, types.InDiscussion))
+	countStatusAccepted := len(filteredByRiskStatus(parsedModel, types.Accepted))
+	countStatusInProgress := len(filteredByRiskStatus(parsedModel, types.InProgress))
+	countStatusMitigated := len(filteredByRiskStatus(parsedModel, types.Mitigated))
+	countStatusFalsePositive := len(filteredByRiskStatus(parsedModel, types.FalsePositive))
 
 	stackedBarChartRiskTracking := chart.StackedBarChart{
 		Width: 4000,
@@ -951,17 +999,17 @@ func (r *pdfReporter) createRiskMitigationStatus(parsedModel *types.Model, tempF
 				Name:  types.LowSeverity.Title(),
 				Width: 130,
 				Values: []chart.Value{
-					{Value: float64(len(types.ReduceToOnlyRiskTrackingUnchecked(parsedModel, risksLow))), Label: types.Unchecked.Title(),
+					{Value: float64(len(reduceToRiskStatus(risksLow, types.Unchecked))), Label: types.Unchecked.Title(),
 						Style: chart.Style{FillColor: makeColor(RgbHexColorRiskStatusUnchecked()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
-					{Value: float64(len(types.ReduceToOnlyRiskTrackingInDiscussion(parsedModel, risksLow))), Label: types.InDiscussion.Title(),
+					{Value: float64(len(reduceToRiskStatus(risksLow, types.InDiscussion))), Label: types.InDiscussion.Title(),
 						Style: chart.Style{FillColor: makeColor(rgbHexColorRiskStatusInDiscussion()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
-					{Value: float64(len(types.ReduceToOnlyRiskTrackingAccepted(parsedModel, risksLow))), Label: types.Accepted.Title(),
+					{Value: float64(len(reduceToRiskStatus(risksLow, types.Accepted))), Label: types.Accepted.Title(),
 						Style: chart.Style{FillColor: makeColor(rgbHexColorRiskStatusAccepted()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
-					{Value: float64(len(types.ReduceToOnlyRiskTrackingInProgress(parsedModel, risksLow))), Label: types.InProgress.Title(),
+					{Value: float64(len(reduceToRiskStatus(risksLow, types.InProgress))), Label: types.InProgress.Title(),
 						Style: chart.Style{FillColor: makeColor(rgbHexColorRiskStatusInProgress()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
-					{Value: float64(len(types.ReduceToOnlyRiskTrackingMitigated(parsedModel, risksLow))), Label: types.Mitigated.Title(),
+					{Value: float64(len(reduceToRiskStatus(risksLow, types.Mitigated))), Label: types.Mitigated.Title(),
 						Style: chart.Style{FillColor: makeColor(rgbHexColorRiskStatusMitigated()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
-					{Value: float64(len(types.ReduceToOnlyRiskTrackingFalsePositive(parsedModel, risksLow))), Label: types.FalsePositive.Title(),
+					{Value: float64(len(reduceToRiskStatus(risksLow, types.FalsePositive))), Label: types.FalsePositive.Title(),
 						Style: chart.Style{FillColor: makeColor(rgbHexColorRiskStatusFalsePositive()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
 				},
 			},
@@ -969,17 +1017,17 @@ func (r *pdfReporter) createRiskMitigationStatus(parsedModel *types.Model, tempF
 				Name:  types.MediumSeverity.Title(),
 				Width: 130,
 				Values: []chart.Value{
-					{Value: float64(len(types.ReduceToOnlyRiskTrackingUnchecked(parsedModel, risksMedium))), Label: types.Unchecked.Title(),
+					{Value: float64(len(reduceToRiskStatus(risksMedium, types.Unchecked))), Label: types.Unchecked.Title(),
 						Style: chart.Style{FillColor: makeColor(RgbHexColorRiskStatusUnchecked()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
-					{Value: float64(len(types.ReduceToOnlyRiskTrackingInDiscussion(parsedModel, risksMedium))), Label: types.InDiscussion.Title(),
+					{Value: float64(len(reduceToRiskStatus(risksMedium, types.InDiscussion))), Label: types.InDiscussion.Title(),
 						Style: chart.Style{FillColor: makeColor(rgbHexColorRiskStatusInDiscussion()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
-					{Value: float64(len(types.ReduceToOnlyRiskTrackingAccepted(parsedModel, risksMedium))), Label: types.Accepted.Title(),
+					{Value: float64(len(reduceToRiskStatus(risksMedium, types.Accepted))), Label: types.Accepted.Title(),
 						Style: chart.Style{FillColor: makeColor(rgbHexColorRiskStatusAccepted()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
-					{Value: float64(len(types.ReduceToOnlyRiskTrackingInProgress(parsedModel, risksMedium))), Label: types.InProgress.Title(),
+					{Value: float64(len(reduceToRiskStatus(risksMedium, types.InProgress))), Label: types.InProgress.Title(),
 						Style: chart.Style{FillColor: makeColor(rgbHexColorRiskStatusInProgress()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
-					{Value: float64(len(types.ReduceToOnlyRiskTrackingMitigated(parsedModel, risksMedium))), Label: types.Mitigated.Title(),
+					{Value: float64(len(reduceToRiskStatus(risksMedium, types.Mitigated))), Label: types.Mitigated.Title(),
 						Style: chart.Style{FillColor: makeColor(rgbHexColorRiskStatusMitigated()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
-					{Value: float64(len(types.ReduceToOnlyRiskTrackingFalsePositive(parsedModel, risksMedium))), Label: types.FalsePositive.Title(),
+					{Value: float64(len(reduceToRiskStatus(risksMedium, types.FalsePositive))), Label: types.FalsePositive.Title(),
 						Style: chart.Style{FillColor: makeColor(rgbHexColorRiskStatusFalsePositive()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
 				},
 			},
@@ -987,17 +1035,17 @@ func (r *pdfReporter) createRiskMitigationStatus(parsedModel *types.Model, tempF
 				Name:  types.ElevatedSeverity.Title(),
 				Width: 130,
 				Values: []chart.Value{
-					{Value: float64(len(types.ReduceToOnlyRiskTrackingUnchecked(parsedModel, risksElevated))), Label: types.Unchecked.Title(),
+					{Value: float64(len(reduceToRiskStatus(risksElevated, types.Unchecked))), Label: types.Unchecked.Title(),
 						Style: chart.Style{FillColor: makeColor(RgbHexColorRiskStatusUnchecked()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
-					{Value: float64(len(types.ReduceToOnlyRiskTrackingInDiscussion(parsedModel, risksElevated))), Label: types.InDiscussion.Title(),
+					{Value: float64(len(reduceToRiskStatus(risksElevated, types.InDiscussion))), Label: types.InDiscussion.Title(),
 						Style: chart.Style{FillColor: makeColor(rgbHexColorRiskStatusInDiscussion()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
-					{Value: float64(len(types.ReduceToOnlyRiskTrackingAccepted(parsedModel, risksElevated))), Label: types.Accepted.Title(),
+					{Value: float64(len(reduceToRiskStatus(risksElevated, types.Accepted))), Label: types.Accepted.Title(),
 						Style: chart.Style{FillColor: makeColor(rgbHexColorRiskStatusAccepted()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
-					{Value: float64(len(types.ReduceToOnlyRiskTrackingInProgress(parsedModel, risksElevated))), Label: types.InProgress.Title(),
+					{Value: float64(len(reduceToRiskStatus(risksElevated, types.InProgress))), Label: types.InProgress.Title(),
 						Style: chart.Style{FillColor: makeColor(rgbHexColorRiskStatusInProgress()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
-					{Value: float64(len(types.ReduceToOnlyRiskTrackingMitigated(parsedModel, risksElevated))), Label: types.Mitigated.Title(),
+					{Value: float64(len(reduceToRiskStatus(risksElevated, types.Mitigated))), Label: types.Mitigated.Title(),
 						Style: chart.Style{FillColor: makeColor(rgbHexColorRiskStatusMitigated()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
-					{Value: float64(len(types.ReduceToOnlyRiskTrackingFalsePositive(parsedModel, risksElevated))), Label: types.FalsePositive.Title(),
+					{Value: float64(len(reduceToRiskStatus(risksElevated, types.FalsePositive))), Label: types.FalsePositive.Title(),
 						Style: chart.Style{FillColor: makeColor(rgbHexColorRiskStatusFalsePositive()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
 				},
 			},
@@ -1005,17 +1053,17 @@ func (r *pdfReporter) createRiskMitigationStatus(parsedModel *types.Model, tempF
 				Name:  types.HighSeverity.Title(),
 				Width: 130,
 				Values: []chart.Value{
-					{Value: float64(len(types.ReduceToOnlyRiskTrackingUnchecked(parsedModel, risksHigh))), Label: types.Unchecked.Title(),
+					{Value: float64(len(reduceToRiskStatus(risksHigh, types.Unchecked))), Label: types.Unchecked.Title(),
 						Style: chart.Style{FillColor: makeColor(RgbHexColorRiskStatusUnchecked()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
-					{Value: float64(len(types.ReduceToOnlyRiskTrackingInDiscussion(parsedModel, risksHigh))), Label: types.InDiscussion.Title(),
+					{Value: float64(len(reduceToRiskStatus(risksHigh, types.InDiscussion))), Label: types.InDiscussion.Title(),
 						Style: chart.Style{FillColor: makeColor(rgbHexColorRiskStatusInDiscussion()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
-					{Value: float64(len(types.ReduceToOnlyRiskTrackingAccepted(parsedModel, risksHigh))), Label: types.Accepted.Title(),
+					{Value: float64(len(reduceToRiskStatus(risksHigh, types.Accepted))), Label: types.Accepted.Title(),
 						Style: chart.Style{FillColor: makeColor(rgbHexColorRiskStatusAccepted()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
-					{Value: float64(len(types.ReduceToOnlyRiskTrackingInProgress(parsedModel, risksHigh))), Label: types.InProgress.Title(),
+					{Value: float64(len(reduceToRiskStatus(risksHigh, types.InProgress))), Label: types.InProgress.Title(),
 						Style: chart.Style{FillColor: makeColor(rgbHexColorRiskStatusInProgress()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
-					{Value: float64(len(types.ReduceToOnlyRiskTrackingMitigated(parsedModel, risksHigh))), Label: types.Mitigated.Title(),
+					{Value: float64(len(reduceToRiskStatus(risksHigh, types.Mitigated))), Label: types.Mitigated.Title(),
 						Style: chart.Style{FillColor: makeColor(rgbHexColorRiskStatusMitigated()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
-					{Value: float64(len(types.ReduceToOnlyRiskTrackingFalsePositive(parsedModel, risksHigh))), Label: types.FalsePositive.Title(),
+					{Value: float64(len(reduceToRiskStatus(risksHigh, types.FalsePositive))), Label: types.FalsePositive.Title(),
 						Style: chart.Style{FillColor: makeColor(rgbHexColorRiskStatusFalsePositive()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
 				},
 			},
@@ -1023,17 +1071,17 @@ func (r *pdfReporter) createRiskMitigationStatus(parsedModel *types.Model, tempF
 				Name:  types.CriticalSeverity.Title(),
 				Width: 130,
 				Values: []chart.Value{
-					{Value: float64(len(types.ReduceToOnlyRiskTrackingUnchecked(parsedModel, risksCritical))), Label: types.Unchecked.Title(),
+					{Value: float64(len(reduceToRiskStatus(risksCritical, types.Unchecked))), Label: types.Unchecked.Title(),
 						Style: chart.Style{FillColor: makeColor(RgbHexColorRiskStatusUnchecked()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
-					{Value: float64(len(types.ReduceToOnlyRiskTrackingInDiscussion(parsedModel, risksCritical))), Label: types.InDiscussion.Title(),
+					{Value: float64(len(reduceToRiskStatus(risksCritical, types.InDiscussion))), Label: types.InDiscussion.Title(),
 						Style: chart.Style{FillColor: makeColor(rgbHexColorRiskStatusInDiscussion()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
-					{Value: float64(len(types.ReduceToOnlyRiskTrackingAccepted(parsedModel, risksCritical))), Label: types.Accepted.Title(),
+					{Value: float64(len(reduceToRiskStatus(risksCritical, types.Accepted))), Label: types.Accepted.Title(),
 						Style: chart.Style{FillColor: makeColor(rgbHexColorRiskStatusAccepted()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
-					{Value: float64(len(types.ReduceToOnlyRiskTrackingInProgress(parsedModel, risksCritical))), Label: types.InProgress.Title(),
+					{Value: float64(len(reduceToRiskStatus(risksCritical, types.InProgress))), Label: types.InProgress.Title(),
 						Style: chart.Style{FillColor: makeColor(rgbHexColorRiskStatusInProgress()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
-					{Value: float64(len(types.ReduceToOnlyRiskTrackingMitigated(parsedModel, risksCritical))), Label: types.Mitigated.Title(),
+					{Value: float64(len(reduceToRiskStatus(risksCritical, types.Mitigated))), Label: types.Mitigated.Title(),
 						Style: chart.Style{FillColor: makeColor(rgbHexColorRiskStatusMitigated()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
-					{Value: float64(len(types.ReduceToOnlyRiskTrackingFalsePositive(parsedModel, risksCritical))), Label: types.FalsePositive.Title(),
+					{Value: float64(len(reduceToRiskStatus(risksCritical, types.FalsePositive))), Label: types.FalsePositive.Title(),
 						Style: chart.Style{FillColor: makeColor(rgbHexColorRiskStatusFalsePositive()).WithAlpha(98), StrokeColor: drawing.ColorFromHex("999")}},
 				},
 			},
@@ -1105,16 +1153,16 @@ func (r *pdfReporter) createRiskMitigationStatus(parsedModel *types.Model, tempF
 			"After removal of risks with status <i>mitigated</i> and <i>false positive</i> "+
 			"the following <b>"+strconv.Itoa(count)+" remain unmitigated</b>:")
 
-		countCritical := len(types.ReduceToOnlyStillAtRisk(parsedModel, types.FilteredByOnlyCriticalRisks(parsedModel)))
-		countHigh := len(types.ReduceToOnlyStillAtRisk(parsedModel, types.FilteredByOnlyHighRisks(parsedModel)))
-		countElevated := len(types.ReduceToOnlyStillAtRisk(parsedModel, types.FilteredByOnlyElevatedRisks(parsedModel)))
-		countMedium := len(types.ReduceToOnlyStillAtRisk(parsedModel, types.FilteredByOnlyMediumRisks(parsedModel)))
-		countLow := len(types.ReduceToOnlyStillAtRisk(parsedModel, types.FilteredByOnlyLowRisks(parsedModel)))
+		countCritical := len(types.ReduceToOnlyStillAtRisk(filteredBySeverity(parsedModel, types.CriticalSeverity)))
+		countHigh := len(types.ReduceToOnlyStillAtRisk(filteredBySeverity(parsedModel, types.HighSeverity)))
+		countElevated := len(types.ReduceToOnlyStillAtRisk(filteredBySeverity(parsedModel, types.ElevatedSeverity)))
+		countMedium := len(types.ReduceToOnlyStillAtRisk(filteredBySeverity(parsedModel, types.MediumSeverity)))
+		countLow := len(types.ReduceToOnlyStillAtRisk(filteredBySeverity(parsedModel, types.LowSeverity)))
 
-		countBusinessSide := len(types.ReduceToOnlyStillAtRisk(parsedModel, types.FilteredByOnlyBusinessSide(parsedModel)))
-		countArchitecture := len(types.ReduceToOnlyStillAtRisk(parsedModel, types.FilteredByOnlyArchitecture(parsedModel)))
-		countDevelopment := len(types.ReduceToOnlyStillAtRisk(parsedModel, types.FilteredByOnlyDevelopment(parsedModel)))
-		countOperation := len(types.ReduceToOnlyStillAtRisk(parsedModel, types.FilteredByOnlyOperation(parsedModel)))
+		countBusinessSide := len(types.ReduceToOnlyStillAtRisk(filteredByRiskFunction(parsedModel, types.BusinessSide)))
+		countArchitecture := len(types.ReduceToOnlyStillAtRisk(filteredByRiskFunction(parsedModel, types.Architecture)))
+		countDevelopment := len(types.ReduceToOnlyStillAtRisk(filteredByRiskFunction(parsedModel, types.Development)))
+		countOperation := len(types.ReduceToOnlyStillAtRisk(filteredByRiskFunction(parsedModel, types.Operations)))
 
 		pieChartRemainingRiskSeverity := chart.PieChart{
 			Width:  1500,
@@ -1226,6 +1274,41 @@ func (r *pdfReporter) createRiskMitigationStatus(parsedModel *types.Model, tempF
 	return nil
 }
 
+func filteredByRiskStatus(parsedModel *types.Model, status types.RiskStatus) []*types.Risk {
+	filteredRisks := make([]*types.Risk, 0)
+	for _, risks := range parsedModel.GeneratedRisksByCategory {
+		for _, risk := range risks {
+			if risk.RiskStatus == status {
+				filteredRisks = append(filteredRisks, risk)
+			}
+		}
+	}
+	return filteredRisks
+}
+
+func filteredByRiskFunction(parsedModel *types.Model, function types.RiskFunction) []*types.Risk {
+	filteredRisks := make([]*types.Risk, 0)
+	for categoryId, risks := range parsedModel.GeneratedRisksByCategory {
+		for _, risk := range risks {
+			category := types.GetRiskCategory(parsedModel, categoryId)
+			if category.Function == function {
+				filteredRisks = append(filteredRisks, risk)
+			}
+		}
+	}
+	return filteredRisks
+}
+
+func reduceToRiskStatus(risks []*types.Risk, status types.RiskStatus) []*types.Risk {
+	filteredRisks := make([]*types.Risk, 0)
+	for _, risk := range risks {
+		if risk.RiskStatus == status {
+			filteredRisks = append(filteredRisks, risk)
+		}
+	}
+	return filteredRisks
+}
+
 // CAUTION: Long labels might cause endless loop, then remove labels and render them manually later inside the PDF
 func (r *pdfReporter) embedStackedBarChart(sbcChart chart.StackedBarChart, x float64, y float64, tempFolder string) error {
 	tmpFilePNG, err := os.CreateTemp(tempFolder, "chart-*-.png")
@@ -1283,9 +1366,9 @@ func (r *pdfReporter) createImpactRemainingRisks(parsedModel *types.Model) {
 
 func (r *pdfReporter) renderImpactAnalysis(parsedModel *types.Model, initialRisks bool) {
 	r.pdf.SetTextColor(0, 0, 0)
-	count, catCount := types.TotalRiskCount(parsedModel), len(parsedModel.GeneratedRisksByCategory)
+	count, catCount := totalRiskCount(parsedModel), len(parsedModel.GeneratedRisksByCategory)
 	if !initialRisks {
-		count, catCount = len(types.FilteredByStillAtRisk(parsedModel)), len(types.CategoriesOfOnlyRisksStillAtRisk(parsedModel, parsedModel.GeneratedRisksByCategory))
+		count, catCount = len(filteredByStillAtRisk(parsedModel)), len(reduceToOnlyStillAtRisk(parsedModel.GeneratedRisksByCategory))
 	}
 	riskStr, catStr := "Risks", "Categories"
 	if count == 1 {
@@ -1326,15 +1409,15 @@ func (r *pdfReporter) renderImpactAnalysis(parsedModel *types.Model, initialRisk
 	html.Write(5, "Risk finding paragraphs are clickable and link to the corresponding chapter.")
 	r.pdf.SetFont("Helvetica", "", fontSizeBody)
 
-	r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyCriticalRisks(parsedModel, parsedModel.GeneratedRisksByCategory, initialRisks)),
+	r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(parsedModel.GeneratedRisksByCategory, initialRisks, types.CriticalSeverity)),
 		types.CriticalSeverity, false, initialRisks, true, false)
-	r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyHighRisks(parsedModel, parsedModel.GeneratedRisksByCategory, initialRisks)),
+	r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(parsedModel.GeneratedRisksByCategory, initialRisks, types.HighSeverity)),
 		types.HighSeverity, false, initialRisks, true, false)
-	r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyElevatedRisks(parsedModel, parsedModel.GeneratedRisksByCategory, initialRisks)),
+	r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(parsedModel.GeneratedRisksByCategory, initialRisks, types.ElevatedSeverity)),
 		types.ElevatedSeverity, false, initialRisks, true, false)
-	r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyMediumRisks(parsedModel, parsedModel.GeneratedRisksByCategory, initialRisks)),
+	r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(parsedModel.GeneratedRisksByCategory, initialRisks, types.MediumSeverity)),
 		types.MediumSeverity, false, initialRisks, true, false)
-	r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyLowRisks(parsedModel, parsedModel.GeneratedRisksByCategory, initialRisks)),
+	r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(parsedModel.GeneratedRisksByCategory, initialRisks, types.LowSeverity)),
 		types.LowSeverity, false, initialRisks, true, false)
 
 	r.pdf.SetDrawColor(0, 0, 0)
@@ -1415,13 +1498,13 @@ func sortedTechnicalAssetsByRAAAndTitle(parsedModel *types.Model) []*types.Techn
 
 func (r *pdfReporter) createModelFailures(parsedModel *types.Model) {
 	r.pdf.SetTextColor(0, 0, 0)
-	modelFailures := types.FlattenRiskSlice(types.FilterByModelFailures(parsedModel, parsedModel.GeneratedRisksByCategory))
+	modelFailures := flattenRiskSlice(filterByModelFailures(parsedModel, parsedModel.GeneratedRisksByCategory))
 	risksStr := "Risks"
 	count := len(modelFailures)
 	if count == 1 {
 		risksStr = "Risk"
 	}
-	countStillAtRisk := len(types.ReduceToOnlyStillAtRisk(parsedModel, modelFailures))
+	countStillAtRisk := len(types.ReduceToOnlyStillAtRisk(modelFailures))
 	if countStillAtRisk > 0 {
 		colorModelFailure(r.pdf)
 	}
@@ -1443,25 +1526,45 @@ func (r *pdfReporter) createModelFailures(parsedModel *types.Model) {
 	html.Write(5, "Risk finding paragraphs are clickable and link to the corresponding chapter.")
 	r.pdf.SetFont("Helvetica", "", fontSizeBody)
 
-	modelFailuresByCategory := types.FilterByModelFailures(parsedModel, parsedModel.GeneratedRisksByCategory)
+	modelFailuresByCategory := filterByModelFailures(parsedModel, parsedModel.GeneratedRisksByCategory)
 	if len(modelFailuresByCategory) == 0 {
 		r.pdfColorGray()
 		html.Write(5, "<br><br>No potential model failures have been identified.")
 	} else {
-		r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyCriticalRisks(parsedModel, modelFailuresByCategory, true)),
+		r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(modelFailuresByCategory, true, types.CriticalSeverity)),
 			types.CriticalSeverity, true, true, false, true)
-		r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyHighRisks(parsedModel, modelFailuresByCategory, true)),
+		r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(modelFailuresByCategory, true, types.HighSeverity)),
 			types.HighSeverity, true, true, false, true)
-		r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyElevatedRisks(parsedModel, modelFailuresByCategory, true)),
+		r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(modelFailuresByCategory, true, types.ElevatedSeverity)),
 			types.ElevatedSeverity, true, true, false, true)
-		r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyMediumRisks(parsedModel, modelFailuresByCategory, true)),
+		r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(modelFailuresByCategory, true, types.MediumSeverity)),
 			types.MediumSeverity, true, true, false, true)
-		r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyLowRisks(parsedModel, modelFailuresByCategory, true)),
+		r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(modelFailuresByCategory, true, types.LowSeverity)),
 			types.LowSeverity, true, true, false, true)
 	}
 
 	r.pdf.SetDrawColor(0, 0, 0)
 	r.pdf.SetDashPattern([]float64{}, 0)
+}
+
+func filterByModelFailures(parsedModel *types.Model, risksByCat map[string][]*types.Risk) map[string][]*types.Risk {
+	result := make(map[string][]*types.Risk)
+	for categoryId, risks := range risksByCat {
+		category := types.GetRiskCategory(parsedModel, categoryId)
+		if category.ModelFailurePossibleReason {
+			result[categoryId] = risks
+		}
+	}
+
+	return result
+}
+
+func flattenRiskSlice(risksByCat map[string][]*types.Risk) []*types.Risk {
+	result := make([]*types.Risk, 0)
+	for _, risks := range risksByCat {
+		result = append(result, risks...)
+	}
+	return result
 }
 
 func (r *pdfReporter) createRAA(parsedModel *types.Model, introTextRAA string) {
@@ -1504,7 +1607,7 @@ func (r *pdfReporter) createRAA(parsedModel *types.Model, introTextRAA string) {
 		default:
 			r.pdfColorBlack()
 		}
-		if len(types.ReduceToOnlyStillAtRisk(parsedModel, newRisksStr)) == 0 {
+		if len(types.ReduceToOnlyStillAtRisk(newRisksStr)) == 0 {
 			r.pdfColorBlack()
 		}
 
@@ -1617,7 +1720,7 @@ func (r *pdfReporter) addCategories(parsedModel *types.Model, riskCategories []*
 	for _, riskCategory := range riskCategories {
 		risksStr := parsedModel.GeneratedRisksByCategory[riskCategory.ID]
 		if !initialRisks {
-			risksStr = types.ReduceToOnlyStillAtRisk(parsedModel, risksStr)
+			risksStr = types.ReduceToOnlyStillAtRisk(risksStr)
 		}
 		if len(risksStr) == 0 {
 			continue
@@ -1661,7 +1764,7 @@ func (r *pdfReporter) addCategories(parsedModel *types.Model, riskCategories []*
 		case types.LowSeverity:
 			colorLowRisk(r.pdf)
 		}
-		if len(types.ReduceToOnlyStillAtRisk(parsedModel, risksStr)) == 0 {
+		if len(types.ReduceToOnlyStillAtRisk(risksStr)) == 0 {
 			r.pdfColorBlack()
 		}
 		html.Write(5, strBuilder.String())
@@ -1676,7 +1779,7 @@ func (r *pdfReporter) addCategories(parsedModel *types.Model, riskCategories []*
 		if !initialRisks {
 			initialStr = "Remaining"
 		}
-		remainingRisks := types.ReduceToOnlyStillAtRisk(parsedModel, risksStr)
+		remainingRisks := types.ReduceToOnlyStillAtRisk(risksStr)
 		suffix := strconv.Itoa(count) + " " + initialStr + " Risk"
 		if bothInitialAndRemainingRisks {
 			suffix = strconv.Itoa(len(remainingRisks)) + " / " + strconv.Itoa(count) + " Risk"
@@ -1686,9 +1789,9 @@ func (r *pdfReporter) addCategories(parsedModel *types.Model, riskCategories []*
 		}
 		suffix += " - Exploitation likelihood is <i>"
 		if initialRisks {
-			suffix += types.HighestExploitationLikelihood(risksStr).Title() + "</i> with <i>" + types.HighestExploitationImpact(risksStr).Title() + "</i> impact."
+			suffix += highestExploitationLikelihood(risksStr).Title() + "</i> with <i>" + highestExploitationImpact(risksStr).Title() + "</i> impact."
 		} else {
-			suffix += types.HighestExploitationLikelihood(remainingRisks).Title() + "</i> with <i>" + types.HighestExploitationImpact(remainingRisks).Title() + "</i> impact."
+			suffix += highestExploitationLikelihood(remainingRisks).Title() + "</i> with <i>" + highestExploitationImpact(remainingRisks).Title() + "</i> impact."
 		}
 		strBuilder.WriteString(suffix + "<br>")
 		html.Write(5, strBuilder.String())
@@ -1707,6 +1810,26 @@ func (r *pdfReporter) addCategories(parsedModel *types.Model, riskCategories []*
 	}
 }
 
+func highestExploitationLikelihood(risks []*types.Risk) types.RiskExploitationLikelihood {
+	result := types.Unlikely
+	for _, risk := range risks {
+		if risk.ExploitationLikelihood > result {
+			result = risk.ExploitationLikelihood
+		}
+	}
+	return result
+}
+
+func highestExploitationImpact(risks []*types.Risk) types.RiskExploitationImpact {
+	result := types.LowImpact
+	for _, risk := range risks {
+		if risk.ExploitationImpact > result {
+			result = risk.ExploitationImpact
+		}
+	}
+	return result
+}
+
 func firstParagraph(text string) string {
 	firstParagraphRegEx := regexp.MustCompile(`(.*?)((<br>)|(<p>))`)
 	match := firstParagraphRegEx.FindStringSubmatch(text)
@@ -1723,19 +1846,19 @@ func (r *pdfReporter) createAssignmentByFunction(parsedModel *types.Model) {
 	r.defineLinkTarget("{function-assignment}")
 	r.currentChapterTitleBreadcrumb = title
 
-	risksBusinessSideFunction := types.RisksOfOnlyBusinessSide(parsedModel, parsedModel.GeneratedRisksByCategory)
-	risksArchitectureFunction := types.RisksOfOnlyArchitecture(parsedModel, parsedModel.GeneratedRisksByCategory)
-	risksDevelopmentFunction := types.RisksOfOnlyDevelopment(parsedModel, parsedModel.GeneratedRisksByCategory)
-	risksOperationFunction := types.RisksOfOnlyOperation(parsedModel, parsedModel.GeneratedRisksByCategory)
+	risksBusinessSideFunction := reduceToFunctionRisk(parsedModel, parsedModel.GeneratedRisksByCategory, types.BusinessSide)
+	risksArchitectureFunction := reduceToFunctionRisk(parsedModel, parsedModel.GeneratedRisksByCategory, types.Architecture)
+	risksDevelopmentFunction := reduceToFunctionRisk(parsedModel, parsedModel.GeneratedRisksByCategory, types.Development)
+	risksOperationFunction := reduceToFunctionRisk(parsedModel, parsedModel.GeneratedRisksByCategory, types.Operations)
 
-	countBusinessSideFunction := types.CountRisks(risksBusinessSideFunction)
-	countArchitectureFunction := types.CountRisks(risksArchitectureFunction)
-	countDevelopmentFunction := types.CountRisks(risksDevelopmentFunction)
-	countOperationFunction := types.CountRisks(risksOperationFunction)
+	countBusinessSideFunction := countRisks(risksBusinessSideFunction)
+	countArchitectureFunction := countRisks(risksArchitectureFunction)
+	countDevelopmentFunction := countRisks(risksDevelopmentFunction)
+	countOperationFunction := countRisks(risksOperationFunction)
 	var intro strings.Builder
 	intro.WriteString("This chapter clusters and assigns the risks by functions which are most likely able to " +
 		"check and mitigate them: " +
-		"In total <b>" + strconv.Itoa(types.TotalRiskCount(parsedModel)) + " potential risks</b> have been identified during the threat modeling process " +
+		"In total <b>" + strconv.Itoa(totalRiskCount(parsedModel)) + " potential risks</b> have been identified during the threat modeling process " +
 		"of which <b>" + strconv.Itoa(countBusinessSideFunction) + " should be checked by " + types.BusinessSide.Title() + "</b>, " +
 		"<b>" + strconv.Itoa(countArchitectureFunction) + " should be checked by " + types.Architecture.Title() + "</b>, " +
 		"<b>" + strconv.Itoa(countDevelopmentFunction) + " should be checked by " + types.Development.Title() + "</b>, " +
@@ -1764,15 +1887,15 @@ func (r *pdfReporter) createAssignmentByFunction(parsedModel *types.Model) {
 		r.pdf.SetTextColor(150, 150, 150)
 		html.Write(5, "<br><br>n/a")
 	} else {
-		r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyCriticalRisks(parsedModel, risksBusinessSideFunction, true)),
+		r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(risksBusinessSideFunction, true, types.CriticalSeverity)),
 			types.CriticalSeverity, true, true, false, false)
-		r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyHighRisks(parsedModel, risksBusinessSideFunction, true)),
+		r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(risksBusinessSideFunction, true, types.HighSeverity)),
 			types.HighSeverity, true, true, false, false)
-		r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyElevatedRisks(parsedModel, risksBusinessSideFunction, true)),
+		r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(risksBusinessSideFunction, true, types.ElevatedSeverity)),
 			types.ElevatedSeverity, true, true, false, false)
-		r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyMediumRisks(parsedModel, risksBusinessSideFunction, true)),
+		r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(risksBusinessSideFunction, true, types.MediumSeverity)),
 			types.MediumSeverity, true, true, false, false)
-		r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyLowRisks(parsedModel, risksBusinessSideFunction, true)),
+		r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(risksBusinessSideFunction, true, types.LowSeverity)),
 			types.LowSeverity, true, true, false, false)
 	}
 	r.pdf.SetLeftMargin(oldLeft)
@@ -1791,15 +1914,15 @@ func (r *pdfReporter) createAssignmentByFunction(parsedModel *types.Model) {
 		r.pdf.SetTextColor(150, 150, 150)
 		html.Write(5, "<br><br>n/a")
 	} else {
-		r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyCriticalRisks(parsedModel, risksArchitectureFunction, true)),
+		r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(risksArchitectureFunction, true, types.CriticalSeverity)),
 			types.CriticalSeverity, true, true, false, false)
-		r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyHighRisks(parsedModel, risksArchitectureFunction, true)),
+		r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(risksArchitectureFunction, true, types.HighSeverity)),
 			types.HighSeverity, true, true, false, false)
-		r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyElevatedRisks(parsedModel, risksArchitectureFunction, true)),
+		r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(risksArchitectureFunction, true, types.ElevatedSeverity)),
 			types.ElevatedSeverity, true, true, false, false)
-		r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyMediumRisks(parsedModel, risksArchitectureFunction, true)),
+		r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(risksArchitectureFunction, true, types.MediumSeverity)),
 			types.MediumSeverity, true, true, false, false)
-		r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyLowRisks(parsedModel, risksArchitectureFunction, true)),
+		r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(risksArchitectureFunction, true, types.LowSeverity)),
 			types.LowSeverity, true, true, false, false)
 	}
 	r.pdf.SetLeftMargin(oldLeft)
@@ -1818,15 +1941,15 @@ func (r *pdfReporter) createAssignmentByFunction(parsedModel *types.Model) {
 		r.pdf.SetTextColor(150, 150, 150)
 		html.Write(5, "<br><br>n/a")
 	} else {
-		r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyCriticalRisks(parsedModel, risksDevelopmentFunction, true)),
+		r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(risksDevelopmentFunction, true, types.CriticalSeverity)),
 			types.CriticalSeverity, true, true, false, false)
-		r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyHighRisks(parsedModel, risksDevelopmentFunction, true)),
+		r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(risksDevelopmentFunction, true, types.HighSeverity)),
 			types.HighSeverity, true, true, false, false)
-		r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyElevatedRisks(parsedModel, risksDevelopmentFunction, true)),
+		r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(risksDevelopmentFunction, true, types.ElevatedSeverity)),
 			types.ElevatedSeverity, true, true, false, false)
-		r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyMediumRisks(parsedModel, risksDevelopmentFunction, true)),
+		r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(risksDevelopmentFunction, true, types.MediumSeverity)),
 			types.MediumSeverity, true, true, false, false)
-		r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyLowRisks(parsedModel, risksDevelopmentFunction, true)),
+		r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(risksDevelopmentFunction, true, types.LowSeverity)),
 			types.LowSeverity, true, true, false, false)
 	}
 	r.pdf.SetLeftMargin(oldLeft)
@@ -1845,21 +1968,34 @@ func (r *pdfReporter) createAssignmentByFunction(parsedModel *types.Model) {
 		r.pdf.SetTextColor(150, 150, 150)
 		html.Write(5, "<br><br>n/a")
 	} else {
-		r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyCriticalRisks(parsedModel, risksOperationFunction, true)),
+		r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(risksOperationFunction, true, types.CriticalSeverity)),
 			types.CriticalSeverity, true, true, false, false)
-		r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyHighRisks(parsedModel, risksOperationFunction, true)),
+		r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(risksOperationFunction, true, types.HighSeverity)),
 			types.HighSeverity, true, true, false, false)
-		r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyElevatedRisks(parsedModel, risksOperationFunction, true)),
+		r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(risksOperationFunction, true, types.ElevatedSeverity)),
 			types.ElevatedSeverity, true, true, false, false)
-		r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyMediumRisks(parsedModel, risksOperationFunction, true)),
+		r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(risksOperationFunction, true, types.MediumSeverity)),
 			types.MediumSeverity, true, true, false, false)
-		r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyLowRisks(parsedModel, risksOperationFunction, true)),
+		r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(risksOperationFunction, true, types.LowSeverity)),
 			types.LowSeverity, true, true, false, false)
 	}
 	r.pdf.SetLeftMargin(oldLeft)
 
 	r.pdf.SetDrawColor(0, 0, 0)
 	r.pdf.SetDashPattern([]float64{}, 0)
+}
+
+func reduceToFunctionRisk(parsedModel *types.Model, risksByCategory map[string][]*types.Risk, function types.RiskFunction) map[string][]*types.Risk {
+	result := make(map[string][]*types.Risk)
+	for categoryId, risks := range risksByCategory {
+		for _, risk := range risks {
+			category := types.GetRiskCategory(parsedModel, categoryId)
+			if category.Function == function {
+				result[categoryId] = append(result[categoryId], risk)
+			}
+		}
+	}
+	return result
 }
 
 func (r *pdfReporter) createSTRIDE(parsedModel *types.Model) {
@@ -1869,22 +2005,22 @@ func (r *pdfReporter) createSTRIDE(parsedModel *types.Model) {
 	r.defineLinkTarget("{stride}")
 	r.currentChapterTitleBreadcrumb = title
 
-	risksSTRIDESpoofing := types.RisksOfOnlySTRIDESpoofing(parsedModel, parsedModel.GeneratedRisksByCategory)
-	risksSTRIDETampering := types.RisksOfOnlySTRIDETampering(parsedModel, parsedModel.GeneratedRisksByCategory)
-	risksSTRIDERepudiation := types.RisksOfOnlySTRIDERepudiation(parsedModel, parsedModel.GeneratedRisksByCategory)
-	risksSTRIDEInformationDisclosure := types.RisksOfOnlySTRIDEInformationDisclosure(parsedModel, parsedModel.GeneratedRisksByCategory)
-	risksSTRIDEDenialOfService := types.RisksOfOnlySTRIDEDenialOfService(parsedModel, parsedModel.GeneratedRisksByCategory)
-	risksSTRIDEElevationOfPrivilege := types.RisksOfOnlySTRIDEElevationOfPrivilege(parsedModel, parsedModel.GeneratedRisksByCategory)
+	risksSTRIDESpoofing := reduceToSTRIDERisk(parsedModel, parsedModel.GeneratedRisksByCategory, types.Spoofing)
+	risksSTRIDETampering := reduceToSTRIDERisk(parsedModel, parsedModel.GeneratedRisksByCategory, types.Tampering)
+	risksSTRIDERepudiation := reduceToSTRIDERisk(parsedModel, parsedModel.GeneratedRisksByCategory, types.Repudiation)
+	risksSTRIDEInformationDisclosure := reduceToSTRIDERisk(parsedModel, parsedModel.GeneratedRisksByCategory, types.InformationDisclosure)
+	risksSTRIDEDenialOfService := reduceToSTRIDERisk(parsedModel, parsedModel.GeneratedRisksByCategory, types.DenialOfService)
+	risksSTRIDEElevationOfPrivilege := reduceToSTRIDERisk(parsedModel, parsedModel.GeneratedRisksByCategory, types.ElevationOfPrivilege)
 
-	countSTRIDESpoofing := types.CountRisks(risksSTRIDESpoofing)
-	countSTRIDETampering := types.CountRisks(risksSTRIDETampering)
-	countSTRIDERepudiation := types.CountRisks(risksSTRIDERepudiation)
-	countSTRIDEInformationDisclosure := types.CountRisks(risksSTRIDEInformationDisclosure)
-	countSTRIDEDenialOfService := types.CountRisks(risksSTRIDEDenialOfService)
-	countSTRIDEElevationOfPrivilege := types.CountRisks(risksSTRIDEElevationOfPrivilege)
+	countSTRIDESpoofing := countRisks(risksSTRIDESpoofing)
+	countSTRIDETampering := countRisks(risksSTRIDETampering)
+	countSTRIDERepudiation := countRisks(risksSTRIDERepudiation)
+	countSTRIDEInformationDisclosure := countRisks(risksSTRIDEInformationDisclosure)
+	countSTRIDEDenialOfService := countRisks(risksSTRIDEDenialOfService)
+	countSTRIDEElevationOfPrivilege := countRisks(risksSTRIDEElevationOfPrivilege)
 	var intro strings.Builder
 	intro.WriteString("This chapter clusters and classifies the risks by STRIDE categories: " +
-		"In total <b>" + strconv.Itoa(types.TotalRiskCount(parsedModel)) + " potential risks</b> have been identified during the threat modeling process " +
+		"In total <b>" + strconv.Itoa(totalRiskCount(parsedModel)) + " potential risks</b> have been identified during the threat modeling process " +
 		"of which <b>" + strconv.Itoa(countSTRIDESpoofing) + " in the " + types.Spoofing.Title() + "</b> category, " +
 		"<b>" + strconv.Itoa(countSTRIDETampering) + " in the " + types.Tampering.Title() + "</b> category, " +
 		"<b>" + strconv.Itoa(countSTRIDERepudiation) + " in the " + types.Repudiation.Title() + "</b> category, " +
@@ -1915,15 +2051,15 @@ func (r *pdfReporter) createSTRIDE(parsedModel *types.Model) {
 		r.pdf.SetTextColor(150, 150, 150)
 		html.Write(5, "<br><br>n/a")
 	} else {
-		r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyCriticalRisks(parsedModel, risksSTRIDESpoofing, true)),
+		r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(risksSTRIDESpoofing, true, types.CriticalSeverity)),
 			types.CriticalSeverity, true, true, false, true)
-		r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyHighRisks(parsedModel, risksSTRIDESpoofing, true)),
+		r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(risksSTRIDESpoofing, true, types.HighSeverity)),
 			types.HighSeverity, true, true, false, true)
-		r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyElevatedRisks(parsedModel, risksSTRIDESpoofing, true)),
+		r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(risksSTRIDESpoofing, true, types.ElevatedSeverity)),
 			types.ElevatedSeverity, true, true, false, true)
-		r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyMediumRisks(parsedModel, risksSTRIDESpoofing, true)),
+		r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(risksSTRIDESpoofing, true, types.MediumSeverity)),
 			types.MediumSeverity, true, true, false, true)
-		r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyLowRisks(parsedModel, risksSTRIDESpoofing, true)),
+		r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(risksSTRIDESpoofing, true, types.LowSeverity)),
 			types.LowSeverity, true, true, false, true)
 	}
 	r.pdf.SetLeftMargin(oldLeft)
@@ -1942,15 +2078,15 @@ func (r *pdfReporter) createSTRIDE(parsedModel *types.Model) {
 		r.pdf.SetTextColor(150, 150, 150)
 		html.Write(5, "<br><br>n/a")
 	} else {
-		r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyCriticalRisks(parsedModel, risksSTRIDETampering, true)),
+		r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(risksSTRIDETampering, true, types.CriticalSeverity)),
 			types.CriticalSeverity, true, true, false, true)
-		r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyHighRisks(parsedModel, risksSTRIDETampering, true)),
+		r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(risksSTRIDETampering, true, types.HighSeverity)),
 			types.HighSeverity, true, true, false, true)
-		r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyElevatedRisks(parsedModel, risksSTRIDETampering, true)),
+		r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(risksSTRIDETampering, true, types.ElevatedSeverity)),
 			types.ElevatedSeverity, true, true, false, true)
-		r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyMediumRisks(parsedModel, risksSTRIDETampering, true)),
+		r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(risksSTRIDETampering, true, types.MediumSeverity)),
 			types.MediumSeverity, true, true, false, true)
-		r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyLowRisks(parsedModel, risksSTRIDETampering, true)),
+		r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(risksSTRIDETampering, true, types.LowSeverity)),
 			types.LowSeverity, true, true, false, true)
 	}
 	r.pdf.SetLeftMargin(oldLeft)
@@ -1969,15 +2105,15 @@ func (r *pdfReporter) createSTRIDE(parsedModel *types.Model) {
 		r.pdf.SetTextColor(150, 150, 150)
 		html.Write(5, "<br><br>n/a")
 	} else {
-		r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyCriticalRisks(parsedModel, risksSTRIDERepudiation, true)),
+		r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(risksSTRIDERepudiation, true, types.CriticalSeverity)),
 			types.CriticalSeverity, true, true, false, true)
-		r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyHighRisks(parsedModel, risksSTRIDERepudiation, true)),
+		r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(risksSTRIDERepudiation, true, types.HighSeverity)),
 			types.HighSeverity, true, true, false, true)
-		r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyElevatedRisks(parsedModel, risksSTRIDERepudiation, true)),
+		r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(risksSTRIDERepudiation, true, types.ElevatedSeverity)),
 			types.ElevatedSeverity, true, true, false, true)
-		r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyMediumRisks(parsedModel, risksSTRIDERepudiation, true)),
+		r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(risksSTRIDERepudiation, true, types.MediumSeverity)),
 			types.MediumSeverity, true, true, false, true)
-		r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyLowRisks(parsedModel, risksSTRIDERepudiation, true)),
+		r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(risksSTRIDERepudiation, true, types.LowSeverity)),
 			types.LowSeverity, true, true, false, true)
 	}
 	r.pdf.SetLeftMargin(oldLeft)
@@ -1996,15 +2132,15 @@ func (r *pdfReporter) createSTRIDE(parsedModel *types.Model) {
 		r.pdf.SetTextColor(150, 150, 150)
 		html.Write(5, "<br><br>n/a")
 	} else {
-		r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyCriticalRisks(parsedModel, risksSTRIDEInformationDisclosure, true)),
+		r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(risksSTRIDEInformationDisclosure, true, types.CriticalSeverity)),
 			types.CriticalSeverity, true, true, false, true)
-		r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyHighRisks(parsedModel, risksSTRIDEInformationDisclosure, true)),
+		r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(risksSTRIDEInformationDisclosure, true, types.HighSeverity)),
 			types.HighSeverity, true, true, false, true)
-		r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyElevatedRisks(parsedModel, risksSTRIDEInformationDisclosure, true)),
+		r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(risksSTRIDEInformationDisclosure, true, types.ElevatedSeverity)),
 			types.ElevatedSeverity, true, true, false, true)
-		r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyMediumRisks(parsedModel, risksSTRIDEInformationDisclosure, true)),
+		r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(risksSTRIDEInformationDisclosure, true, types.MediumSeverity)),
 			types.MediumSeverity, true, true, false, true)
-		r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyLowRisks(parsedModel, risksSTRIDEInformationDisclosure, true)),
+		r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(risksSTRIDEInformationDisclosure, true, types.LowSeverity)),
 			types.LowSeverity, true, true, false, true)
 	}
 	r.pdf.SetLeftMargin(oldLeft)
@@ -2023,15 +2159,15 @@ func (r *pdfReporter) createSTRIDE(parsedModel *types.Model) {
 		r.pdf.SetTextColor(150, 150, 150)
 		html.Write(5, "<br><br>n/a")
 	} else {
-		r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyCriticalRisks(parsedModel, risksSTRIDEDenialOfService, true)),
+		r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(risksSTRIDEDenialOfService, true, types.CriticalSeverity)),
 			types.CriticalSeverity, true, true, false, true)
-		r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyHighRisks(parsedModel, risksSTRIDEDenialOfService, true)),
+		r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(risksSTRIDEDenialOfService, true, types.HighSeverity)),
 			types.HighSeverity, true, true, false, true)
-		r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyElevatedRisks(parsedModel, risksSTRIDEDenialOfService, true)),
+		r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(risksSTRIDEDenialOfService, true, types.ElevatedSeverity)),
 			types.ElevatedSeverity, true, true, false, true)
-		r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyMediumRisks(parsedModel, risksSTRIDEDenialOfService, true)),
+		r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(risksSTRIDEDenialOfService, true, types.MediumSeverity)),
 			types.MediumSeverity, true, true, false, true)
-		r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyLowRisks(parsedModel, risksSTRIDEDenialOfService, true)),
+		r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(risksSTRIDEDenialOfService, true, types.LowSeverity)),
 			types.LowSeverity, true, true, false, true)
 	}
 	r.pdf.SetLeftMargin(oldLeft)
@@ -2050,21 +2186,97 @@ func (r *pdfReporter) createSTRIDE(parsedModel *types.Model) {
 		r.pdf.SetTextColor(150, 150, 150)
 		html.Write(5, "<br><br>n/a")
 	} else {
-		r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyCriticalRisks(parsedModel, risksSTRIDEElevationOfPrivilege, true)),
+		r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(risksSTRIDEElevationOfPrivilege, true, types.CriticalSeverity)),
 			types.CriticalSeverity, true, true, false, true)
-		r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyHighRisks(parsedModel, risksSTRIDEElevationOfPrivilege, true)),
+		r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(risksSTRIDEElevationOfPrivilege, true, types.HighSeverity)),
 			types.HighSeverity, true, true, false, true)
-		r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyElevatedRisks(parsedModel, risksSTRIDEElevationOfPrivilege, true)),
+		r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(risksSTRIDEElevationOfPrivilege, true, types.ElevatedSeverity)),
 			types.ElevatedSeverity, true, true, false, true)
-		r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyMediumRisks(parsedModel, risksSTRIDEElevationOfPrivilege, true)),
+		r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(risksSTRIDEElevationOfPrivilege, true, types.MediumSeverity)),
 			types.MediumSeverity, true, true, false, true)
-		r.addCategories(parsedModel, types.GetRiskCategories(parsedModel, types.CategoriesOfOnlyLowRisks(parsedModel, risksSTRIDEElevationOfPrivilege, true)),
+		r.addCategories(parsedModel, getRiskCategories(parsedModel, reduceToSeverityRisk(risksSTRIDEElevationOfPrivilege, true, types.LowSeverity)),
 			types.LowSeverity, true, true, false, true)
 	}
 	r.pdf.SetLeftMargin(oldLeft)
 
 	r.pdf.SetDrawColor(0, 0, 0)
 	r.pdf.SetDashPattern([]float64{}, 0)
+}
+
+func countRisks(risksByCategory map[string][]*types.Risk) int {
+	result := 0
+	for _, risks := range risksByCategory {
+		result += len(risks)
+	}
+	return result
+}
+
+func getRiskCategories(parsedModel *types.Model, categoryIDs []string) []*types.RiskCategory {
+	categoryMap := make(map[string]*types.RiskCategory)
+	for _, categoryId := range categoryIDs {
+		category := types.GetRiskCategory(parsedModel, categoryId)
+		if category != nil {
+			categoryMap[categoryId] = category
+		}
+	}
+
+	categories := make([]*types.RiskCategory, 0)
+	for categoryId := range categoryMap {
+		categories = append(categories, categoryMap[categoryId])
+	}
+
+	return categories
+}
+
+func reduceToSeverityRisk(risksByCategory map[string][]*types.Risk, initialRisks bool, severity types.RiskSeverity) []string {
+	categories := make(map[string]struct{}) // Go's trick of unique elements is a map
+	for categoryId, risks := range risksByCategory {
+		for _, risk := range risks {
+			if !initialRisks && !risk.RiskStatus.IsStillAtRisk() {
+				continue
+			}
+			if risk.Severity == severity {
+				categories[categoryId] = struct{}{}
+			}
+		}
+	}
+	// return as slice (of now unique values)
+	return keysAsSlice(categories)
+}
+
+func reduceToOnlyStillAtRisk(risksByCategory map[string][]*types.Risk) []string {
+	categories := make(map[string]struct{}) // Go's trick of unique elements is a map
+	for categoryId, risks := range risksByCategory {
+		for _, risk := range risks {
+			if !risk.RiskStatus.IsStillAtRisk() {
+				continue
+			}
+			categories[categoryId] = struct{}{}
+		}
+	}
+	// return as slice (of now unique values)
+	return keysAsSlice(categories)
+}
+
+func keysAsSlice(categories map[string]struct{}) []string {
+	result := make([]string, 0, len(categories))
+	for k := range categories {
+		result = append(result, k)
+	}
+	return result
+}
+
+func reduceToSTRIDERisk(parsedModel *types.Model, risksByCategory map[string][]*types.Risk, stride types.STRIDE) map[string][]*types.Risk {
+	result := make(map[string][]*types.Risk)
+	for categoryId, risks := range risksByCategory {
+		for _, risk := range risks {
+			category := types.GetRiskCategory(parsedModel, categoryId)
+			if category != nil && category.STRIDE == stride {
+				result[categoryId] = append(result[categoryId], risk)
+			}
+		}
+	}
+	return result
 }
 
 func (r *pdfReporter) createSecurityRequirements(parsedModel *types.Model) {
@@ -2300,13 +2512,13 @@ func (r *pdfReporter) createRiskCategories(parsedModel *types.Model) {
 	r.defineLinkTarget("{intro-risks-by-vulnerability-category}")
 	html := r.pdf.HTMLBasicNew()
 	var text strings.Builder
-	text.WriteString("In total <b>" + strconv.Itoa(types.TotalRiskCount(parsedModel)) + " potential risks</b> have been identified during the threat modeling process " +
+	text.WriteString("In total <b>" + strconv.Itoa(totalRiskCount(parsedModel)) + " potential risks</b> have been identified during the threat modeling process " +
 		"of which " +
-		"<b>" + strconv.Itoa(len(types.FilteredByOnlyCriticalRisks(parsedModel))) + " are rated as critical</b>, " +
-		"<b>" + strconv.Itoa(len(types.FilteredByOnlyHighRisks(parsedModel))) + " as high</b>, " +
-		"<b>" + strconv.Itoa(len(types.FilteredByOnlyElevatedRisks(parsedModel))) + " as elevated</b>, " +
-		"<b>" + strconv.Itoa(len(types.FilteredByOnlyMediumRisks(parsedModel))) + " as medium</b>, " +
-		"and <b>" + strconv.Itoa(len(types.FilteredByOnlyLowRisks(parsedModel))) + " as low</b>. " +
+		"<b>" + strconv.Itoa(len(filteredBySeverity(parsedModel, types.CriticalSeverity))) + " are rated as critical</b>, " +
+		"<b>" + strconv.Itoa(len(filteredBySeverity(parsedModel, types.HighSeverity))) + " as high</b>, " +
+		"<b>" + strconv.Itoa(len(filteredBySeverity(parsedModel, types.ElevatedSeverity))) + " as elevated</b>, " +
+		"<b>" + strconv.Itoa(len(filteredBySeverity(parsedModel, types.MediumSeverity))) + " as medium</b>, " +
+		"and <b>" + strconv.Itoa(len(filteredBySeverity(parsedModel, types.LowSeverity))) + " as low</b>. " +
 		"<br><br>These risks are distributed across <b>" + strconv.Itoa(len(parsedModel.GeneratedRisksByCategory)) + " vulnerability categories</b>. ")
 	text.WriteString("The following sub-chapters of this section describe each identified risk category.") // TODO more explanation text
 	html.Write(5, text.String())
@@ -2330,12 +2542,12 @@ func (r *pdfReporter) createRiskCategories(parsedModel *types.Model) {
 		default:
 			r.pdfColorBlack()
 		}
-		if len(types.ReduceToOnlyStillAtRisk(parsedModel, risksStr)) == 0 {
+		if len(types.ReduceToOnlyStillAtRisk(risksStr)) == 0 {
 			r.pdfColorBlack()
 		}
 
 		// category title
-		countStillAtRisk := len(types.ReduceToOnlyStillAtRisk(parsedModel, risksStr))
+		countStillAtRisk := len(types.ReduceToOnlyStillAtRisk(risksStr))
 		suffix := strconv.Itoa(countStillAtRisk) + " / " + strconv.Itoa(len(risksStr)) + " Risk"
 		if len(risksStr) != 1 {
 			suffix += "s"
@@ -2567,13 +2779,13 @@ func (r *pdfReporter) createTechnicalAssets(parsedModel *types.Model) {
 	r.defineLinkTarget("{intro-risks-by-technical-asset}")
 	html := r.pdf.HTMLBasicNew()
 	var text strings.Builder
-	text.WriteString("In total <b>" + strconv.Itoa(types.TotalRiskCount(parsedModel)) + " potential risks</b> have been identified during the threat modeling process " +
+	text.WriteString("In total <b>" + strconv.Itoa(totalRiskCount(parsedModel)) + " potential risks</b> have been identified during the threat modeling process " +
 		"of which " +
-		"<b>" + strconv.Itoa(len(types.FilteredByOnlyCriticalRisks(parsedModel))) + " are rated as critical</b>, " +
-		"<b>" + strconv.Itoa(len(types.FilteredByOnlyHighRisks(parsedModel))) + " as high</b>, " +
-		"<b>" + strconv.Itoa(len(types.FilteredByOnlyElevatedRisks(parsedModel))) + " as elevated</b>, " +
-		"<b>" + strconv.Itoa(len(types.FilteredByOnlyMediumRisks(parsedModel))) + " as medium</b>, " +
-		"and <b>" + strconv.Itoa(len(types.FilteredByOnlyLowRisks(parsedModel))) + " as low</b>. " +
+		"<b>" + strconv.Itoa(len(filteredBySeverity(parsedModel, types.CriticalSeverity))) + " are rated as critical</b>, " +
+		"<b>" + strconv.Itoa(len(filteredBySeverity(parsedModel, types.HighSeverity))) + " as high</b>, " +
+		"<b>" + strconv.Itoa(len(filteredBySeverity(parsedModel, types.ElevatedSeverity))) + " as elevated</b>, " +
+		"<b>" + strconv.Itoa(len(filteredBySeverity(parsedModel, types.MediumSeverity))) + " as medium</b>, " +
+		"and <b>" + strconv.Itoa(len(filteredBySeverity(parsedModel, types.LowSeverity))) + " as low</b>. " +
 		"<br><br>These risks are distributed across <b>" + strconv.Itoa(len(parsedModel.InScopeTechnicalAssets())) + " in-scope technical assets</b>. ")
 	text.WriteString("The following sub-chapters of this section describe each identified risk grouped by technical asset. ") // TODO more explanation text
 	text.WriteString("The RAA value of a technical asset is the calculated \"Relative Attacker Attractiveness\" value in percent.")
@@ -2582,7 +2794,7 @@ func (r *pdfReporter) createTechnicalAssets(parsedModel *types.Model) {
 	r.currentChapterTitleBreadcrumb = title
 	for _, technicalAsset := range sortedTechnicalAssetsByRiskSeverityAndTitle(parsedModel) {
 		risksStr := technicalAsset.GeneratedRisks(parsedModel)
-		countStillAtRisk := len(types.ReduceToOnlyStillAtRisk(parsedModel, risksStr))
+		countStillAtRisk := len(types.ReduceToOnlyStillAtRisk(risksStr))
 		suffix := strconv.Itoa(countStillAtRisk) + " / " + strconv.Itoa(len(risksStr)) + " Risk"
 		if len(risksStr) != 1 {
 			suffix += "s"
@@ -2605,7 +2817,7 @@ func (r *pdfReporter) createTechnicalAssets(parsedModel *types.Model) {
 			default:
 				r.pdfColorBlack()
 			}
-			if len(types.ReduceToOnlyStillAtRisk(parsedModel, risksStr)) == 0 {
+			if len(types.ReduceToOnlyStillAtRisk(risksStr)) == 0 {
 				r.pdfColorBlack()
 			}
 		}
@@ -3370,6 +3582,18 @@ func (r *pdfReporter) createTechnicalAssets(parsedModel *types.Model) {
 	}
 }
 
+func filteredBySeverity(parsedModel *types.Model, severity types.RiskSeverity) []*types.Risk {
+	filteredRisks := make([]*types.Risk, 0)
+	for _, risks := range parsedModel.GeneratedRisksByCategory {
+		for _, risk := range risks {
+			if risk.Severity == severity {
+				filteredRisks = append(filteredRisks, risk)
+			}
+		}
+	}
+	return filteredRisks
+}
+
 func (r *pdfReporter) createDataAssets(parsedModel *types.Model) {
 	uni := r.pdf.UnicodeTranslatorFromDescriptor("")
 	title := "Identified Data Breach Probabilities by Data Asset"
@@ -3377,13 +3601,13 @@ func (r *pdfReporter) createDataAssets(parsedModel *types.Model) {
 	r.addHeadline(title, false)
 	r.defineLinkTarget("{intro-risks-by-data-asset}")
 	html := r.pdf.HTMLBasicNew()
-	html.Write(5, "In total <b>"+strconv.Itoa(types.TotalRiskCount(parsedModel))+" potential risks</b> have been identified during the threat modeling process "+
+	html.Write(5, "In total <b>"+strconv.Itoa(totalRiskCount(parsedModel))+" potential risks</b> have been identified during the threat modeling process "+
 		"of which "+
-		"<b>"+strconv.Itoa(len(types.FilteredByOnlyCriticalRisks(parsedModel)))+" are rated as critical</b>, "+
-		"<b>"+strconv.Itoa(len(types.FilteredByOnlyHighRisks(parsedModel)))+" as high</b>, "+
-		"<b>"+strconv.Itoa(len(types.FilteredByOnlyElevatedRisks(parsedModel)))+" as elevated</b>, "+
-		"<b>"+strconv.Itoa(len(types.FilteredByOnlyMediumRisks(parsedModel)))+" as medium</b>, "+
-		"and <b>"+strconv.Itoa(len(types.FilteredByOnlyLowRisks(parsedModel)))+" as low</b>. "+
+		"<b>"+strconv.Itoa(len(filteredBySeverity(parsedModel, types.CriticalSeverity)))+" are rated as critical</b>, "+
+		"<b>"+strconv.Itoa(len(filteredBySeverity(parsedModel, types.HighSeverity)))+" as high</b>, "+
+		"<b>"+strconv.Itoa(len(filteredBySeverity(parsedModel, types.ElevatedSeverity)))+" as elevated</b>, "+
+		"<b>"+strconv.Itoa(len(filteredBySeverity(parsedModel, types.MediumSeverity)))+" as medium</b>, "+
+		"and <b>"+strconv.Itoa(len(filteredBySeverity(parsedModel, types.LowSeverity)))+" as low</b>. "+
 		"<br><br>These risks are distributed across <b>"+strconv.Itoa(len(parsedModel.DataAssets))+" data assets</b>. ")
 	html.Write(5, "The following sub-chapters of this section describe the derived data breach probabilities grouped by data asset.<br>") // TODO more explanation text
 	r.pdf.SetFont("Helvetica", "", fontSizeSmall)
@@ -3399,7 +3623,7 @@ func (r *pdfReporter) createDataAssets(parsedModel *types.Model) {
 			html.Write(5, "<br><br><br>")
 		}
 		r.pdfColorBlack()
-		switch dataAsset.IdentifiedDataBreachProbabilityStillAtRisk(parsedModel) {
+		switch identifiedDataBreachProbabilityStillAtRisk(parsedModel, dataAsset) {
 		case types.Probable:
 			colorHighRisk(r.pdf)
 		case types.Possible:
@@ -3409,11 +3633,11 @@ func (r *pdfReporter) createDataAssets(parsedModel *types.Model) {
 		default:
 			r.pdfColorBlack()
 		}
-		if !dataAsset.IsDataBreachPotentialStillAtRisk(parsedModel) {
+		if !isDataBreachPotentialStillAtRisk(parsedModel, dataAsset) {
 			r.pdfColorBlack()
 		}
 		risksStr := dataAsset.IdentifiedDataBreachProbabilityRisks(parsedModel)
-		countStillAtRisk := len(types.ReduceToOnlyStillAtRisk(parsedModel, risksStr))
+		countStillAtRisk := len(types.ReduceToOnlyStillAtRisk(risksStr))
 		suffix := strconv.Itoa(countStillAtRisk) + " / " + strconv.Itoa(len(risksStr)) + " Risk"
 		if len(risksStr) != 1 {
 			suffix += "s"
@@ -3426,35 +3650,6 @@ func (r *pdfReporter) createDataAssets(parsedModel *types.Model) {
 		html.Write(5, "<br><br>")
 
 		r.pdf.SetFont("Helvetica", "", fontSizeBody)
-		/*
-			r.pdfColorGray()
-			r.pdf.CellFormat(5, 6, "", "0", 0, "", false, 0, "")
-			r.pdf.CellFormat(40, 6, "Indirect Breach:", "0", 0, "", false, 0, "")
-			r.pdfColorBlack()
-			r.pdf.SetFont("Helvetica", "B", fontSizeBody)
-			probability := dataAsset.IdentifiedDataBreachProbability()
-			dataBreachText := probability.String()
-			switch probability {
-			case model.Probable:
-				colorHighRisk(r.pdf)
-			case model.Possible:
-				colorMediumRisk(r.pdf)
-			case model.Improbable:
-				colorLowRisk(r.pdf)
-			default:
-				r.pdfColorBlack()
-			}
-			if !dataAsset.IsDataBreachPotentialStillAtRisk() {
-				r.pdfColorBlack()
-				dataBreachText = "none"
-			}
-			r.pdf.MultiCell(145, 6, dataBreachText, "0", "0", false)
-			r.pdf.SetFont("Helvetica", "", fontSizeBody)
-			if r.pdf.GetY() > 265 {
-				r.pageBreak()
-				r.pdf.SetY(36)
-			}
-		*/
 		r.pdfColorGray()
 		r.pdf.CellFormat(5, 6, "", "0", 0, "", false, 0, "")
 		r.pdf.CellFormat(40, 6, "ID:", "0", 0, "", false, 0, "")
@@ -3651,73 +3846,12 @@ func (r *pdfReporter) createDataAssets(parsedModel *types.Model) {
 		}
 		r.pdf.MultiCell(145, 6, uni(receivedViaText), "0", "0", false)
 
-		/*
-			// where is this data asset at risk (i.e. why)
-			risksByTechAssetId := dataAsset.IdentifiedRisksByResponsibleTechnicalAssetId()
-			techAssetsResponsible := make([]model.TechnicalAsset, 0)
-			for techAssetId, _ := range risksByTechAssetId {
-				techAssetsResponsible = append(techAssetsResponsible, parsedModel.TechnicalAssets[techAssetId])
-			}
-			sort.Sort(model.ByTechnicalAssetRiskSeverityAndTitleSortStillAtRisk(techAssetsResponsible))
-			assetStr := "assets"
-			if len(techAssetsResponsible) == 1 {
-				assetStr = "asset"
-			}
-			if r.pdf.GetY() > 265 {
-				r.pageBreak()
-				r.pdf.SetY(36)
-			}
-			r.pdfColorGray()
-			r.pdf.CellFormat(5, 6, "", "0", 0, "", false, 0, "")
-			r.pdf.CellFormat(40, 6, "Risk via:", "0", 0, "", false, 0, "")
-			if len(techAssetsResponsible) == 0 {
-				r.pdfColorGray()
-				r.pdf.MultiCell(145, 6, "This data asset is not directly at risk via any technical asset.", "0", "0", false)
-			} else {
-				r.pdfColorBlack()
-				r.pdf.MultiCell(145, 6, "This data asset is at direct risk via "+strconv.Itoa(len(techAssetsResponsible))+" technical "+assetStr+":", "0", "0", false)
-				for _, techAssetResponsible := range techAssetsResponsible {
-					if r.pdf.GetY() > 265 {
-						r.pageBreak()
-						r.pdf.SetY(36)
-					}
-					switch model.HighestSeverityStillAtRisk(techAssetResponsible.GeneratedRisks()) {
-					case model.High:
-						colorHighRisk(r.pdf)
-					case model.Medium:
-						colorMediumRisk(r.pdf)
-					case model.Low:
-						colorLowRisk(r.pdf)
-					default:
-						r.pdfColorBlack()
-					}
-					risksStr := techAssetResponsible.GeneratedRisks()
-					if len(model.ReduceToOnlyStillAtRisk(risksStr)) == 0 {
-						r.pdfColorBlack()
-					}
-					riskStr := "risksStr"
-					if len(risksStr) == 1 {
-						riskStr = "risk"
-					}
-					r.pdf.CellFormat(10, 6, "", "0", 0, "", false, 0, "")
-					posY := r.pdf.GetY()
-					risksResponsible := techAssetResponsible.GeneratedRisks()
-					risksResponsibleStillAtRisk := model.ReduceToOnlyStillAtRisk(risksResponsible)
-					r.pdf.SetFont("Helvetica", "", fontSizeSmall)
-					r.pdf.MultiCell(185, 6, uni(techAssetResponsible.Title)+": "+strconv.Itoa(len(risksResponsibleStillAtRisk))+" / "+strconv.Itoa(len(risksResponsible))+" "+riskStr, "0", "0", false)
-					r.pdf.SetFont("Helvetica", "", fontSizeBody)
-					r.pdf.Link(20, posY, 180, r.pdf.GetY()-posY, tocLinkIdByAssetId[techAssetResponsible.ID])
-				}
-				r.pdfColorBlack()
-			}
-		*/
-
 		r.pdfColorGray()
 		r.pdf.CellFormat(5, 6, "", "0", 0, "", false, 0, "")
 		r.pdf.CellFormat(40, 6, "Data Breach:", "0", 0, "", false, 0, "")
 		r.pdfColorBlack()
 		r.pdf.SetFont("Helvetica", "B", fontSizeBody)
-		dataBreachProbability := dataAsset.IdentifiedDataBreachProbabilityStillAtRisk(parsedModel)
+		dataBreachProbability := identifiedDataBreachProbabilityStillAtRisk(parsedModel, dataAsset)
 		riskText := dataBreachProbability.String()
 		switch dataBreachProbability {
 		case types.Probable:
@@ -3729,7 +3863,7 @@ func (r *pdfReporter) createDataAssets(parsedModel *types.Model) {
 		default:
 			r.pdfColorBlack()
 		}
-		if !dataAsset.IsDataBreachPotentialStillAtRisk(parsedModel) {
+		if !isDataBreachPotentialStillAtRisk(parsedModel, dataAsset) {
 			r.pdfColorBlack()
 			riskText = "none"
 		}
@@ -3741,8 +3875,8 @@ func (r *pdfReporter) createDataAssets(parsedModel *types.Model) {
 		}
 
 		// how can is this data asset be indirectly lost (i.e. why)
-		dataBreachRisksStillAtRisk := dataAsset.IdentifiedDataBreachProbabilityRisksStillAtRisk(parsedModel)
-		types.SortByDataBreachProbability(dataBreachRisksStillAtRisk, parsedModel)
+		dataBreachRisksStillAtRisk := identifiedDataBreachProbabilityRisksStillAtRisk(parsedModel, dataAsset)
+		sortByDataBreachProbability(dataBreachRisksStillAtRisk, parsedModel)
 		if r.pdf.GetY() > 265 {
 			r.pageBreak()
 			r.pdf.SetY(36)
@@ -3789,6 +3923,81 @@ func (r *pdfReporter) createDataAssets(parsedModel *types.Model) {
 			r.pdfColorBlack()
 		}
 	}
+}
+
+func sortByDataBreachProbability(risks []*types.Risk, parsedModel *types.Model) {
+	sort.Slice(risks, func(i, j int) bool {
+
+		if risks[i].DataBreachProbability == risks[j].DataBreachProbability {
+			trackingStatusLeft := risks[i].RiskStatus
+			trackingStatusRight := risks[j].RiskStatus
+			if trackingStatusLeft == trackingStatusRight {
+				return risks[i].Title < risks[j].Title
+			} else {
+				return trackingStatusLeft < trackingStatusRight
+			}
+		}
+		return risks[i].DataBreachProbability > risks[j].DataBreachProbability
+	})
+}
+
+func identifiedDataBreachProbabilityRisksStillAtRisk(parsedModel *types.Model, dataAsset *types.DataAsset) []*types.Risk {
+	result := make([]*types.Risk, 0)
+	for _, risk := range filteredByStillAtRisk(parsedModel) {
+		for _, techAsset := range risk.DataBreachTechnicalAssetIDs {
+			if contains(parsedModel.TechnicalAssets[techAsset].DataAssetsProcessed, dataAsset.Id) {
+				result = append(result, risk)
+				break
+			}
+		}
+	}
+	return result
+}
+
+func identifiedDataBreachProbabilityStillAtRisk(parsedModel *types.Model, dataAsset *types.DataAsset) types.DataBreachProbability {
+	highestProbability := types.Improbable
+	for _, risk := range filteredByStillAtRisk(parsedModel) {
+		for _, techAsset := range risk.DataBreachTechnicalAssetIDs {
+			if contains(parsedModel.TechnicalAssets[techAsset].DataAssetsProcessed, dataAsset.Id) {
+				if risk.DataBreachProbability > highestProbability {
+					highestProbability = risk.DataBreachProbability
+					break
+				}
+			}
+		}
+	}
+	return highestProbability
+}
+
+func isDataBreachPotentialStillAtRisk(parsedModel *types.Model, dataAsset *types.DataAsset) bool {
+	for _, risk := range filteredByStillAtRisk(parsedModel) {
+		for _, techAsset := range risk.DataBreachTechnicalAssetIDs {
+			if contains(parsedModel.TechnicalAssets[techAsset].DataAssetsProcessed, dataAsset.Id) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func filteredByStillAtRisk(parsedModel *types.Model) []*types.Risk {
+	filteredRisks := make([]*types.Risk, 0)
+	for _, risks := range parsedModel.GeneratedRisksByCategory {
+		for _, risk := range risks {
+			if risk.RiskStatus.IsStillAtRisk() {
+				filteredRisks = append(filteredRisks, risk)
+			}
+		}
+	}
+	return filteredRisks
+}
+
+func totalRiskCount(parsedModel *types.Model) int {
+	count := 0
+	for _, risks := range parsedModel.GeneratedRisksByCategory {
+		count += len(risks)
+	}
+	return count
 }
 
 func (r *pdfReporter) createTrustBoundaries(parsedModel *types.Model) {

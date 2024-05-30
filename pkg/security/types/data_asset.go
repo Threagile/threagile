@@ -31,37 +31,6 @@ func (what DataAsset) IsTaggedWithBaseTag(baseTag string) bool {
 	return IsTaggedWithBaseTag(what.Tags, baseTag)
 }
 
-func (what DataAsset) IdentifiedRisksByResponsibleTechnicalAssetId(model *Model) map[string][]*Risk {
-	uniqueTechAssetIDsResponsibleForThisDataAsset := make(map[string]interface{})
-	for _, techAsset := range what.ProcessedByTechnicalAssetsSorted(model) {
-		if len(techAsset.GeneratedRisks(model)) > 0 {
-			uniqueTechAssetIDsResponsibleForThisDataAsset[techAsset.Id] = true
-		}
-	}
-	for _, techAsset := range what.StoredByTechnicalAssetsSorted(model) {
-		if len(techAsset.GeneratedRisks(model)) > 0 {
-			uniqueTechAssetIDsResponsibleForThisDataAsset[techAsset.Id] = true
-		}
-	}
-
-	result := make(map[string][]*Risk)
-	for techAssetId := range uniqueTechAssetIDsResponsibleForThisDataAsset {
-		result[techAssetId] = append(result[techAssetId], model.TechnicalAssets[techAssetId].GeneratedRisks(model)...)
-	}
-	return result
-}
-
-func (what DataAsset) IsDataBreachPotentialStillAtRisk(parsedModel *Model) bool {
-	for _, risk := range FilteredByStillAtRisk(parsedModel) {
-		for _, techAsset := range risk.DataBreachTechnicalAssetIDs {
-			if contains(parsedModel.TechnicalAssets[techAsset].DataAssetsProcessed, what.Id) {
-				return true
-			}
-		}
-	}
-	return false
-}
-
 func (what DataAsset) IdentifiedDataBreachProbability(parsedModel *Model) DataBreachProbability {
 	highestProbability := Improbable
 	for _, risk := range AllRisks(parsedModel) {
@@ -75,34 +44,6 @@ func (what DataAsset) IdentifiedDataBreachProbability(parsedModel *Model) DataBr
 		}
 	}
 	return highestProbability
-}
-
-func (what DataAsset) IdentifiedDataBreachProbabilityStillAtRisk(parsedModel *Model) DataBreachProbability {
-	highestProbability := Improbable
-	for _, risk := range FilteredByStillAtRisk(parsedModel) {
-		for _, techAsset := range risk.DataBreachTechnicalAssetIDs {
-			if contains(parsedModel.TechnicalAssets[techAsset].DataAssetsProcessed, what.Id) {
-				if risk.DataBreachProbability > highestProbability {
-					highestProbability = risk.DataBreachProbability
-					break
-				}
-			}
-		}
-	}
-	return highestProbability
-}
-
-func (what DataAsset) IdentifiedDataBreachProbabilityRisksStillAtRisk(parsedModel *Model) []*Risk {
-	result := make([]*Risk, 0)
-	for _, risk := range FilteredByStillAtRisk(parsedModel) {
-		for _, techAsset := range risk.DataBreachTechnicalAssetIDs {
-			if contains(parsedModel.TechnicalAssets[techAsset].DataAssetsProcessed, what.Id) {
-				result = append(result, risk)
-				break
-			}
-		}
-	}
-	return result
 }
 
 func (what DataAsset) IdentifiedDataBreachProbabilityRisks(parsedModel *Model) []*Risk {
@@ -172,36 +113,6 @@ func (what DataAsset) ReceivedViaCommLinksSorted(parsedModel *Model) []*Communic
 	}
 	sort.Sort(ByTechnicalCommunicationLinkTitleSort(result))
 	return result
-}
-
-func SortByDataAssetDataBreachProbabilityAndTitle(parsedModel *Model, assets []*DataAsset) {
-	sort.Slice(assets, func(i, j int) bool {
-		highestDataBreachProbabilityLeft := assets[i].IdentifiedDataBreachProbability(parsedModel)
-		highestDataBreachProbabilityRight := assets[j].IdentifiedDataBreachProbability(parsedModel)
-		if highestDataBreachProbabilityLeft == highestDataBreachProbabilityRight {
-			return assets[i].Title < assets[j].Title
-		}
-		return highestDataBreachProbabilityLeft > highestDataBreachProbabilityRight
-	})
-}
-
-func SortByDataAssetDataBreachProbabilityAndTitleStillAtRisk(parsedModel *Model, assets []*DataAsset) {
-	sort.Slice(assets, func(i, j int) bool {
-		risksLeft := assets[i].IdentifiedDataBreachProbabilityRisksStillAtRisk(parsedModel)
-		risksRight := assets[j].IdentifiedDataBreachProbabilityRisksStillAtRisk(parsedModel)
-		highestDataBreachProbabilityLeft := assets[i].IdentifiedDataBreachProbabilityStillAtRisk(parsedModel)
-		highestDataBreachProbabilityRight := assets[j].IdentifiedDataBreachProbabilityStillAtRisk(parsedModel)
-		if highestDataBreachProbabilityLeft == highestDataBreachProbabilityRight {
-			if len(risksLeft) == 0 && len(risksRight) > 0 {
-				return false
-			}
-			if len(risksLeft) > 0 && len(risksRight) == 0 {
-				return true
-			}
-			return assets[i].Title < assets[j].Title
-		}
-		return highestDataBreachProbabilityLeft > highestDataBreachProbabilityRight
-	})
 }
 
 type ByDataAssetTitleSort []*DataAsset
