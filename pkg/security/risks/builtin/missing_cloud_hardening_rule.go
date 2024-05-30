@@ -128,7 +128,7 @@ func (r *MissingCloudHardeningRule) GenerateRisks(input *types.Model) ([]*types.
 			}
 		}
 	}
-	for _, sR := range input.SharedRuntimesTaggedWithAny(r.SupportedTags()...) {
+	for _, sR := range input.SharedRuntimes {
 		r.addSharedRuntimeAccordingToBaseTag(sR, sharedRuntimesWithUnspecificCloudRisks,
 			sharedRuntimeIDsAWS, sharedRuntimeIDsAzure, sharedRuntimeIDsGCP, sharedRuntimeIDsOCP)
 		for _, candidateID := range sR.TechnicalAssetsRunning {
