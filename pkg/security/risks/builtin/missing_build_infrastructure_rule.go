@@ -48,26 +48,6 @@ func (r *MissingBuildInfrastructureRule) GenerateRisks(input *types.Model) ([]*t
 	var mostRelevantAsset *types.TechnicalAsset
 	for _, id := range input.SortedTechnicalAssetIDs() { // use the sorted one to always get the same tech asset with the highest sensitivity as example asset
 		technicalAsset := input.TechnicalAssets[id]
-		if technicalAsset.CustomDevelopedParts && !technicalAsset.OutOfScope {
-			hasCustomDevelopedParts = true
-			if impact == types.LowImpact {
-				mostRelevantAsset = technicalAsset
-				if technicalAsset.HighestProcessedConfidentiality(input) >= types.Confidential ||
-					technicalAsset.HighestProcessedIntegrity(input) >= types.Critical ||
-					technicalAsset.HighestProcessedAvailability(input) >= types.Critical {
-					impact = types.MediumImpact
-				}
-			}
-			if technicalAsset.Confidentiality >= types.Confidential ||
-				technicalAsset.Integrity >= types.Critical ||
-				technicalAsset.Availability >= types.Critical {
-				impact = types.MediumImpact
-			}
-			// just for referencing the most interesting asset
-			if technicalAsset.HighestSensitivityScore() > mostRelevantAsset.HighestSensitivityScore() {
-				mostRelevantAsset = technicalAsset
-			}
-		}
 		if technicalAsset.Technologies.GetAttribute(types.BuildPipeline) {
 			hasBuildPipeline = true
 		}
@@ -76,6 +56,27 @@ func (r *MissingBuildInfrastructureRule) GenerateRisks(input *types.Model) ([]*t
 		}
 		if technicalAsset.Technologies.GetAttribute(types.DevOpsClient) {
 			hasDevOpsClient = true
+		}
+		if !technicalAsset.CustomDevelopedParts || technicalAsset.OutOfScope {
+			continue
+		}
+		hasCustomDevelopedParts = true
+		if impact == types.LowImpact {
+			mostRelevantAsset = technicalAsset
+			if technicalAsset.HighestProcessedConfidentiality(input) >= types.Confidential ||
+				technicalAsset.HighestProcessedIntegrity(input) >= types.Critical ||
+				technicalAsset.HighestProcessedAvailability(input) >= types.Critical {
+				impact = types.MediumImpact
+			}
+		}
+		if technicalAsset.Confidentiality >= types.Confidential ||
+			technicalAsset.Integrity >= types.Critical ||
+			technicalAsset.Availability >= types.Critical {
+			impact = types.MediumImpact
+		}
+		// just for referencing the most interesting asset
+		if technicalAsset.HighestSensitivityScore() > mostRelevantAsset.HighestSensitivityScore() {
+			mostRelevantAsset = technicalAsset
 		}
 	}
 	hasBuildInfrastructure := hasBuildPipeline && hasSourcecodeRepo && hasDevOpsClient
