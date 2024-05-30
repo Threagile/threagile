@@ -76,8 +76,7 @@ func TestMissingHardeningRuleNoRisksCreated(t *testing.T) {
 				},
 			}
 			input.TechnicalAssets["ta1"].RAA = float64(testCase.raa)
-			tech := input.TechnicalAssets["ta1"].Technologies[0]
-			tech.Attributes[testCase.enabledAttribute] = true
+			input.TechnicalAssets["ta1"].Technologies[0].Attributes[testCase.enabledAttribute] = true
 			risks, err := rule.GenerateRisks(input)
 
 			assert.Nil(t, err)
