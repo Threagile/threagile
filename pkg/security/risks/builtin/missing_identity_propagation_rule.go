@@ -52,32 +52,33 @@ func (r *MissingIdentityPropagationRule) GenerateRisks(input *types.Model) ([]*t
 		if technicalAsset.OutOfScope {
 			continue
 		}
-		if technicalAsset.Technologies.GetAttribute(types.IsUsuallyProcessingEndUserRequests) &&
-			(technicalAsset.Confidentiality >= types.Confidential ||
-				technicalAsset.Integrity >= types.Critical ||
-				technicalAsset.Availability >= types.Critical ||
-				(technicalAsset.MultiTenant &&
-					(technicalAsset.Confidentiality >= types.Restricted ||
-						technicalAsset.Integrity >= types.Important ||
-						technicalAsset.Availability >= types.Important))) {
-			// check each incoming authenticated data flow
-			commLinks := input.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id]
-			for _, commLink := range commLinks {
-				caller := input.TechnicalAssets[commLink.SourceId]
-				if !caller.Technologies.GetAttribute(types.IsUsuallyAbleToPropagateIdentityToOutgoingTargets) || caller.Type == types.Datastore {
-					continue
-				}
-				if commLink.Authentication != types.NoneAuthentication &&
-					commLink.Authorization != types.EndUserIdentityPropagation {
-					if commLink.Usage == types.DevOps && commLink.Authorization != types.NoneAuthorization {
-						continue
-					}
-					highRisk := technicalAsset.Confidentiality == types.StrictlyConfidential ||
-						technicalAsset.Integrity == types.MissionCritical ||
-						technicalAsset.Availability == types.MissionCritical
-					risks = append(risks, r.createRisk(input, technicalAsset, commLink, highRisk))
-				}
+		if !technicalAsset.Technologies.GetAttribute(types.IsUsuallyProcessingEndUserRequests) {
+			continue
+		}
+		if technicalAsset.MultiTenant && technicalAsset.Confidentiality < types.Restricted && technicalAsset.Integrity < types.Important && technicalAsset.Availability < types.Important {
+			continue
+		}
+		if !technicalAsset.MultiTenant && technicalAsset.Confidentiality < types.Confidential && technicalAsset.Integrity < types.Critical && technicalAsset.Availability < types.Critical {
+			continue
+		}
+
+		// check each incoming authenticated data flow
+		commLinks := input.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id]
+		for _, commLink := range commLinks {
+			caller := input.TechnicalAssets[commLink.SourceId]
+			if !caller.Technologies.GetAttribute(types.IsUsuallyAbleToPropagateIdentityToOutgoingTargets) || caller.Type == types.Datastore {
+				continue
 			}
+			if commLink.Authentication == types.NoneAuthentication || commLink.Authorization == types.EndUserIdentityPropagation {
+				continue
+			}
+			if commLink.Usage == types.DevOps && commLink.Authorization != types.NoneAuthorization {
+				continue
+			}
+			highRisk := technicalAsset.Confidentiality == types.StrictlyConfidential ||
+				technicalAsset.Integrity == types.MissionCritical ||
+				technicalAsset.Availability == types.MissionCritical
+			risks = append(risks, r.createRisk(input, technicalAsset, commLink, highRisk))
 		}
 	}
 	return risks, nil
