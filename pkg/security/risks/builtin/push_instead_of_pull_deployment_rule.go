@@ -45,19 +45,26 @@ func (r *PushInsteadPullDeploymentRule) GenerateRisks(input *types.Model) ([]*ty
 	risks := make([]*types.Risk, 0)
 	impact := types.LowImpact
 	for _, buildPipeline := range input.TechnicalAssets {
-		if buildPipeline.Technologies.GetAttribute(types.BuildPipeline) {
-			for _, deploymentLink := range buildPipeline.CommunicationLinks {
-				targetAsset := input.TechnicalAssets[deploymentLink.TargetId]
-				if !deploymentLink.Readonly && deploymentLink.Usage == types.DevOps &&
-					!targetAsset.OutOfScope && !targetAsset.Technologies.GetAttribute(types.IsDevelopmentRelevant) && targetAsset.Usage == types.Business {
-					if targetAsset.HighestProcessedConfidentiality(input) >= types.Confidential ||
-						targetAsset.HighestProcessedIntegrity(input) >= types.Critical ||
-						targetAsset.HighestProcessedAvailability(input) >= types.Critical {
-						impact = types.MediumImpact
-					}
-					risks = append(risks, r.createRisk(buildPipeline, targetAsset, deploymentLink, impact))
-				}
+		if !buildPipeline.Technologies.GetAttribute(types.BuildPipeline) {
+			continue
+		}
+		for _, deploymentLink := range buildPipeline.CommunicationLinks {
+			targetAsset := input.TechnicalAssets[deploymentLink.TargetId]
+			if deploymentLink.Readonly || deploymentLink.Usage != types.DevOps {
+				continue
 			}
+			if targetAsset.OutOfScope {
+				continue
+			}
+			if targetAsset.Technologies.GetAttribute(types.IsDevelopmentRelevant) || targetAsset.Usage == types.DevOps {
+				continue
+			}
+			if targetAsset.HighestProcessedConfidentiality(input) >= types.Confidential ||
+				targetAsset.HighestProcessedIntegrity(input) >= types.Critical ||
+				targetAsset.HighestProcessedAvailability(input) >= types.Critical {
+				impact = types.MediumImpact
+			}
+			risks = append(risks, r.createRisk(buildPipeline, targetAsset, deploymentLink, impact))
 		}
 	}
 	return risks, nil

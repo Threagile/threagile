@@ -125,7 +125,7 @@ func TestPushInsteadPullDeploymentRuleGenerateRisksTargetOutOfScopeWithBuildPipe
 					{
 						TargetId: "ta2",
 						Readonly: false,
-						Usage:    types.Business,
+						Usage:    types.DevOps,
 					},
 				},
 			},
