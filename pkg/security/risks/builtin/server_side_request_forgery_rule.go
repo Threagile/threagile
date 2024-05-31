@@ -70,14 +70,16 @@ func (r *ServerSideRequestForgeryRule) createRisk(input *types.Model, technicalA
 	uniqueDataBreachTechnicalAssetIDs := make(map[string]interface{})
 	uniqueDataBreachTechnicalAssetIDs[technicalAsset.Id] = true
 	for _, potentialTargetAsset := range input.TechnicalAssets {
-		if technicalAsset.IsSameTrustBoundaryNetworkOnly(input, potentialTargetAsset.Id) {
-			for _, commLinkIncoming := range input.IncomingTechnicalCommunicationLinksMappedByTargetId[potentialTargetAsset.Id] {
-				if commLinkIncoming.Protocol.IsPotentialWebAccessProtocol() {
-					uniqueDataBreachTechnicalAssetIDs[potentialTargetAsset.Id] = true
-					if potentialTargetAsset.HighestProcessedConfidentiality(input) == types.StrictlyConfidential {
-						impact = types.MediumImpact
-					}
-				}
+		if !technicalAsset.IsSameTrustBoundaryNetworkOnly(input, potentialTargetAsset.Id) {
+			continue
+		}
+		for _, commLinkIncoming := range input.IncomingTechnicalCommunicationLinksMappedByTargetId[potentialTargetAsset.Id] {
+			if !commLinkIncoming.Protocol.IsPotentialWebAccessProtocol() {
+				continue
+			}
+			uniqueDataBreachTechnicalAssetIDs[potentialTargetAsset.Id] = true
+			if potentialTargetAsset.HighestProcessedConfidentiality(input) == types.StrictlyConfidential {
+				impact = types.MediumImpact
 			}
 		}
 	}
