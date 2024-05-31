@@ -49,6 +49,7 @@ func (r *MissingVaultRule) GenerateRisks(input *types.Model) ([]*types.Risk, err
 		techAsset := input.TechnicalAssets[id]
 		if techAsset.Technologies.GetAttribute(types.Vault) {
 			hasVault = true
+			break
 		}
 		if techAsset.HighestProcessedConfidentiality(input) >= types.Confidential ||
 			techAsset.HighestProcessedIntegrity(input) >= types.Critical ||
