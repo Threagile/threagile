@@ -54,26 +54,27 @@ func (r *MissingIdentityStoreRule) GenerateRisks(input *types.Model) ([]*types.R
 	for _, id := range input.SortedTechnicalAssetIDs() { // use the sorted one to always get the same tech asset with the highest sensitivity as example asset
 		technicalAsset := input.TechnicalAssets[id]
 		for _, commLink := range technicalAsset.CommunicationLinksSorted() { // use the sorted one to always get the same tech asset with the highest sensitivity as example asset
-			if commLink.Authorization == types.EndUserIdentityPropagation {
-				riskIdentified = true
-				targetAsset := input.TechnicalAssets[commLink.TargetId]
-				if impact == types.LowImpact {
-					mostRelevantAsset = targetAsset
-					if targetAsset.HighestProcessedConfidentiality(input) >= types.Confidential ||
-						targetAsset.HighestProcessedIntegrity(input) >= types.Critical ||
-						targetAsset.HighestProcessedAvailability(input) >= types.Critical {
-						impact = types.MediumImpact
-					}
-				}
-				if targetAsset.Confidentiality >= types.Confidential ||
-					targetAsset.Integrity >= types.Critical ||
-					targetAsset.Availability >= types.Critical {
+			if commLink.Authorization != types.EndUserIdentityPropagation {
+				continue
+			}
+			riskIdentified = true
+			targetAsset := input.TechnicalAssets[commLink.TargetId]
+			if impact == types.LowImpact {
+				mostRelevantAsset = targetAsset
+				if targetAsset.HighestProcessedConfidentiality(input) >= types.Confidential ||
+					targetAsset.HighestProcessedIntegrity(input) >= types.Critical ||
+					targetAsset.HighestProcessedAvailability(input) >= types.Critical {
 					impact = types.MediumImpact
 				}
-				// just for referencing the most interesting asset
-				if technicalAsset.HighestSensitivityScore() > mostRelevantAsset.HighestSensitivityScore() {
-					mostRelevantAsset = technicalAsset
-				}
+			}
+			if targetAsset.Confidentiality >= types.Confidential ||
+				targetAsset.Integrity >= types.Critical ||
+				targetAsset.Availability >= types.Critical {
+				impact = types.MediumImpact
+			}
+			// just for referencing the most interesting asset
+			if technicalAsset.HighestSensitivityScore() > mostRelevantAsset.HighestSensitivityScore() {
+				mostRelevantAsset = technicalAsset
 			}
 		}
 	}
