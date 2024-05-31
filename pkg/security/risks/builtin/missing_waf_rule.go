@@ -42,15 +42,19 @@ func (*MissingWafRule) SupportedTags() []string {
 func (r *MissingWafRule) GenerateRisks(input *types.Model) ([]*types.Risk, error) {
 	risks := make([]*types.Risk, 0)
 	for _, technicalAsset := range input.TechnicalAssets {
-		if !technicalAsset.OutOfScope &&
-			(technicalAsset.Technologies.GetAttribute(types.WebApplication) || technicalAsset.Technologies.GetAttribute(types.IsWebService)) {
-			for _, incomingAccess := range input.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id] {
-				if incomingAccess.IsAcrossTrustBoundaryNetworkOnly(input) &&
-					incomingAccess.Protocol.IsPotentialWebAccessProtocol() &&
-					!input.TechnicalAssets[incomingAccess.SourceId].Technologies.GetAttribute(types.WAF) {
-					risks = append(risks, r.createRisk(input, technicalAsset))
-					break
-				}
+		if technicalAsset.OutOfScope {
+			continue
+		}
+		if !technicalAsset.Technologies.GetAttribute(types.WebApplication) &&
+			!technicalAsset.Technologies.GetAttribute(types.IsWebService) {
+			continue
+		}
+		for _, incomingAccess := range input.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id] {
+			if incomingAccess.IsAcrossTrustBoundaryNetworkOnly(input) &&
+				incomingAccess.Protocol.IsPotentialWebAccessProtocol() &&
+				!input.TechnicalAssets[incomingAccess.SourceId].Technologies.GetAttribute(types.WAF) {
+				risks = append(risks, r.createRisk(input, technicalAsset))
+				break
 			}
 		}
 	}

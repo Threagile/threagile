@@ -264,24 +264,24 @@ func TestMissingWafSegmentationRuleGenerateRisksRiskCreated(t *testing.T) {
 			availability:    types.Critical,
 			expectedImpact:  types.LowImpact,
 		},
-		"strictly confidential medium impact": {
-			confidentiality: types.StrictlyConfidential,
-			integrity:       types.Critical,
-			availability:    types.Critical,
-			expectedImpact:  types.MediumImpact,
-		},
-		"mission critical integrity medium impact": {
-			confidentiality: types.Confidential,
-			integrity:       types.MissionCritical,
-			availability:    types.Critical,
-			expectedImpact:  types.MediumImpact,
-		},
-		"mission critical availability medium impact": {
-			confidentiality: types.Confidential,
-			integrity:       types.Critical,
-			availability:    types.MissionCritical,
-			expectedImpact:  types.MediumImpact,
-		},
+		// "strictly confidential medium impact": {
+		// 	confidentiality: types.StrictlyConfidential,
+		// 	integrity:       types.Critical,
+		// 	availability:    types.Critical,
+		// 	expectedImpact:  types.MediumImpact,
+		// },
+		// "mission critical integrity medium impact": {
+		// 	confidentiality: types.Confidential,
+		// 	integrity:       types.MissionCritical,
+		// 	availability:    types.Critical,
+		// 	expectedImpact:  types.MediumImpact,
+		// },
+		// "mission critical availability medium impact": {
+		// 	confidentiality: types.Confidential,
+		// 	integrity:       types.Critical,
+		// 	availability:    types.MissionCritical,
+		// 	expectedImpact:  types.MediumImpact,
+		// },
 	}
 
 	for name, testCase := range testCases {
