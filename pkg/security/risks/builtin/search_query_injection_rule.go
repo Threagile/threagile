@@ -46,21 +46,23 @@ func (r *SearchQueryInjectionRule) GenerateRisks(input *types.Model) ([]*types.R
 	risks := make([]*types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
-		if technicalAsset.Technologies.GetAttribute(types.IsSearchRelated) {
-			incomingFlows := input.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id]
-			for _, incomingFlow := range incomingFlows {
-				if input.TechnicalAssets[incomingFlow.SourceId].OutOfScope {
-					continue
-				}
-				if incomingFlow.Protocol == types.HTTP || incomingFlow.Protocol == types.HTTPS ||
-					incomingFlow.Protocol == types.BINARY || incomingFlow.Protocol == types.BinaryEncrypted {
-					likelihood := types.VeryLikely
-					if incomingFlow.Usage == types.DevOps {
-						likelihood = types.Likely
-					}
-					risks = append(risks, r.createRisk(input, technicalAsset, incomingFlow, likelihood))
-				}
+		if !technicalAsset.Technologies.GetAttribute(types.IsSearchRelated) {
+			continue
+		}
+		incomingFlows := input.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id]
+		for _, incomingFlow := range incomingFlows {
+			if input.TechnicalAssets[incomingFlow.SourceId].OutOfScope {
+				continue
 			}
+			if incomingFlow.Protocol != types.HTTP && incomingFlow.Protocol != types.HTTPS &&
+				incomingFlow.Protocol != types.BINARY && incomingFlow.Protocol != types.BinaryEncrypted {
+				continue
+			}
+			likelihood := types.VeryLikely
+			if incomingFlow.Usage == types.DevOps {
+				likelihood = types.Likely
+			}
+			risks = append(risks, r.createRisk(input, technicalAsset, incomingFlow, likelihood))
 		}
 	}
 	return risks, nil
