@@ -82,7 +82,8 @@ func (r *ServerSideRequestForgeryRule) createRisk(input *types.Model, technicalA
 		}
 	}
 	// adjust for cloud-based special risks
-	if impact == types.LowImpact && input.TrustBoundaries[technicalAsset.GetTrustBoundaryId(input)].Type.IsWithinCloud() {
+	trustBoundaryId := technicalAsset.GetTrustBoundaryId(input)
+	if impact == types.LowImpact && len(trustBoundaryId) > 0 && input.TrustBoundaries[technicalAsset.GetTrustBoundaryId(input)].Type.IsWithinCloud() {
 		impact = types.MediumImpact
 	}
 	dataBreachTechnicalAssetIDs := make([]string, 0)
