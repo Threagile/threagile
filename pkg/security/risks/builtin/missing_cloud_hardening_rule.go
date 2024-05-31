@@ -352,6 +352,7 @@ func addAccordingToBaseTag(techAsset *types.TechnicalAsset, tags []string,
 
 func findMostSensitiveTechnicalAsset(input *types.Model, techAssets map[string]bool) *types.TechnicalAsset {
 	var mostRelevantAsset *types.TechnicalAsset
+	// as in Go ranging over map is random order, range over them in sorted (hence reproducible) way:
 	keys := make([]string, 0, len(techAssets))
 	for k := range techAssets {
 		keys = append(keys, k)
