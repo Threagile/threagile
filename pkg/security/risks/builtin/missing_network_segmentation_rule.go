@@ -71,21 +71,28 @@ func (r *MissingNetworkSegmentationRule) GenerateRisks(input *types.Model) ([]*t
 			continue
 		}
 
-		if technicalAsset.Type == types.Datastore || technicalAsset.Confidentiality >= types.Confidential || technicalAsset.Integrity >= types.Critical || technicalAsset.Availability >= types.Critical {
-			// now check for any other same-network assets of certain types which have no direct connection
-			for _, sparringAssetCandidateId := range keys { // so inner loop again over all assets
-				if technicalAsset.Id != sparringAssetCandidateId {
-					sparringAssetCandidate := input.TechnicalAssets[sparringAssetCandidateId]
-					if sparringAssetCandidate.Technologies.GetAttribute(types.IsLessProtectedType) &&
-						technicalAsset.IsSameTrustBoundaryNetworkOnly(input, sparringAssetCandidateId) &&
-						!technicalAsset.HasDirectConnection(input, sparringAssetCandidateId) &&
-						!sparringAssetCandidate.Technologies.GetAttribute(types.IsCloseToHighValueTargetsTolerated) {
-						highRisk := technicalAsset.Confidentiality == types.StrictlyConfidential ||
-							technicalAsset.Integrity == types.MissionCritical || technicalAsset.Availability == types.MissionCritical
-						risks = append(risks, r.createRisk(technicalAsset, highRisk))
-						break
-					}
-				}
+		if technicalAsset.Type != types.Datastore &&
+			technicalAsset.Confidentiality < types.Confidential &&
+			technicalAsset.Integrity < types.Critical &&
+			technicalAsset.Availability < types.Critical {
+			continue
+		}
+
+		// now check for any other same-network assets of certain types which have no direct connection
+		for _, sparringAssetCandidateId := range keys { // so inner loop again over all assets
+			if technicalAsset.Id == sparringAssetCandidateId {
+				continue
+			}
+
+			sparringAssetCandidate := input.TechnicalAssets[sparringAssetCandidateId]
+			if sparringAssetCandidate.Technologies.GetAttribute(types.IsLessProtectedType) &&
+				technicalAsset.IsSameTrustBoundaryNetworkOnly(input, sparringAssetCandidateId) &&
+				!technicalAsset.HasDirectConnection(input, sparringAssetCandidateId) &&
+				!sparringAssetCandidate.Technologies.GetAttribute(types.IsCloseToHighValueTargetsTolerated) {
+				highRisk := technicalAsset.Confidentiality == types.StrictlyConfidential ||
+					technicalAsset.Integrity == types.MissionCritical || technicalAsset.Availability == types.MissionCritical
+				risks = append(risks, r.createRisk(technicalAsset, highRisk))
+				break
 			}
 		}
 	}
