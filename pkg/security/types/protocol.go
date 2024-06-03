@@ -7,8 +7,9 @@ package types
 import (
 	"encoding/json"
 	"fmt"
-	"gopkg.in/yaml.v3"
 	"strings"
+
+	"gopkg.in/yaml.v3"
 )
 
 type Protocol int
@@ -195,14 +196,14 @@ func (what Protocol) IsEncrypted() bool {
 		what == IiopEncrypted || what == JrmpEncrypted || what == SmbEncrypted || what == SmtpEncrypted || what == Pop3Encrypted || what == ImapEncrypted
 }
 
-func (what Protocol) IsPotentialDatabaseAccessProtocol(includingLaxDatabaseProtocols bool) bool {
-	strictlyDatabaseOnlyProtocol := what == JdbcEncrypted || what == OdbcEncrypted ||
+func (what Protocol) IsPotentialDatabaseAccessProtocol() bool {
+	return what == JdbcEncrypted || what == OdbcEncrypted ||
 		what == NosqlAccessProtocolEncrypted || what == SqlAccessProtocolEncrypted || what == JDBC || what == ODBC || what == NosqlAccessProtocol || what == SqlAccessProtocol
-	if includingLaxDatabaseProtocols {
-		// include HTTP for REST-based NoSQL-DBs as well as unknown binary
-		return strictlyDatabaseOnlyProtocol || what == HTTPS || what == HTTP || what == BINARY || what == BinaryEncrypted
-	}
-	return strictlyDatabaseOnlyProtocol
+}
+
+func (what Protocol) IsPotentialLaxDatabaseAccessProtocol() bool {
+	// include HTTP for REST-based NoSQL-DBs as well as unknown binary
+	return what == HTTPS || what == HTTP || what == BINARY || what == BinaryEncrypted
 }
 
 func (what Protocol) IsPotentialWebAccessProtocol() bool {
