@@ -44,9 +44,6 @@ func (r *SqlNoSqlInjectionRule) GenerateRisks(input *types.Model) ([]*types.Risk
 		technicalAsset := input.TechnicalAssets[id]
 		incomingFlows := input.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id]
 		for _, incomingFlow := range incomingFlows {
-			if input.TechnicalAssets[incomingFlow.SourceId].OutOfScope {
-				continue
-			}
 			potentialDatabaseAccessProtocol := incomingFlow.Protocol.IsPotentialDatabaseAccessProtocol(true)
 			isVulnerableToQueryInjection := technicalAsset.Technologies.GetAttribute(types.IsVulnerableToQueryInjection)
 			potentialLaxDatabaseAccessProtocol := incomingFlow.Protocol.IsPotentialDatabaseAccessProtocol(false)
