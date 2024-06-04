@@ -48,22 +48,31 @@ func (r *UnencryptedAssetRule) GenerateRisks(input *types.Model) ([]*types.Risk,
 	risks := make([]*types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
-		if !technicalAsset.OutOfScope && !isEncryptionWaiver(technicalAsset) && len(technicalAsset.DataAssetsStored) > 0 &&
-			(technicalAsset.HighestStoredConfidentiality(input) >= types.Confidential ||
-				technicalAsset.HighestStoredIntegrity(input) >= types.Critical) {
-			verySensitive := technicalAsset.HighestStoredConfidentiality(input) == types.StrictlyConfidential ||
-				technicalAsset.HighestStoredIntegrity(input) == types.MissionCritical
-			requiresEndUserKey := verySensitive && technicalAsset.Technologies.GetAttribute(types.IsUsuallyStoringEndUserData)
-			if technicalAsset.Encryption == types.NoneEncryption {
-				impact := types.MediumImpact
-				if verySensitive {
-					impact = types.HighImpact
-				}
-				risks = append(risks, r.createRisk(technicalAsset, impact, requiresEndUserKey))
-			} else if requiresEndUserKey &&
-				(technicalAsset.Encryption == types.Transparent || technicalAsset.Encryption == types.DataWithSymmetricSharedKey || technicalAsset.Encryption == types.DataWithAsymmetricSharedKey) {
-				risks = append(risks, r.createRisk(technicalAsset, types.MediumImpact, requiresEndUserKey))
+		highestStoredConfidentiality := technicalAsset.HighestStoredConfidentiality(input)
+		highestStoredIntegrity := technicalAsset.HighestStoredIntegrity(input)
+		if technicalAsset.OutOfScope || isEncryptionWaiver(technicalAsset) {
+			continue
+		}
+		if len(technicalAsset.DataAssetsStored) == 0 {
+			continue
+		}
+		if highestStoredConfidentiality < types.Confidential || highestStoredIntegrity < types.Critical {
+			continue
+		}
+
+		verySensitive := highestStoredConfidentiality == types.StrictlyConfidential || highestStoredIntegrity == types.MissionCritical
+		requiresEndUserKey := verySensitive && technicalAsset.Technologies.GetAttribute(types.IsUsuallyStoringEndUserData)
+		if technicalAsset.Encryption == types.NoneEncryption {
+			impact := types.MediumImpact
+			if verySensitive {
+				impact = types.HighImpact
 			}
+			risks = append(risks, r.createRisk(technicalAsset, impact, requiresEndUserKey))
+			continue
+		}
+		if requiresEndUserKey && technicalAsset.Encryption != types.DataWithEndUserIndividualKey {
+			risks = append(risks, r.createRisk(technicalAsset, types.MediumImpact, requiresEndUserKey))
+			continue
 		}
 	}
 	return risks, nil
