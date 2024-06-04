@@ -297,18 +297,6 @@ func (what TechnicalAsset) GeneratedRisks(parsedModel *Model) []*Risk {
 	return resultingRisks
 }
 
-/*
-func (what TechnicalAsset) HighestRiskSeverity() RiskSeverity {
-	highest := Low
-	for _, risk := range what.GeneratedRisks() {
-		if risk.Severity > highest {
-			highest = risk.Severity
-		}
-	}
-	return highest
-}
-*/
-
 func (what TechnicalAsset) ProcessesOrStoresDataAsset(dataAssetId string) bool {
 	return contains(what.DataAssetsProcessed, dataAssetId)
 }
