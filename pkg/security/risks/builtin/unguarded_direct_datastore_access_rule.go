@@ -53,9 +53,12 @@ func (r *UnguardedDirectDatastoreAccessRule) GenerateRisks(input *types.Model) (
 					continue
 				}
 
+				acrossTrustBoundaryNetworkOnly := incomingAccess.IsAcrossTrustBoundaryNetworkOnly(input)
+				sharingSameParentTrustBoundary := isSharingSameParentTrustBoundary(input, technicalAsset, sourceAsset)
+
 				if technicalAsset.Confidentiality >= types.Confidential || technicalAsset.Integrity >= types.Critical {
-					if incomingAccess.IsAcrossTrustBoundaryNetworkOnly(input) && !fileServerAccessViaFTP(technicalAsset, incomingAccess) &&
-						incomingAccess.Usage != types.DevOps && !isSharingSameParentTrustBoundary(input, technicalAsset, sourceAsset) {
+					if acrossTrustBoundaryNetworkOnly && !fileServerAccessViaFTP(technicalAsset, incomingAccess) &&
+						incomingAccess.Usage != types.DevOps && !sharingSameParentTrustBoundary {
 						highRisk := technicalAsset.Confidentiality == types.StrictlyConfidential ||
 							technicalAsset.Integrity == types.MissionCritical
 						risks = append(risks, r.createRisk(technicalAsset, incomingAccess,
