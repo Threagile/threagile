@@ -1,6 +1,8 @@
 package builtin
 
 import (
+	"slices"
+
 	"github.com/threagile/threagile/pkg/security/types"
 )
 
@@ -44,38 +46,31 @@ func (r *UnencryptedCommunicationRule) GenerateRisks(input *types.Model) ([]*typ
 	risks := make([]*types.Risk, 0)
 	for _, technicalAsset := range input.TechnicalAssets {
 		for _, dataFlow := range technicalAsset.CommunicationLinks {
-			transferringAuthData := dataFlow.Authentication != types.NoneAuthentication
 			sourceAsset := input.TechnicalAssets[dataFlow.SourceId]
 			targetAsset := input.TechnicalAssets[dataFlow.TargetId]
-			if !technicalAsset.OutOfScope || !sourceAsset.OutOfScope {
-				if !dataFlow.Protocol.IsEncrypted() && !dataFlow.Protocol.IsProcessLocal() &&
-					!sourceAsset.Technologies.GetAttribute(types.IsUnprotectedCommunicationsTolerated) &&
-					!targetAsset.Technologies.GetAttribute(types.IsUnprotectedCommunicationsTolerated) {
-					addedOne := false
-					for _, sentDataAsset := range dataFlow.DataAssetsSent {
-						dataAsset := input.DataAssets[sentDataAsset]
-						if isHighSensitivity(dataAsset) || transferringAuthData {
-							risks = append(risks, r.createRisk(input, technicalAsset, dataFlow, true, transferringAuthData))
-							addedOne = true
-							break
-						} else if !dataFlow.VPN && isMediumSensitivity(dataAsset) {
-							risks = append(risks, r.createRisk(input, technicalAsset, dataFlow, false, transferringAuthData))
-							addedOne = true
-							break
-						}
-					}
-					if !addedOne {
-						for _, receivedDataAsset := range dataFlow.DataAssetsReceived {
-							dataAsset := input.DataAssets[receivedDataAsset]
-							if isHighSensitivity(dataAsset) || transferringAuthData {
-								risks = append(risks, r.createRisk(input, technicalAsset, dataFlow, true, transferringAuthData))
-								break
-							} else if !dataFlow.VPN && isMediumSensitivity(dataAsset) {
-								risks = append(risks, r.createRisk(input, technicalAsset, dataFlow, false, transferringAuthData))
-								break
-							}
-						}
-					}
+			if sourceAsset.OutOfScope && targetAsset.OutOfScope {
+				continue
+			}
+			if dataFlow.Protocol.IsEncrypted() || dataFlow.Protocol.IsProcessLocal() {
+				continue
+			}
+			if sourceAsset.Technologies.GetAttribute(types.IsUnprotectedCommunicationsTolerated) ||
+				targetAsset.Technologies.GetAttribute(types.IsUnprotectedCommunicationsTolerated) {
+				continue
+			}
+
+			transferringAuthData := dataFlow.Authentication != types.NoneAuthentication
+			dataAssetIds := append(dataFlow.DataAssetsSent, dataFlow.DataAssetsReceived...)
+			slices.Sort(dataAssetIds) // ensure deterministic order
+			for _, sentDataAsset := range dataAssetIds {
+				dataAsset := input.DataAssets[sentDataAsset]
+				if isHighSensitivity(dataAsset) || transferringAuthData {
+					risks = append(risks, r.createRisk(input, technicalAsset, dataFlow, true, transferringAuthData))
+					break
+				}
+				if !dataFlow.VPN && isMediumSensitivity(dataAsset) {
+					risks = append(risks, r.createRisk(input, technicalAsset, dataFlow, false, transferringAuthData))
+					break
 				}
 			}
 		}
