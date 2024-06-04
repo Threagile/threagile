@@ -409,3 +409,21 @@ func TestIsSharingSameParentTrustBoundaryInDifferentTrustBoundariesExpectFalse(t
 	}
 	assert.False(t, isSharingSameParentTrustBoundary(input, left, right))
 }
+
+func TestIsSharingSameParentTrustBoundarySameTrustBoundariesExpectTrue(t *testing.T) {
+	input := &types.Model{
+		TrustBoundaries: map[string]*types.TrustBoundary{
+			"tb1": {
+				Id:                    "tb1",
+				TechnicalAssetsInside: []string{"ta1", "ta2"},
+			},
+		},
+	}
+	left := &types.TechnicalAsset{
+		Id: "ta1",
+	}
+	right := &types.TechnicalAsset{
+		Id: "ta2",
+	}
+	assert.True(t, isSharingSameParentTrustBoundary(input, left, right))
+}

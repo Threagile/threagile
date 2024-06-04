@@ -46,26 +46,29 @@ func (r *UnguardedDirectDatastoreAccessRule) GenerateRisks(input *types.Model) (
 	risks := make([]*types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
-		if !technicalAsset.OutOfScope && technicalAsset.Type == types.Datastore {
-			for _, incomingAccess := range input.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id] {
-				sourceAsset := input.TechnicalAssets[incomingAccess.SourceId]
-				if technicalAsset.Technologies.GetAttribute(types.IsIdentityStore) && sourceAsset.Technologies.GetAttribute(types.IdentityProvider) {
-					continue
-				}
-
-				acrossTrustBoundaryNetworkOnly := incomingAccess.IsAcrossTrustBoundaryNetworkOnly(input)
-				sharingSameParentTrustBoundary := isSharingSameParentTrustBoundary(input, technicalAsset, sourceAsset)
-
-				if technicalAsset.Confidentiality >= types.Confidential || technicalAsset.Integrity >= types.Critical {
-					if acrossTrustBoundaryNetworkOnly && !fileServerAccessViaFTP(technicalAsset, incomingAccess) &&
-						incomingAccess.Usage != types.DevOps && !sharingSameParentTrustBoundary {
-						highRisk := technicalAsset.Confidentiality == types.StrictlyConfidential ||
-							technicalAsset.Integrity == types.MissionCritical
-						risks = append(risks, r.createRisk(technicalAsset, incomingAccess,
-							input.TechnicalAssets[incomingAccess.SourceId], highRisk))
-					}
-				}
+		if technicalAsset.OutOfScope || technicalAsset.Type != types.Datastore {
+			continue
+		}
+		for _, incomingAccess := range input.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id] {
+			sourceAsset := input.TechnicalAssets[incomingAccess.SourceId]
+			if technicalAsset.Technologies.GetAttribute(types.IsIdentityStore) && sourceAsset.Technologies.GetAttribute(types.IdentityProvider) {
+				continue
 			}
+			if technicalAsset.Confidentiality < types.Confidential && technicalAsset.Integrity < types.Critical {
+				continue
+			}
+			if incomingAccess.Usage == types.DevOps {
+				continue
+			}
+			if !incomingAccess.IsAcrossTrustBoundaryNetworkOnly(input) || fileServerAccessViaFTP(technicalAsset, incomingAccess) ||
+				isSharingSameParentTrustBoundary(input, technicalAsset, sourceAsset) {
+				continue
+			}
+
+			highRisk := technicalAsset.Confidentiality == types.StrictlyConfidential ||
+				technicalAsset.Integrity == types.MissionCritical
+			risks = append(risks, r.createRisk(technicalAsset, incomingAccess,
+				input.TechnicalAssets[incomingAccess.SourceId], highRisk))
 		}
 	}
 	return risks, nil
