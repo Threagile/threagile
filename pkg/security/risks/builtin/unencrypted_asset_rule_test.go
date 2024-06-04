@@ -232,5 +232,4 @@ func TestUnencryptedAssetRuleGenerateRisks(t *testing.T) {
 			}
 		})
 	}
-
 }
