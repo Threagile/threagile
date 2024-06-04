@@ -54,34 +54,34 @@ func (r *UnguardedAccessFromInternetRule) GenerateRisks(input *types.Model) ([]*
 	risks := make([]*types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
-		if !technicalAsset.OutOfScope {
-			commLinks := input.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id]
-			sort.Sort(types.ByTechnicalCommunicationLinkIdSort(commLinks))
-			for _, incomingAccess := range commLinks {
-				if !technicalAsset.Technologies.GetAttribute(types.LoadBalancer) {
-					if !technicalAsset.CustomDevelopedParts {
-						if technicalAsset.Technologies.GetAttribute(types.IsHTTPInternetAccessOK) && (incomingAccess.Protocol == types.HTTP || incomingAccess.Protocol == types.HTTPS) {
-							continue
-						}
-						if technicalAsset.Technologies.GetAttribute(types.IsFTPInternetAccessOK) && (incomingAccess.Protocol == types.FTP || incomingAccess.Protocol == types.FTPS || incomingAccess.Protocol == types.SFTP) {
-							continue
-						}
-					}
-					if input.TechnicalAssets[incomingAccess.SourceId].Technologies.GetAttribute(types.Monitoring) ||
-						incomingAccess.VPN {
-						continue
-					}
-					if technicalAsset.Confidentiality >= types.Confidential || technicalAsset.Integrity >= types.Critical {
-						sourceAsset := input.TechnicalAssets[incomingAccess.SourceId]
-						if sourceAsset.Internet {
-							highRisk := technicalAsset.Confidentiality == types.StrictlyConfidential ||
-								technicalAsset.Integrity == types.MissionCritical
-							risks = append(risks, r.createRisk(technicalAsset, incomingAccess,
-								input.TechnicalAssets[incomingAccess.SourceId], highRisk))
-						}
-					}
-				}
+		if technicalAsset.OutOfScope {
+			continue
+		}
+
+		commLinks := input.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id]
+		sort.Sort(types.ByTechnicalCommunicationLinkIdSort(commLinks))
+		for _, incomingAccess := range commLinks {
+			if technicalAsset.Technologies.GetAttribute(types.LoadBalancer) {
+				continue
 			}
+			if !technicalAsset.CustomDevelopedParts &&
+				((technicalAsset.Technologies.GetAttribute(types.IsHTTPInternetAccessOK) && (incomingAccess.Protocol == types.HTTP || incomingAccess.Protocol == types.HTTPS)) ||
+					(technicalAsset.Technologies.GetAttribute(types.IsFTPInternetAccessOK) && (incomingAccess.Protocol == types.FTP || incomingAccess.Protocol == types.FTPS || incomingAccess.Protocol == types.SFTP))) {
+				continue
+			}
+			if input.TechnicalAssets[incomingAccess.SourceId].Technologies.GetAttribute(types.Monitoring) ||
+				incomingAccess.VPN {
+				continue
+			}
+			if technicalAsset.Confidentiality < types.Confidential && technicalAsset.Integrity < types.Critical {
+				continue
+			}
+			if !input.TechnicalAssets[incomingAccess.SourceId].Internet {
+				continue
+			}
+
+			highRisk := technicalAsset.Confidentiality == types.StrictlyConfidential || technicalAsset.Integrity == types.MissionCritical
+			risks = append(risks, r.createRisk(technicalAsset, incomingAccess, input.TechnicalAssets[incomingAccess.SourceId], highRisk))
 		}
 	}
 	return risks, nil
