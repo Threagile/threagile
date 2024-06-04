@@ -41,11 +41,13 @@ func (r *UnnecessaryCommunicationLinkRule) GenerateRisks(input *types.Model) ([]
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
 		for _, commLink := range technicalAsset.CommunicationLinks {
-			if len(commLink.DataAssetsSent) == 0 && len(commLink.DataAssetsReceived) == 0 {
-				if !technicalAsset.OutOfScope || !input.TechnicalAssets[commLink.TargetId].OutOfScope {
-					risks = append(risks, r.createRisk(technicalAsset, commLink))
-				}
+			if len(commLink.DataAssetsSent) != 0 || len(commLink.DataAssetsReceived) != 0 {
+				continue
 			}
+			if technicalAsset.OutOfScope && input.TechnicalAssets[commLink.TargetId].OutOfScope {
+				continue
+			}
+			risks = append(risks, r.createRisk(technicalAsset, commLink))
 		}
 	}
 	return risks, nil
