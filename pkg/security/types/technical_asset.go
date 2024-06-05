@@ -44,12 +44,7 @@ func (what TechnicalAsset) IsTaggedWithAny(tags ...string) bool {
 	return containsCaseInsensitiveAny(what.Tags, tags...)
 }
 
-func (what TechnicalAsset) IsTaggedWithBaseTag(baseTag string) bool {
-	return IsTaggedWithBaseTag(what.Tags, baseTag)
-}
-
 // first use the tag(s) of the asset itself, then their trust boundaries (recursively up) and then their shared runtime
-
 func (what TechnicalAsset) IsTaggedWithAnyTraversingUp(model *Model, tags ...string) bool {
 	if containsCaseInsensitiveAny(what.Tags, tags...) {
 		return true

@@ -286,16 +286,16 @@ func (r *MissingCloudHardeningRule) addTrustBoundaryAccordingToBaseTag(trustBoun
 	trustBoundaryIDsGCP map[string]bool,
 	trustBoundaryIDsOCP map[string]bool) {
 	if trustBoundary.IsTaggedWithAny(r.SupportedTags()...) {
-		if trustBoundary.IsTaggedWithBaseTag("aws") {
+		if isTaggedWithBaseTag(trustBoundary.Tags, "aws") {
 			trustBoundaryIDsAWS[trustBoundary.Id] = true
 		}
-		if trustBoundary.IsTaggedWithBaseTag("azure") {
+		if isTaggedWithBaseTag(trustBoundary.Tags, "azure") {
 			trustBoundaryIDsAzure[trustBoundary.Id] = true
 		}
-		if trustBoundary.IsTaggedWithBaseTag("gcp") {
+		if isTaggedWithBaseTag(trustBoundary.Tags, "gcp") {
 			trustBoundaryIDsGCP[trustBoundary.Id] = true
 		}
-		if trustBoundary.IsTaggedWithBaseTag("ocp") {
+		if isTaggedWithBaseTag(trustBoundary.Tags, "ocp") {
 			trustBoundaryIDsOCP[trustBoundary.Id] = true
 		}
 	} else {
@@ -310,16 +310,16 @@ func (r *MissingCloudHardeningRule) addSharedRuntimeAccordingToBaseTag(sharedRun
 	sharedRuntimeIDsGCP map[string]bool,
 	sharedRuntimeIDsOCP map[string]bool) {
 	if sharedRuntime.IsTaggedWithAny(r.SupportedTags()...) {
-		if sharedRuntime.IsTaggedWithBaseTag("aws") {
+		if isTaggedWithBaseTag(sharedRuntime.Tags, "aws") {
 			sharedRuntimeIDsAWS[sharedRuntime.Id] = true
 		}
-		if sharedRuntime.IsTaggedWithBaseTag("azure") {
+		if isTaggedWithBaseTag(sharedRuntime.Tags, "azure") {
 			sharedRuntimeIDsAzure[sharedRuntime.Id] = true
 		}
-		if sharedRuntime.IsTaggedWithBaseTag("gcp") {
+		if isTaggedWithBaseTag(sharedRuntime.Tags, "gcp") {
 			sharedRuntimeIDsGCP[sharedRuntime.Id] = true
 		}
-		if sharedRuntime.IsTaggedWithBaseTag("ocp") {
+		if isTaggedWithBaseTag(sharedRuntime.Tags, "ocp") {
 			sharedRuntimeIDsOCP[sharedRuntime.Id] = true
 		}
 	} else {
@@ -336,18 +336,29 @@ func addAccordingToBaseTag(techAsset *types.TechnicalAsset, tags []string,
 	if techAsset.IsTaggedWithAny(specificSubTagsAWS...) {
 		techAssetIDsWithTagSpecificCloudRisks[techAsset.Id] = true
 	}
-	if types.IsTaggedWithBaseTag(tags, "aws") {
+	if isTaggedWithBaseTag(tags, "aws") {
 		techAssetIDsAWS[techAsset.Id] = true
 	}
-	if types.IsTaggedWithBaseTag(tags, "azure") {
+	if isTaggedWithBaseTag(tags, "azure") {
 		techAssetIDsAzure[techAsset.Id] = true
 	}
-	if types.IsTaggedWithBaseTag(tags, "gcp") {
+	if isTaggedWithBaseTag(tags, "gcp") {
 		techAssetIDsGCP[techAsset.Id] = true
 	}
-	if types.IsTaggedWithBaseTag(tags, "ocp") {
+	if isTaggedWithBaseTag(tags, "ocp") {
 		techAssetIDsOCP[techAsset.Id] = true
 	}
+}
+
+func isTaggedWithBaseTag(tags []string, baseTag string) bool { // base tags are before the colon ":" like in "aws:ec2" it's "aws". The subtag is after the colon. Also, a pure "aws" tag matches the base tag "aws"
+	baseTag = strings.ToLower(strings.TrimSpace(baseTag))
+	for _, tag := range tags {
+		tag = strings.ToLower(strings.TrimSpace(tag))
+		if tag == baseTag || strings.HasPrefix(tag, baseTag+":") {
+			return true
+		}
+	}
+	return false
 }
 
 func findMostSensitiveTechnicalAsset(input *types.Model, techAssets map[string]bool) *types.TechnicalAsset {

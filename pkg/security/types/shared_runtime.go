@@ -20,10 +20,6 @@ func (what SharedRuntime) IsTaggedWithAny(tags ...string) bool {
 	return containsCaseInsensitiveAny(what.Tags, tags...)
 }
 
-func (what SharedRuntime) IsTaggedWithBaseTag(baseTag string) bool {
-	return IsTaggedWithBaseTag(what.Tags, baseTag)
-}
-
 func (what SharedRuntime) HighestConfidentiality(model *Model) Confidentiality {
 	highest := Public
 	for _, id := range what.TechnicalAssetsRunning {

@@ -27,10 +27,6 @@ func (what DataAsset) IsTaggedWithAny(tags ...string) bool {
 	return containsCaseInsensitiveAny(what.Tags, tags...)
 }
 
-func (what DataAsset) IsTaggedWithBaseTag(baseTag string) bool {
-	return IsTaggedWithBaseTag(what.Tags, baseTag)
-}
-
 func (what DataAsset) IdentifiedDataBreachProbability(parsedModel *Model) DataBreachProbability {
 	highestProbability := Improbable
 	for _, risk := range AllRisks(parsedModel) {

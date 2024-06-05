@@ -28,10 +28,6 @@ func (what TrustBoundary) IsTaggedWithAny(tags ...string) bool {
 	return containsCaseInsensitiveAny(what.Tags, tags...)
 }
 
-func (what TrustBoundary) IsTaggedWithBaseTag(baseTag string) bool {
-	return IsTaggedWithBaseTag(what.Tags, baseTag)
-}
-
 func (what TrustBoundary) IsTaggedWithAnyTraversingUp(model *Model, tags ...string) bool {
 	if what.IsTaggedWithAny(tags...) {
 		return true

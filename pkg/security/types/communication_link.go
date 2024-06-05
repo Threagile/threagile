@@ -32,10 +32,6 @@ func (what CommunicationLink) IsTaggedWithAny(tags ...string) bool {
 	return containsCaseInsensitiveAny(what.Tags, tags...)
 }
 
-func (what CommunicationLink) IsTaggedWithBaseTag(baseTag string) bool {
-	return IsTaggedWithBaseTag(what.Tags, baseTag)
-}
-
 func (what CommunicationLink) HighestConfidentiality(parsedModel *Model) Confidentiality {
 	highest := Public
 	for _, dataId := range what.DataAssetsSent {
