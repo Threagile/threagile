@@ -27,3 +27,12 @@ func isAcrossTrustBoundaryNetworkOnly(parsedModel *types.Model, communicationLin
 	}
 	return trustBoundaryOfSourceAsset.Id != trustBoundaryOfTargetAsset.Id && trustBoundaryOfTargetAsset.Type.IsNetworkBoundary()
 }
+
+func contains(a []string, x string) bool {
+	for _, n := range a {
+		if x == n {
+			return true
+		}
+	}
+	return false
+}

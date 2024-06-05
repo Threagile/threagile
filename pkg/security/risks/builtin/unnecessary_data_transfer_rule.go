@@ -76,7 +76,7 @@ func (r *UnnecessaryDataTransferRule) GenerateRisks(input *types.Model) ([]*type
 
 func (r *UnnecessaryDataTransferRule) checkRisksAgainstTechnicalAsset(input *types.Model, risks []*types.Risk, technicalAsset *types.TechnicalAsset, dataFlow *types.CommunicationLink, inverseDirection bool) []*types.Risk {
 	for _, transferredDataAssetId := range dataFlow.DataAssetsSent {
-		if !technicalAsset.ProcessesOrStoresDataAsset(transferredDataAssetId) {
+		if !processesOrStoresDataAsset(technicalAsset, transferredDataAssetId) {
 			transferredDataAsset := input.DataAssets[transferredDataAssetId]
 			//fmt.Print("--->>> Checking "+technicalAsset.ID+": "+transferredDataAsset.ID+" sent via "+dataFlow.ID+"\n")
 			if transferredDataAsset.Confidentiality >= types.Confidential || transferredDataAsset.Integrity >= types.Critical {
@@ -93,7 +93,7 @@ func (r *UnnecessaryDataTransferRule) checkRisksAgainstTechnicalAsset(input *typ
 		}
 	}
 	for _, transferredDataAssetId := range dataFlow.DataAssetsReceived {
-		if !technicalAsset.ProcessesOrStoresDataAsset(transferredDataAssetId) {
+		if !processesOrStoresDataAsset(technicalAsset, transferredDataAssetId) {
 			transferredDataAsset := input.DataAssets[transferredDataAssetId]
 			//fmt.Print("--->>> Checking "+technicalAsset.ID+": "+transferredDataAsset.ID+" received via "+dataFlow.ID+"\n")
 			if transferredDataAsset.Confidentiality >= types.Confidential || transferredDataAsset.Integrity >= types.Critical {
@@ -110,6 +110,10 @@ func (r *UnnecessaryDataTransferRule) checkRisksAgainstTechnicalAsset(input *typ
 		}
 	}
 	return risks
+}
+
+func processesOrStoresDataAsset(ta *types.TechnicalAsset, dataAssetId string) bool {
+	return contains(ta.DataAssetsProcessed, dataAssetId) || contains(ta.DataAssetsStored, dataAssetId)
 }
 
 func isNewRisk(risks []*types.Risk, risk *types.Risk) bool {

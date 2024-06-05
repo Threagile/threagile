@@ -63,18 +63,6 @@ func (what TechnicalAsset) IsTaggedWithAnyTraversingUp(model *Model, tags ...str
 	return false
 }
 
-func (what TechnicalAsset) IsSameTrustBoundary(parsedModel *Model, otherAssetId string) bool {
-	trustBoundaryOfMyAsset, trustBoundaryOfMyAssetOk := parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[what.Id]
-	trustBoundaryOfOtherAsset, trustBoundaryOfOtherAssetOk := parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[otherAssetId]
-	if trustBoundaryOfMyAssetOk != trustBoundaryOfOtherAssetOk {
-		return false
-	}
-	if !trustBoundaryOfMyAssetOk && !trustBoundaryOfOtherAssetOk {
-		return true
-	}
-	return trustBoundaryOfMyAsset.Id == trustBoundaryOfOtherAsset.Id
-}
-
 func (what TechnicalAsset) IsSameExecutionEnvironment(parsedModel *Model, otherAssetId string) bool {
 	trustBoundaryOfMyAsset, trustBoundaryOfMyAssetOk := parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[what.Id]
 	trustBoundaryOfOtherAsset, trustBoundaryOfOtherAssetOk := parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[otherAssetId]
@@ -290,10 +278,6 @@ func (what TechnicalAsset) GeneratedRisks(parsedModel *Model) []*Risk {
 	}
 	SortByRiskSeverity(resultingRisks, parsedModel)
 	return resultingRisks
-}
-
-func (what TechnicalAsset) ProcessesOrStoresDataAsset(dataAssetId string) bool {
-	return contains(what.DataAssetsProcessed, dataAssetId)
 }
 
 /*
