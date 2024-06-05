@@ -83,14 +83,15 @@ func (r *CodeBackdooringRule) createRisk(input *types.Model, technicalAsset *typ
 	uniqueDataBreachTechnicalAssetIDs := make(map[string]interface{})
 	uniqueDataBreachTechnicalAssetIDs[technicalAsset.Id] = true
 	for _, codeDeploymentTargetCommLink := range technicalAsset.CommunicationLinks {
-		if codeDeploymentTargetCommLink.Usage == types.DevOps {
-			for _, dataAssetID := range codeDeploymentTargetCommLink.DataAssetsSent {
-				// it appears to be code when elevated integrity rating of sent data asset
-				if input.DataAssets[dataAssetID].Integrity >= types.Important {
-					// here we've got a deployment target which has its data assets at risk via deployment of backdoored code
-					uniqueDataBreachTechnicalAssetIDs[codeDeploymentTargetCommLink.TargetId] = true
-					break
-				}
+		if codeDeploymentTargetCommLink.Usage != types.DevOps {
+			continue
+		}
+		for _, dataAssetID := range codeDeploymentTargetCommLink.DataAssetsSent {
+			// it appears to be code when elevated integrity rating of sent data asset
+			if input.DataAssets[dataAssetID].Integrity >= types.Important {
+				// here we've got a deployment target which has its data assets at risk via deployment of backdoored code
+				uniqueDataBreachTechnicalAssetIDs[codeDeploymentTargetCommLink.TargetId] = true
+				break
 			}
 		}
 	}
