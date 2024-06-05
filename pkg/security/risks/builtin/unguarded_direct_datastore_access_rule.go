@@ -60,7 +60,7 @@ func (r *UnguardedDirectDatastoreAccessRule) GenerateRisks(input *types.Model) (
 			if incomingAccess.Usage == types.DevOps {
 				continue
 			}
-			if !incomingAccess.IsAcrossTrustBoundaryNetworkOnly(input) || fileServerAccessViaFTP(technicalAsset, incomingAccess) ||
+			if !isAcrossTrustBoundaryNetworkOnly(input, incomingAccess) || fileServerAccessViaFTP(technicalAsset, incomingAccess) ||
 				isSharingSameParentTrustBoundary(input, technicalAsset, sourceAsset) {
 				continue
 			}

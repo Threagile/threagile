@@ -50,7 +50,7 @@ func (r *MissingWafRule) GenerateRisks(input *types.Model) ([]*types.Risk, error
 			continue
 		}
 		for _, incomingAccess := range input.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id] {
-			if incomingAccess.IsAcrossTrustBoundaryNetworkOnly(input) &&
+			if isAcrossTrustBoundaryNetworkOnly(input, incomingAccess) &&
 				incomingAccess.Protocol.IsPotentialWebAccessProtocol() &&
 				!input.TechnicalAssets[incomingAccess.SourceId].Technologies.GetAttribute(types.WAF) {
 				risks = append(risks, r.createRisk(input, technicalAsset))

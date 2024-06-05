@@ -64,7 +64,7 @@ func (r *UntrustedDeserializationRule) GenerateRisks(input *types.Model) ([]*typ
 			if commLink.Protocol == types.IIOP || commLink.Protocol == types.IiopEncrypted ||
 				commLink.Protocol == types.JRMP || commLink.Protocol == types.JrmpEncrypted {
 				hasOne = true
-				if commLink.IsAcrossTrustBoundaryNetworkOnly(input) {
+				if isAcrossTrustBoundaryNetworkOnly(input, commLink) {
 					acrossTrustBoundary = true
 					commLinkTitle = commLink.Title
 				}

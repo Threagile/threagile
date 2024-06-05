@@ -93,7 +93,7 @@ func (r *UnencryptedCommunicationRule) createRisk(input *types.Model, technicalA
 			"rated " + types.StrictlyConfidential.String() + " or integrity is rated " + types.MissionCritical.String() + ")"
 	}
 	likelihood := types.Unlikely
-	if dataFlow.IsAcrossTrustBoundaryNetworkOnly(input) {
+	if isAcrossTrustBoundaryNetworkOnly(input, dataFlow) {
 		likelihood = types.Likely
 	}
 	risk := &types.Risk{

@@ -36,42 +36,6 @@ func (what CommunicationLink) IsTaggedWithBaseTag(baseTag string) bool {
 	return IsTaggedWithBaseTag(what.Tags, baseTag)
 }
 
-func (what CommunicationLink) IsAcrossTrustBoundary(parsedModel *Model) bool {
-	trustBoundaryOfSourceAsset, trustBoundaryOfSourceAssetOk := parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[what.SourceId]
-	trustBoundaryOfTargetAsset, trustBoundaryOfTargetAssetOk := parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[what.TargetId]
-	if trustBoundaryOfSourceAssetOk != trustBoundaryOfTargetAssetOk {
-		return false
-	}
-	if !trustBoundaryOfSourceAssetOk && !trustBoundaryOfTargetAssetOk {
-		return true
-	}
-	return trustBoundaryOfSourceAsset.Id != trustBoundaryOfTargetAsset.Id
-}
-
-func (what CommunicationLink) IsAcrossTrustBoundaryNetworkOnly(parsedModel *Model) bool {
-	trustBoundaryOfSourceAsset, trustBoundaryOfSourceAssetOk := parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[what.SourceId]
-	if !trustBoundaryOfSourceAssetOk {
-		return false
-	}
-	if !trustBoundaryOfSourceAsset.Type.IsNetworkBoundary() { // find and use the parent boundary then
-		trustBoundaryOfSourceAsset, trustBoundaryOfSourceAssetOk = parsedModel.TrustBoundaries[trustBoundaryOfSourceAsset.ParentTrustBoundaryID(parsedModel)]
-		if !trustBoundaryOfSourceAssetOk {
-			return false
-		}
-	}
-	trustBoundaryOfTargetAsset, trustBoundaryOfTargetAssetOk := parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[what.TargetId]
-	if !trustBoundaryOfTargetAssetOk {
-		return false
-	}
-	if !trustBoundaryOfTargetAsset.Type.IsNetworkBoundary() { // find and use the parent boundary then
-		trustBoundaryOfTargetAsset, trustBoundaryOfTargetAssetOk = parsedModel.TrustBoundaries[trustBoundaryOfTargetAsset.ParentTrustBoundaryID(parsedModel)]
-		if !trustBoundaryOfTargetAssetOk {
-			return false
-		}
-	}
-	return trustBoundaryOfSourceAsset.Id != trustBoundaryOfTargetAsset.Id && trustBoundaryOfTargetAsset.Type.IsNetworkBoundary()
-}
-
 func (what CommunicationLink) HighestConfidentiality(parsedModel *Model) Confidentiality {
 	highest := Public
 	for _, dataId := range what.DataAssetsSent {

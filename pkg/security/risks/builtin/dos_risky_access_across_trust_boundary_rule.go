@@ -68,7 +68,7 @@ func (r *DosRiskyAccessAcrossTrustBoundaryRule) GenerateRisks(input *types.Model
 }
 
 func (r *DosRiskyAccessAcrossTrustBoundaryRule) checkRisk(input *types.Model, technicalAsset *types.TechnicalAsset, incomingAccess *types.CommunicationLink, linkId string, hopBetween string, risks []*types.Risk) []*types.Risk {
-	if !incomingAccess.IsAcrossTrustBoundaryNetworkOnly(input) {
+	if !isAcrossTrustBoundaryNetworkOnly(input, incomingAccess) {
 		return risks
 	}
 	if incomingAccess.Usage == types.DevOps {
