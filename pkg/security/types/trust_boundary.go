@@ -28,17 +28,6 @@ func (what TrustBoundary) IsTaggedWithAny(tags ...string) bool {
 	return containsCaseInsensitiveAny(what.Tags, tags...)
 }
 
-func (what TrustBoundary) IsTaggedWithAnyTraversingUp(model *Model, tags ...string) bool {
-	if what.IsTaggedWithAny(tags...) {
-		return true
-	}
-	parentID := what.ParentTrustBoundaryID(model)
-	if len(parentID) > 0 && model.TrustBoundaries[parentID].IsTaggedWithAnyTraversingUp(model, tags...) {
-		return true
-	}
-	return false
-}
-
 func (what TrustBoundary) ParentTrustBoundaryID(model *Model) string {
 	var result string
 	for _, candidate := range model.TrustBoundaries {

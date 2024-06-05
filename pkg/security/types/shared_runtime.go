@@ -53,17 +53,6 @@ func (what SharedRuntime) HighestAvailability(model *Model) Criticality {
 	return highest
 }
 
-func (what SharedRuntime) TechnicalAssetWithHighestRAA(model *Model) *TechnicalAsset {
-	result := model.TechnicalAssets[what.TechnicalAssetsRunning[0]]
-	for _, asset := range what.TechnicalAssetsRunning {
-		candidate := model.TechnicalAssets[asset]
-		if candidate.RAA > result.RAA {
-			result = candidate
-		}
-	}
-	return result
-}
-
 // as in Go ranging over map is random order, range over them in sorted (hence reproducible) way:
 
 func SortedKeysOfSharedRuntime(model *Model) []string {

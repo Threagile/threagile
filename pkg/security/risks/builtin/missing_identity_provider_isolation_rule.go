@@ -64,10 +64,10 @@ func (r *MissingIdentityProviderIsolationRule) GenerateRisks(input *types.Model)
 				continue
 			}
 
-			if technicalAsset.IsSameExecutionEnvironment(input, sparringAssetCandidateId) {
+			if isSameExecutionEnvironment(input, technicalAsset, sparringAssetCandidateId) {
 				createRiskEntry = true
 				sameExecutionEnv = true
-			} else if technicalAsset.IsSameTrustBoundaryNetworkOnly(input, sparringAssetCandidateId) {
+			} else if isSameTrustBoundaryNetworkOnly(input, technicalAsset, sparringAssetCandidateId) {
 				createRiskEntry = true
 			}
 		}

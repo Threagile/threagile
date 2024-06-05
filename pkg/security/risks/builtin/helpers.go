@@ -1,6 +1,8 @@
 package builtin
 
 import (
+	"strings"
+
 	"github.com/threagile/threagile/pkg/security/types"
 )
 
@@ -35,4 +37,51 @@ func contains(a []string, x string) bool {
 		}
 	}
 	return false
+}
+
+func containsCaseInsensitiveAny(a []string, x ...string) bool {
+	for _, n := range a {
+		for _, c := range x {
+			if strings.TrimSpace(strings.ToLower(c)) == strings.TrimSpace(strings.ToLower(n)) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func isSameExecutionEnvironment(parsedModel *types.Model, ta *types.TechnicalAsset, otherAssetId string) bool {
+	trustBoundaryOfMyAsset, trustBoundaryOfMyAssetOk := parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[ta.Id]
+	trustBoundaryOfOtherAsset, trustBoundaryOfOtherAssetOk := parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[otherAssetId]
+	if trustBoundaryOfMyAssetOk != trustBoundaryOfOtherAssetOk {
+		return false
+	}
+	if !trustBoundaryOfMyAssetOk && !trustBoundaryOfOtherAssetOk {
+		return true
+	}
+	if trustBoundaryOfMyAsset.Type == types.ExecutionEnvironment && trustBoundaryOfOtherAsset.Type == types.ExecutionEnvironment {
+		return trustBoundaryOfMyAsset.Id == trustBoundaryOfOtherAsset.Id
+	}
+	return false
+}
+
+func isSameTrustBoundaryNetworkOnly(parsedModel *types.Model, ta *types.TechnicalAsset, otherAssetId string) bool {
+	trustBoundaryOfMyAsset, trustBoundaryOfMyAssetOk := parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[ta.Id]
+	if trustBoundaryOfMyAsset != nil && !trustBoundaryOfMyAsset.Type.IsNetworkBoundary() { // find and use the parent boundary then
+		trustBoundaryOfMyAsset, trustBoundaryOfMyAssetOk = parsedModel.TrustBoundaries[trustBoundaryOfMyAsset.ParentTrustBoundaryID(parsedModel)]
+	}
+	trustBoundaryOfOtherAsset, trustBoundaryOfOtherAssetOk := parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[otherAssetId]
+	if trustBoundaryOfOtherAsset != nil && !trustBoundaryOfOtherAsset.Type.IsNetworkBoundary() { // find and use the parent boundary then
+		trustBoundaryOfOtherAsset, trustBoundaryOfOtherAssetOk = parsedModel.TrustBoundaries[trustBoundaryOfOtherAsset.ParentTrustBoundaryID(parsedModel)]
+	}
+	if trustBoundaryOfMyAssetOk != trustBoundaryOfOtherAssetOk {
+		return false
+	}
+	if !trustBoundaryOfMyAssetOk && !trustBoundaryOfOtherAssetOk {
+		return true
+	}
+	if trustBoundaryOfMyAsset == nil || trustBoundaryOfOtherAsset == nil {
+		return trustBoundaryOfMyAsset == trustBoundaryOfOtherAsset
+	}
+	return trustBoundaryOfMyAsset.Id == trustBoundaryOfOtherAsset.Id
 }

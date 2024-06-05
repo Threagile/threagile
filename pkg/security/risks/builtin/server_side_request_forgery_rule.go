@@ -70,7 +70,7 @@ func (r *ServerSideRequestForgeryRule) createRisk(input *types.Model, technicalA
 	uniqueDataBreachTechnicalAssetIDs := make(map[string]interface{})
 	uniqueDataBreachTechnicalAssetIDs[technicalAsset.Id] = true
 	for _, potentialTargetAsset := range input.TechnicalAssets {
-		if !technicalAsset.IsSameTrustBoundaryNetworkOnly(input, potentialTargetAsset.Id) {
+		if !isSameTrustBoundaryNetworkOnly(input, technicalAsset, potentialTargetAsset.Id) {
 			continue
 		}
 		for _, commLinkIncoming := range input.IncomingTechnicalCommunicationLinksMappedByTargetId[potentialTargetAsset.Id] {

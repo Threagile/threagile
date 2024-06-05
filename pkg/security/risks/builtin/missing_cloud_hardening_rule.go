@@ -267,16 +267,46 @@ func (r *MissingCloudHardeningRule) GenerateRisks(input *types.Model) ([]*types.
 	// now also add all tech asset specific tag-specific risks, as they are specific to the asset anyway (therefore don't set added to true here)
 	for id := range techAssetIDsWithSubtagSpecificCloudRisks {
 		tA := input.TechnicalAssets[id]
-		if tA.IsTaggedWithAnyTraversingUp(input, "aws:ec2") {
+		if isTechnicalAssetTaggedWithAnyTraversingUp(input, tA, "aws:ec2") {
 			risks = append(risks, r.createRiskForTechnicalAsset(input, tA, "EC2", "CIS Benchmark for Amazon Linux"))
 		}
-		if tA.IsTaggedWithAnyTraversingUp(input, "aws:s3") {
+		if isTechnicalAssetTaggedWithAnyTraversingUp(input, tA, "aws:s3") {
 			risks = append(risks, r.createRiskForTechnicalAsset(input, tA, "S3", "Security Best Practices for AWS S3"))
 		}
 		// TODO add more tag-specific risks like also for aws:lambda etc. here
 	}
 
 	return risks, nil
+}
+
+// first use the tag(s) of the asset itself, then their trust boundaries (recursively up) and then their shared runtime
+func isTechnicalAssetTaggedWithAnyTraversingUp(model *types.Model, ta *types.TechnicalAsset, tags ...string) bool {
+	if containsCaseInsensitiveAny(ta.Tags, tags...) {
+		return true
+	}
+	tbID := ta.GetTrustBoundaryId(model)
+	if len(tbID) > 0 {
+		if isTrustedBoundaryTaggedWithAnyTraversingUp(model, model.TrustBoundaries[tbID], tags...) {
+			return true
+		}
+	}
+	for _, sr := range model.SharedRuntimes {
+		if contains(sr.TechnicalAssetsRunning, ta.Id) && sr.IsTaggedWithAny(tags...) {
+			return true
+		}
+	}
+	return false
+}
+
+func isTrustedBoundaryTaggedWithAnyTraversingUp(model *types.Model, tb *types.TrustBoundary, tags ...string) bool {
+	if tb.IsTaggedWithAny(tags...) {
+		return true
+	}
+	parentID := tb.ParentTrustBoundaryID(model)
+	if len(parentID) > 0 && isTrustedBoundaryTaggedWithAnyTraversingUp(model, model.TrustBoundaries[parentID], tags...) {
+		return true
+	}
+	return false
 }
 
 func (r *MissingCloudHardeningRule) addTrustBoundaryAccordingToBaseTag(trustBoundary *types.TrustBoundary,
