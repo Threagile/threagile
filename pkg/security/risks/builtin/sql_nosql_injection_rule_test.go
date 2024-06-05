@@ -59,12 +59,18 @@ func TestSqlNoSqlInjectionRuleCreateRisks(t *testing.T) {
 			expectRiskCreated:            false,
 			isVulnerableToQueryInjection: true,
 		},
-		// TODO: understand
-		// "not vulnerable to query injection": {
-		// 	protocol:                     types.JdbcEncrypted,
-		// 	expectRiskCreated:            false,
-		// 	isVulnerableToQueryInjection: false,
-		// },
+		"not vulnerable to query injection not lax": {
+			protocol:                     types.JdbcEncrypted,
+			expectRiskCreated:            false,
+			isVulnerableToQueryInjection: false,
+		},
+		"lax database always vulnerable to query injection": {
+			protocol:                     types.HTTP,
+			isVulnerableToQueryInjection: false,
+			expectRiskCreated:            true,
+			expectedLikelihood:           types.VeryLikely,
+			expectedImpact:               types.MediumImpact,
+		},
 		"database protocol and vulnerable to query injection": {
 			protocol:                     types.JdbcEncrypted,
 			expectRiskCreated:            true,
