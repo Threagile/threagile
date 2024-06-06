@@ -24,8 +24,6 @@ const (
 	DataAssetDiagramFilenameDOT = "data-asset-diagram.gv"
 	DataAssetDiagramFilenamePNG = "data-asset-diagram.png"
 
-	RAAPluginName = "raa_calc"
-
 	DefaultDiagramDPI               = 100
 	DefaultGraphvizDPI              = 120
 	MinGraphvizDPI                  = 20

@@ -1,81 +1,14 @@
-package main
+package model
 
 import (
-	"flag"
-	"fmt"
-	"gopkg.in/yaml.v3"
-	"io"
-	"os"
 	"sort"
 
 	"github.com/threagile/threagile/pkg/security/types"
 )
 
-// used from run caller:
+func applyRAA(input *types.Model, progressReporter types.ProgressReporter) string {
+	progressReporter.Infof("Applying RAA calculation")
 
-func main() {
-	inputFilename := flag.String("in", "", "input file")
-	outputFilename := flag.String("out", "", "output file")
-	flag.Parse()
-
-	var data []byte
-	var inputError error
-	if len(*inputFilename) > 0 {
-		data, inputError = os.ReadFile(*inputFilename)
-		if inputError != nil {
-			_, _ = fmt.Fprintf(os.Stderr, "failed to read input file %q: %v\n", *inputFilename, inputError)
-			os.Exit(-2)
-		}
-	} else {
-		data, inputError = io.ReadAll(os.Stdin)
-		if inputError != nil {
-			_, _ = fmt.Fprintf(os.Stderr, "failed to read input from stdin: %v\n", inputError)
-			os.Exit(-2)
-		}
-	}
-
-	// _ = os.WriteFile("raa_in.yaml", data, 0644)
-
-	var input types.Model
-	parseError := yaml.Unmarshal(data, &input)
-	if parseError != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "failed to parse model: %v\n", parseError)
-		os.Exit(-2)
-	}
-
-	text := CalculateRAA(&input)
-	outData, marshalError := yaml.Marshal(input)
-	if marshalError != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "failed to print model: %v\n", marshalError)
-		os.Exit(-2)
-	}
-
-	// _ = os.WriteFile("raa_out.yaml", outData, 0644)
-
-	var outputFile io.Writer = os.Stdout
-	if len(*outputFilename) > 0 {
-		file, outputError := os.Open(*outputFilename)
-		if outputError != nil {
-			_, _ = fmt.Fprintf(os.Stderr, "failed to open output file %q: %v\n", *outputFilename, outputError)
-			os.Exit(-2)
-		}
-
-		defer closeFile(file)
-		outputFile = file
-	}
-
-	_, _ = fmt.Fprint(outputFile, string(outData))
-	_ = text
-	//	_, _ = fmt.Fprint(os.Stderr, text)
-
-	os.Exit(0)
-}
-
-func closeFile(file io.Closer) {
-	_ = file.Close()
-}
-
-func CalculateRAA(input *types.Model) string {
 	for techAssetID, techAsset := range input.TechnicalAssets {
 		aa := calculateAttackerAttractiveness(input, techAsset)
 		aa += calculatePivotingNeighbourEffectAdjustment(input, techAsset)
@@ -92,10 +25,9 @@ func CalculateRAA(input *types.Model) string {
 		"attacker-attractive technical assets:"
 }
 
-var attackerAttractivenessMinimum, attackerAttractivenessMaximum, spread float64 = 0, 0, 0
-
 // set the concrete value in relation to the minimum and maximum of all
 func calculateRelativeAttackerAttractiveness(input *types.Model, attractiveness float64) float64 {
+	var attackerAttractivenessMinimum, attackerAttractivenessMaximum, spread float64 = 0, 0, 0
 	if attackerAttractivenessMinimum == 0 || attackerAttractivenessMaximum == 0 {
 		attackerAttractivenessMinimum, attackerAttractivenessMaximum = 9223372036854775807, -9223372036854775808
 		// determine (only one time required) the min/max of all

@@ -63,7 +63,6 @@ func (what *Threagile) initRoot() *Threagile {
 	what.rootCmd.PersistentFlags().StringVar(&what.flags.tempDirFlag, tempDirFlagName, defaultConfig.TempFolder, "temporary folder location")
 
 	what.rootCmd.PersistentFlags().StringVar(&what.flags.inputFileFlag, inputFileFlagName, defaultConfig.InputFile, "input model yaml file")
-	what.rootCmd.PersistentFlags().StringVar(&what.flags.raaPluginFlag, raaPluginFlagName, defaultConfig.RAAPlugin, "RAA calculation run file name")
 
 	what.rootCmd.PersistentFlags().BoolVarP(&what.flags.interactiveFlag, interactiveFlagName, interactiveFlagShorthand, defaultConfig.Interactive, "interactive mode")
 	what.rootCmd.PersistentFlags().BoolVarP(&what.flags.verboseFlag, verboseFlagName, verboseFlagShorthand, defaultConfig.Verbose, "verbose output")
@@ -255,9 +254,6 @@ func (what *Threagile) readConfig(cmd *cobra.Command, buildTimestamp string) *co
 
 	if isFlagOverridden(flags, inputFileFlagName) {
 		cfg.InputFile = cfg.CleanPath(what.flags.inputFileFlag)
-	}
-	if isFlagOverridden(flags, raaPluginFlagName) {
-		cfg.RAAPlugin = what.flags.raaPluginFlag
 	}
 
 	if isFlagOverridden(flags, customRiskRulesPluginFlagName) {

@@ -2,7 +2,6 @@ package model
 
 import (
 	"fmt"
-	"path/filepath"
 	"strings"
 
 	"github.com/threagile/threagile/pkg/common"
@@ -43,15 +42,7 @@ func ReadAndAnalyzeModel(config *common.Config, progressReporter types.ProgressR
 		return nil, fmt.Errorf("unable to parse model yaml: %v", parseError)
 	}
 
-	/**
-	jsonData, _ := json.MarshalIndent(parsedModel, "", "  ")
-	_ = os.WriteFile("parsed-model.json", jsonData, 0600)
-
-	yamlData, _ := yaml.Marshal(parsedModel)
-	_ = os.WriteFile("parsed-model.yaml", yamlData, 0600)
-	/**/
-
-	introTextRAA := applyRAA(parsedModel, config.PluginFolder, config.RAAPlugin, progressReporter)
+	introTextRAA := applyRAA(parsedModel, progressReporter)
 
 	applyRiskGeneration(parsedModel, builtinRiskRules.Merge(customRiskRules), config.SkipRiskRules, progressReporter)
 	err := parsedModel.ApplyWildcardRiskTrackingEvaluation(config.IgnoreOrphanedRiskTracking, progressReporter)
@@ -122,22 +113,4 @@ func applyRiskGeneration(parsedModel *types.Model, rules types.RiskRules,
 			parsedModel.GeneratedRisksBySyntheticId[strings.ToLower(risk.SyntheticId)] = risk
 		}
 	}
-}
-
-func applyRAA(parsedModel *types.Model, binFolder, raaPlugin string, progressReporter types.ProgressReporter) string {
-	progressReporter.Infof("Applying RAA calculation: %v", raaPlugin)
-
-	runner, loadError := new(runner).Load(filepath.Join(binFolder, raaPlugin))
-	if loadError != nil {
-		progressReporter.Warnf("raa %q not loaded: %v\n", raaPlugin, loadError)
-		return ""
-	}
-
-	runError := runner.Run(parsedModel, parsedModel)
-	if runError != nil {
-		progressReporter.Warnf("raa %q not applied: %v\n", raaPlugin, runError)
-		return ""
-	}
-
-	return runner.ErrorOutput
 }

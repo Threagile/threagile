@@ -22,7 +22,6 @@ const (
 	serverPortFlagName = "server-port"
 
 	inputFileFlagName = "model"
-	raaPluginFlagName = "raa-run"
 
 	customRiskRulesPluginFlagName      = "custom-risk-rules-plugin"
 	diagramDpiFlagName                 = "diagram-dpi"
@@ -49,7 +48,6 @@ type Flags struct {
 	outputDirFlag   string
 	tempDirFlag     string
 	inputFileFlag   string
-	raaPluginFlag   string
 	serverPortFlag  int
 	serverDirFlag   string
 

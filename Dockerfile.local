@@ -19,8 +19,6 @@ RUN go version
 RUN go test ./...
 
 # build binaries
-RUN go build -ldflags="-X main.buildTimestamp=$(date '+%Y%m%d%H%M%S')" -o raa_calc cmd/raa/main.go
-RUN go build -ldflags="-X main.buildTimestamp=$(date '+%Y%m%d%H%M%S')" -o raa_dummy cmd/raa_dummy/main.go
 RUN go build -ldflags="-X main.buildTimestamp=$(date '+%Y%m%d%H%M%S')" -o risk_demo_rule cmd/risk_demo/main.go
 RUN go build -ldflags="-X main.buildTimestamp=$(date '+%Y%m%d%H%M%S')" -o threagile cmd/threagile/main.go
 
@@ -68,8 +66,6 @@ RUN chown -R threagile:threagile /app /data
 USER threagile
 
 COPY --from=build --chown=threagile:threagile /app/threagile /app/
-COPY --from=build --chown=threagile:threagile /app/raa_calc /app/
-COPY --from=build --chown=threagile:threagile /app/raa_dummy /app/
 COPY --from=build --chown=threagile:threagile /app/risk_demo_rule /app/
 COPY --from=build --chown=threagile:threagile /app/LICENSE.txt /app/
 COPY --from=build --chown=threagile:threagile /app/report/template/background.pdf /app/
