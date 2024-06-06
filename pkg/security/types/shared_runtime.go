@@ -4,10 +4,6 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 
 package types
 
-import (
-	"sort"
-)
-
 type SharedRuntime struct {
 	Id                     string   `json:"id,omitempty" yaml:"id,omitempty"`
 	Title                  string   `json:"title,omitempty" yaml:"title,omitempty"`
@@ -51,17 +47,6 @@ func (what SharedRuntime) HighestAvailability(model *Model) Criticality {
 		}
 	}
 	return highest
-}
-
-// as in Go ranging over map is random order, range over them in sorted (hence reproducible) way:
-
-func SortedKeysOfSharedRuntime(model *Model) []string {
-	keys := make([]string, 0)
-	for k := range model.SharedRuntimes {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	return keys
 }
 
 type BySharedRuntimeTitleSort []*SharedRuntime

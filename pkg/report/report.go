@@ -581,7 +581,7 @@ func (r *pdfReporter) createTableOfContents(parsedModel *types.Model) {
 		r.pdfColorBlack()
 		r.pdf.Text(11, y, "Shared Runtime")
 		r.pdf.SetFont("Helvetica", "", fontSizeBody)
-		for _, key := range types.SortedKeysOfSharedRuntime(parsedModel) {
+		for _, key := range sortedKeysOfSharedRuntime(parsedModel) {
 			sharedRuntime := parsedModel.SharedRuntimes[key]
 			y += 6
 			if y > 275 {
@@ -635,6 +635,17 @@ func (r *pdfReporter) createTableOfContents(parsedModel *types.Model) {
 	// Now write all the sections/pages. Before we start writing, we use `RegisterAlias` to
 	// ensure that the alias written in the table of contents will be replaced
 	// by the current page number. --> See the "r.pdf.RegisterAlias()" calls during the PDF creation in this file
+}
+
+// as in Go ranging over map is random order, range over them in sorted (hence reproducible) way:
+
+func sortedKeysOfSharedRuntime(model *types.Model) []string {
+	keys := make([]string, 0)
+	for k := range model.SharedRuntimes {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
 }
 
 func sortedTechnicalAssetsByRiskSeverityAndTitle(parsedModel *types.Model) []*types.TechnicalAsset {
