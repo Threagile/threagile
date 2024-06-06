@@ -5,12 +5,12 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package model
 
 import (
-	"github.com/threagile/threagile/pkg/common"
 	"testing"
 
 	"github.com/google/uuid"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/threagile/threagile/pkg/common"
 	"github.com/threagile/threagile/pkg/input"
 	"github.com/threagile/threagile/pkg/security/types"
 )

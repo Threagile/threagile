@@ -10,8 +10,6 @@ import (
 	"slices"
 	"sort"
 	"strings"
-
-	"github.com/threagile/threagile/pkg/input"
 )
 
 // TODO: move model out of types package and
@@ -22,12 +20,12 @@ type Model struct {
 	ThreagileVersion                              string                        `yaml:"threagile_version,omitempty" json:"threagile_version,omitempty"`
 	Includes                                      []string                      `yaml:"includes,omitempty" json:"includes,omitempty"`
 	Title                                         string                        `json:"title,omitempty" yaml:"title,omitempty"`
-	Author                                        input.Author                  `json:"author,omitempty" yaml:"author,omitempty"`
-	Contributors                                  []input.Author                `yaml:"contributors,omitempty" json:"contributors,omitempty"`
+	Author                                        *Author                       `json:"author,omitempty" yaml:"author,omitempty"`
+	Contributors                                  []*Author                     `yaml:"contributors,omitempty" json:"contributors,omitempty"`
 	Date                                          Date                          `json:"date,omitempty" yaml:"date,omitempty"`
-	AppDescription                                input.Overview                `yaml:"application_description,omitempty" json:"application_description,omitempty"`
-	BusinessOverview                              input.Overview                `json:"business_overview,omitempty" yaml:"business_overview,omitempty"`
-	TechnicalOverview                             input.Overview                `json:"technical_overview,omitempty" yaml:"technical_overview,omitempty"`
+	AppDescription                                *Overview                     `yaml:"application_description,omitempty" json:"application_description,omitempty"`
+	BusinessOverview                              *Overview                     `json:"business_overview,omitempty" yaml:"business_overview,omitempty"`
+	TechnicalOverview                             *Overview                     `json:"technical_overview,omitempty" yaml:"technical_overview,omitempty"`
 	BusinessCriticality                           Criticality                   `json:"business_criticality,omitempty" yaml:"business_criticality,omitempty"`
 	ManagementSummaryComment                      string                        `json:"management_summary_comment,omitempty" yaml:"management_summary_comment,omitempty"`
 	SecurityRequirements                          map[string]string             `json:"security_requirements,omitempty" yaml:"security_requirements,omitempty"`
