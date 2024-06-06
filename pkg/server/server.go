@@ -15,11 +15,10 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/gin-gonic/gin"
+
 	"github.com/threagile/threagile/pkg/common"
 	"github.com/threagile/threagile/pkg/model"
-
-	"github.com/gin-gonic/gin"
-	"github.com/threagile/threagile/pkg/docs"
 	"github.com/threagile/threagile/pkg/security/risks"
 	"github.com/threagile/threagile/pkg/security/types"
 )
@@ -85,7 +84,7 @@ func RunServer(config *common.Config) {
 	})
 	router.GET("/meta/version", func(c *gin.Context) {
 		c.JSON(200, gin.H{
-			"version":         docs.ThreagileVersion,
+			"version":         common.ThreagileVersion,
 			"build_timestamp": s.config.BuildTimestamp,
 		})
 	})
