@@ -2,10 +2,12 @@ package threagile
 
 import (
 	"fmt"
+
 	"github.com/spf13/cobra"
 	"github.com/threagile/threagile/pkg/common"
 	"github.com/threagile/threagile/pkg/model"
 	"github.com/threagile/threagile/pkg/report"
+	"github.com/threagile/threagile/pkg/security/risks"
 )
 
 func (what *Threagile) initAnalyze() *Threagile {
@@ -18,7 +20,7 @@ func (what *Threagile) initAnalyze() *Threagile {
 			commands := what.readCommands()
 			progressReporter := common.DefaultProgressReporter{Verbose: cfg.Verbose}
 
-			r, err := model.ReadAndAnalyzeModel(cfg, progressReporter)
+			r, err := model.ReadAndAnalyzeModel(cfg, risks.GetBuiltInRiskRules(), progressReporter)
 			if err != nil {
 				return fmt.Errorf("failed to read and analyze model: %v", err)
 			}

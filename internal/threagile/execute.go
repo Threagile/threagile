@@ -12,6 +12,7 @@ import (
 	"github.com/threagile/threagile/pkg/common"
 	"github.com/threagile/threagile/pkg/macros"
 	"github.com/threagile/threagile/pkg/model"
+	"github.com/threagile/threagile/pkg/security/risks"
 )
 
 func (what *Threagile) initExecute() *Threagile {
@@ -23,7 +24,7 @@ func (what *Threagile) initExecute() *Threagile {
 			cfg := what.readConfig(cmd, what.buildTimestamp)
 			progressReporter := common.DefaultProgressReporter{Verbose: cfg.Verbose}
 
-			r, err := model.ReadAndAnalyzeModel(cfg, progressReporter)
+			r, err := model.ReadAndAnalyzeModel(cfg, risks.GetBuiltInRiskRules(), progressReporter)
 			if err != nil {
 				return fmt.Errorf("unable to read and analyze model: %v", err)
 			}

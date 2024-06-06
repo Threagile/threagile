@@ -6,7 +6,6 @@ import (
 
 	"github.com/threagile/threagile/pkg/common"
 	"github.com/threagile/threagile/pkg/input"
-	"github.com/threagile/threagile/pkg/security/risks"
 	"github.com/threagile/threagile/pkg/security/types"
 )
 
@@ -24,11 +23,10 @@ func (what ReadResult) ExplainRisk(cfg *common.Config, risk string, reporter com
 
 // TODO: consider about splitting this function into smaller ones for better reusability
 
-func ReadAndAnalyzeModel(config *common.Config, progressReporter types.ProgressReporter) (*ReadResult, error) {
+func ReadAndAnalyzeModel(config *common.Config, builtinRiskRules types.RiskRules, progressReporter types.ProgressReporter) (*ReadResult, error) {
 	progressReporter.Infof("Writing into output directory: %v", config.OutputFolder)
 	progressReporter.Infof("Parsing model: %v", config.InputFile)
 
-	builtinRiskRules := risks.GetBuiltInRiskRules()
 	customRiskRules := LoadCustomRiskRules(config.RiskRulesPlugins, progressReporter)
 
 	modelInput := new(input.Model).Defaults()

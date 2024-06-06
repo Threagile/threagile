@@ -2,6 +2,8 @@ package threagile
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/spf13/cobra"
 	"github.com/threagile/threagile/pkg/common"
 	"github.com/threagile/threagile/pkg/docs"
@@ -9,7 +11,6 @@ import (
 	"github.com/threagile/threagile/pkg/model"
 	"github.com/threagile/threagile/pkg/security/risks"
 	"github.com/threagile/threagile/pkg/security/types"
-	"strings"
 )
 
 func (what *Threagile) initExplain() *Threagile {
@@ -57,7 +58,7 @@ func (what *Threagile) explainRisk(cmd *cobra.Command, _ []string) error {
 
 	// todo: reuse model if already loaded
 
-	result, runError := model.ReadAndAnalyzeModel(cfg, progressReporter)
+	result, runError := model.ReadAndAnalyzeModel(cfg, risks.GetBuiltInRiskRules(), progressReporter)
 	if runError != nil {
 		cmd.Printf("Failed to read and analyze model: %v", runError)
 		return runError
