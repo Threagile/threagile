@@ -2,14 +2,14 @@ package threagile
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/spf13/cobra"
 	"github.com/threagile/threagile/pkg/common"
-	"github.com/threagile/threagile/pkg/docs"
 	"github.com/threagile/threagile/pkg/macros"
 	"github.com/threagile/threagile/pkg/model"
 	"github.com/threagile/threagile/pkg/security/risks"
 	"github.com/threagile/threagile/pkg/security/types"
-	"strings"
 )
 
 func (what *Threagile) initList() *Threagile {
@@ -17,7 +17,7 @@ func (what *Threagile) initList() *Threagile {
 		Use:   common.ListRiskRulesCommand,
 		Short: "Print available risk rules",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cmd.Println(docs.Logo + "\n\n" + fmt.Sprintf(docs.VersionText, what.buildTimestamp))
+			cmd.Println(common.Logo + "\n\n" + fmt.Sprintf(common.VersionText, what.buildTimestamp))
 			cmd.Println("The following risk rules are available (can be extended via custom risk rules):")
 			cmd.Println()
 			cmd.Println("----------------------")
@@ -44,7 +44,7 @@ func (what *Threagile) initList() *Threagile {
 		Use:   common.ListModelMacrosCommand,
 		Short: "Print model macros",
 		Run: func(cmd *cobra.Command, args []string) {
-			cmd.Println(docs.Logo + "\n\n" + fmt.Sprintf(docs.VersionText, what.buildTimestamp))
+			cmd.Println(common.Logo + "\n\n" + fmt.Sprintf(common.VersionText, what.buildTimestamp))
 			cmd.Println("The following model macros are available (can be extended via custom model macros):")
 			cmd.Println()
 			/* TODO finish plugin stuff
@@ -70,7 +70,7 @@ func (what *Threagile) initList() *Threagile {
 		Use:   common.ListTypesCommand,
 		Short: "Print type information (enum values to be used in models)",
 		Run: func(cmd *cobra.Command, args []string) {
-			cmd.Println(docs.Logo + "\n\n" + fmt.Sprintf(docs.VersionText, what.buildTimestamp))
+			cmd.Println(common.Logo + "\n\n" + fmt.Sprintf(common.VersionText, what.buildTimestamp))
 			cmd.Println()
 			cmd.Println()
 			cmd.Println("The following types are available (can be extended for custom rules):")

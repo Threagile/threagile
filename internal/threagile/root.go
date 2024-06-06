@@ -18,7 +18,6 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/threagile/threagile/pkg/common"
-	"github.com/threagile/threagile/pkg/docs"
 	"github.com/threagile/threagile/pkg/report"
 )
 
@@ -44,9 +43,9 @@ Additional help topics:{{range .Commands}}{{if .IsAdditionalHelpTopicCommand}}
 func (what *Threagile) initRoot() *Threagile {
 	what.rootCmd = &cobra.Command{
 		Use:           "threagile",
-		Version:       docs.ThreagileVersion,
-		Short:         "\n" + docs.Logo,
-		Long:          "\n" + docs.Logo + "\n\n" + fmt.Sprintf(docs.VersionText, what.buildTimestamp) + "\n\n" + docs.Examples,
+		Version:       common.ThreagileVersion,
+		Short:         "\n" + common.Logo,
+		Long:          "\n" + common.Logo + "\n\n" + fmt.Sprintf(common.VersionText, what.buildTimestamp) + "\n\n" + common.Examples,
 		SilenceErrors: true,
 		SilenceUsage:  true,
 		Run:           what.run,

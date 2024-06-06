@@ -26,7 +26,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/threagile/threagile/pkg/docs"
+	"github.com/threagile/threagile/pkg/common"
 	"github.com/threagile/threagile/pkg/input"
 	"github.com/threagile/threagile/pkg/security/types"
 	"golang.org/x/crypto/argon2"
@@ -55,7 +55,7 @@ func (s *server) createNewModel(ginContext *gin.Context) {
 	}
 
 	aYaml := `title: New Threat Model
-threagile_version: ` + docs.ThreagileVersion + `
+threagile_version: ` + common.ThreagileVersion + `
 author:
   name: ""
   homepage: ""
@@ -1041,7 +1041,7 @@ func (s *server) readModel(ginContext *gin.Context, modelUUID string, key []byte
 func (s *server) writeModel(ginContext *gin.Context, key []byte, folderNameOfKey string, modelInput *input.Model, changeReasonForHistory string) (ok bool) {
 	modelFolder, ok := s.checkModelFolder(ginContext, ginContext.Param("model-id"), folderNameOfKey)
 	if ok {
-		modelInput.ThreagileVersion = docs.ThreagileVersion
+		modelInput.ThreagileVersion = common.ThreagileVersion
 		yamlBytes, err := yaml.Marshal(modelInput)
 		if err != nil {
 			log.Println(err)

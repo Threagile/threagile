@@ -6,7 +6,6 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/threagile/threagile/pkg/common"
-	"github.com/threagile/threagile/pkg/docs"
 	"github.com/threagile/threagile/pkg/macros"
 	"github.com/threagile/threagile/pkg/model"
 	"github.com/threagile/threagile/pkg/security/risks"
@@ -71,7 +70,7 @@ func (what *Threagile) explainRisk(cmd *cobra.Command, _ []string) error {
 }
 
 func (what *Threagile) explainRules(cmd *cobra.Command, _ []string) error {
-	cmd.Println(docs.Logo + "\n\n" + fmt.Sprintf(docs.VersionText, what.buildTimestamp))
+	cmd.Println(common.Logo + "\n\n" + fmt.Sprintf(common.VersionText, what.buildTimestamp))
 	cmd.Println("Explanation for risk rules:")
 	cmd.Println()
 	cmd.Println("----------------------")
@@ -95,7 +94,7 @@ func (what *Threagile) explainRules(cmd *cobra.Command, _ []string) error {
 }
 
 func (what *Threagile) explainMacros(cmd *cobra.Command, args []string) {
-	cmd.Println(docs.Logo + "\n\n" + fmt.Sprintf(docs.VersionText, what.buildTimestamp))
+	cmd.Println(common.Logo + "\n\n" + fmt.Sprintf(common.VersionText, what.buildTimestamp))
 	cmd.Println("Explanation for the model macros:")
 	cmd.Println()
 	/* TODO finish plugin stuff
@@ -118,7 +117,7 @@ func (what *Threagile) explainMacros(cmd *cobra.Command, args []string) {
 }
 
 func (what *Threagile) explainTypes(cmd *cobra.Command, args []string) {
-	cmd.Println(docs.Logo + "\n\n" + fmt.Sprintf(docs.VersionText, what.buildTimestamp))
+	cmd.Println(common.Logo + "\n\n" + fmt.Sprintf(common.VersionText, what.buildTimestamp))
 	fmt.Println("Explanation for the types:")
 	cmd.Println()
 	cmd.Println("The following types are available (can be extended for custom rules):")

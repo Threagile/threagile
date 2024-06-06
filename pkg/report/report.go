@@ -15,7 +15,7 @@ import (
 
 	"github.com/jung-kurt/gofpdf"
 	"github.com/jung-kurt/gofpdf/contrib/gofpdi"
-	"github.com/threagile/threagile/pkg/docs"
+	"github.com/threagile/threagile/pkg/common"
 	"github.com/threagile/threagile/pkg/security/risks"
 	"github.com/threagile/threagile/pkg/security/types"
 	"github.com/wcharczuk/go-chart"
@@ -4233,7 +4233,7 @@ func (r *pdfReporter) createRiskRulesChecked(parsedModel *types.Model, modelFile
 	r.pdfColorGray()
 	r.pdf.SetFont("Helvetica", "", fontSizeSmall)
 	timestamp := time.Now()
-	strBuilder.WriteString("<b>Threagile Version:</b> " + docs.ThreagileVersion)
+	strBuilder.WriteString("<b>Threagile Version:</b> " + common.ThreagileVersion)
 	strBuilder.WriteString("<br><b>Threagile Build Timestamp:</b> " + buildTimestamp)
 	strBuilder.WriteString("<br><b>Threagile Execution Timestamp:</b> " + timestamp.Format("20060102150405"))
 	strBuilder.WriteString("<br><b>Model Filename:</b> " + modelFilename)
