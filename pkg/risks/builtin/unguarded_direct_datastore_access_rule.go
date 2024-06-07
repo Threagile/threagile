@@ -89,7 +89,7 @@ func isSharingSameParentTrustBoundary(input *types.Model, left, right *types.Tec
 		return true
 	}
 	tbLeft, tbRight := input.TrustBoundaries[tbIDLeft], input.TrustBoundaries[tbIDRight]
-	tbParentsLeft, tbParentsRight := tbLeft.AllParentTrustBoundaryIDs(input), tbRight.AllParentTrustBoundaryIDs(input)
+	tbParentsLeft, tbParentsRight := input.AllParentTrustBoundaryIDs(tbLeft), input.AllParentTrustBoundaryIDs(tbRight)
 	for _, parentLeft := range tbParentsLeft {
 		for _, parentRight := range tbParentsRight {
 			if parentLeft == parentRight {

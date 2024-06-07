@@ -380,8 +380,16 @@ func sortedTrustBoundariesByTitle(parsedModel *types.Model) []*types.TrustBounda
 	for _, boundary := range parsedModel.TrustBoundaries {
 		boundaries = append(boundaries, boundary)
 	}
-	sort.Sort(types.ByTrustBoundaryTitleSort(boundaries))
+	sort.Sort(byTrustBoundaryTitleSort(boundaries))
 	return boundaries
+}
+
+type byTrustBoundaryTitleSort []*types.TrustBoundary
+
+func (what byTrustBoundaryTitleSort) Len() int      { return len(what) }
+func (what byTrustBoundaryTitleSort) Swap(i, j int) { what[i], what[j] = what[j], what[i] }
+func (what byTrustBoundaryTitleSort) Less(i, j int) bool {
+	return what[i].Title < what[j].Title
 }
 
 func sortedDataAssetsByTitle(parsedModel *types.Model) []*types.DataAsset {

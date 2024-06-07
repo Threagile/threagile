@@ -553,7 +553,7 @@ func (r *pdfReporter) createTableOfContents(parsedModel *types.Model) {
 		r.pdfColorBlack()
 		r.pdf.Text(11, y, "Trust Boundaries")
 		r.pdf.SetFont("Helvetica", "", fontSizeBody)
-		for _, key := range types.SortedKeysOfTrustBoundaries(parsedModel) {
+		for _, key := range sortedKeysOfTrustBoundaries(parsedModel) {
 			trustBoundary := parsedModel.TrustBoundaries[key]
 			y += 6
 			if y > 275 {
@@ -643,7 +643,16 @@ func (r *pdfReporter) createTableOfContents(parsedModel *types.Model) {
 }
 
 // as in Go ranging over map is random order, range over them in sorted (hence reproducible) way:
+func sortedKeysOfTrustBoundaries(model *types.Model) []string {
+	keys := make([]string, 0)
+	for k := range model.TrustBoundaries {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
+}
 
+// as in Go ranging over map is random order, range over them in sorted (hence reproducible) way:
 func sortedKeysOfSharedRuntime(model *types.Model) []string {
 	keys := make([]string, 0)
 	for k := range model.SharedRuntimes {

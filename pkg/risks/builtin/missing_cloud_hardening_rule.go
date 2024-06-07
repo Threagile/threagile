@@ -90,7 +90,7 @@ func (r *MissingCloudHardeningRule) GenerateRisks(input *types.Model) ([]*types.
 
 		r.addTrustBoundaryAccordingToBaseTag(trustBoundary, trustBoundariesWithUnspecificCloudRisks,
 			trustBoundaryIDsAWS, trustBoundaryIDsAzure, trustBoundaryIDsGCP, trustBoundaryIDsOCP)
-		for _, techAssetID := range trustBoundary.RecursivelyAllTechnicalAssetIDsInside(input) {
+		for _, techAssetID := range input.RecursivelyAllTechnicalAssetIDsInside(trustBoundary) {
 			tA := input.TechnicalAssets[techAssetID]
 			if tA.IsTaggedWithAny(r.SupportedTags()...) {
 				addAccordingToBaseTag(tA, tA.Tags,
@@ -117,7 +117,7 @@ func (r *MissingCloudHardeningRule) GenerateRisks(input *types.Model) ([]*types.
 			techAssetIDsAWS, techAssetIDsAzure, techAssetIDsGCP, techAssetIDsOCP)
 	}
 	for _, tB := range input.TrustBoundariesTaggedWithAny(r.SupportedTags()...) {
-		for _, candidateID := range tB.RecursivelyAllTechnicalAssetIDsInside(input) {
+		for _, candidateID := range input.RecursivelyAllTechnicalAssetIDsInside(tB) {
 			tA := input.TechnicalAssets[candidateID]
 			if tA.IsTaggedWithAny(r.SupportedTags()...) {
 				addAccordingToBaseTag(tA, tA.Tags,
@@ -302,8 +302,8 @@ func isTrustedBoundaryTaggedWithAnyTraversingUp(model *types.Model, tb *types.Tr
 	if tb.IsTaggedWithAny(tags...) {
 		return true
 	}
-	parentID := tb.ParentTrustBoundaryID(model)
-	if len(parentID) > 0 && isTrustedBoundaryTaggedWithAnyTraversingUp(model, model.TrustBoundaries[parentID], tags...) {
+	parentTb := model.FindParentTrustBoundary(tb)
+	if parentTb != nil && isTrustedBoundaryTaggedWithAnyTraversingUp(model, parentTb, tags...) {
 		return true
 	}
 	return false
@@ -454,14 +454,13 @@ func (r *MissingCloudHardeningRule) createRiskForTrustBoundary(parsedModel *type
 		title += ": <u>" + details + "</u>"
 	}
 	impact := types.MediumImpact
-	if trustBoundary.HighestConfidentiality(parsedModel) >= types.Confidential ||
-		trustBoundary.HighestIntegrity(parsedModel) >= types.Critical ||
-		trustBoundary.HighestAvailability(parsedModel) >= types.Critical {
+	confidentiality := parsedModel.FindTrustBoundaryHighestConfidentiality(trustBoundary)
+	integrity := parsedModel.FindTrustBoundaryHighestIntegrity(trustBoundary)
+	availability := parsedModel.FindTrustBoundaryHighestAvailability(trustBoundary)
+	if confidentiality >= types.Confidential || integrity >= types.Critical || availability >= types.Critical {
 		impact = types.HighImpact
 	}
-	if trustBoundary.HighestConfidentiality(parsedModel) == types.StrictlyConfidential ||
-		trustBoundary.HighestIntegrity(parsedModel) == types.MissionCritical ||
-		trustBoundary.HighestAvailability(parsedModel) == types.MissionCritical {
+	if confidentiality == types.StrictlyConfidential || integrity == types.MissionCritical || availability == types.MissionCritical {
 		impact = types.VeryHighImpact
 	}
 	// create risk
@@ -473,7 +472,7 @@ func (r *MissingCloudHardeningRule) createRiskForTrustBoundary(parsedModel *type
 		Title:                       title,
 		MostRelevantTrustBoundaryId: trustBoundary.Id,
 		DataBreachProbability:       types.Probable,
-		DataBreachTechnicalAssetIDs: trustBoundary.RecursivelyAllTechnicalAssetIDsInside(parsedModel),
+		DataBreachTechnicalAssetIDs: parsedModel.RecursivelyAllTechnicalAssetIDsInside(trustBoundary),
 	}
 	risk.SyntheticId = risk.CategoryId + "@" + trustBoundary.Id + id
 	return risk

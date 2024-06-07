@@ -13,7 +13,7 @@ import (
 )
 
 // TODO: move model out of types package and
-// rename parsedModel to model or something like this to emphasize that it's just a model
+// rename model to model or something like this to emphasize that it's just a model
 // maybe
 
 type Model struct {
@@ -56,15 +56,15 @@ type Model struct {
 	GeneratedRisksBySyntheticId                           map[string]*Risk                `json:"generated_risks_by_synthetic_id,omitempty" yaml:"generated_risks_by_synthetic_id,omitempty"`
 }
 
-func (parsedModel *Model) AddToListOfSupportedTags(tags []string) {
+func (model *Model) AddToListOfSupportedTags(tags []string) {
 	for _, tag := range tags {
-		parsedModel.AllSupportedTags[tag] = true
+		model.AllSupportedTags[tag] = true
 	}
 }
 
-func (parsedModel *Model) GetDeferredRiskTrackingDueToWildcardMatching() map[string]*RiskTracking {
+func (model *Model) GetDeferredRiskTrackingDueToWildcardMatching() map[string]*RiskTracking {
 	deferredRiskTrackingDueToWildcardMatching := make(map[string]*RiskTracking)
-	for syntheticRiskId, riskTracking := range parsedModel.RiskTracking {
+	for syntheticRiskId, riskTracking := range model.RiskTracking {
 		if strings.Contains(syntheticRiskId, "*") { // contains a wildcard char
 			deferredRiskTrackingDueToWildcardMatching[syntheticRiskId] = riskTracking
 		}
@@ -73,20 +73,20 @@ func (parsedModel *Model) GetDeferredRiskTrackingDueToWildcardMatching() map[str
 	return deferredRiskTrackingDueToWildcardMatching
 }
 
-func (parsedModel *Model) HasNotYetAnyDirectNonWildcardRiskTracking(syntheticRiskId string) bool {
-	if _, ok := parsedModel.RiskTracking[syntheticRiskId]; ok {
+func (model *Model) HasNotYetAnyDirectNonWildcardRiskTracking(syntheticRiskId string) bool {
+	if _, ok := model.RiskTracking[syntheticRiskId]; ok {
 		return false
 	}
 	return true
 }
 
-func (parsedModel *Model) CheckTags(tags []string, where string) ([]string, error) {
+func (model *Model) CheckTags(tags []string, where string) ([]string, error) {
 	var tagsUsed = make([]string, 0)
 	if tags != nil {
 		tagsUsed = make([]string, len(tags))
 		for i, parsedEntry := range tags {
 			referencedTag := fmt.Sprintf("%v", parsedEntry)
-			err := parsedModel.CheckTagExists(referencedTag, where)
+			err := model.CheckTagExists(referencedTag, where)
 			if err != nil {
 				return nil, err
 			}
@@ -96,17 +96,17 @@ func (parsedModel *Model) CheckTags(tags []string, where string) ([]string, erro
 	return tagsUsed, nil
 }
 
-func (parsedModel *Model) ApplyWildcardRiskTrackingEvaluation(ignoreOrphanedRiskTracking bool, progressReporter ProgressReporter) error {
+func (model *Model) ApplyWildcardRiskTrackingEvaluation(ignoreOrphanedRiskTracking bool, progressReporter ProgressReporter) error {
 	progressReporter.Info("Executing risk tracking evaluation")
-	for syntheticRiskIdPattern, riskTracking := range parsedModel.GetDeferredRiskTrackingDueToWildcardMatching() {
+	for syntheticRiskIdPattern, riskTracking := range model.GetDeferredRiskTrackingDueToWildcardMatching() {
 		progressReporter.Infof("Applying wildcard risk tracking for risk id: %v", syntheticRiskIdPattern)
 
 		foundSome := false
 		var matchingRiskIdExpression = regexp.MustCompile(strings.ReplaceAll(regexp.QuoteMeta(syntheticRiskIdPattern), `\*`, `[^@]+`))
-		for syntheticRiskId := range parsedModel.GeneratedRisksBySyntheticId {
-			if matchingRiskIdExpression.Match([]byte(syntheticRiskId)) && parsedModel.HasNotYetAnyDirectNonWildcardRiskTracking(syntheticRiskId) {
+		for syntheticRiskId := range model.GeneratedRisksBySyntheticId {
+			if matchingRiskIdExpression.Match([]byte(syntheticRiskId)) && model.HasNotYetAnyDirectNonWildcardRiskTracking(syntheticRiskId) {
 				foundSome = true
-				parsedModel.RiskTracking[syntheticRiskId] = &RiskTracking{
+				model.RiskTracking[syntheticRiskId] = &RiskTracking{
 					SyntheticRiskId: strings.TrimSpace(syntheticRiskId),
 					Justification:   riskTracking.Justification,
 					CheckedBy:       riskTracking.CheckedBy,
@@ -128,10 +128,10 @@ func (parsedModel *Model) ApplyWildcardRiskTrackingEvaluation(ignoreOrphanedRisk
 	return nil
 }
 
-func (parsedModel *Model) CheckRiskTracking(ignoreOrphanedRiskTracking bool, progressReporter ProgressReporter) error {
+func (model *Model) CheckRiskTracking(ignoreOrphanedRiskTracking bool, progressReporter ProgressReporter) error {
 	progressReporter.Info("Checking risk tracking")
-	for _, tracking := range parsedModel.RiskTracking {
-		if _, ok := parsedModel.GeneratedRisksBySyntheticId[tracking.SyntheticRiskId]; !ok {
+	for _, tracking := range model.RiskTracking {
+		if _, ok := model.GeneratedRisksBySyntheticId[tracking.SyntheticRiskId]; !ok {
 			if ignoreOrphanedRiskTracking {
 				progressReporter.Infof("Risk tracking references unknown risk (risk id not found): %v", tracking.SyntheticRiskId)
 			} else {
@@ -152,43 +152,43 @@ func (parsedModel *Model) CheckRiskTracking(ignoreOrphanedRiskTracking bool, pro
 	return nil
 }
 
-func (parsedModel *Model) CheckTagExists(referencedTag, where string) error {
-	if !slices.Contains(parsedModel.TagsAvailable, referencedTag) {
+func (model *Model) CheckTagExists(referencedTag, where string) error {
+	if !slices.Contains(model.TagsAvailable, referencedTag) {
 		return fmt.Errorf("missing referenced tag in overall tag list at %v: %v", where, referencedTag)
 	}
 	return nil
 }
 
-func (parsedModel *Model) CheckDataAssetTargetExists(referencedAsset, where string) error {
-	if _, ok := parsedModel.DataAssets[referencedAsset]; !ok {
+func (model *Model) CheckDataAssetTargetExists(referencedAsset, where string) error {
+	if _, ok := model.DataAssets[referencedAsset]; !ok {
 		return fmt.Errorf("missing referenced data asset target at %v: %v", where, referencedAsset)
 	}
 	return nil
 }
 
-func (parsedModel *Model) CheckTrustBoundaryExists(referencedId, where string) error {
-	if _, ok := parsedModel.TrustBoundaries[referencedId]; !ok {
+func (model *Model) CheckTrustBoundaryExists(referencedId, where string) error {
+	if _, ok := model.TrustBoundaries[referencedId]; !ok {
 		return fmt.Errorf("missing referenced trust boundary at %v: %v", where, referencedId)
 	}
 	return nil
 }
 
-func (parsedModel *Model) CheckSharedRuntimeExists(referencedId, where string) error {
-	if _, ok := parsedModel.SharedRuntimes[referencedId]; !ok {
+func (model *Model) CheckSharedRuntimeExists(referencedId, where string) error {
+	if _, ok := model.SharedRuntimes[referencedId]; !ok {
 		return fmt.Errorf("missing referenced shared runtime at %v: %v", where, referencedId)
 	}
 	return nil
 }
 
-func (parsedModel *Model) CheckCommunicationLinkExists(referencedId, where string) error {
-	if _, ok := parsedModel.CommunicationLinks[referencedId]; !ok {
+func (model *Model) CheckCommunicationLinkExists(referencedId, where string) error {
+	if _, ok := model.CommunicationLinks[referencedId]; !ok {
 		return fmt.Errorf("missing referenced communication link at %v: %v", where, referencedId)
 	}
 	return nil
 }
 
-func (parsedModel *Model) CheckTechnicalAssetExists(referencedAsset, where string, onlyForTweak bool) error {
-	if _, ok := parsedModel.TechnicalAssets[referencedAsset]; !ok {
+func (model *Model) CheckTechnicalAssetExists(referencedAsset, where string, onlyForTweak bool) error {
+	if _, ok := model.TechnicalAssets[referencedAsset]; !ok {
 		suffix := ""
 		if onlyForTweak {
 			suffix = " (only referenced in diagram tweak)"
@@ -198,10 +198,10 @@ func (parsedModel *Model) CheckTechnicalAssetExists(referencedAsset, where strin
 	return nil
 }
 
-func (parsedModel *Model) CheckNestedTrustBoundariesExisting() error {
-	for _, trustBoundary := range parsedModel.TrustBoundaries {
+func (model *Model) CheckNestedTrustBoundariesExisting() error {
+	for _, trustBoundary := range model.TrustBoundaries {
 		for _, nestedId := range trustBoundary.TrustBoundariesNested {
-			if _, ok := parsedModel.TrustBoundaries[nestedId]; !ok {
+			if _, ok := model.TrustBoundaries[nestedId]; !ok {
 				return fmt.Errorf("missing referenced nested trust boundary: %v", nestedId)
 			}
 		}
@@ -226,9 +226,9 @@ func CalculateSeverity(likelihood RiskExploitationLikelihood, impact RiskExploit
 	return CriticalSeverity
 }
 
-func (parsedModel *Model) InScopeTechnicalAssets() []*TechnicalAsset {
+func (model *Model) InScopeTechnicalAssets() []*TechnicalAsset {
 	result := make([]*TechnicalAsset, 0)
-	for _, asset := range parsedModel.TechnicalAssets {
+	for _, asset := range model.TechnicalAssets {
 		if !asset.OutOfScope {
 			result = append(result, asset)
 		}
@@ -236,32 +236,32 @@ func (parsedModel *Model) InScopeTechnicalAssets() []*TechnicalAsset {
 	return result
 }
 
-func (parsedModel *Model) SortedTechnicalAssetIDs() []string {
+func (model *Model) SortedTechnicalAssetIDs() []string {
 	res := make([]string, 0)
-	for id := range parsedModel.TechnicalAssets {
+	for id := range model.TechnicalAssets {
 		res = append(res, id)
 	}
 	sort.Strings(res)
 	return res
 }
 
-func (parsedModel *Model) TagsActuallyUsed() []string {
+func (model *Model) TagsActuallyUsed() []string {
 	result := make([]string, 0)
-	for _, tag := range parsedModel.TagsAvailable {
-		if len(parsedModel.TechnicalAssetsTaggedWithAny(tag)) > 0 ||
-			len(parsedModel.CommunicationLinksTaggedWithAny(tag)) > 0 ||
-			len(parsedModel.DataAssetsTaggedWithAny(tag)) > 0 ||
-			len(parsedModel.TrustBoundariesTaggedWithAny(tag)) > 0 ||
-			len(parsedModel.SharedRuntimesTaggedWithAny(tag)) > 0 {
+	for _, tag := range model.TagsAvailable {
+		if len(model.TechnicalAssetsTaggedWithAny(tag)) > 0 ||
+			len(model.CommunicationLinksTaggedWithAny(tag)) > 0 ||
+			len(model.DataAssetsTaggedWithAny(tag)) > 0 ||
+			len(model.TrustBoundariesTaggedWithAny(tag)) > 0 ||
+			len(model.SharedRuntimesTaggedWithAny(tag)) > 0 {
 			result = append(result, tag)
 		}
 	}
 	return result
 }
 
-func (parsedModel *Model) TechnicalAssetsTaggedWithAny(tags ...string) []*TechnicalAsset {
+func (model *Model) TechnicalAssetsTaggedWithAny(tags ...string) []*TechnicalAsset {
 	result := make([]*TechnicalAsset, 0)
-	for _, candidate := range parsedModel.TechnicalAssets {
+	for _, candidate := range model.TechnicalAssets {
 		if candidate.IsTaggedWithAny(tags...) {
 			result = append(result, candidate)
 		}
@@ -269,9 +269,9 @@ func (parsedModel *Model) TechnicalAssetsTaggedWithAny(tags ...string) []*Techni
 	return result
 }
 
-func (parsedModel *Model) CommunicationLinksTaggedWithAny(tags ...string) []*CommunicationLink {
+func (model *Model) CommunicationLinksTaggedWithAny(tags ...string) []*CommunicationLink {
 	result := make([]*CommunicationLink, 0)
-	for _, asset := range parsedModel.TechnicalAssets {
+	for _, asset := range model.TechnicalAssets {
 		for _, candidate := range asset.CommunicationLinks {
 			if candidate.IsTaggedWithAny(tags...) {
 				result = append(result, candidate)
@@ -281,9 +281,9 @@ func (parsedModel *Model) CommunicationLinksTaggedWithAny(tags ...string) []*Com
 	return result
 }
 
-func (parsedModel *Model) DataAssetsTaggedWithAny(tags ...string) []*DataAsset {
+func (model *Model) DataAssetsTaggedWithAny(tags ...string) []*DataAsset {
 	result := make([]*DataAsset, 0)
-	for _, candidate := range parsedModel.DataAssets {
+	for _, candidate := range model.DataAssets {
 		if candidate.IsTaggedWithAny(tags...) {
 			result = append(result, candidate)
 		}
@@ -291,9 +291,9 @@ func (parsedModel *Model) DataAssetsTaggedWithAny(tags ...string) []*DataAsset {
 	return result
 }
 
-func (parsedModel *Model) TrustBoundariesTaggedWithAny(tags ...string) []*TrustBoundary {
+func (model *Model) TrustBoundariesTaggedWithAny(tags ...string) []*TrustBoundary {
 	result := make([]*TrustBoundary, 0)
-	for _, candidate := range parsedModel.TrustBoundaries {
+	for _, candidate := range model.TrustBoundaries {
 		if candidate.IsTaggedWithAny(tags...) {
 			result = append(result, candidate)
 		}
@@ -301,9 +301,9 @@ func (parsedModel *Model) TrustBoundariesTaggedWithAny(tags ...string) []*TrustB
 	return result
 }
 
-func (parsedModel *Model) SharedRuntimesTaggedWithAny(tags ...string) []*SharedRuntime {
+func (model *Model) SharedRuntimesTaggedWithAny(tags ...string) []*SharedRuntime {
 	result := make([]*SharedRuntime, 0)
-	for _, candidate := range parsedModel.SharedRuntimes {
+	for _, candidate := range model.SharedRuntimes {
 		if candidate.IsTaggedWithAny(tags...) {
 			result = append(result, candidate)
 		}
@@ -311,9 +311,9 @@ func (parsedModel *Model) SharedRuntimesTaggedWithAny(tags ...string) []*SharedR
 	return result
 }
 
-func (parsedModel *Model) OutOfScopeTechnicalAssets() []*TechnicalAsset {
+func (model *Model) OutOfScopeTechnicalAssets() []*TechnicalAsset {
 	assets := make([]*TechnicalAsset, 0)
-	for _, asset := range parsedModel.TechnicalAssets {
+	for _, asset := range model.TechnicalAssets {
 		if asset.OutOfScope {
 			assets = append(assets, asset)
 		}
@@ -322,21 +322,21 @@ func (parsedModel *Model) OutOfScopeTechnicalAssets() []*TechnicalAsset {
 	return assets
 }
 
-func (parsedModel *Model) FindSharedRuntimeHighestConfidentiality(sharedRuntime *SharedRuntime) Confidentiality {
+func (model *Model) FindSharedRuntimeHighestConfidentiality(sharedRuntime *SharedRuntime) Confidentiality {
 	highest := Public
 	for _, id := range sharedRuntime.TechnicalAssetsRunning {
-		techAsset := parsedModel.TechnicalAssets[id]
-		if techAsset.HighestProcessedConfidentiality(parsedModel) > highest {
-			highest = techAsset.HighestProcessedConfidentiality(parsedModel)
+		techAsset := model.TechnicalAssets[id]
+		if techAsset.HighestProcessedConfidentiality(model) > highest {
+			highest = techAsset.HighestProcessedConfidentiality(model)
 		}
 	}
 	return highest
 }
 
-func (parsedModel *Model) FindSharedRuntimeHighestIntegrity(sharedRuntime *SharedRuntime) Criticality {
+func (model *Model) FindSharedRuntimeHighestIntegrity(sharedRuntime *SharedRuntime) Criticality {
 	highest := Archive
 	for _, id := range sharedRuntime.TechnicalAssetsRunning {
-		techAssetIntegrity := parsedModel.TechnicalAssets[id].HighestProcessedIntegrity(parsedModel)
+		techAssetIntegrity := model.TechnicalAssets[id].HighestProcessedIntegrity(model)
 		if techAssetIntegrity > highest {
 			highest = techAssetIntegrity
 		}
@@ -344,13 +344,121 @@ func (parsedModel *Model) FindSharedRuntimeHighestIntegrity(sharedRuntime *Share
 	return highest
 }
 
-func (parsedModel *Model) FindSharedRuntimeHighestAvailability(sharedRuntime *SharedRuntime) Criticality {
+func (model *Model) FindSharedRuntimeHighestAvailability(sharedRuntime *SharedRuntime) Criticality {
 	highest := Archive
 	for _, id := range sharedRuntime.TechnicalAssetsRunning {
-		techAssetAvailability := parsedModel.TechnicalAssets[id].HighestProcessedAvailability(parsedModel)
+		techAssetAvailability := model.TechnicalAssets[id].HighestProcessedAvailability(model)
 		if techAssetAvailability > highest {
 			highest = techAssetAvailability
 		}
 	}
 	return highest
+}
+
+/*
+
+func (what TrustBoundary) HighestConfidentiality(model *Model) Confidentiality {
+	highest := Public
+	for _, id := range what.RecursivelyAllTechnicalAssetIDsInside(model) {
+		techAsset := model.TechnicalAssets[id]
+		if techAsset.HighestProcessedConfidentiality(model) > highest {
+			highest = techAsset.HighestProcessedConfidentiality(model)
+		}
+	}
+	return highest
+}
+
+func (what TrustBoundary) HighestIntegrity(model *Model) Criticality {
+	highest := Archive
+	for _, id := range what.RecursivelyAllTechnicalAssetIDsInside(model) {
+		techAsset := model.TechnicalAssets[id]
+		if techAsset.HighestProcessedIntegrity(model) > highest {
+			highest = techAsset.HighestProcessedIntegrity(model)
+		}
+	}
+	return highest
+}
+
+func (what TrustBoundary) HighestAvailability(model *Model) Criticality {
+	highest := Archive
+	for _, id := range what.RecursivelyAllTechnicalAssetIDsInside(model) {
+		techAsset := model.TechnicalAssets[id]
+		if techAsset.HighestProcessedAvailability(model) > highest {
+			highest = techAsset.HighestProcessedAvailability(model)
+		}
+	}
+	return highest
+}
+*/
+
+func (model *Model) FindTrustBoundaryHighestConfidentiality(tb *TrustBoundary) Confidentiality {
+	highest := Public
+	for _, id := range model.RecursivelyAllTechnicalAssetIDsInside(tb) {
+		techAsset := model.TechnicalAssets[id]
+		if techAsset.HighestProcessedConfidentiality(model) > highest {
+			highest = techAsset.HighestProcessedConfidentiality(model)
+		}
+	}
+	return highest
+}
+
+func (model *Model) FindTrustBoundaryHighestIntegrity(tb *TrustBoundary) Criticality {
+	highest := Archive
+	for _, id := range model.RecursivelyAllTechnicalAssetIDsInside(tb) {
+		techAssetIntegrity := model.TechnicalAssets[id].HighestProcessedIntegrity(model)
+		if techAssetIntegrity > highest {
+			highest = techAssetIntegrity
+		}
+	}
+	return highest
+}
+
+func (model *Model) FindTrustBoundaryHighestAvailability(tb *TrustBoundary) Criticality {
+	highest := Archive
+	for _, id := range model.RecursivelyAllTechnicalAssetIDsInside(tb) {
+		techAssetAvailability := model.TechnicalAssets[id].HighestProcessedAvailability(model)
+		if techAssetAvailability > highest {
+			highest = techAssetAvailability
+		}
+	}
+	return highest
+}
+
+func (model *Model) RecursivelyAllTechnicalAssetIDsInside(tb *TrustBoundary) []string {
+	result := make([]string, 0)
+	model.addAssetIDsRecursively(tb, &result)
+	return result
+}
+
+func (model *Model) addAssetIDsRecursively(tb *TrustBoundary, result *[]string) {
+	*result = append(*result, tb.TechnicalAssetsInside...)
+	for _, nestedBoundaryID := range tb.TrustBoundariesNested {
+		model.addAssetIDsRecursively(model.TrustBoundaries[nestedBoundaryID], result)
+	}
+}
+
+func (model *Model) AllParentTrustBoundaryIDs(what *TrustBoundary) []string {
+	result := make([]string, 0)
+	model.addTrustBoundaryIDsRecursively(what, &result)
+	return result
+}
+
+func (model *Model) addTrustBoundaryIDsRecursively(what *TrustBoundary, result *[]string) {
+	*result = append(*result, what.Id)
+	parent := model.FindParentTrustBoundary(what)
+	if parent != nil {
+		model.addTrustBoundaryIDsRecursively(parent, result)
+	}
+}
+
+func (model *Model) FindParentTrustBoundary(tb *TrustBoundary) *TrustBoundary {
+	if tb == nil {
+		return nil
+	}
+	for _, candidate := range model.TrustBoundaries {
+		if contains(candidate.TrustBoundariesNested, tb.Id) {
+			return candidate
+		}
+	}
+	return nil
 }

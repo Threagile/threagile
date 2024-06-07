@@ -118,7 +118,7 @@ func WriteDataFlowDiagramGraphvizDOT(parsedModel *types.Model,
 				//color, fontColor, style, fontname = Blue, Blue, "dashed", "Verdana"
 				penWidth = 5.5
 			}
-			if len(trustBoundary.ParentTrustBoundaryID(parsedModel)) > 0 {
+			if parsedModel.FindParentTrustBoundary(trustBoundary) != nil {
 				bgColor = "#F1F1F1"
 			}
 			if trustBoundary.Type == types.NetworkPolicyNamespaceIsolation {
