@@ -419,14 +419,13 @@ func (r *MissingCloudHardeningRule) createRiskForSharedRuntime(input *types.Mode
 		title += ": <u>" + details + "</u>"
 	}
 	impact := types.MediumImpact
-	if sharedRuntime.HighestConfidentiality(input) >= types.Confidential ||
-		sharedRuntime.HighestIntegrity(input) >= types.Critical ||
-		sharedRuntime.HighestAvailability(input) >= types.Critical {
+	confidentiality := input.FindSharedRuntimeHighestConfidentiality(sharedRuntime)
+	integrity := input.FindSharedRuntimeHighestIntegrity(sharedRuntime)
+	availability := input.FindSharedRuntimeHighestAvailability(sharedRuntime)
+	if confidentiality >= types.Confidential || integrity >= types.Critical || availability >= types.Critical {
 		impact = types.HighImpact
 	}
-	if sharedRuntime.HighestConfidentiality(input) == types.StrictlyConfidential ||
-		sharedRuntime.HighestIntegrity(input) == types.MissionCritical ||
-		sharedRuntime.HighestAvailability(input) == types.MissionCritical {
+	if confidentiality == types.StrictlyConfidential || integrity == types.MissionCritical || availability == types.MissionCritical {
 		impact = types.VeryHighImpact
 	}
 	// create risk

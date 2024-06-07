@@ -2506,8 +2506,16 @@ func sortedSharedRuntimesByTitle(parsedModel *types.Model) []*types.SharedRuntim
 	for _, runtime := range parsedModel.SharedRuntimes {
 		result = append(result, runtime)
 	}
-	sort.Sort(types.BySharedRuntimeTitleSort(result))
+	sort.Sort(bySharedRuntimeTitleSort(result))
 	return result
+}
+
+type bySharedRuntimeTitleSort []*types.SharedRuntime
+
+func (what bySharedRuntimeTitleSort) Len() int      { return len(what) }
+func (what bySharedRuntimeTitleSort) Swap(i, j int) { what[i], what[j] = what[j], what[i] }
+func (what bySharedRuntimeTitleSort) Less(i, j int) bool {
+	return what[i].Title < what[j].Title
 }
 
 func sortedTechnicalAssetsByTitle(parsedModel *types.Model) []*types.TechnicalAsset {

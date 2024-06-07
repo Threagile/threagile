@@ -143,7 +143,7 @@ func (parsedModel *Model) CheckRiskTracking(ignoreOrphanedRiskTracking bool, pro
 					"creates its individual ID by taking all affected elements causing the risk to be within an @-delimited part. "+
 					"Using wildcards (the * sign) for parts delimited by @ signs allows to handle groups of certain risks at once. "+
 					"Best is to lookup the IDs to use in the created Excel file. Alternatively a model macro \"seed-risk-tracking\" "+
-					"is available that helps in initially seeding the risk tracking part here based on already identified and not yet handled risks.",
+					"is available that helps in initially seeding the risk tracking part here based on already identified and not yet handled risks",
 					tracking.SyntheticRiskId)
 			}
 		}
@@ -321,3 +321,69 @@ func (parsedModel *Model) OutOfScopeTechnicalAssets() []*TechnicalAsset {
 	sort.Sort(ByTechnicalAssetTitleSort(assets))
 	return assets
 }
+
+func (parsedModel *Model) FindSharedRuntimeHighestConfidentiality(sharedRuntime *SharedRuntime) Confidentiality {
+	highest := Public
+	for _, id := range sharedRuntime.TechnicalAssetsRunning {
+		techAsset := parsedModel.TechnicalAssets[id]
+		if techAsset.HighestProcessedConfidentiality(parsedModel) > highest {
+			highest = techAsset.HighestProcessedConfidentiality(parsedModel)
+		}
+	}
+	return highest
+}
+
+func (parsedModel *Model) FindSharedRuntimeHighestIntegrity(sharedRuntime *SharedRuntime) Criticality {
+	highest := Archive
+	for _, id := range sharedRuntime.TechnicalAssetsRunning {
+		techAssetIntegrity := parsedModel.TechnicalAssets[id].HighestProcessedIntegrity(parsedModel)
+		if techAssetIntegrity > highest {
+			highest = techAssetIntegrity
+		}
+	}
+	return highest
+}
+
+func (parsedModel *Model) FindSharedRuntimeHighestAvailability(sharedRuntime *SharedRuntime) Criticality {
+	highest := Archive
+	for _, id := range sharedRuntime.TechnicalAssetsRunning {
+		techAssetAvailability := parsedModel.TechnicalAssets[id].HighestProcessedAvailability(parsedModel)
+		if techAssetAvailability > highest {
+			highest = techAssetAvailability
+		}
+	}
+	return highest
+}
+
+/*func (what SharedRuntime) HighestConfidentiality(model *Model) Confidentiality {
+-       highest := Public
+-       for _, id := range what.TechnicalAssetsRunning {
+-               techAsset := model.TechnicalAssets[id]
+-               if techAsset.HighestProcessedConfidentiality(model) > highest {
+-                       highest = techAsset.HighestProcessedConfidentiality(model)
+-               }
+-       }
+-       return highest
+-}
+-
+-func (what SharedRuntime) HighestIntegrity(model *Model) Criticality {
+-       highest := Archive
+-       for _, id := range what.TechnicalAssetsRunning {
+-               techAsset := model.TechnicalAssets[id]
+-               if techAsset.HighestProcessedIntegrity(model) > highest {
+-                       highest = techAsset.HighestProcessedIntegrity(model)
+-               }
+-       }
+-       return highest
+-}
+-
+-func (what SharedRuntime) HighestAvailability(model *Model) Criticality {
+-       highest := Archive
+-       for _, id := range what.TechnicalAssetsRunning {
+-               techAsset := model.TechnicalAssets[id]
+-               if techAsset.HighestProcessedAvailability(model) > highest {
+-                       highest = techAsset.HighestProcessedAvailability(model)
+-               }
+-       }
+-       return highest
+-}*/
