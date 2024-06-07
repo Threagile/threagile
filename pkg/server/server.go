@@ -18,7 +18,6 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/threagile/threagile/pkg/model"
-	"github.com/threagile/threagile/pkg/security/risks"
 	"github.com/threagile/threagile/pkg/security/types"
 )
 
@@ -70,10 +69,11 @@ type server struct {
 	mapFolderNameToTokenHash       map[string]string
 	extremeShortTimeoutsForTesting bool
 	locksByFolderName              map[string]*sync.Mutex
+	builtinRiskRules               types.RiskRules
 	customRiskRules                types.RiskRules
 }
 
-func RunServer(config serverConfigReader) {
+func RunServer(config serverConfigReader, builtinRiskRules types.RiskRules) {
 	s := &server{
 		config:                         config,
 		createdObjectsThrottler:        make(map[string][]int64),
@@ -81,6 +81,7 @@ func RunServer(config serverConfigReader) {
 		mapFolderNameToTokenHash:       make(map[string]string),
 		extremeShortTimeoutsForTesting: false,
 		locksByFolderName:              make(map[string]*sync.Mutex),
+		builtinRiskRules:               builtinRiskRules,
 	}
 	router := gin.Default()
 	router.LoadHTMLGlob(filepath.Join(s.config.ServerFolder(), "s", "static", "*.html")) // <==
@@ -243,7 +244,7 @@ func (s *server) addSupportedTags(input []byte) []byte {
 		}
 	}
 
-	for _, rule := range risks.GetBuiltInRiskRules() {
+	for _, rule := range s.builtinRiskRules {
 		for _, tag := range rule.SupportedTags() {
 			supportedTags[strings.ToLower(tag)] = true
 		}

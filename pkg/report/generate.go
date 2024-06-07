@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 
 	"github.com/threagile/threagile/pkg/model"
+	"github.com/threagile/threagile/pkg/security/types"
 )
 
 type GenerateCommands struct {
@@ -70,7 +71,7 @@ type reportConfigReader interface {
 	AddModelTitle() bool
 }
 
-func Generate(config reportConfigReader, readResult *model.ReadResult, commands *GenerateCommands, progressReporter progressReporter) error {
+func Generate(config reportConfigReader, readResult *model.ReadResult, commands *GenerateCommands, riskRules types.RiskRules, progressReporter progressReporter) error {
 	generateDataFlowDiagram := commands.DataFlowDiagram
 	generateDataAssetsDiagram := commands.DataAssetDiagram
 	if commands.ReportPDF { // as the PDF report includes both diagrams
@@ -188,7 +189,7 @@ func Generate(config reportConfigReader, readResult *model.ReadResult, commands 
 		// report PDF
 		progressReporter.Info("Writing report pdf")
 
-		pdfReporter := pdfReporter{}
+		pdfReporter := newPdfReporter(riskRules)
 		err = pdfReporter.WriteReportPDF(filepath.Join(config.OutputFolder(), config.ReportFilename()),
 			filepath.Join(config.AppFolder(), config.TemplateFilename()),
 			filepath.Join(config.OutputFolder(), config.DataFlowDiagramFilenamePNG()),

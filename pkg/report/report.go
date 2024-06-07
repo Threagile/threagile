@@ -15,7 +15,6 @@ import (
 
 	"github.com/jung-kurt/gofpdf"
 	"github.com/jung-kurt/gofpdf/contrib/gofpdi"
-	"github.com/threagile/threagile/pkg/security/risks"
 	"github.com/threagile/threagile/pkg/security/types"
 	"github.com/wcharczuk/go-chart"
 	"github.com/wcharczuk/go-chart/drawing"
@@ -35,6 +34,12 @@ type pdfReporter struct {
 	tocLinkIdByAssetId            map[string]int
 	homeLink                      int
 	currentChapterTitleBreadcrumb string
+
+	riskRules types.RiskRules
+}
+
+func newPdfReporter(types.RiskRules) *pdfReporter {
+	return &pdfReporter{}
 }
 
 func (r *pdfReporter) initReport() {
@@ -4327,7 +4332,7 @@ func (r *pdfReporter) createRiskRulesChecked(parsedModel *types.Model, modelFile
 		r.pdf.MultiCell(160, 6, individualRiskCategory.RiskAssessment, "0", "0", false)
 	}
 
-	for _, rule := range risks.GetBuiltInRiskRules() {
+	for _, rule := range r.riskRules {
 		r.pdf.Ln(-1)
 		r.pdf.SetFont("Helvetica", "B", fontSizeBody)
 		if contains(skipRiskRules, rule.Category().ID) {

@@ -24,7 +24,7 @@ func (what *Threagile) initAnalyze() *Threagile {
 				return fmt.Errorf("failed to read and analyze model: %v", err)
 			}
 
-			err = report.Generate(cfg, r, commands, progressReporter)
+			err = report.Generate(cfg, r, commands, risks.GetBuiltInRiskRules(), progressReporter)
 			if err != nil {
 				return fmt.Errorf("failed to generate reports: %v", err)
 			}

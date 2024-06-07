@@ -2,6 +2,7 @@ package threagile
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/threagile/threagile/pkg/security/risks"
 	"github.com/threagile/threagile/pkg/server"
 )
 
@@ -18,7 +19,7 @@ func (what *Threagile) initServer() *Threagile {
 			if serverError != nil {
 				return serverError
 			}
-			server.RunServer(cfg)
+			server.RunServer(cfg, risks.GetBuiltInRiskRules())
 			return nil
 		},
 	}
