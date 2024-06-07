@@ -55,6 +55,10 @@ func (r *WrongCommunicationLinkContentRule) GenerateRisks(input *types.Model) ([
 			}
 			// check for protocol inconsistencies
 			targetAsset := input.TechnicalAssets[commLink.TargetId]
+			if commLink.Protocol == types.InterProcessCommunication && targetAsset.Type != types.Process {
+				risks = append(risks, r.createRisk(techAsset, commLink,
+					"(protocol type \""+types.InterProcessCommunication.String()+"\" does not match target technology type \""+targetAsset.Technologies.String()+"\": expected \""+types.Process.String()+"\")"))
+			}
 			if commLink.Protocol == types.InProcessLibraryCall && !targetAsset.Technologies.GetAttribute(types.Library) {
 				risks = append(risks, r.createRisk(techAsset, commLink,
 					"(protocol type \""+types.InProcessLibraryCall.String()+"\" does not match target technology type \""+targetAsset.Technologies.String()+"\": expected \""+types.Library+"\")"))

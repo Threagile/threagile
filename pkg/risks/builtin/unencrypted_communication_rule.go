@@ -26,7 +26,7 @@ func (*UnencryptedCommunicationRule) Category() *types.RiskCategory {
 		Check:      "Are recommendations from the linked cheat sheet and referenced ASVS chapter applied?",
 		Function:   types.Operations,
 		STRIDE:     types.InformationDisclosure,
-		DetectionLogic: "Unencrypted technical communication links of in-scope technical assets (excluding " + types.Monitoring + " traffic as well as " + types.LocalFileAccess.String() + " and " + types.InProcessLibraryCall.String() + ") " +
+		DetectionLogic: "Unencrypted technical communication links of in-scope technical assets (excluding " + types.Monitoring + " traffic as well as " + types.LocalFileAccess.String() + ", " + types.InProcessLibraryCall.String() + " and " + types.InterProcessCommunication.String() + ") " +
 			"transferring sensitive data.", // TODO more detailed text required here
 		RiskAssessment: "Depending on the confidentiality rating of the transferred data-assets either medium or high risk.",
 		FalsePositives: "When all sensitive data sent over the communication link is already fully encrypted on document or data level. " +
