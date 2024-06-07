@@ -68,6 +68,30 @@ app/
 ├─ [threagile-stub-model.yaml](./demo/stub/threagile.yaml)
 ```
 
+## Packages structure
+
+After recent efforts on modularization the code those packages was added:
+
+- ***cmd*** - contains programs which runs
+  - threagile - the main program, documentation about can be found at main [readme](./README.md)
+  - risk_demo - demo risk program which is demonstrating how to create custom risk rules
+  - script - util program to test script rule against your model
+- ***pkg*** - reused part
+  - internal - details on how to run the application as part of cobra application and configuration
+  - types - simple structs (except [parsedModel](./pkg/types/model.go) which needs to be moved to [model](./pkg/model) package as soon as cross circular dependencies will be solved)
+  - examples - logic for generating useful examples for end user (like example or stub Threagile model)
+  - risks - logic for risk (builtin and scripts) to be executed against model
+  - macros - logic for macros logic ()
+  - server - [gin server](https://gin-gonic.com/) to run some of commands via UI
+  - report - logic to generate all kind of reports (JSON, PDF, Excel)
+  - input - logic to read the model from file system
+  - model - logic to analyze the model from package above (input)
+
+![package structure](./docs/package-structure.png)
+
+Currently it is not expected that any extra references will be added to the current architecture, so if it appears that adding extra dependency (effectively if you need to draw any extra line to make model above to expect reality) highly likely it may 2 options: some violation of [SOLID](https://en.wikipedia.org/wiki/SOLID)(particularly [interface segregation principle](https://en.wikipedia.org/wiki/Interface_segregation_principle)) is happening or current architecture require rethinking. Please raise a pull request and discuss this with other contributors.
+
+
 ## Contribution
 
 To contribute the code simply make changes and create pull request. There is no strict rules about pull requests format like [this](https://www.pullrequest.com/blog/writing-a-great-pull-request-description/) however please take into consideration:
