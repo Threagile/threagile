@@ -29,19 +29,15 @@ func (what ReadResult) ExplainRisk(cfg explainRiskConfig, risk string, reporter 
 // TODO: consider about splitting this function into smaller ones for better reusability
 
 type configReader interface {
-	AppFolder() string
-	ServerFolder() string
 	BuildTimestamp() string
 	Verbose() bool
-	RiskRulesPlugins() []string
-	SkipRiskRules() []string
-	ExecuteModelMacro() string
-	GraphvizDPI() int
-	TechnologyFilename() string
-	ServerPort() int
-	KeyFolder() string
+
+	AppFolder() string
 	OutputFolder() string
+	ServerFolder() string
 	TempFolder() string
+	KeyFolder() string
+
 	InputFile() string
 	DataFlowDiagramFilenamePNG() string
 	DataAssetDiagramFilenamePNG() string
@@ -52,6 +48,15 @@ type configReader interface {
 	JsonRisksFilename() string
 	JsonTechnicalAssetsFilename() string
 	JsonStatsFilename() string
+	TechnologyFilename() string
+
+	RiskRulesPlugins() []string
+	SkipRiskRules() []string
+	ExecuteModelMacro() string
+
+	ServerPort() int
+	GraphvizDPI() int
+
 	KeepDiagramSourceFiles() bool
 	IgnoreOrphanedRiskTracking() bool
 }

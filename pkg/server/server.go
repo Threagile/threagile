@@ -23,23 +23,19 @@ import (
 )
 
 type serverConfigReader interface {
-	AppFolder() string
-	ServerFolder() string
 	BuildTimestamp() string
 	Verbose() bool
-	RiskRulesPlugins() []string
-	SkipRiskRules() []string
-	ExecuteModelMacro() string
-	GraphvizDPI() int
-	TechnologyFilename() string
-	ServerPort() int
-	KeyFolder() string
+	ThreagileVersion() string
+
+	AppFolder() string
+	ServerFolder() string
 	TempFolder() string
+	KeyFolder() string
+
 	InputFile() string
-	BackupHistoryFilesToKeep() int
 	DataFlowDiagramFilenamePNG() string
-	DataFlowDiagramFilenameDOT() string
 	DataAssetDiagramFilenamePNG() string
+	DataFlowDiagramFilenameDOT() string
 	DataAssetDiagramFilenameDOT() string
 	ReportFilename() string
 	ExcelRisksFilename() string
@@ -47,9 +43,18 @@ type serverConfigReader interface {
 	JsonRisksFilename() string
 	JsonTechnicalAssetsFilename() string
 	JsonStatsFilename() string
+	TechnologyFilename() string
+
+	RiskRulesPlugins() []string
+	SkipRiskRules() []string
+	ExecuteModelMacro() string
+
+	ServerPort() int
+	GraphvizDPI() int
+	BackupHistoryFilesToKeep() int
+
 	KeepDiagramSourceFiles() bool
 	IgnoreOrphanedRiskTracking() bool
-	ThreagileVersion() string
 
 	ProgressReporter() types.ProgressReporter
 }

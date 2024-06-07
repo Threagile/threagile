@@ -37,33 +37,37 @@ func (c *GenerateCommands) Defaults() *GenerateCommands {
 }
 
 type reportConfigReader interface {
-	MinGraphvizDPI() int
-	MaxGraphvizDPI() int
-	DiagramDPI() int
-	InputFile() string
-	OutputFolder() string
-	AppFolder() string
-	ReportFilename() string
-	TemplateFilename() string
-	JsonRisksFilename() string
-	JsonTechnicalAssetsFilename() string
-	JsonStatsFilename() string
-	ExcelRisksFilename() string
-	ExcelTagsFilename() string
-	DataFlowDiagramFilenamePNG() string
-	DataFlowDiagramFilenameDOT() string
-	DataAssetDiagramFilenamePNG() string
-	DataAssetDiagramFilenameDOT() string
-	KeepDiagramSourceFiles() bool
-	TempFolder() string
-	AddModelTitle() bool
-	SkipRiskRules() []string
 	BuildTimestamp() string
 	ThreagileVersion() string
 
+	AppFolder() string
+	OutputFolder() string
+	TempFolder() string
+
+	InputFile() string
+	DataFlowDiagramFilenamePNG() string
+	DataAssetDiagramFilenamePNG() string
+	DataFlowDiagramFilenameDOT() string
+	DataAssetDiagramFilenameDOT() string
+	ReportFilename() string
+	ExcelRisksFilename() string
+	ExcelTagsFilename() string
+	JsonRisksFilename() string
+	JsonTechnicalAssetsFilename() string
+	JsonStatsFilename() string
+	TemplateFilename() string
+
+	SkipRiskRules() []string
 	RiskExcelConfigHideColumns() []string
 	RiskExcelConfigSortByColumns() []string
 	RiskExcelConfigWidthOfColumns() map[string]float64
+
+	DiagramDPI() int
+	MinGraphvizDPI() int
+	MaxGraphvizDPI() int
+
+	KeepDiagramSourceFiles() bool
+	AddModelTitle() bool
 }
 
 func Generate(config reportConfigReader, readResult *model.ReadResult, commands *GenerateCommands, progressReporter progressReporter) error {
