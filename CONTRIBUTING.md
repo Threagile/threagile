@@ -89,7 +89,7 @@ After recent efforts on modularization the code those packages was added:
 
 ![package structure](./docs/package-structure.png)
 
-Currently it is not expected that any extra references will be added to the current architecture, so if it appears that adding extra dependency (effectively if you need to draw any extra line to make model above to expect reality) highly likely it may 2 options: some violation of [SOLID](https://en.wikipedia.org/wiki/SOLID)(particularly [interface segregation principle](https://en.wikipedia.org/wiki/Interface_segregation_principle)) is happening or current architecture require rethinking. Please raise a pull request and discuss this with other contributors.
+Currently it is not expected that any extra references will be added to the current architecture, so if it appears that adding extra dependency (effectively if you need to draw any extra line to make model above to expect reality) highly likely it may 2 options: some violation of [SOLID](https://en.wikipedia.org/wiki/SOLID)(particularly [dependency inversion principle](https://en.wikipedia.org/wiki/Dependency_inversion_principle)) is happening or current architecture require rethinking. Please raise a pull request and discuss this with other contributors.
 
 
 ## Contribution
