@@ -354,36 +354,3 @@ func (parsedModel *Model) FindSharedRuntimeHighestAvailability(sharedRuntime *Sh
 	}
 	return highest
 }
-
-/*func (what SharedRuntime) HighestConfidentiality(model *Model) Confidentiality {
--       highest := Public
--       for _, id := range what.TechnicalAssetsRunning {
--               techAsset := model.TechnicalAssets[id]
--               if techAsset.HighestProcessedConfidentiality(model) > highest {
--                       highest = techAsset.HighestProcessedConfidentiality(model)
--               }
--       }
--       return highest
--}
--
--func (what SharedRuntime) HighestIntegrity(model *Model) Criticality {
--       highest := Archive
--       for _, id := range what.TechnicalAssetsRunning {
--               techAsset := model.TechnicalAssets[id]
--               if techAsset.HighestProcessedIntegrity(model) > highest {
--                       highest = techAsset.HighestProcessedIntegrity(model)
--               }
--       }
--       return highest
--}
--
--func (what SharedRuntime) HighestAvailability(model *Model) Criticality {
--       highest := Archive
--       for _, id := range what.TechnicalAssetsRunning {
--               techAsset := model.TechnicalAssets[id]
--               if techAsset.HighestProcessedAvailability(model) > highest {
--                       highest = techAsset.HighestProcessedAvailability(model)
--               }
--       }
--       return highest
--}*/
