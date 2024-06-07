@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/threagile/threagile/pkg/input"
 	"github.com/threagile/threagile/pkg/script/common"
 	"github.com/threagile/threagile/pkg/script/expressions"
 	"github.com/threagile/threagile/pkg/script/statements"
@@ -12,14 +11,25 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type Script struct {
-	id    map[string]any
-	match common.Statement
-	data  map[string]any
-	utils map[string]*statements.MethodStatement
+type script struct {
+	id        map[string]any
+	match     common.Statement
+	data      map[string]any
+	utils     map[string]*statements.MethodStatement
+	formatter formatter
 }
 
-func (what *Script) NewScope(risk *types.RiskCategory) (*common.Scope, error) {
+type formatter interface {
+	AddLineNumbers(script any) string
+}
+
+func NewScript(f formatter) *script {
+	s := new(script)
+	s.formatter = f
+	return s
+}
+
+func (what *script) NewScope(risk *types.RiskCategory) (*common.Scope, error) {
 	methods := make(map[string]common.Statement)
 	for name, method := range what.utils {
 		methods[name] = method
@@ -28,13 +38,13 @@ func (what *Script) NewScope(risk *types.RiskCategory) (*common.Scope, error) {
 	scope := new(common.Scope)
 	scopeError := scope.Init(risk, methods)
 	if scopeError != nil {
-		return scope, fmt.Errorf("error initializing scope: %v\n", scopeError)
+		return scope, fmt.Errorf("error initializing scope: %v", scopeError)
 	}
 
 	return scope, nil
 }
 
-func (what *Script) ParseScriptsFromData(text []byte) (map[string]*Script, error) {
+func (what *script) ParseScriptsFromData(text []byte) (map[string]*script, error) {
 	items := make(map[string]any)
 	parseError := yaml.Unmarshal(text, &items)
 	if parseError != nil {
@@ -44,7 +54,7 @@ func (what *Script) ParseScriptsFromData(text []byte) (map[string]*Script, error
 	return what.ParseScripts(items)
 }
 
-func (what *Script) ParseScripts(items map[string]any) (map[string]*Script, error) {
+func (what *script) ParseScripts(items map[string]any) (map[string]*script, error) {
 	for key, value := range items {
 		switch strings.ToLower(key) {
 		case "individual_risk_categories":
@@ -53,14 +63,14 @@ func (what *Script) ParseScripts(items map[string]any) (map[string]*Script, erro
 				return nil, fmt.Errorf("unexpected format %T in data definition", value)
 			}
 
-			scripts := make(map[string]*Script)
+			scripts := make(map[string]*script)
 			for scriptID, riskScript := range riskScripts {
 				risk, ok := riskScript.(map[string]any)
 				if !ok {
 					return nil, fmt.Errorf("unexpected format %T in data definition for %q", riskScript, scriptID)
 				}
 
-				script, scriptError := new(Script).ParseScript(risk)
+				script, scriptError := NewScript(what.formatter).ParseScript(risk)
 				if scriptError != nil {
 					return nil, fmt.Errorf("failed to parse script of data definition for %q: %v", scriptID, scriptError)
 				}
@@ -78,7 +88,7 @@ func (what *Script) ParseScripts(items map[string]any) (map[string]*Script, erro
 	return nil, fmt.Errorf("no scripts found")
 }
 
-func (what *Script) ParseCategoryFromData(text []byte) (*Script, error) {
+func (what *script) ParseCategoryFromData(text []byte) (*script, error) {
 	items := make(map[string]any)
 	parseError := yaml.Unmarshal(text, &items)
 	if parseError != nil {
@@ -88,7 +98,7 @@ func (what *Script) ParseCategoryFromData(text []byte) (*Script, error) {
 	return what.ParseCategory(items)
 }
 
-func (what *Script) ParseCategory(script map[string]any) (*Script, error) {
+func (what *script) ParseCategory(script map[string]any) (*script, error) {
 	for key, value := range script {
 		switch strings.ToLower(key) {
 		case common.Risk:
@@ -97,7 +107,7 @@ func (what *Script) ParseCategory(script map[string]any) (*Script, error) {
 				return what.ParseScript(castValue)
 
 			default:
-				return what, fmt.Errorf("failed to parse %q: unexpected script type %T\nscript:\n%v", key, value, new(input.Strings).AddLineNumbers(value))
+				return what, fmt.Errorf("failed to parse %q: unexpected script type %T\nscript:\n%v", key, value, what.formatter.AddLineNumbers(value))
 			}
 		}
 	}
@@ -105,7 +115,7 @@ func (what *Script) ParseCategory(script map[string]any) (*Script, error) {
 	return what, nil
 }
 
-func (what *Script) ParseScriptFromData(text []byte) (*Script, error) {
+func (what *script) ParseScriptFromData(text []byte) (*script, error) {
 	items := make(map[string]any)
 	parseError := yaml.Unmarshal(text, &items)
 	if parseError != nil {
@@ -115,7 +125,7 @@ func (what *Script) ParseScriptFromData(text []byte) (*Script, error) {
 	return what.ParseScript(items)
 }
 
-func (what *Script) ParseScript(script map[string]any) (*Script, error) {
+func (what *script) ParseScript(script map[string]any) (*script, error) {
 	for key, value := range script {
 		switch strings.ToLower(key) {
 		case common.ID:
@@ -132,13 +142,13 @@ func (what *Script) ParseScript(script map[string]any) (*Script, error) {
 				what.data = castValue
 
 			default:
-				return what, fmt.Errorf("failed to parse %q: unexpected script type %T\nscript:\n%v", key, value, new(input.Strings).AddLineNumbers(value))
+				return what, fmt.Errorf("failed to parse %q: unexpected script type %T\nscript:\n%v", key, value, what.formatter.AddLineNumbers(value))
 			}
 
 		case common.Match:
 			item, errorScript, itemError := new(statements.MethodStatement).Parse(value)
 			if itemError != nil {
-				return what, fmt.Errorf("failed to parse %q: %v\nscript:\n%v", key, itemError, new(input.Strings).AddLineNumbers(errorScript))
+				return what, fmt.Errorf("failed to parse %q: %v\nscript:\n%v", key, itemError, what.formatter.AddLineNumbers(errorScript))
 			}
 
 			what.match = item
@@ -146,7 +156,7 @@ func (what *Script) ParseScript(script map[string]any) (*Script, error) {
 		case common.Utils:
 			item, errorScript, itemError := what.parseUtils(value)
 			if itemError != nil {
-				return what, fmt.Errorf("failed to parse %q: %v\nscript:\n%v", key, itemError, new(input.Strings).AddLineNumbers(errorScript))
+				return what, fmt.Errorf("failed to parse %q: %v\nscript:\n%v", key, itemError, what.formatter.AddLineNumbers(errorScript))
 			}
 
 			what.utils = item
@@ -156,7 +166,7 @@ func (what *Script) ParseScript(script map[string]any) (*Script, error) {
 	return what, nil
 }
 
-func (what *Script) GetTechnicalAssetsByRiskID(scope *common.Scope, riskID string) ([]any, error) {
+func (what *script) GetTechnicalAssetsByRiskID(scope *common.Scope, riskID string) ([]any, error) {
 	value, valueOk := what.getItem(scope.Model, "technical_assets")
 	if !valueOk {
 		return nil, fmt.Errorf("no technical assets in scope")
@@ -186,7 +196,7 @@ func (what *Script) GetTechnicalAssetsByRiskID(scope *common.Scope, riskID strin
 	return matchingTechAssets, nil
 }
 
-func (what *Script) GenerateRisks(scope *common.Scope) ([]*types.Risk, string, error) {
+func (what *script) GenerateRisks(scope *common.Scope) ([]*types.Risk, string, error) {
 	value, valueOk := what.getItem(scope.Model, "technical_assets")
 	if !valueOk {
 		return nil, "", fmt.Errorf("no technical assets in scope")
@@ -235,7 +245,7 @@ func (what *Script) GenerateRisks(scope *common.Scope) ([]*types.Risk, string, e
 	return risks, "", nil
 }
 
-func (what *Script) matchRisk(outerScope *common.Scope, techAsset any) (bool, string, error) {
+func (what *script) matchRisk(outerScope *common.Scope, techAsset any) (bool, string, error) {
 	if what.match == nil {
 		return false, "", nil
 	}
@@ -260,7 +270,7 @@ func (what *Script) matchRisk(outerScope *common.Scope, techAsset any) (bool, st
 	return false, "", nil
 }
 
-func (what *Script) generateRisk(outerScope *common.Scope, techAsset any) (*types.Risk, string, error) {
+func (what *script) generateRisk(outerScope *common.Scope, techAsset any) (*types.Risk, string, error) {
 	if what.data == nil {
 		return nil, "", fmt.Errorf("no data template")
 	}
@@ -322,7 +332,7 @@ func (what *Script) generateRisk(outerScope *common.Scope, techAsset any) (*type
 	return &risk, "", nil
 }
 
-func (what *Script) getRiskID(outerScope *common.Scope, techAsset any) (string, string, error) {
+func (what *script) getRiskID(outerScope *common.Scope, techAsset any) (string, string, error) {
 	if len(what.id) == 0 {
 		return "", "", fmt.Errorf("no ID expression")
 	}
@@ -371,7 +381,7 @@ func (what *Script) getRiskID(outerScope *common.Scope, techAsset any) (string, 
 	return "", "", nil
 }
 
-func (what *Script) getItemString(value any, path ...string) (string, bool) {
+func (what *script) getItemString(value any, path ...string) (string, bool) {
 	item, itemOk := what.getItem(value, path...)
 	if !itemOk {
 		return "", false
@@ -385,7 +395,7 @@ func (what *Script) getItemString(value any, path ...string) (string, bool) {
 	return itemString, true
 }
 
-func (what *Script) getItem(value any, path ...string) (any, bool) {
+func (what *script) getItem(value any, path ...string) (any, bool) {
 	if len(path) == 0 {
 		return nil, false
 	}
@@ -408,7 +418,7 @@ func (what *Script) getItem(value any, path ...string) (any, bool) {
 	return nil, false
 }
 
-func (what *Script) parseUtils(script any) (map[string]*statements.MethodStatement, any, error) {
+func (what *script) parseUtils(script any) (map[string]*statements.MethodStatement, any, error) {
 	statementMap := make(map[string]*statements.MethodStatement)
 	switch castScript := script.(type) {
 	case map[string]any:

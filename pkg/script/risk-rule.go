@@ -15,7 +15,7 @@ type RiskRule struct {
 	types.RiskRule
 	category      types.RiskCategory
 	supportedTags []string
-	script        *Script
+	script        *script
 }
 
 func (what *RiskRule) Init() *RiskRule {
@@ -40,7 +40,7 @@ func (what *RiskRule) ParseFromData(text []byte) (*RiskRule, error) {
 	}
 
 	what.supportedTags = rule.SupportedTags
-	script, scriptError := new(Script).ParseScript(rule.Script)
+	script, scriptError := NewScript(new(input.Strings)).ParseScript(rule.Script)
 	if scriptError != nil {
 		return nil, scriptError
 	}
@@ -145,12 +145,12 @@ func (what *RiskRule) loadRiskRule(fileSystem fs.FS, filename string) error {
 
 	ruleData, ruleReadError := fs.ReadFile(fileSystem, scriptFilename)
 	if ruleReadError != nil {
-		return fmt.Errorf("error reading data category: %w\n", ruleReadError)
+		return fmt.Errorf("error reading data category: %w", ruleReadError)
 	}
 
 	_, parseError := what.ParseFromData(ruleData)
 	if parseError != nil {
-		return fmt.Errorf("error parsing scripts from %q: %w\n", scriptFilename, parseError)
+		return fmt.Errorf("error parsing scripts from %q: %w", scriptFilename, parseError)
 	}
 
 	return nil

@@ -2,6 +2,7 @@ package expressions
 
 import (
 	"fmt"
+
 	"github.com/threagile/threagile/pkg/script/common"
 )
 

@@ -2,11 +2,12 @@ package expressions
 
 import (
 	"fmt"
-	"github.com/shopspring/decimal"
-	"github.com/threagile/threagile/pkg/script/common"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/shopspring/decimal"
+	"github.com/threagile/threagile/pkg/script/common"
 )
 
 type ValueExpression struct {
