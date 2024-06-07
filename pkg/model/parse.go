@@ -2,13 +2,14 @@ package model
 
 import (
 	"fmt"
-	"github.com/threagile/threagile/pkg/common"
-	"github.com/threagile/threagile/pkg/input"
-	"github.com/threagile/threagile/pkg/security/types"
 	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/threagile/threagile/pkg/common"
+	"github.com/threagile/threagile/pkg/input"
+	"github.com/threagile/threagile/pkg/security/types"
 )
 
 func ParseModel(config *common.Config, modelInput *input.Model, builtinRiskRules types.RiskRules, customRiskRules types.RiskRules) (*types.Model, error) {
@@ -37,8 +38,8 @@ func ParseModel(config *common.Config, modelInput *input.Model, builtinRiskRules
 	parsedModel := types.Model{
 		ThreagileVersion:               modelInput.ThreagileVersion,
 		Title:                          modelInput.Title,
-		Author:                         modelInput.Author,
-		Contributors:                   modelInput.Contributors,
+		Author:                         convertAuthor(modelInput.Author),
+		Contributors:                   convertAuthors(modelInput.Contributors),
 		Date:                           types.Date{Time: reportDate},
 		AppDescription:                 removePathElementsFromImageFiles(modelInput.AppDescription),
 		BusinessOverview:               removePathElementsFromImageFiles(modelInput.BusinessOverview),
@@ -177,7 +178,12 @@ func ParseModel(config *common.Config, modelInput *input.Model, builtinRiskRules
 		}
 
 		technicalAssetTechnologies := make([]*types.Technology, 0)
-		for _, technologyName := range append(asset.Technologies, asset.Technology) {
+
+		allTechnologies := asset.Technologies
+		if asset.Technology != "" {
+			allTechnologies = append(allTechnologies, asset.Technology)
+		}
+		for _, technologyName := range allTechnologies {
 			technicalAssetTechnology := technologies.Get(technologyName)
 			if technicalAssetTechnology == nil {
 				return nil, fmt.Errorf("unknown 'technology' value of technical asset %q: %v", title, asset.Technology)
@@ -186,9 +192,6 @@ func ParseModel(config *common.Config, modelInput *input.Model, builtinRiskRules
 			technicalAssetTechnologies = append(technicalAssetTechnologies, technicalAssetTechnology)
 		}
 
-		if err != nil {
-			return nil, fmt.Errorf("unknown 'technology' value of technical asset %q: %v", title, asset.Technology)
-		}
 		encryption, err := types.ParseEncryptionStyle(asset.Encryption)
 		if err != nil {
 			return nil, fmt.Errorf("unknown 'encryption' value of technical asset %q: %v", title, asset.Encryption)
@@ -286,9 +289,6 @@ func ParseModel(config *common.Config, modelInput *input.Model, builtinRiskRules
 				}
 
 				dataFlowTitle := fmt.Sprintf("%v", commLinkTitle)
-				if err != nil {
-					return nil, err
-				}
 				commLinkId, err := createDataFlowId(id, dataFlowTitle)
 				if err != nil {
 					return nil, err
@@ -394,6 +394,9 @@ func ParseModel(config *common.Config, modelInput *input.Model, builtinRiskRules
 				continue
 			}
 			targetTechAsset := parsedModel.TechnicalAssets[commLink.TargetId]
+			if targetTechAsset == nil {
+				return nil, fmt.Errorf("missing target technical asset %q for communication link: %q", commLink.TargetId, commLink.Title)
+			}
 			dataAssetsProcessedByTarget := targetTechAsset.DataAssetsProcessed
 			for _, dataAssetSent := range commLink.DataAssetsSent {
 				if !contains(dataAssetsProcessedByTarget, dataAssetSent) {
@@ -729,6 +732,22 @@ func ParseModel(config *common.Config, modelInput *input.Model, builtinRiskRules
 	return &parsedModel, nil
 }
 
+func convertAuthor(author input.Author) *types.Author {
+	return &types.Author{
+		Name:     author.Name,
+		Contact:  author.Contact,
+		Homepage: author.Homepage,
+	}
+}
+
+func convertAuthors(authors []input.Author) []*types.Author {
+	result := make([]*types.Author, len(authors))
+	for i, author := range authors {
+		result[i] = convertAuthor(author)
+	}
+	return result
+}
+
 func checkIdSyntax(id string) error {
 	validIdSyntax := regexp.MustCompile(`^[a-zA-Z0-9\-]+$`)
 	if !validIdSyntax.MatchString(id) {
@@ -767,15 +786,19 @@ func createSyntheticId(categoryId string,
 }
 
 // in order to prevent Path-Traversal like stuff...
-func removePathElementsFromImageFiles(overview input.Overview) input.Overview {
+func removePathElementsFromImageFiles(overview input.Overview) *types.Overview {
+	parsedOverview := &types.Overview{
+		Description: overview.Description,
+		Images:      make([]map[string]string, len(overview.Images)),
+	}
 	for i := range overview.Images {
 		newValue := make(map[string]string)
 		for file, desc := range overview.Images[i] {
 			newValue[filepath.Base(file)] = desc
 		}
-		overview.Images[i] = newValue
+		parsedOverview.Images[i] = newValue
 	}
-	return overview
+	return parsedOverview
 }
 
 func withDefault(value string, defaultWhenEmpty string) string {

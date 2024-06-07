@@ -37,7 +37,6 @@ type Config struct {
 	TemplateFilename            string
 	TechnologyFilename          string
 
-	RAAPlugin         string
 	RiskRulesPlugins  []string
 	SkipRiskRules     []string
 	ExecuteModelMacro string
@@ -91,7 +90,6 @@ func (c *Config) Defaults(buildTimestamp string) *Config {
 		TemplateFilename:            TemplateFilename,
 		TechnologyFilename:          "",
 
-		RAAPlugin:         RAAPluginName,
 		RiskRulesPlugins:  make([]string, 0),
 		SkipRiskRules:     make([]string, 0),
 		ExecuteModelMacro: "",
@@ -285,9 +283,6 @@ func (c *Config) Merge(config Config, values map[string]any) {
 
 		case strings.ToLower("TechnologyFilename"):
 			c.TechnologyFilename = config.TechnologyFilename
-
-		case strings.ToLower("RAAPlugin"):
-			c.RAAPlugin = config.RAAPlugin
 
 		case strings.ToLower("RiskRulesPlugins"):
 			c.RiskRulesPlugins = config.RiskRulesPlugins

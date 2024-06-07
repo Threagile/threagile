@@ -10,8 +10,6 @@ ASSETS			= 							\
 	pkg/security/types/technologies.yaml	\
 	server
 BIN				= 							\
-	raa_calc 								\
-	raa_dummy 								\
 	risk_demo_rule 							\
 	threagile
 
@@ -65,12 +63,6 @@ gv: out/tmp/diagram.png
 
 out/tmp/diagram.png: out/tmp/diagram.gv
 	dot -Tpng $< -o $@
-
-bin/raa_calc: cmd/raa/main.go
-	$(GO) build $(GOFLAGS) -o $@ $<
-
-bin/raa_dummy: cmd/raa_dummy/main.go
-	$(GO) build $(GOFLAGS) -o $@ $<
 
 bin/risk_demo_rule: cmd/risk_demo/main.go
 	$(GO) build $(GOFLAGS) -o $@ $<

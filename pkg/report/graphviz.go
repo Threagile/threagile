@@ -543,7 +543,7 @@ func WriteDataAssetDiagramGraphvizDOT(parsedModel *types.Model, diagramFilenameD
 		dataAssets = append(dataAssets, dataAsset)
 	}
 
-	types.SortByDataAssetDataBreachProbabilityAndTitle(parsedModel, dataAssets)
+	sortByDataAssetDataBreachProbabilityAndTitle(parsedModel, dataAssets)
 	for _, dataAsset := range dataAssets {
 		dotContent.WriteString(makeDataAssetNode(parsedModel, dataAsset))
 		dotContent.WriteString("\n")
@@ -584,9 +584,20 @@ func WriteDataAssetDiagramGraphvizDOT(parsedModel *types.Model, diagramFilenameD
 	return file, nil
 }
 
+func sortByDataAssetDataBreachProbabilityAndTitle(parsedModel *types.Model, assets []*types.DataAsset) {
+	sort.Slice(assets, func(i, j int) bool {
+		highestDataBreachProbabilityLeft := assets[i].IdentifiedDataBreachProbability(parsedModel)
+		highestDataBreachProbabilityRight := assets[j].IdentifiedDataBreachProbability(parsedModel)
+		if highestDataBreachProbabilityLeft == highestDataBreachProbabilityRight {
+			return assets[i].Title < assets[j].Title
+		}
+		return highestDataBreachProbabilityLeft > highestDataBreachProbabilityRight
+	})
+}
+
 func makeDataAssetNode(parsedModel *types.Model, dataAsset *types.DataAsset) string {
 	var color string
-	switch dataAsset.IdentifiedDataBreachProbabilityStillAtRisk(parsedModel) {
+	switch identifiedDataBreachProbabilityStillAtRisk(parsedModel, dataAsset) {
 	case types.Probable:
 		color = rgbHexColorHighRisk()
 	case types.Possible:
@@ -596,7 +607,7 @@ func makeDataAssetNode(parsedModel *types.Model, dataAsset *types.DataAsset) str
 	default:
 		color = "#444444" // since black is too dark here as fill color
 	}
-	if !dataAsset.IsDataBreachPotentialStillAtRisk(parsedModel) {
+	if !isDataBreachPotentialStillAtRisk(parsedModel, dataAsset) {
 		color = "#444444" // since black is too dark here as fill color
 	}
 	return "  " + hash(dataAsset.Id) + ` [ label=<<b>` + encode(dataAsset.Title) + `</b>> penwidth="3.0" style="filled" fillcolor="` + color + `" color="` + color + "\"\n  ]; "
@@ -621,7 +632,7 @@ func makeTechAssetNode(parsedModel *types.Model, technicalAsset *types.Technical
 			default:
 				color = "#444444" // since black is too dark here as fill color
 			}
-			if len(types.ReduceToOnlyStillAtRisk(parsedModel, generatedRisks)) == 0 {
+			if len(types.ReduceToOnlyStillAtRisk(generatedRisks)) == 0 {
 				color = "#444444" // since black is too dark here as fill color
 			}
 		}
