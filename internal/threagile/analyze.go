@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/threagile/threagile/pkg/common"
 	"github.com/threagile/threagile/pkg/model"
 	"github.com/threagile/threagile/pkg/report"
 	"github.com/threagile/threagile/pkg/security/risks"
@@ -12,13 +11,13 @@ import (
 
 func (what *Threagile) initAnalyze() *Threagile {
 	analyze := &cobra.Command{
-		Use:     common.AnalyzeModelCommand,
+		Use:     AnalyzeModelCommand,
 		Short:   "Analyze model",
 		Aliases: []string{"analyze", "analyse", "run", "analyse-model"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cfg := what.readConfig(cmd, what.buildTimestamp)
 			commands := what.readCommands()
-			progressReporter := common.DefaultProgressReporter{Verbose: cfg.Verbose}
+			progressReporter := DefaultProgressReporter{Verbose: cfg.Verbose()}
 
 			r, err := model.ReadAndAnalyzeModel(cfg, risks.GetBuiltInRiskRules(), progressReporter)
 			if err != nil {

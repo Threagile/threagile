@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/threagile/threagile/pkg/common"
 	"gopkg.in/yaml.v3"
 )
 
@@ -15,8 +14,13 @@ var technologiesLocation embed.FS
 
 type TechnologyMap map[string]Technology
 
-func (what TechnologyMap) LoadWithConfig(config *common.Config, defaultFilename string) error {
-	technologiesFilename := filepath.Join(config.AppFolder, defaultFilename)
+type technologyMapConfigReader interface {
+	AppFolder() string
+	TechnologyFilename() string
+}
+
+func (what TechnologyMap) LoadWithConfig(config technologyMapConfigReader, defaultFilename string) error {
+	technologiesFilename := filepath.Join(config.AppFolder(), defaultFilename)
 	_, statError := os.Stat(technologiesFilename)
 	if statError == nil {
 		technologiesLoadError := what.LoadFromFile(technologiesFilename)
@@ -30,11 +34,11 @@ func (what TechnologyMap) LoadWithConfig(config *common.Config, defaultFilename 
 		}
 	}
 
-	if len(config.TechnologyFilename) > 0 {
+	if len(config.TechnologyFilename()) > 0 {
 		additionalTechnologies := make(TechnologyMap)
-		loadError := additionalTechnologies.LoadFromFile(config.TechnologyFilename)
+		loadError := additionalTechnologies.LoadFromFile(config.TechnologyFilename())
 		if loadError != nil {
-			return fmt.Errorf("error loading additional technologies from %q: %v", config.TechnologyFilename, loadError)
+			return fmt.Errorf("error loading additional technologies from %q: %v", config.TechnologyFilename(), loadError)
 		}
 
 		for name, technology := range additionalTechnologies {
@@ -159,7 +163,7 @@ func (what TechnologyMap) propagateAttributes(name string, attributes map[string
 	}
 }
 
-func TechnicalAssetTechnologyValues(cfg *common.Config) []TypeEnum {
+func TechnicalAssetTechnologyValues(cfg technologyMapConfigReader) []TypeEnum {
 	technologies := make(TechnologyMap)
 	_ = technologies.LoadWithConfig(cfg, "technologies.yaml")
 	technologies.PropagateAttributes()

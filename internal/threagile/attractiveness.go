@@ -1,4 +1,4 @@
-package common
+package threagile
 
 type Attractiveness struct {
 	Quantity        int

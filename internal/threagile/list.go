@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/threagile/threagile/pkg/common"
 	"github.com/threagile/threagile/pkg/macros"
 	"github.com/threagile/threagile/pkg/model"
 	"github.com/threagile/threagile/pkg/security/risks"
@@ -14,16 +13,16 @@ import (
 
 func (what *Threagile) initList() *Threagile {
 	what.rootCmd.AddCommand(&cobra.Command{
-		Use:   common.ListRiskRulesCommand,
+		Use:   ListRiskRulesCommand,
 		Short: "Print available risk rules",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cmd.Println(common.Logo + "\n\n" + fmt.Sprintf(common.VersionText, what.buildTimestamp))
+			cmd.Println(Logo + "\n\n" + fmt.Sprintf(VersionText, what.buildTimestamp))
 			cmd.Println("The following risk rules are available (can be extended via custom risk rules):")
 			cmd.Println()
 			cmd.Println("----------------------")
 			cmd.Println("Custom risk rules:")
 			cmd.Println("----------------------")
-			customRiskRules := model.LoadCustomRiskRules(strings.Split(what.flags.customRiskRulesPluginFlag, ","), common.DefaultProgressReporter{Verbose: what.flags.verboseFlag})
+			customRiskRules := model.LoadCustomRiskRules(strings.Split(what.flags.customRiskRulesPluginFlag, ","), DefaultProgressReporter{Verbose: what.flags.verboseFlag})
 			for id, customRule := range customRiskRules {
 				cmd.Println(id, "-->", customRule.Category().Title, "--> with tags:", customRule.SupportedTags())
 			}
@@ -41,10 +40,10 @@ func (what *Threagile) initList() *Threagile {
 	})
 
 	what.rootCmd.AddCommand(&cobra.Command{
-		Use:   common.ListModelMacrosCommand,
+		Use:   ListModelMacrosCommand,
 		Short: "Print model macros",
 		Run: func(cmd *cobra.Command, args []string) {
-			cmd.Println(common.Logo + "\n\n" + fmt.Sprintf(common.VersionText, what.buildTimestamp))
+			cmd.Println(Logo + "\n\n" + fmt.Sprintf(VersionText, what.buildTimestamp))
 			cmd.Println("The following model macros are available (can be extended via custom model macros):")
 			cmd.Println()
 			/* TODO finish plugin stuff
@@ -67,10 +66,10 @@ func (what *Threagile) initList() *Threagile {
 	})
 
 	what.rootCmd.AddCommand(&cobra.Command{
-		Use:   common.ListTypesCommand,
+		Use:   ListTypesCommand,
 		Short: "Print type information (enum values to be used in models)",
 		Run: func(cmd *cobra.Command, args []string) {
-			cmd.Println(common.Logo + "\n\n" + fmt.Sprintf(common.VersionText, what.buildTimestamp))
+			cmd.Println(Logo + "\n\n" + fmt.Sprintf(VersionText, what.buildTimestamp))
 			cmd.Println()
 			cmd.Println()
 			cmd.Println("The following types are available (can be extended for custom rules):")

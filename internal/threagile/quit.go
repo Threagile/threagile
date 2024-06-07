@@ -4,12 +4,11 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/threagile/threagile/pkg/common"
 )
 
 func (what *Threagile) initQuit() *Threagile {
 	quit := &cobra.Command{
-		Use:     common.QuitCommand,
+		Use:     QuitCommand,
 		Short:   "quit client",
 		Aliases: []string{"exit", "bye", "x", "q"},
 		Run: func(cmd *cobra.Command, args []string) {

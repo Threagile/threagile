@@ -1,4 +1,4 @@
-package common
+package threagile
 
 type AttackerFocus struct {
 	Asset                 int // fibonacci sequence base index

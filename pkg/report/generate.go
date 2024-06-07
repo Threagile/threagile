@@ -8,7 +8,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/threagile/threagile/pkg/common"
 	"github.com/threagile/threagile/pkg/model"
 )
 
@@ -37,7 +36,37 @@ func (c *GenerateCommands) Defaults() *GenerateCommands {
 	return c
 }
 
-func Generate(config *common.Config, readResult *model.ReadResult, commands *GenerateCommands, progressReporter progressReporter) error {
+type reportConfigReader interface {
+	MinGraphvizDPI() int
+	MaxGraphvizDPI() int
+	DiagramDPI() int
+	InputFile() string
+	OutputFolder() string
+	AppFolder() string
+	ReportFilename() string
+	TemplateFilename() string
+	JsonRisksFilename() string
+	JsonTechnicalAssetsFilename() string
+	JsonStatsFilename() string
+	ExcelRisksFilename() string
+	ExcelTagsFilename() string
+	DataFlowDiagramFilenamePNG() string
+	DataFlowDiagramFilenameDOT() string
+	DataAssetDiagramFilenamePNG() string
+	DataAssetDiagramFilenameDOT() string
+	KeepDiagramSourceFiles() bool
+	TempFolder() string
+	AddModelTitle() bool
+	SkipRiskRules() []string
+	BuildTimestamp() string
+	ThreagileVersion() string
+
+	RiskExcelConfigHideColumns() []string
+	RiskExcelConfigSortByColumns() []string
+	RiskExcelConfigWidthOfColumns() map[string]float64
+}
+
+func Generate(config reportConfigReader, readResult *model.ReadResult, commands *GenerateCommands, progressReporter progressReporter) error {
 	generateDataFlowDiagram := commands.DataFlowDiagram
 	generateDataAssetsDiagram := commands.DataAssetDiagram
 	if commands.ReportPDF { // as the PDF report includes both diagrams
@@ -45,39 +74,39 @@ func Generate(config *common.Config, readResult *model.ReadResult, commands *Gen
 		generateDataAssetsDiagram = true
 	}
 
-	diagramDPI := config.DiagramDPI
-	if diagramDPI < common.MinGraphvizDPI {
-		diagramDPI = common.MinGraphvizDPI
-	} else if diagramDPI > common.MaxGraphvizDPI {
-		diagramDPI = common.MaxGraphvizDPI
+	diagramDPI := config.DiagramDPI()
+	if diagramDPI < config.MinGraphvizDPI() {
+		diagramDPI = config.MinGraphvizDPI()
+	} else if diagramDPI > config.MaxGraphvizDPI() {
+		diagramDPI = config.MaxGraphvizDPI()
 	}
 	// Data-flow Diagram rendering
 	if generateDataFlowDiagram {
-		gvFile := filepath.Join(config.OutputFolder, config.DataFlowDiagramFilenameDOT)
-		if !config.KeepDiagramSourceFiles {
-			tmpFileGV, err := os.CreateTemp(config.TempFolder, config.DataFlowDiagramFilenameDOT)
+		gvFile := filepath.Join(config.OutputFolder(), config.DataFlowDiagramFilenameDOT())
+		if !config.KeepDiagramSourceFiles() {
+			tmpFileGV, err := os.CreateTemp(config.TempFolder(), config.DataFlowDiagramFilenameDOT())
 			if err != nil {
 				return err
 			}
 			gvFile = tmpFileGV.Name()
 			defer func() { _ = os.Remove(gvFile) }()
 		}
-		dotFile, err := WriteDataFlowDiagramGraphvizDOT(readResult.ParsedModel, gvFile, diagramDPI, config.AddModelTitle, progressReporter)
+		dotFile, err := WriteDataFlowDiagramGraphvizDOT(readResult.ParsedModel, gvFile, diagramDPI, config.AddModelTitle(), progressReporter)
 		if err != nil {
 			return fmt.Errorf("error while generating data flow diagram: %s", err)
 		}
 
-		err = GenerateDataFlowDiagramGraphvizImage(dotFile, config.OutputFolder,
-			config.TempFolder, config.DataFlowDiagramFilenamePNG, progressReporter, config.KeepDiagramSourceFiles)
+		err = GenerateDataFlowDiagramGraphvizImage(dotFile, config.OutputFolder(),
+			config.TempFolder(), config.DataFlowDiagramFilenamePNG(), progressReporter, config.KeepDiagramSourceFiles())
 		if err != nil {
 			progressReporter.Warn(err)
 		}
 	}
 	// Data Asset Diagram rendering
 	if generateDataAssetsDiagram {
-		gvFile := filepath.Join(config.OutputFolder, config.DataAssetDiagramFilenameDOT)
-		if !config.KeepDiagramSourceFiles {
-			tmpFile, err := os.CreateTemp(config.TempFolder, config.DataAssetDiagramFilenameDOT)
+		gvFile := filepath.Join(config.OutputFolder(), config.DataAssetDiagramFilenameDOT())
+		if !config.KeepDiagramSourceFiles() {
+			tmpFile, err := os.CreateTemp(config.TempFolder(), config.DataAssetDiagramFilenameDOT())
 			if err != nil {
 				return err
 			}
@@ -88,8 +117,8 @@ func Generate(config *common.Config, readResult *model.ReadResult, commands *Gen
 		if err != nil {
 			return fmt.Errorf("error while generating data asset diagram: %s", err)
 		}
-		err = GenerateDataAssetDiagramGraphvizImage(dotFile, config.OutputFolder,
-			config.TempFolder, config.DataAssetDiagramFilenamePNG, progressReporter)
+		err = GenerateDataAssetDiagramGraphvizImage(dotFile, config.OutputFolder(),
+			config.TempFolder(), config.DataAssetDiagramFilenamePNG(), progressReporter)
 		if err != nil {
 			progressReporter.Warn(err)
 		}
@@ -98,7 +127,7 @@ func Generate(config *common.Config, readResult *model.ReadResult, commands *Gen
 	// risks as risks json
 	if commands.RisksJSON {
 		progressReporter.Info("Writing risks json")
-		err := WriteRisksJSON(readResult.ParsedModel, filepath.Join(config.OutputFolder, config.JsonRisksFilename))
+		err := WriteRisksJSON(readResult.ParsedModel, filepath.Join(config.OutputFolder(), config.JsonRisksFilename()))
 		if err != nil {
 			return fmt.Errorf("error while writing risks json: %s", err)
 		}
@@ -107,7 +136,7 @@ func Generate(config *common.Config, readResult *model.ReadResult, commands *Gen
 	// technical assets json
 	if commands.TechnicalAssetsJSON {
 		progressReporter.Info("Writing technical assets json")
-		err := WriteTechnicalAssetsJSON(readResult.ParsedModel, filepath.Join(config.OutputFolder, config.JsonTechnicalAssetsFilename))
+		err := WriteTechnicalAssetsJSON(readResult.ParsedModel, filepath.Join(config.OutputFolder(), config.JsonTechnicalAssetsFilename()))
 		if err != nil {
 			return fmt.Errorf("error while writing technical assets json: %s", err)
 		}
@@ -116,7 +145,7 @@ func Generate(config *common.Config, readResult *model.ReadResult, commands *Gen
 	// risks as risks json
 	if commands.StatsJSON {
 		progressReporter.Info("Writing stats json")
-		err := WriteStatsJSON(readResult.ParsedModel, filepath.Join(config.OutputFolder, config.JsonStatsFilename))
+		err := WriteStatsJSON(readResult.ParsedModel, filepath.Join(config.OutputFolder(), config.JsonStatsFilename()))
 		if err != nil {
 			return fmt.Errorf("error while writing stats json: %s", err)
 		}
@@ -125,7 +154,7 @@ func Generate(config *common.Config, readResult *model.ReadResult, commands *Gen
 	// risks Excel
 	if commands.RisksExcel {
 		progressReporter.Info("Writing risks excel")
-		err := WriteRisksExcelToFile(readResult.ParsedModel, filepath.Join(config.OutputFolder, config.ExcelRisksFilename), config)
+		err := WriteRisksExcelToFile(readResult.ParsedModel, filepath.Join(config.OutputFolder(), config.ExcelRisksFilename()), config)
 		if err != nil {
 			return err
 		}
@@ -134,7 +163,7 @@ func Generate(config *common.Config, readResult *model.ReadResult, commands *Gen
 	// tags Excel
 	if commands.TagsExcel {
 		progressReporter.Info("Writing tags excel")
-		err := WriteTagsExcelToFile(readResult.ParsedModel, filepath.Join(config.OutputFolder, config.ExcelTagsFilename))
+		err := WriteTagsExcelToFile(readResult.ParsedModel, filepath.Join(config.OutputFolder(), config.ExcelTagsFilename()))
 		if err != nil {
 			return err
 		}
@@ -142,7 +171,7 @@ func Generate(config *common.Config, readResult *model.ReadResult, commands *Gen
 
 	if commands.ReportPDF {
 		// hash the YAML input file
-		f, err := os.Open(config.InputFile)
+		f, err := os.Open(config.InputFile())
 		if err != nil {
 			return err
 		}
@@ -156,17 +185,18 @@ func Generate(config *common.Config, readResult *model.ReadResult, commands *Gen
 		progressReporter.Info("Writing report pdf")
 
 		pdfReporter := pdfReporter{}
-		err = pdfReporter.WriteReportPDF(filepath.Join(config.OutputFolder, config.ReportFilename),
-			filepath.Join(config.AppFolder, config.TemplateFilename),
-			filepath.Join(config.OutputFolder, config.DataFlowDiagramFilenamePNG),
-			filepath.Join(config.OutputFolder, config.DataAssetDiagramFilenamePNG),
-			config.InputFile,
-			config.SkipRiskRules,
-			config.BuildTimestamp,
+		err = pdfReporter.WriteReportPDF(filepath.Join(config.OutputFolder(), config.ReportFilename()),
+			filepath.Join(config.AppFolder(), config.TemplateFilename()),
+			filepath.Join(config.OutputFolder(), config.DataFlowDiagramFilenamePNG()),
+			filepath.Join(config.OutputFolder(), config.DataAssetDiagramFilenamePNG()),
+			config.InputFile(),
+			config.SkipRiskRules(),
+			config.BuildTimestamp(),
+			config.ThreagileVersion(),
 			modelHash,
 			readResult.IntroTextRAA,
 			readResult.CustomRiskRules,
-			config.TempFolder,
+			config.TempFolder(),
 			readResult.ParsedModel)
 		if err != nil {
 			return err

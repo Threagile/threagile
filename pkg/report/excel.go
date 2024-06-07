@@ -2,17 +2,17 @@ package report
 
 import (
 	"fmt"
-	"github.com/shopspring/decimal"
-	"github.com/threagile/threagile/pkg/common"
-	"github.com/threagile/threagile/pkg/security/types"
-	"github.com/xuri/excelize/v2"
 	"sort"
 	"strconv"
 	"strings"
 	"unicode/utf8"
+
+	"github.com/shopspring/decimal"
+	"github.com/threagile/threagile/pkg/security/types"
+	"github.com/xuri/excelize/v2"
 )
 
-func WriteRisksExcelToFile(parsedModel *types.Model, filename string, config *common.Config) error {
+func WriteRisksExcelToFile(parsedModel *types.Model, filename string, config reportConfigReader) error {
 	columns := new(ExcelColumns).GetColumns()
 	excel := excelize.NewFile()
 	sheetName := parsedModel.Title
@@ -133,7 +133,7 @@ func WriteRisksExcelToFile(parsedModel *types.Model, filename string, config *co
 	}
 
 	// group risks
-	groupedRisk, groupedRiskError := new(RiskGroup).Make(riskItems, columns, config.RiskExcel.SortByColumns)
+	groupedRisk, groupedRiskError := new(RiskGroup).Make(riskItems, columns, config.RiskExcelConfigSortByColumns())
 	if groupedRiskError != nil {
 		return fmt.Errorf("failed to group risks: %w", groupedRiskError)
 	}
@@ -160,7 +160,7 @@ func WriteRisksExcelToFile(parsedModel *types.Model, filename string, config *co
 			}
 
 			var minWidth float64 = 0
-			width, widthOk := config.RiskExcel.WidthOfColumns[columns[name].Title]
+			width, widthOk := config.RiskExcelConfigWidthOfColumns()[columns[name].Title]
 			if widthOk {
 				minWidth = width
 			} else {
@@ -210,7 +210,7 @@ func WriteRisksExcelToFile(parsedModel *types.Model, filename string, config *co
 
 	// hide some columns
 	for columnLetter, column := range columns {
-		for _, hiddenColumn := range config.RiskExcel.HideColumns {
+		for _, hiddenColumn := range config.RiskExcelConfigHideColumns() {
 			if strings.EqualFold(hiddenColumn, column.Title) {
 				hideColumnError := excel.SetColVisible(sheetName, columnLetter, false)
 				if hideColumnError != nil {

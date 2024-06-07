@@ -1,4 +1,4 @@
-package common
+package threagile
 
 const (
 	TempDir   = "/dev/shm" // TODO: make configurable via cmdline arg?

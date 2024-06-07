@@ -7,12 +7,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/threagile/threagile/pkg/common"
 	"github.com/threagile/threagile/pkg/input"
 	"github.com/threagile/threagile/pkg/security/types"
 )
 
-func ParseModel(config *common.Config, modelInput *input.Model, builtinRiskRules types.RiskRules, customRiskRules types.RiskRules) (*types.Model, error) {
+type technologyMapConfigReader interface {
+	AppFolder() string
+	TechnologyFilename() string
+}
+
+func ParseModel(config technologyMapConfigReader, modelInput *input.Model, builtinRiskRules types.RiskRules, customRiskRules types.RiskRules) (*types.Model, error) {
 	technologies := make(types.TechnologyMap)
 	technologiesLoadError := technologies.LoadWithConfig(config, "technologies.yaml")
 	if technologiesLoadError != nil {

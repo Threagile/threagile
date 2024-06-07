@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/threagile/threagile/pkg/common"
 	"github.com/threagile/threagile/pkg/input"
 	"github.com/threagile/threagile/pkg/security/types"
 )
@@ -17,20 +16,54 @@ type ReadResult struct {
 	CustomRiskRules  types.RiskRules
 }
 
-func (what ReadResult) ExplainRisk(cfg *common.Config, risk string, reporter common.DefaultProgressReporter) error {
+type explainRiskConfig interface {
+}
+
+type explainRiskReporter interface {
+}
+
+func (what ReadResult) ExplainRisk(cfg explainRiskConfig, risk string, reporter explainRiskReporter) error {
 	return fmt.Errorf("not implemented")
 }
 
 // TODO: consider about splitting this function into smaller ones for better reusability
 
-func ReadAndAnalyzeModel(config *common.Config, builtinRiskRules types.RiskRules, progressReporter types.ProgressReporter) (*ReadResult, error) {
-	progressReporter.Infof("Writing into output directory: %v", config.OutputFolder)
+type configReader interface {
+	AppFolder() string
+	ServerFolder() string
+	BuildTimestamp() string
+	Verbose() bool
+	RiskRulesPlugins() []string
+	SkipRiskRules() []string
+	ExecuteModelMacro() string
+	GraphvizDPI() int
+	TechnologyFilename() string
+	ServerPort() int
+	KeyFolder() string
+	OutputFolder() string
+	TempFolder() string
+	InputFile() string
+	DataFlowDiagramFilenamePNG() string
+	DataAssetDiagramFilenamePNG() string
+	DataAssetDiagramFilenameDOT() string
+	ReportFilename() string
+	ExcelRisksFilename() string
+	ExcelTagsFilename() string
+	JsonRisksFilename() string
+	JsonTechnicalAssetsFilename() string
+	JsonStatsFilename() string
+	KeepDiagramSourceFiles() bool
+	IgnoreOrphanedRiskTracking() bool
+}
+
+func ReadAndAnalyzeModel(config configReader, builtinRiskRules types.RiskRules, progressReporter types.ProgressReporter) (*ReadResult, error) {
+	progressReporter.Infof("Writing into output directory: %v", config.OutputFolder())
 	progressReporter.Infof("Parsing model: %v", config.InputFile)
 
-	customRiskRules := LoadCustomRiskRules(config.RiskRulesPlugins, progressReporter)
+	customRiskRules := LoadCustomRiskRules(config.RiskRulesPlugins(), progressReporter)
 
 	modelInput := new(input.Model).Defaults()
-	loadError := modelInput.Load(config.InputFile)
+	loadError := modelInput.Load(config.InputFile())
 	if loadError != nil {
 		return nil, fmt.Errorf("unable to load model yaml: %v", loadError)
 	}
@@ -42,13 +75,13 @@ func ReadAndAnalyzeModel(config *common.Config, builtinRiskRules types.RiskRules
 
 	introTextRAA := applyRAA(parsedModel, progressReporter)
 
-	applyRiskGeneration(parsedModel, builtinRiskRules.Merge(customRiskRules), config.SkipRiskRules, progressReporter)
-	err := parsedModel.ApplyWildcardRiskTrackingEvaluation(config.IgnoreOrphanedRiskTracking, progressReporter)
+	applyRiskGeneration(parsedModel, builtinRiskRules.Merge(customRiskRules), config.SkipRiskRules(), progressReporter)
+	err := parsedModel.ApplyWildcardRiskTrackingEvaluation(config.IgnoreOrphanedRiskTracking(), progressReporter)
 	if err != nil {
 		return nil, fmt.Errorf("unable to apply wildcard risk tracking evaluation: %v", err)
 	}
 
-	err = parsedModel.CheckRiskTracking(config.IgnoreOrphanedRiskTracking, progressReporter)
+	err = parsedModel.CheckRiskTracking(config.IgnoreOrphanedRiskTracking(), progressReporter)
 	if err != nil {
 		return nil, fmt.Errorf("unable to check risk tracking: %v", err)
 	}

@@ -15,7 +15,6 @@ import (
 
 	"github.com/jung-kurt/gofpdf"
 	"github.com/jung-kurt/gofpdf/contrib/gofpdi"
-	"github.com/threagile/threagile/pkg/common"
 	"github.com/threagile/threagile/pkg/security/risks"
 	"github.com/threagile/threagile/pkg/security/types"
 	"github.com/wcharczuk/go-chart"
@@ -23,7 +22,7 @@ import (
 )
 
 const fontSizeHeadline, fontSizeHeadlineSmall, fontSizeBody, fontSizeSmall, fontSizeVerySmall = 20, 16, 12, 9, 7
-const /*dataFlowDiagramFullscreen,*/ allowedPdfLandscapePages, embedDiagramLegendPage = /*false,*/ true, false
+const allowedPdfLandscapePages, embedDiagramLegendPage = true, false
 
 type pdfReporter struct {
 	isLandscapePage               bool
@@ -55,6 +54,7 @@ func (r *pdfReporter) WriteReportPDF(reportFilename string,
 	modelFilename string,
 	skipRiskRules []string,
 	buildTimestamp string,
+	threagileVersion string,
 	modelHash string,
 	introTextRAA string,
 	customRiskRules types.RiskRules,
@@ -103,7 +103,7 @@ func (r *pdfReporter) WriteReportPDF(reportFilename string,
 	r.createDataAssets(model)
 	r.createTrustBoundaries(model)
 	r.createSharedRuntimes(model)
-	r.createRiskRulesChecked(model, modelFilename, skipRiskRules, buildTimestamp, modelHash, customRiskRules)
+	r.createRiskRulesChecked(model, modelFilename, skipRiskRules, buildTimestamp, threagileVersion, modelHash, customRiskRules)
 	r.createDisclaimer(model)
 	err = r.writeReportToFile(reportFilename)
 	if err != nil {
@@ -4221,7 +4221,7 @@ func (r *pdfReporter) createSharedRuntimes(parsedModel *types.Model) {
 	}
 }
 
-func (r *pdfReporter) createRiskRulesChecked(parsedModel *types.Model, modelFilename string, skipRiskRules []string, buildTimestamp string, modelHash string, customRiskRules types.RiskRules) {
+func (r *pdfReporter) createRiskRulesChecked(parsedModel *types.Model, modelFilename string, skipRiskRules []string, buildTimestamp string, threagileVersion string, modelHash string, customRiskRules types.RiskRules) {
 	r.pdf.SetTextColor(0, 0, 0)
 	title := "Risk Rules Checked by Threagile"
 	r.addHeadline(title, false)
@@ -4233,7 +4233,7 @@ func (r *pdfReporter) createRiskRulesChecked(parsedModel *types.Model, modelFile
 	r.pdfColorGray()
 	r.pdf.SetFont("Helvetica", "", fontSizeSmall)
 	timestamp := time.Now()
-	strBuilder.WriteString("<b>Threagile Version:</b> " + common.ThreagileVersion)
+	strBuilder.WriteString("<b>Threagile Version:</b> " + threagileVersion)
 	strBuilder.WriteString("<br><b>Threagile Build Timestamp:</b> " + buildTimestamp)
 	strBuilder.WriteString("<br><b>Threagile Execution Timestamp:</b> " + timestamp.Format("20060102150405"))
 	strBuilder.WriteString("<br><b>Model Filename:</b> " + modelFilename)
