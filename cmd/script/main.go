@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/threagile/threagile/pkg/script"
+	"github.com/threagile/threagile/pkg/risks/script"
 	"github.com/threagile/threagile/pkg/types"
 	"gopkg.in/yaml.v3"
 )

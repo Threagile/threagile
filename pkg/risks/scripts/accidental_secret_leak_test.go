@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/threagile/threagile/pkg/script"
+	"github.com/threagile/threagile/pkg/risks/script"
 	"github.com/threagile/threagile/pkg/types"
 )
 
