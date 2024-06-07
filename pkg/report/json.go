@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/threagile/threagile/pkg/security/types"
+	"github.com/threagile/threagile/pkg/types"
 )
 
 func WriteRisksJSON(parsedModel *types.Model, filename string) error {

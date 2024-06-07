@@ -7,7 +7,7 @@ ASSETS			= 							\
 	support/openapi.yaml 					\
 	support/schema.json 					\
 	support/live-templates.txt				\
-	pkg/security/types/technologies.yaml	\
+	pkg/types/technologies.yaml	\
 	server
 BIN				= 							\
 	risk_demo_rule 							\

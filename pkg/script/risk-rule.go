@@ -2,12 +2,13 @@ package script
 
 import (
 	"fmt"
-	"github.com/threagile/threagile/pkg/input"
-	"github.com/threagile/threagile/pkg/security/types"
-	"gopkg.in/yaml.v3"
 	"io/fs"
 	"path/filepath"
 	"strings"
+
+	"github.com/threagile/threagile/pkg/input"
+	"github.com/threagile/threagile/pkg/types"
+	"gopkg.in/yaml.v3"
 )
 
 type RiskRule struct {

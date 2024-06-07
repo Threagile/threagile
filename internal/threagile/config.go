@@ -9,7 +9,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/threagile/threagile/pkg/security/types"
+	"github.com/threagile/threagile/pkg/types"
 )
 
 type Config struct {

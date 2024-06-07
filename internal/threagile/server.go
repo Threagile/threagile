@@ -2,7 +2,7 @@ package threagile
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/threagile/threagile/pkg/security/risks"
+	"github.com/threagile/threagile/pkg/risks"
 	"github.com/threagile/threagile/pkg/server"
 )
 

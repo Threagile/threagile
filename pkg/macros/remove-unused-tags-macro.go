@@ -1,12 +1,13 @@
 package macros
 
 import (
-	"github.com/mpvl/unique"
 	"sort"
 	"strconv"
 
+	"github.com/mpvl/unique"
+
 	"github.com/threagile/threagile/pkg/input"
-	"github.com/threagile/threagile/pkg/security/types"
+	"github.com/threagile/threagile/pkg/types"
 )
 
 type removeUnusedTagsMacro struct {

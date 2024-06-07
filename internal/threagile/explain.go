@@ -7,8 +7,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/threagile/threagile/pkg/macros"
 	"github.com/threagile/threagile/pkg/model"
-	"github.com/threagile/threagile/pkg/security/risks"
-	"github.com/threagile/threagile/pkg/security/types"
+	"github.com/threagile/threagile/pkg/risks"
+	"github.com/threagile/threagile/pkg/types"
 )
 
 func (what *Threagile) initExplain() *Threagile {

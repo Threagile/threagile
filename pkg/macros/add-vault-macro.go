@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/threagile/threagile/pkg/input"
-	"github.com/threagile/threagile/pkg/security/types"
+	"github.com/threagile/threagile/pkg/types"
 )
 
 type AddVaultMacro struct {

@@ -11,7 +11,7 @@ import (
 
 	"github.com/threagile/threagile/pkg/macros"
 	"github.com/threagile/threagile/pkg/model"
-	"github.com/threagile/threagile/pkg/security/risks"
+	"github.com/threagile/threagile/pkg/risks"
 )
 
 func (what *Threagile) initExecute() *Threagile {

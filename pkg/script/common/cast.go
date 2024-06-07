@@ -2,7 +2,8 @@ package common
 
 import (
 	"fmt"
-	"github.com/threagile/threagile/pkg/security/types"
+
+	"github.com/threagile/threagile/pkg/types"
 )
 
 const (

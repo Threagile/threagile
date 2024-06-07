@@ -8,7 +8,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/shopspring/decimal"
-	"github.com/threagile/threagile/pkg/security/types"
+	"github.com/threagile/threagile/pkg/types"
 	"github.com/xuri/excelize/v2"
 )
 

@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/threagile/threagile/pkg/model"
 	"github.com/threagile/threagile/pkg/report"
-	"github.com/threagile/threagile/pkg/security/risks"
+	"github.com/threagile/threagile/pkg/risks"
 )
 
 func (what *Threagile) initAnalyze() *Threagile {

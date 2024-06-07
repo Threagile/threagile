@@ -2,9 +2,10 @@ package common
 
 import (
 	"encoding/json"
-	"github.com/threagile/threagile/pkg/security/types"
-	"gopkg.in/yaml.v3"
 	"strings"
+
+	"github.com/threagile/threagile/pkg/types"
+	"gopkg.in/yaml.v3"
 )
 
 type Scope struct {

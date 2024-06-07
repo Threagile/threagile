@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 
 	"github.com/threagile/threagile/pkg/model"
-	"github.com/threagile/threagile/pkg/security/types"
+	"github.com/threagile/threagile/pkg/types"
 )
 
 type GenerateCommands struct {

@@ -18,7 +18,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/threagile/threagile/pkg/model"
-	"github.com/threagile/threagile/pkg/security/types"
+	"github.com/threagile/threagile/pkg/types"
 )
 
 type serverConfigReader interface {
