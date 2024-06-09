@@ -25,6 +25,9 @@ const (
 	Then = "then"
 	Else = "else"
 
+	Defer   = "defer"
+	Explain = "explain"
+
 	All            = "all"
 	And            = "and"
 	Any            = "any"

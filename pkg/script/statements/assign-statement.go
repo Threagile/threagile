@@ -51,6 +51,10 @@ func (what *AssignStatement) parse(script map[string]any) (common.Statement, any
 }
 
 func (what *AssignStatement) Run(scope *common.Scope) (string, error) {
+	if scope.HasReturned {
+		return "", nil
+	}
+
 	for name, item := range what.items {
 		value, errorLiteral, evalError := item.EvalAny(scope)
 		if evalError != nil {

@@ -91,16 +91,17 @@ func (what *CountExpression) evalDecimal(scope *common.Scope, inValue common.Val
 	switch castValue := inValue.Value().(type) {
 	case []any:
 		if what.expression == nil {
-			return common.SomeDecimalValue(decimal.NewFromInt(int64(len(castValue))), common.NewHistory("any value is good")), "", nil
+			return common.SomeDecimalValue(decimal.NewFromInt(int64(len(castValue))), nil), "", nil
 		}
 
 		var count int64 = 0
+		values := make([]common.Value, 0)
 		for index, item := range castValue {
 			if len(what.index) > 0 {
-				scope.Set(what.index, common.SomeDecimalValue(decimal.NewFromInt(int64(index)), common.NewHistory("item %v of value", index).From(inValue.History())))
+				scope.Set(what.index, common.SomeDecimalValue(decimal.NewFromInt(int64(index)), nil))
 			}
 
-			itemValue := scope.SetItem(common.SomeValue(item, common.NewHistory("item %v of value", index).From(inValue.History())))
+			itemValue := scope.SetItem(common.SomeValue(item, inValue.Event()))
 			if len(what.item) > 0 {
 				scope.Set(what.item, itemValue)
 			}
@@ -111,24 +112,26 @@ func (what *CountExpression) evalDecimal(scope *common.Scope, inValue common.Val
 			}
 
 			if value.BoolValue() {
+				values = append(values, value)
 				count++
 			}
 		}
 
-		return common.SomeDecimalValue(decimal.NewFromInt(count), common.NewHistory("%d items are true", len(castValue)).From(inValue.History())), "", nil
+		return common.SomeDecimalValue(decimal.NewFromInt(count), inValue.Event().From(values...)), "", nil
 
 	case []common.Value:
 		if what.expression == nil {
-			return common.SomeDecimalValue(decimal.NewFromInt(int64(len(castValue))), common.NewHistory("any value is good")), "", nil
+			return common.SomeDecimalValue(decimal.NewFromInt(int64(len(castValue))), nil), "", nil
 		}
 
 		var count int64 = 0
+		values := make([]common.Value, 0)
 		for index, item := range castValue {
 			if len(what.index) > 0 {
-				scope.Set(what.index, common.SomeDecimalValue(decimal.NewFromInt(int64(index)), common.NewHistory("item %v of value", index).From(inValue.History())))
+				scope.Set(what.index, common.SomeDecimalValue(decimal.NewFromInt(int64(index)), nil))
 			}
 
-			itemValue := scope.SetItem(common.SomeValue(item.Value(), common.NewHistory("item %v of value", index).From(inValue.History())))
+			itemValue := scope.SetItem(common.SomeValue(item.Value(), inValue.Event()))
 			if len(what.item) > 0 {
 				scope.Set(what.item, itemValue)
 			}
@@ -139,24 +142,26 @@ func (what *CountExpression) evalDecimal(scope *common.Scope, inValue common.Val
 			}
 
 			if value.BoolValue() {
+				values = append(values, value)
 				count++
 			}
 		}
 
-		return common.SomeDecimalValue(decimal.NewFromInt(count), common.NewHistory("%d items are true", len(castValue)).From(inValue.History())), "", nil
+		return common.SomeDecimalValue(decimal.NewFromInt(count), inValue.Event().From(values...)), "", nil
 
 	case map[string]any:
 		if what.expression == nil {
-			return common.SomeDecimalValue(decimal.NewFromInt(int64(len(castValue))), common.NewHistory("any value is good")), "", nil
+			return common.SomeDecimalValue(decimal.NewFromInt(int64(len(castValue))), nil), "", nil
 		}
 
 		var count int64 = 0
+		values := make([]common.Value, 0)
 		for name, item := range castValue {
 			if len(what.index) > 0 {
-				scope.Set(what.index, common.SomeStringValue(name, common.NewHistory("item %q of value", name).From(inValue.History())))
+				scope.Set(what.index, common.SomeStringValue(name, nil))
 			}
 
-			itemValue := scope.SetItem(common.SomeValue(item, common.NewHistory("item %q of value", name).From(inValue.History())))
+			itemValue := scope.SetItem(common.SomeValue(item, inValue.Event()))
 			if len(what.item) > 0 {
 				scope.Set(what.item, itemValue)
 			}
@@ -167,14 +172,15 @@ func (what *CountExpression) evalDecimal(scope *common.Scope, inValue common.Val
 			}
 
 			if value.BoolValue() {
+				values = append(values, value)
 				count++
 			}
 		}
 
-		return common.SomeDecimalValue(decimal.NewFromInt(count), common.NewHistory("%d items are true", len(castValue)).From(inValue.History())), "", nil
+		return common.SomeDecimalValue(decimal.NewFromInt(count), inValue.Event().From(values...)), "", nil
 
 	case common.Value:
-		return what.evalDecimal(scope, common.SomeValue(castValue.Value(), inValue.History()))
+		return what.evalDecimal(scope, common.SomeValue(castValue.Value(), inValue.Event()))
 
 	default:
 		return common.EmptyDecimalValue(), what.Literal(), fmt.Errorf("failed to eval all-expression: expected iterable type, got %T", inValue)

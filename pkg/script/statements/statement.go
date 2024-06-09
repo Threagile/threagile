@@ -18,8 +18,16 @@ func (what *Statement) Parse(name string, body any) (common.Statement, any, erro
 
 		return statement, errorScript, parseError
 
-	case common.Loop:
-		statement, errorScript, parseError := new(LoopStatement).Parse(body)
+	case common.Defer:
+		statement, errorScript, parseError := new(DeferStatement).Parse(body)
+		if parseError != nil {
+			return nil, errorScript, fmt.Errorf("failed to parse %q-statement: %w", name, parseError)
+		}
+
+		return statement, errorScript, parseError
+
+	case common.Explain:
+		statement, errorScript, parseError := new(ExplainStatement).Parse(body)
 		if parseError != nil {
 			return nil, errorScript, fmt.Errorf("failed to parse %q-statement: %w", name, parseError)
 		}
@@ -28,6 +36,14 @@ func (what *Statement) Parse(name string, body any) (common.Statement, any, erro
 
 	case common.If:
 		statement, errorScript, parseError := new(IfStatement).Parse(body)
+		if parseError != nil {
+			return nil, errorScript, fmt.Errorf("failed to parse %q-statement: %w", name, parseError)
+		}
+
+		return statement, errorScript, parseError
+
+	case common.Loop:
+		statement, errorScript, parseError := new(LoopStatement).Parse(body)
 		if parseError != nil {
 			return nil, errorScript, fmt.Errorf("failed to parse %q-statement: %w", name, parseError)
 		}

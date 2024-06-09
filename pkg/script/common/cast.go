@@ -41,6 +41,10 @@ var (
 type castFunc func(value Value) (Value, error)
 
 func CastValue(value Value, castType string) (Value, error) {
+	if value == nil {
+		return NilValue(), nil
+	}
+
 	caster, ok := cast[castType]
 	if !ok {
 		return nil, fmt.Errorf("unknown cast type %v", castType)
@@ -50,24 +54,20 @@ func CastValue(value Value, castType string) (Value, error) {
 }
 
 func toConfidentiality(value Value) (Value, error) {
-	if value.Value() == nil {
-		return NilValue(), nil
-	}
-
 	switch castValue := value.Value().(type) {
 	case string:
 		converted, conversionError := types.Confidentiality(0).Find(castValue)
-		return SomeDecimalValue(decimal.NewFromInt(int64(converted)), value.History()), conversionError
+		if conversionError != nil {
+			return nil, conversionError
+		}
 
-	case fmt.Stringer:
-		converted, conversionError := types.Confidentiality(0).Find(castValue.String())
-		return SomeDecimalValue(decimal.NewFromInt(int64(converted)), value.History()), conversionError
+		return SomeDecimalValue(decimal.NewFromInt(int64(converted)), value.Event()), nil
 
 	case int:
-		return SomeDecimalValue(decimal.NewFromInt(int64(castValue)), NewHistory("")), nil
+		return SomeDecimalValue(decimal.NewFromInt(int64(castValue)), value.Event()), nil
 
 	case int64:
-		return SomeDecimalValue(decimal.NewFromInt(castValue), NewHistory("")), nil
+		return SomeDecimalValue(decimal.NewFromInt(castValue), value.Event()), nil
 
 	case Value:
 		return toConfidentiality(castValue)
@@ -78,24 +78,20 @@ func toConfidentiality(value Value) (Value, error) {
 }
 
 func toCriticality(value Value) (Value, error) {
-	if value.Value() == nil {
-		return NilValue(), nil
-	}
-
 	switch castValue := value.Value().(type) {
 	case string:
 		converted, conversionError := types.Criticality(0).Find(castValue)
-		return SomeDecimalValue(decimal.NewFromInt(int64(converted)), value.History()), conversionError
+		if conversionError != nil {
+			return nil, conversionError
+		}
 
-	case fmt.Stringer:
-		converted, conversionError := types.Criticality(0).Find(castValue.String())
-		return SomeDecimalValue(decimal.NewFromInt(int64(converted)), value.History()), conversionError
+		return SomeDecimalValue(decimal.NewFromInt(int64(converted)), value.Event()), nil
 
 	case int:
-		return SomeDecimalValue(decimal.NewFromInt(int64(castValue)), NewHistory("")), nil
+		return SomeDecimalValue(decimal.NewFromInt(int64(castValue)), value.Event()), nil
 
 	case int64:
-		return SomeDecimalValue(decimal.NewFromInt(castValue), NewHistory("")), nil
+		return SomeDecimalValue(decimal.NewFromInt(castValue), value.Event()), nil
 
 	case Value:
 		return toCriticality(castValue)
@@ -106,24 +102,20 @@ func toCriticality(value Value) (Value, error) {
 }
 
 func toAuthentication(value Value) (Value, error) {
-	if value.Value() == nil {
-		return NilValue(), nil
-	}
-
 	switch castValue := value.Value().(type) {
 	case string:
 		converted, conversionError := types.Authentication(0).Find(castValue)
-		return SomeDecimalValue(decimal.NewFromInt(int64(converted)), value.History()), conversionError
+		if conversionError != nil {
+			return nil, conversionError
+		}
 
-	case fmt.Stringer:
-		converted, conversionError := types.Authentication(0).Find(castValue.String())
-		return SomeDecimalValue(decimal.NewFromInt(int64(converted)), value.History()), conversionError
+		return SomeDecimalValue(decimal.NewFromInt(int64(converted)), value.Event()), nil
 
 	case int:
-		return SomeDecimalValue(decimal.NewFromInt(int64(castValue)), NewHistory("")), nil
+		return SomeDecimalValue(decimal.NewFromInt(int64(castValue)), value.Event()), nil
 
 	case int64:
-		return SomeDecimalValue(decimal.NewFromInt(castValue), NewHistory("")), nil
+		return SomeDecimalValue(decimal.NewFromInt(castValue), value.Event()), nil
 
 	case Value:
 		return toAuthentication(castValue)
@@ -134,24 +126,20 @@ func toAuthentication(value Value) (Value, error) {
 }
 
 func toAuthorization(value Value) (Value, error) {
-	if value.Value() == nil {
-		return NilValue(), nil
-	}
-
 	switch castValue := value.Value().(type) {
 	case string:
 		converted, conversionError := types.Authorization(0).Find(castValue)
-		return SomeDecimalValue(decimal.NewFromInt(int64(converted)), value.History()), conversionError
+		if conversionError != nil {
+			return nil, conversionError
+		}
 
-	case fmt.Stringer:
-		converted, conversionError := types.Authorization(0).Find(castValue.String())
-		return SomeDecimalValue(decimal.NewFromInt(int64(converted)), value.History()), conversionError
+		return SomeDecimalValue(decimal.NewFromInt(int64(converted)), value.Event()), nil
 
 	case int:
-		return SomeDecimalValue(decimal.NewFromInt(int64(castValue)), NewHistory("")), nil
+		return SomeDecimalValue(decimal.NewFromInt(int64(castValue)), value.Event()), nil
 
 	case int64:
-		return SomeDecimalValue(decimal.NewFromInt(castValue), NewHistory("")), nil
+		return SomeDecimalValue(decimal.NewFromInt(castValue), value.Event()), nil
 
 	case Value:
 		return toAuthorization(castValue)
@@ -162,24 +150,20 @@ func toAuthorization(value Value) (Value, error) {
 }
 
 func toProbability(value Value) (Value, error) {
-	if value.Value() == nil {
-		return NilValue(), nil
-	}
-
 	switch castValue := value.Value().(type) {
 	case string:
 		converted, conversionError := types.DataBreachProbability(0).Find(castValue)
-		return SomeDecimalValue(decimal.NewFromInt(int64(converted)), value.History()), conversionError
+		if conversionError != nil {
+			return nil, conversionError
+		}
 
-	case fmt.Stringer:
-		converted, conversionError := types.DataBreachProbability(0).Find(castValue.String())
-		return SomeDecimalValue(decimal.NewFromInt(int64(converted)), value.History()), conversionError
+		return SomeDecimalValue(decimal.NewFromInt(int64(converted)), value.Event()), nil
 
 	case int:
-		return SomeDecimalValue(decimal.NewFromInt(int64(castValue)), NewHistory("")), nil
+		return SomeDecimalValue(decimal.NewFromInt(int64(castValue)), value.Event()), nil
 
 	case int64:
-		return SomeDecimalValue(decimal.NewFromInt(castValue), NewHistory("")), nil
+		return SomeDecimalValue(decimal.NewFromInt(castValue), value.Event()), nil
 
 	case Value:
 		return toProbability(castValue)
@@ -190,24 +174,20 @@ func toProbability(value Value) (Value, error) {
 }
 
 func toEncryption(value Value) (Value, error) {
-	if value.Value() == nil {
-		return NilValue(), nil
-	}
-
 	switch castValue := value.Value().(type) {
 	case string:
 		converted, conversionError := types.EncryptionStyle(0).Find(castValue)
-		return SomeDecimalValue(decimal.NewFromInt(int64(converted)), value.History()), conversionError
+		if conversionError != nil {
+			return nil, conversionError
+		}
 
-	case fmt.Stringer:
-		converted, conversionError := types.EncryptionStyle(0).Find(castValue.String())
-		return SomeDecimalValue(decimal.NewFromInt(int64(converted)), value.History()), conversionError
+		return SomeDecimalValue(decimal.NewFromInt(int64(converted)), value.Event()), nil
 
 	case int:
-		return SomeDecimalValue(decimal.NewFromInt(int64(castValue)), NewHistory("")), nil
+		return SomeDecimalValue(decimal.NewFromInt(int64(castValue)), value.Event()), nil
 
 	case int64:
-		return SomeDecimalValue(decimal.NewFromInt(castValue), NewHistory("")), nil
+		return SomeDecimalValue(decimal.NewFromInt(castValue), value.Event()), nil
 
 	case Value:
 		return toEncryption(castValue)
@@ -218,24 +198,20 @@ func toEncryption(value Value) (Value, error) {
 }
 
 func toQuantity(value Value) (Value, error) {
-	if value.Value() == nil {
-		return NilValue(), nil
-	}
-
 	switch castValue := value.Value().(type) {
 	case string:
 		converted, conversionError := types.Quantity(0).Find(castValue)
-		return SomeDecimalValue(decimal.NewFromInt(int64(converted)), value.History()), conversionError
+		if conversionError != nil {
+			return nil, conversionError
+		}
 
-	case fmt.Stringer:
-		converted, conversionError := types.Quantity(0).Find(castValue.String())
-		return SomeDecimalValue(decimal.NewFromInt(int64(converted)), value.History()), conversionError
+		return SomeDecimalValue(decimal.NewFromInt(int64(converted)), value.Event()), nil
 
 	case int:
-		return SomeDecimalValue(decimal.NewFromInt(int64(castValue)), NewHistory("")), nil
+		return SomeDecimalValue(decimal.NewFromInt(int64(castValue)), value.Event()), nil
 
 	case int64:
-		return SomeDecimalValue(decimal.NewFromInt(castValue), NewHistory("")), nil
+		return SomeDecimalValue(decimal.NewFromInt(castValue), value.Event()), nil
 
 	case Value:
 		return toQuantity(castValue)
@@ -246,24 +222,20 @@ func toQuantity(value Value) (Value, error) {
 }
 
 func toImpact(value Value) (Value, error) {
-	if value.Value() == nil {
-		return NilValue(), nil
-	}
-
 	switch castValue := value.Value().(type) {
 	case string:
 		converted, conversionError := types.RiskExploitationImpact(0).Find(castValue)
-		return SomeDecimalValue(decimal.NewFromInt(int64(converted)), value.History()), conversionError
+		if conversionError != nil {
+			return nil, conversionError
+		}
 
-	case fmt.Stringer:
-		converted, conversionError := types.RiskExploitationImpact(0).Find(castValue.String())
-		return SomeDecimalValue(decimal.NewFromInt(int64(converted)), value.History()), conversionError
+		return SomeDecimalValue(decimal.NewFromInt(int64(converted)), value.Event()), nil
 
 	case int:
-		return SomeDecimalValue(decimal.NewFromInt(int64(castValue)), NewHistory("")), nil
+		return SomeDecimalValue(decimal.NewFromInt(int64(castValue)), value.Event()), nil
 
 	case int64:
-		return SomeDecimalValue(decimal.NewFromInt(castValue), NewHistory("")), nil
+		return SomeDecimalValue(decimal.NewFromInt(castValue), value.Event()), nil
 
 	case Value:
 		return toImpact(castValue)
@@ -274,24 +246,20 @@ func toImpact(value Value) (Value, error) {
 }
 
 func toLikelihood(value Value) (Value, error) {
-	if value.Value() == nil {
-		return NilValue(), nil
-	}
-
 	switch castValue := value.Value().(type) {
 	case string:
 		converted, conversionError := types.RiskExploitationLikelihood(0).Find(castValue)
-		return SomeDecimalValue(decimal.NewFromInt(int64(converted)), value.History()), conversionError
+		if conversionError != nil {
+			return nil, conversionError
+		}
 
-	case fmt.Stringer:
-		converted, conversionError := types.RiskExploitationLikelihood(0).Find(castValue.String())
-		return SomeDecimalValue(decimal.NewFromInt(int64(converted)), value.History()), conversionError
+		return SomeDecimalValue(decimal.NewFromInt(int64(converted)), value.Event()), nil
 
 	case int:
-		return SomeDecimalValue(decimal.NewFromInt(int64(castValue)), NewHistory("")), nil
+		return SomeDecimalValue(decimal.NewFromInt(int64(castValue)), value.Event()), nil
 
 	case int64:
-		return SomeDecimalValue(decimal.NewFromInt(castValue), NewHistory("")), nil
+		return SomeDecimalValue(decimal.NewFromInt(castValue), value.Event()), nil
 
 	case Value:
 		return toLikelihood(castValue)
@@ -302,24 +270,20 @@ func toLikelihood(value Value) (Value, error) {
 }
 
 func toSize(value Value) (Value, error) {
-	if value.Value() == nil {
-		return NilValue(), nil
-	}
-
 	switch castValue := value.Value().(type) {
 	case string:
 		converted, conversionError := types.TechnicalAssetSize(0).Find(castValue)
-		return SomeDecimalValue(decimal.NewFromInt(int64(converted)), value.History()), conversionError
+		if conversionError != nil {
+			return nil, conversionError
+		}
 
-	case fmt.Stringer:
-		converted, conversionError := types.TechnicalAssetSize(0).Find(castValue.String())
-		return SomeDecimalValue(decimal.NewFromInt(int64(converted)), value.History()), conversionError
+		return SomeDecimalValue(decimal.NewFromInt(int64(converted)), value.Event()), nil
 
 	case int:
-		return SomeDecimalValue(decimal.NewFromInt(int64(castValue)), NewHistory("")), nil
+		return SomeDecimalValue(decimal.NewFromInt(int64(castValue)), value.Event()), nil
 
 	case int64:
-		return SomeDecimalValue(decimal.NewFromInt(castValue), NewHistory("")), nil
+		return SomeDecimalValue(decimal.NewFromInt(castValue), value.Event()), nil
 
 	case Value:
 		return toSize(castValue)

@@ -77,48 +77,48 @@ func (what *ContainsExpression) evalBool(scope *common.Scope, item common.Value,
 	switch castValue := inValue.Value().(type) {
 	case []any:
 		for index, value := range castValue {
-			compareValue, compareError := common.Compare(item, common.SomeValue(value, common.NewHistory("")), what.as)
+			compareValue, compareError := common.Compare(item, common.SomeValue(value, nil), what.as)
 			if compareError != nil {
 				return common.EmptyBoolValue(), what.Literal(), fmt.Errorf("failed to eval contains-expression: can't compare value to item #%v: %w", index+1, compareError)
 			}
 
-			if common.IsSame(compareValue) {
-				return common.SomeBoolValue(true, common.NewHistory("value %v matches", index).From(compareValue.History())), "", nil
+			if common.IsSame(compareValue.Property) {
+				return common.SomeBoolValue(true, compareValue), "", nil
 			}
 		}
 
-		return common.SomeBoolValue(false, common.NewHistory("none of the %d values matches", len(castValue)).From(inValue.History())), "", nil
+		return common.SomeBoolValue(false, nil), "", nil
 
 	case []common.Value:
 		for index, value := range castValue {
-			compareValue, compareError := common.Compare(item, common.SomeValue(value.Value(), common.NewHistory(what.in.Literal()).From(inValue.History())), what.as)
+			compareValue, compareError := common.Compare(item, common.SomeValue(value.Value(), value.Event()), what.as)
 			if compareError != nil {
 				return common.EmptyBoolValue(), what.Literal(), fmt.Errorf("failed to eval contains-expression: can't compare value to item #%v: %w", index+1, compareError)
 			}
 
-			if common.IsSame(compareValue) {
-				return common.SomeBoolValue(true, common.NewHistory("value %v matches", index).From(compareValue.History())), "", nil
+			if common.IsSame(compareValue.Property) {
+				return common.SomeBoolValue(true, compareValue), "", nil
 			}
 		}
 
-		return common.SomeBoolValue(false, common.NewHistory("none of the %d values matches", len(castValue)).From(inValue.History())), "", nil
+		return common.SomeBoolValue(false, nil), "", nil
 
 	case map[string]any:
 		for name, value := range castValue {
-			compareValue, compareError := common.Compare(item, common.SomeValue(value, common.NewHistory("")), what.as)
+			compareValue, compareError := common.Compare(item, common.SomeValue(value, nil), what.as)
 			if compareError != nil {
 				return common.EmptyBoolValue(), what.Literal(), fmt.Errorf("failed to eval contains-expression: can't compare value to item %q: %w", name, compareError)
 			}
 
-			if common.IsSame(compareValue) {
-				return common.SomeBoolValue(true, common.NewHistory("value %q matches", name).From(compareValue.History())), "", nil
+			if common.IsSame(compareValue.Property) {
+				return common.SomeBoolValue(true, compareValue), "", nil
 			}
 		}
 
-		return common.SomeBoolValue(false, common.NewHistory("none of the %d values matches", len(castValue)).From(item.History())), "", nil
+		return common.SomeBoolValue(false, nil), "", nil
 
 	case common.Value:
-		return what.evalBool(scope, item, common.SomeValue(castValue.Value(), inValue.History()))
+		return what.evalBool(scope, item, common.SomeValue(castValue.Value(), inValue.Event()))
 
 	default:
 		return common.EmptyBoolValue(), "", fmt.Errorf("failed to eval contains-expression: expected iterable type, got %T", inValue)

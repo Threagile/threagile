@@ -80,6 +80,10 @@ func (what *IfStatement) parse(key any, value any, script any) (common.Statement
 }
 
 func (what *IfStatement) Run(scope *common.Scope) (string, error) {
+	if scope.HasReturned {
+		return "", nil
+	}
+
 	if what.expression == nil {
 		return "", nil
 	}
@@ -91,10 +95,16 @@ func (what *IfStatement) Run(scope *common.Scope) (string, error) {
 
 	if value.BoolValue() {
 		if what.yesPath != nil {
+			scope.PushCall(common.NewEventFrom(common.NewTrueProperty(), value))
+			defer scope.PopCall()
+
 			return what.yesPath.Run(scope)
 		}
 	} else {
 		if what.noPath != nil {
+			scope.PushCall(common.NewEventFrom(common.NewFalseProperty(), value))
+			defer scope.PopCall()
+
 			return what.noPath.Run(scope)
 		}
 	}

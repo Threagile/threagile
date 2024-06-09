@@ -44,7 +44,7 @@ func (what *AndExpression) ParseAny(script any) (common.Expression, any, error) 
 }
 
 func (what *AndExpression) EvalBool(scope *common.Scope) (*common.BoolValue, string, error) {
-	histories := make([]common.History, 0)
+	values := make([]common.Value, 0)
 	for index, expression := range what.expressions {
 		value, errorLiteral, evalError := expression.EvalBool(scope)
 		if evalError != nil {
@@ -52,13 +52,13 @@ func (what *AndExpression) EvalBool(scope *common.Scope) (*common.BoolValue, str
 		}
 
 		if !value.BoolValue() {
-			return common.SomeBoolValue(false, common.NewHistory("item %v (%v) is false", index, expression.Literal()).From(value.History())), "", nil
+			return common.SomeBoolValue(false, value.Event()), "", nil
 		}
 
-		histories = append(histories, value.History())
+		values = append(values, value)
 	}
 
-	return common.SomeBoolValue(true, common.NewHistory("all %d items are true", len(what.expressions)).From(histories...)), "", nil
+	return common.SomeBoolValue(true, common.NewEvent(common.NewTrueProperty(), common.EmptyPath()).From(values...)), "", nil
 }
 
 func (what *AndExpression) EvalAny(scope *common.Scope) (common.Value, string, error) {

@@ -75,11 +75,11 @@ func (what *LessExpression) EvalBool(scope *common.Scope) (*common.BoolValue, st
 		return common.EmptyBoolValue(), what.Literal(), fmt.Errorf("failed to compare equal-expression: %w", compareError)
 	}
 
-	if common.IsLess(compareValue) {
-		return common.SomeBoolValue(true, common.NewHistory("value is less").From(compareValue.History())), "", nil
+	if common.IsLess(compareValue.Property) {
+		return common.SomeBoolValue(true, compareValue), "", nil
 	}
 
-	return common.SomeBoolValue(false, common.NewHistory("value is equal or greater").From(compareValue.History())), "", nil
+	return common.SomeBoolValue(false, compareValue), "", nil
 }
 
 func (what *LessExpression) EvalAny(scope *common.Scope) (common.Value, string, error) {

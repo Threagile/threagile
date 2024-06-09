@@ -36,7 +36,6 @@ func (what *ArrayExpression) ParseAny(script any) (common.Expression, any, error
 
 func (what *ArrayExpression) EvalArray(scope *common.Scope) (*common.ArrayValue, string, error) {
 	values := make([]common.Value, 0)
-	histories := make([]common.History, 0)
 	for index, expression := range what.expressions.Expressions() {
 		value, errorLiteral, evalError := expression.EvalAny(scope)
 		if evalError != nil {
@@ -44,10 +43,9 @@ func (what *ArrayExpression) EvalArray(scope *common.Scope) (*common.ArrayValue,
 		}
 
 		values = append(values, value)
-		histories = append(histories, value.History())
 	}
 
-	return common.SomeArrayValue(values, common.NewHistory("creating array").From(histories...)), "", nil
+	return common.SomeArrayValue(values, common.NewEvent(common.NewValueProperty(values), common.NewPath("array value")).From(values...)), "", nil
 }
 
 func (what *ArrayExpression) EvalAny(scope *common.Scope) (common.Value, string, error) {

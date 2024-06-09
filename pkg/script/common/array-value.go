@@ -5,16 +5,25 @@ import (
 )
 
 type ArrayValue struct {
-	value   []Value
-	history History
+	value []Value
+	name  Path
+	event *Event
 }
 
 func (what ArrayValue) Value() any {
 	return what.value
 }
 
-func (what ArrayValue) History() History {
-	return what.history
+func (what ArrayValue) Name() Path {
+	return what.name
+}
+
+func (what ArrayValue) SetName(name ...string) {
+	what.name.SetPath(name...)
+}
+
+func (what ArrayValue) Event() *Event {
+	return what.event
 }
 
 func (what ArrayValue) ArrayValue() []Value {
@@ -30,31 +39,58 @@ func (what ArrayValue) PlainValue() any {
 	return values
 }
 
+func (what ArrayValue) Text() []string {
+	text := make([]string, 0)
+	for _, item := range what.value {
+		itemText := item.Text()
+		switch len(itemText) {
+		case 0:
+
+		case 1:
+			text = append(text, "  - "+itemText[0])
+
+		default:
+			text = append(text, "  - ")
+
+			for _, line := range itemText {
+				text = append(text, "      "+line)
+			}
+		}
+	}
+
+	return text
+}
+
 func EmptyArrayValue() *ArrayValue {
 	return &ArrayValue{}
 }
 
-func SomeArrayValue(value []Value, history History) *ArrayValue {
-	if history == nil {
-		history = NewHistory("")
-	}
-
+func SomeArrayValue(value []Value, event *Event) *ArrayValue {
 	return &ArrayValue{
-		value:   value,
-		history: history,
+		value: value,
+		event: event,
 	}
 }
 
 func ToArrayValue(value Value) (*ArrayValue, error) {
-	castValue, ok := value.Value().([]Value)
+	var arrayValue []Value
+	switch castValue := value.Value().(type) {
+	case []Value:
+		arrayValue = castValue
 
-	var conversionError error
-	if !ok {
-		conversionError = fmt.Errorf("expected value-expression to eval to an array instead of %T", value.Value)
+	case []any:
+		arrayValue = make([]Value, 0)
+		for _, item := range castValue {
+			arrayValue = append(arrayValue, SomeValue(item, nil))
+		}
+
+	default:
+		return nil, fmt.Errorf("expected value-expression to eval to an array instead of %T", value.Value)
 	}
 
 	return &ArrayValue{
-		value:   castValue,
-		history: value.History(),
-	}, conversionError
+		value: arrayValue,
+		name:  value.Name(),
+		event: value.Event(),
+	}, nil
 }

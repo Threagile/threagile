@@ -91,15 +91,16 @@ func (what *AnyExpression) evalBool(scope *common.Scope, inValue common.Value) (
 	switch castValue := inValue.Value().(type) {
 	case []any:
 		if what.expression == nil {
-			return common.SomeBoolValue(true, common.NewHistory("any value is good")), "", nil
+			return common.SomeBoolValue(true, nil), "", nil
 		}
 
+		values := make([]common.Value, 0)
 		for index, item := range castValue {
 			if len(what.index) > 0 {
-				scope.Set(what.index, common.SomeDecimalValue(decimal.NewFromInt(int64(index)), common.NewHistory("item %v of value", index).From(inValue.History())))
+				scope.Set(what.index, common.SomeDecimalValue(decimal.NewFromInt(int64(index)), nil))
 			}
 
-			itemValue := scope.SetItem(common.SomeValue(item, common.NewHistory("item %v of value", index).From(inValue.History())))
+			itemValue := scope.SetItem(common.SomeValue(item, inValue.Event()))
 			if len(what.item) > 0 {
 				scope.Set(what.item, itemValue)
 			}
@@ -110,23 +111,26 @@ func (what *AnyExpression) evalBool(scope *common.Scope, inValue common.Value) (
 			}
 
 			if value.BoolValue() {
-				return common.SomeBoolValue(true, common.NewHistory("item %v is true", index).From(value.History())), "", nil
+				return common.SomeBoolValue(true, value.Event()), "", nil
 			}
+
+			values = append(values, value)
 		}
 
-		return common.SomeBoolValue(false, common.NewHistory("none of the %d items are true", len(castValue)).From(inValue.History())), "", nil
+		return common.SomeBoolValue(false, common.NewEvent(common.NewFalseProperty(), inValue.Event().Origin).From(values...)), "", nil
 
 	case []common.Value:
 		if what.expression == nil {
-			return common.SomeBoolValue(true, common.NewHistory("any value is good")), "", nil
+			return common.SomeBoolValue(true, nil), "", nil
 		}
 
+		values := make([]common.Value, 0)
 		for index, item := range castValue {
 			if len(what.index) > 0 {
-				scope.Set(what.index, common.SomeDecimalValue(decimal.NewFromInt(int64(index)), common.NewHistory("item %v of value", index).From(inValue.History())))
+				scope.Set(what.index, common.SomeDecimalValue(decimal.NewFromInt(int64(index)), nil))
 			}
 
-			itemValue := scope.SetItem(common.SomeValue(item.Value(), common.NewHistory("item %v of value", index).From(inValue.History())))
+			itemValue := scope.SetItem(common.SomeValue(item.Value(), inValue.Event()))
 			if len(what.item) > 0 {
 				scope.Set(what.item, itemValue)
 			}
@@ -137,23 +141,26 @@ func (what *AnyExpression) evalBool(scope *common.Scope, inValue common.Value) (
 			}
 
 			if value.BoolValue() {
-				return common.SomeBoolValue(true, common.NewHistory("item %v is true", index).From(value.History())), "", nil
+				return common.SomeBoolValue(true, value.Event()), "", nil
 			}
+
+			values = append(values, value)
 		}
 
-		return common.SomeBoolValue(false, common.NewHistory("none of the %d items are true", len(castValue)).From(inValue.History())), "", nil
+		return common.SomeBoolValue(false, common.NewEvent(common.NewFalseProperty(), inValue.Event().Origin).From(values...)), "", nil
 
 	case map[string]any:
 		if what.expression == nil {
-			return common.SomeBoolValue(true, common.NewHistory("any value is good")), "", nil
+			return common.SomeBoolValue(true, nil), "", nil
 		}
 
+		values := make([]common.Value, 0)
 		for name, item := range castValue {
 			if len(what.index) > 0 {
-				scope.Set(what.index, common.SomeStringValue(name, common.NewHistory("item %q of value", name).From(inValue.History())))
+				scope.Set(what.index, common.SomeStringValue(name, nil))
 			}
 
-			itemValue := scope.SetItem(common.SomeValue(item, common.NewHistory("item %q of value", name).From(inValue.History())))
+			itemValue := scope.SetItem(common.SomeValue(item, inValue.Event()))
 			if len(what.item) > 0 {
 				scope.Set(what.item, itemValue)
 			}
@@ -164,14 +171,16 @@ func (what *AnyExpression) evalBool(scope *common.Scope, inValue common.Value) (
 			}
 
 			if value.BoolValue() {
-				return common.SomeBoolValue(false, common.NewHistory("item %q is true", name).From(value.History())), "", nil
+				return common.SomeBoolValue(false, value.Event()), "", nil
 			}
+
+			values = append(values, value)
 		}
 
-		return common.SomeBoolValue(true, common.NewHistory("none of the %d items are true", len(castValue)).From(inValue.History())), "", nil
+		return common.SomeBoolValue(true, common.NewEvent(common.NewFalseProperty(), inValue.Event().Origin).From(values...)), "", nil
 
 	case common.Value:
-		return what.evalBool(scope, common.SomeValue(castValue.Value(), inValue.History()))
+		return what.evalBool(scope, common.SomeValue(castValue.Value(), inValue.Event()))
 
 	default:
 		return common.EmptyBoolValue(), what.Literal(), fmt.Errorf("failed to eval any-expression: expected iterable type, got %T", inValue)

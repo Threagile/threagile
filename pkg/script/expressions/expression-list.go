@@ -134,7 +134,6 @@ func (what *ExpressionList) EvalAny(scope *common.Scope) (common.Value, string, 
 
 	default:
 		var values []common.Value
-		var histories []common.History
 		for _, expression := range what.expressions {
 			value, errorLiteral, statementError := expression.EvalAny(scope)
 			if statementError != nil {
@@ -142,10 +141,9 @@ func (what *ExpressionList) EvalAny(scope *common.Scope) (common.Value, string, 
 			}
 
 			values = append(values, value)
-			histories = append(histories, value.History())
 		}
 
-		return common.SomeArrayValue(values, common.NewHistory("").From(histories...)), "", nil
+		return common.SomeArrayValue(values, common.NewEvent(common.NewValueProperty(values), common.NewPath("array value")).From(values...)), "", nil
 	}
 }
 

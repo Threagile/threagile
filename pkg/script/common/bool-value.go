@@ -5,20 +5,33 @@ import (
 )
 
 type BoolValue struct {
-	value   bool
-	history History
+	value bool
+	name  Path
+	event *Event
 }
 
 func (what BoolValue) Value() any {
 	return what.value
 }
 
-func (what BoolValue) History() History {
-	return what.history
+func (what BoolValue) Name() Path {
+	return what.name
+}
+
+func (what BoolValue) SetName(name ...string) {
+	what.name.SetPath(name...)
+}
+
+func (what BoolValue) Event() *Event {
+	return what.event
 }
 
 func (what BoolValue) PlainValue() any {
 	return what.value
+}
+
+func (what BoolValue) Text() []string {
+	return []string{fmt.Sprintf("%v", what.value)}
 }
 
 func (what BoolValue) BoolValue() bool {
@@ -29,14 +42,10 @@ func EmptyBoolValue() *BoolValue {
 	return &BoolValue{}
 }
 
-func SomeBoolValue(value bool, history History) *BoolValue {
-	if history == nil {
-		history = NewHistory("")
-	}
-
+func SomeBoolValue(value bool, event *Event) *BoolValue {
 	return &BoolValue{
-		value:   value,
-		history: history,
+		value: value,
+		event: event,
 	}
 }
 
@@ -49,7 +58,8 @@ func ToBoolValue(value Value) (*BoolValue, error) {
 	}
 
 	return &BoolValue{
-		value:   castValue,
-		history: value.History(),
+		value: castValue,
+		name:  value.Name(),
+		event: value.Event(),
 	}, conversionError
 }

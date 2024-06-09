@@ -75,11 +75,11 @@ func (what *NotEqualExpression) EvalBool(scope *common.Scope) (*common.BoolValue
 		return common.EmptyBoolValue(), what.Literal(), fmt.Errorf("failed to compare not-equal-expression: %w", compareError)
 	}
 
-	if !common.IsSame(compareValue) {
-		return common.SomeBoolValue(true, common.NewHistory("value does not match").From(compareValue.History())), "", nil
+	if !common.IsSame(compareValue.Property) {
+		return common.SomeBoolValue(true, compareValue), "", nil
 	}
 
-	return common.SomeBoolValue(false, common.NewHistory("value matches").From(compareValue.History())), "", nil
+	return common.SomeBoolValue(false, compareValue), "", nil
 }
 
 func (what *NotEqualExpression) EvalAny(scope *common.Scope) (common.Value, string, error) {

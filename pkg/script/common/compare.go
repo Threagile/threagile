@@ -2,141 +2,196 @@ package common
 
 import (
 	"fmt"
-	"github.com/shopspring/decimal"
-	"strings"
+	"github.com/threagile/threagile/pkg/script/property"
 )
 
-func Compare(first Value, second Value, as string) (*DecimalValue, error) {
+func Compare(first Value, second Value, as string) (*Event, error) {
 	firstValue := first
 	secondValue := second
 	if len(as) > 0 {
 		var castError error
 		firstValue, castError = CastValue(firstValue, as)
 		if castError != nil {
-			return EmptyDecimalValue(), fmt.Errorf("failed to cast value to %q: %w", as, castError)
+			return nil, fmt.Errorf("failed to cast value to %q: %w", as, castError)
 		}
 
 		secondValue, castError = CastValue(secondValue, as)
 		if castError != nil {
-			return EmptyDecimalValue(), fmt.Errorf("failed to cast value to %q: %w", as, castError)
+			return nil, fmt.Errorf("failed to cast value to %q: %w", as, castError)
 		}
 	}
 
-	compatibilityError := checkComparability(firstValue, secondValue)
-	if compatibilityError != nil {
-		return EmptyDecimalValue(), compatibilityError
-	}
-
-	if isString(firstValue) {
-		if !isString(secondValue) {
-			return EmptyDecimalValue(), fmt.Errorf("can't compare string to %T", secondValue)
-		}
-
-		return compareStrings(firstValue, secondValue)
-	}
-
-	firstDecimal, firstDecimalError := toDecimal(firstValue)
-	if firstDecimalError != nil {
-		return EmptyDecimalValue(), firstDecimalError
-	}
-
-	secondDecimal, secondDecimalError := toDecimal(secondValue)
-	if secondDecimalError != nil {
-		return EmptyDecimalValue(), secondDecimalError
-	}
-
-	return SomeDecimalValue(decimal.NewFromInt(int64(firstDecimal.DecimalValue().Cmp(secondDecimal.DecimalValue()))), NewHistory("comparing values").From(firstDecimal.History(), secondDecimal.History())), nil
+	return compare(firstValue, secondValue)
 }
 
-func IsSame(value *DecimalValue) bool {
-	return value.DecimalValue().IsZero()
-}
-
-func IsGreater(value *DecimalValue) bool {
-	return value.DecimalValue().IsPositive()
-}
-
-func IsLess(value *DecimalValue) bool {
-	return value.DecimalValue().IsNegative()
-}
-
-func checkComparability(firstValue any, secondValue any) error {
-	switch castFirstValue := firstValue.(type) {
-	case BoolValue, *BoolValue, bool:
-		switch castSecondValue := secondValue.(type) {
-		case BoolValue, *BoolValue, bool:
-			return nil
-
-		case AnyValue:
-			return checkComparability(firstValue, castSecondValue.Value())
-
-		case *AnyValue:
-			return checkComparability(firstValue, castSecondValue.Value())
+func compare(firstValue Value, secondValue Value) (*Event, error) {
+	switch first := firstValue.(type) {
+	case *ArrayValue:
+		second, conversionError := ToArrayValue(secondValue)
+		if conversionError != nil {
+			return nil, conversionError
 		}
 
-	case DecimalValue, *DecimalValue, decimal.Decimal, int, int64, float64:
-		switch castSecondValue := secondValue.(type) {
-		case DecimalValue, *DecimalValue, decimal.Decimal, int, int64, float64:
-			return nil
+		return compareArrays(first, second)
 
-		case AnyValue:
-			return checkComparability(firstValue, castSecondValue.Value())
-
-		case *AnyValue:
-			return checkComparability(firstValue, castSecondValue.Value())
+	case *BoolValue:
+		second, conversionError := ToBoolValue(secondValue)
+		if conversionError != nil {
+			return nil, conversionError
 		}
 
-	case StringValue, *StringValue, string, fmt.Stringer:
-		switch castSecondValue := secondValue.(type) {
-		case StringValue, *StringValue, string, fmt.Stringer:
-			return nil
-
-		case AnyValue:
-			return checkComparability(firstValue, castSecondValue.Value())
-
-		case *AnyValue:
-			return checkComparability(firstValue, castSecondValue.Value())
+		if first.BoolValue() == second.BoolValue() {
+			return NewEventFrom(NewEqualProperty(second), first, second), nil
 		}
 
-	case AnyValue:
-		return checkComparability(castFirstValue.Value(), secondValue)
+		return NewEventFrom(NewNotEqualProperty(second), first, second), nil
+
+	case *DecimalValue:
+		second, conversionError := ToDecimalValue(secondValue)
+		if conversionError != nil {
+			return nil, conversionError
+		}
+
+		value := first.DecimalValue().Cmp(second.DecimalValue())
+		prop := NewEqualProperty(secondValue)
+		if value < 0 {
+			prop = NewLessProperty(secondValue)
+		} else if value > 0 {
+			prop = NewGreaterProperty(secondValue)
+		}
+
+		return NewEventFrom(prop, first, second), nil
+
+	case *StringValue:
+		second, conversionError := ToStringValue(secondValue)
+		if conversionError != nil {
+			return nil, conversionError
+		}
+
+		if first.StringValue() == second.StringValue() {
+			return NewEventFrom(NewEqualProperty(second), first, second), nil
+		}
+
+		return NewEventFrom(NewNotEqualProperty(second), first, second), nil
 
 	case *AnyValue:
-		return checkComparability(castFirstValue.Value(), secondValue)
+		if firstValue.Value() == nil {
+			return compare(nil, secondValue)
+		}
 
 	case nil:
-		return nil
+		switch second := secondValue.(type) {
+		case *ArrayValue:
+			if len(second.ArrayValue()) == 0 {
+				return NewEventFrom(NewEqualProperty(second), first, second), nil
+			}
+
+			return NewEventFrom(NewNotEqualProperty(second), first, second), nil
+
+		case *BoolValue:
+			if second.BoolValue() == false {
+				return NewEventFrom(NewEqualProperty(second), first, second), nil
+			}
+
+			return NewEventFrom(NewNotEqualProperty(second), first, second), nil
+
+		case *DecimalValue:
+			if second.DecimalValue().IsZero() {
+				return NewEventFrom(NewEqualProperty(second), first, second), nil
+			}
+
+			return NewEventFrom(NewNotEqualProperty(second), first, second), nil
+
+		case *StringValue:
+			if len(second.StringValue()) == 0 {
+				return NewEventFrom(NewEqualProperty(second), first, second), nil
+			}
+
+			return NewEventFrom(NewNotEqualProperty(second), first, second), nil
+
+		case *AnyValue:
+			if second.Value() == nil {
+				return NewEvent(NewEqualProperty(nil), nil), nil
+			}
+
+		case nil:
+			return NewEvent(NewEqualProperty(nil), nil), nil
+		}
 	}
 
-	return fmt.Errorf("can't compare %T to %T", firstValue, secondValue)
+	return nil, fmt.Errorf("can't compare %T to %T", firstValue, secondValue)
+}
+
+func compareArrays(firstValue *ArrayValue, secondValue *ArrayValue) (*Event, error) {
+	if len(firstValue.ArrayValue()) != len(secondValue.ArrayValue()) {
+		return NewEventFrom(NewNotEqualProperty(firstValue), firstValue, secondValue), nil
+	}
+
+	for index, first := range firstValue.ArrayValue() {
+		second := secondValue.ArrayValue()[index]
+		event, compareError := compare(first, second)
+		if compareError != nil {
+			return event, compareError
+		}
+
+		if !IsSame(event.Property) {
+			return NewEventFrom(NewNotEqualProperty(firstValue), firstValue, secondValue), nil
+		}
+	}
+
+	return NewEventFrom(NewEqualProperty(firstValue), firstValue, secondValue), nil
+}
+
+func IsSame(value *Property) bool {
+	if value == nil {
+		return false
+	}
+
+	switch value.Property.(type) {
+	case *property.Equal:
+		return true
+	}
+
+	return false
+}
+
+func IsGreater(value *Property) bool {
+	if value == nil {
+		return false
+	}
+
+	switch value.Property.(type) {
+	case *property.Greater:
+		return true
+	}
+
+	return false
+}
+
+func IsLess(value *Property) bool {
+	if value == nil {
+		return false
+	}
+
+	switch value.Property.(type) {
+	case *property.Less:
+		return true
+	}
+
+	return false
 }
 
 func ToString(value any) (*StringValue, error) {
 	switch castValue := value.(type) {
 	case string:
-		return SomeStringValue(castValue, NewHistory("")), nil
-
-	case fmt.Stringer:
-		return SomeStringValue(castValue.String(), NewHistory("")), nil
-
-	case StringValue:
-		return &castValue, nil
+		return SomeStringValue(castValue, nil), nil
 
 	case *StringValue:
 		return castValue, nil
 
-	case AnyValue:
-		aString, valueError := ToString(castValue.Value())
-		stringValue := SomeStringValue(aString.StringValue(), castValue.History())
-		if valueError != nil {
-			return stringValue, valueError
-		}
-
-		return stringValue, nil
-
 	case *AnyValue:
 		aString, valueError := ToString(castValue.Value())
-		stringValue := SomeStringValue(aString.StringValue(), castValue.History())
+		stringValue := SomeStringValue(aString.StringValue(), castValue.Event())
 		if valueError != nil {
 			return stringValue, valueError
 		}
@@ -146,89 +201,4 @@ func ToString(value any) (*StringValue, error) {
 	default:
 		return EmptyStringValue(), fmt.Errorf("expected string, got %T", value)
 	}
-}
-
-func toDecimal(value any) (*DecimalValue, error) {
-	switch castValue := value.(type) {
-	case BoolValue:
-		if castValue.BoolValue() {
-			return SomeDecimalValue(decimal.NewFromInt(1), NewHistory("is true").From(castValue.History())), nil
-		} else {
-			return SomeDecimalValue(decimal.NewFromInt(0), NewHistory("is false").From(castValue.History())), nil
-		}
-
-	case *BoolValue:
-		if castValue.BoolValue() {
-			return SomeDecimalValue(decimal.NewFromInt(1), NewHistory("is true").From(castValue.History())), nil
-		} else {
-			return SomeDecimalValue(decimal.NewFromInt(0), NewHistory("is false").From(castValue.History())), nil
-		}
-
-	case bool:
-		if castValue {
-			return SomeDecimalValue(decimal.NewFromInt(1), NewHistory("is true")), nil
-		} else {
-			return SomeDecimalValue(decimal.NewFromInt(0), NewHistory("is false")), nil
-		}
-
-	case DecimalValue:
-		return &castValue, nil
-
-	case *DecimalValue:
-		return castValue, nil
-
-	case decimal.Decimal:
-		return SomeDecimalValue(castValue, NewHistory("is %v", castValue)), nil
-
-	case int:
-		return SomeDecimalValue(decimal.NewFromInt(int64(castValue)), NewHistory("is %v", castValue)), nil
-
-	case int64:
-		return SomeDecimalValue(decimal.NewFromInt(castValue), NewHistory("is %v", castValue)), nil
-
-	case float64:
-		return SomeDecimalValue(decimal.NewFromFloat(castValue), NewHistory("is %v", castValue)), nil
-
-	case AnyValue:
-		return toDecimal(castValue.Value())
-
-	case *AnyValue:
-		return toDecimal(castValue.Value())
-
-	case nil:
-		return EmptyDecimalValue(), nil
-
-	default:
-		return EmptyDecimalValue(), fmt.Errorf("can't compare values of type %T", value)
-	}
-}
-
-func isString(value any) bool {
-	switch castValue := value.(type) {
-	case string, fmt.Stringer, StringValue, *StringValue:
-		return true
-
-	case AnyValue:
-		return isString(castValue.Value())
-
-	case *AnyValue:
-		return isString(castValue.Value())
-
-	default:
-		return false
-	}
-}
-
-func compareStrings(firstValue any, secondValue any) (*DecimalValue, error) {
-	firstStringValue, firstStringError := ToString(firstValue)
-	if firstStringError != nil {
-		return EmptyDecimalValue(), fmt.Errorf("error for first value: %w", firstStringError)
-	}
-
-	secondStringValue, secondStringError := ToString(secondValue)
-	if secondStringError != nil {
-		return EmptyDecimalValue(), fmt.Errorf("error for second value: %w", secondStringError)
-	}
-
-	return SomeDecimalValue(decimal.NewFromInt(int64(strings.Compare(firstStringValue.StringValue(), secondStringValue.StringValue()))), NewHistory("comparing values").From(firstStringValue.History(), secondStringValue.History())), nil
 }

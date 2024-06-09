@@ -5,20 +5,33 @@ import (
 )
 
 type StringValue struct {
-	value   string
-	history History
+	value string
+	name  Path
+	event *Event
 }
 
 func (what StringValue) Value() any {
 	return what.value
 }
 
-func (what StringValue) History() History {
-	return what.history
+func (what StringValue) Name() Path {
+	return what.name
+}
+
+func (what StringValue) SetName(name ...string) {
+	what.name.SetPath(name...)
+}
+
+func (what StringValue) Event() *Event {
+	return what.event
 }
 
 func (what StringValue) PlainValue() any {
 	return what.value
+}
+
+func (what StringValue) Text() []string {
+	return []string{what.value}
 }
 
 func (what StringValue) StringValue() string {
@@ -29,14 +42,10 @@ func EmptyStringValue() *StringValue {
 	return &StringValue{}
 }
 
-func SomeStringValue(value string, history History) *StringValue {
-	if history == nil {
-		history = NewHistory("")
-	}
-
+func SomeStringValue(value string, event *Event) *StringValue {
 	return &StringValue{
-		value:   value,
-		history: history,
+		value: value,
+		event: event,
 	}
 }
 
@@ -49,7 +58,8 @@ func ToStringValue(value Value) (*StringValue, error) {
 	}
 
 	return &StringValue{
-		history: value.History(),
-		value:   castValue,
+		value: castValue,
+		name:  value.Name(),
+		event: value.Event(),
 	}, conversionError
 }

@@ -3,5 +3,8 @@ package common
 type Value interface {
 	PlainValue() any
 	Value() any
-	History() History
+	Name() Path
+	SetName(name ...string)
+	Event() *Event
+	Text() []string
 }

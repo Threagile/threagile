@@ -168,17 +168,17 @@ func (what *Script) GenerateRisks(scope *common.Scope) ([]*types.Risk, string, e
 
 	risks := make([]*types.Risk, 0)
 	for techAssetName, techAsset := range techAssets {
-		techAssetValue := common.SomeValue(techAsset, common.NewHistory(techAssetName))
+		techAssetValue := common.SomeValue(techAsset, common.NewEvent(common.NewValueProperty(techAsset), common.NewPath(fmt.Sprintf("technical asset '%v'", techAssetName))))
 		isMatch, errorMatchLiteral, matchError := what.matchRisk(scope, techAssetValue)
 		if matchError != nil {
 			return nil, errorMatchLiteral, matchError
 		}
 
-		if !isMatch {
+		if !isMatch.BoolValue() {
 			continue
 		}
 
-		risk, errorRiskLiteral, riskError := what.generateRisk(scope, techAssetValue)
+		risk, errorRiskLiteral, riskError := what.generateRisk(scope, techAssetName, techAssetValue, isMatch.Event())
 		if riskError != nil {
 			return nil, errorRiskLiteral, riskError
 		}
@@ -203,39 +203,36 @@ func (what *Script) GenerateRisks(scope *common.Scope) ([]*types.Risk, string, e
 	return risks, "", nil
 }
 
-func (what *Script) matchRisk(outerScope *common.Scope, techAsset common.Value) (bool, string, error) {
+func (what *Script) matchRisk(outerScope *common.Scope, techAsset common.Value) (*common.BoolValue, string, error) {
 	if what.match == nil {
-		return false, "", nil
+		return common.EmptyBoolValue(), "", nil
 	}
 
 	scope, cloneError := outerScope.Clone()
 	if cloneError != nil {
-		return false, "", fmt.Errorf("failed to clone scope: %w", cloneError)
+		return common.EmptyBoolValue(), "", fmt.Errorf("failed to clone scope: %w", cloneError)
 	}
 
 	scope.Args = append(scope.Args, techAsset)
 
 	errorLiteral, runError := what.match.Run(scope)
 	if runError != nil {
-		return false, errorLiteral, runError
+		return common.EmptyBoolValue(), errorLiteral, runError
 	}
 
 	if scope.GetReturnValue() == nil {
-		return false, "", nil
+		return common.EmptyBoolValue(), "", nil
 	}
 
-	switch boolValue := scope.GetReturnValue().Value().(type) {
-	case bool:
-		history := scope.GetReturnValue().History().String()
-		_ = history
-
+	switch boolValue := scope.GetReturnValue().(type) {
+	case *common.BoolValue:
 		return boolValue, "", nil
 	}
 
-	return false, "", nil
+	return common.EmptyBoolValue(), "", nil
 }
 
-func (what *Script) generateRisk(outerScope *common.Scope, techAsset common.Value) (*types.Risk, string, error) {
+func (what *Script) generateRisk(outerScope *common.Scope, techAssetName string, techAsset common.Value, isMatchEvent *common.Event) (*types.Risk, string, error) {
 	if what.data == nil {
 		return nil, "", fmt.Errorf("no data template")
 	}
@@ -266,6 +263,7 @@ func (what *Script) generateRisk(outerScope *common.Scope, techAsset common.Valu
 		}
 	}
 
+	ratingExplanation := make([]string, 0)
 	riskMap := make(map[string]any)
 	for name, value := range what.data {
 		expression, errorParseLiteral, parseError := new(expressions.ValueExpression).ParseValue(value)
@@ -278,16 +276,40 @@ func (what *Script) generateRisk(outerScope *common.Scope, techAsset common.Valu
 			return nil, errorEvalLiteral, fmt.Errorf("failed to eval field value: %w", evalError)
 		}
 
-		fmt.Printf("%v: %v\n", name, newValue.PlainValue())
-		fmt.Printf("history: \n")
-		for _, text := range newValue.History().Indented(0) {
-			if len(strings.TrimSpace(text)) > 0 {
-				fmt.Printf("    %v\n", text)
-			}
-		}
-		fmt.Printf("\n")
-
 		riskMap[name] = newValue.PlainValue()
+
+		title := ""
+		switch name {
+		case "severity":
+			title = "Severity"
+
+		case "exploitation_likelihood":
+			title = "Exploitation Likelihood"
+
+		case "exploitation_impact":
+			title = "Exploitation Impact"
+
+		case "data_breach_probability":
+			title = "Data Breach Probability"
+
+		default:
+			continue
+		}
+
+		text := fmt.Sprintf("'%v' is '%v'", title, newValue.PlainValue())
+		explanation := what.Explain([]*common.Event{newValue.Event()})
+		if len(explanation) > 0 {
+			ratingExplanation = append(ratingExplanation, text+" because")
+			for n, line := range explanation {
+				if n < len(explanation)-1 {
+					ratingExplanation = append(ratingExplanation, line+", and")
+				} else {
+					ratingExplanation = append(ratingExplanation, line)
+				}
+			}
+		} else {
+			ratingExplanation = append(ratingExplanation, text)
+		}
 	}
 
 	riskData, marshalError := yaml.Marshal(riskMap)
@@ -303,7 +325,39 @@ func (what *Script) generateRisk(outerScope *common.Scope, techAsset common.Valu
 
 	risk.CategoryId, _ = what.getItemString(scope.Risk, "id")
 
+	riskExplanation := make([]string, 0)
+	text := fmt.Sprintf("Risk '%v' has been flagged for technical asset '%v'", scope.Category.Title, techAssetName)
+
+	var explanation []string
+	if isMatchEvent != nil {
+		explanation = what.Explain(isMatchEvent.Events)
+		if len(explanation) > 0 {
+			riskExplanation = append(riskExplanation, text+" because")
+			for n, line := range explanation {
+				if n < len(explanation)-1 {
+					riskExplanation = append(riskExplanation, line+", and")
+				} else {
+					riskExplanation = append(riskExplanation, line)
+				}
+			}
+		} else {
+			riskExplanation = append(riskExplanation, text)
+		}
+	}
+
+	risk.RiskExplanation = riskExplanation
+	risk.RatingExplanation = ratingExplanation
+
 	return &risk, "", nil
+}
+
+func (what *Script) Explain(history []*common.Event) []string {
+	text := make([]string, 0)
+	for _, event := range history {
+		text = append(text, event.Indented(0)...)
+	}
+
+	return text
 }
 
 func (what *Script) getRiskID(outerScope *common.Scope, techAsset common.Value, risk *types.Risk) (string, string, error) {

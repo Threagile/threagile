@@ -39,7 +39,7 @@ func (what *FalseExpression) EvalBool(scope *common.Scope) (*common.BoolValue, s
 		return common.EmptyBoolValue(), errorLiteral, fmt.Errorf("%q: error evaluating false-expression: %w", what.literal, evalError)
 	}
 
-	return common.SomeBoolValue(!value.BoolValue(), common.NewHistory("negating bool").From(value.History())), "", nil
+	return common.SomeBoolValue(!value.BoolValue(), value.Event()), "", nil
 }
 
 func (what *FalseExpression) EvalAny(scope *common.Scope) (common.Value, string, error) {

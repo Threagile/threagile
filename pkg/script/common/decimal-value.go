@@ -6,20 +6,33 @@ import (
 )
 
 type DecimalValue struct {
-	value   decimal.Decimal
-	history History
+	value decimal.Decimal
+	name  Path
+	event *Event
 }
 
 func (what DecimalValue) Value() any {
 	return what.value
 }
 
-func (what DecimalValue) History() History {
-	return what.history
+func (what DecimalValue) Name() Path {
+	return what.name
+}
+
+func (what DecimalValue) SetName(name ...string) {
+	what.name.SetPath(name...)
+}
+
+func (what DecimalValue) Event() *Event {
+	return what.event
 }
 
 func (what DecimalValue) PlainValue() any {
 	return what.value
+}
+
+func (what DecimalValue) Text() []string {
+	return []string{what.value.String()}
 }
 
 func (what DecimalValue) DecimalValue() decimal.Decimal {
@@ -32,14 +45,10 @@ func EmptyDecimalValue() *DecimalValue {
 	}
 }
 
-func SomeDecimalValue(value decimal.Decimal, history History) *DecimalValue {
-	if history == nil {
-		history = NewHistory("")
-	}
-
+func SomeDecimalValue(value decimal.Decimal, event *Event) *DecimalValue {
 	return &DecimalValue{
-		value:   value,
-		history: history,
+		value: value,
+		event: event,
 	}
 }
 
@@ -52,7 +61,8 @@ func ToDecimalValue(value Value) (*DecimalValue, error) {
 	}
 
 	return &DecimalValue{
-		value:   castValue,
-		history: value.History(),
+		value: castValue,
+		name:  value.Name(),
+		event: value.Event(),
 	}, conversionError
 }

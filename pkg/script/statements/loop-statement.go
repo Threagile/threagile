@@ -67,6 +67,10 @@ func (what *LoopStatement) Parse(script any) (common.Statement, any, error) {
 }
 
 func (what *LoopStatement) Run(scope *common.Scope) (string, error) {
+	if scope.HasReturned {
+		return "", nil
+	}
+
 	oldIterator := scope.PopItem()
 	defer scope.SetItem(oldIterator)
 
@@ -82,11 +86,15 @@ func (what *LoopStatement) run(scope *common.Scope, value common.Value) (string,
 	switch castValue := value.Value().(type) {
 	case []any:
 		for index, item := range castValue {
-			if len(what.index) > 0 {
-				scope.Set(what.index, common.SomeDecimalValue(decimal.NewFromInt(int64(index)), common.NewHistory("index").From(value.History())))
+			if scope.HasReturned {
+				return "", nil
 			}
 
-			itemValue := scope.SetItem(common.SomeValue(item, common.NewHistory("item #%d", index).From(value.History())))
+			if len(what.index) > 0 {
+				scope.Set(what.index, common.SomeDecimalValue(decimal.NewFromInt(int64(index)), nil))
+			}
+
+			itemValue := scope.SetItem(common.SomeValue(item, value.Event()))
 			if len(what.item) > 0 {
 				scope.Set(what.item, itemValue)
 			}
@@ -99,11 +107,15 @@ func (what *LoopStatement) run(scope *common.Scope, value common.Value) (string,
 
 	case []common.Value:
 		for index, item := range castValue {
-			if len(what.index) > 0 {
-				scope.Set(what.index, common.SomeDecimalValue(decimal.NewFromInt(int64(index)), common.NewHistory("index").From(value.History())))
+			if scope.HasReturned {
+				return "", nil
 			}
 
-			itemValue := scope.SetItem(common.SomeValue(item.Value(), common.NewHistory("item #%d", index).From(value.History())))
+			if len(what.index) > 0 {
+				scope.Set(what.index, common.SomeDecimalValue(decimal.NewFromInt(int64(index)), nil))
+			}
+
+			itemValue := scope.SetItem(common.SomeValue(item.Value(), value.Event()))
 			if len(what.item) > 0 {
 				scope.Set(what.item, itemValue)
 			}
@@ -116,11 +128,15 @@ func (what *LoopStatement) run(scope *common.Scope, value common.Value) (string,
 
 	case map[string]any:
 		for name, item := range castValue {
-			if len(what.index) > 0 {
-				scope.Set(what.index, common.SomeStringValue(name, common.NewHistory("index").From(value.History())))
+			if scope.HasReturned {
+				return "", nil
 			}
 
-			itemValue := scope.SetItem(common.SomeValue(item, common.NewHistory("item %q", name).From(value.History())))
+			if len(what.index) > 0 {
+				scope.Set(what.index, common.SomeStringValue(name, nil))
+			}
+
+			itemValue := scope.SetItem(common.SomeValue(item, value.Event()))
 			if len(what.item) > 0 {
 				scope.Set(what.item, itemValue)
 			}
@@ -132,7 +148,7 @@ func (what *LoopStatement) run(scope *common.Scope, value common.Value) (string,
 		}
 
 	case common.Value:
-		return what.run(scope, common.SomeValue(castValue.Value(), value.History()))
+		return what.run(scope, common.SomeValue(castValue.Value(), value.Event()))
 
 	default:
 		return what.Literal(), fmt.Errorf("failed to run loop-statement: expected iterable type, got %T", value)
