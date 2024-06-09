@@ -56,6 +56,15 @@ type Model struct {
 	GeneratedRisksBySyntheticId                           map[string]*Risk                `json:"generated_risks_by_synthetic_id,omitempty" yaml:"generated_risks_by_synthetic_id,omitempty"`
 }
 
+type ProgressReporter interface {
+	Info(a ...any)
+	Warn(a ...any)
+	Error(a ...any)
+	Infof(format string, a ...any)
+	Warnf(format string, a ...any)
+	Errorf(format string, a ...any)
+}
+
 func (model *Model) AddToListOfSupportedTags(tags []string) {
 	for _, tag := range tags {
 		model.AllSupportedTags[tag] = true
