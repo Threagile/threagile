@@ -68,9 +68,9 @@ func (r *UncheckedDeploymentRule) createRisk(input *types.Model, technicalAsset 
 				// here we've got a deployment target which has its data assets at risk via deployment of backdoored code
 				uniqueDataBreachTechnicalAssetIDs[codeDeploymentTargetCommLink.TargetId] = true
 				targetTechAsset := input.TechnicalAssets[codeDeploymentTargetCommLink.TargetId]
-				if targetTechAsset.HighestProcessedConfidentiality(input) >= types.Confidential ||
-					targetTechAsset.HighestProcessedIntegrity(input) >= types.Critical ||
-					targetTechAsset.HighestProcessedAvailability(input) >= types.Critical {
+				if input.HighestProcessedConfidentiality(targetTechAsset) >= types.Confidential ||
+					input.HighestProcessedIntegrity(targetTechAsset) >= types.Critical ||
+					input.HighestProcessedAvailability(targetTechAsset) >= types.Critical {
 					impact = types.MediumImpact
 				}
 				break

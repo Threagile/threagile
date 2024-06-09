@@ -284,7 +284,7 @@ func isTechnicalAssetTaggedWithAnyTraversingUp(model *types.Model, ta *types.Tec
 	if containsCaseInsensitiveAny(ta.Tags, tags...) {
 		return true
 	}
-	tbID := ta.GetTrustBoundaryId(model)
+	tbID := model.GetTechnicalAssetTrustBoundaryId(ta)
 	if len(tbID) > 0 {
 		if isTrustedBoundaryTaggedWithAnyTraversingUp(model, model.TrustBoundaries[tbID], tags...) {
 			return true
@@ -489,14 +489,14 @@ func (r *MissingCloudHardeningRule) createRiskForTechnicalAsset(parsedModel *typ
 		title += ": <u>" + details + "</u>"
 	}
 	impact := types.MediumImpact
-	if technicalAsset.HighestProcessedConfidentiality(parsedModel) >= types.Confidential ||
-		technicalAsset.HighestProcessedIntegrity(parsedModel) >= types.Critical ||
-		technicalAsset.HighestProcessedAvailability(parsedModel) >= types.Critical {
+	if parsedModel.HighestProcessedConfidentiality(technicalAsset) >= types.Confidential ||
+		parsedModel.HighestProcessedIntegrity(technicalAsset) >= types.Critical ||
+		parsedModel.HighestProcessedAvailability(technicalAsset) >= types.Critical {
 		impact = types.HighImpact
 	}
-	if technicalAsset.HighestProcessedConfidentiality(parsedModel) == types.StrictlyConfidential ||
-		technicalAsset.HighestProcessedIntegrity(parsedModel) == types.MissionCritical ||
-		technicalAsset.HighestProcessedAvailability(parsedModel) == types.MissionCritical {
+	if parsedModel.HighestProcessedConfidentiality(technicalAsset) == types.StrictlyConfidential ||
+		parsedModel.HighestProcessedIntegrity(technicalAsset) == types.MissionCritical ||
+		parsedModel.HighestProcessedAvailability(technicalAsset) == types.MissionCritical {
 		impact = types.VeryHighImpact
 	}
 	// create risk

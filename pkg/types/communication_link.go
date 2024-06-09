@@ -4,10 +4,6 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 
 package types
 
-import (
-	"sort"
-)
-
 type CommunicationLink struct {
 	Id                     string         `json:"id,omitempty" yaml:"id,omitempty"`
 	SourceId               string         `json:"source_id,omitempty" yaml:"source_id,omitempty"`
@@ -30,75 +26,6 @@ type CommunicationLink struct {
 
 func (what CommunicationLink) IsTaggedWithAny(tags ...string) bool {
 	return containsCaseInsensitiveAny(what.Tags, tags...)
-}
-
-func (what CommunicationLink) HighestConfidentiality(parsedModel *Model) Confidentiality {
-	highest := Public
-	for _, dataId := range what.DataAssetsSent {
-		dataAsset := parsedModel.DataAssets[dataId]
-		if dataAsset.Confidentiality > highest {
-			highest = dataAsset.Confidentiality
-		}
-	}
-	for _, dataId := range what.DataAssetsReceived {
-		dataAsset := parsedModel.DataAssets[dataId]
-		if dataAsset.Confidentiality > highest {
-			highest = dataAsset.Confidentiality
-		}
-	}
-	return highest
-}
-
-func (what CommunicationLink) HighestIntegrity(parsedModel *Model) Criticality {
-	highest := Archive
-	for _, dataId := range what.DataAssetsSent {
-		dataAsset := parsedModel.DataAssets[dataId]
-		if dataAsset.Integrity > highest {
-			highest = dataAsset.Integrity
-		}
-	}
-	for _, dataId := range what.DataAssetsReceived {
-		dataAsset := parsedModel.DataAssets[dataId]
-		if dataAsset.Integrity > highest {
-			highest = dataAsset.Integrity
-		}
-	}
-	return highest
-}
-
-func (what CommunicationLink) HighestAvailability(parsedModel *Model) Criticality {
-	highest := Archive
-	for _, dataId := range what.DataAssetsSent {
-		dataAsset := parsedModel.DataAssets[dataId]
-		if dataAsset.Availability > highest {
-			highest = dataAsset.Availability
-		}
-	}
-	for _, dataId := range what.DataAssetsReceived {
-		dataAsset := parsedModel.DataAssets[dataId]
-		if dataAsset.Availability > highest {
-			highest = dataAsset.Availability
-		}
-	}
-	return highest
-}
-
-func (what CommunicationLink) DataAssetsSentSorted(parsedModel *Model) []*DataAsset {
-	result := make([]*DataAsset, 0)
-	for _, assetID := range what.DataAssetsSent {
-		result = append(result, parsedModel.DataAssets[assetID])
-	}
-	sort.Sort(byDataAssetTitleSort(result))
-	return result
-}
-
-func (what CommunicationLink) DataAssetsReceivedSorted(parsedModel *Model) []*DataAsset {
-	result := make([]*DataAsset, 0)
-	for _, assetID := range what.DataAssetsReceived {
-		result = append(result, parsedModel.DataAssets[assetID])
-	}
-	sort.Sort(byDataAssetTitleSort(result))
-	return result
 }
 
 func (what CommunicationLink) IsBidirectional() bool {

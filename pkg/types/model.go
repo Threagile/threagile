@@ -326,8 +326,8 @@ func (model *Model) FindSharedRuntimeHighestConfidentiality(sharedRuntime *Share
 	highest := Public
 	for _, id := range sharedRuntime.TechnicalAssetsRunning {
 		techAsset := model.TechnicalAssets[id]
-		if techAsset.HighestProcessedConfidentiality(model) > highest {
-			highest = techAsset.HighestProcessedConfidentiality(model)
+		if model.HighestProcessedConfidentiality(techAsset) > highest {
+			highest = model.HighestProcessedConfidentiality(techAsset)
 		}
 	}
 	return highest
@@ -336,7 +336,7 @@ func (model *Model) FindSharedRuntimeHighestConfidentiality(sharedRuntime *Share
 func (model *Model) FindSharedRuntimeHighestIntegrity(sharedRuntime *SharedRuntime) Criticality {
 	highest := Archive
 	for _, id := range sharedRuntime.TechnicalAssetsRunning {
-		techAssetIntegrity := model.TechnicalAssets[id].HighestProcessedIntegrity(model)
+		techAssetIntegrity := model.HighestProcessedIntegrity(model.TechnicalAssets[id])
 		if techAssetIntegrity > highest {
 			highest = techAssetIntegrity
 		}
@@ -347,7 +347,7 @@ func (model *Model) FindSharedRuntimeHighestIntegrity(sharedRuntime *SharedRunti
 func (model *Model) FindSharedRuntimeHighestAvailability(sharedRuntime *SharedRuntime) Criticality {
 	highest := Archive
 	for _, id := range sharedRuntime.TechnicalAssetsRunning {
-		techAssetAvailability := model.TechnicalAssets[id].HighestProcessedAvailability(model)
+		techAssetAvailability := model.HighestProcessedAvailability(model.TechnicalAssets[id])
 		if techAssetAvailability > highest {
 			highest = techAssetAvailability
 		}
@@ -355,48 +355,12 @@ func (model *Model) FindSharedRuntimeHighestAvailability(sharedRuntime *SharedRu
 	return highest
 }
 
-/*
-
-func (what TrustBoundary) HighestConfidentiality(model *Model) Confidentiality {
-	highest := Public
-	for _, id := range what.RecursivelyAllTechnicalAssetIDsInside(model) {
-		techAsset := model.TechnicalAssets[id]
-		if techAsset.HighestProcessedConfidentiality(model) > highest {
-			highest = techAsset.HighestProcessedConfidentiality(model)
-		}
-	}
-	return highest
-}
-
-func (what TrustBoundary) HighestIntegrity(model *Model) Criticality {
-	highest := Archive
-	for _, id := range what.RecursivelyAllTechnicalAssetIDsInside(model) {
-		techAsset := model.TechnicalAssets[id]
-		if techAsset.HighestProcessedIntegrity(model) > highest {
-			highest = techAsset.HighestProcessedIntegrity(model)
-		}
-	}
-	return highest
-}
-
-func (what TrustBoundary) HighestAvailability(model *Model) Criticality {
-	highest := Archive
-	for _, id := range what.RecursivelyAllTechnicalAssetIDsInside(model) {
-		techAsset := model.TechnicalAssets[id]
-		if techAsset.HighestProcessedAvailability(model) > highest {
-			highest = techAsset.HighestProcessedAvailability(model)
-		}
-	}
-	return highest
-}
-*/
-
 func (model *Model) FindTrustBoundaryHighestConfidentiality(tb *TrustBoundary) Confidentiality {
 	highest := Public
 	for _, id := range model.RecursivelyAllTechnicalAssetIDsInside(tb) {
 		techAsset := model.TechnicalAssets[id]
-		if techAsset.HighestProcessedConfidentiality(model) > highest {
-			highest = techAsset.HighestProcessedConfidentiality(model)
+		if model.HighestProcessedConfidentiality(techAsset) > highest {
+			highest = model.HighestProcessedConfidentiality(techAsset)
 		}
 	}
 	return highest
@@ -405,7 +369,7 @@ func (model *Model) FindTrustBoundaryHighestConfidentiality(tb *TrustBoundary) C
 func (model *Model) FindTrustBoundaryHighestIntegrity(tb *TrustBoundary) Criticality {
 	highest := Archive
 	for _, id := range model.RecursivelyAllTechnicalAssetIDsInside(tb) {
-		techAssetIntegrity := model.TechnicalAssets[id].HighestProcessedIntegrity(model)
+		techAssetIntegrity := model.HighestProcessedIntegrity(model.TechnicalAssets[id])
 		if techAssetIntegrity > highest {
 			highest = techAssetIntegrity
 		}
@@ -416,7 +380,7 @@ func (model *Model) FindTrustBoundaryHighestIntegrity(tb *TrustBoundary) Critica
 func (model *Model) FindTrustBoundaryHighestAvailability(tb *TrustBoundary) Criticality {
 	highest := Archive
 	for _, id := range model.RecursivelyAllTechnicalAssetIDsInside(tb) {
-		techAssetAvailability := model.TechnicalAssets[id].HighestProcessedAvailability(model)
+		techAssetAvailability := model.HighestProcessedAvailability(model.TechnicalAssets[id])
 		if techAssetAvailability > highest {
 			highest = techAssetAvailability
 		}
@@ -461,4 +425,402 @@ func (model *Model) FindParentTrustBoundary(tb *TrustBoundary) *TrustBoundary {
 		}
 	}
 	return nil
+}
+
+// as in Go ranging over map is random order, range over them in sorted (hence reproducible) way:
+
+func (model *Model) SortedRiskCategories() []*RiskCategory {
+	categoryMap := make(map[string]*RiskCategory)
+	for categoryId := range model.GeneratedRisksByCategory {
+		category := model.GetRiskCategory(categoryId)
+		if category != nil {
+			categoryMap[categoryId] = category
+		}
+	}
+
+	categories := make([]*RiskCategory, 0)
+	for categoryId := range categoryMap {
+		categories = append(categories, categoryMap[categoryId])
+	}
+
+	model.SortByRiskCategoryHighestContainingRiskSeveritySortStillAtRisk(categories)
+	return categories
+}
+
+func (model *Model) SortedRisksOfCategory(category *RiskCategory) []*Risk {
+	risks := model.GeneratedRisksByCategory[category.ID]
+	SortByRiskSeverity(risks)
+	return risks
+}
+
+func (model *Model) SortByRiskCategoryHighestContainingRiskSeveritySortStillAtRisk(riskCategories []*RiskCategory) {
+	sort.Slice(riskCategories, func(i, j int) bool {
+		risksLeft := ReduceToOnlyStillAtRisk(model.GeneratedRisksByCategory[riskCategories[i].ID])
+		risksRight := ReduceToOnlyStillAtRisk(model.GeneratedRisksByCategory[riskCategories[j].ID])
+		highestLeft := HighestSeverityStillAtRisk(risksLeft)
+		highestRight := HighestSeverityStillAtRisk(risksRight)
+		if highestLeft == highestRight {
+			if len(risksLeft) == 0 && len(risksRight) > 0 {
+				return false
+			}
+			if len(risksLeft) > 0 && len(risksRight) == 0 {
+				return true
+			}
+			return riskCategories[i].Title < riskCategories[j].Title
+		}
+		return highestLeft > highestRight
+	})
+}
+
+func (model *Model) GetRiskCategory(categoryID string) *RiskCategory {
+	if len(model.CustomRiskCategories) > 0 {
+		for _, custom := range model.CustomRiskCategories {
+			if strings.EqualFold(custom.ID, categoryID) {
+				return custom
+			}
+		}
+	}
+
+	if len(model.BuiltInRiskCategories) > 0 {
+		for _, builtIn := range model.BuiltInRiskCategories {
+			if strings.EqualFold(builtIn.ID, categoryID) {
+				return builtIn
+			}
+		}
+	}
+
+	return nil
+}
+
+func (model *Model) AllRisks() []*Risk {
+	result := make([]*Risk, 0)
+	for _, risks := range model.GeneratedRisksByCategory {
+		result = append(result, risks...)
+	}
+	return result
+}
+
+func (model *Model) IdentifiedDataBreachProbability(what *DataAsset) DataBreachProbability {
+	highestProbability := Improbable
+	for _, risk := range model.AllRisks() {
+		for _, techAsset := range risk.DataBreachTechnicalAssetIDs {
+			if contains(model.TechnicalAssets[techAsset].DataAssetsProcessed, what.Id) {
+				if risk.DataBreachProbability > highestProbability {
+					highestProbability = risk.DataBreachProbability
+					break
+				}
+			}
+		}
+	}
+	return highestProbability
+}
+
+func (model *Model) IdentifiedDataBreachProbabilityRisks(what *DataAsset) []*Risk {
+	result := make([]*Risk, 0)
+	for _, risk := range model.AllRisks() {
+		for _, techAsset := range risk.DataBreachTechnicalAssetIDs {
+			if contains(model.TechnicalAssets[techAsset].DataAssetsProcessed, what.Id) {
+				result = append(result, risk)
+				break
+			}
+		}
+	}
+	return result
+}
+
+func (model *Model) ProcessedByTechnicalAssetsSorted(what *DataAsset) []*TechnicalAsset {
+	result := make([]*TechnicalAsset, 0)
+	for _, technicalAsset := range model.TechnicalAssets {
+		for _, candidateID := range technicalAsset.DataAssetsProcessed {
+			if candidateID == what.Id {
+				result = append(result, technicalAsset)
+			}
+		}
+	}
+	sort.Sort(ByTechnicalAssetTitleSort(result))
+	return result
+}
+
+func (model *Model) StoredByTechnicalAssetsSorted(what *DataAsset) []*TechnicalAsset {
+	result := make([]*TechnicalAsset, 0)
+	for _, technicalAsset := range model.TechnicalAssets {
+		for _, candidateID := range technicalAsset.DataAssetsStored {
+			if candidateID == what.Id {
+				result = append(result, technicalAsset)
+			}
+		}
+	}
+	sort.Sort(ByTechnicalAssetTitleSort(result))
+	return result
+}
+
+func (model *Model) SentViaCommLinksSorted(what *DataAsset) []*CommunicationLink {
+	result := make([]*CommunicationLink, 0)
+	for _, technicalAsset := range model.TechnicalAssets {
+		for _, commLink := range technicalAsset.CommunicationLinks {
+			for _, candidateID := range commLink.DataAssetsSent {
+				if candidateID == what.Id {
+					result = append(result, commLink)
+				}
+			}
+		}
+	}
+	sort.Sort(ByTechnicalCommunicationLinkTitleSort(result))
+	return result
+}
+
+func (model *Model) ReceivedViaCommLinksSorted(what *DataAsset) []*CommunicationLink {
+	result := make([]*CommunicationLink, 0)
+	for _, technicalAsset := range model.TechnicalAssets {
+		for _, commLink := range technicalAsset.CommunicationLinks {
+			for _, candidateID := range commLink.DataAssetsReceived {
+				if candidateID == what.Id {
+					result = append(result, commLink)
+				}
+			}
+		}
+	}
+	sort.Sort(ByTechnicalCommunicationLinkTitleSort(result))
+	return result
+}
+
+func (model *Model) HighestCommunicationLinkConfidentiality(what *CommunicationLink) Confidentiality {
+	highest := Public
+	for _, dataId := range what.DataAssetsSent {
+		dataAsset := model.DataAssets[dataId]
+		if dataAsset.Confidentiality > highest {
+			highest = dataAsset.Confidentiality
+		}
+	}
+	for _, dataId := range what.DataAssetsReceived {
+		dataAsset := model.DataAssets[dataId]
+		if dataAsset.Confidentiality > highest {
+			highest = dataAsset.Confidentiality
+		}
+	}
+	return highest
+}
+
+func (model *Model) HighestCommunicationLinkIntegrity(what *CommunicationLink) Criticality {
+	highest := Archive
+	for _, dataId := range what.DataAssetsSent {
+		dataAsset := model.DataAssets[dataId]
+		if dataAsset.Integrity > highest {
+			highest = dataAsset.Integrity
+		}
+	}
+	for _, dataId := range what.DataAssetsReceived {
+		dataAsset := model.DataAssets[dataId]
+		if dataAsset.Integrity > highest {
+			highest = dataAsset.Integrity
+		}
+	}
+	return highest
+}
+
+func (model *Model) HighestCommunicationLinkAvailability(what *CommunicationLink) Criticality {
+	highest := Archive
+	for _, dataId := range what.DataAssetsSent {
+		dataAsset := model.DataAssets[dataId]
+		if dataAsset.Availability > highest {
+			highest = dataAsset.Availability
+		}
+	}
+	for _, dataId := range what.DataAssetsReceived {
+		dataAsset := model.DataAssets[dataId]
+		if dataAsset.Availability > highest {
+			highest = dataAsset.Availability
+		}
+	}
+	return highest
+}
+
+func (model *Model) DataAssetsSentSorted(what *CommunicationLink) []*DataAsset {
+	result := make([]*DataAsset, 0)
+	for _, assetID := range what.DataAssetsSent {
+		result = append(result, model.DataAssets[assetID])
+	}
+	sort.Sort(byDataAssetTitleSort(result))
+	return result
+}
+
+func (model *Model) DataAssetsReceivedSorted(what *CommunicationLink) []*DataAsset {
+	result := make([]*DataAsset, 0)
+	for _, assetID := range what.DataAssetsReceived {
+		result = append(result, model.DataAssets[assetID])
+	}
+	sort.Sort(byDataAssetTitleSort(result))
+	return result
+}
+
+func (model *Model) GetTechnicalAssetTrustBoundaryId(ta *TechnicalAsset) string {
+	for _, trustBoundary := range model.TrustBoundaries {
+		for _, techAssetInside := range trustBoundary.TechnicalAssetsInside {
+			if techAssetInside == ta.Id {
+				return trustBoundary.Id
+			}
+		}
+	}
+	return ""
+}
+
+func (model *Model) HighestTechnicalAssetConfidentiality(what *TechnicalAsset) Confidentiality {
+	highest := what.Confidentiality
+	highestProcessed := model.HighestProcessedConfidentiality(what)
+	if highest < highestProcessed {
+		highest = highestProcessed
+	}
+
+	highestStored := model.HighestStoredConfidentiality(what)
+	if highest < highestStored {
+		highest = highestStored
+	}
+
+	return highest
+}
+
+func (model *Model) HighestProcessedConfidentiality(what *TechnicalAsset) Confidentiality {
+	highest := what.Confidentiality
+	for _, dataId := range what.DataAssetsProcessed {
+		dataAsset := model.DataAssets[dataId]
+		if dataAsset.Confidentiality > highest {
+			highest = dataAsset.Confidentiality
+		}
+	}
+	return highest
+}
+
+func (model *Model) HighestStoredConfidentiality(what *TechnicalAsset) Confidentiality {
+	highest := what.Confidentiality
+	for _, dataId := range what.DataAssetsStored {
+		dataAsset := model.DataAssets[dataId]
+		if dataAsset.Confidentiality > highest {
+			highest = dataAsset.Confidentiality
+		}
+	}
+	return highest
+}
+
+func (model *Model) DataAssetsProcessedSorted(what *TechnicalAsset) []*DataAsset {
+	result := make([]*DataAsset, 0)
+	for _, assetID := range what.DataAssetsProcessed {
+		result = append(result, model.DataAssets[assetID])
+	}
+	sort.Sort(ByDataAssetTitleSort(result))
+	return result
+}
+
+func (model *Model) DataAssetsStoredSorted(what *TechnicalAsset) []*DataAsset {
+	result := make([]*DataAsset, 0)
+	for _, assetID := range what.DataAssetsStored {
+		result = append(result, model.DataAssets[assetID])
+	}
+	sort.Sort(ByDataAssetTitleSort(result))
+	return result
+}
+
+func (model *Model) HighestIntegrity(what *TechnicalAsset) Criticality {
+	highest := what.Integrity
+	highestProcessed := model.HighestProcessedIntegrity(what)
+	if highest < highestProcessed {
+		highest = highestProcessed
+	}
+
+	highestStored := model.HighestStoredIntegrity(what)
+	if highest < highestStored {
+		highest = highestStored
+	}
+
+	return highest
+}
+
+func (model *Model) HighestProcessedIntegrity(what *TechnicalAsset) Criticality {
+	highest := what.Integrity
+	for _, dataId := range what.DataAssetsProcessed {
+		dataAsset := model.DataAssets[dataId]
+		if dataAsset.Integrity > highest {
+			highest = dataAsset.Integrity
+		}
+	}
+	return highest
+}
+
+func (model *Model) HighestStoredIntegrity(what *TechnicalAsset) Criticality {
+	highest := what.Integrity
+	for _, dataId := range what.DataAssetsStored {
+		dataAsset := model.DataAssets[dataId]
+		if dataAsset.Integrity > highest {
+			highest = dataAsset.Integrity
+		}
+	}
+	return highest
+}
+
+func (model *Model) HighestAvailability(what *TechnicalAsset) Criticality {
+	highest := what.Availability
+	highestProcessed := model.HighestProcessedAvailability(what)
+	if highest < highestProcessed {
+		highest = highestProcessed
+	}
+
+	highestStored := model.HighestStoredAvailability(what)
+	if highest < highestStored {
+		highest = highestStored
+	}
+
+	return highest
+}
+
+func (model *Model) HighestProcessedAvailability(what *TechnicalAsset) Criticality {
+	highest := what.Availability
+	for _, dataId := range what.DataAssetsProcessed {
+		dataAsset := model.DataAssets[dataId]
+		if dataAsset.Availability > highest {
+			highest = dataAsset.Availability
+		}
+	}
+	return highest
+}
+
+func (model *Model) HighestStoredAvailability(what *TechnicalAsset) Criticality {
+	highest := what.Availability
+	for _, dataId := range what.DataAssetsStored {
+		dataAsset := model.DataAssets[dataId]
+		if dataAsset.Availability > highest {
+			highest = dataAsset.Availability
+		}
+	}
+	return highest
+}
+
+func (model *Model) HasDirectConnection(what *TechnicalAsset, otherAssetId string) bool {
+	for _, dataFlow := range model.IncomingTechnicalCommunicationLinksMappedByTargetId[what.Id] {
+		if dataFlow.SourceId == otherAssetId {
+			return true
+		}
+	}
+	// check both directions, hence two times, just reversed
+	for _, dataFlow := range model.IncomingTechnicalCommunicationLinksMappedByTargetId[otherAssetId] {
+		if dataFlow.SourceId == what.Id {
+			return true
+		}
+	}
+	return false
+}
+
+func (model *Model) GeneratedRisks(what *TechnicalAsset) []*Risk {
+	resultingRisks := make([]*Risk, 0)
+	if len(model.SortedRiskCategories()) == 0 {
+		fmt.Println("Uh, strange, no risks generated (yet?) and asking for them by tech asset...")
+	}
+	for _, category := range model.SortedRiskCategories() {
+		risks := model.SortedRisksOfCategory(category)
+		for _, risk := range risks {
+			if risk.MostRelevantTechnicalAssetId == what.Id {
+				resultingRisks = append(resultingRisks, risk)
+			}
+		}
+	}
+	SortByRiskSeverity(resultingRisks)
+	return resultingRisks
 }

@@ -48,8 +48,8 @@ func (r *UnencryptedAssetRule) GenerateRisks(input *types.Model) ([]*types.Risk,
 	risks := make([]*types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
-		highestStoredConfidentiality := technicalAsset.HighestStoredConfidentiality(input)
-		highestStoredIntegrity := technicalAsset.HighestStoredIntegrity(input)
+		highestStoredConfidentiality := input.HighestStoredConfidentiality(technicalAsset)
+		highestStoredIntegrity := input.HighestStoredIntegrity(technicalAsset)
 		if technicalAsset.OutOfScope || isEncryptionWaiver(technicalAsset) {
 			continue
 		}

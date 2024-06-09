@@ -75,7 +75,7 @@ func (r *UnguardedDirectDatastoreAccessRule) GenerateRisks(input *types.Model) (
 }
 
 func isSharingSameParentTrustBoundary(input *types.Model, left, right *types.TechnicalAsset) bool {
-	tbIDLeft, tbIDRight := left.GetTrustBoundaryId(input), right.GetTrustBoundaryId(input)
+	tbIDLeft, tbIDRight := input.GetTechnicalAssetTrustBoundaryId(left), input.GetTechnicalAssetTrustBoundaryId(right)
 	if len(tbIDLeft) == 0 && len(tbIDRight) > 0 {
 		return false
 	}

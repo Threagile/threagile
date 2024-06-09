@@ -63,9 +63,9 @@ func (r *MissingBuildInfrastructureRule) GenerateRisks(input *types.Model) ([]*t
 		hasCustomDevelopedParts = true
 		if impact == types.LowImpact {
 			mostRelevantAsset = technicalAsset
-			if technicalAsset.HighestProcessedConfidentiality(input) >= types.Confidential ||
-				technicalAsset.HighestProcessedIntegrity(input) >= types.Critical ||
-				technicalAsset.HighestProcessedAvailability(input) >= types.Critical {
+			if input.HighestProcessedConfidentiality(technicalAsset) >= types.Confidential ||
+				input.HighestProcessedIntegrity(technicalAsset) >= types.Critical ||
+				input.HighestProcessedAvailability(technicalAsset) >= types.Critical {
 				impact = types.MediumImpact
 			}
 		}

@@ -59,12 +59,12 @@ func (r *MixedTargetsOnSharedRuntimeRule) GenerateRisks(input *types.Model) ([]*
 		riskAdded := false
 		for _, technicalAssetId := range sharedRuntime.TechnicalAssetsRunning {
 			technicalAsset := input.TechnicalAssets[technicalAssetId]
-			if len(currentTrustBoundaryId) > 0 && currentTrustBoundaryId != technicalAsset.GetTrustBoundaryId(input) {
+			if len(currentTrustBoundaryId) > 0 && currentTrustBoundaryId != input.GetTechnicalAssetTrustBoundaryId(technicalAsset) {
 				risks = append(risks, r.createRisk(input, sharedRuntime))
 				riskAdded = true
 				break
 			}
-			currentTrustBoundaryId = technicalAsset.GetTrustBoundaryId(input)
+			currentTrustBoundaryId = input.GetTechnicalAssetTrustBoundaryId(technicalAsset)
 			if technicalAsset.Technologies.GetAttribute(types.IsExclusivelyFrontendRelated) {
 				hasFrontend = true
 			}

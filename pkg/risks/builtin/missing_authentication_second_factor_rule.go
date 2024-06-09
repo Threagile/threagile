@@ -51,9 +51,9 @@ func (r *MissingAuthenticationSecondFactorRule) GenerateRisks(input *types.Model
 			continue
 		}
 
-		if technicalAsset.HighestProcessedConfidentiality(input) < types.Confidential &&
-			technicalAsset.HighestProcessedIntegrity(input) < types.Critical &&
-			technicalAsset.HighestProcessedAvailability(input) < types.Critical &&
+		if input.HighestProcessedConfidentiality(technicalAsset) < types.Confidential &&
+			input.HighestProcessedIntegrity(technicalAsset) < types.Critical &&
+			input.HighestProcessedAvailability(technicalAsset) < types.Critical &&
 			!technicalAsset.MultiTenant {
 			continue
 		}
@@ -66,8 +66,8 @@ func (r *MissingAuthenticationSecondFactorRule) GenerateRisks(input *types.Model
 				continue
 			}
 			if caller.UsedAsClientByHuman {
-				moreRisky := commLink.HighestConfidentiality(input) >= types.Confidential ||
-					commLink.HighestIntegrity(input) >= types.Critical
+				moreRisky := input.HighestCommunicationLinkConfidentiality(commLink) >= types.Confidential ||
+					input.HighestCommunicationLinkIntegrity(commLink) >= types.Critical
 				if moreRisky && commLink.Authentication != types.TwoFactor {
 					risks = append(risks, r.missingAuthenticationRule.createRisk(input, technicalAsset, commLink, commLink, "", types.MediumImpact, types.Unlikely, true, r.Category()))
 				}
@@ -81,8 +81,8 @@ func (r *MissingAuthenticationSecondFactorRule) GenerateRisks(input *types.Model
 						continue
 					}
 
-					moreRisky := callersCommLink.HighestConfidentiality(input) >= types.Confidential ||
-						callersCommLink.HighestIntegrity(input) >= types.Critical
+					moreRisky := input.HighestCommunicationLinkConfidentiality(callersCommLink) >= types.Confidential ||
+						input.HighestCommunicationLinkIntegrity(callersCommLink) >= types.Critical
 					if moreRisky && callersCommLink.Authentication != types.TwoFactor {
 						risks = append(risks, r.missingAuthenticationRule.createRisk(input, technicalAsset, commLink, callersCommLink, caller.Title, types.MediumImpact, types.Unlikely, true, r.Category()))
 					}

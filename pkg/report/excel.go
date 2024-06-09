@@ -80,8 +80,8 @@ func WriteRisksExcelToFile(parsedModel *types.Model, filename string, config rep
 
 	// get sorted risks
 	riskItems := make([]RiskItem, 0)
-	for _, category := range types.SortedRiskCategories(parsedModel) {
-		risks := types.SortedRisksOfCategory(parsedModel, category)
+	for _, category := range parsedModel.SortedRiskCategories() {
+		risks := parsedModel.SortedRisksOfCategory(category)
 		for _, risk := range risks {
 			techAsset := parsedModel.TechnicalAssets[risk.MostRelevantTechnicalAssetId]
 			techAssetTitle := ""

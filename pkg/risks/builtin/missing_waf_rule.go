@@ -65,9 +65,9 @@ func (r *MissingWafRule) createRisk(input *types.Model, technicalAsset *types.Te
 	title := "<b>Missing Web Application Firewall (WAF)</b> risk at <b>" + technicalAsset.Title + "</b>"
 	likelihood := types.Unlikely
 	impact := types.LowImpact
-	if technicalAsset.HighestProcessedConfidentiality(input) == types.StrictlyConfidential ||
-		technicalAsset.HighestProcessedIntegrity(input) == types.MissionCritical ||
-		technicalAsset.HighestProcessedAvailability(input) == types.MissionCritical {
+	if input.HighestProcessedConfidentiality(technicalAsset) == types.StrictlyConfidential ||
+		input.HighestProcessedIntegrity(technicalAsset) == types.MissionCritical ||
+		input.HighestProcessedAvailability(technicalAsset) == types.MissionCritical {
 		impact = types.MediumImpact
 	}
 	risk := &types.Risk{

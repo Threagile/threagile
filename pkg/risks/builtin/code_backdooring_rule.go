@@ -75,7 +75,7 @@ func (r *CodeBackdooringRule) createRisk(input *types.Model, technicalAsset *typ
 	impact := types.LowImpact
 	if !technicalAsset.Technologies.GetAttribute(types.CodeInspectionPlatform) {
 		impact = types.MediumImpact
-		if technicalAsset.HighestProcessedConfidentiality(input) >= types.Confidential || technicalAsset.HighestProcessedIntegrity(input) >= types.Critical {
+		if input.HighestProcessedConfidentiality(technicalAsset) >= types.Confidential || input.HighestProcessedIntegrity(technicalAsset) >= types.Critical {
 			impact = types.HighImpact
 		}
 	}

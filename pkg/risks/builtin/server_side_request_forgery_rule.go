@@ -63,7 +63,7 @@ func (r *ServerSideRequestForgeryRule) createRisk(input *types.Model, technicalA
 		"the target <b>" + target.Title + "</b> via <b>" + outgoingFlow.Title + "</b>"
 	impact := types.LowImpact
 	// check by the target itself (can be in another trust-boundary)
-	if target.HighestProcessedConfidentiality(input) == types.StrictlyConfidential {
+	if input.HighestProcessedConfidentiality(target) == types.StrictlyConfidential {
 		impact = types.MediumImpact
 	}
 	// check all potential attack targets within the same trust boundary (accessible via web protocols)
@@ -78,14 +78,14 @@ func (r *ServerSideRequestForgeryRule) createRisk(input *types.Model, technicalA
 				continue
 			}
 			uniqueDataBreachTechnicalAssetIDs[potentialTargetAsset.Id] = true
-			if potentialTargetAsset.HighestProcessedConfidentiality(input) == types.StrictlyConfidential {
+			if input.HighestProcessedConfidentiality(potentialTargetAsset) == types.StrictlyConfidential {
 				impact = types.MediumImpact
 			}
 		}
 	}
 	// adjust for cloud-based special risks
-	trustBoundaryId := technicalAsset.GetTrustBoundaryId(input)
-	if impact == types.LowImpact && len(trustBoundaryId) > 0 && input.TrustBoundaries[technicalAsset.GetTrustBoundaryId(input)].Type.IsWithinCloud() {
+	trustBoundaryId := input.GetTechnicalAssetTrustBoundaryId(technicalAsset)
+	if impact == types.LowImpact && len(trustBoundaryId) > 0 && input.TrustBoundaries[input.GetTechnicalAssetTrustBoundaryId(technicalAsset)].Type.IsWithinCloud() {
 		impact = types.MediumImpact
 	}
 	dataBreachTechnicalAssetIDs := make([]string, 0)

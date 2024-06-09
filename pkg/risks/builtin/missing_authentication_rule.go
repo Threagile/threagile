@@ -47,9 +47,9 @@ func (r *MissingAuthenticationRule) GenerateRisks(input *types.Model) ([]*types.
 			continue
 		}
 
-		if technicalAsset.HighestProcessedConfidentiality(input) < types.Confidential &&
-			technicalAsset.HighestProcessedIntegrity(input) < types.Critical &&
-			technicalAsset.HighestProcessedAvailability(input) < types.Critical &&
+		if input.HighestProcessedConfidentiality(technicalAsset) < types.Confidential &&
+			input.HighestProcessedIntegrity(technicalAsset) < types.Critical &&
+			input.HighestProcessedAvailability(technicalAsset) < types.Critical &&
 			!technicalAsset.MultiTenant {
 			continue
 		}
@@ -71,10 +71,10 @@ func (r *MissingAuthenticationRule) GenerateRisks(input *types.Model) ([]*types.
 }
 
 func (r *MissingAuthenticationRule) calculateImpact(commLink *types.CommunicationLink, input *types.Model) types.RiskExploitationImpact {
-	if commLink.HighestConfidentiality(input) == types.StrictlyConfidential || commLink.HighestIntegrity(input) == types.MissionCritical {
+	if input.HighestCommunicationLinkConfidentiality(commLink) == types.StrictlyConfidential || input.HighestCommunicationLinkIntegrity(commLink) == types.MissionCritical {
 		return types.HighImpact
 	}
-	if commLink.HighestConfidentiality(input) <= types.Internal && commLink.HighestIntegrity(input) == types.Operational {
+	if input.HighestCommunicationLinkConfidentiality(commLink) <= types.Internal && input.HighestCommunicationLinkIntegrity(commLink) == types.Operational {
 		return types.LowImpact
 	}
 	return types.MediumImpact

@@ -87,7 +87,7 @@ func (r *MissingNetworkSegmentationRule) GenerateRisks(input *types.Model) ([]*t
 			sparringAssetCandidate := input.TechnicalAssets[sparringAssetCandidateId]
 			if sparringAssetCandidate.Technologies.GetAttribute(types.IsLessProtectedType) &&
 				isSameTrustBoundaryNetworkOnly(input, technicalAsset, sparringAssetCandidateId) &&
-				!technicalAsset.HasDirectConnection(input, sparringAssetCandidateId) &&
+				!input.HasDirectConnection(technicalAsset, sparringAssetCandidateId) &&
 				!sparringAssetCandidate.Technologies.GetAttribute(types.IsCloseToHighValueTargetsTolerated) {
 				highRisk := technicalAsset.Confidentiality == types.StrictlyConfidential ||
 					technicalAsset.Integrity == types.MissionCritical || technicalAsset.Availability == types.MissionCritical

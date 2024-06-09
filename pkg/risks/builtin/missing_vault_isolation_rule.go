@@ -77,7 +77,7 @@ func (r *MissingVaultIsolationRule) GenerateRisks(input *types.Model) ([]*types.
 }
 
 func isVaultStorage(parsedModel *types.Model, vault *types.TechnicalAsset, storage *types.TechnicalAsset) bool {
-	return storage.Type == types.Datastore && vault.HasDirectConnection(parsedModel, storage.Id)
+	return storage.Type == types.Datastore && parsedModel.HasDirectConnection(vault, storage.Id)
 }
 
 func (r *MissingVaultIsolationRule) createRisk(techAsset *types.TechnicalAsset, moreImpact bool, sameExecutionEnv bool) *types.Risk {

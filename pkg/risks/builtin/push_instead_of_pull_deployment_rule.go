@@ -59,9 +59,9 @@ func (r *PushInsteadPullDeploymentRule) GenerateRisks(input *types.Model) ([]*ty
 			if targetAsset.Technologies.GetAttribute(types.IsDevelopmentRelevant) || targetAsset.Usage == types.DevOps {
 				continue
 			}
-			if targetAsset.HighestProcessedConfidentiality(input) >= types.Confidential ||
-				targetAsset.HighestProcessedIntegrity(input) >= types.Critical ||
-				targetAsset.HighestProcessedAvailability(input) >= types.Critical {
+			if input.HighestProcessedConfidentiality(targetAsset) >= types.Confidential ||
+				input.HighestProcessedIntegrity(targetAsset) >= types.Critical ||
+				input.HighestProcessedAvailability(targetAsset) >= types.Critical {
 				impact = types.MediumImpact
 			}
 			risks = append(risks, r.createRisk(buildPipeline, targetAsset, deploymentLink, impact))

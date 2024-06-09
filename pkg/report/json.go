@@ -9,7 +9,7 @@ import (
 )
 
 func WriteRisksJSON(parsedModel *types.Model, filename string) error {
-	jsonBytes, err := json.Marshal(types.AllRisks(parsedModel))
+	jsonBytes, err := json.Marshal(parsedModel.AllRisks())
 	if err != nil {
 		return fmt.Errorf("failed to marshal risks to JSON: %w", err)
 	}
@@ -46,8 +46,8 @@ func WriteStatsJSON(parsedModel *types.Model, filename string) error {
 	return nil
 }
 
-func overallRiskStatistics(parsedModel *types.Model) types.RiskStatistics {
-	result := types.RiskStatistics{}
+func overallRiskStatistics(parsedModel *types.Model) riskStatistics {
+	result := riskStatistics{}
 	result.Risks = make(map[string]map[string]int)
 	result.Risks[types.CriticalSeverity.String()] = make(map[string]int)
 	result.Risks[types.CriticalSeverity.String()][types.Unchecked.String()] = 0
@@ -90,4 +90,9 @@ func overallRiskStatistics(parsedModel *types.Model) types.RiskStatistics {
 		}
 	}
 	return result
+}
+
+type riskStatistics struct {
+	// TODO add also some more like before / after (i.e. with mitigation applied)
+	Risks map[string]map[string]int `yaml:"risks" json:"risks"`
 }

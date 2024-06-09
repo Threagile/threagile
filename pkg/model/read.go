@@ -143,8 +143,8 @@ func applyRiskGeneration(parsedModel *types.Model, rules types.RiskRules,
 	}
 
 	// save also in map keyed by synthetic risk-id
-	for _, category := range types.SortedRiskCategories(parsedModel) {
-		someRisks := types.SortedRisksOfCategory(parsedModel, category)
+	for _, category := range parsedModel.SortedRiskCategories() {
+		someRisks := parsedModel.SortedRisksOfCategory(category)
 		for _, risk := range someRisks {
 			parsedModel.GeneratedRisksBySyntheticId[strings.ToLower(risk.SyntheticId)] = risk
 		}

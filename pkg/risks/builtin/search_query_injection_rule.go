@@ -73,9 +73,9 @@ func (r *SearchQueryInjectionRule) createRisk(input *types.Model, technicalAsset
 	title := "<b>Search Query Injection</b> risk at <b>" + caller.Title + "</b> against search engine server <b>" + technicalAsset.Title + "</b>" +
 		" via <b>" + incomingFlow.Title + "</b>"
 	impact := types.MediumImpact
-	if technicalAsset.HighestProcessedConfidentiality(input) == types.StrictlyConfidential || technicalAsset.HighestProcessedIntegrity(input) == types.MissionCritical {
+	if input.HighestProcessedConfidentiality(technicalAsset) == types.StrictlyConfidential || input.HighestProcessedIntegrity(technicalAsset) == types.MissionCritical {
 		impact = types.HighImpact
-	} else if technicalAsset.HighestProcessedConfidentiality(input) <= types.Internal && technicalAsset.HighestProcessedIntegrity(input) == types.Operational {
+	} else if input.HighestProcessedConfidentiality(technicalAsset) <= types.Internal && input.HighestProcessedIntegrity(technicalAsset) == types.Operational {
 		impact = types.LowImpact
 	}
 	risk := &types.Risk{

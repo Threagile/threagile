@@ -85,9 +85,9 @@ func (r *UntrustedDeserializationRule) createRisk(parsedModel *types.Model, tech
 		likelihood = types.VeryLikely
 		title += " across a trust boundary (at least via communication link <b>" + commLinkTitle + "</b>)"
 	}
-	if technicalAsset.HighestProcessedConfidentiality(parsedModel) == types.StrictlyConfidential ||
-		technicalAsset.HighestProcessedIntegrity(parsedModel) == types.MissionCritical ||
-		technicalAsset.HighestProcessedAvailability(parsedModel) == types.MissionCritical {
+	if parsedModel.HighestProcessedConfidentiality(technicalAsset) == types.StrictlyConfidential ||
+		parsedModel.HighestProcessedIntegrity(technicalAsset) == types.MissionCritical ||
+		parsedModel.HighestProcessedAvailability(technicalAsset) == types.MissionCritical {
 		impact = types.VeryHighImpact
 	}
 	risk := &types.Risk{

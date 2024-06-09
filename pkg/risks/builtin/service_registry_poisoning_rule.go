@@ -56,9 +56,9 @@ func (r *ServiceRegistryPoisoningRule) createRisk(input *types.Model, technicalA
 
 	for _, incomingFlow := range incomingFlows {
 		caller := input.TechnicalAssets[incomingFlow.SourceId]
-		if technicalAsset.HighestProcessedConfidentiality(input) == types.StrictlyConfidential || technicalAsset.HighestProcessedIntegrity(input) == types.MissionCritical || technicalAsset.HighestProcessedAvailability(input) == types.MissionCritical ||
-			caller.HighestProcessedConfidentiality(input) == types.StrictlyConfidential || caller.HighestProcessedIntegrity(input) == types.MissionCritical || caller.HighestProcessedAvailability(input) == types.MissionCritical ||
-			incomingFlow.HighestConfidentiality(input) == types.StrictlyConfidential || incomingFlow.HighestIntegrity(input) == types.MissionCritical || incomingFlow.HighestAvailability(input) == types.MissionCritical {
+		if input.HighestProcessedConfidentiality(technicalAsset) == types.StrictlyConfidential || input.HighestProcessedIntegrity(technicalAsset) == types.MissionCritical || input.HighestProcessedAvailability(technicalAsset) == types.MissionCritical ||
+			input.HighestProcessedConfidentiality(caller) == types.StrictlyConfidential || input.HighestProcessedIntegrity(caller) == types.MissionCritical || input.HighestProcessedAvailability(caller) == types.MissionCritical ||
+			input.HighestCommunicationLinkConfidentiality(incomingFlow) == types.StrictlyConfidential || input.HighestCommunicationLinkIntegrity(incomingFlow) == types.MissionCritical || input.HighestCommunicationLinkAvailability(incomingFlow) == types.MissionCritical {
 			impact = types.MediumImpact
 			break
 		}

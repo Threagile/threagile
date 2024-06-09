@@ -55,9 +55,9 @@ func (r *ContainerBaseImageBackdooringRule) GenerateRisks(parsedModel *types.Mod
 func (r *ContainerBaseImageBackdooringRule) createRisk(parsedModel *types.Model, technicalAsset *types.TechnicalAsset) *types.Risk {
 	title := "<b>Container Base Image Backdooring</b> risk at <b>" + technicalAsset.Title + "</b>"
 	impact := types.MediumImpact
-	if technicalAsset.HighestProcessedConfidentiality(parsedModel) == types.StrictlyConfidential ||
-		technicalAsset.HighestProcessedIntegrity(parsedModel) == types.MissionCritical ||
-		technicalAsset.HighestProcessedAvailability(parsedModel) == types.MissionCritical {
+	if parsedModel.HighestProcessedConfidentiality(technicalAsset) == types.StrictlyConfidential ||
+		parsedModel.HighestProcessedIntegrity(technicalAsset) == types.MissionCritical ||
+		parsedModel.HighestProcessedAvailability(technicalAsset) == types.MissionCritical {
 		impact = types.HighImpact
 	}
 	risk := &types.Risk{

@@ -61,9 +61,9 @@ func (r *MissingIdentityStoreRule) GenerateRisks(input *types.Model) ([]*types.R
 			targetAsset := input.TechnicalAssets[commLink.TargetId]
 			if impact == types.LowImpact {
 				mostRelevantAsset = targetAsset
-				if targetAsset.HighestProcessedConfidentiality(input) >= types.Confidential ||
-					targetAsset.HighestProcessedIntegrity(input) >= types.Critical ||
-					targetAsset.HighestProcessedAvailability(input) >= types.Critical {
+				if input.HighestProcessedConfidentiality(targetAsset) >= types.Confidential ||
+					input.HighestProcessedIntegrity(targetAsset) >= types.Critical ||
+					input.HighestProcessedAvailability(targetAsset) >= types.Critical {
 					impact = types.MediumImpact
 				}
 			}

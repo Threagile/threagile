@@ -5,7 +5,6 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package types
 
 import (
-	"fmt"
 	"sort"
 )
 
@@ -50,61 +49,6 @@ func (what TechnicalAsset) HighestSensitivityScore() float64 {
 		what.Availability.AttackerAttractivenessForAsset()
 }
 
-func (what TechnicalAsset) HighestConfidentiality(model *Model) Confidentiality {
-	highest := what.Confidentiality
-	highestProcessed := what.HighestProcessedConfidentiality(model)
-	if highest < highestProcessed {
-		highest = highestProcessed
-	}
-
-	highestStored := what.HighestStoredConfidentiality(model)
-	if highest < highestStored {
-		highest = highestStored
-	}
-
-	return highest
-}
-
-func (what TechnicalAsset) HighestProcessedConfidentiality(parsedModel *Model) Confidentiality {
-	highest := what.Confidentiality
-	for _, dataId := range what.DataAssetsProcessed {
-		dataAsset := parsedModel.DataAssets[dataId]
-		if dataAsset.Confidentiality > highest {
-			highest = dataAsset.Confidentiality
-		}
-	}
-	return highest
-}
-
-func (what TechnicalAsset) HighestStoredConfidentiality(parsedModel *Model) Confidentiality {
-	highest := what.Confidentiality
-	for _, dataId := range what.DataAssetsStored {
-		dataAsset := parsedModel.DataAssets[dataId]
-		if dataAsset.Confidentiality > highest {
-			highest = dataAsset.Confidentiality
-		}
-	}
-	return highest
-}
-
-func (what TechnicalAsset) DataAssetsProcessedSorted(parsedModel *Model) []*DataAsset {
-	result := make([]*DataAsset, 0)
-	for _, assetID := range what.DataAssetsProcessed {
-		result = append(result, parsedModel.DataAssets[assetID])
-	}
-	sort.Sort(ByDataAssetTitleSort(result))
-	return result
-}
-
-func (what TechnicalAsset) DataAssetsStoredSorted(parsedModel *Model) []*DataAsset {
-	result := make([]*DataAsset, 0)
-	for _, assetID := range what.DataAssetsStored {
-		result = append(result, parsedModel.DataAssets[assetID])
-	}
-	sort.Sort(ByDataAssetTitleSort(result))
-	return result
-}
-
 func (what TechnicalAsset) DataFormatsAcceptedSorted() []DataFormat {
 	result := make([]DataFormat, 0)
 	result = append(result, what.DataFormatsAccepted...)
@@ -119,110 +63,36 @@ func (what TechnicalAsset) CommunicationLinksSorted() []*CommunicationLink {
 	return result
 }
 
-func (what TechnicalAsset) HighestIntegrity(model *Model) Criticality {
-	highest := what.Integrity
-	highestProcessed := what.HighestProcessedIntegrity(model)
-	if highest < highestProcessed {
-		highest = highestProcessed
-	}
+type ByTechnicalAssetRAAAndTitleSort []*TechnicalAsset
 
-	highestStored := what.HighestStoredIntegrity(model)
-	if highest < highestStored {
-		highest = highestStored
+func (what ByTechnicalAssetRAAAndTitleSort) Len() int      { return len(what) }
+func (what ByTechnicalAssetRAAAndTitleSort) Swap(i, j int) { what[i], what[j] = what[j], what[i] }
+func (what ByTechnicalAssetRAAAndTitleSort) Less(i, j int) bool {
+	raaLeft := what[i].RAA
+	raaRight := what[j].RAA
+	if raaLeft == raaRight {
+		return what[i].Title < what[j].Title
 	}
-
-	return highest
+	return raaLeft > raaRight
 }
 
-func (what TechnicalAsset) HighestProcessedIntegrity(model *Model) Criticality {
-	highest := what.Integrity
-	for _, dataId := range what.DataAssetsProcessed {
-		dataAsset := model.DataAssets[dataId]
-		if dataAsset.Integrity > highest {
-			highest = dataAsset.Integrity
-		}
-	}
-	return highest
+type ByTechnicalAssetTitleSort []*TechnicalAsset
+
+func (what ByTechnicalAssetTitleSort) Len() int      { return len(what) }
+func (what ByTechnicalAssetTitleSort) Swap(i, j int) { what[i], what[j] = what[j], what[i] }
+func (what ByTechnicalAssetTitleSort) Less(i, j int) bool {
+	return what[i].Title < what[j].Title
 }
 
-func (what TechnicalAsset) HighestStoredIntegrity(model *Model) Criticality {
-	highest := what.Integrity
-	for _, dataId := range what.DataAssetsStored {
-		dataAsset := model.DataAssets[dataId]
-		if dataAsset.Integrity > highest {
-			highest = dataAsset.Integrity
-		}
-	}
-	return highest
-}
+type ByOrderAndIdSort []*TechnicalAsset
 
-func (what TechnicalAsset) HighestAvailability(model *Model) Criticality {
-	highest := what.Availability
-	highestProcessed := what.HighestProcessedAvailability(model)
-	if highest < highestProcessed {
-		highest = highestProcessed
+func (what ByOrderAndIdSort) Len() int      { return len(what) }
+func (what ByOrderAndIdSort) Swap(i, j int) { what[i], what[j] = what[j], what[i] }
+func (what ByOrderAndIdSort) Less(i, j int) bool {
+	if what[i].DiagramTweakOrder == what[j].DiagramTweakOrder {
+		return what[i].Id > what[j].Id
 	}
-
-	highestStored := what.HighestStoredAvailability(model)
-	if highest < highestStored {
-		highest = highestStored
-	}
-
-	return highest
-}
-
-func (what TechnicalAsset) HighestProcessedAvailability(model *Model) Criticality {
-	highest := what.Availability
-	for _, dataId := range what.DataAssetsProcessed {
-		dataAsset := model.DataAssets[dataId]
-		if dataAsset.Availability > highest {
-			highest = dataAsset.Availability
-		}
-	}
-	return highest
-}
-
-func (what TechnicalAsset) HighestStoredAvailability(model *Model) Criticality {
-	highest := what.Availability
-	for _, dataId := range what.DataAssetsStored {
-		dataAsset := model.DataAssets[dataId]
-		if dataAsset.Availability > highest {
-			highest = dataAsset.Availability
-		}
-	}
-	return highest
-}
-
-func (what TechnicalAsset) HasDirectConnection(parsedModel *Model, otherAssetId string) bool {
-	for _, dataFlow := range parsedModel.IncomingTechnicalCommunicationLinksMappedByTargetId[what.Id] {
-		if dataFlow.SourceId == otherAssetId {
-			return true
-		}
-	}
-	// check both directions, hence two times, just reversed
-	for _, dataFlow := range parsedModel.IncomingTechnicalCommunicationLinksMappedByTargetId[otherAssetId] {
-		if dataFlow.SourceId == what.Id {
-			return true
-		}
-	}
-	return false
-}
-
-func (what TechnicalAsset) GeneratedRisks(parsedModel *Model) []*Risk {
-	resultingRisks := make([]*Risk, 0)
-	if len(SortedRiskCategories(parsedModel)) == 0 {
-		fmt.Println("Uh, strange, no risks generated (yet?) and asking for them by tech asset...")
-	}
-	for _, category := range SortedRiskCategories(parsedModel) {
-		risks := SortedRisksOfCategory(parsedModel, category)
-		for _, risk := range risks {
-			if risk.MostRelevantTechnicalAssetId == what.Id {
-				resultingRisks = append(resultingRisks, risk)
-			}
-		}
-	}
-	SortByRiskSeverity(resultingRisks, parsedModel)
-	return resultingRisks
+	return what[i].DiagramTweakOrder < what[j].DiagramTweakOrder
 }
 
 /*
@@ -266,30 +136,6 @@ func (what TechnicalAsset) QuickWins() float64 {
 }
 */
 
-func (what TechnicalAsset) GetTrustBoundaryId(model *Model) string {
-	for _, trustBoundary := range model.TrustBoundaries {
-		for _, techAssetInside := range trustBoundary.TechnicalAssetsInside {
-			if techAssetInside == what.Id {
-				return trustBoundary.Id
-			}
-		}
-	}
-	return ""
-}
-
-type ByTechnicalAssetRAAAndTitleSort []*TechnicalAsset
-
-func (what ByTechnicalAssetRAAAndTitleSort) Len() int      { return len(what) }
-func (what ByTechnicalAssetRAAAndTitleSort) Swap(i, j int) { what[i], what[j] = what[j], what[i] }
-func (what ByTechnicalAssetRAAAndTitleSort) Less(i, j int) bool {
-	raaLeft := what[i].RAA
-	raaRight := what[j].RAA
-	if raaLeft == raaRight {
-		return what[i].Title < what[j].Title
-	}
-	return raaLeft > raaRight
-}
-
 /*
 type ByTechnicalAssetQuickWinsAndTitleSort []TechnicalAsset
 
@@ -304,22 +150,3 @@ func (what ByTechnicalAssetQuickWinsAndTitleSort) Less(i, j int) bool {
 	return qwLeft > qwRight
 }
 */
-
-type ByTechnicalAssetTitleSort []*TechnicalAsset
-
-func (what ByTechnicalAssetTitleSort) Len() int      { return len(what) }
-func (what ByTechnicalAssetTitleSort) Swap(i, j int) { what[i], what[j] = what[j], what[i] }
-func (what ByTechnicalAssetTitleSort) Less(i, j int) bool {
-	return what[i].Title < what[j].Title
-}
-
-type ByOrderAndIdSort []*TechnicalAsset
-
-func (what ByOrderAndIdSort) Len() int      { return len(what) }
-func (what ByOrderAndIdSort) Swap(i, j int) { what[i], what[j] = what[j], what[i] }
-func (what ByOrderAndIdSort) Less(i, j int) bool {
-	if what[i].DiagramTweakOrder == what[j].DiagramTweakOrder {
-		return what[i].Id > what[j].Id
-	}
-	return what[i].DiagramTweakOrder < what[j].DiagramTweakOrder
-}

@@ -457,7 +457,7 @@ func makeDiagramSameRankNodeTweaks(parsedModel *types.Model) (string, error) {
 					if err != nil {
 						return "", fmt.Errorf("error while checking technical asset existence: %s", err)
 					}
-					if len(parsedModel.TechnicalAssets[id].GetTrustBoundaryId(parsedModel)) > 0 {
+					if len(parsedModel.GetTechnicalAssetTrustBoundaryId(parsedModel.TechnicalAssets[id])) > 0 {
 						return "", fmt.Errorf("technical assets (referenced in same rank diagram tweak) are inside trust boundaries: " +
 							fmt.Sprintf("%v", parsedModel.DiagramTweakSameRankAssets))
 					}
@@ -586,8 +586,8 @@ func WriteDataAssetDiagramGraphvizDOT(parsedModel *types.Model, diagramFilenameD
 
 func sortByDataAssetDataBreachProbabilityAndTitle(parsedModel *types.Model, assets []*types.DataAsset) {
 	sort.Slice(assets, func(i, j int) bool {
-		highestDataBreachProbabilityLeft := assets[i].IdentifiedDataBreachProbability(parsedModel)
-		highestDataBreachProbabilityRight := assets[j].IdentifiedDataBreachProbability(parsedModel)
+		highestDataBreachProbabilityLeft := parsedModel.IdentifiedDataBreachProbability(assets[i])
+		highestDataBreachProbabilityRight := parsedModel.IdentifiedDataBreachProbability(assets[j])
 		if highestDataBreachProbabilityLeft == highestDataBreachProbabilityRight {
 			return assets[i].Title < assets[j].Title
 		}
@@ -617,8 +617,8 @@ func makeTechAssetNode(parsedModel *types.Model, technicalAsset *types.Technical
 	if simplified {
 		color := rgbHexColorOutOfScope()
 		if !technicalAsset.OutOfScope {
-			generatedRisks := technicalAsset.GeneratedRisks(parsedModel)
-			switch types.HighestSeverityStillAtRisk(parsedModel, generatedRisks) {
+			generatedRisks := parsedModel.GeneratedRisks(technicalAsset)
+			switch types.HighestSeverityStillAtRisk(generatedRisks) {
 			case types.CriticalSeverity:
 				color = rgbHexColorCriticalRisk()
 			case types.HighSeverity:

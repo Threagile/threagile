@@ -64,7 +64,7 @@ func (r *CrossSiteRequestForgeryRule) createRisk(parsedModel *types.Model, techn
 	sourceAsset := parsedModel.TechnicalAssets[incomingFlow.SourceId]
 	title := "<b>Cross-Site Request Forgery (CSRF)</b> risk at <b>" + technicalAsset.Title + "</b> via <b>" + incomingFlow.Title + "</b> from <b>" + sourceAsset.Title + "</b>"
 	impact := types.LowImpact
-	if incomingFlow.HighestIntegrity(parsedModel) == types.MissionCritical {
+	if parsedModel.HighestCommunicationLinkIntegrity(incomingFlow) == types.MissionCritical {
 		impact = types.MediumImpact
 	}
 	likelihood := r.likelihoodFromUsage(incomingFlow)

@@ -373,17 +373,17 @@ func ParseModel(config technologyMapConfigReader, modelInput *input.Model, built
 
 	// If CIA is lower than that of its data assets, it is implicitly set to the highest CIA value of its data assets
 	for id, techAsset := range parsedModel.TechnicalAssets {
-		dataAssetConfidentiality := techAsset.HighestConfidentiality(&parsedModel)
+		dataAssetConfidentiality := parsedModel.HighestTechnicalAssetConfidentiality(techAsset)
 		if techAsset.Confidentiality < dataAssetConfidentiality {
 			techAsset.Confidentiality = dataAssetConfidentiality
 		}
 
-		dataAssetIntegrity := techAsset.HighestIntegrity(&parsedModel)
+		dataAssetIntegrity := parsedModel.HighestIntegrity(techAsset)
 		if techAsset.Integrity < dataAssetIntegrity {
 			techAsset.Integrity = dataAssetIntegrity
 		}
 
-		dataAssetAvailability := techAsset.HighestAvailability(&parsedModel)
+		dataAssetAvailability := parsedModel.HighestAvailability(techAsset)
 		if techAsset.Availability < dataAssetAvailability {
 			techAsset.Availability = dataAssetAvailability
 		}
