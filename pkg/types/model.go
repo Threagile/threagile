@@ -824,3 +824,24 @@ func (model *Model) GeneratedRisks(what *TechnicalAsset) []*Risk {
 	SortByRiskSeverity(resultingRisks)
 	return resultingRisks
 }
+
+func (model *Model) GetRiskTracking(what *Risk) *RiskTracking { // TODO: Unify function naming regarding Get etc.
+	if riskTracking, ok := model.RiskTracking[what.SyntheticId]; ok {
+		return riskTracking
+	}
+	return nil
+}
+
+func (model *Model) GetRiskTrackingWithDefault(what *Risk) RiskTracking { // TODO: Unify function naming regarding Get etc.
+	if riskTracking, ok := model.RiskTracking[what.SyntheticId]; ok {
+		return *riskTracking
+	}
+	return RiskTracking{}
+}
+
+func (model *Model) IsRiskTracked(what *Risk) bool {
+	if _, ok := model.RiskTracking[what.SyntheticId]; ok {
+		return true
+	}
+	return false
+}

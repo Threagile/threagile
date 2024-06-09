@@ -17,24 +17,3 @@ type Risk struct {
 	DataBreachTechnicalAssetIDs     []string                   `yaml:"data_breach_technical_assets,omitempty" json:"data_breach_technical_assets,omitempty"`
 	// TODO: refactor all "ID" here to "ID"?
 }
-
-func (what Risk) GetRiskTracking(model *Model) *RiskTracking { // TODO: Unify function naming regarding Get etc.
-	if riskTracking, ok := model.RiskTracking[what.SyntheticId]; ok {
-		return riskTracking
-	}
-	return nil
-}
-
-func (what Risk) GetRiskTrackingWithDefault(model *Model) RiskTracking { // TODO: Unify function naming regarding Get etc.
-	if riskTracking, ok := model.RiskTracking[what.SyntheticId]; ok {
-		return *riskTracking
-	}
-	return RiskTracking{}
-}
-
-func (what Risk) IsRiskTracked(model *Model) bool {
-	if _, ok := model.RiskTracking[what.SyntheticId]; ok {
-		return true
-	}
-	return false
-}

@@ -42,7 +42,7 @@ func (*SeedRiskTrackingMacro) GetFinalChangeImpact(_ *input.Model, _ *types.Mode
 func (*SeedRiskTrackingMacro) Execute(modelInput *input.Model, parsedModel *types.Model) (message string, validResult bool, err error) {
 	syntheticRiskIDsToCreateTrackingFor := make([]string, 0)
 	for id, risk := range parsedModel.GeneratedRisksBySyntheticId {
-		if !risk.IsRiskTracked(parsedModel) {
+		if !parsedModel.IsRiskTracked(risk) {
 			syntheticRiskIDsToCreateTrackingFor = append(syntheticRiskIDsToCreateTrackingFor, id)
 		}
 	}

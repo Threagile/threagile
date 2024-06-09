@@ -98,7 +98,7 @@ func WriteRisksExcelToFile(parsedModel *types.Model, filename string, config rep
 			}
 
 			date := ""
-			riskTracking := risk.GetRiskTrackingWithDefault(parsedModel)
+			riskTracking := parsedModel.GetRiskTrackingWithDefault(risk)
 			if !riskTracking.Date.IsZero() {
 				date = riskTracking.Date.Format("2006-01-02")
 			}

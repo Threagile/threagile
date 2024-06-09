@@ -2758,7 +2758,7 @@ func (r *pdfReporter) createRiskCategories(parsedModel *types.Model) {
 
 func (r *pdfReporter) writeRiskTrackingStatus(parsedModel *types.Model, risk *types.Risk) {
 	uni := r.pdf.UnicodeTranslatorFromDescriptor("")
-	tracking := risk.GetRiskTrackingWithDefault(parsedModel)
+	tracking := parsedModel.GetRiskTrackingWithDefault(risk)
 	r.pdfColorBlack()
 	r.pdf.CellFormat(10, 6, "", "0", 0, "", false, 0, "")
 	switch tracking.Status {
