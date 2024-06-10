@@ -22,6 +22,7 @@ type WrongCommunicationLinkContentRuleTest struct {
 	sendAnyData       bool
 	readonly          bool
 	protocol          types.Protocol
+	targetAssetType   types.TechnicalAssetType
 	isLibrary         bool
 	isLocalFileSystem bool
 	machine           types.TechnicalAssetMachine
@@ -125,14 +126,15 @@ func TestWrongCommunicationLinkContentRuleSendDataAssetRisksCreated(t *testing.T
 			isLibrary:      false,
 
 			riskCreated:    true,
-			expectedReason: "(protocol type \"InterProcessCommunication\" does not match target technology type \"\": expected \"process\")",
+			expectedReason: "(protocol type \"inter-process-communication\" does not match target technology type \"\": expected \"process\")",
 		},
 		"protocol type InterProcessCommunication match target technology type Process": {
-			receiveAnyData: false,
-			sendAnyData:    false,
-			readonly:       false,
-			protocol:       types.InterProcessCommunication,
-			isLibrary:      true,
+			receiveAnyData:  false,
+			sendAnyData:     false,
+			readonly:        false,
+			protocol:        types.InterProcessCommunication,
+			targetAssetType: types.Process,
+			isLibrary:       true,
 
 			riskCreated: false,
 		},
@@ -209,6 +211,7 @@ func TestWrongCommunicationLinkContentRuleSendDataAssetRisksCreated(t *testing.T
 						Id:      "target",
 						Title:   "Target Technical Asset",
 						Machine: testCase.machine,
+						Type:    testCase.targetAssetType,
 						Technologies: types.TechnologyList{
 							{
 								Attributes: map[string]bool{
