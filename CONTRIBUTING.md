@@ -41,19 +41,28 @@ To run the code with VS Code add launch.json with this content and simply use ``
           "program": "${workspaceFolder}/cmd/threagile",
           "args": [
             "help",
-            "--ignore-orphaned-risk-tracking",
-            "--model",
-            "./threagile.yaml",
-            "--app-dir",
-            "directory_with_support_files",
-            "--temp-dir",
-            "./",
-            "-v"
+            "--config",
+            "./config.json",
           ]
         }
     ]
 }
 ```
+
+Where  config.json
+
+```
+{
+    "appFolder": "/Users/Yevhen.Zavhorodnii/app",
+    "tempFolder": "./",
+    "diagramDPI": 96,
+    "inputFile": "./threagile.yaml",
+    "ignoreOrphanedRiskTracking": true,
+    "verbose": true
+}
+```
+
+Where
 
 ```directory_with_support_files``` is a directory where support files are located:
 
