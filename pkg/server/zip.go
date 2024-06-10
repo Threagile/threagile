@@ -56,11 +56,11 @@ func unzip(src string, dest string) ([]string, error) {
 		filenames = append(filenames, path)
 		if f.FileInfo().IsDir() {
 			// Make Folder
-			_ = os.MkdirAll(path, os.ModePerm)
+			_ = os.MkdirAll(path, 0700)
 			continue
 		}
 		// Make File
-		if err = os.MkdirAll(filepath.Dir(path), os.ModePerm); err != nil {
+		if err = os.MkdirAll(filepath.Dir(path), 0700); err != nil {
 			return filenames, err
 		}
 		if path != filepath.Clean(path) {
