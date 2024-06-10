@@ -40,8 +40,8 @@ FROM alpine:latest as finalize
 LABEL type="threagile"
 
 # update vulnerable packages
-RUN apk add libcrypto3=3.1.4-r5
-RUN apk add libssl3=3.1.4-r5
+RUN apk add libcrypto3=3.3.1-r0
+RUN apk add libssl3=3.3.1-r0
 
 # add certificates, graphviz, fonts
 RUN apk add --update --no-cache ca-certificates
