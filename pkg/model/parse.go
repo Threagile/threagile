@@ -12,8 +12,8 @@ import (
 )
 
 type technologyMapConfigReader interface {
-	AppFolder() string
-	TechnologyFilename() string
+	GetAppFolder() string
+	GetTechnologyFilename() string
 }
 
 func ParseModel(config technologyMapConfigReader, modelInput *input.Model, builtinRiskRules types.RiskRules, customRiskRules types.RiskRules) (*types.Model, error) {

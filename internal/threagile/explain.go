@@ -52,7 +52,7 @@ func (what *Threagile) initExplainNew() *Threagile {
 
 func (what *Threagile) explainRisk(cmd *cobra.Command, _ []string) error {
 	cfg := what.readConfig(cmd, what.buildTimestamp)
-	progressReporter := DefaultProgressReporter{Verbose: cfg.Verbose()}
+	progressReporter := DefaultProgressReporter{Verbose: cfg.GetVerbose()}
 
 	// todo: reuse model if already loaded
 

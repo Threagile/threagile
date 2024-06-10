@@ -50,7 +50,7 @@ func (what *Threagile) initCreate() *Threagile {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cfg := what.readConfig(cmd, what.buildTimestamp)
 
-			err := examples.CreateStubModelFile(cfg.AppFolder(), cfg.OutputFolder(), InputFile)
+			err := examples.CreateStubModelFile(cfg.GetAppFolder(), cfg.GetOutputFolder(), InputFile)
 			if err != nil {
 				cmd.Printf("Unable to copy stub model: %v", err)
 				return err
@@ -59,7 +59,7 @@ func (what *Threagile) initCreate() *Threagile {
 			if !what.flags.interactiveFlag {
 				cmd.Println(Logo + "\n\n" + fmt.Sprintf(VersionText, what.buildTimestamp))
 			}
-			cmd.Printf("A minimal stub model was created named threagile-stub-model.yaml in %q.\n", cfg.OutputFolder())
+			cmd.Printf("A minimal stub model was created named threagile-stub-model.yaml in %q.\n", cfg.GetOutputFolder())
 			if !what.flags.interactiveFlag {
 				cmd.Println()
 				cmd.Println(Examples)

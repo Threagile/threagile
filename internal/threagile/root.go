@@ -55,23 +55,22 @@ func (what *Threagile) initRoot() *Threagile {
 
 	defaultConfig := new(Config).Defaults(what.buildTimestamp)
 
-	what.rootCmd.PersistentFlags().StringVar(&what.flags.appDirFlag, appDirFlagName, defaultConfig.AppFolder(), "app folder")
-	what.rootCmd.PersistentFlags().StringVar(&what.flags.pluginDirFlag, pluginDirFlagName, defaultConfig.PluginFolder(), "plugin folder location")
-	what.rootCmd.PersistentFlags().StringVar(&what.flags.outputDirFlag, outputFlagName, defaultConfig.OutputFolder(), "output directory")
-	what.rootCmd.PersistentFlags().StringVar(&what.flags.tempDirFlag, tempDirFlagName, defaultConfig.TempFolder(), "temporary folder location")
+	what.rootCmd.PersistentFlags().StringVar(&what.flags.appDirFlag, appDirFlagName, defaultConfig.AppFolder, "app folder")
+	what.rootCmd.PersistentFlags().StringVar(&what.flags.outputDirFlag, outputFlagName, defaultConfig.OutputFolder, "output directory")
+	what.rootCmd.PersistentFlags().StringVar(&what.flags.tempDirFlag, tempDirFlagName, defaultConfig.TempFolder, "temporary folder location")
 
-	what.rootCmd.PersistentFlags().StringVar(&what.flags.inputFileFlag, inputFileFlagName, defaultConfig.InputFile(), "input model yaml file")
+	what.rootCmd.PersistentFlags().StringVar(&what.flags.inputFileFlag, inputFileFlagName, defaultConfig.InputFile, "input model yaml file")
 
 	what.rootCmd.PersistentFlags().BoolVarP(&what.flags.interactiveFlag, interactiveFlagName, interactiveFlagShorthand, defaultConfig.Interactive, "interactive mode")
-	what.rootCmd.PersistentFlags().BoolVarP(&what.flags.verboseFlag, verboseFlagName, verboseFlagShorthand, defaultConfig.Verbose(), "verbose output")
+	what.rootCmd.PersistentFlags().BoolVarP(&what.flags.verboseFlag, verboseFlagName, verboseFlagShorthand, defaultConfig.Verbose, "verbose output")
 
 	what.rootCmd.PersistentFlags().StringVar(&what.flags.configFlag, configFlagName, "", "config file")
 
-	what.rootCmd.PersistentFlags().StringVar(&what.flags.customRiskRulesPluginFlag, customRiskRulesPluginFlagName, strings.Join(defaultConfig.RiskRulesPlugins(), ","), "comma-separated list of plugins file names with custom risk rules to load")
-	what.rootCmd.PersistentFlags().IntVar(&what.flags.diagramDpiFlag, diagramDpiFlagName, defaultConfig.DiagramDPI(), "DPI used to render: maximum is "+fmt.Sprintf("%d", defaultConfig.MaxGraphvizDPI())+"")
-	what.rootCmd.PersistentFlags().StringVar(&what.flags.skipRiskRulesFlag, skipRiskRulesFlagName, strings.Join(defaultConfig.SkipRiskRules(), ","), "comma-separated list of risk rules (by their ID) to skip")
-	what.rootCmd.PersistentFlags().BoolVar(&what.flags.ignoreOrphanedRiskTrackingFlag, ignoreOrphanedRiskTrackingFlagName, defaultConfig.IgnoreOrphanedRiskTracking(), "ignore orphaned risk tracking (just log them) not matching a concrete risk")
-	what.rootCmd.PersistentFlags().StringVar(&what.flags.templateFileNameFlag, templateFileNameFlagName, defaultConfig.TemplateFilename(), "background pdf file")
+	what.rootCmd.PersistentFlags().StringVar(&what.flags.customRiskRulesPluginFlag, customRiskRulesPluginFlagName, strings.Join(defaultConfig.RiskRulesPlugins, ","), "comma-separated list of plugins file names with custom risk rules to load")
+	what.rootCmd.PersistentFlags().IntVar(&what.flags.diagramDpiFlag, diagramDpiFlagName, defaultConfig.DiagramDPI, "DPI used to render: maximum is "+fmt.Sprintf("%d", defaultConfig.MaxGraphvizDPI)+"")
+	what.rootCmd.PersistentFlags().StringVar(&what.flags.skipRiskRulesFlag, skipRiskRulesFlagName, strings.Join(defaultConfig.SkipRiskRules, ","), "comma-separated list of risk rules (by their ID) to skip")
+	what.rootCmd.PersistentFlags().BoolVar(&what.flags.ignoreOrphanedRiskTrackingFlag, ignoreOrphanedRiskTrackingFlagName, defaultConfig.IgnoreOrphanedRiskTracking, "ignore orphaned risk tracking (just log them) not matching a concrete risk")
+	what.rootCmd.PersistentFlags().StringVar(&what.flags.templateFileNameFlag, templateFileNameFlagName, defaultConfig.TemplateFilename, "background pdf file")
 
 	what.rootCmd.PersistentFlags().BoolVar(&what.flags.generateDataFlowDiagramFlag, generateDataFlowDiagramFlagName, true, "generate data flow diagram")
 	what.rootCmd.PersistentFlags().BoolVar(&what.flags.generateDataAssetDiagramFlag, generateDataAssetDiagramFlagName, true, "generate data asset diagram")
@@ -227,47 +226,44 @@ func (what *Threagile) readConfig(cmd *cobra.Command, buildTimestamp string) *Co
 
 	flags := cmd.Flags()
 	if isFlagOverridden(flags, serverPortFlagName) {
-		cfg.SetServerPort(what.flags.serverPortFlag)
+		cfg.ServerPort = what.flags.serverPortFlag
 	}
 	if isFlagOverridden(flags, serverDirFlagName) {
-		cfg.SetServerFolder(cfg.CleanPath(what.flags.serverDirFlag))
+		cfg.ServerFolder = cfg.CleanPath(what.flags.serverDirFlag)
 	}
 
 	if isFlagOverridden(flags, appDirFlagName) {
-		cfg.SetAppFolder(cfg.CleanPath(what.flags.appDirFlag))
-	}
-	if isFlagOverridden(flags, pluginDirFlagName) {
-		cfg.SetPluginFolder(cfg.CleanPath(what.flags.pluginDirFlag))
+		cfg.AppFolder = cfg.CleanPath(what.flags.appDirFlag)
 	}
 	if isFlagOverridden(flags, outputFlagName) {
-		cfg.SetOutputFolder(cfg.CleanPath(what.flags.outputDirFlag))
+		cfg.OutputFolder = cfg.CleanPath(what.flags.outputDirFlag)
 	}
 	if isFlagOverridden(flags, tempDirFlagName) {
-		cfg.SetTempFolder(cfg.CleanPath(what.flags.tempDirFlag))
+		cfg.TempFolder = cfg.CleanPath(what.flags.tempDirFlag)
 	}
 
 	if isFlagOverridden(flags, verboseFlagName) {
-		cfg.SetVerbose(what.flags.verboseFlag)
+		cfg.Verbose = what.flags.verboseFlag
 	}
 
 	if isFlagOverridden(flags, inputFileFlagName) {
-		cfg.SetInputFile(cfg.CleanPath(what.flags.inputFileFlag))
+		cfg.InputFile = cfg.CleanPath(what.flags.inputFileFlag)
 	}
 
 	if isFlagOverridden(flags, customRiskRulesPluginFlagName) {
-		cfg.SetRiskRulesPlugins(strings.Split(what.flags.customRiskRulesPluginFlag, ","))
+		cfg.RiskRulesPlugins = strings.Split(what.flags.customRiskRulesPluginFlag, ",")
 	}
 	if isFlagOverridden(flags, skipRiskRulesFlagName) {
-		cfg.SetSkipRiskRules(strings.Split(what.flags.skipRiskRulesFlag, ","))
+		cfg.SkipRiskRules = strings.Split(what.flags.skipRiskRulesFlag, ",")
 	}
 	if isFlagOverridden(flags, ignoreOrphanedRiskTrackingFlagName) {
-		cfg.SetIgnoreOrphanedRiskTracking(what.flags.ignoreOrphanedRiskTrackingFlag)
+		cfg.IgnoreOrphanedRiskTracking = what.flags.ignoreOrphanedRiskTrackingFlag
 	}
 	if isFlagOverridden(flags, diagramDpiFlagName) {
-		cfg.SetDiagramDPI(what.flags.diagramDpiFlag)
+		cfg.DiagramDPI = what.flags.diagramDpiFlag
 	}
 	if isFlagOverridden(flags, templateFileNameFlagName) {
-		cfg.SetTemplateFilename(what.flags.templateFileNameFlag)
+		cfg.TemplateFilename = what.flags.templateFileNameFlag
 	}
 	return cfg
 }

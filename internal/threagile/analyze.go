@@ -17,7 +17,7 @@ func (what *Threagile) initAnalyze() *Threagile {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cfg := what.readConfig(cmd, what.buildTimestamp)
 			commands := what.readCommands()
-			progressReporter := DefaultProgressReporter{Verbose: cfg.Verbose()}
+			progressReporter := DefaultProgressReporter{Verbose: cfg.Verbose}
 
 			r, err := model.ReadAndAnalyzeModel(cfg, risks.GetBuiltInRiskRules(), progressReporter)
 			if err != nil {

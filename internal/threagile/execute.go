@@ -21,7 +21,7 @@ func (what *Threagile) initExecute() *Threagile {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cfg := what.readConfig(cmd, what.buildTimestamp)
-			progressReporter := DefaultProgressReporter{Verbose: cfg.Verbose()}
+			progressReporter := DefaultProgressReporter{Verbose: cfg.GetVerbose()}
 
 			r, err := model.ReadAndAnalyzeModel(cfg, risks.GetBuiltInRiskRules(), progressReporter)
 			if err != nil {
@@ -29,7 +29,7 @@ func (what *Threagile) initExecute() *Threagile {
 			}
 
 			macrosId := args[0]
-			err = macros.ExecuteModelMacro(r.ModelInput, cfg.InputFile(), r.ParsedModel, macrosId)
+			err = macros.ExecuteModelMacro(r.ModelInput, cfg.GetInputFile(), r.ParsedModel, macrosId)
 			if err != nil {
 				return fmt.Errorf("unable to execute model macro: %v", err)
 			}

@@ -133,7 +133,7 @@ func WriteRisksExcelToFile(parsedModel *types.Model, filename string, config rep
 	}
 
 	// group risks
-	groupedRisk, groupedRiskError := new(RiskGroup).Make(riskItems, columns, config.RiskExcelConfigSortByColumns())
+	groupedRisk, groupedRiskError := new(RiskGroup).Make(riskItems, columns, config.GetRiskExcelConfigSortByColumns())
 	if groupedRiskError != nil {
 		return fmt.Errorf("failed to group risks: %w", groupedRiskError)
 	}
@@ -160,7 +160,7 @@ func WriteRisksExcelToFile(parsedModel *types.Model, filename string, config rep
 			}
 
 			var minWidth float64 = 0
-			width, widthOk := config.RiskExcelConfigWidthOfColumns()[columns[name].Title]
+			width, widthOk := config.GetRiskExcelConfigWidthOfColumns()[columns[name].Title]
 			if widthOk {
 				minWidth = width
 			} else {
@@ -210,7 +210,7 @@ func WriteRisksExcelToFile(parsedModel *types.Model, filename string, config rep
 
 	// hide some columns
 	for columnLetter, column := range columns {
-		for _, hiddenColumn := range config.RiskExcelConfigHideColumns() {
+		for _, hiddenColumn := range config.GetRiskExcelConfigHideColumns() {
 			if strings.EqualFold(hiddenColumn, column.Title) {
 				hideColumnError := excel.SetColVisible(sheetName, columnLetter, false)
 				if hideColumnError != nil {

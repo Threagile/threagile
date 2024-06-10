@@ -189,10 +189,10 @@ func createDataAsset(confidentiality types.Confidentiality, integrity types.Crit
 type mockConfig struct {
 }
 
-func (m *mockConfig) AppFolder() string {
+func (m *mockConfig) GetAppFolder() string {
 	return ""
 }
 
-func (m *mockConfig) TechnologyFilename() string {
+func (m *mockConfig) GetTechnologyFilename() string {
 	return ""
 }

@@ -14,7 +14,7 @@ func (what *Threagile) initServer() *Threagile {
 		Short: "Run server",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cfg := what.readConfig(cmd, what.buildTimestamp)
-			cfg.SetServerMode(true)
+			cfg.ServerMode = true
 			serverError := cfg.CheckServerFolder()
 			if serverError != nil {
 				return serverError
@@ -24,8 +24,8 @@ func (what *Threagile) initServer() *Threagile {
 		},
 	}
 
-	serverCmd.PersistentFlags().IntVar(&what.flags.serverPortFlag, serverPortFlagName, defaultConfig.ServerPort(), "server port")
-	serverCmd.PersistentFlags().StringVar(&what.flags.serverDirFlag, serverDirFlagName, defaultConfig.DataFolder(), "base folder for server mode (default: "+DataDir+")")
+	serverCmd.PersistentFlags().IntVar(&what.flags.serverPortFlag, serverPortFlagName, defaultConfig.GetServerPort(), "server port")
+	serverCmd.PersistentFlags().StringVar(&what.flags.serverDirFlag, serverDirFlagName, defaultConfig.GetDataFolder(), "base folder for server mode (default: "+DataDir+")")
 
 	what.rootCmd.AddCommand(serverCmd)
 

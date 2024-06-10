@@ -15,12 +15,12 @@ var technologiesLocation embed.FS
 type TechnologyMap map[string]Technology
 
 type technologyMapConfigReader interface {
-	AppFolder() string
-	TechnologyFilename() string
+	GetAppFolder() string
+	GetTechnologyFilename() string
 }
 
 func (what TechnologyMap) LoadWithConfig(config technologyMapConfigReader, defaultFilename string) error {
-	technologiesFilename := filepath.Join(config.AppFolder(), defaultFilename)
+	technologiesFilename := filepath.Join(config.GetAppFolder(), defaultFilename)
 	_, statError := os.Stat(technologiesFilename)
 	if statError == nil {
 		technologiesLoadError := what.LoadFromFile(technologiesFilename)
@@ -34,11 +34,11 @@ func (what TechnologyMap) LoadWithConfig(config technologyMapConfigReader, defau
 		}
 	}
 
-	if len(config.TechnologyFilename()) > 0 {
+	if len(config.GetTechnologyFilename()) > 0 {
 		additionalTechnologies := make(TechnologyMap)
-		loadError := additionalTechnologies.LoadFromFile(config.TechnologyFilename())
+		loadError := additionalTechnologies.LoadFromFile(config.GetTechnologyFilename())
 		if loadError != nil {
-			return fmt.Errorf("error loading additional technologies from %q: %v", config.TechnologyFilename(), loadError)
+			return fmt.Errorf("error loading additional technologies from %q: %v", config.GetTechnologyFilename(), loadError)
 		}
 
 		for name, technology := range additionalTechnologies {

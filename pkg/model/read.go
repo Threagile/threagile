@@ -29,46 +29,46 @@ func (what ReadResult) ExplainRisk(cfg explainRiskConfig, risk string, reporter 
 // TODO: consider about splitting this function into smaller ones for better reusability
 
 type configReader interface {
-	BuildTimestamp() string
-	Verbose() bool
+	GetBuildTimestamp() string
+	GetVerbose() bool
 
-	AppFolder() string
-	OutputFolder() string
-	ServerFolder() string
-	TempFolder() string
-	KeyFolder() string
+	GetAppFolder() string
+	GetOutputFolder() string
+	GetServerFolder() string
+	GetTempFolder() string
+	GetKeyFolder() string
 
-	InputFile() string
-	DataFlowDiagramFilenamePNG() string
-	DataAssetDiagramFilenamePNG() string
-	DataAssetDiagramFilenameDOT() string
-	ReportFilename() string
-	ExcelRisksFilename() string
-	ExcelTagsFilename() string
-	JsonRisksFilename() string
-	JsonTechnicalAssetsFilename() string
-	JsonStatsFilename() string
-	TechnologyFilename() string
+	GetInputFile() string
+	GetDataFlowDiagramFilenamePNG() string
+	GetDataAssetDiagramFilenamePNG() string
+	GetDataAssetDiagramFilenameDOT() string
+	GetReportFilename() string
+	GetExcelRisksFilename() string
+	GetExcelTagsFilename() string
+	GetJsonRisksFilename() string
+	GetJsonTechnicalAssetsFilename() string
+	GetJsonStatsFilename() string
+	GetTechnologyFilename() string
 
-	RiskRulesPlugins() []string
-	SkipRiskRules() []string
-	ExecuteModelMacro() string
+	GetRiskRulesPlugins() []string
+	GetSkipRiskRules() []string
+	GetExecuteModelMacro() string
 
-	ServerPort() int
-	GraphvizDPI() int
+	GetServerPort() int
+	GetGraphvizDPI() int
 
-	KeepDiagramSourceFiles() bool
-	IgnoreOrphanedRiskTracking() bool
+	GetKeepDiagramSourceFiles() bool
+	GetIgnoreOrphanedRiskTracking() bool
 }
 
 func ReadAndAnalyzeModel(config configReader, builtinRiskRules types.RiskRules, progressReporter types.ProgressReporter) (*ReadResult, error) {
-	progressReporter.Infof("Writing into output directory: %v", config.OutputFolder())
-	progressReporter.Infof("Parsing model: %v", config.InputFile)
+	progressReporter.Infof("Writing into output directory: %v", config.GetOutputFolder())
+	progressReporter.Infof("Parsing model: %v", config.GetInputFile())
 
-	customRiskRules := LoadCustomRiskRules(config.RiskRulesPlugins(), progressReporter)
+	customRiskRules := LoadCustomRiskRules(config.GetRiskRulesPlugins(), progressReporter)
 
 	modelInput := new(input.Model).Defaults()
-	loadError := modelInput.Load(config.InputFile())
+	loadError := modelInput.Load(config.GetInputFile())
 	if loadError != nil {
 		return nil, fmt.Errorf("unable to load model yaml: %v", loadError)
 	}
@@ -80,13 +80,13 @@ func ReadAndAnalyzeModel(config configReader, builtinRiskRules types.RiskRules, 
 
 	introTextRAA := applyRAA(parsedModel, progressReporter)
 
-	applyRiskGeneration(parsedModel, builtinRiskRules.Merge(customRiskRules), config.SkipRiskRules(), progressReporter)
-	err := parsedModel.ApplyWildcardRiskTrackingEvaluation(config.IgnoreOrphanedRiskTracking(), progressReporter)
+	applyRiskGeneration(parsedModel, builtinRiskRules.Merge(customRiskRules), config.GetSkipRiskRules(), progressReporter)
+	err := parsedModel.ApplyWildcardRiskTrackingEvaluation(config.GetIgnoreOrphanedRiskTracking(), progressReporter)
 	if err != nil {
 		return nil, fmt.Errorf("unable to apply wildcard risk tracking evaluation: %v", err)
 	}
 
-	err = parsedModel.CheckRiskTracking(config.IgnoreOrphanedRiskTracking(), progressReporter)
+	err = parsedModel.CheckRiskTracking(config.GetIgnoreOrphanedRiskTracking(), progressReporter)
 	if err != nil {
 		return nil, fmt.Errorf("unable to check risk tracking: %v", err)
 	}
