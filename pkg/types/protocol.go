@@ -61,6 +61,7 @@ const (
 	JRMP
 	JrmpEncrypted
 	InProcessLibraryCall
+	InterProcessCommunication
 	ContainerSpawning
 )
 
@@ -112,6 +113,7 @@ func ProtocolValues() []TypeEnum {
 		JRMP,
 		JrmpEncrypted,
 		InProcessLibraryCall,
+		InterProcessCommunication,
 		ContainerSpawning,
 	}
 }
@@ -163,6 +165,7 @@ var ProtocolTypeDescription = [...]TypeDescription{
 	{"jrmp", "Java Remote Method Protocol"},
 	{"jrmp-encrypted", "Java Remote Method Protocol, encrypted"},
 	{"in-process-library-call", "Call to local library"},
+	{"inter-process-communication", "Communication between processes via system sockets or systems like dbus"},
 	{"container-spawning", "Spawn a container"},
 }
 
@@ -186,7 +189,7 @@ func (what Protocol) Explain() string {
 }
 
 func (what Protocol) IsProcessLocal() bool {
-	return what == InProcessLibraryCall || what == LocalFileAccess || what == ContainerSpawning
+	return what == InProcessLibraryCall || what == InterProcessCommunication || what == LocalFileAccess || what == ContainerSpawning
 }
 
 func (what Protocol) IsEncrypted() bool {

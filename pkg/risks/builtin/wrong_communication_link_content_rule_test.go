@@ -117,6 +117,25 @@ func TestWrongCommunicationLinkContentRuleSendDataAssetRisksCreated(t *testing.T
 
 			riskCreated: false,
 		},
+		"protocol type InterProcessCommunication does not match target technology type Process": {
+			receiveAnyData: false,
+			sendAnyData:    false,
+			readonly:       false,
+			protocol:       types.InterProcessCommunication,
+			isLibrary:      false,
+
+			riskCreated:    true,
+			expectedReason: "(protocol type \"InterProcessCommunication\" does not match target technology type \"\": expected \"process\")",
+		},
+		"protocol type InterProcessCommunication match target technology type Process": {
+			receiveAnyData: false,
+			sendAnyData:    false,
+			readonly:       false,
+			protocol:       types.InterProcessCommunication,
+			isLibrary:      true,
+
+			riskCreated: false,
+		},
 		"protocol type LocalFileAccess does not match target technology type LocalFileSystem": {
 			receiveAnyData:    false,
 			sendAnyData:       false,

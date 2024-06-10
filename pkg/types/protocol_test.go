@@ -203,6 +203,10 @@ func TestParseProtocol(t *testing.T) {
 			input:    "in-process-library-call",
 			expected: InProcessLibraryCall,
 		},
+		"inter-process-communication": {
+			input:    "inter-process-communication",
+			expected: InterProcessCommunication,
+		},
 		"container-spawning": {
 			input:    "container-spawning",
 			expected: ContainerSpawning,

@@ -456,6 +456,13 @@ func TestUnencryptedCommunicationRuleGenerateRisks(t *testing.T) {
 
 			riskCreated: false,
 		},
+		"InterProcessCommunication": {
+			sourceOutOfScope: false,
+			targetOutOfScope: false,
+			protocol:         types.InterProcessCommunication,
+
+			riskCreated: false,
+		},
 		"LocalFileAccess": {
 			sourceOutOfScope: false,
 			targetOutOfScope: false,
