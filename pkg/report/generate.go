@@ -46,6 +46,8 @@ type reportConfigReader interface {
 	GetTempFolder() string
 
 	GetInputFile() string
+	GetUseCustomDataAssetDiagram() bool
+	GetUseCustomDataFlowDiagram() bool
 	GetDataFlowDiagramFilenamePNG() string
 	GetDataAssetDiagramFilenamePNG() string
 	GetDataFlowDiagramFilenameDOT() string
@@ -86,7 +88,7 @@ func Generate(config reportConfigReader, readResult *model.ReadResult, commands 
 		diagramDPI = config.GetMaxGraphvizDPI()
 	}
 	// Data-flow Diagram rendering
-	if generateDataFlowDiagram {
+	if generateDataFlowDiagram && !config.GetUseCustomDataFlowDiagram() {
 		gvFile := filepath.Join(config.GetOutputFolder(), config.GetDataFlowDiagramFilenameDOT())
 		if !config.GetKeepDiagramSourceFiles() {
 			tmpFileGV, err := os.CreateTemp(config.GetTempFolder(), config.GetDataFlowDiagramFilenameDOT())
@@ -108,7 +110,7 @@ func Generate(config reportConfigReader, readResult *model.ReadResult, commands 
 		}
 	}
 	// Data Asset Diagram rendering
-	if generateDataAssetsDiagram {
+	if generateDataAssetsDiagram && !config.GetUseCustomDataAssetDiagram() {
 		gvFile := filepath.Join(config.GetOutputFolder(), config.GetDataAssetDiagramFilenameDOT())
 		if !config.GetKeepDiagramSourceFiles() {
 			tmpFile, err := os.CreateTemp(config.GetTempFolder(), config.GetDataAssetDiagramFilenameDOT())

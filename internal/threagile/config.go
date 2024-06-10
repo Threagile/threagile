@@ -25,6 +25,8 @@ type Config struct {
 	KeyFolder    string
 
 	InputFile                   string
+	UseCustomDataFlowDiagram    bool
+	UseCustomDataAssetDiagram   bool
 	DataFlowDiagramFilenamePNG  string
 	DataAssetDiagramFilenamePNG string
 	DataFlowDiagramFilenameDOT  string
@@ -77,6 +79,8 @@ func (c *Config) Defaults(buildTimestamp string) *Config {
 		KeyFolder:    KeyDir,
 
 		InputFile:                   InputFile,
+		UseCustomDataFlowDiagram:    false,
+		UseCustomDataAssetDiagram:   false,
 		DataFlowDiagramFilenamePNG:  DataFlowDiagramFilenamePNG,
 		DataAssetDiagramFilenamePNG: DataAssetDiagramFilenamePNG,
 		DataFlowDiagramFilenameDOT:  DataFlowDiagramFilenameDOT,
@@ -240,6 +244,12 @@ func (c *Config) Merge(config Config, values map[string]any) {
 
 		case strings.ToLower("InputFile"):
 			c.InputFile = config.InputFile
+
+		case strings.ToLower("UseCustomDataAssetDiagram"):
+			c.UseCustomDataAssetDiagram = config.UseCustomDataAssetDiagram
+
+		case strings.ToLower("UseCustomDataFlowDiagram"):
+			c.UseCustomDataFlowDiagram = config.UseCustomDataFlowDiagram
 
 		case strings.ToLower("DataFlowDiagramFilenamePNG"):
 			c.DataFlowDiagramFilenamePNG = config.DataFlowDiagramFilenamePNG
@@ -423,6 +433,14 @@ func (c *Config) GetTechnologyFilename() string {
 
 func (c *Config) GetInputFile() string {
 	return c.InputFile
+}
+
+func (c *Config) GetUseCustomDataFlowDiagram() bool {
+	return c.UseCustomDataFlowDiagram
+}
+
+func (c *Config) GetUseCustomDataAssetDiagram() bool {
+	return c.UseCustomDataAssetDiagram
 }
 
 func (c *Config) GetDataFlowDiagramFilenamePNG() string {
