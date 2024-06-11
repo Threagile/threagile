@@ -28,7 +28,7 @@ Main program is [threagile](./cmd/threagile/main.go).
 
 Start by navigating to `./cmd/threagile/main.go`, selecting `Run -> Add Configuration... -> Go: Launch file`. This will create launch.json at `./.vscode/launch.json`
 
-Modify launch.json with this content and simply use `Run -> Start Debugging`/`Run -> Start Without Debugging`. Note that paths in `;aunch.json` under `"args":` are relative to the `main.go`.
+Modify launch.json with this content and simply use `Run -> Start Debugging`/`Run -> Start Without Debugging`. Note that paths in `launch.json` under `"args":` are relative to the `main.go`.
 
 Example `launch.json`:
 
