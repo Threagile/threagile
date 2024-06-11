@@ -86,7 +86,7 @@ func (r *UnnecessaryDataAssetRule) createRisk(input *types.Model, unusedDataAsse
 		Title:                       title,
 		MostRelevantDataAssetId:     unusedDataAsset.Id,
 		DataBreachProbability:       types.Improbable,
-		DataBreachTechnicalAssetIDs: []string{unusedDataAsset.Id},
+		DataBreachTechnicalAssetIDs: []string{},
 	}
 	risk.SyntheticId = risk.CategoryId + "@" + unusedDataAsset.Id
 	return risk
