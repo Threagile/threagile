@@ -99,7 +99,7 @@ You can add additional configurations in `launch.json`, for example:
         "--model",
         "${workspaceFolder}/demo/example/threagile.yaml",
         "--app-dir",
-        "/Users/maximilian.colledge/threagile",
+        "/Users/Yevhen.Zavhorodnii/app",
         "--temp-dir",
         "${workspaceFolder}/tmp",
         "--output",
