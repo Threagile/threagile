@@ -19,21 +19,25 @@ Before running the project please install
 - [go 1.21.0](https://go.dev/doc/install)
 - [Docker](https://docs.docker.com/engine/install/)
 - [pre-commit](https://pre-commit.com/)
-- [golangci-lint](https://golangci-lint.run/usage/install/#local-installation)
+- [golangci-lint](https://golangci-lint.run/welcome/install/#local-installation)
 - [goimports](https://pkg.go.dev/golang.org/x/tools/cmd/goimports)
 
 Main program is [threagile](./cmd/threagile/main.go).
 
 ### Development with Visual Studio Code
 
-To run the code with VS Code add launch.json with this content and simply use ```Run -> Start Debugging```/```Run -> Start Without Debugging```:
+Start by navigating to `./cmd/threagile/main.go`, selecting `Run -> Add Configuration... -> Go: Launch file`. This will create launch.json at `./.vscode/launch.json`
 
-```
+Modify launch.json with this content and simply use `Run -> Start Debugging`/`Run -> Start Without Debugging`. Note that paths in `;aunch.json` under `"args":` are relative to the `main.go`.
+
+Example `launch.json`:
+
+```json
 {
     "version": "0.2.0",
     "configurations": [
         {
-          "name": "Launch Threagile",
+          "name": "Launch Threagile Help Command",
           "type": "go",
           "request": "launch",
           "mode": "debug",
@@ -51,12 +55,12 @@ To run the code with VS Code add launch.json with this content and simply use ``
 
 Where  config.json
 
-```
+```json
 {
     "appFolder": "/Users/Yevhen.Zavhorodnii/app",
     "tempFolder": "./",
     "diagramDPI": 96,
-    "inputFile": "./threagile.yaml",
+    "inputFile": "./threagile-example-model.yaml",
     "ignoreOrphanedRiskTracking": true,
     "verbose": true
 }
@@ -76,6 +80,39 @@ app/
 ├─ [threagile-example-model.yaml](./demo/example/threagile.yaml)
 ├─ [threagile-stub-model.yaml](./demo/stub/threagile.yaml)
 ```
+
+When everything is configured, select the Run and Debug menu on the left (picture of a play button with a bug) and run your configuration from there.
+
+You can add additional configurations in `launch.json`, for example:
+
+```json
+    {
+      "name": "Launch Threagile Analyze",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "console": "integratedTerminal",
+      "program": "${workspaceFolder}/cmd/threagile",
+      "args": [
+        "analyze-model",
+        "--ignore-orphaned-risk-tracking",
+        "--model",
+        "${workspaceFolder}/demo/example/threagile.yaml",
+        "--app-dir",
+        "/Users/maximilian.colledge/threagile",
+        "--temp-dir",
+        "${workspaceFolder}/tmp",
+        "--output",
+        "${workspaceFolder}/output",
+        "--diagram-dpi",
+        "96",
+        "-v"
+      ]
+    }
+```
+Note that this configuration uses folders you will have to create in the project root: `tmp` and `output`.
+
+Using any of the above configurations will allow you to use the vscode debugger, set breakpoints etc.
 
 ## Packages structure
 
