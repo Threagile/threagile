@@ -30,6 +30,7 @@ const (
 
 	generateDataFlowDiagramFlagName     = "generate-data-flow-diagram"
 	generateDataAssetDiagramFlagName    = "generate-data-asset-diagram"
+	useExternalDataFlowDiagramFlagName  = "use-external-data-flow-diagram"
 	generateRisksJSONFlagName           = "generate-risks-json"
 	generateTechnicalAssetsJSONFlagName = "generate-technical-assets-json"
 	generateStatsJSONFlagName           = "generate-stats-json"
@@ -57,6 +58,7 @@ type Flags struct {
 
 	generateDataFlowDiagramFlag     bool
 	generateDataAssetDiagramFlag    bool
+	useExternalDataFlowDiagramFlag  string
 	generateRisksJSONFlag           bool
 	generateTechnicalAssetsJSONFlag bool
 	generateStatsJSONFlag           bool

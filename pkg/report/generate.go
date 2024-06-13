@@ -13,26 +13,28 @@ import (
 )
 
 type GenerateCommands struct {
-	DataFlowDiagram     bool
-	DataAssetDiagram    bool
-	RisksJSON           bool
-	TechnicalAssetsJSON bool
-	StatsJSON           bool
-	RisksExcel          bool
-	TagsExcel           bool
-	ReportPDF           bool
+	DataFlowDiagram            bool
+	DataAssetDiagram           bool
+	UseExternalDataFlowDiagram string
+	RisksJSON                  bool
+	TechnicalAssetsJSON        bool
+	StatsJSON                  bool
+	RisksExcel                 bool
+	TagsExcel                  bool
+	ReportPDF                  bool
 }
 
 func (c *GenerateCommands) Defaults() *GenerateCommands {
 	*c = GenerateCommands{
-		DataFlowDiagram:     true,
-		DataAssetDiagram:    true,
-		RisksJSON:           true,
-		TechnicalAssetsJSON: true,
-		StatsJSON:           true,
-		RisksExcel:          true,
-		TagsExcel:           true,
-		ReportPDF:           true,
+		DataFlowDiagram:            true,
+		DataAssetDiagram:           true,
+		UseExternalDataFlowDiagram: "",
+		RisksJSON:                  true,
+		TechnicalAssetsJSON:        true,
+		StatsJSON:                  true,
+		RisksExcel:                 true,
+		TagsExcel:                  true,
+		ReportPDF:                  true,
 	}
 	return c
 }
@@ -74,6 +76,7 @@ type reportConfigReader interface {
 func Generate(config reportConfigReader, readResult *model.ReadResult, commands *GenerateCommands, riskRules types.RiskRules, progressReporter progressReporter) error {
 	generateDataFlowDiagram := commands.DataFlowDiagram
 	generateDataAssetsDiagram := commands.DataAssetDiagram
+	useExternalDataFlowDiagram := commands.UseExternalDataFlowDiagram
 	if commands.ReportPDF { // as the PDF report includes both diagrams
 		generateDataFlowDiagram = true
 		generateDataAssetsDiagram = true
@@ -105,6 +108,31 @@ func Generate(config reportConfigReader, readResult *model.ReadResult, commands 
 			config.GetTempFolder(), config.GetDataFlowDiagramFilenamePNG(), progressReporter, config.GetKeepDiagramSourceFiles())
 		if err != nil {
 			progressReporter.Warn(err)
+		}
+	}
+	if useExternalDataFlowDiagram != "" {
+		// copy file
+		srcStat, err := os.Stat(useExternalDataFlowDiagram)
+		if err != nil {
+			return err
+		}
+		if !srcStat.Mode().IsRegular() {
+			return fmt.Errorf("%s is not a regular file", useExternalDataFlowDiagram)
+		}
+		src, err := os.Open(useExternalDataFlowDiagram)
+		if err != nil {
+			return err
+		}
+		defer src.Close()
+
+		dest, err := os.Create(filepath.Join(config.GetOutputFolder(), config.GetDataFlowDiagramFilenamePNG()))
+		if err != nil {
+			return err
+		}
+		defer dest.Close()
+		_, err = io.Copy(dest, src)
+		if err != nil {
+			return fmt.Errorf("failed to create %s: %v", filepath.Join(config.GetOutputFolder(), config.GetDataFlowDiagramFilenamePNG()), err)
 		}
 	}
 	// Data Asset Diagram rendering

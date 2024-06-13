@@ -74,6 +74,7 @@ func (what *Threagile) initRoot() *Threagile {
 
 	what.rootCmd.PersistentFlags().BoolVar(&what.flags.generateDataFlowDiagramFlag, generateDataFlowDiagramFlagName, true, "generate data flow diagram")
 	what.rootCmd.PersistentFlags().BoolVar(&what.flags.generateDataAssetDiagramFlag, generateDataAssetDiagramFlagName, true, "generate data asset diagram")
+	what.rootCmd.PersistentFlags().StringVar(&what.flags.useExternalDataFlowDiagramFlag, useExternalDataFlowDiagramFlagName, "", "external data flow diagram (png)")
 	what.rootCmd.PersistentFlags().BoolVar(&what.flags.generateRisksJSONFlag, generateRisksJSONFlagName, true, "generate risks json")
 	what.rootCmd.PersistentFlags().BoolVar(&what.flags.generateTechnicalAssetsJSONFlag, generateTechnicalAssetsJSONFlagName, true, "generate technical assets json")
 	what.rootCmd.PersistentFlags().BoolVar(&what.flags.generateStatsJSONFlag, generateStatsJSONFlagName, true, "generate stats json")
@@ -208,6 +209,7 @@ func (what *Threagile) readCommands() *report.GenerateCommands {
 	commands := new(report.GenerateCommands).Defaults()
 	commands.DataFlowDiagram = what.flags.generateDataFlowDiagramFlag
 	commands.DataAssetDiagram = what.flags.generateDataAssetDiagramFlag
+	commands.UseExternalDataFlowDiagram = what.flags.useExternalDataFlowDiagramFlag
 	commands.RisksJSON = what.flags.generateRisksJSONFlag
 	commands.StatsJSON = what.flags.generateStatsJSONFlag
 	commands.TechnicalAssetsJSON = what.flags.generateTechnicalAssetsJSONFlag

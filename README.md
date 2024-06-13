@@ -55,6 +55,8 @@ The easiest way to execute Threagile on the commandline is via its Docker contai
         	generate data asset diagram (default true)
       -generate-data-flow-diagram
         	generate data-flow diagram (default true)
+      -use-external-data-flow-diagram
+          use a custom data flow diagram instead of the generated onde (default "")
       -generate-report-pdf
         	generate report pdf, including diagrams (default true)
       -generate-risks-excel
