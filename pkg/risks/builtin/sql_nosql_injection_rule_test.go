@@ -43,6 +43,7 @@ type SqlNoSqlInjectionRuleTest struct {
 	confidentiality types.Confidentiality
 	integrity       types.Criticality
 	usage           types.Usage
+	assetType       types.TechnicalAssetType
 
 	protocol                     types.Protocol
 	isVulnerableToQueryInjection bool
@@ -55,23 +56,33 @@ type SqlNoSqlInjectionRuleTest struct {
 func TestSqlNoSqlInjectionRuleCreateRisks(t *testing.T) {
 	testCases := map[string]SqlNoSqlInjectionRuleTest{
 		"not database protocol": {
+			assetType:                    types.Datastore,
 			protocol:                     types.SmbEncrypted,
 			expectRiskCreated:            false,
 			isVulnerableToQueryInjection: true,
 		},
 		"not vulnerable to query injection not lax": {
+			assetType:                    types.Datastore,
 			protocol:                     types.JdbcEncrypted,
 			expectRiskCreated:            false,
 			isVulnerableToQueryInjection: false,
 		},
 		"lax database always vulnerable to query injection": {
+			assetType:                    types.Datastore,
 			protocol:                     types.HTTP,
 			isVulnerableToQueryInjection: false,
 			expectRiskCreated:            true,
 			expectedLikelihood:           types.VeryLikely,
 			expectedImpact:               types.MediumImpact,
 		},
+		"no datastore": {
+			assetType:                    types.Process,
+			protocol:                     types.JdbcEncrypted,
+			isVulnerableToQueryInjection: true,
+			expectRiskCreated:            false,
+		},
 		"database protocol and vulnerable to query injection": {
+			assetType:                    types.Datastore,
 			protocol:                     types.JdbcEncrypted,
 			expectRiskCreated:            true,
 			isVulnerableToQueryInjection: true,
@@ -79,6 +90,7 @@ func TestSqlNoSqlInjectionRuleCreateRisks(t *testing.T) {
 			expectedImpact:               types.MediumImpact,
 		},
 		"strictly confidential tech asset high impact": {
+			assetType:                    types.Datastore,
 			protocol:                     types.JdbcEncrypted,
 			expectRiskCreated:            true,
 			isVulnerableToQueryInjection: true,
@@ -88,6 +100,7 @@ func TestSqlNoSqlInjectionRuleCreateRisks(t *testing.T) {
 			expectedImpact:               types.HighImpact,
 		},
 		"mission critical integrity tech asset high impact": {
+			assetType:                    types.Datastore,
 			protocol:                     types.JdbcEncrypted,
 			expectRiskCreated:            true,
 			isVulnerableToQueryInjection: true,
@@ -97,6 +110,7 @@ func TestSqlNoSqlInjectionRuleCreateRisks(t *testing.T) {
 			expectedImpact:               types.HighImpact,
 		},
 		"devops usage likely likelihood": {
+			assetType:                    types.Datastore,
 			protocol:                     types.JdbcEncrypted,
 			expectRiskCreated:            true,
 			isVulnerableToQueryInjection: true,
@@ -117,6 +131,7 @@ func TestSqlNoSqlInjectionRuleCreateRisks(t *testing.T) {
 						Id:         "ta1",
 						Title:      "Test Technical Asset",
 						OutOfScope: false,
+						Type:       testCase.assetType,
 						Technologies: types.TechnologyList{
 							{
 								Name: "service-registry",
