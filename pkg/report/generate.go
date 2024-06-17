@@ -78,14 +78,14 @@ func Generate(config reportConfigReader, readResult *model.ReadResult, commands 
 
 	if commands.ReportPDF { // as the PDF report includes both diagrams
 		if !generateDataFlowDiagram {
-			dataFlowFile := filepath.Join(config.OutputFolder, config.DataFlowDiagramFilenamePNG)
+			dataFlowFile := filepath.Join(config.GetOutputFolder(), config.GetDataFlowDiagramFilenamePNG())
 			if _, err := os.Stat(dataFlowFile); errors.Is(err, os.ErrNotExist) {
 				progressReporter.Warn("Forcibly create the needed Data-Flow Diagram file to enable report generation.")
 				generateDataFlowDiagram = true
 			}
 		}
 		if !generateDataAssetsDiagram {
-			dataAssetFile := filepath.Join(config.OutputFolder, config.DataAssetDiagramFilenamePNG)
+			dataAssetFile := filepath.Join(config.GetOutputFolder(), config.GetDataAssetDiagramFilenamePNG())
 			if _, err := os.Stat(dataAssetFile); errors.Is(err, os.ErrNotExist) {
 				progressReporter.Warn("Forcibly create the needed Data-Asset Diagram file to enable report generation.")
 				generateDataAssetsDiagram = true
