@@ -2,12 +2,12 @@ package threagile
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/threagile/threagile/pkg/common"
+	"github.com/threagile/threagile/pkg/risks"
 	"github.com/threagile/threagile/pkg/server"
 )
 
 func (what *Threagile) initServer() *Threagile {
-	defaultConfig := new(common.Config).Defaults(what.buildTimestamp)
+	defaultConfig := new(Config).Defaults(what.buildTimestamp)
 
 	serverCmd := &cobra.Command{
 		Use:   "server",
@@ -19,13 +19,13 @@ func (what *Threagile) initServer() *Threagile {
 			if serverError != nil {
 				return serverError
 			}
-			server.RunServer(cfg)
+			server.RunServer(cfg, risks.GetBuiltInRiskRules())
 			return nil
 		},
 	}
 
-	serverCmd.PersistentFlags().IntVar(&what.flags.serverPortFlag, serverPortFlagName, defaultConfig.ServerPort, "server port")
-	serverCmd.PersistentFlags().StringVar(&what.flags.serverDirFlag, serverDirFlagName, defaultConfig.DataFolder, "base folder for server mode (default: "+common.DataDir+")")
+	serverCmd.PersistentFlags().IntVar(&what.flags.serverPortFlag, serverPortFlagName, defaultConfig.GetServerPort(), "server port")
+	serverCmd.PersistentFlags().StringVar(&what.flags.serverDirFlag, serverDirFlagName, defaultConfig.GetDataFolder(), "base folder for server mode (default: "+DataDir+")")
 
 	what.rootCmd.AddCommand(serverCmd)
 

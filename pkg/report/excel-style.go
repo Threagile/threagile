@@ -2,9 +2,10 @@ package report
 
 import (
 	"fmt"
-	"github.com/threagile/threagile/pkg/security/types"
-	"github.com/xuri/excelize/v2"
 	"strings"
+
+	"github.com/threagile/threagile/pkg/types"
+	"github.com/xuri/excelize/v2"
 )
 
 type ExcelStyles struct {

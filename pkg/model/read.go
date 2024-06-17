@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/threagile/threagile/pkg/common"
 	"github.com/threagile/threagile/pkg/input"
-	"github.com/threagile/threagile/pkg/security/types"
+	"github.com/threagile/threagile/pkg/types"
 )
 
 type ReadResult struct {
@@ -17,20 +16,59 @@ type ReadResult struct {
 	CustomRiskRules  types.RiskRules
 }
 
-func (what ReadResult) ExplainRisk(cfg *common.Config, risk string, reporter common.DefaultProgressReporter) error {
+type explainRiskConfig interface {
+}
+
+type explainRiskReporter interface {
+}
+
+func (what ReadResult) ExplainRisk(cfg explainRiskConfig, risk string, reporter explainRiskReporter) error {
 	return fmt.Errorf("not implemented")
 }
 
 // TODO: consider about splitting this function into smaller ones for better reusability
 
-func ReadAndAnalyzeModel(config *common.Config, builtinRiskRules types.RiskRules, progressReporter types.ProgressReporter) (*ReadResult, error) {
-	progressReporter.Infof("Writing into output directory: %v", config.OutputFolder)
-	progressReporter.Infof("Parsing model: %v", config.InputFile)
+type configReader interface {
+	GetBuildTimestamp() string
+	GetVerbose() bool
 
-	customRiskRules := LoadCustomRiskRules(config.RiskRulesPlugins, progressReporter)
+	GetAppFolder() string
+	GetOutputFolder() string
+	GetServerFolder() string
+	GetTempFolder() string
+	GetKeyFolder() string
+
+	GetInputFile() string
+	GetDataFlowDiagramFilenamePNG() string
+	GetDataAssetDiagramFilenamePNG() string
+	GetDataAssetDiagramFilenameDOT() string
+	GetReportFilename() string
+	GetExcelRisksFilename() string
+	GetExcelTagsFilename() string
+	GetJsonRisksFilename() string
+	GetJsonTechnicalAssetsFilename() string
+	GetJsonStatsFilename() string
+	GetTechnologyFilename() string
+
+	GetRiskRulesPlugins() []string
+	GetSkipRiskRules() []string
+	GetExecuteModelMacro() string
+
+	GetServerPort() int
+	GetGraphvizDPI() int
+
+	GetKeepDiagramSourceFiles() bool
+	GetIgnoreOrphanedRiskTracking() bool
+}
+
+func ReadAndAnalyzeModel(config configReader, builtinRiskRules types.RiskRules, progressReporter types.ProgressReporter) (*ReadResult, error) {
+	progressReporter.Infof("Writing into output directory: %v", config.GetOutputFolder())
+	progressReporter.Infof("Parsing model: %v", config.GetInputFile())
+
+	customRiskRules := LoadCustomRiskRules(config.GetRiskRulesPlugins(), progressReporter)
 
 	modelInput := new(input.Model).Defaults()
-	loadError := modelInput.Load(config.InputFile)
+	loadError := modelInput.Load(config.GetInputFile())
 	if loadError != nil {
 		return nil, fmt.Errorf("unable to load model yaml: %v", loadError)
 	}
@@ -42,13 +80,13 @@ func ReadAndAnalyzeModel(config *common.Config, builtinRiskRules types.RiskRules
 
 	introTextRAA := applyRAA(parsedModel, progressReporter)
 
-	applyRiskGeneration(parsedModel, builtinRiskRules.Merge(customRiskRules), config.SkipRiskRules, progressReporter)
-	err := parsedModel.ApplyWildcardRiskTrackingEvaluation(config.IgnoreOrphanedRiskTracking, progressReporter)
+	applyRiskGeneration(parsedModel, builtinRiskRules.Merge(customRiskRules), config.GetSkipRiskRules(), progressReporter)
+	err := parsedModel.ApplyWildcardRiskTrackingEvaluation(config.GetIgnoreOrphanedRiskTracking(), progressReporter)
 	if err != nil {
 		return nil, fmt.Errorf("unable to apply wildcard risk tracking evaluation: %v", err)
 	}
 
-	err = parsedModel.CheckRiskTracking(config.IgnoreOrphanedRiskTracking, progressReporter)
+	err = parsedModel.CheckRiskTracking(config.GetIgnoreOrphanedRiskTracking(), progressReporter)
 	if err != nil {
 		return nil, fmt.Errorf("unable to check risk tracking: %v", err)
 	}
@@ -105,8 +143,8 @@ func applyRiskGeneration(parsedModel *types.Model, rules types.RiskRules,
 	}
 
 	// save also in map keyed by synthetic risk-id
-	for _, category := range types.SortedRiskCategories(parsedModel) {
-		someRisks := types.SortedRisksOfCategory(parsedModel, category)
+	for _, category := range parsedModel.SortedRiskCategories() {
+		someRisks := parsedModel.SortedRisksOfCategory(category)
 		for _, risk := range someRisks {
 			parsedModel.GeneratedRisksBySyntheticId[strings.ToLower(risk.SyntheticId)] = risk
 		}

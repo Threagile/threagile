@@ -15,15 +15,13 @@ import (
 
 	"github.com/jung-kurt/gofpdf"
 	"github.com/jung-kurt/gofpdf/contrib/gofpdi"
-	"github.com/threagile/threagile/pkg/docs"
-	"github.com/threagile/threagile/pkg/security/risks"
-	"github.com/threagile/threagile/pkg/security/types"
+	"github.com/threagile/threagile/pkg/types"
 	"github.com/wcharczuk/go-chart"
 	"github.com/wcharczuk/go-chart/drawing"
 )
 
 const fontSizeHeadline, fontSizeHeadlineSmall, fontSizeBody, fontSizeSmall, fontSizeVerySmall = 20, 16, 12, 9, 7
-const /*dataFlowDiagramFullscreen,*/ allowedPdfLandscapePages, embedDiagramLegendPage = /*false,*/ true, false
+const allowedPdfLandscapePages, embedDiagramLegendPage = true, false
 
 type pdfReporter struct {
 	isLandscapePage               bool
@@ -36,6 +34,12 @@ type pdfReporter struct {
 	tocLinkIdByAssetId            map[string]int
 	homeLink                      int
 	currentChapterTitleBreadcrumb string
+
+	riskRules types.RiskRules
+}
+
+func newPdfReporter(types.RiskRules) *pdfReporter {
+	return &pdfReporter{}
 }
 
 func (r *pdfReporter) initReport() {
@@ -55,6 +59,7 @@ func (r *pdfReporter) WriteReportPDF(reportFilename string,
 	modelFilename string,
 	skipRiskRules []string,
 	buildTimestamp string,
+	threagileVersion string,
 	modelHash string,
 	introTextRAA string,
 	customRiskRules types.RiskRules,
@@ -103,7 +108,7 @@ func (r *pdfReporter) WriteReportPDF(reportFilename string,
 	r.createDataAssets(model)
 	r.createTrustBoundaries(model)
 	r.createSharedRuntimes(model)
-	r.createRiskRulesChecked(model, modelFilename, skipRiskRules, buildTimestamp, modelHash, customRiskRules)
+	r.createRiskRulesChecked(model, modelFilename, skipRiskRules, buildTimestamp, threagileVersion, modelHash, customRiskRules)
 	r.createDisclaimer(model)
 	err = r.writeReportToFile(reportFilename)
 	if err != nil {
@@ -387,9 +392,9 @@ func (r *pdfReporter) createTableOfContents(parsedModel *types.Model) {
 		r.pdf.Text(175, y, "{intro-risks-by-vulnerability-category}")
 		r.pdf.Line(15.6, y+1.3, 11+171.5, y+1.3)
 		r.pdf.Link(10, y-5, 172.5, 6.5, r.pdf.AddLink())
-		for _, category := range types.SortedRiskCategories(parsedModel) {
-			newRisksStr := types.SortedRisksOfCategory(parsedModel, category)
-			switch types.HighestSeverityStillAtRisk(parsedModel, newRisksStr) {
+		for _, category := range parsedModel.SortedRiskCategories() {
+			newRisksStr := parsedModel.SortedRisksOfCategory(category)
+			switch types.HighestSeverityStillAtRisk(newRisksStr) {
 			case types.CriticalSeverity:
 				colorCriticalRisk(r.pdf)
 			case types.HighSeverity:
@@ -443,7 +448,7 @@ func (r *pdfReporter) createTableOfContents(parsedModel *types.Model) {
 		r.pdf.Line(15.6, y+1.3, 11+171.5, y+1.3)
 		r.pdf.Link(10, y-5, 172.5, 6.5, r.pdf.AddLink())
 		for _, technicalAsset := range sortedTechnicalAssetsByRiskSeverityAndTitle(parsedModel) {
-			newRisksStr := technicalAsset.GeneratedRisks(parsedModel)
+			newRisksStr := parsedModel.GeneratedRisks(technicalAsset)
 			y += 6
 			if y > 275 {
 				r.pageBreakInLists()
@@ -458,7 +463,7 @@ func (r *pdfReporter) createTableOfContents(parsedModel *types.Model) {
 				r.pdfColorOutOfScope()
 				suffix = "out-of-scope"
 			} else {
-				switch types.HighestSeverityStillAtRisk(parsedModel, newRisksStr) {
+				switch types.HighestSeverityStillAtRisk(newRisksStr) {
 				case types.CriticalSeverity:
 					colorCriticalRisk(r.pdf)
 				case types.HighSeverity:
@@ -508,7 +513,7 @@ func (r *pdfReporter) createTableOfContents(parsedModel *types.Model) {
 				r.pageBreakInLists()
 				y = 40
 			}
-			newRisksStr := dataAsset.IdentifiedDataBreachProbabilityRisks(parsedModel)
+			newRisksStr := parsedModel.IdentifiedDataBreachProbabilityRisks(dataAsset)
 			countStillAtRisk := len(types.ReduceToOnlyStillAtRisk(newRisksStr))
 			suffix := strconv.Itoa(countStillAtRisk) + " / " + strconv.Itoa(len(newRisksStr)) + " Risk"
 			if len(newRisksStr) != 1 {
@@ -548,7 +553,7 @@ func (r *pdfReporter) createTableOfContents(parsedModel *types.Model) {
 		r.pdfColorBlack()
 		r.pdf.Text(11, y, "Trust Boundaries")
 		r.pdf.SetFont("Helvetica", "", fontSizeBody)
-		for _, key := range types.SortedKeysOfTrustBoundaries(parsedModel) {
+		for _, key := range sortedKeysOfTrustBoundaries(parsedModel) {
 			trustBoundary := parsedModel.TrustBoundaries[key]
 			y += 6
 			if y > 275 {
@@ -638,7 +643,16 @@ func (r *pdfReporter) createTableOfContents(parsedModel *types.Model) {
 }
 
 // as in Go ranging over map is random order, range over them in sorted (hence reproducible) way:
+func sortedKeysOfTrustBoundaries(model *types.Model) []string {
+	keys := make([]string, 0)
+	for k := range model.TrustBoundaries {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
+}
 
+// as in Go ranging over map is random order, range over them in sorted (hence reproducible) way:
 func sortedKeysOfSharedRuntime(model *types.Model) []string {
 	keys := make([]string, 0)
 	for k := range model.SharedRuntimes {
@@ -659,10 +673,10 @@ func sortedTechnicalAssetsByRiskSeverityAndTitle(parsedModel *types.Model) []*ty
 
 func sortByTechnicalAssetRiskSeverityAndTitleStillAtRisk(assets []*types.TechnicalAsset, parsedModel *types.Model) {
 	sort.Slice(assets, func(i, j int) bool {
-		risksLeft := types.ReduceToOnlyStillAtRisk(assets[i].GeneratedRisks(parsedModel))
-		risksRight := types.ReduceToOnlyStillAtRisk(assets[j].GeneratedRisks(parsedModel))
-		highestSeverityLeft := types.HighestSeverityStillAtRisk(parsedModel, risksLeft)
-		highestSeverityRight := types.HighestSeverityStillAtRisk(parsedModel, risksRight)
+		risksLeft := types.ReduceToOnlyStillAtRisk(parsedModel.GeneratedRisks(assets[i]))
+		risksRight := types.ReduceToOnlyStillAtRisk(parsedModel.GeneratedRisks(assets[j]))
+		highestSeverityLeft := types.HighestSeverityStillAtRisk(risksLeft)
+		highestSeverityRight := types.HighestSeverityStillAtRisk(risksRight)
 		var result bool
 		if highestSeverityLeft == highestSeverityRight {
 			if len(risksLeft) == 0 && len(risksRight) > 0 {
@@ -1301,7 +1315,7 @@ func filteredByRiskFunction(parsedModel *types.Model, function types.RiskFunctio
 	filteredRisks := make([]*types.Risk, 0)
 	for categoryId, risks := range parsedModel.GeneratedRisksByCategory {
 		for _, risk := range risks {
-			category := types.GetRiskCategory(parsedModel, categoryId)
+			category := parsedModel.GetRiskCategory(categoryId)
 			if category.Function == function {
 				filteredRisks = append(filteredRisks, risk)
 			}
@@ -1561,7 +1575,7 @@ func (r *pdfReporter) createModelFailures(parsedModel *types.Model) {
 func filterByModelFailures(parsedModel *types.Model, risksByCat map[string][]*types.Risk) map[string][]*types.Risk {
 	result := make(map[string][]*types.Risk)
 	for categoryId, risks := range risksByCat {
-		category := types.GetRiskCategory(parsedModel, categoryId)
+		category := parsedModel.GetRiskCategory(categoryId)
 		if category.ModelFailurePossibleReason {
 			result[categoryId] = risks
 		}
@@ -1607,8 +1621,8 @@ func (r *pdfReporter) createRAA(parsedModel *types.Model, introTextRAA string) {
 		} else {
 			strBuilder.WriteString("<br><br>")
 		}
-		newRisksStr := technicalAsset.GeneratedRisks(parsedModel)
-		switch types.HighestSeverityStillAtRisk(parsedModel, newRisksStr) {
+		newRisksStr := parsedModel.GeneratedRisks(technicalAsset)
+		switch types.HighestSeverityStillAtRisk(newRisksStr) {
 		case types.HighSeverity:
 			colorHighRisk(r.pdf)
 		case types.MediumSeverity:
@@ -1763,7 +1777,7 @@ func (r *pdfReporter) addCategories(parsedModel *types.Model, riskCategories []*
 			r.pdfColorBlack()
 			prefix = ""
 		}
-		switch types.HighestSeverityStillAtRisk(parsedModel, risksStr) {
+		switch types.HighestSeverityStillAtRisk(risksStr) {
 		case types.CriticalSeverity:
 			colorCriticalRisk(r.pdf)
 		case types.HighSeverity:
@@ -2000,7 +2014,7 @@ func reduceToFunctionRisk(parsedModel *types.Model, risksByCategory map[string][
 	result := make(map[string][]*types.Risk)
 	for categoryId, risks := range risksByCategory {
 		for _, risk := range risks {
-			category := types.GetRiskCategory(parsedModel, categoryId)
+			category := parsedModel.GetRiskCategory(categoryId)
 			if category.Function == function {
 				result[categoryId] = append(result[categoryId], risk)
 			}
@@ -2225,7 +2239,7 @@ func countRisks(risksByCategory map[string][]*types.Risk) int {
 func getRiskCategories(parsedModel *types.Model, categoryIDs []string) []*types.RiskCategory {
 	categoryMap := make(map[string]*types.RiskCategory)
 	for _, categoryId := range categoryIDs {
-		category := types.GetRiskCategory(parsedModel, categoryId)
+		category := parsedModel.GetRiskCategory(categoryId)
 		if category != nil {
 			categoryMap[categoryId] = category
 		}
@@ -2281,7 +2295,7 @@ func reduceToSTRIDERisk(parsedModel *types.Model, risksByCategory map[string][]*
 	result := make(map[string][]*types.Risk)
 	for categoryId, risks := range risksByCategory {
 		for _, risk := range risks {
-			category := types.GetRiskCategory(parsedModel, categoryId)
+			category := parsedModel.GetRiskCategory(categoryId)
 			if category != nil && category.STRIDE == stride {
 				result[categoryId] = append(result[categoryId], risk)
 			}
@@ -2501,8 +2515,16 @@ func sortedSharedRuntimesByTitle(parsedModel *types.Model) []*types.SharedRuntim
 	for _, runtime := range parsedModel.SharedRuntimes {
 		result = append(result, runtime)
 	}
-	sort.Sort(types.BySharedRuntimeTitleSort(result))
+	sort.Sort(bySharedRuntimeTitleSort(result))
 	return result
+}
+
+type bySharedRuntimeTitleSort []*types.SharedRuntime
+
+func (what bySharedRuntimeTitleSort) Len() int      { return len(what) }
+func (what bySharedRuntimeTitleSort) Swap(i, j int) { what[i], what[j] = what[j], what[i] }
+func (what bySharedRuntimeTitleSort) Less(i, j int) bool {
+	return what[i].Title < what[j].Title
 }
 
 func sortedTechnicalAssetsByTitle(parsedModel *types.Model) []*types.TechnicalAsset {
@@ -2535,11 +2557,11 @@ func (r *pdfReporter) createRiskCategories(parsedModel *types.Model) {
 	html.Write(5, text.String())
 	text.Reset()
 	r.currentChapterTitleBreadcrumb = title
-	for _, category := range types.SortedRiskCategories(parsedModel) {
-		risksStr := types.SortedRisksOfCategory(parsedModel, category)
+	for _, category := range parsedModel.SortedRiskCategories() {
+		risksStr := parsedModel.SortedRisksOfCategory(category)
 
 		// category color
-		switch types.HighestSeverityStillAtRisk(parsedModel, risksStr) {
+		switch types.HighestSeverityStillAtRisk(risksStr) {
 		case types.CriticalSeverity:
 			colorCriticalRisk(r.pdf)
 		case types.HighSeverity:
@@ -2736,7 +2758,7 @@ func (r *pdfReporter) createRiskCategories(parsedModel *types.Model) {
 
 func (r *pdfReporter) writeRiskTrackingStatus(parsedModel *types.Model, risk *types.Risk) {
 	uni := r.pdf.UnicodeTranslatorFromDescriptor("")
-	tracking := risk.GetRiskTrackingWithDefault(parsedModel)
+	tracking := parsedModel.GetRiskTrackingWithDefault(risk)
 	r.pdfColorBlack()
 	r.pdf.CellFormat(10, 6, "", "0", 0, "", false, 0, "")
 	switch tracking.Status {
@@ -2804,7 +2826,7 @@ func (r *pdfReporter) createTechnicalAssets(parsedModel *types.Model) {
 	text.Reset()
 	r.currentChapterTitleBreadcrumb = title
 	for _, technicalAsset := range sortedTechnicalAssetsByRiskSeverityAndTitle(parsedModel) {
-		risksStr := technicalAsset.GeneratedRisks(parsedModel)
+		risksStr := parsedModel.GeneratedRisks(technicalAsset)
 		countStillAtRisk := len(types.ReduceToOnlyStillAtRisk(risksStr))
 		suffix := strconv.Itoa(countStillAtRisk) + " / " + strconv.Itoa(len(risksStr)) + " Risk"
 		if len(risksStr) != 1 {
@@ -2814,7 +2836,7 @@ func (r *pdfReporter) createTechnicalAssets(parsedModel *types.Model) {
 			r.pdfColorOutOfScope()
 			suffix = "out-of-scope"
 		} else {
-			switch types.HighestSeverityStillAtRisk(parsedModel, risksStr) {
+			switch types.HighestSeverityStillAtRisk(risksStr) {
 			case types.CriticalSeverity:
 				colorCriticalRisk(r.pdf)
 			case types.HighSeverity:
@@ -3120,7 +3142,7 @@ func (r *pdfReporter) createTechnicalAssets(parsedModel *types.Model) {
 		r.pdf.CellFormat(40, 6, "Data Processed:", "0", 0, "", false, 0, "")
 		r.pdfColorBlack()
 		dataAssetsProcessedText := ""
-		for _, dataAsset := range technicalAsset.DataAssetsProcessedSorted(parsedModel) {
+		for _, dataAsset := range parsedModel.DataAssetsProcessedSorted(technicalAsset) {
 			if len(dataAssetsProcessedText) > 0 {
 				dataAssetsProcessedText += ", "
 			}
@@ -3137,7 +3159,7 @@ func (r *pdfReporter) createTechnicalAssets(parsedModel *types.Model) {
 		r.pdf.CellFormat(40, 6, "Data Stored:", "0", 0, "", false, 0, "")
 		r.pdfColorBlack()
 		dataAssetsStoredText := ""
-		for _, dataAsset := range technicalAsset.DataAssetsStoredSorted(parsedModel) {
+		for _, dataAsset := range parsedModel.DataAssetsStoredSorted(technicalAsset) {
 			if len(dataAssetsStoredText) > 0 {
 				dataAssetsStoredText += ", "
 			}
@@ -3388,7 +3410,7 @@ func (r *pdfReporter) createTechnicalAssets(parsedModel *types.Model) {
 				r.pdf.CellFormat(35, 6, "Data Sent:", "0", 0, "", false, 0, "")
 				r.pdfColorBlack()
 				dataAssetsSentText := ""
-				for _, dataAsset := range outgoingCommLink.DataAssetsSentSorted(parsedModel) {
+				for _, dataAsset := range parsedModel.DataAssetsSentSorted(outgoingCommLink) {
 					if len(dataAssetsSentText) > 0 {
 						dataAssetsSentText += ", "
 					}
@@ -3404,7 +3426,7 @@ func (r *pdfReporter) createTechnicalAssets(parsedModel *types.Model) {
 				r.pdf.CellFormat(35, 6, "Data Received:", "0", 0, "", false, 0, "")
 				r.pdfColorBlack()
 				dataAssetsReceivedText := ""
-				for _, dataAsset := range outgoingCommLink.DataAssetsReceivedSorted(parsedModel) {
+				for _, dataAsset := range parsedModel.DataAssetsReceivedSorted(outgoingCommLink) {
 					if len(dataAssetsReceivedText) > 0 {
 						dataAssetsReceivedText += ", "
 					}
@@ -3559,7 +3581,7 @@ func (r *pdfReporter) createTechnicalAssets(parsedModel *types.Model) {
 				r.pdfColorBlack()
 				dataAssetsSentText := ""
 				// yep, here we reverse the sent/received direction, as it's the incoming stuff
-				for _, dataAsset := range incomingCommLink.DataAssetsSentSorted(parsedModel) {
+				for _, dataAsset := range parsedModel.DataAssetsSentSorted(incomingCommLink) {
 					if len(dataAssetsSentText) > 0 {
 						dataAssetsSentText += ", "
 					}
@@ -3576,7 +3598,7 @@ func (r *pdfReporter) createTechnicalAssets(parsedModel *types.Model) {
 				r.pdfColorBlack()
 				dataAssetsReceivedText := ""
 				// yep, here we reverse the sent/received direction, as it's the incoming stuff
-				for _, dataAsset := range incomingCommLink.DataAssetsReceivedSorted(parsedModel) {
+				for _, dataAsset := range parsedModel.DataAssetsReceivedSorted(incomingCommLink) {
 					if len(dataAssetsReceivedText) > 0 {
 						dataAssetsReceivedText += ", "
 					}
@@ -3647,7 +3669,7 @@ func (r *pdfReporter) createDataAssets(parsedModel *types.Model) {
 		if !isDataBreachPotentialStillAtRisk(parsedModel, dataAsset) {
 			r.pdfColorBlack()
 		}
-		risksStr := dataAsset.IdentifiedDataBreachProbabilityRisks(parsedModel)
+		risksStr := parsedModel.IdentifiedDataBreachProbabilityRisks(dataAsset)
 		countStillAtRisk := len(types.ReduceToOnlyStillAtRisk(risksStr))
 		suffix := strconv.Itoa(countStillAtRisk) + " / " + strconv.Itoa(len(risksStr)) + " Risk"
 		if len(risksStr) != 1 {
@@ -3782,7 +3804,7 @@ func (r *pdfReporter) createDataAssets(parsedModel *types.Model) {
 		r.pdf.CellFormat(40, 6, "Processed by:", "0", 0, "", false, 0, "")
 		r.pdfColorBlack()
 		processedByText := ""
-		for _, dataAsset := range dataAsset.ProcessedByTechnicalAssetsSorted(parsedModel) {
+		for _, dataAsset := range parsedModel.ProcessedByTechnicalAssetsSorted(dataAsset) {
 			if len(processedByText) > 0 {
 				processedByText += ", "
 			}
@@ -3803,7 +3825,7 @@ func (r *pdfReporter) createDataAssets(parsedModel *types.Model) {
 		r.pdf.CellFormat(40, 6, "Stored by:", "0", 0, "", false, 0, "")
 		r.pdfColorBlack()
 		storedByText := ""
-		for _, dataAsset := range dataAsset.StoredByTechnicalAssetsSorted(parsedModel) {
+		for _, dataAsset := range parsedModel.StoredByTechnicalAssetsSorted(dataAsset) {
 			if len(storedByText) > 0 {
 				storedByText += ", "
 			}
@@ -3824,7 +3846,7 @@ func (r *pdfReporter) createDataAssets(parsedModel *types.Model) {
 		r.pdf.CellFormat(40, 6, "Sent via:", "0", 0, "", false, 0, "")
 		r.pdfColorBlack()
 		sentViaText := ""
-		for _, commLink := range dataAsset.SentViaCommLinksSorted(parsedModel) {
+		for _, commLink := range parsedModel.SentViaCommLinksSorted(dataAsset) {
 			if len(sentViaText) > 0 {
 				sentViaText += ", "
 			}
@@ -3845,7 +3867,7 @@ func (r *pdfReporter) createDataAssets(parsedModel *types.Model) {
 		r.pdf.CellFormat(40, 6, "Received via:", "0", 0, "", false, 0, "")
 		r.pdfColorBlack()
 		receivedViaText := ""
-		for _, commLink := range dataAsset.ReceivedViaCommLinksSorted(parsedModel) {
+		for _, commLink := range parsedModel.ReceivedViaCommLinksSorted(dataAsset) {
 			if len(receivedViaText) > 0 {
 				receivedViaText += ", "
 			}
@@ -4221,7 +4243,7 @@ func (r *pdfReporter) createSharedRuntimes(parsedModel *types.Model) {
 	}
 }
 
-func (r *pdfReporter) createRiskRulesChecked(parsedModel *types.Model, modelFilename string, skipRiskRules []string, buildTimestamp string, modelHash string, customRiskRules types.RiskRules) {
+func (r *pdfReporter) createRiskRulesChecked(parsedModel *types.Model, modelFilename string, skipRiskRules []string, buildTimestamp string, threagileVersion string, modelHash string, customRiskRules types.RiskRules) {
 	r.pdf.SetTextColor(0, 0, 0)
 	title := "Risk Rules Checked by Threagile"
 	r.addHeadline(title, false)
@@ -4233,7 +4255,7 @@ func (r *pdfReporter) createRiskRulesChecked(parsedModel *types.Model, modelFile
 	r.pdfColorGray()
 	r.pdf.SetFont("Helvetica", "", fontSizeSmall)
 	timestamp := time.Now()
-	strBuilder.WriteString("<b>Threagile Version:</b> " + docs.ThreagileVersion)
+	strBuilder.WriteString("<b>Threagile Version:</b> " + threagileVersion)
 	strBuilder.WriteString("<br><b>Threagile Build Timestamp:</b> " + buildTimestamp)
 	strBuilder.WriteString("<br><b>Threagile Execution Timestamp:</b> " + timestamp.Format("20060102150405"))
 	strBuilder.WriteString("<br><b>Model Filename:</b> " + modelFilename)
@@ -4327,7 +4349,7 @@ func (r *pdfReporter) createRiskRulesChecked(parsedModel *types.Model, modelFile
 		r.pdf.MultiCell(160, 6, individualRiskCategory.RiskAssessment, "0", "0", false)
 	}
 
-	for _, rule := range risks.GetBuiltInRiskRules() {
+	for _, rule := range r.riskRules {
 		r.pdf.Ln(-1)
 		r.pdf.SetFont("Helvetica", "B", fontSizeBody)
 		if contains(skipRiskRules, rule.Category().ID) {

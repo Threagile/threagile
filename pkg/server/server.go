@@ -15,17 +15,51 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/threagile/threagile/pkg/common"
-	"github.com/threagile/threagile/pkg/model"
-
 	"github.com/gin-gonic/gin"
-	"github.com/threagile/threagile/pkg/docs"
-	"github.com/threagile/threagile/pkg/security/risks"
-	"github.com/threagile/threagile/pkg/security/types"
+
+	"github.com/threagile/threagile/pkg/model"
+	"github.com/threagile/threagile/pkg/types"
 )
 
+type serverConfigReader interface {
+	GetBuildTimestamp() string
+	GetVerbose() bool
+	GetThreagileVersion() string
+
+	GetAppFolder() string
+	GetServerFolder() string
+	GetTempFolder() string
+	GetKeyFolder() string
+
+	GetInputFile() string
+	GetDataFlowDiagramFilenamePNG() string
+	GetDataAssetDiagramFilenamePNG() string
+	GetDataFlowDiagramFilenameDOT() string
+	GetDataAssetDiagramFilenameDOT() string
+	GetReportFilename() string
+	GetExcelRisksFilename() string
+	GetExcelTagsFilename() string
+	GetJsonRisksFilename() string
+	GetJsonTechnicalAssetsFilename() string
+	GetJsonStatsFilename() string
+	GetTechnologyFilename() string
+
+	GetRiskRulesPlugins() []string
+	GetSkipRiskRules() []string
+	GetExecuteModelMacro() string
+
+	GetServerPort() int
+	GetGraphvizDPI() int
+	GetBackupHistoryFilesToKeep() int
+
+	GetKeepDiagramSourceFiles() bool
+	GetIgnoreOrphanedRiskTracking() bool
+
+	GetProgressReporter() types.ProgressReporter
+}
+
 type server struct {
-	config                         *common.Config
+	config                         serverConfigReader
 	successCount                   int
 	errorCount                     int
 	globalLock                     sync.Mutex
@@ -35,10 +69,11 @@ type server struct {
 	mapFolderNameToTokenHash       map[string]string
 	extremeShortTimeoutsForTesting bool
 	locksByFolderName              map[string]*sync.Mutex
+	builtinRiskRules               types.RiskRules
 	customRiskRules                types.RiskRules
 }
 
-func RunServer(config *common.Config) {
+func RunServer(config serverConfigReader, builtinRiskRules types.RiskRules) {
 	s := &server{
 		config:                         config,
 		createdObjectsThrottler:        make(map[string][]int64),
@@ -46,34 +81,35 @@ func RunServer(config *common.Config) {
 		mapFolderNameToTokenHash:       make(map[string]string),
 		extremeShortTimeoutsForTesting: false,
 		locksByFolderName:              make(map[string]*sync.Mutex),
+		builtinRiskRules:               builtinRiskRules,
 	}
 	router := gin.Default()
-	router.LoadHTMLGlob(filepath.Join(s.config.ServerFolder, "s", "static", "*.html")) // <==
+	router.LoadHTMLGlob(filepath.Join(s.config.GetServerFolder(), "s", "static", "*.html")) // <==
 	router.GET("/", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "index.html", gin.H{})
 	})
 	router.HEAD("/", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "index.html", gin.H{})
 	})
-	router.StaticFile("/threagile.png", filepath.Join(s.config.ServerFolder, "s", "static", "threagile.png")) // <==
-	router.StaticFile("/site.webmanifest", filepath.Join(s.config.ServerFolder, "s", "static", "site.webmanifest"))
-	router.StaticFile("/favicon.ico", filepath.Join(s.config.ServerFolder, "s", "static", "favicon.ico"))
-	router.StaticFile("/favicon-32x32.png", filepath.Join(s.config.ServerFolder, "s", "static", "favicon-32x32.png"))
-	router.StaticFile("/favicon-16x16.png", filepath.Join(s.config.ServerFolder, "s", "static", "favicon-16x16.png"))
-	router.StaticFile("/apple-touch-icon.png", filepath.Join(s.config.ServerFolder, "s", "static", "apple-touch-icon.png"))
-	router.StaticFile("/android-chrome-512x512.png", filepath.Join(s.config.ServerFolder, "s", "static", "android-chrome-512x512.png"))
-	router.StaticFile("/android-chrome-192x192.png", filepath.Join(s.config.ServerFolder, "s", "static", "android-chrome-192x192.png"))
+	router.StaticFile("/threagile.png", filepath.Join(s.config.GetServerFolder(), "s", "static", "threagile.png")) // <==
+	router.StaticFile("/site.webmanifest", filepath.Join(s.config.GetServerFolder(), "s", "static", "site.webmanifest"))
+	router.StaticFile("/favicon.ico", filepath.Join(s.config.GetServerFolder(), "s", "static", "favicon.ico"))
+	router.StaticFile("/favicon-32x32.png", filepath.Join(s.config.GetServerFolder(), "s", "static", "favicon-32x32.png"))
+	router.StaticFile("/favicon-16x16.png", filepath.Join(s.config.GetServerFolder(), "s", "static", "favicon-16x16.png"))
+	router.StaticFile("/apple-touch-icon.png", filepath.Join(s.config.GetServerFolder(), "s", "static", "apple-touch-icon.png"))
+	router.StaticFile("/android-chrome-512x512.png", filepath.Join(s.config.GetServerFolder(), "s", "static", "android-chrome-512x512.png"))
+	router.StaticFile("/android-chrome-192x192.png", filepath.Join(s.config.GetServerFolder(), "s", "static", "android-chrome-192x192.png"))
 
-	router.StaticFile("/schema.json", filepath.Join(s.config.AppFolder, "schema.json"))
-	router.StaticFile("/live-templates.txt", filepath.Join(s.config.AppFolder, "live-templates.txt"))
-	router.StaticFile("/openapi.yaml", filepath.Join(s.config.AppFolder, "openapi.yaml"))
-	router.StaticFile("/swagger-ui/", filepath.Join(s.config.ServerFolder, "s", "static", "swagger-ui/index.html"))
-	router.StaticFile("/swagger-ui/index.html", filepath.Join(s.config.ServerFolder, "s", "static", "swagger-ui/index.html"))
-	router.StaticFile("/swagger-ui/oauth2-redirect.html", filepath.Join(s.config.ServerFolder, "s", "static", "swagger-ui/oauth2-redirect.html"))
-	router.StaticFile("/swagger-ui/swagger-ui.css", filepath.Join(s.config.ServerFolder, "s", "static", "swagger-ui/swagger-ui.css"))
-	router.StaticFile("/swagger-ui/swagger-ui.js", filepath.Join(s.config.ServerFolder, "s", "static", "swagger-ui/swagger-ui.js"))
-	router.StaticFile("/swagger-ui/swagger-ui-bundle.js", filepath.Join(s.config.ServerFolder, "s", "static", "swagger-ui/swagger-ui-bundle.js"))
-	router.StaticFile("/swagger-ui/swagger-ui-standalone-preset.js", filepath.Join(s.config.ServerFolder, "s", "static", "swagger-ui/swagger-ui-standalone-preset.js")) // <==
+	router.StaticFile("/schema.json", filepath.Join(s.config.GetAppFolder(), "schema.json"))
+	router.StaticFile("/live-templates.txt", filepath.Join(s.config.GetAppFolder(), "live-templates.txt"))
+	router.StaticFile("/openapi.yaml", filepath.Join(s.config.GetAppFolder(), "openapi.yaml"))
+	router.StaticFile("/swagger-ui/", filepath.Join(s.config.GetServerFolder(), "s", "static", "swagger-ui/index.html"))
+	router.StaticFile("/swagger-ui/index.html", filepath.Join(s.config.GetServerFolder(), "s", "static", "swagger-ui/index.html"))
+	router.StaticFile("/swagger-ui/oauth2-redirect.html", filepath.Join(s.config.GetServerFolder(), "s", "static", "swagger-ui/oauth2-redirect.html"))
+	router.StaticFile("/swagger-ui/swagger-ui.css", filepath.Join(s.config.GetServerFolder(), "s", "static", "swagger-ui/swagger-ui.css"))
+	router.StaticFile("/swagger-ui/swagger-ui.js", filepath.Join(s.config.GetServerFolder(), "s", "static", "swagger-ui/swagger-ui.js"))
+	router.StaticFile("/swagger-ui/swagger-ui-bundle.js", filepath.Join(s.config.GetServerFolder(), "s", "static", "swagger-ui/swagger-ui-bundle.js"))
+	router.StaticFile("/swagger-ui/swagger-ui-standalone-preset.js", filepath.Join(s.config.GetServerFolder(), "s", "static", "swagger-ui/swagger-ui-standalone-preset.js")) // <==
 
 	router.GET("/threagile-example-model.yaml", s.exampleFile)
 	router.GET("/threagile-stub-model.yaml", s.stubFile)
@@ -85,8 +121,8 @@ func RunServer(config *common.Config) {
 	})
 	router.GET("/meta/version", func(c *gin.Context) {
 		c.JSON(200, gin.H{
-			"version":         docs.ThreagileVersion,
-			"build_timestamp": s.config.BuildTimestamp,
+			"version":         config.GetThreagileVersion(),
+			"build_timestamp": s.config.GetBuildTimestamp(),
 		})
 	})
 	router.GET("/meta/types", func(c *gin.Context) {
@@ -175,15 +211,14 @@ func RunServer(config *common.Config) {
 	router.PUT("/models/:model-id/shared-runtimes/:shared-runtime-id", s.setSharedRuntime)
 	router.DELETE("/models/:model-id/shared-runtimes/:shared-runtime-id", s.deleteSharedRuntime)
 
-	reporter := common.DefaultProgressReporter{Verbose: s.config.Verbose}
-	s.customRiskRules = model.LoadCustomRiskRules(s.config.RiskRulesPlugins, reporter)
+	s.customRiskRules = model.LoadCustomRiskRules(s.config.GetRiskRulesPlugins(), config.GetProgressReporter())
 
 	fmt.Println("Threagile s running...")
-	_ = router.Run(":" + strconv.Itoa(s.config.ServerPort)) // listen and serve on 0.0.0.0:8080 or whatever port was specified
+	_ = router.Run(":" + strconv.Itoa(s.config.GetServerPort())) // listen and serve on 0.0.0.0:8080 or whatever port was specified
 }
 
 func (s *server) exampleFile(ginContext *gin.Context) {
-	example, err := os.ReadFile(filepath.Join(s.config.AppFolder, "threagile-example-model.yaml"))
+	example, err := os.ReadFile(filepath.Join(s.config.GetAppFolder(), "threagile-example-model.yaml"))
 	if err != nil {
 		handleErrorInServiceCall(err, ginContext)
 		return
@@ -192,7 +227,7 @@ func (s *server) exampleFile(ginContext *gin.Context) {
 }
 
 func (s *server) stubFile(ginContext *gin.Context) {
-	stub, err := os.ReadFile(filepath.Join(s.config.AppFolder, "threagile-stub-model.yaml"))
+	stub, err := os.ReadFile(filepath.Join(s.config.GetAppFolder(), "threagile-stub-model.yaml"))
 	if err != nil {
 		handleErrorInServiceCall(err, ginContext)
 		return
@@ -209,7 +244,7 @@ func (s *server) addSupportedTags(input []byte) []byte {
 		}
 	}
 
-	for _, rule := range risks.GetBuiltInRiskRules() {
+	for _, rule := range s.builtinRiskRules {
 		for _, tag := range rule.SupportedTags() {
 			supportedTags[strings.ToLower(tag)] = true
 		}
@@ -223,7 +258,7 @@ func (s *server) addSupportedTags(input []byte) []byte {
 		return input
 	}
 	sort.Strings(tags)
-	if s.config.Verbose {
+	if s.config.GetVerbose() {
 		fmt.Print("Supported tags of all risk rules: ")
 		for i, tag := range tags {
 			if i > 0 {
@@ -250,7 +285,7 @@ func arrayOfStringValues(values []types.TypeEnum) []string {
 
 func (s *server) stats(ginContext *gin.Context) {
 	keyCount, modelCount := 0, 0
-	keyFolders, err := os.ReadDir(filepath.Join(s.config.ServerFolder, s.config.KeyFolder))
+	keyFolders, err := os.ReadDir(filepath.Join(s.config.GetServerFolder(), s.config.GetKeyFolder()))
 	if err != nil {
 		log.Println(err)
 		ginContext.JSON(http.StatusInternalServerError, gin.H{
@@ -267,7 +302,7 @@ func (s *server) stats(ginContext *gin.Context) {
 				})
 				return
 			}
-			modelFolders, err := os.ReadDir(filepath.Join(s.config.ServerFolder, s.config.KeyFolder, keyFolder.Name()))
+			modelFolders, err := os.ReadDir(filepath.Join(s.config.GetServerFolder(), s.config.GetKeyFolder(), keyFolder.Name()))
 			if err != nil {
 				log.Println(err)
 				ginContext.JSON(http.StatusInternalServerError, gin.H{

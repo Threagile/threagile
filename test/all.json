@@ -1608,7 +1608,7 @@
       "action": "Encryption of Communication Links",
       "mitigation": "Apply transport layer encryption to the communication link.",
       "check": "Are recommendations from the linked cheat sheet and referenced ASVS chapter applied?",
-      "detection_logic": "Unencrypted technical communication links of in-scope technical assets (excluding monitoring traffic as well as local-file-access and in-process-library-call) transferring sensitive data.",
+      "detection_logic": "Unencrypted technical communication links of in-scope technical assets (excluding monitoring traffic as well as local-file-access, in-process-library-call and inter-process-communication) transferring sensitive data.",
       "risk_assessment": "Depending on the confidentiality rating of the transferred data-assets either medium or high risk.",
       "false_positives": "When all sensitive data sent over the communication link is already fully encrypted on document or data level. Also intra-container/pod communication can be considered false positive when container orchestration platform handles encryption.",
       "function": "operations",

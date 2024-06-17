@@ -2,17 +2,17 @@ package report
 
 import (
 	"fmt"
-	"github.com/shopspring/decimal"
-	"github.com/threagile/threagile/pkg/common"
-	"github.com/threagile/threagile/pkg/security/types"
-	"github.com/xuri/excelize/v2"
 	"sort"
 	"strconv"
 	"strings"
 	"unicode/utf8"
+
+	"github.com/shopspring/decimal"
+	"github.com/threagile/threagile/pkg/types"
+	"github.com/xuri/excelize/v2"
 )
 
-func WriteRisksExcelToFile(parsedModel *types.Model, filename string, config *common.Config) error {
+func WriteRisksExcelToFile(parsedModel *types.Model, filename string, config reportConfigReader) error {
 	columns := new(ExcelColumns).GetColumns()
 	excel := excelize.NewFile()
 	sheetName := parsedModel.Title
@@ -80,8 +80,8 @@ func WriteRisksExcelToFile(parsedModel *types.Model, filename string, config *co
 
 	// get sorted risks
 	riskItems := make([]RiskItem, 0)
-	for _, category := range types.SortedRiskCategories(parsedModel) {
-		risks := types.SortedRisksOfCategory(parsedModel, category)
+	for _, category := range parsedModel.SortedRiskCategories() {
+		risks := parsedModel.SortedRisksOfCategory(category)
 		for _, risk := range risks {
 			techAsset := parsedModel.TechnicalAssets[risk.MostRelevantTechnicalAssetId]
 			techAssetTitle := ""
@@ -98,7 +98,7 @@ func WriteRisksExcelToFile(parsedModel *types.Model, filename string, config *co
 			}
 
 			date := ""
-			riskTracking := risk.GetRiskTrackingWithDefault(parsedModel)
+			riskTracking := parsedModel.GetRiskTrackingWithDefault(risk)
 			if !riskTracking.Date.IsZero() {
 				date = riskTracking.Date.Format("2006-01-02")
 			}
@@ -133,7 +133,7 @@ func WriteRisksExcelToFile(parsedModel *types.Model, filename string, config *co
 	}
 
 	// group risks
-	groupedRisk, groupedRiskError := new(RiskGroup).Make(riskItems, columns, config.RiskExcel.SortByColumns)
+	groupedRisk, groupedRiskError := new(RiskGroup).Make(riskItems, columns, config.GetRiskExcelConfigSortByColumns())
 	if groupedRiskError != nil {
 		return fmt.Errorf("failed to group risks: %w", groupedRiskError)
 	}
@@ -160,7 +160,7 @@ func WriteRisksExcelToFile(parsedModel *types.Model, filename string, config *co
 			}
 
 			var minWidth float64 = 0
-			width, widthOk := config.RiskExcel.WidthOfColumns[columns[name].Title]
+			width, widthOk := config.GetRiskExcelConfigWidthOfColumns()[columns[name].Title]
 			if widthOk {
 				minWidth = width
 			} else {
@@ -210,7 +210,7 @@ func WriteRisksExcelToFile(parsedModel *types.Model, filename string, config *co
 
 	// hide some columns
 	for columnLetter, column := range columns {
-		for _, hiddenColumn := range config.RiskExcel.HideColumns {
+		for _, hiddenColumn := range config.GetRiskExcelConfigHideColumns() {
 			if strings.EqualFold(hiddenColumn, column.Title) {
 				hideColumnError := excel.SetColVisible(sheetName, columnLetter, false)
 				if hideColumnError != nil {
@@ -380,8 +380,16 @@ func sortedTrustBoundariesByTitle(parsedModel *types.Model) []*types.TrustBounda
 	for _, boundary := range parsedModel.TrustBoundaries {
 		boundaries = append(boundaries, boundary)
 	}
-	sort.Sort(types.ByTrustBoundaryTitleSort(boundaries))
+	sort.Sort(byTrustBoundaryTitleSort(boundaries))
 	return boundaries
+}
+
+type byTrustBoundaryTitleSort []*types.TrustBoundary
+
+func (what byTrustBoundaryTitleSort) Len() int      { return len(what) }
+func (what byTrustBoundaryTitleSort) Swap(i, j int) { what[i], what[j] = what[j], what[i] }
+func (what byTrustBoundaryTitleSort) Less(i, j int) bool {
+	return what[i].Title < what[j].Title
 }
 
 func sortedDataAssetsByTitle(parsedModel *types.Model) []*types.DataAsset {

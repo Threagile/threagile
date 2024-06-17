@@ -7,12 +7,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/threagile/threagile/pkg/common"
 	"github.com/threagile/threagile/pkg/input"
-	"github.com/threagile/threagile/pkg/security/types"
+	"github.com/threagile/threagile/pkg/types"
 )
 
-func ParseModel(config *common.Config, modelInput *input.Model, builtinRiskRules types.RiskRules, customRiskRules types.RiskRules) (*types.Model, error) {
+type technologyMapConfigReader interface {
+	GetAppFolder() string
+	GetTechnologyFilename() string
+}
+
+func ParseModel(config technologyMapConfigReader, modelInput *input.Model, builtinRiskRules types.RiskRules, customRiskRules types.RiskRules) (*types.Model, error) {
 	technologies := make(types.TechnologyMap)
 	technologiesLoadError := technologies.LoadWithConfig(config, "technologies.yaml")
 	if technologiesLoadError != nil {
@@ -369,17 +373,17 @@ func ParseModel(config *common.Config, modelInput *input.Model, builtinRiskRules
 
 	// If CIA is lower than that of its data assets, it is implicitly set to the highest CIA value of its data assets
 	for id, techAsset := range parsedModel.TechnicalAssets {
-		dataAssetConfidentiality := techAsset.HighestConfidentiality(&parsedModel)
+		dataAssetConfidentiality := parsedModel.HighestTechnicalAssetConfidentiality(techAsset)
 		if techAsset.Confidentiality < dataAssetConfidentiality {
 			techAsset.Confidentiality = dataAssetConfidentiality
 		}
 
-		dataAssetIntegrity := techAsset.HighestIntegrity(&parsedModel)
+		dataAssetIntegrity := parsedModel.HighestIntegrity(techAsset)
 		if techAsset.Integrity < dataAssetIntegrity {
 			techAsset.Integrity = dataAssetIntegrity
 		}
 
-		dataAssetAvailability := techAsset.HighestAvailability(&parsedModel)
+		dataAssetAvailability := parsedModel.HighestAvailability(techAsset)
 		if techAsset.Availability < dataAssetAvailability {
 			techAsset.Availability = dataAssetAvailability
 		}

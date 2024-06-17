@@ -6,19 +6,18 @@ package examples
 
 import (
 	"fmt"
-	"github.com/threagile/threagile/pkg/common"
 	"io"
 	"os"
 	"path/filepath"
 )
 
-func CreateExampleModelFile(appFolder, outputDir string) error {
+func CreateExampleModelFile(appFolder, outputDir, inputFile string) error {
 	_, err := copyFile(filepath.Join(appFolder, "threagile-example-model.yaml"), filepath.Join(outputDir, "threagile-example-model.yaml"))
 	if err == nil {
 		return nil
 	}
 
-	_, altError := copyFile(filepath.Join(appFolder, common.InputFile), filepath.Join(outputDir, "threagile-example-model.yaml"))
+	_, altError := copyFile(filepath.Join(appFolder, inputFile), filepath.Join(outputDir, "threagile-example-model.yaml"))
 	if altError != nil {
 		return err
 	}
@@ -26,13 +25,13 @@ func CreateExampleModelFile(appFolder, outputDir string) error {
 	return nil
 }
 
-func CreateStubModelFile(appFolder, outputDir string) error {
+func CreateStubModelFile(appFolder, outputDir, inputFile string) error {
 	_, err := copyFile(filepath.Join(appFolder, "threagile-stub-model.yaml"), filepath.Join(outputDir, "threagile-stub-model.yaml"))
 	if err == nil {
 		return nil
 	}
 
-	_, altError := copyFile(filepath.Join(appFolder, common.InputFile), filepath.Join(outputDir, "threagile-stub-model.yaml"))
+	_, altError := copyFile(filepath.Join(appFolder, inputFile), filepath.Join(outputDir, "threagile-stub-model.yaml"))
 	if altError != nil {
 		return err
 	}

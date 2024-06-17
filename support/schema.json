@@ -650,6 +650,7 @@
                     "jrmp",
                     "jrmp-encrypted",
                     "in-process-library-call",
+                    "inter-process-communication",
                     "container-spawning"
                   ]
                 },

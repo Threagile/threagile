@@ -45,7 +45,7 @@ func (s *server) execute(ginContext *gin.Context, dryRun bool) (yamlContent []by
 		}
 	}()
 
-	dpi, err := strconv.Atoi(ginContext.DefaultQuery("dpi", strconv.Itoa(s.config.GraphvizDPI)))
+	dpi, err := strconv.Atoi(ginContext.DefaultQuery("dpi", strconv.Itoa(s.config.GetGraphvizDPI())))
 	if err != nil {
 		handleErrorInServiceCall(err, ginContext)
 		return yamlContent, false
@@ -68,7 +68,7 @@ func (s *server) execute(ginContext *gin.Context, dryRun bool) (yamlContent []by
 
 	filenameUploaded := strings.TrimSpace(header.Filename)
 
-	tmpInputDir, err := os.MkdirTemp(s.config.TempFolder, "threagile-input-")
+	tmpInputDir, err := os.MkdirTemp(s.config.GetTempFolder(), "threagile-input-")
 	if err != nil {
 		handleErrorInServiceCall(err, ginContext)
 		return yamlContent, false
@@ -91,7 +91,7 @@ func (s *server) execute(ginContext *gin.Context, dryRun bool) (yamlContent []by
 
 	if strings.ToLower(filepath.Ext(filenameUploaded)) == ".zip" {
 		// unzip first (including the resources like images etc.)
-		if s.config.Verbose {
+		if s.config.GetVerbose() {
 			fmt.Println("Decompressing uploaded archive")
 		}
 		filenamesUnzipped, err := unzip(tmpModelFile.Name(), tmpInputDir)
@@ -112,14 +112,14 @@ func (s *server) execute(ginContext *gin.Context, dryRun bool) (yamlContent []by
 		}
 	}
 
-	tmpOutputDir, err := os.MkdirTemp(s.config.TempFolder, "threagile-output-")
+	tmpOutputDir, err := os.MkdirTemp(s.config.GetTempFolder(), "threagile-output-")
 	if err != nil {
 		handleErrorInServiceCall(err, ginContext)
 		return yamlContent, false
 	}
 	defer func() { _ = os.RemoveAll(tmpOutputDir) }()
 
-	tmpResultFile, err := os.CreateTemp(s.config.TempFolder, "threagile-result-*.zip")
+	tmpResultFile, err := os.CreateTemp(s.config.GetTempFolder(), "threagile-result-*.zip")
 	if err != nil {
 		handleErrorInServiceCall(err, ginContext)
 		return yamlContent, false
@@ -137,7 +137,7 @@ func (s *server) execute(ginContext *gin.Context, dryRun bool) (yamlContent []by
 		handleErrorInServiceCall(err, ginContext)
 		return yamlContent, false
 	}
-	err = os.WriteFile(filepath.Join(tmpOutputDir, s.config.InputFile), yamlContent, 0400)
+	err = os.WriteFile(filepath.Join(tmpOutputDir, s.config.GetInputFile()), yamlContent, 0400)
 	if err != nil {
 		handleErrorInServiceCall(err, ginContext)
 		return yamlContent, false
@@ -145,26 +145,26 @@ func (s *server) execute(ginContext *gin.Context, dryRun bool) (yamlContent []by
 
 	if !dryRun {
 		files := []string{
-			filepath.Join(tmpOutputDir, s.config.InputFile),
-			filepath.Join(tmpOutputDir, s.config.DataFlowDiagramFilenamePNG),
-			filepath.Join(tmpOutputDir, s.config.DataAssetDiagramFilenamePNG),
-			filepath.Join(tmpOutputDir, s.config.ReportFilename),
-			filepath.Join(tmpOutputDir, s.config.ExcelRisksFilename),
-			filepath.Join(tmpOutputDir, s.config.ExcelTagsFilename),
-			filepath.Join(tmpOutputDir, s.config.JsonRisksFilename),
-			filepath.Join(tmpOutputDir, s.config.JsonTechnicalAssetsFilename),
-			filepath.Join(tmpOutputDir, s.config.JsonStatsFilename),
+			filepath.Join(tmpOutputDir, s.config.GetInputFile()),
+			filepath.Join(tmpOutputDir, s.config.GetDataFlowDiagramFilenamePNG()),
+			filepath.Join(tmpOutputDir, s.config.GetDataAssetDiagramFilenamePNG()),
+			filepath.Join(tmpOutputDir, s.config.GetReportFilename()),
+			filepath.Join(tmpOutputDir, s.config.GetExcelRisksFilename()),
+			filepath.Join(tmpOutputDir, s.config.GetExcelTagsFilename()),
+			filepath.Join(tmpOutputDir, s.config.GetJsonRisksFilename()),
+			filepath.Join(tmpOutputDir, s.config.GetJsonTechnicalAssetsFilename()),
+			filepath.Join(tmpOutputDir, s.config.GetJsonStatsFilename()),
 		}
-		if s.config.KeepDiagramSourceFiles {
-			files = append(files, filepath.Join(tmpOutputDir, s.config.DataAssetDiagramFilenamePNG))
-			files = append(files, filepath.Join(tmpOutputDir, s.config.DataAssetDiagramFilenameDOT))
+		if s.config.GetKeepDiagramSourceFiles() {
+			files = append(files, filepath.Join(tmpOutputDir, s.config.GetDataAssetDiagramFilenamePNG()))
+			files = append(files, filepath.Join(tmpOutputDir, s.config.GetDataAssetDiagramFilenameDOT()))
 		}
 		err = zipFiles(tmpResultFile.Name(), files)
 		if err != nil {
 			handleErrorInServiceCall(err, ginContext)
 			return yamlContent, false
 		}
-		if s.config.Verbose {
+		if s.config.GetVerbose() {
 			log.Println("Streaming back result file: " + tmpResultFile.Name())
 		}
 		ginContext.FileAttachment(tmpResultFile.Name(), "threagile-result.zip")
@@ -179,11 +179,11 @@ func (s *server) doItViaRuntimeCall(modelFile string, outputDir string,
 	dpi int) {
 	// Remember to also add the same args to the exec based sub-process calls!
 	var cmd *exec.Cmd
-	args := []string{"-model", modelFile, "-output", outputDir, "-execute-model-macro", s.config.ExecuteModelMacro, "-custom-risk-rules-plugins", strings.Join(s.config.RiskRulesPlugins, ","), "-skip-risk-rules", strings.Join(s.config.SkipRiskRules, ","), "-diagram-dpi", strconv.Itoa(dpi)}
-	if s.config.Verbose {
+	args := []string{"-model", modelFile, "-output", outputDir, "-execute-model-macro", s.config.GetExecuteModelMacro(), "-custom-risk-rules-plugins", strings.Join(s.config.GetRiskRulesPlugins(), ","), "-skip-risk-rules", strings.Join(s.config.GetSkipRiskRules(), ","), "-diagram-dpi", strconv.Itoa(dpi)}
+	if s.config.GetVerbose() {
 		args = append(args, "-verbose")
 	}
-	if s.config.IgnoreOrphanedRiskTracking { // TODO why add all them as arguments, when they are also variables on outer level?
+	if s.config.GetIgnoreOrphanedRiskTracking() { // TODO why add all them as arguments, when they are also variables on outer level?
 		args = append(args, "-ignore-orphaned-risk-tracking")
 	}
 	if generateDataFlowDiagram {
@@ -220,7 +220,7 @@ func (s *server) doItViaRuntimeCall(modelFile string, outputDir string,
 	if err != nil {
 		panic(fmt.Errorf(string(out)))
 	} else {
-		if s.config.Verbose && len(out) > 0 {
+		if s.config.GetVerbose() && len(out) > 0 {
 			fmt.Println("---")
 			fmt.Print(string(out))
 			fmt.Println("---")
