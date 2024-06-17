@@ -2,7 +2,7 @@ package statements
 
 import (
 	"fmt"
-
+	"github.com/shopspring/decimal"
 	"github.com/threagile/threagile/pkg/risks/script/common"
 	"github.com/threagile/threagile/pkg/risks/script/expressions"
 )
@@ -25,7 +25,7 @@ func (what *LoopStatement) Parse(script any) (common.Statement, any, error) {
 			case common.In:
 				item, errorExpression, itemError := new(expressions.ValueExpression).ParseValue(value)
 				if itemError != nil {
-					return nil, errorExpression, fmt.Errorf("failed to parse %q of loop-statement: %v", key, itemError)
+					return nil, errorExpression, fmt.Errorf("failed to parse %q of loop-statement: %w", key, itemError)
 				}
 
 				what.in = item
@@ -49,7 +49,7 @@ func (what *LoopStatement) Parse(script any) (common.Statement, any, error) {
 			case common.Do:
 				item, errorScript, itemError := new(StatementList).Parse(value)
 				if itemError != nil {
-					return nil, errorScript, fmt.Errorf("failed to parse %q of loop-statement: %v", key, itemError)
+					return nil, errorScript, fmt.Errorf("failed to parse %q of loop-statement: %w", key, itemError)
 				}
 
 				what.body = item
@@ -67,48 +67,88 @@ func (what *LoopStatement) Parse(script any) (common.Statement, any, error) {
 }
 
 func (what *LoopStatement) Run(scope *common.Scope) (string, error) {
-	oldIterator := scope.SwapIterator(nil)
-	defer scope.SetIterator(oldIterator)
+	if scope.HasReturned {
+		return "", nil
+	}
+
+	oldIterator := scope.PopItem()
+	defer scope.SetItem(oldIterator)
 
 	value, errorEvalLiteral, evalError := what.in.EvalAny(scope)
 	if evalError != nil {
 		return errorEvalLiteral, evalError
 	}
 
-	switch castValue := value.(type) {
+	return what.run(scope, value)
+}
+
+func (what *LoopStatement) run(scope *common.Scope, value common.Value) (string, error) {
+	switch castValue := value.Value().(type) {
 	case []any:
 		for index, item := range castValue {
-			if len(what.index) > 0 {
-				scope.Set(what.index, index)
+			if scope.HasReturned {
+				return "", nil
 			}
 
-			scope.SetIterator(item)
+			if len(what.index) > 0 {
+				scope.Set(what.index, common.SomeDecimalValue(decimal.NewFromInt(int64(index)), nil))
+			}
+
+			itemValue := scope.SetItem(common.SomeValue(item, value.Event()))
 			if len(what.item) > 0 {
-				scope.Set(what.item, item)
+				scope.Set(what.item, itemValue)
 			}
 
 			errorLiteral, runError := what.body.Run(scope)
 			if runError != nil {
-				return errorLiteral, fmt.Errorf("failed to run loop-statement for item #%d: %v", index+1, runError)
+				return errorLiteral, fmt.Errorf("failed to run loop-statement for item #%d: %w", index+1, runError)
+			}
+		}
+
+	case []common.Value:
+		for index, item := range castValue {
+			if scope.HasReturned {
+				return "", nil
+			}
+
+			if len(what.index) > 0 {
+				scope.Set(what.index, common.SomeDecimalValue(decimal.NewFromInt(int64(index)), nil))
+			}
+
+			itemValue := scope.SetItem(common.SomeValue(item.Value(), value.Event()))
+			if len(what.item) > 0 {
+				scope.Set(what.item, itemValue)
+			}
+
+			errorLiteral, runError := what.body.Run(scope)
+			if runError != nil {
+				return errorLiteral, fmt.Errorf("failed to run loop-statement for item #%d: %w", index+1, runError)
 			}
 		}
 
 	case map[string]any:
 		for name, item := range castValue {
-			if len(what.index) > 0 {
-				scope.Set(what.index, name)
+			if scope.HasReturned {
+				return "", nil
 			}
 
-			scope.SetIterator(item)
+			if len(what.index) > 0 {
+				scope.Set(what.index, common.SomeStringValue(name, nil))
+			}
+
+			itemValue := scope.SetItem(common.SomeValue(item, value.Event()))
 			if len(what.item) > 0 {
-				scope.Set(what.item, item)
+				scope.Set(what.item, itemValue)
 			}
 
 			errorLiteral, runError := what.body.Run(scope)
 			if runError != nil {
-				return errorLiteral, fmt.Errorf("failed to run loop-statement for item %q: %v", name, runError)
+				return errorLiteral, fmt.Errorf("failed to run loop-statement for item %q: %w", name, runError)
 			}
 		}
+
+	case common.Value:
+		return what.run(scope, common.SomeValue(castValue.Value(), value.Event()))
 
 	default:
 		return what.Literal(), fmt.Errorf("failed to run loop-statement: expected iterable type, got %T", value)

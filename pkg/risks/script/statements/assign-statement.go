@@ -2,7 +2,6 @@ package statements
 
 import (
 	"fmt"
-
 	"github.com/threagile/threagile/pkg/risks/script/common"
 	"github.com/threagile/threagile/pkg/risks/script/expressions"
 )
@@ -27,7 +26,7 @@ func (what *AssignStatement) Parse(script any) (common.Statement, any, error) {
 		for _, statement := range castScript {
 			_, errorScript, itemError := what.Parse(statement)
 			if itemError != nil {
-				return nil, errorScript, fmt.Errorf("failed to parse assign-statement: %v", itemError)
+				return nil, errorScript, fmt.Errorf("failed to parse assign-statement: %w", itemError)
 			}
 		}
 
@@ -42,7 +41,7 @@ func (what *AssignStatement) parse(script map[string]any) (common.Statement, any
 	for key, value := range script {
 		expression, errorScript, parseError := new(expressions.ExpressionList).ParseAny(value)
 		if parseError != nil {
-			return nil, errorScript, fmt.Errorf("failed to parse %q of assign-statement: %v", key, parseError)
+			return nil, errorScript, fmt.Errorf("failed to parse %q of assign-statement: %w", key, parseError)
 		}
 
 		what.items[key] = expression
@@ -52,10 +51,14 @@ func (what *AssignStatement) parse(script map[string]any) (common.Statement, any
 }
 
 func (what *AssignStatement) Run(scope *common.Scope) (string, error) {
+	if scope.HasReturned {
+		return "", nil
+	}
+
 	for name, item := range what.items {
 		value, errorLiteral, evalError := item.EvalAny(scope)
 		if evalError != nil {
-			return errorLiteral, fmt.Errorf("failed to eval %q of assign-statement: %v", name, evalError)
+			return errorLiteral, fmt.Errorf("failed to eval %q of assign-statement: %w", name, evalError)
 		}
 
 		scope.Set(name, value)

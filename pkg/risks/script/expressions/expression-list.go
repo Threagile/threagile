@@ -2,7 +2,6 @@ package expressions
 
 import (
 	"fmt"
-
 	"github.com/threagile/threagile/pkg/risks/script/common"
 )
 
@@ -72,7 +71,7 @@ func (what *ExpressionList) ParseArray(script any) (common.ExpressionList, any, 
 		for _, expression := range castScript {
 			item, errorScript, itemError := what.ParseAny(expression)
 			if itemError != nil {
-				return nil, errorScript, fmt.Errorf("failed to parse expression list: %v", itemError)
+				return nil, errorScript, fmt.Errorf("failed to parse expression list: %w", itemError)
 			}
 
 			what.expressions = append(what.expressions, item)
@@ -104,7 +103,7 @@ func (what *ExpressionList) ParseAny(script any) (common.Expression, any, error)
 		for _, expression := range castScript {
 			item, errorScript, itemError := what.ParseAny(expression)
 			if itemError != nil {
-				return nil, errorScript, fmt.Errorf("failed to parse expression list: %v", itemError)
+				return nil, errorScript, fmt.Errorf("failed to parse expression list: %w", itemError)
 			}
 
 			what.expressions = append(what.expressions, item)
@@ -121,7 +120,7 @@ func (what *ExpressionList) ParseAny(script any) (common.Expression, any, error)
 	return what, nil, nil
 }
 
-func (what *ExpressionList) EvalAny(scope *common.Scope) (any, string, error) {
+func (what *ExpressionList) EvalAny(scope *common.Scope) (common.Value, string, error) {
 	if what.expressions == nil {
 		return nil, "", nil
 	}
@@ -134,7 +133,7 @@ func (what *ExpressionList) EvalAny(scope *common.Scope) (any, string, error) {
 		return what.expressions[0].EvalAny(scope)
 
 	default:
-		var values common.ValueList
+		var values []common.Value
 		for _, expression := range what.expressions {
 			value, errorLiteral, statementError := expression.EvalAny(scope)
 			if statementError != nil {
@@ -144,7 +143,7 @@ func (what *ExpressionList) EvalAny(scope *common.Scope) (any, string, error) {
 			values = append(values, value)
 		}
 
-		return values, "", nil
+		return common.SomeArrayValue(values, common.NewEvent(common.NewValueProperty(values), common.NewPath("array value")).From(values...)), "", nil
 	}
 }
 

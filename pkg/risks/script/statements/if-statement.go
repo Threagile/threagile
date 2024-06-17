@@ -2,7 +2,6 @@ package statements
 
 import (
 	"fmt"
-
 	"github.com/threagile/threagile/pkg/risks/script/common"
 	"github.com/threagile/threagile/pkg/risks/script/expressions"
 )
@@ -46,7 +45,7 @@ func (what *IfStatement) parse(key any, value any, script any) (common.Statement
 	case common.Then:
 		item, errorScript, itemError := new(StatementList).Parse(value)
 		if itemError != nil {
-			return nil, errorScript, fmt.Errorf("failed to parse %q of if-statement: %v", key, itemError)
+			return nil, errorScript, fmt.Errorf("failed to parse %q of if-statement: %w", key, itemError)
 		}
 
 		what.yesPath = item
@@ -54,7 +53,7 @@ func (what *IfStatement) parse(key any, value any, script any) (common.Statement
 	case common.Else:
 		item, errorScript, itemError := new(StatementList).Parse(value)
 		if itemError != nil {
-			return nil, errorScript, fmt.Errorf("failed to parse %q of if-statement: %v", key, itemError)
+			return nil, errorScript, fmt.Errorf("failed to parse %q of if-statement: %w", key, itemError)
 		}
 
 		what.noPath = item
@@ -66,12 +65,12 @@ func (what *IfStatement) parse(key any, value any, script any) (common.Statement
 
 		item, errorScript, itemError := new(expressions.ExpressionList).ParseExpression(map[string]any{fmt.Sprintf("%v", key): value})
 		if itemError != nil {
-			return nil, errorScript, fmt.Errorf("failed to parse expression of if-statement: %v", itemError)
+			return nil, errorScript, fmt.Errorf("failed to parse expression of if-statement: %w", itemError)
 		}
 
 		boolItem, ok := item.(common.BoolExpression)
 		if !ok {
-			return nil, script, fmt.Errorf("expression of if-statement is not a bool expression: %v", itemError)
+			return nil, script, fmt.Errorf("expression of if-statement is not a bool expression: %w", itemError)
 		}
 
 		what.expression = boolItem
@@ -81,6 +80,10 @@ func (what *IfStatement) parse(key any, value any, script any) (common.Statement
 }
 
 func (what *IfStatement) Run(scope *common.Scope) (string, error) {
+	if scope.HasReturned {
+		return "", nil
+	}
+
 	if what.expression == nil {
 		return "", nil
 	}
@@ -90,12 +93,18 @@ func (what *IfStatement) Run(scope *common.Scope) (string, error) {
 		return errorLiteral, evalError
 	}
 
-	if value {
+	if value.BoolValue() {
 		if what.yesPath != nil {
+			scope.PushCall(common.NewEventFrom(common.NewTrueProperty(), value))
+			defer scope.PopCall()
+
 			return what.yesPath.Run(scope)
 		}
 	} else {
 		if what.noPath != nil {
+			scope.PushCall(common.NewEventFrom(common.NewFalseProperty(), value))
+			defer scope.PopCall()
+
 			return what.noPath.Run(scope)
 		}
 	}

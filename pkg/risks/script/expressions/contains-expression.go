@@ -2,7 +2,6 @@ package expressions
 
 import (
 	"fmt"
-
 	"github.com/threagile/threagile/pkg/risks/script/common"
 )
 
@@ -23,7 +22,7 @@ func (what *ContainsExpression) ParseBool(script any) (common.BoolExpression, an
 			case common.Item:
 				item, errorScript, itemError := new(ValueExpression).ParseValue(value)
 				if itemError != nil {
-					return nil, errorScript, fmt.Errorf("failed to parse %q of contains-expression: %v", key, itemError)
+					return nil, errorScript, fmt.Errorf("failed to parse %q of contains-expression: %w", key, itemError)
 				}
 
 				what.item = item
@@ -31,7 +30,7 @@ func (what *ContainsExpression) ParseBool(script any) (common.BoolExpression, an
 			case common.In:
 				item, errorScript, itemError := new(ValueExpression).ParseValue(value)
 				if itemError != nil {
-					return nil, errorScript, fmt.Errorf("failed to parse %q of contains-expression: %v", key, itemError)
+					return nil, errorScript, fmt.Errorf("failed to parse %q of contains-expression: %w", key, itemError)
 				}
 
 				what.in = item
@@ -60,52 +59,73 @@ func (what *ContainsExpression) ParseAny(script any) (common.Expression, any, er
 	return what.ParseBool(script)
 }
 
-func (what *ContainsExpression) EvalBool(scope *common.Scope) (bool, string, error) {
+func (what *ContainsExpression) EvalBool(scope *common.Scope) (*common.BoolValue, string, error) {
 	item, errorItemLiteral, itemError := what.item.EvalAny(scope)
 	if itemError != nil {
-		return false, errorItemLiteral, itemError
+		return common.EmptyBoolValue(), errorItemLiteral, itemError
 	}
 
-	in, errorInLiteral, evalError := what.in.EvalAny(scope)
+	inValue, errorInLiteral, evalError := what.in.EvalAny(scope)
 	if evalError != nil {
-		return false, errorInLiteral, evalError
+		return common.EmptyBoolValue(), errorInLiteral, evalError
 	}
 
-	switch castIn := in.(type) {
+	return what.evalBool(scope, item, inValue)
+}
+
+func (what *ContainsExpression) evalBool(scope *common.Scope, item common.Value, inValue common.Value) (*common.BoolValue, string, error) {
+	switch castValue := inValue.Value().(type) {
 	case []any:
-		for index, value := range castIn {
-			compareValue, compareError := common.Compare(item, value, what.as)
+		for index, value := range castValue {
+			compareValue, compareError := common.Compare(item, common.SomeValue(value, nil), what.as)
 			if compareError != nil {
-				return false, what.Literal(), fmt.Errorf("failed to eval contains-expression: can't compare value to item #%d: %v", index+1, compareError)
+				return common.EmptyBoolValue(), what.Literal(), fmt.Errorf("failed to eval contains-expression: can't compare value to item #%v: %w", index+1, compareError)
 			}
 
-			if compareValue == 0 {
-				return true, "", nil
+			if common.IsSame(compareValue.Property) {
+				return common.SomeBoolValue(true, compareValue), "", nil
 			}
 		}
 
-		return false, "", nil
+		return common.SomeBoolValue(false, nil), "", nil
+
+	case []common.Value:
+		for index, value := range castValue {
+			compareValue, compareError := common.Compare(item, common.SomeValue(value.Value(), value.Event()), what.as)
+			if compareError != nil {
+				return common.EmptyBoolValue(), what.Literal(), fmt.Errorf("failed to eval contains-expression: can't compare value to item #%v: %w", index+1, compareError)
+			}
+
+			if common.IsSame(compareValue.Property) {
+				return common.SomeBoolValue(true, compareValue), "", nil
+			}
+		}
+
+		return common.SomeBoolValue(false, nil), "", nil
 
 	case map[string]any:
-		for name, value := range castIn {
-			compareValue, compareError := common.Compare(item, value, what.as)
+		for name, value := range castValue {
+			compareValue, compareError := common.Compare(item, common.SomeValue(value, nil), what.as)
 			if compareError != nil {
-				return false, what.Literal(), fmt.Errorf("failed to eval contains-expression: can't compare value to item %q: %v", name, compareError)
+				return common.EmptyBoolValue(), what.Literal(), fmt.Errorf("failed to eval contains-expression: can't compare value to item %q: %w", name, compareError)
 			}
 
-			if compareValue == 0 {
-				return true, "", nil
+			if common.IsSame(compareValue.Property) {
+				return common.SomeBoolValue(true, compareValue), "", nil
 			}
 		}
 
-		return false, "", nil
+		return common.SomeBoolValue(false, nil), "", nil
+
+	case common.Value:
+		return what.evalBool(scope, item, common.SomeValue(castValue.Value(), inValue.Event()))
 
 	default:
-		return false, "", fmt.Errorf("failed to eval contains-expression: expected iterable type, got %T", in)
+		return common.EmptyBoolValue(), "", fmt.Errorf("failed to eval contains-expression: expected iterable type, got %T", inValue)
 	}
 }
 
-func (what *ContainsExpression) EvalAny(scope *common.Scope) (any, string, error) {
+func (what *ContainsExpression) EvalAny(scope *common.Scope) (common.Value, string, error) {
 	return what.EvalBool(scope)
 }
 

@@ -2,12 +2,11 @@ package expressions
 
 import (
 	"fmt"
+	"github.com/shopspring/decimal"
+	"github.com/threagile/threagile/pkg/risks/script/common"
 	"regexp"
 	"strconv"
 	"strings"
-
-	"github.com/shopspring/decimal"
-	"github.com/threagile/threagile/pkg/risks/script/common"
 )
 
 type ValueExpression struct {
@@ -57,34 +56,41 @@ func (what *ValueExpression) ParseAny(script any) (common.Expression, any, error
 	return what, nil, nil
 }
 
-func (what *ValueExpression) EvalArray(scope *common.Scope) ([]any, string, error) {
-	switch what.value.(type) {
-	case string, fmt.Stringer:
-		valueString := ""
-		switch what.value.(type) {
-		case string:
-			valueString = what.value.(string)
+func (what *ValueExpression) EvalArray(scope *common.Scope) (*common.ArrayValue, string, error) {
+	return what.evalArray(scope, common.SomeValue(what.value, nil))
+}
 
-		case fmt.Stringer:
-			valueString = what.value.(fmt.Stringer).String()
-		}
+func (what *ValueExpression) EvalBool(scope *common.Scope) (*common.BoolValue, string, error) {
+	return what.evalBool(scope, common.SomeValue(what.value, nil))
+}
 
-		value, errorLiteral, evalError := what.evalString(scope, valueString)
+func (what *ValueExpression) EvalDecimal(scope *common.Scope) (*common.DecimalValue, string, error) {
+	return what.evalDecimal(scope, common.SomeValue(what.value, nil))
+}
+
+func (what *ValueExpression) EvalString(scope *common.Scope) (*common.StringValue, string, error) {
+	return what.evalString(scope, common.SomeValue(what.value, nil))
+}
+
+func (what *ValueExpression) EvalAny(scope *common.Scope) (common.Value, string, error) {
+	return what.evalAny(scope, common.SomeValue(what.value, nil))
+}
+
+func (what *ValueExpression) evalArray(scope *common.Scope, anyValue common.Value) (*common.ArrayValue, string, error) {
+	switch castValue := anyValue.(type) {
+	case *common.StringValue:
+		value, errorLiteral, evalError := what.evalStringReference(scope, castValue)
 		if evalError != nil {
-			return nil, errorLiteral, evalError
+			return common.EmptyArrayValue(), errorLiteral, evalError
 		}
 
-		arrayValue, ok := value.([]any)
-		if !ok {
-			return nil, what.Literal(), fmt.Errorf("expected value-expression to eval to an array instead of %T", value)
-		}
+		arrayValue, arrayValueError := common.ToArrayValue(value)
+		return arrayValue, what.Literal(), arrayValueError
 
-		return arrayValue, "", nil
-
-	case []any:
-		array := make([]any, 0)
-		for _, item := range what.value.([]any) {
-			value, errorLiteral, evalError := what.eval(scope, item)
+	case *common.ArrayValue:
+		array := make([]common.Value, 0)
+		for _, item := range castValue.ArrayValue() {
+			value, errorLiteral, evalError := what.evalAny(scope, item)
 			if evalError != nil {
 				return nil, errorLiteral, evalError
 			}
@@ -92,273 +98,220 @@ func (what *ValueExpression) EvalArray(scope *common.Scope) ([]any, string, erro
 			array = append(array, value)
 		}
 
-		return array, "", nil
+		return common.SomeArrayValue(array, nil), "", nil
 
 	case nil:
-		return make([]any, 0), "", nil
+		return common.EmptyArrayValue(), "", nil
 
 	default:
 		return nil, what.Literal(), fmt.Errorf("failed to eval value-expression: value type %T is not an array", what.value)
 	}
 }
 
-func (what *ValueExpression) EvalBool(scope *common.Scope) (bool, string, error) {
-	switch what.value.(type) {
-	case string, fmt.Stringer:
-		valueString := ""
-		switch what.value.(type) {
-		case string:
-			valueString = what.value.(string)
+func (what *ValueExpression) evalBool(scope *common.Scope, anyValue common.Value) (*common.BoolValue, string, error) {
+	switch castValue := anyValue.(type) {
+	case *common.StringValue:
+		return what.stringToBool(scope, castValue)
 
-		case fmt.Stringer:
-			valueString = what.value.(fmt.Stringer).String()
-		}
-
-		value, errorLiteral, evalError := what.evalString(scope, valueString)
-		if evalError != nil {
-			return false, errorLiteral, evalError
-		}
-
-		switch castValue := value.(type) {
-		case string, fmt.Stringer:
-			stringValue := ""
-			switch castStringValue := value.(type) {
-			case string:
-				stringValue = castStringValue
-
-			case fmt.Stringer:
-				stringValue = castStringValue.String()
-			}
-
-			if len(stringValue) == 0 {
-				return false, "", nil
-			}
-
-			boolValue, parseError := strconv.ParseBool(stringValue)
-			if parseError != nil {
-				return false, what.Literal(), fmt.Errorf("failed to parse value-expression: %v", parseError)
-			}
-
-			return boolValue, "", nil
-
-		case bool:
-			return castValue, "", nil
-
-		case nil:
-			return false, "", nil
-
-		default:
-			return false, what.Literal(), fmt.Errorf("expected value-expression to eval to a bool instead of %T", value)
-		}
-
-	case bool:
-		return what.value.(bool), "", nil
+	case *common.BoolValue:
+		return castValue, "", nil
 
 	case nil:
-		return false, "", nil
+		return common.SomeBoolValue(false, nil), "", nil
 
 	default:
-		return false, what.Literal(), fmt.Errorf("failed to eval value-expression: value type %T is not a bool", what.value)
+		return common.EmptyBoolValue(), what.Literal(), fmt.Errorf("failed to eval value-expression: value type %T is not a bool", what.value)
 	}
 }
 
-func (what *ValueExpression) EvalDecimal(scope *common.Scope) (decimal.Decimal, string, error) {
-	switch castOrigValue := what.value.(type) {
-	case decimal.Decimal:
-		return castOrigValue, "", nil
+func (what *ValueExpression) evalDecimal(scope *common.Scope, anyValue common.Value) (*common.DecimalValue, string, error) {
+	switch castValue := anyValue.(type) {
+	case *common.StringValue:
+		return what.stringToDecimal(scope, castValue)
 
-	case string, fmt.Stringer:
-		valueString := ""
-		switch castStringValue := what.value.(type) {
-		case string:
-			valueString = castStringValue
-
-		case fmt.Stringer:
-			valueString = castStringValue.String()
-		}
-
-		value, errorLiteral, evalError := what.evalString(scope, valueString)
-		if evalError != nil {
-			return decimal.NewFromInt(0), errorLiteral, evalError
-		}
-
-		switch castValue := value.(type) {
-		case decimal.Decimal:
-			return castValue, "", nil
-
-		case string, fmt.Stringer:
-			evalString := ""
-			switch castStringValue := value.(type) {
-			case string:
-				evalString = castStringValue
-
-			case fmt.Stringer:
-				evalString = castStringValue.String()
-			}
-
-			decimalValue, parseError := decimal.NewFromString(evalString)
-			if parseError != nil {
-				return decimal.NewFromInt(0), what.Literal(), fmt.Errorf("failed to parse value-expression: %v", parseError)
-			}
-
-			return decimalValue, "", nil
-
-		case nil:
-			return decimal.NewFromInt(0), "", nil
-
-		default:
-			return decimal.NewFromInt(0), what.Literal(), fmt.Errorf("expected value-expression to eval to a decimal instead of %T", value)
-		}
+	case *common.DecimalValue:
+		return castValue, "", nil
 
 	case nil:
-		return decimal.NewFromInt(0), "", nil
+		return common.SomeDecimalValue(decimal.Zero, nil), "", nil
 
 	default:
-		return decimal.NewFromInt(0), what.Literal(), fmt.Errorf("failed to eval value-expression: value type %T is not a decimal", what.value)
+		return common.EmptyDecimalValue(), what.Literal(), fmt.Errorf("failed to eval value-expression: value type %T is not a decimal", what.value)
 	}
 }
 
-func (what *ValueExpression) EvalString(scope *common.Scope) (string, string, error) {
-	switch what.value.(type) {
-	case string, fmt.Stringer:
-		valueString := ""
-		switch what.value.(type) {
-		case string:
-			valueString = what.value.(string)
+func (what *ValueExpression) evalString(scope *common.Scope, anyValue common.Value) (*common.StringValue, string, error) {
+	switch castValue := anyValue.(type) {
+	case *common.StringValue:
+		return what.stringToString(scope, castValue)
 
-		case fmt.Stringer:
-			valueString = what.value.(fmt.Stringer).String()
-
-		case nil:
-		}
-
-		value, errorLiteral, evalError := what.evalString(scope, valueString)
-		if evalError != nil {
-			return "", errorLiteral, evalError
-		}
-
-		switch value.(type) {
-		case string, fmt.Stringer:
-			evalString := ""
-			switch castStringValue := value.(type) {
-			case string:
-				evalString = castStringValue
-
-			case fmt.Stringer:
-				evalString = castStringValue.String()
-			}
-
-			return evalString, "", nil
-
-		case nil:
-			return "", "", nil
-
-		default:
-			return "", what.Literal(), fmt.Errorf("expected value-expression to eval to a string instead of %T", value)
-		}
+	case nil:
+		return common.SomeStringValue("", nil), "", nil
 
 	default:
-		return "", what.Literal(), fmt.Errorf("failed to eval value-expression: value type %T is not a string", what.value)
+		return common.EmptyStringValue(), what.Literal(), fmt.Errorf("failed to eval value-expression: value type %T is not a string", what.value)
 	}
 }
 
-func (what *ValueExpression) EvalAny(scope *common.Scope) (any, string, error) {
-	switch what.value.(type) {
-	case decimal.Decimal:
-		return what.value.(decimal.Decimal), "", nil
+func (what *ValueExpression) evalAny(scope *common.Scope, anyValue common.Value) (common.Value, string, error) {
+	switch castValue := anyValue.(type) {
+	case *common.StringValue:
+		return what.evalStringReference(scope, castValue)
 
-	case string:
-		return what.evalString(scope, what.value.(string))
+	case *common.BoolValue:
+		return castValue, "", nil
 
-	case fmt.Stringer:
-		return what.evalString(scope, what.value.(fmt.Stringer).String())
+	case *common.DecimalValue:
+		return castValue, "", nil
 
-	case bool:
-		return what.value.(bool), "", nil
-
-	case float64:
-		return decimal.NewFromFloat(what.value.(float64)), "", nil
-
-	case int64:
-		return decimal.NewFromInt(what.value.(int64)), "", nil
-
-	case []any:
-		array := make([]any, 0)
-		for _, item := range what.value.([]any) {
-			value, errorLiteral, evalError := what.eval(scope, item)
-			if evalError != nil {
-				return nil, errorLiteral, evalError
-			}
-
-			array = append(array, value)
-		}
-
-		return array, "", nil
+	case *common.ArrayValue:
+		return what.evalArray(scope, castValue)
 
 	case nil:
-		return nil, "", nil
+		return common.SomeValue(nil, nil), "", nil
 
 	default:
 		return nil, what.Literal(), fmt.Errorf("failed to eval value-expression: value type is %T", what.value)
 	}
 }
 
-func (what *ValueExpression) eval(scope *common.Scope, value any) (any, string, error) {
-	switch castStringValue := value.(type) {
-	case string:
-		return what.evalString(scope, castStringValue)
+func (what *ValueExpression) stringToBool(scope *common.Scope, valueString *common.StringValue) (*common.BoolValue, string, error) {
+	value, errorLiteral, evalError := what.evalStringReference(scope, valueString) // resolve references
+	if evalError != nil {
+		return common.EmptyBoolValue(), errorLiteral, evalError
+	}
 
-	case fmt.Stringer:
-		return what.evalString(scope, castStringValue.String())
+	if value == nil {
+		return common.SomeBoolValue(false, valueString.Event()), "", nil
+	}
+
+	switch castValue := value.Value().(type) {
+	case string: // string literal
+		if len(castValue) == 0 {
+			return common.SomeBoolValue(false, value.Event()), "", nil
+		}
+
+		boolValue, parseError := strconv.ParseBool(castValue)
+		if parseError != nil {
+			return common.EmptyBoolValue(), what.Literal(), fmt.Errorf("failed to parse value-expression: %w", parseError)
+		}
+
+		return common.SomeBoolValue(boolValue, value.Event()), "", nil
+
+	case bool: // bool value
+		return common.SomeBoolValue(castValue, value.Event()), "", nil
+
+	case nil: // empty value
+		return common.SomeBoolValue(false, value.Event()), "", nil
+
+	case common.Value:
+		return what.evalBool(scope, castValue)
 
 	default:
-		return value, "", nil
+		return common.EmptyBoolValue(), what.Literal(), fmt.Errorf("expected value-expression to eval to a bool instead of %T", value)
 	}
 }
 
-func (what *ValueExpression) evalString(scope *common.Scope, value string) (any, string, error) {
-	varRe := `\{[^{}]+}`
-	value = what.resolveStringValues(scope, varRe, value)
+func (what *ValueExpression) stringToDecimal(scope *common.Scope, valueString *common.StringValue) (*common.DecimalValue, string, error) {
+	value, errorLiteral, evalError := what.evalStringReference(scope, valueString)
+	if evalError != nil {
+		return common.EmptyDecimalValue(), errorLiteral, evalError
+	}
 
-	if regexp.MustCompile(`^` + varRe + `$`).MatchString(value) {
-		returnValue, ok := scope.Get(value[1 : len(value)-1])
-		if !ok {
-			return "", "", nil
+	switch castValue := value.Value().(type) {
+	case decimal.Decimal:
+		return common.SomeDecimalValue(castValue, value.Event()), "", nil
+
+	case string:
+		decimalValue, parseError := decimal.NewFromString(castValue)
+		if parseError != nil {
+			return common.EmptyDecimalValue(), what.Literal(), fmt.Errorf("failed to parse value-expression: %w", parseError)
+		}
+
+		return common.SomeDecimalValue(decimalValue, value.Event()), "", nil
+
+	case nil:
+		return common.SomeDecimalValue(decimal.Zero, value.Event()), "", nil
+
+	default:
+		return common.EmptyDecimalValue(), what.Literal(), fmt.Errorf("expected value-expression to eval to a decimal instead of %T", value)
+	}
+}
+
+func (what *ValueExpression) stringToString(scope *common.Scope, valueString *common.StringValue) (*common.StringValue, string, error) {
+	value, errorLiteral, evalError := what.evalStringReference(scope, valueString)
+	if evalError != nil {
+		return common.EmptyStringValue(), errorLiteral, evalError
+	}
+
+	switch castValue := value.Value().(type) {
+	case string:
+		return common.SomeStringValue(castValue, value.Event()), "", nil
+
+	case *common.StringValue:
+		return castValue, "", nil
+
+	case nil:
+		return common.EmptyStringValue(), "", nil
+
+	default:
+		return common.EmptyStringValue(), what.Literal(), fmt.Errorf("expected value-expression to eval to a string instead of %T", value)
+	}
+}
+
+func (what *ValueExpression) evalStringReference(scope *common.Scope, ref *common.StringValue) (common.Value, string, error) {
+	varRe := `\{[^{}]+}`
+	value := what.resolveStringValues(scope, varRe, ref)
+	if regexp.MustCompile(`^` + varRe + `$`).MatchString(value.StringValue()) {
+		returnValue, ok := scope.Get(value.StringValue()[1 : len(value.StringValue())-1])
+		if ok {
+			return returnValue, "", nil
 		}
 
 		return returnValue, "", nil
+		//		return common.SomeStringValue(value.StringValue()[1:len(value.StringValue())-1], nil), "", nil
 	}
 
 	funcRe := `(\w+)\(([^()]+)\)`
 	resolvedValue, errorLiteral, evalError := what.resolveMethodCalls(scope, funcRe, value)
 	if evalError != nil {
-		return resolvedValue, errorLiteral, evalError
+		return common.EmptyStringValue(), errorLiteral, evalError
 	}
 
-	if regexp.MustCompile(`^` + funcRe + `$`).MatchString(resolvedValue) {
-		return what.resolveMethodCall(scope, funcRe, resolvedValue)
+	if regexp.MustCompile(`^` + funcRe + `$`).MatchString(resolvedValue.StringValue()) {
+		genericValue, genericErrorLiteral, genericEvalError := what.resolveMethodCall(scope, funcRe, resolvedValue)
+		return common.SomeValue(genericValue, ref.Event()), genericErrorLiteral, genericEvalError
 	}
 
-	return resolvedValue, "", nil
+	return common.SomeValue(resolvedValue, ref.Event()), "", nil
 }
 
-func (what *ValueExpression) resolveStringValues(scope *common.Scope, reString string, value string) string {
+func (what *ValueExpression) resolveStringValues(scope *common.Scope, reString string, value *common.StringValue) *common.StringValue {
 	replacements := 0
-	text := regexp.MustCompile(reString).ReplaceAllStringFunc(value, func(name string) string {
+	values := make([]common.Value, 0)
+	text := regexp.MustCompile(reString).ReplaceAllStringFunc(value.StringValue(), func(name string) string {
 		cleanName := name[1 : len(name)-1]
 		item, ok := scope.Get(strings.ToLower(cleanName))
 		if !ok {
 			return name
 		}
 
-		switch castItem := item.(type) {
+		switch castItem := item.Value().(type) {
 		case string:
 			replacements++
 			return castItem
 
-		case fmt.Stringer:
-			replacements++
-			return castItem.String()
+		case common.Value:
+			values = append(values, castItem)
+			stringValue := castItem.PlainValue()
+			switch castStringValue := stringValue.(type) {
+			case string:
+				replacements++
+				return castStringValue
+
+			default:
+				return name
+			}
 
 		default:
 			return name
@@ -366,48 +319,48 @@ func (what *ValueExpression) resolveStringValues(scope *common.Scope, reString s
 	})
 
 	if replacements > 0 {
-		return what.resolveStringValues(scope, reString, text)
+		return what.resolveStringValues(scope, reString, common.SomeStringValue(text, value.Event().From(values...)))
 	}
 
-	return text
+	return common.SomeStringValue(text, value.Event())
 }
 
-func (what *ValueExpression) resolveMethodCalls(scope *common.Scope, reString string, value string) (string, string, error) {
+func (what *ValueExpression) resolveMethodCalls(scope *common.Scope, reString string, value *common.StringValue) (*common.StringValue, string, error) {
 	replacements := 0
-	re := regexp.MustCompile(reString)
-	text := re.ReplaceAllStringFunc(value, func(name string) string {
-		returnValue, _, callError := what.resolveMethodCall(scope, reString, name)
+	values := make([]common.Value, 0)
+	text := regexp.MustCompile(reString).ReplaceAllStringFunc(value.StringValue(), func(name string) string {
+		returnValue, _, callError := what.resolveMethodCall(scope, reString, common.SomeStringValue(name, value.Event()))
 		if callError != nil {
 			return name
 		}
 
-		switch castReturnValue := returnValue.(type) {
-		case string:
-			replacements++
-			return castReturnValue
+		if returnValue != nil {
+			stringValue, valueError := common.ToString(returnValue)
+			if valueError != nil {
+				return name
+			}
 
-		case fmt.Stringer:
 			replacements++
-			return castReturnValue.String()
-
-		default:
-			return name
+			values = append(values, stringValue)
+			return stringValue.StringValue()
 		}
+
+		return name
 	})
 
 	if replacements == 0 {
-		return text, "", nil
+		return common.SomeStringValue(text, value.Event().From(values...)), "", nil
 	}
 
-	return what.resolveMethodCalls(scope, reString, text)
+	return what.resolveMethodCalls(scope, reString, common.SomeStringValue(text, value.Event().From(values...)))
 }
 
-func (what *ValueExpression) resolveMethodCall(scope *common.Scope, reString string, value string) (any, string, error) {
+func (what *ValueExpression) resolveMethodCall(scope *common.Scope, reString string, value *common.StringValue) (common.Value, string, error) {
 	re := regexp.MustCompile(reString)
 
-	match := re.FindStringSubmatch(value)
+	match := re.FindStringSubmatch(value.StringValue())
 	if len(match) != 3 {
-		return value, what.Literal(), fmt.Errorf("method call match failed for %q", value)
+		return common.NilValue(), what.Literal(), fmt.Errorf("method call match failed for %q", value)
 	}
 
 	name := strings.ToLower(match[1])
@@ -415,9 +368,9 @@ func (what *ValueExpression) resolveMethodCall(scope *common.Scope, reString str
 	if len(strings.TrimSpace(match[2])) > 0 {
 		// todo: better arg parsing for '{var1}, {var2}'
 		for _, arg := range strings.Split(match[2], ",") {
-			val, errorLiteral, evalError := what.evalString(scope, strings.TrimSpace(arg))
+			val, errorLiteral, evalError := what.evalStringReference(scope, common.SomeStringValue(strings.TrimSpace(arg), value.Event()))
 			if evalError != nil {
-				return nil, errorLiteral, fmt.Errorf("failed to eval method parameter: %v", evalError)
+				return nil, errorLiteral, fmt.Errorf("failed to eval method parameter: %w", evalError)
 			}
 
 			args = append(args, val)
@@ -428,13 +381,13 @@ func (what *ValueExpression) resolveMethodCall(scope *common.Scope, reString str
 	if ok {
 		newScope, cloneError := scope.Clone()
 		if cloneError != nil {
-			return value, what.Literal(), fmt.Errorf("failed to clone scope: %v", cloneError)
+			return common.NilValue(), what.Literal(), fmt.Errorf("failed to clone scope: %w", cloneError)
 		}
 
 		newScope.Args = args
 		errorLiteral, runError := method.Run(newScope)
 		if runError != nil {
-			return value, errorLiteral, runError
+			return common.NilValue(), errorLiteral, fmt.Errorf("failed to run method %q: %w", name, runError)
 		}
 
 		return newScope.GetReturnValue(), "", nil
@@ -443,13 +396,13 @@ func (what *ValueExpression) resolveMethodCall(scope *common.Scope, reString str
 	if common.IsBuiltIn(name) {
 		callValue, callError := common.CallBuiltIn(name, args...)
 		if callError != nil {
-			return callValue, what.Literal(), fmt.Errorf("failed to call %q: %v", name, callError)
+			return common.NilValue(), what.Literal(), fmt.Errorf("failed to call %q: %w", name, callError)
 		}
 
 		return callValue, "", nil
 	}
 
-	return value, what.Literal(), fmt.Errorf("no method %q", match[1])
+	return common.NilValue(), what.Literal(), fmt.Errorf("no method %q", match[1])
 }
 
 func (what *ValueExpression) Literal() string {

@@ -15,5 +15,7 @@ type Risk struct {
 	MostRelevantCommunicationLinkId string                     `yaml:"most_relevant_communication_link,omitempty" json:"most_relevant_communication_link,omitempty"`
 	DataBreachProbability           DataBreachProbability      `yaml:"data_breach_probability,omitempty" json:"data_breach_probability,omitempty"`
 	DataBreachTechnicalAssetIDs     []string                   `yaml:"data_breach_technical_assets,omitempty" json:"data_breach_technical_assets,omitempty"`
+	RiskExplanation                 []string                   `yaml:"risk_explanation,omitempty" json:"risk_explanation,omitempty"`
+	RatingExplanation               []string                   `yaml:"rating_explanation,omitempty" json:"rating_explanation,omitempty"`
 	// TODO: refactor all "ID" here to "ID"?
 }

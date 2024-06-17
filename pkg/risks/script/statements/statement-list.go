@@ -2,7 +2,6 @@ package statements
 
 import (
 	"fmt"
-
 	"github.com/threagile/threagile/pkg/risks/script/common"
 )
 
@@ -18,7 +17,7 @@ func (what *StatementList) Parse(script any) (common.Statement, any, error) {
 	case map[string]any:
 		scriptMap := castScript
 		if len(scriptMap) != 1 {
-			return nil, script, fmt.Errorf("failed to parse statement: statements must have single identifier")
+			return nil, script, fmt.Errorf("failed to parse statement-list: statements must have single identifier")
 		}
 
 		for name, body := range scriptMap {
@@ -29,7 +28,7 @@ func (what *StatementList) Parse(script any) (common.Statement, any, error) {
 		for _, statement := range castScript {
 			item, errorScript, itemError := what.Parse(statement)
 			if itemError != nil {
-				return nil, errorScript, fmt.Errorf("failed to parse statement list: %v", itemError)
+				return nil, errorScript, fmt.Errorf("failed to parse statement-list: %w", itemError)
 			}
 
 			what.statements = append(what.statements, item)
@@ -42,14 +41,22 @@ func (what *StatementList) Parse(script any) (common.Statement, any, error) {
 		}
 
 	default:
-		return nil, script, fmt.Errorf("unexpected statement format %T", script)
+		return nil, script, fmt.Errorf("unexpected statement-list format %T", script)
 	}
 
 	return what, nil, nil
 }
 
 func (what *StatementList) Run(scope *common.Scope) (string, error) {
+	if scope.HasReturned {
+		return "", nil
+	}
+
 	for _, statement := range what.statements {
+		if scope.HasReturned {
+			return "", nil
+		}
+
 		errorLiteral, statementError := statement.Run(scope)
 		if statementError != nil {
 			return errorLiteral, statementError

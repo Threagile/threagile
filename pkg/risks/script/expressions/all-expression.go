@@ -2,7 +2,7 @@ package expressions
 
 import (
 	"fmt"
-
+	"github.com/shopspring/decimal"
 	"github.com/threagile/threagile/pkg/risks/script/common"
 )
 
@@ -24,7 +24,7 @@ func (what *AllExpression) ParseBool(script any) (common.BoolExpression, any, er
 			case common.In:
 				item, errorExpression, itemError := new(ValueExpression).ParseValue(value)
 				if itemError != nil {
-					return nil, errorExpression, fmt.Errorf("failed to parse %q of any-expression: %v", key, itemError)
+					return nil, errorExpression, fmt.Errorf("failed to parse %q of all-expression: %w", key, itemError)
 				}
 
 				what.in = item
@@ -32,7 +32,7 @@ func (what *AllExpression) ParseBool(script any) (common.BoolExpression, any, er
 			case common.Item:
 				text, ok := value.(string)
 				if !ok {
-					return nil, value, fmt.Errorf("failed to parse %q of any-expression: expected string, got %T", key, value)
+					return nil, value, fmt.Errorf("failed to parse %q of all-expression: expected string, got %T", key, value)
 				}
 
 				what.item = text
@@ -40,24 +40,24 @@ func (what *AllExpression) ParseBool(script any) (common.BoolExpression, any, er
 			case common.Index:
 				text, ok := value.(string)
 				if !ok {
-					return nil, value, fmt.Errorf("failed to parse %q of any-expression: expected string, got %T", key, value)
+					return nil, value, fmt.Errorf("failed to parse %q of all-expression: expected string, got %T", key, value)
 				}
 
 				what.index = text
 
 			default:
 				if what.expression != nil {
-					return nil, script, fmt.Errorf("failed to parse any-expression: additional bool expression %q", key)
+					return nil, script, fmt.Errorf("failed to parse all-expression: additional bool expression %q", key)
 				}
 
 				expression, errorScript, itemError := new(ExpressionList).ParseAny(map[string]any{key: value})
 				if itemError != nil {
-					return nil, errorScript, fmt.Errorf("failed to parse any-expression: %v", itemError)
+					return nil, errorScript, fmt.Errorf("failed to parse all-expression: %w", itemError)
 				}
 
 				boolExpression, ok := expression.(common.BoolExpression)
 				if !ok {
-					return nil, script, fmt.Errorf("any-expression contains non-bool expression: %v", itemError)
+					return nil, script, fmt.Errorf("all-expression contains non-bool expression: %w", itemError)
 				}
 
 				what.expression = boolExpression
@@ -65,7 +65,7 @@ func (what *AllExpression) ParseBool(script any) (common.BoolExpression, any, er
 		}
 
 	default:
-		return nil, script, fmt.Errorf("failed to parse any-expression: expected map[string]any, got %T", script)
+		return nil, script, fmt.Errorf("failed to parse all-expression: expected map[string]any, got %T", script)
 	}
 
 	return what, nil, nil
@@ -75,74 +75,127 @@ func (what *AllExpression) ParseAny(script any) (common.Expression, any, error) 
 	return what.ParseBool(script)
 }
 
-func (what *AllExpression) EvalBool(scope *common.Scope) (bool, string, error) {
-	oldIterator := scope.SwapIterator(nil)
-	defer scope.SetIterator(oldIterator)
+func (what *AllExpression) EvalBool(scope *common.Scope) (*common.BoolValue, string, error) {
+	oldItem := scope.PopItem()
+	defer scope.SetItem(oldItem)
 
 	inValue, errorEvalLiteral, evalError := what.in.EvalAny(scope)
 	if evalError != nil {
-		return false, errorEvalLiteral, evalError
+		return common.EmptyBoolValue(), errorEvalLiteral, evalError
 	}
 
-	switch castValue := inValue.(type) {
+	return what.evalBool(scope, inValue)
+}
+
+func (what *AllExpression) evalBool(scope *common.Scope, inValue common.Value) (*common.BoolValue, string, error) {
+	oldItem := scope.PopItem()
+	defer scope.SetItem(oldItem)
+
+	inValue, errorEvalLiteral, evalError := what.in.EvalAny(scope)
+	if evalError != nil {
+		return common.EmptyBoolValue(), errorEvalLiteral, evalError
+	}
+
+	switch castValue := inValue.Value().(type) {
 	case []any:
 		if what.expression == nil {
-			return true, "", nil
+			return common.SomeBoolValue(true, nil), "", nil
 		}
 
+		values := make([]common.Value, 0)
 		for index, item := range castValue {
 			if len(what.index) > 0 {
-				scope.Set(what.index, index)
+				scope.Set(what.index, common.SomeDecimalValue(decimal.NewFromInt(int64(index)), nil))
 			}
 
-			scope.SetIterator(item)
+			itemValue := scope.SetItem(common.SomeValue(item, inValue.Event()))
 			if len(what.item) > 0 {
-				scope.Set(what.item, item)
+				scope.Set(what.item, itemValue)
 			}
 
 			value, errorLiteral, expressionError := what.expression.EvalBool(scope)
 			if expressionError != nil {
-				return false, errorLiteral, fmt.Errorf("error evaluating expression #%v of any-expression: %v", index+1, expressionError)
+				return common.EmptyBoolValue(), errorLiteral, fmt.Errorf("error evaluating expression #%v of all-expression: %w", index+1, expressionError)
 			}
 
-			if !value {
-				return false, "", nil
+			if !value.BoolValue() {
+				return common.SomeBoolValue(false, value.Event()), "", nil
 			}
+
+			values = append(values, value)
 		}
+
+		return common.SomeBoolValue(true, common.NewEvent(common.NewTrueProperty(), inValue.Event().Origin).From(values...)), "", nil
+
+	case []common.Value:
+		if what.expression == nil {
+			return common.SomeBoolValue(true, nil), "", nil
+		}
+
+		values := make([]common.Value, 0)
+		for index, item := range castValue {
+			if len(what.index) > 0 {
+				scope.Set(what.index, common.SomeDecimalValue(decimal.NewFromInt(int64(index)), nil))
+			}
+
+			itemValue := scope.SetItem(common.SomeValue(item.Value(), inValue.Event()))
+			if len(what.item) > 0 {
+				scope.Set(what.item, itemValue)
+			}
+
+			value, errorLiteral, expressionError := what.expression.EvalBool(scope)
+			if expressionError != nil {
+				return common.EmptyBoolValue(), errorLiteral, fmt.Errorf("error evaluating expression #%v of all-expression: %w", index+1, expressionError)
+			}
+
+			if !value.BoolValue() {
+				return common.SomeBoolValue(false, value.Event()), "", nil
+			}
+
+			values = append(values, value)
+		}
+
+		return common.SomeBoolValue(true, common.NewEvent(common.NewTrueProperty(), inValue.Event().Origin).From(values...)), "", nil
 
 	case map[string]any:
 		if what.expression == nil {
-			return true, "", nil
+			return common.SomeBoolValue(true, nil), "", nil
 		}
 
+		values := make([]common.Value, 0)
 		for name, item := range castValue {
 			if len(what.index) > 0 {
-				scope.Set(what.index, name)
+				scope.Set(what.index, common.SomeStringValue(name, nil))
 			}
 
-			scope.SetIterator(item)
+			itemValue := scope.SetItem(common.SomeValue(item, inValue.Event()))
 			if len(what.item) > 0 {
-				scope.Set(what.item, item)
+				scope.Set(what.item, itemValue)
 			}
 
 			value, errorLiteral, expressionError := what.expression.EvalBool(scope)
 			if expressionError != nil {
-				return false, errorLiteral, fmt.Errorf("error evaluating expression %q of any-expression: %v", name, expressionError)
+				return common.EmptyBoolValue(), errorLiteral, fmt.Errorf("error evaluating expression %q of all-expression: %w", name, expressionError)
 			}
 
-			if !value {
-				return false, "", nil
+			if !value.BoolValue() {
+				return common.SomeBoolValue(false, value.Event()), "", nil
 			}
+
+			values = append(values, value)
 		}
 
-	default:
-		return false, what.Literal(), fmt.Errorf("failed to eval any-expression: expected iterable type, got %T", inValue)
-	}
+		return common.SomeBoolValue(true, common.NewEvent(common.NewTrueProperty(), inValue.Event().Origin).From(values...)), "", nil
 
-	return true, "", nil
+	case common.Value:
+		return what.evalBool(scope, common.SomeValue(castValue.Value(), inValue.Event()))
+
+	default:
+		return common.EmptyBoolValue(), what.Literal(), fmt.Errorf("failed to eval all-expression: expected iterable type, got %T", inValue)
+	}
 }
 
-func (what *AllExpression) EvalAny(scope *common.Scope) (any, string, error) {
+func (what *AllExpression) EvalAny(scope *common.Scope) (common.Value, string, error) {
 	return what.EvalBool(scope)
 }
 

@@ -2,7 +2,6 @@ package expressions
 
 import (
 	"fmt"
-
 	"github.com/threagile/threagile/pkg/risks/script/common"
 )
 
@@ -10,7 +9,7 @@ type GreaterExpression struct {
 	literal string
 	first   common.ValueExpression
 	second  common.ValueExpression
-	as      string
+	as      common.StringExpression
 }
 
 func (what *GreaterExpression) ParseBool(script any) (common.BoolExpression, any, error) {
@@ -23,7 +22,7 @@ func (what *GreaterExpression) ParseBool(script any) (common.BoolExpression, any
 			case common.First:
 				item, errorScript, itemError := new(ValueExpression).ParseValue(value)
 				if itemError != nil {
-					return nil, errorScript, fmt.Errorf("failed to parse %q of equal-expression: %v", key, itemError)
+					return nil, errorScript, fmt.Errorf("failed to parse %q of equal-expression: %w", key, itemError)
 				}
 
 				what.first = item
@@ -31,15 +30,15 @@ func (what *GreaterExpression) ParseBool(script any) (common.BoolExpression, any
 			case common.Second:
 				item, errorScript, itemError := new(ValueExpression).ParseValue(value)
 				if itemError != nil {
-					return nil, errorScript, fmt.Errorf("failed to parse %q of equal-expression: %v", key, itemError)
+					return nil, errorScript, fmt.Errorf("failed to parse %q of equal-expression: %w", key, itemError)
 				}
 
 				what.second = item
 
 			case common.As:
-				item, ok := value.(string)
-				if !ok {
-					return nil, script, fmt.Errorf("failed to parse equal-expression: %q is not a string but %T", key, value)
+				item, errorScript, itemError := new(ValueExpression).ParseValue(value)
+				if itemError != nil {
+					return nil, errorScript, fmt.Errorf("failed to parse %q of equal-expression: %w", key, itemError)
 				}
 
 				what.as = item
@@ -60,26 +59,40 @@ func (what *GreaterExpression) ParseAny(script any) (common.Expression, any, err
 	return what.ParseBool(script)
 }
 
-func (what *GreaterExpression) EvalBool(scope *common.Scope) (bool, string, error) {
+func (what *GreaterExpression) EvalBool(scope *common.Scope) (*common.BoolValue, string, error) {
 	first, errorItemLiteral, itemError := what.first.EvalAny(scope)
 	if itemError != nil {
-		return false, errorItemLiteral, itemError
+		return common.EmptyBoolValue(), errorItemLiteral, itemError
 	}
 
 	second, errorInLiteral, evalError := what.second.EvalAny(scope)
 	if evalError != nil {
-		return false, errorInLiteral, evalError
+		return common.EmptyBoolValue(), errorInLiteral, evalError
 	}
 
-	compareValue, compareError := common.Compare(first, second, what.as)
+	asString := ""
+	if what.as != nil {
+		as, errorAsLiteral, asError := what.as.EvalString(scope)
+		if asError != nil {
+			return common.EmptyBoolValue(), errorAsLiteral, asError
+		}
+
+		asString = as.StringValue()
+	}
+
+	compareValue, compareError := common.Compare(first, second, asString)
 	if compareError != nil {
-		return false, what.Literal(), fmt.Errorf("failed to eval equal-expression: %v", compareError)
+		return common.EmptyBoolValue(), what.Literal(), fmt.Errorf("failed to compare equal-expression: %w", compareError)
 	}
 
-	return compareValue > 0, "", nil
+	if common.IsGreater(compareValue.Property) {
+		return common.SomeBoolValue(true, compareValue), "", nil
+	}
+
+	return common.SomeBoolValue(false, compareValue), "", nil
 }
 
-func (what *GreaterExpression) EvalAny(scope *common.Scope) (any, string, error) {
+func (what *GreaterExpression) EvalAny(scope *common.Scope) (common.Value, string, error) {
 	return what.EvalBool(scope)
 }
 

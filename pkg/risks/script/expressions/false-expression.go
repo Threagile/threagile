@@ -2,7 +2,6 @@ package expressions
 
 import (
 	"fmt"
-
 	"github.com/threagile/threagile/pkg/risks/script/common"
 )
 
@@ -16,7 +15,7 @@ func (what *FalseExpression) ParseBool(script any) (common.BoolExpression, any, 
 
 	item, errorScript, itemError := new(ExpressionList).ParseAny(script)
 	if itemError != nil {
-		return nil, errorScript, fmt.Errorf("failed to parse false-expression: %v", itemError)
+		return nil, errorScript, fmt.Errorf("failed to parse false-expression: %w", itemError)
 	}
 
 	switch castItem := item.(type) {
@@ -24,7 +23,7 @@ func (what *FalseExpression) ParseBool(script any) (common.BoolExpression, any, 
 		what.expression = castItem
 
 	default:
-		return nil, script, fmt.Errorf("false-expression has non-bool expression: %v", itemError)
+		return nil, script, fmt.Errorf("false-expression has non-bool expression: %w", itemError)
 	}
 
 	return what, nil, nil
@@ -34,16 +33,16 @@ func (what *FalseExpression) ParseAny(script any) (common.Expression, any, error
 	return what.ParseBool(script)
 }
 
-func (what *FalseExpression) EvalBool(scope *common.Scope) (bool, string, error) {
+func (what *FalseExpression) EvalBool(scope *common.Scope) (*common.BoolValue, string, error) {
 	value, errorLiteral, evalError := what.expression.EvalBool(scope)
 	if evalError != nil {
-		return false, errorLiteral, fmt.Errorf("%q: error evaluating false-expression: %v", what.literal, evalError)
+		return common.EmptyBoolValue(), errorLiteral, fmt.Errorf("%q: error evaluating false-expression: %w", what.literal, evalError)
 	}
 
-	return !value, "", nil
+	return common.SomeBoolValue(!value.BoolValue(), value.Event()), "", nil
 }
 
-func (what *FalseExpression) EvalAny(scope *common.Scope) (any, string, error) {
+func (what *FalseExpression) EvalAny(scope *common.Scope) (common.Value, string, error) {
 	return what.EvalBool(scope)
 }
 

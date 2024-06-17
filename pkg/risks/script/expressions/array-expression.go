@@ -2,7 +2,6 @@ package expressions
 
 import (
 	"fmt"
-
 	"github.com/threagile/threagile/pkg/risks/script/common"
 )
 
@@ -19,7 +18,7 @@ func (what *ArrayExpression) ParseArray(script any) (common.ArrayExpression, any
 		expressions := new(ExpressionList)
 		_, errorScript, itemError := expressions.ParseAny(castScript)
 		if itemError != nil {
-			return nil, errorScript, fmt.Errorf("failed to parse array-expression: %v", itemError)
+			return nil, errorScript, fmt.Errorf("failed to parse array-expression: %w", itemError)
 		}
 
 		what.expressions = expressions
@@ -35,21 +34,21 @@ func (what *ArrayExpression) ParseAny(script any) (common.Expression, any, error
 	return what.ParseArray(script)
 }
 
-func (what *ArrayExpression) EvalArray(scope *common.Scope) ([]any, string, error) {
-	values := make([]any, 0)
+func (what *ArrayExpression) EvalArray(scope *common.Scope) (*common.ArrayValue, string, error) {
+	values := make([]common.Value, 0)
 	for index, expression := range what.expressions.Expressions() {
 		value, errorLiteral, evalError := expression.EvalAny(scope)
 		if evalError != nil {
-			return nil, errorLiteral, fmt.Errorf("%q: error evaluating array-expression #%v: %v", what.literal, index+1, evalError)
+			return nil, errorLiteral, fmt.Errorf("%q: error evaluating array-expression #%v: %w", what.literal, index+1, evalError)
 		}
 
 		values = append(values, value)
 	}
 
-	return values, "", nil
+	return common.SomeArrayValue(values, common.NewEvent(common.NewValueProperty(values), common.NewPath("array value")).From(values...)), "", nil
 }
 
-func (what *ArrayExpression) EvalAny(scope *common.Scope) (any, string, error) {
+func (what *ArrayExpression) EvalAny(scope *common.Scope) (common.Value, string, error) {
 	return what.EvalArray(scope)
 }
 
