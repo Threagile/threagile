@@ -360,7 +360,7 @@ func (what *ValueExpression) resolveMethodCall(scope *common.Scope, reString str
 
 	match := re.FindStringSubmatch(value.StringValue())
 	if len(match) != 3 {
-		return common.NilValue(), what.Literal(), fmt.Errorf("method call match failed for %q", value)
+		return common.NilValue(), what.Literal(), fmt.Errorf("method call match failed for %q", value.StringValue())
 	}
 
 	name := strings.ToLower(match[1])
