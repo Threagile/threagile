@@ -91,11 +91,6 @@ func (what *AllExpression) evalBool(scope *common.Scope, inValue common.Value) (
 	oldItem := scope.PopItem()
 	defer scope.SetItem(oldItem)
 
-	inValue, errorEvalLiteral, evalError := what.in.EvalAny(scope)
-	if evalError != nil {
-		return common.EmptyBoolValue(), errorEvalLiteral, evalError
-	}
-
 	switch castValue := inValue.Value().(type) {
 	case []any:
 		if what.expression == nil {

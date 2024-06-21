@@ -60,9 +60,7 @@ func (what *Event) AddHistory(history []*Event) *Event {
 		return what
 	}
 
-	for _, event := range history {
-		what.Events = append(what.Events, event)
-	}
+	what.Events = append(what.Events, history...)
 
 	return what
 }

@@ -89,7 +89,7 @@ func compare(firstValue Value, secondValue Value) (*Event, error) {
 			return NewEventFrom(NewNotEqualProperty(second), first, second), nil
 
 		case *BoolValue:
-			if second.BoolValue() == false {
+			if !second.BoolValue() {
 				return NewEventFrom(NewEqualProperty(second), first, second), nil
 			}
 

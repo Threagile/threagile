@@ -23,7 +23,7 @@ func (what *Path) Copy() *Path {
 	}
 
 	return &Path{
-		Path: append(what.Path[:]),
+		Path: what.Path[:],
 	}
 }
 

@@ -15,9 +15,9 @@ type GreaterExpression struct {
 func (what *GreaterExpression) ParseBool(script any) (common.BoolExpression, any, error) {
 	what.literal = common.ToLiteral(script)
 
-	switch script.(type) {
+	switch castScript := script.(type) {
 	case map[string]any:
-		for key, value := range script.(map[string]any) {
+		for key, value := range castScript {
 			switch key {
 			case common.First:
 				item, errorScript, itemError := new(ValueExpression).ParseValue(value)
