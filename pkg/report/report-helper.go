@@ -21,8 +21,8 @@ func filteredByRiskStatus(parsedModel *types.Model, status types.RiskStatus) []*
 func filteredByRiskFunction(parsedModel *types.Model, function types.RiskFunction) []*types.Risk {
 	filteredRisks := make([]*types.Risk, 0)
 	for categoryId, risks := range parsedModel.GeneratedRisksByCategory {
+		category := parsedModel.GetRiskCategory(categoryId)
 		for _, risk := range risks {
-			category := parsedModel.GetRiskCategory(categoryId)
 			if category.Function == function {
 				filteredRisks = append(filteredRisks, risk)
 			}
