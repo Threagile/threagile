@@ -1,0 +1,51 @@
+extends: default
+footer:
+  height: 2cm
+  line-height: 1.2
+  recto:
+    center:
+      content: "My Custom Theme"
+    right:
+      content: "Page {page-number} / {page-count}"
+  verso:
+    center:
+      content: "{document-title}"
+    right:
+      content: |
+        Page {page-number} / {page-count}
+role:
+  LowRisk:
+    font-color: #23465F
+  MediumRisk:
+    font-color: #C87832
+  ElevatedRisk:
+    font-color: #FF8E00
+  HighRisk:
+    font-color: #A0281E
+  CriticalRisk:
+    font-color: #FF2600
+  OutOfScope:
+    font-color: #7f7f7f
+  GreyText:
+    font-color: #505050
+  LightGreyText:
+    font-color: #646464
+  ModelFailure:
+    font-color: #945200
+  RiskStatusFalsePositive:
+    font-color: #666666
+  RiskStatusMitigated:
+    font-color: #008F00
+  RiskStatusInProgress:
+    font-color: #0000FF
+  RiskStatusAccepted:
+    font-color: #FF40FF
+  RiskStatusInDiscussion:
+    font-color: #FF9300
+  RiskStatusUnchecked:
+    font-color: #FF0000
+  Twilight:
+    font-color: #3A52C8
+  SmallGrey:
+    font-size: 0.5em
+    font-color: #505050
