@@ -9,6 +9,7 @@ risks.json
 technical-assets.json
 stats.json
 .vscode
+.task
 
 # Binaries for programs and plugins
 *.exe
