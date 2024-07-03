@@ -5,7 +5,7 @@ vars:
   CONTAINER: asciidoctor/docker-asciidoctor
   # CONTAINER: docker-asciidoctor:local
   DOCKER_ASCIIDOCTOR: docker run -it -u $(id -u):$(id -g) -v $(pwd):/documents/ {{.CONTAINER}} asciidoctor {{.AD_GLOBAL_REQUIRES}} --require asciidoctor-kroki
-  GIT_SHORT_SHA: 
+  GIT_SHORT_SHA:
     sh: git log -n 1 --format=%h
 
 env:
@@ -61,3 +61,17 @@ tasks:
                 --generate-report-adoc
                 --generate-report-pdf=0
                 # --background ./report/template/background.pdf
+
+    golangci-lint:
+        desc: run golangci-lint on current code
+        cmds:
+          - docker run --rm -it -v $(pwd):/app -w /app golangci/golangci-lint golangci-lint run -v
+
+    gosec:
+        desc: run securego/gosec
+        cmds:
+          - docker run --rm -it -v $(pwd):/app -w /app securego/gosec /app/...
+
+    linting:
+        desc: all linting jobs
+        deps: [golangci-lint, gosec]
