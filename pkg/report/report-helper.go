@@ -8,7 +8,7 @@ import (
 
 func filteredByRiskStatus(parsedModel *types.Model, status types.RiskStatus) []*types.Risk {
 	filteredRisks := make([]*types.Risk, 0)
-	for _, risks := range parsedModel.GeneratedRisksByCategory {
+	for _, risks := range parsedModel.GeneratedRisksByCategoryWithCurrentStatus() {
 		for _, risk := range risks {
 			if risk.RiskStatus == status {
 				filteredRisks = append(filteredRisks, risk)
@@ -103,7 +103,7 @@ func sortedKeysOfQuestions(parsedModel *types.Model) []string {
 
 func filteredBySeverity(parsedModel *types.Model, severity types.RiskSeverity) []*types.Risk {
 	filteredRisks := make([]*types.Risk, 0)
-	for _, risks := range parsedModel.GeneratedRisksByCategory {
+	for _, risks := range parsedModel.GeneratedRisksByCategoryWithCurrentStatus() {
 		for _, risk := range risks {
 			if risk.Severity == severity {
 				filteredRisks = append(filteredRisks, risk)

@@ -252,7 +252,7 @@ func (r *pdfReporter) createTableOfContents(parsedModel *types.Model) {
 	y += 6
 	risksStr = "Risks"
 	catStr = "Categories"
-	count, catCount = len(filteredByStillAtRisk(parsedModel)), len(reduceToOnlyStillAtRisk(parsedModel.GeneratedRisksByCategory))
+	count, catCount = len(filteredByStillAtRisk(parsedModel)), len(reduceToOnlyStillAtRisk(parsedModel.GeneratedRisksByCategoryWithCurrentStatus()))
 	if count == 1 {
 		risksStr = "Risk"
 	}
@@ -1349,7 +1349,7 @@ func (r *pdfReporter) renderImpactAnalysis(parsedModel *types.Model, initialRisk
 	r.pdf.SetTextColor(0, 0, 0)
 	count, catCount := totalRiskCount(parsedModel), len(parsedModel.GeneratedRisksByCategory)
 	if !initialRisks {
-		count, catCount = len(filteredByStillAtRisk(parsedModel)), len(reduceToOnlyStillAtRisk(parsedModel.GeneratedRisksByCategory))
+		count, catCount = len(filteredByStillAtRisk(parsedModel)), len(reduceToOnlyStillAtRisk(parsedModel.GeneratedRisksByCategoryWithCurrentStatus()))
 	}
 	riskStr, catStr := "Risks", "Categories"
 	if count == 1 {
@@ -3892,7 +3892,7 @@ func isDataBreachPotentialStillAtRisk(parsedModel *types.Model, dataAsset *types
 
 func filteredByStillAtRisk(parsedModel *types.Model) []*types.Risk {
 	filteredRisks := make([]*types.Risk, 0)
-	for _, risks := range parsedModel.GeneratedRisksByCategory {
+	for _, risks := range parsedModel.GeneratedRisksByCategoryWithCurrentStatus() {
 		for _, risk := range risks {
 			if risk.RiskStatus.IsStillAtRisk() {
 				filteredRisks = append(filteredRisks, risk)

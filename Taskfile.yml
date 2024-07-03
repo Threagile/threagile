@@ -62,6 +62,7 @@ tasks:
                 --app-dir .
                 --generate-report-adoc
                 --generate-report-pdf=0
+                --verbose
                 # --background ./report/template/background.pdf
 
     golangci-lint:

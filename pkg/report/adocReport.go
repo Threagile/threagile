@@ -581,11 +581,11 @@ func (adoc adocReport) impactAnalysis(f *os.File, initialRisks bool) {
 			" (distributed over *"+strconv.Itoa(catCount)+" risk categories*) are "+
 			"(taking the severity ratings into account and using the highest for each category)!{fn-risk-findings}")
 	writeLine(f, "")
-	adoc.addCategories(f, adoc.model.GeneratedRisksByCategory, initialRisks, types.CriticalSeverity, false, false)
-	adoc.addCategories(f, adoc.model.GeneratedRisksByCategory, initialRisks, types.HighSeverity, false, false)
-	adoc.addCategories(f, adoc.model.GeneratedRisksByCategory, initialRisks, types.ElevatedSeverity, false, false)
-	adoc.addCategories(f, adoc.model.GeneratedRisksByCategory, initialRisks, types.MediumSeverity, false, false)
-	adoc.addCategories(f, adoc.model.GeneratedRisksByCategory, initialRisks, types.LowSeverity, false, false)
+	adoc.addCategories(f, adoc.model.GeneratedRisksByCategoryWithCurrentStatus(), initialRisks, types.CriticalSeverity, false, false)
+	adoc.addCategories(f, adoc.model.GeneratedRisksByCategoryWithCurrentStatus(), initialRisks, types.HighSeverity, false, false)
+	adoc.addCategories(f, adoc.model.GeneratedRisksByCategoryWithCurrentStatus(), initialRisks, types.ElevatedSeverity, false, false)
+	adoc.addCategories(f, adoc.model.GeneratedRisksByCategoryWithCurrentStatus(), initialRisks, types.MediumSeverity, false, false)
+	adoc.addCategories(f, adoc.model.GeneratedRisksByCategoryWithCurrentStatus(), initialRisks, types.LowSeverity, false, false)
 }
 
 func (adoc adocReport) writeImpactInitialRisks() error {
@@ -1062,7 +1062,7 @@ func (adoc adocReport) stride(f *os.File) {
 
 	for _, strideValue := range strides {
 		writeLine(f, "== "+strideValue.Title())
-		risksSTRIDE := reduceToSTRIDERisk(adoc.model, adoc.model.GeneratedRisksByCategory, strideValue)
+		risksSTRIDE := reduceToSTRIDERisk(adoc.model, adoc.model.GeneratedRisksByCategoryWithCurrentStatus(), strideValue)
 		for _, critValue := range reverseRiskSeverity {
 			adoc.addCategories(f, risksSTRIDE, true, critValue, true, true)
 		}
@@ -1123,7 +1123,7 @@ func (adoc adocReport) assignmentByFunction(f *os.File) {
 
 	for _, riskFunctionValue := range riskFunctionValues {
 		writeLine(f, "== "+riskFunctionValue.Title())
-		risksFunction := reduceToFunctionRisk(adoc.model, adoc.model.GeneratedRisksByCategory, riskFunctionValue)
+		risksFunction := reduceToFunctionRisk(adoc.model, adoc.model.GeneratedRisksByCategoryWithCurrentStatus(), riskFunctionValue)
 		for _, critValue := range reverseRiskSeverity {
 			adoc.addCategories(f, risksFunction, true, critValue, true, false)
 		}
@@ -1283,7 +1283,7 @@ func (adoc adocReport) writeOutOfScopeAssets() error {
 }
 
 func (adoc adocReport) modelFailures(f *os.File) {
-	modelFailures := flattenRiskSlice(filterByModelFailures(adoc.model, adoc.model.GeneratedRisksByCategory))
+	modelFailures := flattenRiskSlice(filterByModelFailures(adoc.model, adoc.model.GeneratedRisksByCategoryWithCurrentStatus()))
 	risksStr := "Risk"
 	count := len(modelFailures)
 	if count > 1 {
@@ -1306,7 +1306,7 @@ modeled or the model might itself contain inconsistencies. Each potential model 
 in the model against the architecture design:{fn-risk-findings}`)
 	writeLine(f, "")
 
-	modelFailuresByCategory := filterByModelFailures(adoc.model, adoc.model.GeneratedRisksByCategory)
+	modelFailuresByCategory := filterByModelFailures(adoc.model, adoc.model.GeneratedRisksByCategoryWithCurrentStatus())
 	if len(modelFailuresByCategory) == 0 {
 		writeLine(f, "No potential model failures have been identified.")
 	} else {
