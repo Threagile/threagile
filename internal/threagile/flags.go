@@ -27,6 +27,7 @@ const (
 	skipRiskRulesFlagName              = "skip-risk-rules"
 	ignoreOrphanedRiskTrackingFlagName = "ignore-orphaned-risk-tracking"
 	templateFileNameFlagName           = "background"
+	reportLogoImagePathFlagName        = "reportLogoImagePath"
 
 	generateDataFlowDiagramFlagName     = "generate-data-flow-diagram"
 	generateDataAssetDiagramFlagName    = "generate-data-asset-diagram"
@@ -36,6 +37,7 @@ const (
 	generateRisksExcelFlagName          = "generate-risks-excel"
 	generateTagsExcelFlagName           = "generate-tags-excel"
 	generateReportPDFFlagName           = "generate-report-pdf"
+	generateReportADOCFlagName          = "generate-report-adoc"
 )
 
 type Flags struct {
@@ -53,6 +55,7 @@ type Flags struct {
 	customRiskRulesPluginFlag      string
 	ignoreOrphanedRiskTrackingFlag bool
 	templateFileNameFlag           string
+	reportLogoImagePathFlag        string
 	diagramDpiFlag                 int
 
 	generateDataFlowDiagramFlag     bool
@@ -63,4 +66,5 @@ type Flags struct {
 	generateRisksExcelFlag          bool
 	generateTagsExcelFlag           bool
 	generateReportPDFFlag           bool
+	generateReportADOCFlag          bool
 }

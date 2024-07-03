@@ -71,6 +71,7 @@ func (what *Threagile) initRoot() *Threagile {
 	what.rootCmd.PersistentFlags().StringVar(&what.flags.skipRiskRulesFlag, skipRiskRulesFlagName, strings.Join(defaultConfig.SkipRiskRules, ","), "comma-separated list of risk rules (by their ID) to skip")
 	what.rootCmd.PersistentFlags().BoolVar(&what.flags.ignoreOrphanedRiskTrackingFlag, ignoreOrphanedRiskTrackingFlagName, defaultConfig.IgnoreOrphanedRiskTracking, "ignore orphaned risk tracking (just log them) not matching a concrete risk")
 	what.rootCmd.PersistentFlags().StringVar(&what.flags.templateFileNameFlag, templateFileNameFlagName, defaultConfig.TemplateFilename, "background pdf file")
+	what.rootCmd.PersistentFlags().StringVar(&what.flags.reportLogoImagePathFlag, reportLogoImagePathFlagName, defaultConfig.ReportLogoImagePath, "reportLogoImagePath")
 
 	what.rootCmd.PersistentFlags().BoolVar(&what.flags.generateDataFlowDiagramFlag, generateDataFlowDiagramFlagName, true, "generate data flow diagram")
 	what.rootCmd.PersistentFlags().BoolVar(&what.flags.generateDataAssetDiagramFlag, generateDataAssetDiagramFlagName, true, "generate data asset diagram")
@@ -80,7 +81,7 @@ func (what *Threagile) initRoot() *Threagile {
 	what.rootCmd.PersistentFlags().BoolVar(&what.flags.generateRisksExcelFlag, generateRisksExcelFlagName, true, "generate risks excel")
 	what.rootCmd.PersistentFlags().BoolVar(&what.flags.generateTagsExcelFlag, generateTagsExcelFlagName, true, "generate tags excel")
 	what.rootCmd.PersistentFlags().BoolVar(&what.flags.generateReportPDFFlag, generateReportPDFFlagName, true, "generate report pdf, including diagrams")
-
+	what.rootCmd.PersistentFlags().BoolVar(&what.flags.generateReportADOCFlag, generateReportADOCFlagName, true, "generate report adoc, including diagrams")
 	return what
 }
 
@@ -214,6 +215,7 @@ func (what *Threagile) readCommands() *report.GenerateCommands {
 	commands.RisksExcel = what.flags.generateRisksExcelFlag
 	commands.TagsExcel = what.flags.generateTagsExcelFlag
 	commands.ReportPDF = what.flags.generateReportPDFFlag
+	commands.ReportADOC = what.flags.generateReportADOCFlag
 	return commands
 }
 
@@ -264,6 +266,9 @@ func (what *Threagile) readConfig(cmd *cobra.Command, buildTimestamp string) *Co
 	}
 	if isFlagOverridden(flags, templateFileNameFlagName) {
 		cfg.TemplateFilename = what.flags.templateFileNameFlag
+	}
+	if isFlagOverridden(flags, reportLogoImagePathFlagName) {
+		cfg.ReportLogoImagePath = what.flags.reportLogoImagePathFlag
 	}
 	return cfg
 }

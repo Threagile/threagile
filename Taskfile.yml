@@ -57,6 +57,7 @@ tasks:
                 --model ./demo/example/threagile.yaml
                 --output /tmp/threagile-test
                 --ignore-orphaned-risk-tracking
-                --background report/template/background.pdf
                 --app-dir .
-                --generate-report-pdf
+                --generate-report-adoc
+                --generate-report-pdf=0
+                # --background ./report/template/background.pdf

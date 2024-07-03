@@ -22,6 +22,7 @@ type GenerateCommands struct {
 	RisksExcel          bool
 	TagsExcel           bool
 	ReportPDF           bool
+	ReportADOC          bool
 }
 
 func (c *GenerateCommands) Defaults() *GenerateCommands {
@@ -34,6 +35,7 @@ func (c *GenerateCommands) Defaults() *GenerateCommands {
 		RisksExcel:          true,
 		TagsExcel:           true,
 		ReportPDF:           true,
+		ReportADOC:          true,
 	}
 	return c
 }
@@ -58,6 +60,7 @@ type reportConfigReader interface {
 	GetJsonTechnicalAssetsFilename() string
 	GetJsonStatsFilename() string
 	GetTemplateFilename() string
+	GetReportLogoImagePath() string
 
 	GetSkipRiskRules() []string
 	GetRiskExcelConfigHideColumns() []string
@@ -76,7 +79,7 @@ func Generate(config reportConfigReader, readResult *model.ReadResult, commands 
 	generateDataFlowDiagram := commands.DataFlowDiagram
 	generateDataAssetsDiagram := commands.DataAssetDiagram
 
-	if commands.ReportPDF { // as the PDF report includes both diagrams
+	if commands.ReportPDF || commands.ReportADOC { // as the PDF report includes both diagrams
 		if !generateDataFlowDiagram {
 			dataFlowFile := filepath.Join(config.GetOutputFolder(), config.GetDataFlowDiagramFilenamePNG())
 			if _, err := os.Stat(dataFlowFile); errors.Is(err, os.ErrNotExist) {
@@ -217,6 +220,38 @@ func Generate(config reportConfigReader, readResult *model.ReadResult, commands 
 			readResult.CustomRiskRules,
 			config.GetTempFolder(),
 			readResult.ParsedModel)
+		if err != nil {
+			return err
+		}
+	}
+
+	if commands.ReportADOC {
+		// hash the YAML input file
+		f, err := os.Open(config.GetInputFile())
+		if err != nil {
+			return err
+		}
+		defer func() { _ = f.Close() }()
+		hasher := sha256.New()
+		if _, err := io.Copy(hasher, f); err != nil {
+			return err
+		}
+
+		modelHash := hex.EncodeToString(hasher.Sum(nil))
+		// report ADOC
+		progressReporter.Info("Writing report adoc")
+		adocReporter := NewAdocReport(config.GetOutputFolder(), riskRules)
+		err = adocReporter.WriteReport(readResult.ParsedModel,
+			filepath.Join(config.GetOutputFolder(), config.GetDataFlowDiagramFilenamePNG()),
+			filepath.Join(config.GetOutputFolder(), config.GetDataAssetDiagramFilenamePNG()),
+			config.GetInputFile(),
+			config.GetSkipRiskRules(),
+			config.GetBuildTimestamp(),
+			config.GetThreagileVersion(),
+			modelHash,
+			readResult.IntroTextRAA,
+			readResult.CustomRiskRules,
+			config.GetReportLogoImagePath())
 		if err != nil {
 			return err
 		}

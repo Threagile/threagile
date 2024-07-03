@@ -19,6 +19,7 @@ const (
 	JsonTechnicalAssetsFilename = "technical-assets.json"
 	JsonStatsFilename           = "stats.json"
 	TemplateFilename            = "background.pdf"
+	ReportLogoImagePath         = "report/threagile-logo.png"
 	DataFlowDiagramFilenameDOT  = "data-flow-diagram.gv"
 	DataFlowDiagramFilenamePNG  = "data-flow-diagram.png"
 	DataAssetDiagramFilenameDOT = "data-asset-diagram.gv"
