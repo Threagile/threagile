@@ -665,8 +665,8 @@ func (adoc adocReport) riskMitigationStatus(f *os.File) {
   },
   "mark": {"type": "bar", "cornerRadiusTopLeft": 3, "cornerRadiusTopRight": 3},
   "encoding": {
-    "x": {"field": "risk", "type": "ordinal", "title": "", "axis": {
-      "labelAngle": 0
+    "x": {"field": "risk", "type": "ordinal", "title": "", "sort": [], "axis": {
+        "labelAngle": 0
     }},
     "y": {"field": "value", "type": "quantitative", "title": "", "axis": {
       "orient": "right"
