@@ -128,27 +128,23 @@ title-page:
   line-height: 1
   recto:
     center:
-      content: "{section-or-chapter-title} - `+adoc.model.Title+`"
+      content: "{document-title} -- `+adoc.model.Title+` -- {section-or-chapter-title}"
   verso:
     center:
-      content: "{section-or-chapter-title} - `+adoc.model.Title+`"
+      content: "{document-title} -- `+adoc.model.Title+` -- {section-or-chapter-title}"
 footer:
   height: 2cm
   line-height: 1.2
   recto:
     center:
-      content: |
-        --confidential --
-        {document-title}
+      content: -- confidential --
     left:
       content: "Version: {DOC_VERSION}"
     right:
       content: "Page {page-number} of {page-count}"
   verso:
     center:
-      content: |
-        --confidential --
-        {document-title}
+      content: -- confidential --
     left:
       content: "Version: {DOC_VERSION}"
     right:
