@@ -1406,13 +1406,17 @@ func (adoc adocReport) riskTrackingStatus(f *os.File, risk *types.Risk) {
 			dateStr = ""
 		}
 		justificationStr := tracking.Justification
+		ticket := tracking.Ticket
+		if len(ticket) == 0 {
+			ticket = "-"
+		}
 		writeLine(f, `
 [cols="a,c,c,c",frame=none,grid=none,options="unbreakable"]
 |===
 | [.`+colorName+`.small]#`+bold+tracking.Status.Title()+bold+`#
 | [.GreyText.small]#`+dateStr+`#
 | [.GreyText.small]#`+tracking.CheckedBy+`#
-| [.GreyText.small]#`+tracking.Ticket+`#
+| [.GreyText.small]#`+ticket+`#
 
 4+|[.small]#`+justificationStr+`#
 |===
@@ -1477,10 +1481,12 @@ func (adoc adocReport) riskCategories(f *os.File) {
 		writeLine(f, fixBasicHtml(category.RiskAssessment))
 
 		writeLine(f, "[RiskStatusFalsePositive]#*False Positives*#::")
-		writeLine(f, "[RiskStatusFalsePositive]#"+category.FalsePositives+"#")
+		if len(category.FalsePositives) > 0 {
+			writeLine(f, "[RiskStatusFalsePositive]#"+category.FalsePositives+"#")
+		}
 
 		writeLine(f, "[RiskStatusMitigated]#*Mitigation*# ("+category.Function.Title()+"): "+category.Action+"::")
-		writeLine(f, "[RiskStatusMitigated]#"+fixBasicHtml(category.Mitigation)+"#")
+		writeLine(f, fixBasicHtml(category.Mitigation))
 
 		asvsChapter := category.ASVS
 		asvsLink := "n/a"
