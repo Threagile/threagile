@@ -21,7 +21,7 @@ func (*LdapInjectionRule) Category() *types.RiskCategory {
 		CheatSheet: "https://cheatsheetseries.owasp.org/cheatsheets/LDAP_Injection_Prevention_Cheat_Sheet.html",
 		Action:     "LDAP-Injection Prevention",
 		Mitigation: "Try to use libraries that properly encode LDAP meta characters in searches and queries to access " +
-			"the LDAP sever in order to stay safe from LDAP-Injection vulnerabilities. " +
+			"the LDAP server in order to stay safe from LDAP-Injection vulnerabilities. " +
 			"When a third-party product is used instead of custom developed software, check if the product applies the proper mitigation and ensure a reasonable patch-level.",
 		Check:          "Are recommendations from the linked cheat sheet and referenced ASVS chapter applied?",
 		Function:       types.Development,
