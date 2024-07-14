@@ -51,10 +51,12 @@ tasks:
     create-example-project:
         desc: create the example project
         deps: [build-threagile]
+        env:
+          YAML: ./demo/example/threagile.yaml
         cmds:
           - mkdir -p /tmp/threagile-test
           - ./bin/threagile analyze-model
-                --model ./demo/example/threagile.yaml
+                --model ${YAML}
                 --output /tmp/threagile-test
                 --ignore-orphaned-risk-tracking
                 --app-dir .
