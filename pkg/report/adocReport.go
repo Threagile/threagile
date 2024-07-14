@@ -550,8 +550,12 @@ func (adoc adocReport) addCategories(f *os.File, risksByCategory map[string][]*t
 }
 
 func (adoc adocReport) impactAnalysis(f *os.File, initialRisks bool) {
-	count, catCount := totalRiskCount(adoc.model), len(adoc.model.GeneratedRisksByCategory)
+	totalCount, remainingCount, catCount := totalRiskCount(adoc.model), len(reduceToOnlyStillAtRisk(adoc.model.GeneratedRisksByCategoryWithCurrentStatus())), len(adoc.model.GeneratedRisksByCategory)
 	riskStr, catStr := "Risks", "Categories"
+	count := remainingCount
+	if initialRisks {
+		count = totalCount
+	}
 	if count == 1 {
 		riskStr = "Risk"
 	}
@@ -563,6 +567,7 @@ func (adoc adocReport) impactAnalysis(f *os.File, initialRisks bool) {
 		chapTitle := "= Impact Analysis of " + strconv.Itoa(count) + " Initial " + riskStr + " in " + strconv.Itoa(catCount) + " " + catStr
 		writeLine(f, chapTitle)
 	} else {
+
 		chapTitle := "= Impact Analysis of " + strconv.Itoa(count) + " Remaining " + riskStr + " in " + strconv.Itoa(catCount) + " " + catStr
 		writeLine(f, chapTitle)
 	}
