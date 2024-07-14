@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -59,6 +60,9 @@ func fixBasicHtml(inputWithHtml string) string {
 
 	result = strings.Replace(result, "<br>", "\n", -1)
 	result = strings.Replace(result, "</br>", "\n", -1)
+
+	linkAndName := regexp.MustCompile(`<a href=\"(.*)\".*>(.*)</a>`)
+	result = linkAndName.ReplaceAllString(result, "${1}[${2}]")
 	return result
 }
 
