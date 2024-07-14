@@ -1665,7 +1665,7 @@ func (adoc adocReport) technicalAssets(f *os.File) {
 		// and more metadata of asset in tabular view
 		writeLine(f, "=== Identified Risks of Asset")
 		if len(risksStr) > 0 {
-			writeLine(f, "[GreyText]#Risk finding paragraphs are clickable and link to the corresponding chapter.#")
+			writeLine(f, ":fn-risk-findings: footnote:riskfinding[Risk finding paragraphs are clickable and link to the corresponding chapter.]")
 			for _, risk := range risksStr {
 				colorPrefix, colorSuffix = colorPrefixBySeverity(types.HighestSeverityStillAtRisk(risksStr), false)
 				if !risk.RiskStatus.IsStillAtRisk() {
