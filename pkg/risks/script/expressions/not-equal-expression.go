@@ -2,6 +2,7 @@ package expressions
 
 import (
 	"fmt"
+
 	"github.com/threagile/threagile/pkg/risks/script/common"
 )
 
@@ -70,16 +71,16 @@ func (what *NotEqualExpression) EvalBool(scope *common.Scope) (*common.BoolValue
 		return common.EmptyBoolValue(), errorInLiteral, evalError
 	}
 
-	compareValue, compareError := common.Compare(first, second, what.as)
+	compareValue, compareError := common.Compare(first, second, what.as, scope.Stack())
 	if compareError != nil {
 		return common.EmptyBoolValue(), what.Literal(), fmt.Errorf("failed to compare not-equal-expression: %w", compareError)
 	}
 
-	if !common.IsSame(compareValue.Property) {
-		return common.SomeBoolValue(true, compareValue), "", nil
+	if !common.IsSame(compareValue) {
+		return common.SomeBoolValue(true, scope.Stack(), compareValue), "", nil
 	}
 
-	return common.SomeBoolValue(false, compareValue), "", nil
+	return common.SomeBoolValue(false, scope.Stack(), compareValue), "", nil
 }
 
 func (what *NotEqualExpression) EvalAny(scope *common.Scope) (common.Value, string, error) {

@@ -2,6 +2,7 @@ package statements
 
 import (
 	"fmt"
+
 	"github.com/threagile/threagile/pkg/risks/script/common"
 	"github.com/threagile/threagile/pkg/risks/script/expressions"
 )
@@ -95,15 +96,15 @@ func (what *IfStatement) Run(scope *common.Scope) (string, error) {
 
 	if value.BoolValue() {
 		if what.yesPath != nil {
-			scope.PushCall(common.NewEventFrom(common.NewTrueProperty(), value))
-			defer scope.PopCall()
+			scope.PushHistory(value.History()...)
+			defer scope.PopHistory()
 
 			return what.yesPath.Run(scope)
 		}
 	} else {
 		if what.noPath != nil {
-			scope.PushCall(common.NewEventFrom(common.NewFalseProperty(), value))
-			defer scope.PopCall()
+			scope.PushHistory(value.History()...)
+			defer scope.PopHistory()
 
 			return what.noPath.Run(scope)
 		}

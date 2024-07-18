@@ -2,7 +2,9 @@ package statements
 
 import (
 	"fmt"
+
 	"github.com/threagile/threagile/pkg/risks/script/common"
+	"github.com/threagile/threagile/pkg/risks/script/event"
 )
 
 type MethodStatement struct {
@@ -93,11 +95,12 @@ func (what *MethodStatement) runDeferred(scope *common.Scope) {
 
 	if scope.Explain != nil {
 		scope.HasReturned = false
-		scope.CallStack = make(common.History, 0)
+		scope.CallStack = make([]event.History, 0)
+		explanation := scope.Explain.Eval(scope)
 
 		returnValue := scope.GetReturnValue()
 		if returnValue != nil {
-			returnValue = common.SomeValue(returnValue.PlainValue(), returnValue.Event())
+			returnValue = common.SomeValueWithPath(returnValue.PlainValue(), returnValue.Path(), scope.Stack(), event.NewExplain(explanation))
 			scope.SetReturnValue(returnValue)
 		}
 	}

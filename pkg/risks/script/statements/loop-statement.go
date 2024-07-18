@@ -2,8 +2,10 @@ package statements
 
 import (
 	"fmt"
+
 	"github.com/shopspring/decimal"
 	"github.com/threagile/threagile/pkg/risks/script/common"
+	"github.com/threagile/threagile/pkg/risks/script/event"
 	"github.com/threagile/threagile/pkg/risks/script/expressions"
 )
 
@@ -91,10 +93,10 @@ func (what *LoopStatement) run(scope *common.Scope, value common.Value) (string,
 			}
 
 			if len(what.index) > 0 {
-				scope.Set(what.index, common.SomeDecimalValue(decimal.NewFromInt(int64(index)), nil))
+				scope.Set(what.index, common.SomeDecimalValue(decimal.NewFromInt(int64(index)), scope.Stack()))
 			}
 
-			itemValue := scope.SetItem(common.SomeValue(item, value.Event()))
+			itemValue := scope.SetItem(common.SomeValue(item, scope.Stack(), event.NewValueEvent(value)))
 			if len(what.item) > 0 {
 				scope.Set(what.item, itemValue)
 			}
@@ -112,10 +114,10 @@ func (what *LoopStatement) run(scope *common.Scope, value common.Value) (string,
 			}
 
 			if len(what.index) > 0 {
-				scope.Set(what.index, common.SomeDecimalValue(decimal.NewFromInt(int64(index)), nil))
+				scope.Set(what.index, common.SomeDecimalValue(decimal.NewFromInt(int64(index)), scope.Stack()))
 			}
 
-			itemValue := scope.SetItem(common.SomeValue(item.Value(), value.Event()))
+			itemValue := scope.SetItem(common.SomeValue(item.Value(), scope.Stack(), event.NewValueEvent(value)))
 			if len(what.item) > 0 {
 				scope.Set(what.item, itemValue)
 			}
@@ -133,10 +135,10 @@ func (what *LoopStatement) run(scope *common.Scope, value common.Value) (string,
 			}
 
 			if len(what.index) > 0 {
-				scope.Set(what.index, common.SomeStringValue(name, nil))
+				scope.Set(what.index, common.SomeStringValue(name, scope.Stack()))
 			}
 
-			itemValue := scope.SetItem(common.SomeValue(item, value.Event()))
+			itemValue := scope.SetItem(common.SomeValue(item, scope.Stack(), event.NewValueEvent(value)))
 			if len(what.item) > 0 {
 				scope.Set(what.item, itemValue)
 			}
@@ -148,7 +150,7 @@ func (what *LoopStatement) run(scope *common.Scope, value common.Value) (string,
 		}
 
 	case common.Value:
-		return what.run(scope, common.SomeValue(castValue.Value(), value.Event()))
+		return what.run(scope, common.SomeValue(castValue.Value(), nil, value.History()...))
 
 	default:
 		return what.Literal(), fmt.Errorf("failed to run loop-statement: expected iterable type, got %T", value)
