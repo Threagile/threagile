@@ -2,7 +2,9 @@ package expressions
 
 import (
 	"fmt"
+
 	"github.com/threagile/threagile/pkg/risks/script/common"
+	"github.com/threagile/threagile/pkg/risks/script/event"
 )
 
 type OrExpression struct {
@@ -44,7 +46,7 @@ func (what *OrExpression) ParseAny(script any) (common.Expression, any, error) {
 }
 
 func (what *OrExpression) EvalBool(scope *common.Scope) (*common.BoolValue, string, error) {
-	values := make([]common.Value, 0)
+	events := make([]event.Event, 0)
 	for index, expression := range what.expressions {
 		value, errorLiteral, evalError := expression.EvalBool(scope)
 		if evalError != nil {
@@ -52,13 +54,13 @@ func (what *OrExpression) EvalBool(scope *common.Scope) (*common.BoolValue, stri
 		}
 
 		if value.BoolValue() {
-			return common.SomeBoolValue(true, value.Event()), "", nil
+			return value, "", nil
 		}
 
-		values = append(values, value)
+		events = append(events, event.NewValueEvent(value))
 	}
 
-	return common.SomeBoolValue(false, common.NewEvent(common.NewFalseProperty(), common.EmptyPath()).From(values...)), "", nil
+	return common.SomeBoolValue(false, scope.Stack(), events...), "", nil
 }
 
 func (what *OrExpression) EvalAny(scope *common.Scope) (common.Value, string, error) {

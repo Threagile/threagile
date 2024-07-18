@@ -2,6 +2,7 @@ package expressions
 
 import (
 	"fmt"
+
 	"github.com/threagile/threagile/pkg/risks/script/common"
 )
 
@@ -45,7 +46,7 @@ func (what *ArrayExpression) EvalArray(scope *common.Scope) (*common.ArrayValue,
 		values = append(values, value)
 	}
 
-	return common.SomeArrayValue(values, common.NewEvent(common.NewValueProperty(values), common.NewPath("array value")).From(values...)), "", nil
+	return common.SomeArrayValue(values, scope.Stack()), "", nil
 }
 
 func (what *ArrayExpression) EvalAny(scope *common.Scope) (common.Value, string, error) {

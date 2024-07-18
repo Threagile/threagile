@@ -2,7 +2,9 @@ package expressions
 
 import (
 	"fmt"
+
 	"github.com/threagile/threagile/pkg/risks/script/common"
+	"github.com/threagile/threagile/pkg/risks/script/event"
 )
 
 type AndExpression struct {
@@ -44,7 +46,7 @@ func (what *AndExpression) ParseAny(script any) (common.Expression, any, error) 
 }
 
 func (what *AndExpression) EvalBool(scope *common.Scope) (*common.BoolValue, string, error) {
-	values := make([]common.Value, 0)
+	events := make([]event.Event, 0)
 	for index, expression := range what.expressions {
 		value, errorLiteral, evalError := expression.EvalBool(scope)
 		if evalError != nil {
@@ -52,13 +54,17 @@ func (what *AndExpression) EvalBool(scope *common.Scope) (*common.BoolValue, str
 		}
 
 		if !value.BoolValue() {
-			return common.SomeBoolValue(false, value.Event()), "", nil
+			return common.SomeBoolValue(false, scope.Stack(), event.NewValueEvent(value)), "", nil
 		}
 
-		values = append(values, value)
+		if len(value.Path()) == 0 {
+			events = append(events, value.History()...)
+		} else {
+			events = append(events, event.NewValueEvent(value))
+		}
 	}
 
-	return common.SomeBoolValue(true, common.NewEvent(common.NewTrueProperty(), common.EmptyPath()).From(values...)), "", nil
+	return common.SomeBoolValue(true, scope.Stack(), events...), "", nil
 }
 
 func (what *AndExpression) EvalAny(scope *common.Scope) (common.Value, string, error) {

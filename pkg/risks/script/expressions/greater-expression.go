@@ -2,6 +2,7 @@ package expressions
 
 import (
 	"fmt"
+
 	"github.com/threagile/threagile/pkg/risks/script/common"
 )
 
@@ -80,16 +81,16 @@ func (what *GreaterExpression) EvalBool(scope *common.Scope) (*common.BoolValue,
 		asString = as.StringValue()
 	}
 
-	compareValue, compareError := common.Compare(first, second, asString)
+	compareValue, compareError := common.Compare(first, second, asString, scope.Stack())
 	if compareError != nil {
 		return common.EmptyBoolValue(), what.Literal(), fmt.Errorf("failed to compare equal-expression: %w", compareError)
 	}
 
-	if common.IsGreater(compareValue.Property) {
-		return common.SomeBoolValue(true, compareValue), "", nil
+	if common.IsGreater(compareValue) {
+		return common.SomeBoolValue(true, scope.Stack(), compareValue), "", nil
 	}
 
-	return common.SomeBoolValue(false, compareValue), "", nil
+	return common.SomeBoolValue(false, scope.Stack(), compareValue), "", nil
 }
 
 func (what *GreaterExpression) EvalAny(scope *common.Scope) (common.Value, string, error) {

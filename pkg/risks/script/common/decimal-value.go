@@ -2,37 +2,51 @@ package common
 
 import (
 	"fmt"
+
 	"github.com/shopspring/decimal"
+	"github.com/threagile/threagile/pkg/risks/script/event"
 )
 
 type DecimalValue struct {
-	value decimal.Decimal
-	name  Path
-	event *Event
-}
-
-func (what DecimalValue) Value() any {
-	return what.value
-}
-
-func (what DecimalValue) Name() Path {
-	return what.name
-}
-
-func (what DecimalValue) SetName(name ...string) {
-	what.name.SetPath(name...)
-}
-
-func (what DecimalValue) Event() *Event {
-	return what.event
+	value   decimal.Decimal
+	path    event.Path
+	history event.History
 }
 
 func (what DecimalValue) PlainValue() any {
 	return what.value
 }
 
-func (what DecimalValue) Text() []string {
-	return []string{what.value.String()}
+func (what DecimalValue) Value() any {
+	return what.value
+}
+
+func (what DecimalValue) Path() event.Path {
+	return what.path
+}
+
+func (what DecimalValue) ValueText() event.Text {
+	return new(event.Text).Append(what.value.String())
+}
+
+func (what DecimalValue) History() event.History {
+	return what.history
+}
+
+func (what DecimalValue) Text() event.Text {
+	if len(what.path) > 0 {
+		return new(event.Text).Append(what.path.String())
+	}
+
+	return what.ValueText()
+}
+
+func (what DecimalValue) Description() event.Text {
+	if len(what.path) == 0 {
+		return what.History().Text()
+	}
+
+	return new(event.Text).Append(fmt.Sprintf("%v is %v", what.path.String(), what.value.String()))
 }
 
 func (what DecimalValue) DecimalValue() decimal.Decimal {
@@ -45,10 +59,15 @@ func EmptyDecimalValue() *DecimalValue {
 	}
 }
 
-func SomeDecimalValue(value decimal.Decimal, event *Event) *DecimalValue {
+func SomeDecimalValue(value decimal.Decimal, stack Stack, events ...event.Event) *DecimalValue {
+	return SomeDecimalValueWithPath(value, nil, stack, events...)
+}
+
+func SomeDecimalValueWithPath(value decimal.Decimal, path event.Path, stack Stack, events ...event.Event) *DecimalValue {
 	return &DecimalValue{
-		value: value,
-		event: event,
+		value:   value,
+		path:    path,
+		history: stack.History(events...),
 	}
 }
 
@@ -61,8 +80,8 @@ func ToDecimalValue(value Value) (*DecimalValue, error) {
 	}
 
 	return &DecimalValue{
-		value: castValue,
-		name:  value.Name(),
-		event: value.Event(),
+		value:   castValue,
+		path:    value.Path(),
+		history: value.History(),
 	}, conversionError
 }

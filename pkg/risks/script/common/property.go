@@ -1,93 +1,90 @@
 package common
 
-import (
-	"fmt"
-	"github.com/threagile/threagile/pkg/risks/script/property"
-)
-
-type Property struct {
-	Property property.Item
-	Path     *Path
+/*
+type Event struct {
+	Event property.Event
+	Path     Path
 }
 
-func NewBlankProperty() *Property {
-	return &Property{
-		Property: property.NewBlank(),
-	}
-}
-
-func NewEqualProperty(value Value) *Property {
-	var path *Path
-	if value.Event() != nil {
-		path = value.Event().Path().Copy()
+func NewEqualProperty(value Value) *Event {
+	var path Path
+	if value.EventX() != nil {
+		path = *value.EventX().Path().Copy()
 	}
 
-	return &Property{
-		Property: property.NewEqual(),
+	return &Event{
+		Event: property.NewEqual(),
 		Path:     path,
 	}
 }
 
-func NewFalseProperty() *Property {
-	return &Property{
-		Property: property.NewFalse(),
+func NewFalseProperty() *Event {
+	return &Event{
+		Event: property.NewFalse(),
 	}
 }
 
-func NewGreaterProperty(value Value) *Property {
-	var path *Path
-	if value.Event() != nil {
-		path = value.Event().Path().Copy()
+func NewGreaterProperty(value Value) *Event {
+	var path Path
+	if value.EventX() != nil {
+		path = *value.EventX().Path().Copy()
 	}
 
-	return &Property{
-		Property: property.NewGreater(),
+	return &Event{
+		Event: property.NewGreater(),
 		Path:     path,
 	}
 }
 
-func NewLessProperty(value Value) *Property {
-	var path *Path
-	if value.Event() != nil {
-		path = value.Event().Path().Copy()
+func NewLessProperty(value Value) *Event {
+	var path Path
+	if value.EventX() != nil {
+		path = *value.EventX().Path().Copy()
 	}
 
-	return &Property{
-		Property: property.NewLess(),
+	return &Event{
+		Event: property.NewLess(),
 		Path:     path,
 	}
 }
 
-func NewNotEqualProperty(value Value) *Property {
-	var path *Path
-	if value.Event() != nil {
-		path = value.Event().Path().Copy()
+func NewNotEqualProperty(value Value) *Event {
+	var path Path
+	if value.EventX() != nil {
+		path = *value.EventX().Path().Copy()
 	}
 
-	return &Property{
-		Property: property.NewNotEqual(),
+	return &Event{
+		Event: property.NewNotEqual(),
 		Path:     path,
 	}
 }
 
-func NewTrueProperty() *Property {
-	return &Property{
-		Property: property.NewTrue(),
+func NewTrueProperty() *Event {
+	return &Event{
+		Event: property.NewTrue(),
 	}
 }
 
-func NewValueProperty(value any) *Property {
-	return &Property{
-		Property: property.NewValue(value),
+func NewValueProperty(value any) *Event {
+	return &Event{
+		Event: property.NewValue(value),
 	}
 }
 
-func (what *Property) Text() []string {
+func (what *Event) ValueText() []string {
 	if what == nil {
 		return []string{}
 	}
 
-	propertyText := what.Property.Text()
+	originalPropertyText := what.Event.ValueText()
+	propertyText := make([]string, 0)
+	for _, text := range originalPropertyText {
+		if len(text) > 0 {
+			propertyText = append(propertyText, text)
+		}
+	}
+
 	switch len(propertyText) {
 	case 0: // blank
 		return []string{}
@@ -104,7 +101,7 @@ func (what *Property) Text() []string {
 	}
 }
 
-func (what *Property) SetPath(path *Path) *Property {
+func (what *Event) SetPath(path Path) *Event {
 	if what == nil {
 		return what
 	}
@@ -113,20 +110,21 @@ func (what *Property) SetPath(path *Path) *Property {
 	return what
 }
 
-func (what *Property) AddPathParent(path ...string) *Property {
+func (what *Event) AddPathParent(path ...string) *Event {
 	if what == nil {
 		return what
 	}
 
-	what.Path.AddPathParent(path...)
+	what.Path.AddParent(path...)
 	return what
 }
 
-func (what *Property) AddPathLeaf(path ...string) *Property {
+func (what *Event) AddPathLeaf(path ...string) *Event {
 	if what == nil {
 		return what
 	}
 
-	what.Path.AddPathLeaf(path...)
+	what.Path.AddLeaf(path...)
 	return what
 }
+*/

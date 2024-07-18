@@ -2,36 +2,50 @@ package common
 
 import (
 	"fmt"
+
+	"github.com/threagile/threagile/pkg/risks/script/event"
 )
 
 type BoolValue struct {
-	value bool
-	name  Path
-	event *Event
-}
-
-func (what BoolValue) Value() any {
-	return what.value
-}
-
-func (what BoolValue) Name() Path {
-	return what.name
-}
-
-func (what BoolValue) SetName(name ...string) {
-	what.name.SetPath(name...)
-}
-
-func (what BoolValue) Event() *Event {
-	return what.event
+	value   bool
+	path    event.Path
+	history event.History
 }
 
 func (what BoolValue) PlainValue() any {
 	return what.value
 }
 
-func (what BoolValue) Text() []string {
-	return []string{fmt.Sprintf("%v", what.value)}
+func (what BoolValue) Value() any {
+	return what.value
+}
+
+func (what BoolValue) Path() event.Path {
+	return what.path
+}
+
+func (what BoolValue) ValueText() event.Text {
+	return new(event.Text).Append(fmt.Sprintf("%v", what.value))
+}
+
+func (what BoolValue) History() event.History {
+	return what.history
+}
+
+func (what BoolValue) Text() event.Text {
+	if len(what.path) > 0 {
+		return new(event.Text).Append(what.path.String())
+	}
+
+	return what.ValueText()
+}
+
+func (what BoolValue) Description() event.Text {
+	if len(what.path) == 0 {
+		return what.History().Text()
+	}
+
+	return new(event.Text).Append(fmt.Sprintf("%v is %v", what.path.String(), what.value))
 }
 
 func (what BoolValue) BoolValue() bool {
@@ -42,10 +56,15 @@ func EmptyBoolValue() *BoolValue {
 	return &BoolValue{}
 }
 
-func SomeBoolValue(value bool, event *Event) *BoolValue {
+func SomeBoolValue(value bool, stack Stack, events ...event.Event) *BoolValue {
+	return SomeBoolValueWithPath(value, nil, stack, events...)
+}
+
+func SomeBoolValueWithPath(value bool, path event.Path, stack Stack, events ...event.Event) *BoolValue {
 	return &BoolValue{
-		value: value,
-		event: event,
+		value:   value,
+		path:    path,
+		history: stack.History(events...),
 	}
 }
 
@@ -58,8 +77,8 @@ func ToBoolValue(value Value) (*BoolValue, error) {
 	}
 
 	return &BoolValue{
-		value: castValue,
-		name:  value.Name(),
-		event: value.Event(),
+		value:   castValue,
+		path:    value.Path(),
+		history: value.History(),
 	}, conversionError
 }

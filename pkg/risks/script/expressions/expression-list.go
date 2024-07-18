@@ -2,6 +2,7 @@ package expressions
 
 import (
 	"fmt"
+
 	"github.com/threagile/threagile/pkg/risks/script/common"
 )
 
@@ -23,7 +24,7 @@ func (what *ExpressionList) ParseExpression(script map[string]any) (common.Expre
 			return new(AndExpression).ParseBool(value)
 
 		case common.Contains:
-			return new(ContainsExpression).ParseBool(value)
+			return new(ContainExpression).ParseBool(value)
 
 		case common.Count:
 			return new(CountExpression).ParseDecimal(value)
@@ -143,7 +144,7 @@ func (what *ExpressionList) EvalAny(scope *common.Scope) (common.Value, string, 
 			values = append(values, value)
 		}
 
-		return common.SomeArrayValue(values, common.NewEvent(common.NewValueProperty(values), common.NewPath("array value")).From(values...)), "", nil
+		return common.SomeArrayValue(values, scope.Stack()), "", nil
 	}
 }
 

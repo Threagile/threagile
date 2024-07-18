@@ -2,32 +2,14 @@ package common
 
 import (
 	"fmt"
+
+	"github.com/threagile/threagile/pkg/risks/script/event"
 )
 
 type ArrayValue struct {
-	value []Value
-	name  Path
-	event *Event
-}
-
-func (what ArrayValue) Value() any {
-	return what.value
-}
-
-func (what ArrayValue) Name() Path {
-	return what.name
-}
-
-func (what ArrayValue) SetName(name ...string) {
-	what.name.SetPath(name...)
-}
-
-func (what ArrayValue) Event() *Event {
-	return what.event
-}
-
-func (what ArrayValue) ArrayValue() []Value {
-	return what.value
+	value   []Value
+	path    event.Path
+	history event.History
 }
 
 func (what ArrayValue) PlainValue() any {
@@ -39,36 +21,78 @@ func (what ArrayValue) PlainValue() any {
 	return values
 }
 
-func (what ArrayValue) Text() []string {
-	text := make([]string, 0)
+func (what ArrayValue) Value() any {
+	return what.value
+}
+
+func (what ArrayValue) Path() event.Path {
+	return what.path
+}
+
+func (what ArrayValue) ValueText() event.Text {
+	if len(what.value) == 0 {
+		return new(event.Text).Append("(empty)")
+	}
+
+	text := make(event.Text, 0)
 	for _, item := range what.value {
 		itemText := item.Text()
 		switch len(itemText) {
 		case 0:
+			text = new(event.Text).Append("  - (empty)")
 
 		case 1:
-			text = append(text, "  - "+itemText[0])
+			text = text.Append("  - " + itemText[0].Line)
 
 		default:
-			text = append(text, "  - ")
-
-			for _, line := range itemText {
-				text = append(text, "      "+line)
-			}
+			text = new(event.Text).Append("  - :", itemText...)
 		}
 	}
 
 	return text
 }
 
+func (what ArrayValue) History() event.History {
+	return what.history
+}
+
+func (what ArrayValue) Text() event.Text {
+	if len(what.path) > 0 {
+		return new(event.Text).Append(what.path.String())
+	}
+
+	return what.ValueText()
+}
+
+func (what ArrayValue) Description() event.Text {
+	if len(what.path) == 0 {
+		return what.History().Text()
+	}
+
+	if len(what.value) == 0 {
+		return new(event.Text).Append(what.path.String() + " is (empty)")
+	}
+
+	return append(new(event.Text).Append(what.path.String()+" is:"), what.ValueText()...)
+}
+
+func (what ArrayValue) ArrayValue() []Value {
+	return what.value
+}
+
 func EmptyArrayValue() *ArrayValue {
 	return &ArrayValue{}
 }
 
-func SomeArrayValue(value []Value, event *Event) *ArrayValue {
+func SomeArrayValue(value []Value, stack Stack, events ...event.Event) *ArrayValue {
+	return SomeArrayValueWithPath(value, nil, stack, events...)
+}
+
+func SomeArrayValueWithPath(value []Value, path event.Path, stack Stack, events ...event.Event) *ArrayValue {
 	return &ArrayValue{
-		value: value,
-		event: event,
+		value:   value,
+		path:    path,
+		history: stack.History(events...),
 	}
 }
 
@@ -89,8 +113,8 @@ func ToArrayValue(value Value) (*ArrayValue, error) {
 	}
 
 	return &ArrayValue{
-		value: arrayValue,
-		name:  value.Name(),
-		event: value.Event(),
+		value:   arrayValue,
+		path:    value.Path(),
+		history: value.History(),
 	}, nil
 }
