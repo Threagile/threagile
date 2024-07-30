@@ -4,6 +4,7 @@
 FROM alpine/git as clone
 WORKDIR /app
 RUN git clone https://github.com/threagile/threagile.git
+RUN cd threagile && git checkout tags/v0.9.1 -b v0.9.1
 
 
 
