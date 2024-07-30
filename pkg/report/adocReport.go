@@ -1688,7 +1688,9 @@ func (adoc adocReport) technicalAssets(f *os.File) {
 		}
 
 		// ASSET INFORMATION
+		writeLine(f, "")
 		writeLine(f, "<<<")
+		writeLine(f, "")
 		writeLine(f, "=== Asset Information")
 		textRAA := fmt.Sprintf("%.0f", technicalAsset.RAA) + " %"
 		if technicalAsset.OutOfScope {
