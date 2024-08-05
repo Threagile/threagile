@@ -189,6 +189,8 @@ role:
   SmallGrey:
     font-size: 0.5em
     font-color: #505050
+  Silver:
+    font-color: #C0C0C0
 `)
 
 	return nil
@@ -2117,7 +2119,7 @@ func (adoc adocReport) writeRiskRulesChecked(modelFilename string, skipRiskRules
 func (adoc adocReport) disclaimer(f *os.File) {
 	writeLine(f, "= Disclaimer")
 
-	disclaimerColor := "[.silver]\n"
+	disclaimerColor := "\n[.Silver]\n"
 
 	writeLine(f, disclaimerColor+
 		adoc.model.Author.Name+" conducted this threat analysis using the open-source Threagile toolkit "+
