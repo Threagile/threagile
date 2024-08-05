@@ -122,6 +122,15 @@ func sortedTechnicalAssetsByRiskSeverityAndTitle(parsedModel *types.Model) []*ty
 	return assets
 }
 
+func filteredByStillAtRisk(parsedModel *types.Model) []*types.Risk {
+	filteredRisks := make([]*types.Risk, 0)
+	for _, risks := range parsedModel.GeneratedRisksByCategoryWithCurrentStatus() {
+		stillAtRisk := types.ReduceToOnlyStillAtRisk(risks)
+		filteredRisks = append(filteredRisks, stillAtRisk...)
+	}
+	return filteredRisks
+}
+
 func identifiedDataBreachProbabilityStillAtRisk(parsedModel *types.Model, dataAsset *types.DataAsset) types.DataBreachProbability {
 	highestProbability := types.Improbable
 	for _, risk := range filteredByStillAtRisk(parsedModel) {

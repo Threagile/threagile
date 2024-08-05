@@ -14,6 +14,8 @@ import (
 	"time"
 
 	"github.com/threagile/threagile/pkg/types"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 type adocReport struct {
@@ -550,39 +552,36 @@ func (adoc adocReport) addCategories(f *os.File, risksByCategory map[string][]*t
 }
 
 func (adoc adocReport) impactAnalysis(f *os.File, initialRisks bool) {
-	totalCount, remainingCount, catCount := totalRiskCount(adoc.model), len(reduceToOnlyStillAtRisk(adoc.model.GeneratedRisksByCategoryWithCurrentStatus())), len(adoc.model.GeneratedRisksByCategory)
-	riskStr, catStr := "Risks", "Categories"
-	count := remainingCount
-	if initialRisks {
-		count = totalCount
-	}
-	if count == 1 {
-		riskStr = "Risk"
-	}
-	if catCount == 1 {
-		catStr = "category"
-	}
 
+	count := 0
+	catCount := 0
+	initialStr := ""
 	if initialRisks {
-		chapTitle := "= Impact Analysis of " + strconv.Itoa(count) + " Initial " + riskStr + " in " + strconv.Itoa(catCount) + " " + catStr
-		writeLine(f, chapTitle)
+		count = totalRiskCount(adoc.model)
+		catCount = len(adoc.model.GeneratedRisksByCategory)
+		initialStr = "initial"
 	} else {
-
-		chapTitle := "= Impact Analysis of " + strconv.Itoa(count) + " Remaining " + riskStr + " in " + strconv.Itoa(catCount) + " " + catStr
-		writeLine(f, chapTitle)
-	}
-	writeLine(f, ":fn-risk-findings: footnote:riskfinding[Risk finding paragraphs are clickable and link to the corresponding chapter.]")
-
-	riskStr = "risks"
-	if count == 1 {
-		riskStr = "risk"
-	}
-	initialStr := "initial"
-	if !initialRisks {
+		count = len(filteredByStillAtRisk(adoc.model))
+		catCount = len(reduceToOnlyStillAtRisk(adoc.model.GeneratedRisksByCategoryWithCurrentStatus()))
 		initialStr = "remaining"
 	}
+
+	riskText := "risks"
+	if count == 1 {
+		riskText = "risk"
+	}
+	catText := "categories"
+	if catCount == 1 {
+		catText = "category"
+	}
+
+	titleCaser := cases.Title(language.English)
+	chapTitle := titleCaser.String("= Impact Analysis of " + strconv.Itoa(count) + " " + initialStr + " " + riskText + " in " + strconv.Itoa(catCount) + " " + catText)
+	writeLine(f, chapTitle)
+	writeLine(f, ":fn-risk-findings: footnote:riskfinding[Risk finding paragraphs are clickable and link to the corresponding chapter.]")
+
 	writeLine(f,
-		"The most prevalent impacts of the *"+strconv.Itoa(count)+" "+initialStr+" "+riskStr+"*"+
+		"The most prevalent impacts of the *"+strconv.Itoa(count)+" "+initialStr+" "+riskText+"*"+
 			" (distributed over *"+strconv.Itoa(catCount)+" risk categories*) are "+
 			"(taking the severity ratings into account and using the highest for each category)!{fn-risk-findings}")
 	writeLine(f, "")

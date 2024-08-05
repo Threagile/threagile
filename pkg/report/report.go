@@ -3890,18 +3890,6 @@ func isDataBreachPotentialStillAtRisk(parsedModel *types.Model, dataAsset *types
 	return false
 }
 
-func filteredByStillAtRisk(parsedModel *types.Model) []*types.Risk {
-	filteredRisks := make([]*types.Risk, 0)
-	for _, risks := range parsedModel.GeneratedRisksByCategoryWithCurrentStatus() {
-		for _, risk := range risks {
-			if risk.RiskStatus.IsStillAtRisk() {
-				filteredRisks = append(filteredRisks, risk)
-			}
-		}
-	}
-	return filteredRisks
-}
-
 func (r *pdfReporter) createTrustBoundaries(parsedModel *types.Model) {
 	uni := r.pdf.UnicodeTranslatorFromDescriptor("")
 	title := "Trust Boundaries"
