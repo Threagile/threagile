@@ -662,15 +662,6 @@ func sortedKeysOfSharedRuntime(model *types.Model) []string {
 	return keys
 }
 
-func sortedTechnicalAssetsByRiskSeverityAndTitle(parsedModel *types.Model) []*types.TechnicalAsset {
-	assets := make([]*types.TechnicalAsset, 0)
-	for _, asset := range parsedModel.TechnicalAssets {
-		assets = append(assets, asset)
-	}
-	sortByTechnicalAssetRiskSeverityAndTitleStillAtRisk(assets, parsedModel)
-	return assets
-}
-
 func sortByTechnicalAssetRiskSeverityAndTitleStillAtRisk(assets []*types.TechnicalAsset, parsedModel *types.Model) {
 	sort.Slice(assets, func(i, j int) bool {
 		risksLeft := types.ReduceToOnlyStillAtRisk(parsedModel.GeneratedRisks(assets[i]))
@@ -1299,41 +1290,6 @@ func (r *pdfReporter) createRiskMitigationStatus(parsedModel *types.Model, tempF
 	return nil
 }
 
-func filteredByRiskStatus(parsedModel *types.Model, status types.RiskStatus) []*types.Risk {
-	filteredRisks := make([]*types.Risk, 0)
-	for _, risks := range parsedModel.GeneratedRisksByCategory {
-		for _, risk := range risks {
-			if risk.RiskStatus == status {
-				filteredRisks = append(filteredRisks, risk)
-			}
-		}
-	}
-	return filteredRisks
-}
-
-func filteredByRiskFunction(parsedModel *types.Model, function types.RiskFunction) []*types.Risk {
-	filteredRisks := make([]*types.Risk, 0)
-	for categoryId, risks := range parsedModel.GeneratedRisksByCategory {
-		for _, risk := range risks {
-			category := parsedModel.GetRiskCategory(categoryId)
-			if category.Function == function {
-				filteredRisks = append(filteredRisks, risk)
-			}
-		}
-	}
-	return filteredRisks
-}
-
-func reduceToRiskStatus(risks []*types.Risk, status types.RiskStatus) []*types.Risk {
-	filteredRisks := make([]*types.Risk, 0)
-	for _, risk := range risks {
-		if risk.RiskStatus == status {
-			filteredRisks = append(filteredRisks, risk)
-		}
-	}
-	return filteredRisks
-}
-
 // CAUTION: Long labels might cause endless loop, then remove labels and render them manually later inside the PDF
 func (r *pdfReporter) embedStackedBarChart(sbcChart chart.StackedBarChart, x float64, y float64, tempFolder string) error {
 	tmpFilePNG, err := os.CreateTemp(tempFolder, "chart-*-.png")
@@ -1510,15 +1466,6 @@ func (r *pdfReporter) createOutOfScopeAssets(parsedModel *types.Model) {
 
 	r.pdf.SetDrawColor(0, 0, 0)
 	r.pdf.SetDashPattern([]float64{}, 0)
-}
-
-func sortedTechnicalAssetsByRAAAndTitle(parsedModel *types.Model) []*types.TechnicalAsset {
-	assets := make([]*types.TechnicalAsset, 0)
-	for _, asset := range parsedModel.TechnicalAssets {
-		assets = append(assets, asset)
-	}
-	sort.Sort(types.ByTechnicalAssetRAAAndTitleSort(assets))
-	return assets
 }
 
 func (r *pdfReporter) createModelFailures(parsedModel *types.Model) {
@@ -2010,19 +1957,6 @@ func (r *pdfReporter) createAssignmentByFunction(parsedModel *types.Model) {
 	r.pdf.SetDashPattern([]float64{}, 0)
 }
 
-func reduceToFunctionRisk(parsedModel *types.Model, risksByCategory map[string][]*types.Risk, function types.RiskFunction) map[string][]*types.Risk {
-	result := make(map[string][]*types.Risk)
-	for categoryId, risks := range risksByCategory {
-		for _, risk := range risks {
-			category := parsedModel.GetRiskCategory(categoryId)
-			if category.Function == function {
-				result[categoryId] = append(result[categoryId], risk)
-			}
-		}
-	}
-	return result
-}
-
 func (r *pdfReporter) createSTRIDE(parsedModel *types.Model) {
 	r.pdf.SetTextColor(0, 0, 0)
 	title := "STRIDE Classification of Identified Risks"
@@ -2228,14 +2162,6 @@ func (r *pdfReporter) createSTRIDE(parsedModel *types.Model) {
 	r.pdf.SetDashPattern([]float64{}, 0)
 }
 
-func countRisks(risksByCategory map[string][]*types.Risk) int {
-	result := 0
-	for _, risks := range risksByCategory {
-		result += len(risks)
-	}
-	return result
-}
-
 func getRiskCategories(parsedModel *types.Model, categoryIDs []string) []*types.RiskCategory {
 	categoryMap := make(map[string]*types.RiskCategory)
 	for _, categoryId := range categoryIDs {
@@ -2287,19 +2213,6 @@ func keysAsSlice(categories map[string]struct{}) []string {
 	result := make([]string, 0, len(categories))
 	for k := range categories {
 		result = append(result, k)
-	}
-	return result
-}
-
-func reduceToSTRIDERisk(parsedModel *types.Model, risksByCategory map[string][]*types.Risk, stride types.STRIDE) map[string][]*types.Risk {
-	result := make(map[string][]*types.Risk)
-	for categoryId, risks := range risksByCategory {
-		for _, risk := range risks {
-			category := parsedModel.GetRiskCategory(categoryId)
-			if category != nil && category.STRIDE == stride {
-				result[categoryId] = append(result[categoryId], risk)
-			}
-		}
 	}
 	return result
 }
@@ -2431,15 +2344,6 @@ func (r *pdfReporter) createQuestions(parsedModel *types.Model) {
 			r.pdfColorBlack()
 		}
 	}
-}
-
-func sortedKeysOfQuestions(parsedModel *types.Model) []string {
-	keys := make([]string, 0)
-	for k := range parsedModel.Questions {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	return keys
 }
 
 func (r *pdfReporter) createTagListing(parsedModel *types.Model) {
@@ -3615,18 +3519,6 @@ func (r *pdfReporter) createTechnicalAssets(parsedModel *types.Model) {
 	}
 }
 
-func filteredBySeverity(parsedModel *types.Model, severity types.RiskSeverity) []*types.Risk {
-	filteredRisks := make([]*types.Risk, 0)
-	for _, risks := range parsedModel.GeneratedRisksByCategory {
-		for _, risk := range risks {
-			if risk.Severity == severity {
-				filteredRisks = append(filteredRisks, risk)
-			}
-		}
-	}
-	return filteredRisks
-}
-
 func (r *pdfReporter) createDataAssets(parsedModel *types.Model) {
 	uni := r.pdf.UnicodeTranslatorFromDescriptor("")
 	title := "Identified Data Breach Probabilities by Data Asset"
@@ -3987,21 +3879,6 @@ func identifiedDataBreachProbabilityRisksStillAtRisk(parsedModel *types.Model, d
 	return result
 }
 
-func identifiedDataBreachProbabilityStillAtRisk(parsedModel *types.Model, dataAsset *types.DataAsset) types.DataBreachProbability {
-	highestProbability := types.Improbable
-	for _, risk := range filteredByStillAtRisk(parsedModel) {
-		for _, techAsset := range risk.DataBreachTechnicalAssetIDs {
-			if contains(parsedModel.TechnicalAssets[techAsset].DataAssetsProcessed, dataAsset.Id) {
-				if risk.DataBreachProbability > highestProbability {
-					highestProbability = risk.DataBreachProbability
-					break
-				}
-			}
-		}
-	}
-	return highestProbability
-}
-
 func isDataBreachPotentialStillAtRisk(parsedModel *types.Model, dataAsset *types.DataAsset) bool {
 	for _, risk := range filteredByStillAtRisk(parsedModel) {
 		for _, techAsset := range risk.DataBreachTechnicalAssetIDs {
@@ -4023,14 +3900,6 @@ func filteredByStillAtRisk(parsedModel *types.Model) []*types.Risk {
 		}
 	}
 	return filteredRisks
-}
-
-func totalRiskCount(parsedModel *types.Model) int {
-	count := 0
-	for _, risks := range parsedModel.GeneratedRisksByCategory {
-		count += len(risks)
-	}
-	return count
 }
 
 func (r *pdfReporter) createTrustBoundaries(parsedModel *types.Model) {

@@ -36,6 +36,7 @@ type Config struct {
 	JsonTechnicalAssetsFilename string
 	JsonStatsFilename           string
 	TemplateFilename            string
+	ReportLogoImagePath         string
 	TechnologyFilename          string
 
 	RiskRulesPlugins  []string
@@ -88,6 +89,7 @@ func (c *Config) Defaults(buildTimestamp string) *Config {
 		JsonTechnicalAssetsFilename: JsonTechnicalAssetsFilename,
 		JsonStatsFilename:           JsonStatsFilename,
 		TemplateFilename:            TemplateFilename,
+		ReportLogoImagePath:         ReportLogoImagePath,
 		TechnologyFilename:          "",
 
 		RiskRulesPlugins:  make([]string, 0),
@@ -273,6 +275,9 @@ func (c *Config) Merge(config Config, values map[string]any) {
 
 		case strings.ToLower("TemplateFilename"):
 			c.TemplateFilename = config.TemplateFilename
+
+		case strings.ToLower("ReportLogoImagePath"):
+			c.TemplateFilename = config.ReportLogoImagePath
 
 		case strings.ToLower("TechnologyFilename"):
 			c.TechnologyFilename = config.TechnologyFilename
@@ -467,6 +472,10 @@ func (c *Config) GetJsonStatsFilename() string {
 
 func (c *Config) GetTemplateFilename() string {
 	return c.TemplateFilename
+}
+
+func (c *Config) GetReportLogoImagePath() string {
+	return c.ReportLogoImagePath
 }
 
 func (c *Config) GetRiskRulesPlugins() []string {
