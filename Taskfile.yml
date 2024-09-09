@@ -1,0 +1,79 @@
+version: '3'
+
+vars:
+  AD_GLOBAL_REQUIRES: --require asciidoctor-diagram --verbose --require asciidoctor-pdf --backend pdf --attribute allow-uri-read
+  CONTAINER: asciidoctor/docker-asciidoctor
+  # CONTAINER: docker-asciidoctor:local
+  DOCKER_ASCIIDOCTOR: docker run -it -u $(id -u):$(id -g) -v $(pwd):/documents/ {{.CONTAINER}} asciidoctor {{.AD_GLOBAL_REQUIRES}} --require asciidoctor-kroki
+  GIT_SHORT_SHA:
+    sh: git log -n 1 --format=%h
+
+env:
+  GOOS: linux
+  GO111MODULE: on
+
+tasks:
+    default:
+        deps: [convert-example-project-adoc-to-pdf]
+
+    build-and-test:
+        desc: build threagile and run tests
+        deps: [build-threagile, run-tests]
+
+    build-threagile:
+        desc: build threagile
+        sources:
+          - "**/*.go"
+          - exclude: "**/*_test.go"
+        generates:
+          - bin/threagile
+        vars:
+          GOFLAGS: -a -ldflags="-s -w -X main.buildTimestamp=$(shell date '+%Y%m%d%H%M%S')"
+        cmds:
+          - go mod download
+          - go build -o bin/threagile cmd/threagile/main.go
+
+    run-tests:
+        desc: run threagile tests
+        deps: [build-threagile]
+        cmds:
+          - go test ./...
+
+    convert-example-project-adoc-to-pdf:
+        desc: create example project and create a pdf from the asciidoctor output
+        deps: [create-example-project]
+        dir: /tmp/threagile-test/adocReport
+        cmds:
+          - "{{.DOCKER_ASCIIDOCTOR}} --attribute DOC_VERSION={{.GIT_SHORT_SHA}} --attribute pdf-themesdir=/documents/theme --attribute pdf-theme=pdf /documents/00_main.adoc"
+          - cp /tmp/threagile-test/adocReport/00_main.pdf /tmp/report.pdf
+          - echo "Open report with \"xdg-open /tmp/report.pdf\""
+
+    create-example-project:
+        desc: create the example project
+        deps: [build-threagile]
+        env:
+          YAML: ./demo/example/threagile.yaml
+        cmds:
+          - mkdir -p /tmp/threagile-test
+          - ./bin/threagile analyze-model
+                --model ${YAML}
+                --output /tmp/threagile-test
+                --ignore-orphaned-risk-tracking
+                --app-dir .
+                --generate-report-adoc
+                --generate-report-pdf=0
+                # --background ./report/template/background.pdf
+
+    golangci-lint:
+        desc: run golangci-lint on current code
+        cmds:
+          - docker run --rm -it -v $(pwd):/app -w /app golangci/golangci-lint golangci-lint run -v
+
+    gosec:
+        desc: run securego/gosec
+        cmds:
+          - docker run --rm -it -v $(pwd):/app -w /app securego/gosec /app/...
+
+    linting:
+        desc: all linting jobs
+        deps: [golangci-lint, gosec]
