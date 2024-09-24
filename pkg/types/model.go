@@ -457,7 +457,7 @@ func (model *Model) SortedRiskCategories() []*RiskCategory {
 }
 
 func (model *Model) SortedRisksOfCategory(category *RiskCategory) []*Risk {
-	risks := model.GeneratedRisksByCategory[category.ID]
+	risks := model.GeneratedRisksByCategoryWithCurrentStatus()[category.ID]
 	SortByRiskSeverity(risks)
 	return risks
 }
@@ -853,4 +853,17 @@ func (model *Model) IsRiskTracked(what *Risk) bool {
 		return true
 	}
 	return false
+}
+
+func (model *Model) GeneratedRisksByCategoryWithCurrentStatus() map[string][]*Risk {
+	generatedRisksByCategoryWithCurrentStatus := model.GeneratedRisksByCategory
+	for catId, risks := range generatedRisksByCategoryWithCurrentStatus {
+		for idx, risk := range risks {
+			riskTracked, ok := model.RiskTracking[risk.SyntheticId]
+			if ok {
+				generatedRisksByCategoryWithCurrentStatus[catId][idx].RiskStatus = riskTracked.Status
+			}
+		}
+	}
+	return generatedRisksByCategoryWithCurrentStatus
 }

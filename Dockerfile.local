@@ -39,10 +39,6 @@ FROM alpine:latest as finalize
 # label used in other scripts to filter
 LABEL type="threagile"
 
-# update vulnerable packages
-RUN apk add libcrypto3=3.3.1-r3
-RUN apk add libssl3=3.3.1-r3
-
 # add certificates, graphviz, fonts
 RUN apk add --update --no-cache ca-certificates
 RUN apk add --update --no-cache graphviz ttf-freefont

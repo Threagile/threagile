@@ -1005,7 +1005,7 @@ func (s *server) readModel(ginContext *gin.Context, modelUUID string, key []byte
 
 	nonce := fileBytes[0:12]
 	ciphertext := fileBytes[12:]
-	plaintext, err := aesGcm.Open(nil, nonce, ciphertext, nil)
+	plaintext, err := aesGcm.Open(nil, nonce, ciphertext, nil) // #nosec G407 // false positive The nounce is read from file for decryption not encryption
 	if err != nil {
 		log.Println(err)
 		ginContext.JSON(http.StatusInternalServerError, gin.H{
@@ -1253,7 +1253,7 @@ func (s *server) writeModelYAML(ginContext *gin.Context, yaml string, key []byte
 		})
 		return false
 	}
-	ciphertext := aesGcm.Seal(nil, nonce, plaintext, nil)
+	ciphertext := aesGcm.Seal(nil, nonce, plaintext, nil) // #nosec G407 // The nounce is read from random so it shoul be random each run
 	if !skipBackup {
 		err = s.backupModelToHistory(modelFolder, changeReasonForHistory)
 		if err != nil {
