@@ -87,6 +87,9 @@ func (r *pdfReporter) WriteReportPDF(reportFilename string,
 	if err != nil {
 		return fmt.Errorf("error creating risk mitigation status: %w", err)
 	}
+	if val := hideChapters[AssetRegister]; !val {
+		r.createAssetRegister(model)
+	}
 	r.createImpactRemainingRisks(model)
 	err = r.createTargetDescription(model, filepath.Dir(modelFilename))
 	if err != nil {
@@ -249,6 +252,12 @@ func (r *pdfReporter) createTableOfContents(parsedModel *types.Model) {
 	y += 6
 	r.pdf.Text(11, y, "    "+"Risk Mitigation")
 	r.pdf.Text(175, y, "{risk-mitigation-status}")
+	r.pdf.Line(15.6, y+1.3, 11+171.5, y+1.3)
+	r.pdf.Link(10, y-5, 172.5, 6.5, r.pdf.AddLink())
+
+	y += 6
+	r.pdf.Text(11, y, "    "+"Asset Register")
+	r.pdf.Text(175, y, "{asset-register}")
 	r.pdf.Line(15.6, y+1.3, 11+171.5, y+1.3)
 	r.pdf.Link(10, y-5, 172.5, 6.5, r.pdf.AddLink())
 
@@ -1291,6 +1300,82 @@ func (r *pdfReporter) createRiskMitigationStatus(parsedModel *types.Model, tempF
 		r.pdf.SetFont("Helvetica", "", fontSizeBody)
 	}
 	return nil
+}
+
+func (r *pdfReporter) createAssetRegister(parsedModel *types.Model) {
+	uni := r.pdf.UnicodeTranslatorFromDescriptor("")
+	r.pdf.SetTextColor(0, 0, 0)
+	chapTitle := "Asset Register"
+	r.addHeadline(chapTitle, false)
+	r.defineLinkTarget("{asset-register}")
+	r.currentChapterTitleBreadcrumb = chapTitle
+
+	html := r.pdf.HTMLBasicNew()
+	var strBuilder strings.Builder
+	r.pdf.SetFont("Helvetica", "", fontSizeBody)
+
+	subTitle := "Technical Assets"
+	r.addHeadline(subTitle, true)
+	r.currentChapterTitleBreadcrumb = subTitle
+	for _, technicalAsset := range sortedTechnicalAssetsByTitle(parsedModel) {
+		if r.pdf.GetY() > 250 {
+			r.pageBreak()
+			r.pdf.SetY(36)
+		} else {
+			strBuilder.WriteString("<br><br>")
+		}
+
+		r.pdf.SetTextColor(0, 0, 0)
+
+		html.Write(5, strBuilder.String())
+		strBuilder.Reset()
+		posY := r.pdf.GetY()
+		strBuilder.WriteString("<b>")
+		strBuilder.WriteString(uni(technicalAsset.Title))
+		strBuilder.WriteString("</b>")
+		if technicalAsset.OutOfScope {
+			strBuilder.WriteString(": out-of-scope")
+		}
+		strBuilder.WriteString("<br>")
+		html.Write(5, strBuilder.String())
+		strBuilder.Reset()
+		strBuilder.WriteString(uni(technicalAsset.Description))
+		html.Write(5, strBuilder.String())
+		strBuilder.Reset()
+		r.pdf.Link(9, posY, 190, r.pdf.GetY()-posY+4, r.tocLinkIdByAssetId[technicalAsset.Id])
+	}
+
+	subTitle = "Data Assets"
+	r.addHeadline(subTitle, true)
+	r.currentChapterTitleBreadcrumb = subTitle
+
+	for _, dataAsset := range sortedDataAssetsByTitle(parsedModel) {
+		if r.pdf.GetY() > 250 {
+			r.pageBreak()
+			r.pdf.SetY(36)
+		} else {
+			strBuilder.WriteString("<br><br>")
+		}
+
+		r.pdf.SetTextColor(0, 0, 0)
+
+		html.Write(5, strBuilder.String())
+		strBuilder.Reset()
+		posY := r.pdf.GetY()
+		strBuilder.WriteString("<b>")
+		strBuilder.WriteString(uni(dataAsset.Title))
+		strBuilder.WriteString("</b>")
+		strBuilder.WriteString("<br>")
+		html.Write(5, strBuilder.String())
+		strBuilder.Reset()
+		strBuilder.WriteString(uni(dataAsset.Description))
+		html.Write(5, strBuilder.String())
+		strBuilder.Reset()
+		r.pdf.Link(9, posY, 190, r.pdf.GetY()-posY+4, r.tocLinkIdByAssetId[dataAsset.Id])
+	}
+
+	r.pdf.SetDrawColor(0, 0, 0)
+	r.pdf.SetDashPattern([]float64{}, 0)
 }
 
 // CAUTION: Long labels might cause endless loop, then remove labels and render them manually later inside the PDF
