@@ -109,7 +109,7 @@ func (r *pdfReporter) WriteReportPDF(reportFilename string,
 	r.createDataAssets(model)
 	r.createTrustBoundaries(model)
 	r.createSharedRuntimes(model)
-	if showChapters[RiskRulesCheckedByThreagile] {
+	if val, ok := showChapters[RiskRulesCheckedByThreagile]; !ok || val {
 		r.createRiskRulesChecked(model, modelFilename, skipRiskRules, buildTimestamp, threagileVersion, modelHash, customRiskRules)
 	}
 	r.createDisclaimer(model)

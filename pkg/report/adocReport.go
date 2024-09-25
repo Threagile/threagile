@@ -311,7 +311,7 @@ func (adoc adocReport) WriteReport(model *types.Model,
 	if err != nil {
 		return fmt.Errorf("error creating shared runtimes: %w", err)
 	}
-	if showChapters[RiskRulesCheckedByThreagile] {
+	if val, ok := showChapters[RiskRulesCheckedByThreagile]; !ok || val {
 		err = adoc.writeRiskRulesChecked(modelFilename, skipRiskRules, buildTimestamp, threagileVersion, modelHash, customRiskRules)
 		if err != nil {
 			return fmt.Errorf("error creating risk rules checked: %w", err)
