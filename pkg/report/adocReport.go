@@ -239,6 +239,12 @@ func (adoc adocReport) WriteReport(model *types.Model,
 	if err != nil {
 		return fmt.Errorf("error creating risk mitigation status: %w", err)
 	}
+	if val := hideChapters[AssetRegister]; !val {
+		err = adoc.writeAssetRegister()
+		if err != nil {
+			return fmt.Errorf("error creating asset register status: %w", err)
+		}
+	}
 	err = adoc.writeImpactRemainingRisks()
 	if err != nil {
 		return fmt.Errorf("error creating impact remaining risks: %w", err)
@@ -768,6 +774,47 @@ func (adoc adocReport) writeRiskMitigationStatus() error {
 	adoc.writeMainLine("include::" + filename + "[leveloffset=+1]")
 
 	adoc.riskMitigationStatus(rms)
+	return nil
+}
+
+func (adoc adocReport) assetRegister(f *os.File) {
+	writeLine(f, "= Asset Register")
+	writeLine(f, "")
+
+	writeLine(f, "== Technical Assets")
+	writeLine(f, "")
+	for _, technicalAsset := range sortedTechnicalAssetsByTitle(adoc.model) {
+
+		fullLine := "<<" + technicalAsset.Id + ",*" + technicalAsset.Title + "*"
+		if technicalAsset.OutOfScope {
+			fullLine += ": out-of-scope"
+		}
+		writeLine(f, fullLine+">>::")
+		writeLine(f, "  "+technicalAsset.Description)
+		writeLine(f, "")
+	}
+
+	writeLine(f, "== Data Assets")
+	writeLine(f, "")
+
+	for _, dataAsset := range sortedDataAssetsByTitle(adoc.model) {
+		writeLine(f, "<<"+dataAsset.Id+",*"+dataAsset.Title+"*"+">>::")
+		writeLine(f, "  "+dataAsset.Description)
+		writeLine(f, "")
+	}
+}
+
+func (adoc adocReport) writeAssetRegister() error {
+	filename := "035_AssetRegister.adoc"
+	ar, err := os.Create(filepath.Join(adoc.targetDirectory, filename))
+	defer func() { _ = ar.Close() }()
+	if err != nil {
+		return err
+	}
+	adoc.writeMainLine("<<<")
+	adoc.writeMainLine("include::" + filename + "[leveloffset=+1]")
+
+	adoc.assetRegister(ar)
 	return nil
 }
 
