@@ -62,10 +62,10 @@ tasks:
                 --ignore-orphaned-risk-tracking
                 --app-dir .
                 --generate-report-adoc
-                --generate-report-pdf=0
+                --generate-report-pdf=1
                 --verbose
                 --config ${CONFIG}
-                # --background ./report/template/background.pdf
+                --background ./report/template/background.pdf
 
     golangci-lint:
         desc: run golangci-lint on current code
