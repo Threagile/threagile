@@ -213,7 +213,7 @@ func (adoc adocReport) WriteReport(model *types.Model,
 	introTextRAA string,
 	customRiskRules types.RiskRules,
 	logoImagePath string,
-	showChapters map[ChaptersToShowHide]bool) error {
+	hideChapters map[ChaptersToShowHide]bool) error {
 
 	adoc.model = model
 	err := adoc.initReport()
@@ -311,7 +311,7 @@ func (adoc adocReport) WriteReport(model *types.Model,
 	if err != nil {
 		return fmt.Errorf("error creating shared runtimes: %w", err)
 	}
-	if val, ok := showChapters[RiskRulesCheckedByThreagile]; !ok || val {
+	if val := hideChapters[RiskRulesCheckedByThreagile]; !val {
 		err = adoc.writeRiskRulesChecked(modelFilename, skipRiskRules, buildTimestamp, threagileVersion, modelHash, customRiskRules)
 		if err != nil {
 			return fmt.Errorf("error creating risk rules checked: %w", err)

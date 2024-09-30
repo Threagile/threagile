@@ -65,7 +65,7 @@ func (r *pdfReporter) WriteReportPDF(reportFilename string,
 	customRiskRules types.RiskRules,
 	tempFolder string,
 	model *types.Model,
-	showChapters map[ChaptersToShowHide]bool) error {
+	hideChapters map[ChaptersToShowHide]bool) error {
 	defer func() {
 		value := recover()
 		if value != nil {
@@ -109,7 +109,7 @@ func (r *pdfReporter) WriteReportPDF(reportFilename string,
 	r.createDataAssets(model)
 	r.createTrustBoundaries(model)
 	r.createSharedRuntimes(model)
-	if val, ok := showChapters[RiskRulesCheckedByThreagile]; !ok || val {
+	if val := hideChapters[RiskRulesCheckedByThreagile]; !val {
 		r.createRiskRulesChecked(model, modelFilename, skipRiskRules, buildTimestamp, threagileVersion, modelHash, customRiskRules)
 	}
 	r.createDisclaimer(model)

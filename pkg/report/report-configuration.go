@@ -7,5 +7,5 @@ const (
 )
 
 type ReportConfiguation struct {
-	ShowChapter map[ChaptersToShowHide]bool
+	HideChapter map[ChaptersToShowHide]bool
 }

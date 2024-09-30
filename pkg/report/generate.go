@@ -73,7 +73,7 @@ type reportConfigReader interface {
 
 	GetKeepDiagramSourceFiles() bool
 	GetAddModelTitle() bool
-	GetReportConfigurationShowChapters() map[ChaptersToShowHide]bool
+	GetReportConfigurationHideChapters() map[ChaptersToShowHide]bool
 }
 
 func Generate(config reportConfigReader, readResult *model.ReadResult, commands *GenerateCommands, riskRules types.RiskRules, progressReporter progressReporter) error {
@@ -221,7 +221,7 @@ func Generate(config reportConfigReader, readResult *model.ReadResult, commands 
 			readResult.CustomRiskRules,
 			config.GetTempFolder(),
 			readResult.ParsedModel,
-			config.GetReportConfigurationShowChapters())
+			config.GetReportConfigurationHideChapters())
 		if err != nil {
 			return err
 		}
@@ -254,7 +254,7 @@ func Generate(config reportConfigReader, readResult *model.ReadResult, commands 
 			readResult.IntroTextRAA,
 			readResult.CustomRiskRules,
 			config.GetReportLogoImagePath(),
-			config.GetReportConfigurationShowChapters())
+			config.GetReportConfigurationHideChapters())
 		if err != nil {
 			return err
 		}

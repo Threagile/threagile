@@ -135,7 +135,7 @@ func (c *Config) Defaults(buildTimestamp string) *Config {
 		},
 
 		ReportConfiguration: report.ReportConfiguation{
-			ShowChapter: make(map[report.ChaptersToShowHide]bool),
+			HideChapter: make(map[report.ChaptersToShowHide]bool),
 		},
 	}
 
@@ -358,15 +358,15 @@ func (c *Config) Merge(config Config, values map[string]any) {
 			}
 			for valueName := range configMap {
 				switch strings.ToLower(valueName) {
-				case strings.ToLower("ShowChapter"):
-					if c.ReportConfiguration.ShowChapter == nil {
-						c.ReportConfiguration.ShowChapter = make(map[report.ChaptersToShowHide]bool)
+				case strings.ToLower("HideChapter"):
+					if c.ReportConfiguration.HideChapter == nil {
+						c.ReportConfiguration.HideChapter = make(map[report.ChaptersToShowHide]bool)
 					}
 
-					for chapter, value := range config.ReportConfiguration.ShowChapter {
-						c.ReportConfiguration.ShowChapter[chapter] = value
-						if !value {
-							log.Println("Not adding chapter: ", chapter)
+					for chapter, value := range config.ReportConfiguration.HideChapter {
+						c.ReportConfiguration.HideChapter[chapter] = value
+						if value {
+							log.Println("Hiding chapter: ", chapter)
 						}
 					}
 				}
@@ -579,6 +579,6 @@ func (c *Config) GetProgressReporter() types.ProgressReporter {
 	return DefaultProgressReporter{Verbose: c.Verbose}
 }
 
-func (c *Config) GetReportConfigurationShowChapters() map[report.ChaptersToShowHide]bool {
-	return c.ReportConfiguration.ShowChapter
+func (c *Config) GetReportConfigurationHideChapters() map[report.ChaptersToShowHide]bool {
+	return c.ReportConfiguration.HideChapter
 }

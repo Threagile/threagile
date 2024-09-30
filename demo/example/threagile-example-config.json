@@ -1,6 +1,6 @@
 {
     "ReportConfiguration": {
-        "ShowChapter": {
+        "HideChapter": {
             "RiskRulesCheckedByThreagile": false
         }
     }
