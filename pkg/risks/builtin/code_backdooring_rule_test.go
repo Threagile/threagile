@@ -1,6 +1,7 @@
 package builtin
 
 import (
+	"sort"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -396,5 +397,7 @@ func TestCodeBackdoogingRuleGenerateRisksDevOpsImportantDataAssetNoAddingTargetR
 	assert.NotEmpty(t, risks)
 	assert.Equal(t, "<b>Code Backdooring</b> risk at <b>GitLab CI/CD</b>", risks[0].Title)
 	assert.Equal(t, types.MediumImpact, risks[0].ExploitationImpact)
-	assert.Equal(t, []string{"git-lab-ci-cd", "deployment-target"}, risks[0].DataBreachTechnicalAssetIDs)
+	orderedDataBreachTechnicalAssetIDs := risks[0].DataBreachTechnicalAssetIDs
+	sort.Strings(orderedDataBreachTechnicalAssetIDs)
+	assert.Equal(t, []string{"deployment-target", "git-lab-ci-cd"}, orderedDataBreachTechnicalAssetIDs)
 }
