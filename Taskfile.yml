@@ -53,6 +53,7 @@ tasks:
         deps: [build-threagile]
         env:
           YAML: ./demo/example/threagile.yaml
+          CONFIG: ./demo/example/threagile-example-config.json
         cmds:
           - mkdir -p /tmp/threagile-test
           - ./bin/threagile analyze-model
@@ -63,6 +64,7 @@ tasks:
                 --generate-report-adoc
                 --generate-report-pdf=0
                 --verbose
+                --config ${CONFIG}
                 # --background ./report/template/background.pdf
 
     golangci-lint:

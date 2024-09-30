@@ -4,11 +4,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
 
+	"github.com/threagile/threagile/pkg/report"
 	"github.com/threagile/threagile/pkg/types"
 )
 
@@ -56,6 +58,8 @@ type Config struct {
 	IgnoreOrphanedRiskTracking bool
 
 	Attractiveness Attractiveness
+
+	ReportConfiguration report.ReportConfiguation
 }
 
 type riskExcelConfig struct {
@@ -128,6 +132,10 @@ func (c *Config) Defaults(buildTimestamp string) *Config {
 				ProcessedOrStoredData: 0,
 				TransferredData:       0,
 			},
+		},
+
+		ReportConfiguration: report.ReportConfiguation{
+			HideChapter: make(map[report.ChaptersToShowHide]bool),
 		},
 	}
 
@@ -342,6 +350,27 @@ func (c *Config) Merge(config Config, values map[string]any) {
 
 		case strings.ToLower("Attractiveness"):
 			c.Attractiveness = config.Attractiveness
+
+		case strings.ToLower("ReportConfiguration"):
+			configMap, mapOk := values[key].(map[string]any)
+			if !mapOk {
+				continue
+			}
+			for valueName := range configMap {
+				switch strings.ToLower(valueName) {
+				case strings.ToLower("HideChapter"):
+					if c.ReportConfiguration.HideChapter == nil {
+						c.ReportConfiguration.HideChapter = make(map[report.ChaptersToShowHide]bool)
+					}
+
+					for chapter, value := range config.ReportConfiguration.HideChapter {
+						c.ReportConfiguration.HideChapter[chapter] = value
+						if value {
+							log.Println("Hiding chapter: ", chapter)
+						}
+					}
+				}
+			}
 		}
 	}
 }
@@ -548,4 +577,8 @@ func (c *Config) GetThreagileVersion() string {
 
 func (c *Config) GetProgressReporter() types.ProgressReporter {
 	return DefaultProgressReporter{Verbose: c.Verbose}
+}
+
+func (c *Config) GetReportConfigurationHideChapters() map[report.ChaptersToShowHide]bool {
+	return c.ReportConfiguration.HideChapter
 }
