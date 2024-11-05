@@ -285,7 +285,7 @@ func (c *Config) Merge(config Config, values map[string]any) {
 			c.TemplateFilename = config.TemplateFilename
 
 		case strings.ToLower("ReportLogoImagePath"):
-			c.TemplateFilename = config.ReportLogoImagePath
+			c.ReportLogoImagePath = config.ReportLogoImagePath
 
 		case strings.ToLower("TechnologyFilename"):
 			c.TechnologyFilename = config.TechnologyFilename
