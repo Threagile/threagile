@@ -57,11 +57,13 @@ Where  config.json
 
 ```json
 {
-    "appFolder": "/Users/Yevhen.Zavhorodnii/app",
+    "appFolder": "directory_with_support_files",
     "tempFolder": "./",
+    "dataFolder": "./",
     "diagramDPI": 96,
     "inputFile": "./threagile-example-model.yaml",
     "ignoreOrphanedRiskTracking": true,
+    "reportLogoImagePath": "/Users/Yevhen.Zavhorodnii/app/threagile-logo.png",
     "verbose": true
 }
 ```
@@ -78,6 +80,7 @@ app/
 ├─ [openapi.yaml](./support/openapi.yaml)
 ├─ [schema.json](./support/schema.json)
 ├─ [threagile-example-model.yaml](./demo/example/threagile.yaml)
+├─ [threagile-logo.png](./report/threagile-logo.png)
 ├─ [threagile-stub-model.yaml](./demo/stub/threagile.yaml)
 ```
 
