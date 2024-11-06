@@ -5,6 +5,17 @@
   "description": "Agile Threat Modeling",
   "type": "object",
   "properties": {
+    "includes": {
+      "description": "Include other yaml files into the model",
+      "type": [
+        "array",
+        "null"
+      ],
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    },
     "threagile_version": {
       "description": "Version of the Threagile toolkit",
       "type": "string"
@@ -378,7 +389,7 @@
             ]
           },
           "technology": {
-            "description": "Technology",
+            "description": "Technology (deprecated, use 'technologies' instead)",
             "type": "string",
             "enum": [
               "unknown-technology",
@@ -438,6 +449,75 @@
               "block-storage",
               "library"
             ]
+          },
+          "technologies": {
+            "description": "List of technologies used for the asset",
+            "type": [
+              "array",
+              "null"
+            ],
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "enum": [
+                "unknown-technology",
+                "client-system",
+                "browser",
+                "desktop",
+                "mobile-app",
+                "devops-client",
+                "web-server",
+                "web-application",
+                "application-server",
+                "database",
+                "file-server",
+                "local-file-system",
+                "erp",
+                "cms",
+                "web-service-rest",
+                "web-service-soap",
+                "ejb",
+                "search-index",
+                "search-engine",
+                "service-registry",
+                "reverse-proxy",
+                "load-balancer",
+                "build-pipeline",
+                "sourcecode-repository",
+                "artifact-registry",
+                "code-inspection-platform",
+                "monitoring",
+                "ldap-server",
+                "container-platform",
+                "batch-processing",
+                "event-listener",
+                "identity-provider",
+                "identity-store-ldap",
+                "identity-store-database",
+                "tool",
+                "cli",
+                "task",
+                "function",
+                "gateway",
+                "iot-device",
+                "message-queue",
+                "stream-processing",
+                "service-mesh",
+                "data-lake",
+                "report-engine",
+                "ai",
+                "mail-server",
+                "vault",
+                "hsm",
+                "waf",
+                "ids",
+                "ips",
+                "scheduler",
+                "mainframe",
+                "block-storage",
+                "library"
+              ]
+            }
           },
           "tags": {
             "description": "Tags",
