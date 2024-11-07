@@ -59,71 +59,81 @@ func (what *styleCreator) NewStyle(style *excelize.Style) int {
 	return styleID
 }
 
-func (what *ExcelStyles) Init(excel *excelize.File) (*ExcelStyles, error) {
+func (what *ExcelStyles) Init(excel *excelize.File, config reportConfigReader) (*ExcelStyles, error) {
 	if excel == nil {
 		return what, fmt.Errorf("no excel file provided to create styles")
 	}
 
 	creator := new(styleCreator).Init(excel)
 
+	colorCriticalRisk := "#000000"
+	if config.GetRiskExcelColorText() {
+		colorCriticalRisk = rgbHexColorCriticalRisk()
+	}
 	what.severityCriticalBold = creator.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{
 			Horizontal:  "center",
-			ShrinkToFit: true,
-			WrapText:    false,
+			ShrinkToFit: config.GetRiskExcelShrinkColumnsToFit(),
+			WrapText:    config.GetRiskExcelWrapText(),
 		},
 		Font: &excelize.Font{
-			Color: rgbHexColorCriticalRisk(),
+			Color: colorCriticalRisk,
 			Size:  12,
 			Bold:  true,
 		},
 	})
-
 	what.severityCriticalCenter = creator.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{
 			Horizontal:  "center",
-			ShrinkToFit: true,
-			WrapText:    false,
+			ShrinkToFit: config.GetRiskExcelShrinkColumnsToFit(),
+			WrapText:    config.GetRiskExcelWrapText(),
 		},
 		Font: &excelize.Font{
-			Color: rgbHexColorCriticalRisk(),
+			Color: colorCriticalRisk,
 			Size:  12,
 		},
 	})
 
+	colorHighRisk := "#000000"
+	if config.GetRiskExcelColorText() {
+		colorHighRisk = rgbHexColorHighRisk()
+	}
 	what.severityHighBold = creator.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{
 			Horizontal:  "center",
-			ShrinkToFit: true,
-			WrapText:    false,
+			ShrinkToFit: config.GetRiskExcelShrinkColumnsToFit(),
+			WrapText:    config.GetRiskExcelWrapText(),
 		},
 		Font: &excelize.Font{
-			Color: rgbHexColorHighRisk(),
+			Color: colorHighRisk,
 			Size:  12,
 			Bold:  true,
 		},
 	})
-
 	what.severityHighCenter = creator.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{
 			Horizontal:  "center",
-			ShrinkToFit: true,
-			WrapText:    false,
+			ShrinkToFit: config.GetRiskExcelShrinkColumnsToFit(),
+			WrapText:    config.GetRiskExcelWrapText(),
 		},
 		Font: &excelize.Font{
-			Color: rgbHexColorHighRisk(),
+			Color: colorHighRisk,
 			Size:  12,
 		},
 	})
 
+	colorElevatedRisk := "#000000"
+	if config.GetRiskExcelColorText() {
+		colorElevatedRisk = rgbHexColorElevatedRisk()
+	}
 	what.severityElevatedBold = creator.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{
 			Horizontal:  "center",
-			ShrinkToFit: true,
-			WrapText:    false,
+			ShrinkToFit: config.GetRiskExcelShrinkColumnsToFit(),
+			WrapText:    config.GetRiskExcelWrapText(),
 		},
 		Font: &excelize.Font{
-			Color: rgbHexColorElevatedRisk(),
+			Color: colorElevatedRisk,
 			Size:  12,
 			Bold:  true,
 		},
@@ -132,23 +142,27 @@ func (what *ExcelStyles) Init(excel *excelize.File) (*ExcelStyles, error) {
 	what.severityElevatedCenter = creator.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{
 			Horizontal:  "center",
-			ShrinkToFit: true,
-			WrapText:    false,
+			ShrinkToFit: config.GetRiskExcelShrinkColumnsToFit(),
+			WrapText:    config.GetRiskExcelWrapText(),
 		},
 		Font: &excelize.Font{
-			Color: rgbHexColorElevatedRisk(),
+			Color: colorElevatedRisk,
 			Size:  12,
 		},
 	})
 
+	colorMediumRisk := "#000000"
+	if config.GetRiskExcelColorText() {
+		colorMediumRisk = rgbHexColorMediumRisk()
+	}
 	what.severityMediumBold = creator.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{
 			Horizontal:  "center",
-			ShrinkToFit: true,
-			WrapText:    false,
+			ShrinkToFit: config.GetRiskExcelShrinkColumnsToFit(),
+			WrapText:    config.GetRiskExcelWrapText(),
 		},
 		Font: &excelize.Font{
-			Color: rgbHexColorMediumRisk(),
+			Color: colorMediumRisk,
 			Size:  12,
 			Bold:  true,
 		},
@@ -157,23 +171,27 @@ func (what *ExcelStyles) Init(excel *excelize.File) (*ExcelStyles, error) {
 	what.severityMediumCenter = creator.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{
 			Horizontal:  "center",
-			ShrinkToFit: true,
-			WrapText:    false,
+			ShrinkToFit: config.GetRiskExcelShrinkColumnsToFit(),
+			WrapText:    config.GetRiskExcelWrapText(),
 		},
 		Font: &excelize.Font{
-			Color: rgbHexColorMediumRisk(),
+			Color: colorMediumRisk,
 			Size:  12,
 		},
 	})
 
+	colorLowRisk := "#000000"
+	if config.GetRiskExcelColorText() {
+		colorLowRisk = rgbHexColorLowRisk()
+	}
 	what.severityLowBold = creator.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{
 			Horizontal:  "center",
-			ShrinkToFit: true,
-			WrapText:    false,
+			ShrinkToFit: config.GetRiskExcelShrinkColumnsToFit(),
+			WrapText:    config.GetRiskExcelWrapText(),
 		},
 		Font: &excelize.Font{
-			Color: rgbHexColorLowRisk(),
+			Color: colorLowRisk,
 			Size:  12,
 			Bold:  true,
 		},
@@ -182,11 +200,11 @@ func (what *ExcelStyles) Init(excel *excelize.File) (*ExcelStyles, error) {
 	what.severityLowCenter = creator.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{
 			Horizontal:  "center",
-			ShrinkToFit: true,
-			WrapText:    false,
+			ShrinkToFit: config.GetRiskExcelShrinkColumnsToFit(),
+			WrapText:    config.GetRiskExcelWrapText(),
 		},
 		Font: &excelize.Font{
-			Color: rgbHexColorLowRisk(),
+			Color: colorLowRisk,
 			Size:  12,
 		},
 	})
@@ -194,71 +212,91 @@ func (what *ExcelStyles) Init(excel *excelize.File) (*ExcelStyles, error) {
 	what.redCenter = creator.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{
 			Horizontal:  "center",
-			ShrinkToFit: true,
-			WrapText:    false,
+			ShrinkToFit: config.GetRiskExcelShrinkColumnsToFit(),
+			WrapText:    config.GetRiskExcelWrapText(),
 		},
 		Font: &excelize.Font{
-			Color: rgbHexColorLowRisk(),
+			Color: colorLowRisk,
 			Size:  12,
 		},
 	})
 
+	colorRiskStatusMitigated := "#000000"
+	if config.GetRiskExcelColorText() {
+		colorRiskStatusMitigated = rgbHexColorRiskStatusMitigated()
+	}
 	what.greenCenter = creator.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{
 			Horizontal:  "center",
-			ShrinkToFit: true,
-			WrapText:    false,
+			ShrinkToFit: config.GetRiskExcelShrinkColumnsToFit(),
+			WrapText:    config.GetRiskExcelWrapText(),
 		},
 		Font: &excelize.Font{
-			Color: rgbHexColorRiskStatusMitigated(),
+			Color: colorRiskStatusMitigated,
 			Size:  12,
 		},
 	})
 
+	colorRiskStatusInProgress := "#000000"
+	if config.GetRiskExcelColorText() {
+		colorRiskStatusInProgress = rgbHexColorRiskStatusInProgress()
+	}
 	what.blueCenter = creator.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{
 			Horizontal:  "center",
-			ShrinkToFit: true,
-			WrapText:    false,
+			ShrinkToFit: config.GetRiskExcelShrinkColumnsToFit(),
+			WrapText:    config.GetRiskExcelWrapText(),
 		},
 		Font: &excelize.Font{
-			Color: rgbHexColorRiskStatusInProgress(),
+			Color: colorRiskStatusInProgress,
 			Size:  12,
 		},
 	})
 
+	colorRiskStatusAccepted := "#000000"
+	if config.GetRiskExcelColorText() {
+		colorRiskStatusAccepted = rgbHexColorRiskStatusAccepted()
+	}
 	what.yellowCenter = creator.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{
 			Horizontal:  "center",
-			ShrinkToFit: true,
-			WrapText:    false,
+			ShrinkToFit: config.GetRiskExcelShrinkColumnsToFit(),
+			WrapText:    config.GetRiskExcelWrapText(),
 		},
 		Font: &excelize.Font{
-			Color: rgbHexColorRiskStatusAccepted(),
+			Color: colorRiskStatusAccepted,
 			Size:  12,
 		},
 	})
 
+	colorRiskStatusInDiscussion := "#000000"
+	if config.GetRiskExcelColorText() {
+		colorRiskStatusInDiscussion = rgbHexColorRiskStatusInDiscussion()
+	}
 	what.orangeCenter = creator.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{
 			Horizontal:  "center",
-			ShrinkToFit: true,
-			WrapText:    false,
+			ShrinkToFit: config.GetRiskExcelShrinkColumnsToFit(),
+			WrapText:    config.GetRiskExcelWrapText(),
 		},
 		Font: &excelize.Font{
-			Color: rgbHexColorRiskStatusInDiscussion(),
+			Color: colorRiskStatusInDiscussion,
 			Size:  12,
 		},
 	})
 
+	colorRiskStatusFalsePositive := "#000000"
+	if config.GetRiskExcelColorText() {
+		colorRiskStatusFalsePositive = rgbHexColorRiskStatusFalsePositive()
+	}
 	what.grayCenter = creator.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{
 			Horizontal:  "center",
-			ShrinkToFit: true,
-			WrapText:    false,
+			ShrinkToFit: config.GetRiskExcelShrinkColumnsToFit(),
+			WrapText:    config.GetRiskExcelWrapText(),
 		},
 		Font: &excelize.Font{
-			Color: rgbHexColorRiskStatusFalsePositive(),
+			Color: colorRiskStatusFalsePositive,
 			Size:  12,
 		},
 	})
@@ -266,8 +304,8 @@ func (what *ExcelStyles) Init(excel *excelize.File) (*ExcelStyles, error) {
 	what.blackLeft = creator.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{
 			Horizontal:  "left",
-			ShrinkToFit: true,
-			WrapText:    false,
+			ShrinkToFit: config.GetRiskExcelShrinkColumnsToFit(),
+			WrapText:    config.GetRiskExcelWrapText(),
 		},
 		Font: &excelize.Font{
 			Color: "#000000",
@@ -278,8 +316,8 @@ func (what *ExcelStyles) Init(excel *excelize.File) (*ExcelStyles, error) {
 	what.blackCenter = creator.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{
 			Horizontal:  "center",
-			ShrinkToFit: true,
-			WrapText:    false,
+			ShrinkToFit: config.GetRiskExcelShrinkColumnsToFit(),
+			WrapText:    config.GetRiskExcelWrapText(),
 		},
 		Font: &excelize.Font{
 			Color: "#000000",
@@ -290,8 +328,8 @@ func (what *ExcelStyles) Init(excel *excelize.File) (*ExcelStyles, error) {
 	what.blackRight = creator.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{
 			Horizontal:  "right",
-			ShrinkToFit: true,
-			WrapText:    false,
+			ShrinkToFit: config.GetRiskExcelShrinkColumnsToFit(),
+			WrapText:    config.GetRiskExcelWrapText(),
 		},
 		Font: &excelize.Font{
 			Color: "#000000",
@@ -301,7 +339,8 @@ func (what *ExcelStyles) Init(excel *excelize.File) (*ExcelStyles, error) {
 
 	what.blackSmall = creator.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{
-			ShrinkToFit: true,
+			ShrinkToFit: config.GetRiskExcelShrinkColumnsToFit(),
+			WrapText:    config.GetRiskExcelWrapText(),
 		},
 		Font: &excelize.Font{
 			Color: "#000000",
@@ -309,12 +348,17 @@ func (what *ExcelStyles) Init(excel *excelize.File) (*ExcelStyles, error) {
 		},
 	})
 
+	colorOutOfScope := "#FF0000"
+	if config.GetRiskExcelColorText() {
+		colorOutOfScope = rgbHexColorOutOfScope()
+	}
 	what.graySmall = creator.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{
-			ShrinkToFit: true,
+			ShrinkToFit: config.GetRiskExcelShrinkColumnsToFit(),
+			WrapText:    config.GetRiskExcelWrapText(),
 		},
 		Font: &excelize.Font{
-			Color: rgbHexColorOutOfScope(),
+			Color: colorOutOfScope,
 			Size:  10,
 		},
 	})
@@ -322,8 +366,8 @@ func (what *ExcelStyles) Init(excel *excelize.File) (*ExcelStyles, error) {
 	what.blackBold = creator.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{
 			Horizontal:  "center",
-			ShrinkToFit: true,
-			WrapText:    false,
+			ShrinkToFit: config.GetRiskExcelShrinkColumnsToFit(),
+			WrapText:    config.GetRiskExcelWrapText(),
 		},
 		Font: &excelize.Font{
 			Color: "#000000",
@@ -335,8 +379,8 @@ func (what *ExcelStyles) Init(excel *excelize.File) (*ExcelStyles, error) {
 	what.blackLeftBold = creator.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{
 			Horizontal:  "left",
-			ShrinkToFit: true,
-			WrapText:    false,
+			ShrinkToFit: config.GetRiskExcelShrinkColumnsToFit(),
+			WrapText:    config.GetRiskExcelWrapText(),
 		},
 		Font: &excelize.Font{
 			Color: "#000000",
@@ -347,10 +391,11 @@ func (what *ExcelStyles) Init(excel *excelize.File) (*ExcelStyles, error) {
 
 	what.mitigation = creator.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{
-			ShrinkToFit: true,
+			ShrinkToFit: config.GetRiskExcelShrinkColumnsToFit(),
+			WrapText:    config.GetRiskExcelWrapText(),
 		},
 		Font: &excelize.Font{
-			Color: rgbHexColorRiskStatusMitigated(),
+			Color: colorRiskStatusMitigated,
 			Size:  10,
 		},
 	})
@@ -358,8 +403,8 @@ func (what *ExcelStyles) Init(excel *excelize.File) (*ExcelStyles, error) {
 	what.headCenterBoldItalic = creator.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{
 			Horizontal:  "center",
-			ShrinkToFit: true,
-			WrapText:    false,
+			ShrinkToFit: config.GetRiskExcelShrinkColumnsToFit(),
+			WrapText:    config.GetRiskExcelWrapText(),
 		},
 		Font: &excelize.Font{
 			Color:  "#000000",
@@ -377,8 +422,8 @@ func (what *ExcelStyles) Init(excel *excelize.File) (*ExcelStyles, error) {
 	what.headCenterBold = creator.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{
 			Horizontal:  "center",
-			ShrinkToFit: true,
-			WrapText:    false,
+			ShrinkToFit: config.GetRiskExcelShrinkColumnsToFit(),
+			WrapText:    config.GetRiskExcelWrapText(),
 		},
 		Font: &excelize.Font{
 			Color: "#000000",
@@ -395,8 +440,8 @@ func (what *ExcelStyles) Init(excel *excelize.File) (*ExcelStyles, error) {
 	what.headCenter = creator.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{
 			Horizontal:  "center",
-			ShrinkToFit: true,
-			WrapText:    false,
+			ShrinkToFit: config.GetRiskExcelShrinkColumnsToFit(),
+			WrapText:    config.GetRiskExcelWrapText(),
 		},
 		Font: &excelize.Font{
 			Color: "#000000",

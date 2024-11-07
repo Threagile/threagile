@@ -73,7 +73,7 @@ func WriteRisksExcelToFile(parsedModel *types.Model, filename string, config rep
 		}
 	}
 
-	cellStyles, createCellStylesError := new(ExcelStyles).Init(excel)
+	cellStyles, createCellStylesError := new(ExcelStyles).Init(excel, config)
 	if createCellStylesError != nil {
 		return fmt.Errorf("unable to create cell styles: %w", createCellStylesError)
 	}
@@ -166,7 +166,7 @@ func WriteRisksExcelToFile(parsedModel *types.Model, filename string, config rep
 			} else {
 				var largestWidth float64 = 0
 				for rowIndex, rowCell := range col {
-					cellWidth := float64(utf8.RuneCountInString(rowCell) + 1) // + 1 for margin
+					cellWidth := float64(utf8.RuneCountInString(rowCell) + 2) // + 2 for margin
 
 					cellName, coordinateError := excelize.CoordinatesToCellName(colIndex+1, rowIndex+1)
 					if coordinateError == nil {
@@ -244,7 +244,8 @@ func WriteRisksExcelToFile(parsedModel *types.Model, filename string, config rep
 	return nil
 }
 
-func WriteTagsExcelToFile(parsedModel *types.Model, filename string) error { // TODO: eventually when len(sortedTagsAvailable) == 0 is: write a hint in the Excel that no tags are used
+// TODO: eventually when len(sortedTagsAvailable) == 0 is: write a hint in the Excel that no tags are used
+func WriteTagsExcelToFile(parsedModel *types.Model, filename string, config reportConfigReader) error {
 	excelRow := 0
 	excel := excelize.NewFile()
 	sheetName := parsedModel.Title
@@ -320,7 +321,7 @@ func WriteTagsExcelToFile(parsedModel *types.Model, filename string) error { // 
 		return err
 	}
 
-	cellStyles, createCellStylesError := new(ExcelStyles).Init(excel)
+	cellStyles, createCellStylesError := new(ExcelStyles).Init(excel, config)
 	if createCellStylesError != nil {
 		return fmt.Errorf("unable to create cell styles: %w", createCellStylesError)
 	}
