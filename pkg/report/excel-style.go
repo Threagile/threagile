@@ -348,7 +348,7 @@ func (what *ExcelStyles) Init(excel *excelize.File, config reportConfigReader) (
 		},
 	})
 
-	colorOutOfScope := "#FF0000"
+	colorOutOfScope := "#000000"
 	if config.GetRiskExcelColorText() {
 		colorOutOfScope = rgbHexColorOutOfScope()
 	}
