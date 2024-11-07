@@ -181,6 +181,8 @@ func WriteRisksExcelToFile(parsedModel *types.Model, filename string, config rep
 						}
 					}
 
+					cellWidth += 5 // add some extra width for auto filter
+
 					if cellWidth > largestWidth {
 						largestWidth = cellWidth
 					}
@@ -234,6 +236,17 @@ func WriteRisksExcelToFile(parsedModel *types.Model, filename string, config rep
 	}
 
 	excel.SetActiveSheet(sheetIndex)
+
+	lastColumn, err := excelize.ColumnNumberToName(len(columns))
+	if err != nil {
+		return fmt.Errorf("failed to get last column name: %w", err)
+	}
+	lastRow := len(riskItems) + 1
+	filterRange := fmt.Sprintf("A1:%s%d", lastColumn, lastRow)
+	err = excel.AutoFilter(sheetName, filterRange, []excelize.AutoFilterOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to add autofilter: %w", err)
+	}
 
 	// save file
 	saveAsError := excel.SaveAs(filename)
