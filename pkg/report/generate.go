@@ -66,6 +66,9 @@ type reportConfigReader interface {
 	GetRiskExcelConfigHideColumns() []string
 	GetRiskExcelConfigSortByColumns() []string
 	GetRiskExcelConfigWidthOfColumns() map[string]float64
+	GetRiskExcelWrapText() bool
+	GetRiskExcelShrinkColumnsToFit() bool
+	GetRiskExcelColorText() bool
 
 	GetDiagramDPI() int
 	GetMinGraphvizDPI() int
@@ -186,7 +189,7 @@ func Generate(config reportConfigReader, readResult *model.ReadResult, commands 
 	// tags Excel
 	if commands.TagsExcel {
 		progressReporter.Info("Writing tags excel")
-		err := WriteTagsExcelToFile(readResult.ParsedModel, filepath.Join(config.GetOutputFolder(), config.GetExcelTagsFilename()))
+		err := WriteTagsExcelToFile(readResult.ParsedModel, filepath.Join(config.GetOutputFolder(), config.GetExcelTagsFilename()), config)
 		if err != nil {
 			return err
 		}

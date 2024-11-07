@@ -63,9 +63,12 @@ type Config struct {
 }
 
 type riskExcelConfig struct {
-	HideColumns    []string
-	SortByColumns  []string
-	WidthOfColumns map[string]float64
+	HideColumns        []string
+	SortByColumns      []string
+	WidthOfColumns     map[string]float64
+	ShrinkColumnsToFit bool
+	WrapText           bool
+	ColorText          bool
 }
 
 func (c *Config) Defaults(buildTimestamp string) *Config {
@@ -100,8 +103,11 @@ func (c *Config) Defaults(buildTimestamp string) *Config {
 		SkipRiskRules:     make([]string, 0),
 		ExecuteModelMacro: "",
 		RiskExcel: riskExcelConfig{
-			HideColumns:   make([]string, 0),
-			SortByColumns: make([]string, 0),
+			HideColumns:        make([]string, 0),
+			SortByColumns:      make([]string, 0),
+			ShrinkColumnsToFit: true,
+			WrapText:           false,
+			ColorText:          true,
 		},
 
 		ServerMode:               false,
@@ -315,6 +321,15 @@ func (c *Config) Merge(config Config, values map[string]any) {
 					for name, value := range config.RiskExcel.WidthOfColumns {
 						c.RiskExcel.WidthOfColumns[name] = value
 					}
+
+				case strings.ToLower("ShrinkColumnsToFit"):
+					c.RiskExcel.ShrinkColumnsToFit = config.RiskExcel.ShrinkColumnsToFit
+
+				case strings.ToLower("WrapText"):
+					c.RiskExcel.WrapText = config.RiskExcel.WrapText
+
+				case strings.ToLower("ColorText"):
+					c.RiskExcel.ColorText = config.RiskExcel.ColorText
 				}
 			}
 
@@ -529,6 +544,17 @@ func (c *Config) GetRiskExcelConfigSortByColumns() []string {
 
 func (c *Config) GetRiskExcelConfigWidthOfColumns() map[string]float64 {
 	return c.RiskExcel.WidthOfColumns
+}
+
+func (c *Config) GetRiskExcelWrapText() bool {
+	return c.RiskExcel.WrapText
+}
+
+func (c *Config) GetRiskExcelShrinkColumnsToFit() bool {
+	return c.RiskExcel.ShrinkColumnsToFit
+}
+func (c *Config) GetRiskExcelColorText() bool {
+	return c.RiskExcel.ColorText
 }
 
 func (c *Config) GetServerMode() bool {
