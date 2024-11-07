@@ -73,7 +73,7 @@ func WriteRisksExcelToFile(parsedModel *types.Model, filename string, config rep
 		}
 	}
 
-	cellStyles, createCellStylesError := new(ExcelStyles).Init(excel, config)
+	cellStyles, createCellStylesError := NewExcelStyles(excel, config)
 	if createCellStylesError != nil {
 		return fmt.Errorf("unable to create cell styles: %w", createCellStylesError)
 	}
@@ -334,7 +334,7 @@ func WriteTagsExcelToFile(parsedModel *types.Model, filename string, config repo
 		return err
 	}
 
-	cellStyles, createCellStylesError := new(ExcelStyles).Init(excel, config)
+	cellStyles, createCellStylesError := NewExcelStyles(excel, config)
 	if createCellStylesError != nil {
 		return fmt.Errorf("unable to create cell styles: %w", createCellStylesError)
 	}
