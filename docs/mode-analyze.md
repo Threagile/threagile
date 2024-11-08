@@ -1,4 +1,4 @@
-# Generate
+# Analyze model
 
 The output of running tool may be in different formats:
 
