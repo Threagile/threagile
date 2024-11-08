@@ -133,7 +133,15 @@ func (parsedModel *Model) ApplyWildcardRiskTrackingEvaluation(ignoreOrphanedRisk
 func (parsedModel *Model) CheckRiskTracking(ignoreOrphanedRiskTracking bool, progressReporter ProgressReporter) error {
 	progressReporter.Info("Checking risk tracking")
 	for _, tracking := range parsedModel.RiskTracking {
-		if _, ok := parsedModel.GeneratedRisksBySyntheticId[tracking.SyntheticRiskId]; !ok {
+		foundSome := false
+		var matchingRiskIdExpression = regexp.MustCompile(strings.ReplaceAll(regexp.QuoteMeta(tracking.SyntheticRiskId), `\*`, `[^@]+`))
+		for syntheticRiskId := range parsedModel.GeneratedRisksBySyntheticId {
+			if matchingRiskIdExpression.Match([]byte(syntheticRiskId)) {
+				foundSome = true
+			}
+		}
+
+		if !foundSome {
 			if ignoreOrphanedRiskTracking {
 				progressReporter.Infof("Risk tracking references unknown risk (risk id not found): %v", tracking.SyntheticRiskId)
 			} else {
