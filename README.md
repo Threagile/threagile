@@ -24,7 +24,7 @@ The tool is highly configurable via [flags](./docs/flags.md) and [config](./docs
 We know that modifying yaml file via text editor may be tough and to simplify it we introduced:
 
 - [includes](todo-link)
-- [macros](macros)
+- [macros](./docs/macros.md)
 
 Efforts on UI are ongoing and there are few attempts to do it although that is far from being ready.
 
