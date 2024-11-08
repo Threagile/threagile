@@ -23,11 +23,12 @@ const (
 	inputFileFlagName = "model"
 
 	customRiskRulesPluginFlagName      = "custom-risk-rules-plugin"
-	diagramDpiFlagName                 = "diagram-dpi"
 	skipRiskRulesFlagName              = "skip-risk-rules"
 	ignoreOrphanedRiskTrackingFlagName = "ignore-orphaned-risk-tracking"
-	templateFileNameFlagName           = "background"
-	reportLogoImagePathFlagName        = "reportLogoImagePath"
+
+	diagramDpiFlagName          = "diagram-dpi"
+	templateFileNameFlagName    = "background"
+	reportLogoImagePathFlagName = "reportLogoImagePath"
 
 	generateDataFlowDiagramFlagName     = "generate-data-flow-diagram"
 	generateDataAssetDiagramFlagName    = "generate-data-asset-diagram"

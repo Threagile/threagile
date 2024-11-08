@@ -71,7 +71,7 @@ $ ./bin/threagile analyze-model \
                 --app-dir . \
                 --generate-report-pdf=0 \
                 --generate-report-adoc
-$ cp doc/custom-theme.yml /tmp/threagile-test/adocReport/theme/my-pdf-theme.yml
+$ cp docs/custom-theme.yml /tmp/threagile-test/adocReport/theme/my-pdf-theme.yml
 $ docker run -it -u $(id -u):$(id -g) -v /tmp/threagile-test/adocReport:/documents/ asciidoctor/docker-asciidoctor \
     asciidoctor --verbose --require asciidoctor-pdf --backend pdf \
     --attribute allow-uri-read --require asciidoctor-kroki \
