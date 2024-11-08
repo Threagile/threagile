@@ -10,16 +10,7 @@ It allows to model an architecture with its assets in an agile fashion as a YAML
 Upon execution of the Threagile toolkit all standard risk rules (as well as individual custom rules if present)
 are checked against the architecture model. You can find more information about model schema [here](./docs/model.md).
 
-The output of running tool may be in different formats:
-
-* `report.pdf` - most comprehensive report contained all information.
-* `risks.json` and `risks.json` - list of identified risks in Excel and JSON formats.
-* `data-asset-diagram.png` - image/dot file which contains all data assets and relationship between them.
-* `data-flow-diagram.png` - image/dot file which contains all technical assets and relationship between them.
-* `stats.json` - contains statistics of identified risks.
-* [adocReport](./docs/asciidoctor-report.md)
-
-The tool is highly configurable via [flags](./docs/flags.md) and [config](./docs/config.md).
+The tool have various [commands](./docs/commands.md) and is highly configurable via [flags](./docs/flags.md) and [config](./docs/config.md).
 
 We know that modifying yaml file via text editor may be tough and to simplify it we introduced:
 
@@ -27,6 +18,8 @@ We know that modifying yaml file via text editor may be tough and to simplify it
 - [macros](./docs/macros.md)
 
 Efforts on UI are ongoing and there are few attempts to do it although that is far from being ready.
+
+[Here](./docs/how-to.md) may be useful use cases on how others are using the tool and may be helpful to simplify onboarding of Threagile tool for your team.
 
 ## Execution via Docker Container
 The easiest way to execute Threagile on the commandline is via its Docker container:
