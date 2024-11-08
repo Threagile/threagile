@@ -17,7 +17,7 @@ The output of running tool may be in different formats:
 * `data-asset-diagram.png` - image/dot file which contains all data assets and relationship between them.
 * `data-flow-diagram.png` - image/dot file which contains all technical assets and relationship between them.
 * `stats.json` - contains statistics of identified risks.
-* [adocReport](asciidoctor-report.md)
+* [adocReport](./docs/asciidoctor-report.md)
 
 The tool is highly configurable via [flags](./docs/flags.md) and [config](./docs/config.md).
 
