@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	"github.com/threagile/threagile/pkg/security/types"
@@ -45,7 +46,7 @@ func (what *CustomRiskCategory) GenerateRisks(parsedModel *types.Model) ([]*type
 	return generatedRisks, nil
 }
 
-func LoadCustomRiskRules(pluginFiles []string, reporter types.ProgressReporter) types.RiskRules {
+func LoadCustomRiskRules(pluginDir string, pluginFiles []string, reporter types.ProgressReporter) types.RiskRules {
 	customRiskRuleList := make([]string, 0)
 	customRiskRules := make(types.RiskRules)
 	if len(pluginFiles) > 0 {
@@ -53,7 +54,7 @@ func LoadCustomRiskRules(pluginFiles []string, reporter types.ProgressReporter) 
 
 		for _, pluginFile := range pluginFiles {
 			if len(pluginFile) > 0 {
-				newRunner, loadError := new(runner).Load(pluginFile)
+				newRunner, loadError := new(runner).Load(filepath.Join(pluginDir, pluginFile))
 				if loadError != nil {
 					reporter.Error(fmt.Sprintf("WARNING: Custom risk rule %q not loaded: %v\n", pluginFile, loadError))
 				}

@@ -2,9 +2,9 @@ package main
 
 import (
 	"bufio"
-	"encoding/json"
 	"flag"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"io"
 	"os"
 
@@ -23,7 +23,7 @@ func main() {
 
 	if *getInfo {
 		rule := new(customRiskRule)
-		riskData, marshalError := json.MarshalIndent(new(model.CustomRiskCategory).Init(rule.Category(), rule.SupportedTags()), "", "  ")
+		riskData, marshalError := yaml.Marshal(new(model.CustomRiskCategory).Init(rule.Category(), rule.SupportedTags()))
 
 		if marshalError != nil {
 			_, _ = fmt.Fprintf(os.Stderr, "failed to print risk data: %v", marshalError)
@@ -43,7 +43,7 @@ func main() {
 		}
 
 		var input types.Model
-		inError := json.Unmarshal(inData, &input)
+		inError := yaml.Unmarshal(inData, &input)
 		if inError != nil {
 			_, _ = fmt.Fprintf(os.Stderr, "failed to parse model: %v\n", inError)
 			os.Exit(-2)
@@ -55,7 +55,7 @@ func main() {
 			os.Exit(-2)
 		}
 
-		outData, marshalError := json.MarshalIndent(generatedRisks, "", "  ")
+		outData, marshalError := yaml.Marshal(generatedRisks)
 		if marshalError != nil {
 			_, _ = fmt.Fprintf(os.Stderr, "failed to print generated risks: %v\n", marshalError)
 			os.Exit(-2)

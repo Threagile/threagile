@@ -27,7 +27,7 @@ func ReadAndAnalyzeModel(config *common.Config, builtinRiskRules types.RiskRules
 	progressReporter.Infof("Writing into output directory: %v", config.OutputFolder)
 	progressReporter.Infof("Parsing model: %v", config.InputFile)
 
-	customRiskRules := LoadCustomRiskRules(config.RiskRulesPlugins, progressReporter)
+	customRiskRules := LoadCustomRiskRules(config.PluginFolder, config.RiskRulesPlugins, progressReporter)
 
 	modelInput := new(input.Model).Defaults()
 	loadError := modelInput.Load(config.InputFile)

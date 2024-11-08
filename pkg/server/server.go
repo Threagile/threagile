@@ -175,7 +175,7 @@ func RunServer(config *common.Config) {
 	router.DELETE("/models/:model-id/shared-runtimes/:shared-runtime-id", s.deleteSharedRuntime)
 
 	reporter := common.DefaultProgressReporter{Verbose: s.config.Verbose}
-	s.customRiskRules = model.LoadCustomRiskRules(s.config.RiskRulesPlugins, reporter)
+	s.customRiskRules = model.LoadCustomRiskRules(s.config.PluginFolder, s.config.RiskRulesPlugins, reporter)
 
 	fmt.Println("Threagile s running...")
 	_ = router.Run(":" + strconv.Itoa(s.config.ServerPort)) // listen and serve on 0.0.0.0:8080 or whatever port was specified
