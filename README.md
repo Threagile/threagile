@@ -14,7 +14,7 @@ The tool have various [commands](./docs/commands.md) and is highly configurable 
 
 We know that modifying yaml file via text editor may be tough and to simplify it we introduced:
 
-- [includes](./docs/includes)
+- [includes](./docs/includes.md)
 - [macros](./docs/macros.md)
 
 Efforts on UI are ongoing and there are few attempts to do it although that is far from being ready.
