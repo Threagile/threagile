@@ -135,6 +135,10 @@ Which will give you an output with possible flags that can be used with Threagil
      docker run --rm -it -v "$(pwd)":/app/work threagile/threagile --model /app/work/threagile.yaml --output /app/work --execute-model-macro add-build-pipeline
 ```
 
+## Releases
+
+The information about releases can be found at [releases page](./docs/releases.md).
+
 ## Contribution
 
 You are very welcome to contribute into the project in any way. If you'd like to add new feature or fix the bug in the code base  please follow [contribution guide](./CONTRIBUTING.md).
