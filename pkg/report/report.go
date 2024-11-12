@@ -793,7 +793,8 @@ func (r *pdfReporter) createDisclaimer(parsedModel *types.Model) {
 		"as well as the chapter about the Threagile toolkit and method used is kept intact as part of the " +
 		"distributed report or referenced from the distributed parts.")
 	html := r.pdf.HTMLBasicNew()
-	html.Write(5, disclaimer.String())
+	uni := r.pdf.UnicodeTranslatorFromDescriptor("")
+	html.Write(5, uni(disclaimer.String()))
 	r.pdfColorBlack()
 }
 
