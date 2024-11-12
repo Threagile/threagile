@@ -2496,8 +2496,9 @@ func (r *pdfReporter) createTagListing(parsedModel *types.Model) {
 				html.Write(5, "<br><br><br>")
 			}
 			r.pdfColorBlack()
-			html.Write(5, "<b>"+tag+"</b><br>")
-			html.Write(5, description)
+			uni := r.pdf.UnicodeTranslatorFromDescriptor("")
+			html.Write(5, "<b>"+uni(tag)+"</b><br>")
+			html.Write(5, uni(description))
 		}
 	}
 }
