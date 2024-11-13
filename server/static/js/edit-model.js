@@ -12,7 +12,7 @@ document.getElementById('fileInput').addEventListener('change', function(event) 
 
               const yamlData = jsyaml.load(e.target.result);
               console.log(yamlData);
-              updateDiagramModel(yamlData);
+              updateDiagramModel(yamlData, document.getElementById('showDataAssetsCheckBox').checked);
           } catch (error) {
               console.error('Error parsing YAML:', error);
               alert('Failed to parse YAML file.');
@@ -20,6 +20,10 @@ document.getElementById('fileInput').addEventListener('change', function(event) 
       };
       reader.readAsText(file);
   }
+});
+
+document.getElementById('showDataAssetsCheckBox').addEventListener('change', function(event) {
+  restoreChanges();
 });
 
 function nodeClicked(e, obj) {
@@ -48,13 +52,15 @@ function init() {
       );
 }
 
-function updateDiagramModel(yamlData) {
+function updateDiagramModel(yamlData, showDataAssets) {
   let nodeDataArray = [];
-  for (const daKey in yamlData.data_assets) {
-    if (yamlData.data_assets.hasOwnProperty(daKey)) {
-      const data_asset = yamlData.data_assets[daKey];
-      console.log(`${daKey}: ${data_asset}`);
-      nodeDataArray.push({ key: data_asset.id, threagile_model: data_asset, type: 'data_asset', caption: daKey, color: 'lightgreen' });
+  if (showDataAssets) {
+    for (const daKey in yamlData.data_assets) {
+      if (yamlData.data_assets.hasOwnProperty(daKey)) {
+        const data_asset = yamlData.data_assets[daKey];
+        console.log(`${daKey}: ${data_asset}`);
+        nodeDataArray.push({ key: data_asset.id, threagile_model: data_asset, type: 'data_asset', caption: daKey, color: 'lightgreen' });
+      }
     }
   }
 
@@ -71,14 +77,14 @@ function updateDiagramModel(yamlData) {
           console.log(`${clKey}: ${communicationLink}`);
           nodesLinks.push({ from: technical_asset.id, to: communicationLink.target });
 
-          if (communicationLink.data_assets_sent) {
+          if (showDataAssets && communicationLink.data_assets_sent) {
             communicationLink.data_assets_sent.forEach((dataAsset) => {
               nodesLinks.push({ from: technical_asset.id, to: dataAsset });
               nodesLinks.push({ from: communicationLink.target, to: dataAsset });
             })
           }
 
-          if (communicationLink.data_assets_received) {
+          if (showDataAssets && communicationLink.data_assets_received) {
             communicationLink.data_assets_received.forEach((dataAsset) => {
               nodesLinks.push({ from: technical_asset.id, to: dataAsset });
               nodesLinks.push({ from: communicationLink.target, to: dataAsset });
@@ -87,13 +93,13 @@ function updateDiagramModel(yamlData) {
         }
       }
 
-      if (technical_asset.data_assets_processed) {
+      if (showDataAssets && technical_asset.data_assets_processed) {
         technical_asset.data_assets_processed.forEach((dataAsset) => {
           nodesLinks.push({ from: technical_asset.id, to: dataAsset });
         });
       }
 
-      if (technical_asset.data_assets_stored) {
+      if (showDataAssets && technical_asset.data_assets_stored) {
         technical_asset.data_assets_stored.forEach((dataAsset) => {
           nodesLinks.push({ from: technical_asset.id, to: dataAsset });
         });
@@ -104,4 +110,23 @@ function updateDiagramModel(yamlData) {
   myDiagram.model = new go.GraphLinksModel(nodeDataArray, nodesLinks);
 }
 
- window.addEventListener('DOMContentLoaded', init);
+function restoreChanges() {
+  if (currentFile) {
+    const yamlData = jsyaml.load(currentFile);
+    console.log(yamlData);
+    updateDiagramModel(yamlData, document.getElementById('showDataAssetsCheckBox').checked);
+  }
+}
+
+function clearDiagram() {
+  if (myDiagram) {
+    myDiagram.clear();
+    console.log("Diagram cleared");
+  }
+}
+
+function exportDiagram() {
+  alert('code is going to be implemented');
+}
+
+window.addEventListener('DOMContentLoaded', init);
