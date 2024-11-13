@@ -1,4 +1,6 @@
-var myDiagram; // TODO: do not use global variables
+// TODO: do not use global variables
+var myDiagram;
+var currentFile;
 
 document.getElementById('fileInput').addEventListener('change', function(event) {
   const file = event.target.files[0];
@@ -6,9 +8,10 @@ document.getElementById('fileInput').addEventListener('change', function(event) 
       const reader = new FileReader();
       reader.onload = function(e) {
           try {
-              // Parse YAML content to JavaScript object
+              currentFile = e.target.result;
+
               const yamlData = jsyaml.load(e.target.result);
-              console.log(yamlData); // Log to console for debugging
+              console.log(yamlData);
               updateDiagramModel(yamlData);
           } catch (error) {
               console.error('Error parsing YAML:', error);
@@ -29,6 +32,11 @@ function nodeClicked(e, obj) {
 
 function init() {
     myDiagram = new go.Diagram('myDiagramDiv');
+    myDiagram.layout = new go.LayeredDigraphLayout({
+      layerSpacing: 50,
+      setsPortSpots: false
+    });
+
     myDiagram.nodeTemplate = new go.Node('Auto', {
       click: nodeClicked,
     })
@@ -42,20 +50,42 @@ function init() {
 
 function updateDiagramModel(yamlData) {
   let nodeDataArray = [];
-  for (const key in yamlData.data_assets) {
-    if (yamlData.data_assets.hasOwnProperty(key)) {
-      const data_asset = yamlData.data_assets[key];
-      console.log(`${key}: ${data_asset}`);
-      nodeDataArray.push({ key: data_asset.id, threagile_model: data_asset, type: 'data_asset', caption: key, color: 'lightgreen' });
+  for (const daKey in yamlData.data_assets) {
+    if (yamlData.data_assets.hasOwnProperty(daKey)) {
+      const data_asset = yamlData.data_assets[daKey];
+      console.log(`${daKey}: ${data_asset}`);
+      nodeDataArray.push({ key: data_asset.id, threagile_model: data_asset, type: 'data_asset', caption: daKey, color: 'lightgreen' });
     }
   }
 
   let nodesLinks = [];
-  for (const key in yamlData.technical_assets) {
-    if (yamlData.technical_assets.hasOwnProperty(key)) {
-      const technical_asset = yamlData.technical_assets[key];
-      console.log(`${key}: ${technical_asset}`);
-      nodeDataArray.push({ key: technical_asset.id, threagile_model: yamlData.technical_assets[key], type: 'technical_asset', caption: key, color: 'lightblue' });
+  for (const taKey in yamlData.technical_assets) {
+    if (yamlData.technical_assets.hasOwnProperty(taKey)) {
+      const technical_asset = yamlData.technical_assets[taKey];
+      console.log(`${taKey}: ${technical_asset}`);
+      nodeDataArray.push({ key: technical_asset.id, threagile_model: technical_asset, type: 'technical_asset', caption: taKey, color: 'lightblue' });
+
+      if (technical_asset.communication_links) {
+        for (const clKey in technical_asset.communication_links) {
+          const communicationLink = technical_asset.communication_links[clKey];
+          console.log(`${clKey}: ${communicationLink}`);
+          nodesLinks.push({ from: technical_asset.id, to: communicationLink.target });
+
+          if (communicationLink.data_assets_sent) {
+            communicationLink.data_assets_sent.forEach((dataAsset) => {
+              nodesLinks.push({ from: technical_asset.id, to: dataAsset });
+              nodesLinks.push({ from: communicationLink.target, to: dataAsset });
+            })
+          }
+
+          if (communicationLink.data_assets_received) {
+            communicationLink.data_assets_received.forEach((dataAsset) => {
+              nodesLinks.push({ from: technical_asset.id, to: dataAsset });
+              nodesLinks.push({ from: communicationLink.target, to: dataAsset });
+            })
+          }
+        }
+      }
 
       if (technical_asset.data_assets_processed) {
         technical_asset.data_assets_processed.forEach((dataAsset) => {
