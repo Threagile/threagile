@@ -94,6 +94,15 @@ func RunServer(config serverConfigReader, builtinRiskRules types.RiskRules) {
 	router.HEAD("/", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "index.html", gin.H{})
 	})
+	router.GET("/edit-model", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "edit-model.html", gin.H{})
+	})
+	router.HEAD("/edit-model", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "edit-model.html", gin.H{})
+	})
+	router.StaticFile("/css/edit-model.css", filepath.Join(s.config.GetServerFolder(), "s", "static", "css", "edit-model.css")) // <==
+	router.StaticFile("/js/edit-model.js", filepath.Join(s.config.GetServerFolder(), "s", "static", "js", "edit-model.js"))     // <==
+
 	router.StaticFile("/threagile.png", filepath.Join(s.config.GetServerFolder(), "s", "static", "threagile.png")) // <==
 	router.StaticFile("/site.webmanifest", filepath.Join(s.config.GetServerFolder(), "s", "static", "site.webmanifest"))
 	router.StaticFile("/favicon.ico", filepath.Join(s.config.GetServerFolder(), "s", "static", "favicon.ico"))
@@ -216,7 +225,7 @@ func RunServer(config serverConfigReader, builtinRiskRules types.RiskRules) {
 
 	s.customRiskRules = model.LoadCustomRiskRules(s.config.GetPluginFolder(), s.config.GetRiskRulePlugins(), config.GetProgressReporter())
 
-	fmt.Println("Threagile s running...")
+	fmt.Println("Threagile is running...")
 	_ = router.Run(":" + strconv.Itoa(s.config.GetServerPort())) // listen and serve on 0.0.0.0:8080 or whatever port was specified
 }
 

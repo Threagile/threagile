@@ -1,0 +1,30 @@
+<html>
+    <head>
+        <title>Threagile - Agile Threat Modeling</title>
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+        <link rel="manifest" href="/site.webmanifest">
+        <style>
+            body {
+                background: white;
+                font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+                font-weight: 300;
+                font-size: 1.8em;
+                color: #5a5a5a;
+            }
+        </style>
+        <script src="https://cdn.jsdelivr.net/npm/gojs@3.0.13/release/go.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/create-gojs-kit@3.0.13/dist/extensions/ArrangingLayout.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
+    </head>
+    <body>
+        <h2>Upload YAML File</h2>
+        <input type="file" id="fileInput" accept=".yaml, .yml">
+        <!-- The DIV for a Diagram needs an explicit size or else we will not see anything.
+            In this case we also add a background color so we can see that area. -->
+        <div id="myDiagramDiv" class="diagram"></div>
+    </body>
+    <script src="./js/edit-model.js"></script>
+    <link href="./css/edit-model.css" rel="stylesheet" />
+</html>
