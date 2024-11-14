@@ -100,8 +100,10 @@ func RunServer(config serverConfigReader, builtinRiskRules types.RiskRules) {
 	router.HEAD("/edit-model", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "edit-model.html", gin.H{})
 	})
-	router.StaticFile("/css/edit-model.css", filepath.Join(s.config.GetServerFolder(), "s", "static", "css", "edit-model.css")) // <==
-	router.StaticFile("/js/edit-model.js", filepath.Join(s.config.GetServerFolder(), "s", "static", "js", "edit-model.js"))     // <==
+	router.StaticFile("/css/edit-model.css", filepath.Join(s.config.GetServerFolder(), "s", "static", "css", "edit-model.css"))       // <==
+	router.StaticFile("/js/edit-model.js", filepath.Join(s.config.GetServerFolder(), "s", "static", "js", "edit-model.js"))           // <==
+	router.StaticFile("/js/property-editor.js", filepath.Join(s.config.GetServerFolder(), "s", "static", "js", "property-editor.js")) // <==
+	router.StaticFile("/js/schema.js", filepath.Join(s.config.GetServerFolder(), "s", "static", "js", "schema.js"))                   // <==
 
 	router.StaticFile("/threagile.png", filepath.Join(s.config.GetServerFolder(), "s", "static", "threagile.png")) // <==
 	router.StaticFile("/site.webmanifest", filepath.Join(s.config.GetServerFolder(), "s", "static", "site.webmanifest"))

@@ -28,13 +28,15 @@ document.getElementById('showDataAssetsCheckBox').addEventListener('change', fun
 });
 
 function nodeClicked(e, obj) {
-  // executed by click and doubleclick handlers
   var evt = e.copy();
   var node = obj.part;
   var type = evt.clickCount === 2 ? 'Double-Clicked: ' : 'Clicked: ';
   console.log(type + 'on ' + node);
   if (evt.clickCount === 2) {
-    openPropertyEditor(node.data.threagile_model, 'itemPropertyEditor');
+    var editorSchema = node.data.type === 'data_asset' ?
+                          schema.properties.data_assets.additionalProperties.properties :
+                          schema.properties.technical_assets.additionalProperties.properties;
+    openPropertyEditor(node.data.threagile_model, 'itemPropertyEditor', editorSchema);
   }
 }
 
@@ -114,7 +116,7 @@ function updateDiagramModel(yamlData, showDataAssets) {
   }
 
   myDiagram.model = new go.GraphLinksModel(nodeDataArray, nodesLinks);
-  openPropertyEditor(yamlData, 'projectInfo');
+  openPropertyEditor(yamlData, 'projectInfo', schema.properties);
 }
 
 function restoreChanges() {
@@ -126,33 +128,26 @@ function restoreChanges() {
 }
 
 function exportDiagram() {
-  alert('code is going to be implemented');
+  try {
+    const yamlData = jsyaml.dump(diagramYaml);
+    const blob = new Blob([yamlData], { type: 'text/yaml' });
+    const downloadLink = document.createElement('a');
+    downloadLink.href = URL.createObjectURL(blob);
+    downloadLink.download = 'diagram.yaml'; // Default file name
+    downloadLink.click();
+    URL.revokeObjectURL(downloadLink.href);
+  } catch (e) {
+    alert('Failed to export diagram.');
+    console.error("Error exporting diagram:", e);
+  }
 }
 
-function openPropertyEditor(nodeData, id) {
-  const editor = document.getElementById(id);
-  editor.innerHTML = ''; // Clear existing content
-
-  Object.keys(nodeData).forEach(prop => {
-      const itemContainer = document.createElement('div');
-      itemContainer.classList.add('property-editor-item');
-
-      const label = document.createElement('label');
-      label.textContent = prop;
-      label.classList.add('property-editor-label');
-
-      const input = document.createElement('input');
-      input.type = 'text';
-      input.value = nodeData[prop];
-      input.classList.add('property-editor-field');
-      input.onchange = () => {
-          nodeData[prop] = input.value; // Update node data
-      };
-
-      itemContainer.appendChild(label);
-      itemContainer.appendChild(input);
-      editor.appendChild(itemContainer);
-  });
+function openPropertyEditor(nodeData, id, schema) {
+  const classEditor = new EditorGenerator(nodeData, schema, id);
+  // TODO: do not hard code hidden properties
+  classEditor.generateEditor(['communication_links', 'data_assets_processed', 'data_assets_stored',
+    'data_assets_sent', 'data_assets_received', 'data_assets', 'technical_assets',
+    'trust_boundaries', 'shared_runtimes', 'individual_risk_categories']);
 }
 
 window.addEventListener('DOMContentLoaded', init);

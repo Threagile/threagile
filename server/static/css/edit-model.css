@@ -73,3 +73,12 @@ body {
   border: 1px solid #ccc;
   border-radius: 4px;
 }
+
+.property-editor-input {
+  width: 100%;
+  padding: 5px;
+}
+
+.property-editor-checkbox {
+  margin-left: 5px;
+}
