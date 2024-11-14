@@ -1,6 +1,7 @@
 // TODO: do not use global variables
 var myDiagram;
 var currentFile;
+var diagramYaml;
 
 document.getElementById('fileInput').addEventListener('change', function(event) {
   const file = event.target.files[0];
@@ -32,6 +33,9 @@ function nodeClicked(e, obj) {
   var node = obj.part;
   var type = evt.clickCount === 2 ? 'Double-Clicked: ' : 'Clicked: ';
   console.log(type + 'on ' + node);
+  if (evt.clickCount === 2) {
+    openPropertyEditor(node.data.threagile_model, 'itemPropertyEditor');
+  }
 }
 
 function init() {
@@ -53,6 +57,8 @@ function init() {
 }
 
 function updateDiagramModel(yamlData, showDataAssets) {
+  diagramYaml = yamlData;
+
   let nodeDataArray = [];
   if (showDataAssets) {
     for (const daKey in yamlData.data_assets) {
@@ -108,6 +114,7 @@ function updateDiagramModel(yamlData, showDataAssets) {
   }
 
   myDiagram.model = new go.GraphLinksModel(nodeDataArray, nodesLinks);
+  openPropertyEditor(yamlData, 'projectInfo');
 }
 
 function restoreChanges() {
@@ -118,15 +125,34 @@ function restoreChanges() {
   }
 }
 
-function clearDiagram() {
-  if (myDiagram) {
-    myDiagram.clear();
-    console.log("Diagram cleared");
-  }
-}
-
 function exportDiagram() {
   alert('code is going to be implemented');
+}
+
+function openPropertyEditor(nodeData, id) {
+  const editor = document.getElementById(id);
+  editor.innerHTML = ''; // Clear existing content
+
+  Object.keys(nodeData).forEach(prop => {
+      const itemContainer = document.createElement('div');
+      itemContainer.classList.add('property-editor-item');
+
+      const label = document.createElement('label');
+      label.textContent = prop;
+      label.classList.add('property-editor-label');
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.value = nodeData[prop];
+      input.classList.add('property-editor-field');
+      input.onchange = () => {
+          nodeData[prop] = input.value; // Update node data
+      };
+
+      itemContainer.appendChild(label);
+      itemContainer.appendChild(input);
+      editor.appendChild(itemContainer);
+  });
 }
 
 window.addEventListener('DOMContentLoaded', init);

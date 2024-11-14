@@ -8,11 +8,13 @@
         <script src="https://cdn.jsdelivr.net/npm/gojs@3.0.13/release/go.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/create-gojs-kit@3.0.13/dist/extensions/ArrangingLayout.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
+        <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+        <script src="https://code.jquery.com/ui/1.14.1/jquery-ui.min.js" integrity="sha256-AlTido85uXPlSyyaZNsjJXeCs07eSv3r43kyCVc8ChI=" crossorigin="anonymous"></script>
     </head>
     <body>
         <div class="input-container">
           <input type="file" id="fileInput" accept=".yaml, .yml">
-          <label class="checkboxLabel">
+          <label class="checkbox-label">
             <input type="checkbox" id="showDataAssetsCheckBox">
             Show Data Assets
           </label>
@@ -20,12 +22,13 @@
 
         <div class="buttons-container">
           <button onclick="restoreChanges()">Restore Changes</button>
-          <button onclick="clearDiagram()">Clear Diagram</button>
           <button onclick="exportDiagram()">Export</button>
         </div>
 
         <div class="diagram-container">
+          <div id="projectInfo" class="property-editor"></div>
           <div id="myDiagramDiv" class="diagram"></div>
+          <div id="itemPropertyEditor" class="property-editor"></div>
         </div>
     </body>
     <script src="./js/edit-model.js"></script>
