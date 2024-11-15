@@ -44,14 +44,14 @@ $(document).ready(function() {
   });
 
   $('#showDataAssetsCheckBox').on('change', function() {
-    restoreChanges();
+    updateDiagramModel(yamlData, $('#showDataAssetsCheckBox').is(':checked'));
   });
 
   $('#btnRestoreChanges').on('click', function() {
     if (currentFile) {
       const yamlData = jsyaml.load(currentFile);
       console.log(yamlData);
-      updateDiagramModel(yamlData, $('#showDataAssetsCheckBox').is(':checked'));
+      updateDiagramModel(diagramYaml, $('#showDataAssetsCheckBox').is(':checked'));
     }
   });
 
