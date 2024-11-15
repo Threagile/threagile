@@ -152,17 +152,19 @@ $(document).ready(function() {
     var editorSchema = nodeType === 'data_asset' ?
           schema.properties.data_assets.additionalProperties.properties :
           schema.properties.technical_assets.additionalProperties.properties;
-    const classEditor = new EditorGenerator(nodeData, editorSchema, $('#itemPropertyEditor'), title, generateEnumFields());
-    classEditor.generateEditor(['communication_links']);
+    const assetEditor = new EditorGenerator(nodeData, editorSchema, $('#itemPropertyEditor'), title, generateEnumFields());
+    assetEditor.generateEditor([], ['communication_links'], () => {
+      updateDiagramModel(diagramYaml, $('#showDataAssetsCheckBox').is(':checked'));
+    });
   }
 
   function showProjectFields(nodeData) {
-    const classEditor = new EditorGenerator(nodeData, schema.properties, $('#projectInfo'), undefined, generateEnumFields());
+    const projectEditor = new EditorGenerator(nodeData, schema.properties, $('#projectInfo'), undefined, generateEnumFields());
     const hiddenProperties = ['communication_links', 'data_assets_processed', 'data_assets_stored',
       'data_assets_sent', 'data_assets_received', 'data_assets', 'technical_assets',
       'trust_boundaries', 'shared_runtimes', 'individual_risk_categories', 'includes'];
     const extendableProperties = ['questions', 'abuse_cases', 'security_requirements', 'risk_tracking'];
-    classEditor.generateEditor(hiddenProperties, extendableProperties);
+    projectEditor.generateEditor(hiddenProperties, extendableProperties);
   }
 
   function showTechnicalAssets(data) {
@@ -202,6 +204,7 @@ $(document).ready(function() {
     return {
       "technical_assets_running": technical_assets,
       "technical_assets_inside": technical_assets,
+      "target": technical_assets,
       "trust_boundaries_nested": trust_boundaries,
       "data_assets_processed": data_assets,
       "data_assets_stored": data_assets,

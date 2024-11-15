@@ -101,6 +101,9 @@ class EditorGenerator {
                             toggleButton.text(toggleButton.text() === '>' ? 'v' : '>');
                         });
 
+                    if (this.object[key] === undefined) {
+                        this.object[key] = {};
+                    }
                     const subObject = this.object[key] || {};
                     const subSchema = property.properties || {};
 
@@ -172,7 +175,9 @@ class EditorGenerator {
                                     });
 
                                 entryContainer.append(keyInput, valueEditor, deleteButton);
-                                extendableContainer.append(entryContainer);
+
+                                const delimiter = $('<br /> <br />');
+                                extendableContainer.append(entryContainer, delimiter);
                             }
                         };
 
