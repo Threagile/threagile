@@ -152,12 +152,12 @@ $(document).ready(function() {
     var editorSchema = nodeType === 'data_asset' ?
           schema.properties.data_assets.additionalProperties.properties :
           schema.properties.technical_assets.additionalProperties.properties;
-    const classEditor = new EditorGenerator(nodeData, editorSchema, $('#itemPropertyEditor'), title);
-    classEditor.generateEditor();
+    const classEditor = new EditorGenerator(nodeData, editorSchema, $('#itemPropertyEditor'), title, generateEnumFields());
+    classEditor.generateEditor(['communication_links']);
   }
 
   function showProjectFields(nodeData) {
-    const classEditor = new EditorGenerator(nodeData, schema.properties, $('#projectInfo'));
+    const classEditor = new EditorGenerator(nodeData, schema.properties, $('#projectInfo'), undefined, generateEnumFields());
     const hiddenProperties = ['communication_links', 'data_assets_processed', 'data_assets_stored',
       'data_assets_sent', 'data_assets_received', 'data_assets', 'technical_assets',
       'trust_boundaries', 'shared_runtimes', 'individual_risk_categories', 'includes'];
@@ -166,30 +166,46 @@ $(document).ready(function() {
   }
 
   function showTechnicalAssets(data) {
-    const editor = new EditorGenerator(data, schema.properties, $('#technicalAssets'));
+    const editor = new EditorGenerator(data, schema.properties, $('#technicalAssets'), undefined, generateEnumFields());
     editor.generateEditorForKeys('technical_assets', (key, value) => {
       updateDiagramModel(diagramYaml, $('#showDataAssetsCheckBox').is(':checked'));
     });
   }
 
   function showDataAssetsObjects(data) {
-    const editor = new EditorGenerator(data, schema.properties, $('#dataAssets'));
+    const editor = new EditorGenerator(data, schema.properties, $('#dataAssets'), undefined, generateEnumFields());
     editor.generateEditorForKeys('data_assets', (key, value) => {
       updateDiagramModel(diagramYaml, $('#showDataAssetsCheckBox').is(':checked'));
     });
   }
 
   function showTrustBoundaries(data) {
-    const editor = new EditorGenerator(data, schema.properties, $('#trustBoundaries'));
+    const editor = new EditorGenerator(data, schema.properties, $('#trustBoundaries'), undefined, generateEnumFields());
     editor.generateEditorForObject('trust_boundaries', (key, value) => {
       updateDiagramModel(diagramYaml, $('#showDataAssetsCheckBox').is(':checked'));
     });
   }
 
   function showSharedRuntimes(data) {
-    const editor = new EditorGenerator(data, schema.properties, $('#sharedRuntimes'));
+    const editor = new EditorGenerator(data, schema.properties, $('#sharedRuntimes'), undefined, generateEnumFields());
     editor.generateEditorForObject('shared_runtimes', (key, value) => {
       updateDiagramModel(diagramYaml, $('#showDataAssetsCheckBox').is(':checked'));
     });
+  }
+
+  function generateEnumFields() {
+    let data_assets = Object.values(diagramYaml.data_assets).map(da => da.id);
+    let technical_assets = Object.values(diagramYaml.technical_assets).map(ta => ta.id);
+    let trust_boundaries = Object.values(diagramYaml.trust_boundaries).map(tb => tb.id);
+
+    return {
+      "technical_assets_running": technical_assets,
+      "technical_assets_inside": technical_assets,
+      "trust_boundaries_nested": trust_boundaries,
+      "data_assets_processed": data_assets,
+      "data_assets_stored": data_assets,
+      "data_assets_sent": data_assets,
+      "data_assets_received": data_assets
+    }
   }
 });

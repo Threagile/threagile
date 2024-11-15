@@ -1,9 +1,10 @@
 class EditorGenerator {
-    constructor(object, schema, formContainer, title) {
+    constructor(object, schema, formContainer, title, customEnumFields = {}) {
         this.object = object;
         this.schema = schema;
         this.formContainer = formContainer;
         this.title = title;
+        this.customEnumFields = customEnumFields;
     }
 
     generateEditor(ignoreFields = [], extendableProperties = [], callback = (key, value) => {}) {
@@ -44,6 +45,16 @@ class EditorGenerator {
                                 callback(key, input.val());
                             });
                         property.enum.forEach((option) => {
+                            input.append($('<option>').val(option).text(option));
+                        });
+                    } else if (this.customEnumFields[key]) {
+                        input = $('<select>')
+                            .addClass('property-editor-input')
+                            .on('change', () => {
+                                this.object[key] = input.val();
+                                callback(key, input.val());
+                            });
+                        this.customEnumFields[key].forEach((option) => {
                             input.append($('<option>').val(option).text(option));
                         });
                     } else {
@@ -136,7 +147,9 @@ class EditorGenerator {
                                     const entrySubEditor = new EditorGenerator(
                                         entryValue,
                                         property.additionalProperties.properties || {},
-                                        $('<div>')
+                                        $('<div>'),
+                                        '',
+                                        this.customEnumFields
                                     );
                                     entrySubEditor.generateEditor();
                                     valueEditor = entrySubEditor.formContainer;
@@ -168,7 +181,7 @@ class EditorGenerator {
                             .append(toggleButton, label, extendableContainer, addButton);
 
                     } else {
-                        const subEditor = new EditorGenerator(subObject, subSchema, '');
+                        const subEditor = new EditorGenerator(subObject, subSchema, '', '', this.customEnumFields);
                         subEditor.formContainer = subContainer; // Set the container manually
                         subEditor.generateEditor();
                         this.object[key] = subObject;
@@ -216,7 +229,26 @@ class EditorGenerator {
                                 });
 
                                 itemContainer.append(select);
-                            } else if (itemSchema.type === 'string') {
+                            } else if (this.customEnumFields[key]) {
+                                // Handle array of custom enums (dropdowns)
+                                const select = $('<select>')
+                                    .addClass('property-editor-input')
+                                    .on('change', () => {
+                                        arrayItems[index] = select.val();
+                                        callback(key + '[' + index + ']', select.val());
+                                    });
+
+                                this.customEnumFields[key].forEach((option) => {
+                                    const optionElement = $('<option>')
+                                        .val(option)
+                                        .text(option)
+                                        .prop('selected', item === option);
+                                    select.append(optionElement);
+                                });
+
+                                itemContainer.append(select);
+                            }
+                            else if (itemSchema.type === 'string') {
                                 // Handle array of strings (text input)
                                 const input = $('<input type="text">')
                                     .addClass('property-editor-input')
@@ -238,7 +270,7 @@ class EditorGenerator {
                                 itemContainer.append(input);
                             } else if (itemSchema.type === 'object' || itemSchema.properties) {
                                 // Handle array of objects
-                                const subEditor = new EditorGenerator(arrayItems[index], itemSchema.properties, '');
+                                const subEditor = new EditorGenerator(arrayItems[index], itemSchema.properties, '', '', this.customEnumFields);
                                 subEditor.formContainer = itemContainer; // Set the container manually
                                 subEditor.generateEditor();
                             } else {
@@ -378,19 +410,7 @@ class EditorGenerator {
                 continue;
             }
 
-            const label = $('<label>')
-                .text(key)
-                .addClass('property-editor-label');
             let input;
-            const subContainer = $('<div>').addClass('property-editor-object').hide();
-            const toggleButton = $('<span>')
-                .text('>')
-                .addClass('property-editor-toggle')
-                .on('click', () => {
-                    subContainer.toggle();
-                    toggleButton.text(toggleButton.text() === '>' ? 'v' : '>');
-                });
-
             const subObject = this.object[key] || {};
             const extendableContainer = $('<div>').addClass('property-editor-extendable');
             const addButton = $('<button>')
@@ -408,6 +428,7 @@ class EditorGenerator {
                     callback(key, newKey);
                 });
 
+            let customEnumFields = this.customEnumFields;
             const renderExtendableEntries = () => {
                 extendableContainer.empty();
 
@@ -434,7 +455,9 @@ class EditorGenerator {
                         const entrySubEditor = new EditorGenerator(
                             entryValue,
                             property.additionalProperties.properties || {},
-                            $('<div>')
+                            $('<div>'),
+                            '',
+                            customEnumFields
                         );
                         entrySubEditor.generateEditor();
                         valueEditor = entrySubEditor.formContainer;
@@ -457,18 +480,20 @@ class EditorGenerator {
                         });
 
                     entryContainer.append(keyInput, valueEditor, deleteButton);
-                    extendableContainer.append(entryContainer);
+
+                    const delimiter = $('<br /> <br />');
+                    extendableContainer.append(entryContainer, delimiter);
                 }
             };
 
             renderExtendableEntries();
             input = $('<div>')
-                .append(toggleButton, label, extendableContainer, addButton);
+                .append(extendableContainer, addButton);
 
             const fieldContainer = $('<div>').addClass('property-editor-field');
-            fieldContainer.append(label).append(input);
+            fieldContainer.append(input);
+
             this.formContainer.append(fieldContainer);
         }
     }
-
 }
