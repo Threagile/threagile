@@ -44,7 +44,7 @@ $(document).ready(function() {
   });
 
   $('#showDataAssetsCheckBox').on('change', function() {
-    updateDiagramModel(yamlData, $('#showDataAssetsCheckBox').is(':checked'));
+    updateDiagramModel(diagramYaml, $('#showDataAssetsCheckBox').is(':checked'));
   });
 
   $('#btnRestoreChanges').on('click', function() {
