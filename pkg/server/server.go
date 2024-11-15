@@ -87,7 +87,7 @@ func RunServer(config serverConfigReader, builtinRiskRules types.RiskRules) {
 		builtinRiskRules:               builtinRiskRules,
 	}
 	router := gin.Default()
-	router.LoadHTMLGlob(filepath.Join(s.config.GetServerFolder(), "s", "static", "*.html")) // <==
+	router.LoadHTMLGlob(filepath.Join(s.config.GetServerFolder(), "static", "*.html")) // <==
 	router.GET("/", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "index.html", gin.H{})
 	})
@@ -100,30 +100,30 @@ func RunServer(config serverConfigReader, builtinRiskRules types.RiskRules) {
 	router.HEAD("/edit-model", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "edit-model.html", gin.H{})
 	})
-	router.StaticFile("/css/edit-model.css", filepath.Join(s.config.GetServerFolder(), "s", "static", "css", "edit-model.css"))       // <==
-	router.StaticFile("/js/edit-model.js", filepath.Join(s.config.GetServerFolder(), "s", "static", "js", "edit-model.js"))           // <==
-	router.StaticFile("/js/property-editor.js", filepath.Join(s.config.GetServerFolder(), "s", "static", "js", "property-editor.js")) // <==
-	router.StaticFile("/js/schema.js", filepath.Join(s.config.GetServerFolder(), "s", "static", "js", "schema.js"))                   // <==
+	router.StaticFile("/css/edit-model.css", filepath.Join(s.config.GetServerFolder(), "static", "css", "edit-model.css"))       // <==
+	router.StaticFile("/js/edit-model.js", filepath.Join(s.config.GetServerFolder(), "static", "js", "edit-model.js"))           // <==
+	router.StaticFile("/js/property-editor.js", filepath.Join(s.config.GetServerFolder(), "static", "js", "property-editor.js")) // <==
+	router.StaticFile("/js/schema.js", filepath.Join(s.config.GetServerFolder(), "static", "js", "schema.js"))                   // <==
 
-	router.StaticFile("/threagile.png", filepath.Join(s.config.GetServerFolder(), "s", "static", "threagile.png")) // <==
-	router.StaticFile("/site.webmanifest", filepath.Join(s.config.GetServerFolder(), "s", "static", "site.webmanifest"))
-	router.StaticFile("/favicon.ico", filepath.Join(s.config.GetServerFolder(), "s", "static", "favicon.ico"))
-	router.StaticFile("/favicon-32x32.png", filepath.Join(s.config.GetServerFolder(), "s", "static", "favicon-32x32.png"))
-	router.StaticFile("/favicon-16x16.png", filepath.Join(s.config.GetServerFolder(), "s", "static", "favicon-16x16.png"))
-	router.StaticFile("/apple-touch-icon.png", filepath.Join(s.config.GetServerFolder(), "s", "static", "apple-touch-icon.png"))
-	router.StaticFile("/android-chrome-512x512.png", filepath.Join(s.config.GetServerFolder(), "s", "static", "android-chrome-512x512.png"))
-	router.StaticFile("/android-chrome-192x192.png", filepath.Join(s.config.GetServerFolder(), "s", "static", "android-chrome-192x192.png"))
+	router.StaticFile("/threagile.png", filepath.Join(s.config.GetServerFolder(), "static", "threagile.png")) // <==
+	router.StaticFile("/site.webmanifest", filepath.Join(s.config.GetServerFolder(), "static", "site.webmanifest"))
+	router.StaticFile("/favicon.ico", filepath.Join(s.config.GetServerFolder(), "static", "favicon.ico"))
+	router.StaticFile("/favicon-32x32.png", filepath.Join(s.config.GetServerFolder(), "static", "favicon-32x32.png"))
+	router.StaticFile("/favicon-16x16.png", filepath.Join(s.config.GetServerFolder(), "static", "favicon-16x16.png"))
+	router.StaticFile("/apple-touch-icon.png", filepath.Join(s.config.GetServerFolder(), "static", "apple-touch-icon.png"))
+	router.StaticFile("/android-chrome-512x512.png", filepath.Join(s.config.GetServerFolder(), "static", "android-chrome-512x512.png"))
+	router.StaticFile("/android-chrome-192x192.png", filepath.Join(s.config.GetServerFolder(), "static", "android-chrome-192x192.png"))
 
 	router.StaticFile("/schema.json", filepath.Join(s.config.GetAppFolder(), "schema.json"))
 	router.StaticFile("/live-templates.txt", filepath.Join(s.config.GetAppFolder(), "live-templates.txt"))
 	router.StaticFile("/openapi.yaml", filepath.Join(s.config.GetAppFolder(), "openapi.yaml"))
-	router.StaticFile("/swagger-ui/", filepath.Join(s.config.GetServerFolder(), "s", "static", "swagger-ui/index.html"))
-	router.StaticFile("/swagger-ui/index.html", filepath.Join(s.config.GetServerFolder(), "s", "static", "swagger-ui/index.html"))
-	router.StaticFile("/swagger-ui/oauth2-redirect.html", filepath.Join(s.config.GetServerFolder(), "s", "static", "swagger-ui/oauth2-redirect.html"))
-	router.StaticFile("/swagger-ui/swagger-ui.css", filepath.Join(s.config.GetServerFolder(), "s", "static", "swagger-ui/swagger-ui.css"))
-	router.StaticFile("/swagger-ui/swagger-ui.js", filepath.Join(s.config.GetServerFolder(), "s", "static", "swagger-ui/swagger-ui.js"))
-	router.StaticFile("/swagger-ui/swagger-ui-bundle.js", filepath.Join(s.config.GetServerFolder(), "s", "static", "swagger-ui/swagger-ui-bundle.js"))
-	router.StaticFile("/swagger-ui/swagger-ui-standalone-preset.js", filepath.Join(s.config.GetServerFolder(), "s", "static", "swagger-ui/swagger-ui-standalone-preset.js")) // <==
+	router.StaticFile("/swagger-ui/", filepath.Join(s.config.GetServerFolder(), "static", "swagger-ui/index.html"))
+	router.StaticFile("/swagger-ui/index.html", filepath.Join(s.config.GetServerFolder(), "static", "swagger-ui/index.html"))
+	router.StaticFile("/swagger-ui/oauth2-redirect.html", filepath.Join(s.config.GetServerFolder(), "static", "swagger-ui/oauth2-redirect.html"))
+	router.StaticFile("/swagger-ui/swagger-ui.css", filepath.Join(s.config.GetServerFolder(), "static", "swagger-ui/swagger-ui.css"))
+	router.StaticFile("/swagger-ui/swagger-ui.js", filepath.Join(s.config.GetServerFolder(), "static", "swagger-ui/swagger-ui.js"))
+	router.StaticFile("/swagger-ui/swagger-ui-bundle.js", filepath.Join(s.config.GetServerFolder(), "static", "swagger-ui/swagger-ui-bundle.js"))
+	router.StaticFile("/swagger-ui/swagger-ui-standalone-preset.js", filepath.Join(s.config.GetServerFolder(), "static", "swagger-ui/swagger-ui-standalone-preset.js")) // <==
 
 	router.GET("/threagile-example-model.yaml", s.exampleFile)
 	router.GET("/threagile-stub-model.yaml", s.stubFile)
