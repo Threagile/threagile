@@ -143,6 +143,7 @@ $(document).ready(function() {
     myDiagram.model = new go.GraphLinksModel(nodeDataArray, nodesLinks);
     showProjectFields(yamlData);
     showTechnicalAssets(yamlData);
+    showDataAssetsObjects(yamlData);
   }
 
   function openAssetEditor(nodeData, nodeType, title) {
@@ -165,6 +166,13 @@ $(document).ready(function() {
   function showTechnicalAssets(data) {
     const editor = new EditorGenerator(data, schema.properties, $('#technicalAssets'));
     editor.generateEditorForKeys('technical_assets', (key, value) => {
+      updateDiagramModel(diagramYaml, $('#showDataAssetsCheckBox').is(':checked'));
+    });
+  }
+
+  function showDataAssetsObjects(data) {
+    const editor = new EditorGenerator(data, schema.properties, $('#dataAssets'));
+    editor.generateEditorForKeys('data_assets', (key, value) => {
       updateDiagramModel(diagramYaml, $('#showDataAssetsCheckBox').is(':checked'));
     });
   }
