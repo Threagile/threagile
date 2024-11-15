@@ -365,4 +365,110 @@ class EditorGenerator {
         }
     }
 
+    generateEditorForObject(objectKey, callback = (key, value) => {}) {
+        this.formContainer.empty();
+        if (this.title) {
+            const title = $('<label>')
+                        .text(this.title)
+                        .addClass('property-editor-title')
+            this.formContainer.append(title);
+        }
+        for (const [key, property] of Object.entries(this.schema)) {
+            if (key !== objectKey) {
+                continue;
+            }
+
+            const label = $('<label>')
+                .text(key)
+                .addClass('property-editor-label');
+            let input;
+            const subContainer = $('<div>').addClass('property-editor-object').hide();
+            const toggleButton = $('<span>')
+                .text('>')
+                .addClass('property-editor-toggle')
+                .on('click', () => {
+                    subContainer.toggle();
+                    toggleButton.text(toggleButton.text() === '>' ? 'v' : '>');
+                });
+
+            const subObject = this.object[key] || {};
+            const extendableContainer = $('<div>').addClass('property-editor-extendable');
+            const addButton = $('<button>')
+                .text('Add Entry')
+                .on('click', () => {
+                    const newKey = prompt('Enter key for the new entry:');
+                    if (!newKey) return;
+
+                    if (property.additionalProperties?.type === 'object') {
+                        subObject[newKey] = {};
+                    } else {
+                        subObject[newKey] = '';
+                    }
+                    renderExtendableEntries();
+                    callback(key, newKey);
+                });
+
+            const renderExtendableEntries = () => {
+                extendableContainer.empty();
+
+                for (const [entryKey, entryValue] of Object.entries(subObject)) {
+                    const entryContainer = $('<div>').addClass('extendable-entry');
+
+                    // Key input
+                    const keyInput = $('<input type="text">')
+                        .addClass('property-editor-input')
+                        .val(entryKey)
+                        .on('change', () => {
+                            const newKey = keyInput.val();
+                            if (newKey !== entryKey) {
+                                delete subObject[entryKey];
+                                subObject[newKey] = entryValue;
+                            }
+                            renderExtendableEntries();
+                            callback(key, newKey);
+                        });
+
+                    // Value editor
+                    let valueEditor;
+                    if (property.additionalProperties?.type === 'object') {
+                        const entrySubEditor = new EditorGenerator(
+                            entryValue,
+                            property.additionalProperties.properties || {},
+                            $('<div>')
+                        );
+                        entrySubEditor.generateEditor();
+                        valueEditor = entrySubEditor.formContainer;
+                    } else {
+                        valueEditor = $('<input type="text">')
+                            .addClass('property-editor-input')
+                            .val(entryValue || '')
+                            .on('change', () => {
+                                subObject[entryKey] = valueEditor.val();
+                                callback(entryKey, valueEditor.val());
+                            });
+                    }
+
+                    const deleteButton = $('<button>')
+                        .text('x')
+                        .on('click', () => {
+                            delete subObject[entryKey];
+                            renderExtendableEntries();
+                            callback(entryKey, 'DELETED');
+                        });
+
+                    entryContainer.append(keyInput, valueEditor, deleteButton);
+                    extendableContainer.append(entryContainer);
+                }
+            };
+
+            renderExtendableEntries();
+            input = $('<div>')
+                .append(toggleButton, label, extendableContainer, addButton);
+
+            const fieldContainer = $('<div>').addClass('property-editor-field');
+            fieldContainer.append(label).append(input);
+            this.formContainer.append(fieldContainer);
+        }
+    }
+
 }

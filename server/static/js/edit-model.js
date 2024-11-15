@@ -144,6 +144,8 @@ $(document).ready(function() {
     showProjectFields(yamlData);
     showTechnicalAssets(yamlData);
     showDataAssetsObjects(yamlData);
+    showTrustBoundaries(yamlData);
+    showSharedRuntimes(yamlData);
   }
 
   function openAssetEditor(nodeData, nodeType, title) {
@@ -173,6 +175,20 @@ $(document).ready(function() {
   function showDataAssetsObjects(data) {
     const editor = new EditorGenerator(data, schema.properties, $('#dataAssets'));
     editor.generateEditorForKeys('data_assets', (key, value) => {
+      updateDiagramModel(diagramYaml, $('#showDataAssetsCheckBox').is(':checked'));
+    });
+  }
+
+  function showTrustBoundaries(data) {
+    const editor = new EditorGenerator(data, schema.properties, $('#trustBoundaries'));
+    editor.generateEditorForObject('trust_boundaries', (key, value) => {
+      updateDiagramModel(diagramYaml, $('#showDataAssetsCheckBox').is(':checked'));
+    });
+  }
+
+  function showSharedRuntimes(data) {
+    const editor = new EditorGenerator(data, schema.properties, $('#sharedRuntimes'));
+    editor.generateEditorForObject('shared_runtimes', (key, value) => {
       updateDiagramModel(diagramYaml, $('#showDataAssetsCheckBox').is(':checked'));
     });
   }
