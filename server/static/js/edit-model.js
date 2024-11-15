@@ -4,6 +4,9 @@ var currentFile;
 var diagramYaml;
 
 $(document).ready(function() {
+  $("#projectTabs").tabs();
+
+
   myDiagram = new go.Diagram('myDiagramDiv');
   myDiagram.layout = new go.LayeredDigraphLayout({
     layerSpacing: 50,
@@ -76,10 +79,7 @@ $(document).ready(function() {
     var type = evt.clickCount === 2 ? 'Double-Clicked: ' : 'Clicked: ';
     console.log(type + 'on ' + node);
     if (evt.clickCount === 2) {
-      var editorSchema = node.data.type === 'data_asset' ?
-                            schema.properties.data_assets.additionalProperties.properties :
-                            schema.properties.technical_assets.additionalProperties.properties;
-      openPropertyEditor(node.data.threagile_model, 'itemPropertyEditor', editorSchema);
+      openAssetEditor(node.data.threagile_model, node.data.type, node.data.caption);
     }
   }
 
@@ -141,17 +141,31 @@ $(document).ready(function() {
     }
 
     myDiagram.model = new go.GraphLinksModel(nodeDataArray, nodesLinks);
-    openPropertyEditor(yamlData, 'projectInfo', schema.properties);
+    showProjectFields(yamlData);
+    showTechnicalAssets(yamlData);
   }
 
-  function openPropertyEditor(nodeData, id, schema) {
+  function openAssetEditor(nodeData, nodeType, title) {
+    var editorSchema = nodeType === 'data_asset' ?
+          schema.properties.data_assets.additionalProperties.properties :
+          schema.properties.technical_assets.additionalProperties.properties;
+    const classEditor = new EditorGenerator(nodeData, editorSchema, $('#itemPropertyEditor'), title);
+    classEditor.generateEditor();
+  }
 
-    const classEditor = new EditorGenerator(nodeData, schema, $('#' + id));
-    // TODO: do not hard code hidden properties
+  function showProjectFields(nodeData) {
+    const classEditor = new EditorGenerator(nodeData, schema.properties, $('#projectInfo'));
     const hiddenProperties = ['communication_links', 'data_assets_processed', 'data_assets_stored',
       'data_assets_sent', 'data_assets_received', 'data_assets', 'technical_assets',
-      'trust_boundaries', 'shared_runtimes', 'individual_risk_categories'];
+      'trust_boundaries', 'shared_runtimes', 'individual_risk_categories', 'includes'];
     const extendableProperties = ['questions', 'abuse_cases', 'security_requirements', 'risk_tracking'];
     classEditor.generateEditor(hiddenProperties, extendableProperties);
+  }
+
+  function showTechnicalAssets(data) {
+    const editor = new EditorGenerator(data, schema.properties, $('#technicalAssets'));
+    editor.generateEditorForKeys('technical_assets', (key, value) => {
+        console.log(`Updated ${key} to ${value}`);
+    });
   }
 });

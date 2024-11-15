@@ -1,13 +1,19 @@
 class EditorGenerator {
-    constructor(object, schema, formContainer) {
+    constructor(object, schema, formContainer, title) {
         this.object = object;
         this.schema = schema;
         this.formContainer = formContainer;
+        this.title = title;
     }
 
-    generateEditor(ignoreFields = [], extendableProperties = []) {
+    generateEditor(ignoreFields = [], extendableProperties = [], callback = (key, value) => {}) {
         this.formContainer.empty();
-
+        if (this.title) {
+            const title = $('<label>')
+                        .text(this.title)
+                        .addClass('property-editor-title')
+            this.formContainer.append(title);
+        }
         for (const [key, property] of Object.entries(this.schema)) {
             if (ignoreFields.includes(key)) {
                 continue;
@@ -27,6 +33,7 @@ class EditorGenerator {
                             .val(this.object[key] || '')
                             .on('change', () => {
                                 this.object[key] = input.val();
+                                callback(key, input.val());
                             });
                         input.datepicker();
                     } else if (property.enum) {
@@ -34,6 +41,7 @@ class EditorGenerator {
                             .addClass('property-editor-input')
                             .on('change', () => {
                                 this.object[key] = input.val();
+                                callback(key, input.val());
                             });
                         property.enum.forEach((option) => {
                             input.append($('<option>').val(option).text(option));
@@ -44,6 +52,7 @@ class EditorGenerator {
                             .val(this.object[key] || '')
                             .on('change', () => {
                                 this.object[key] = input.val();
+                                callback(key, input.val());
                             });
                     }
                     break;
@@ -57,6 +66,7 @@ class EditorGenerator {
                         .attr('max', property.maximum || null)
                         .on('input', () => {
                             this.object[key] = parseFloat(input.val());
+                            callback(key, input.val());
                         });
                     break;
 
@@ -66,6 +76,7 @@ class EditorGenerator {
                         .prop('checked', this.object[key] || false)
                         .on('change', () => {
                             this.object[key] = input.is(':checked');
+                            callback(key, input.val());
                         });
                     break;
 
@@ -96,6 +107,7 @@ class EditorGenerator {
                                     subObject[newKey] = '';
                                 }
                                 renderExtendableEntries();
+                                callback(key, newKey);
                             });
 
                         const renderExtendableEntries = () => {
@@ -115,6 +127,7 @@ class EditorGenerator {
                                             subObject[newKey] = entryValue;
                                         }
                                         renderExtendableEntries();
+                                        callback(key, newKey);
                                     });
 
                                 // Value editor
@@ -133,6 +146,7 @@ class EditorGenerator {
                                         .val(entryValue || '')
                                         .on('change', () => {
                                             subObject[entryKey] = valueEditor.val();
+                                            callback(entryKey, valueEditor.val());
                                         });
                                 }
 
@@ -141,6 +155,7 @@ class EditorGenerator {
                                     .on('click', () => {
                                         delete subObject[entryKey];
                                         renderExtendableEntries();
+                                        callback(entryKey, 'DELETED');
                                     });
 
                                 entryContainer.append(keyInput, valueEditor, deleteButton);
@@ -180,6 +195,7 @@ class EditorGenerator {
                                 .on('click', () => {
                                     arrayItems.splice(index, 1);
                                     renderArrayItems();
+                                    callback(key + '[' + index + ']', 'DELETED');
                                 });
 
                             if (itemSchema.enum) {
@@ -188,6 +204,7 @@ class EditorGenerator {
                                     .addClass('property-editor-input')
                                     .on('change', () => {
                                         arrayItems[index] = select.val();
+                                        callback(key + '[' + index + ']', selec.val());
                                     });
 
                                 itemSchema.enum.forEach((option) => {
@@ -206,6 +223,7 @@ class EditorGenerator {
                                     .val(item || '')
                                     .on('change', () => {
                                         arrayItems[index] = input.val();
+                                        callback(key + '[' + index + ']', input.val());
                                     });
                                 itemContainer.append(input);
                             } else if (itemSchema.type === 'number' || itemSchema.type === 'integer') {
@@ -215,6 +233,7 @@ class EditorGenerator {
                                     .val(item !== undefined ? item : '')
                                     .on('input', () => {
                                         arrayItems[index] = parseFloat(input.val());
+                                        callback(key + '[' + index + ']', input.val());
                                     });
                                 itemContainer.append(input);
                             } else if (itemSchema.type === 'object' || itemSchema.properties) {
@@ -239,6 +258,7 @@ class EditorGenerator {
                     const addButton = $('<button>')
                         .text('Add')
                         .on('click', () => {
+                            callback(key, 'added');
                             if (itemSchema.enum) {
                                 arrayItems.push(itemSchema.enum[0]); // Default to the first enum value
                             } else if (itemSchema.type === 'object') {
@@ -273,4 +293,76 @@ class EditorGenerator {
             this.formContainer.append(fieldContainer);
         }
     }
+
+    generateEditorForKeys(objectKey, callback = (key, value) => {}) {
+        this.formContainer.empty();
+        if (this.title) {
+            const title = $('<label>')
+                        .text(this.title)
+                        .addClass('property-editor-title')
+            this.formContainer.append(title);
+        }
+        for (const [key, property] of Object.entries(this.schema)) {
+            if (key !== objectKey) {
+                continue;
+            }
+
+            let input;
+            const subObject = this.object[key] || {};
+            const extendableContainer = $('<div>').addClass('property-editor-extendable');
+            const addButton = $('<button>')
+                .text('Add Entry')
+                .on('click', () => {
+                    const newKey = prompt('Enter key for the new entry:');
+                    if (!newKey) {
+                        return;
+                    }
+                    subObject[newKey] = {};
+                    renderExtendableEntries();
+                    callback(key, newKey);
+                });
+
+            const renderExtendableEntries = () => {
+                extendableContainer.empty();
+
+                for (const [entryKey, entryValue] of Object.entries(subObject)) {
+                    const entryContainer = $('<div>').addClass('extendable-entry');
+
+                    // Key input
+                    const keyInput = $('<input type="text">')
+                        .addClass('property-editor-input')
+                        .val(entryKey)
+                        .on('change', () => {
+                            const newKey = keyInput.val();
+                            if (newKey !== entryKey) {
+                                delete subObject[entryKey];
+                                subObject[newKey] = entryValue;
+                            }
+                            renderExtendableEntries();
+                            callback(key, newKey);
+                        });
+
+                    const deleteButton = $('<button>')
+                        .text('x')
+                        .on('click', () => {
+                            delete subObject[entryKey];
+                            renderExtendableEntries();
+                            callback(entryKey, 'DELETED');
+                        });
+
+                    entryContainer.append(keyInput, deleteButton);
+                    extendableContainer.append(entryContainer);
+                }
+            };
+
+            renderExtendableEntries();
+            input = $('<div>')
+                .append(extendableContainer, addButton);
+
+            const fieldContainer = $('<div>').addClass('property-editor-field');
+            fieldContainer.append(input);
+            this.formContainer.append(fieldContainer);
+        }
+    }
+
 }
