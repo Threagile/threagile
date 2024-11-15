@@ -165,7 +165,7 @@ $(document).ready(function() {
   function showTechnicalAssets(data) {
     const editor = new EditorGenerator(data, schema.properties, $('#technicalAssets'));
     editor.generateEditorForKeys('technical_assets', (key, value) => {
-        console.log(`Updated ${key} to ${value}`);
+      updateDiagramModel(diagramYaml, $('#showDataAssetsCheckBox').is(':checked'));
     });
   }
 });
