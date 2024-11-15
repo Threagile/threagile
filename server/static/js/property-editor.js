@@ -96,7 +96,7 @@ class EditorGenerator {
                 case 'array': {
                     const arrayContainer = $('<div>').addClass('property-editor-array');
                     const arrayItems = this.object[key] || [];
-                    const itemSchema = property.items || {};
+                    const itemSchema = property.items || { type: 'string' }; // Default to strings if items schema is missing
 
                     const renderArrayItems = () => {
                         arrayContainer.empty();
@@ -112,6 +112,7 @@ class EditorGenerator {
                                 });
 
                             if (itemSchema.enum) {
+                                // Handle array of enums (dropdowns)
                                 const select = $('<select>')
                                     .addClass('property-editor-input')
                                     .on('change', () => {
@@ -172,7 +173,7 @@ class EditorGenerator {
                             } else if (itemSchema.type === 'object') {
                                 arrayItems.push({});
                             } else if (itemSchema.type === 'string') {
-                                arrayItems.push('');
+                                arrayItems.push(''); // Default to empty string
                             } else if (itemSchema.type === 'number' || itemSchema.type === 'integer') {
                                 arrayItems.push(0); // Default value for numbers
                             } else {
