@@ -111,13 +111,24 @@ class EditorGenerator {
                                     renderArrayItems();
                                 });
 
-                            if (itemSchema.type === 'object' || itemSchema.properties) {
-                                // Handle array of objects
-                                const subEditor = new EditorGenerator(arrayItems[index], itemSchema.properties, '');
-                                subEditor.formContainer = itemContainer; // Set the container manually
-                                subEditor.generateEditor();
+                            if (itemSchema.enum) {
+                                const select = $('<select>')
+                                    .addClass('property-editor-input')
+                                    .on('change', () => {
+                                        arrayItems[index] = select.val();
+                                    });
+
+                                itemSchema.enum.forEach((option) => {
+                                    const optionElement = $('<option>')
+                                        .val(option)
+                                        .text(option)
+                                        .prop('selected', item === option);
+                                    select.append(optionElement);
+                                });
+
+                                itemContainer.append(select);
                             } else if (itemSchema.type === 'string') {
-                                // Handle array of strings
+                                // Handle array of strings (text input)
                                 const input = $('<input type="text">')
                                     .addClass('property-editor-input')
                                     .val(item || '')
@@ -134,6 +145,11 @@ class EditorGenerator {
                                         arrayItems[index] = parseFloat(input.val());
                                     });
                                 itemContainer.append(input);
+                            } else if (itemSchema.type === 'object' || itemSchema.properties) {
+                                // Handle array of objects
+                                const subEditor = new EditorGenerator(arrayItems[index], itemSchema.properties, '');
+                                subEditor.formContainer = itemContainer; // Set the container manually
+                                subEditor.generateEditor();
                             } else {
                                 // Fallback for unsupported item types
                                 itemContainer.append(
@@ -149,20 +165,22 @@ class EditorGenerator {
                     };
 
                     const addButton = $('<button>')
-                                .text('Add')
-                                .on('click', () => {
-                                    if (itemSchema.type === 'object') {
-                                        arrayItems.push({});
-                                    } else if (itemSchema.type === 'string') {
-                                        arrayItems.push('');
-                                    } else if (itemSchema.type === 'number' || itemSchema.type === 'integer') {
-                                        arrayItems.push(0); // Default value for numbers
-                                    } else {
-                                        console.warn('Unsupported item type for addition:', itemSchema.type);
-                                        return;
-                                    }
-                                    renderArrayItems();
-                                });
+                        .text('Add')
+                        .on('click', () => {
+                            if (itemSchema.enum) {
+                                arrayItems.push(itemSchema.enum[0]); // Default to the first enum value
+                            } else if (itemSchema.type === 'object') {
+                                arrayItems.push({});
+                            } else if (itemSchema.type === 'string') {
+                                arrayItems.push('');
+                            } else if (itemSchema.type === 'number' || itemSchema.type === 'integer') {
+                                arrayItems.push(0); // Default value for numbers
+                            } else {
+                                console.warn('Unsupported item type for addition:', itemSchema.type);
+                                return;
+                            }
+                            renderArrayItems();
+                        });
 
                     renderArrayItems();
                     input = $('<div>')
@@ -182,22 +200,5 @@ class EditorGenerator {
             fieldContainer.append(label).append(input);
             this.formContainer.append(fieldContainer);
         }
-    }
-
-    getValues() {
-        const values = {};
-        this.formContainer.find('.property-editor-field').each(function() {
-            const key = $(this).find('.property-editor-label').text();
-            const input = $(this).find('.property-editor-input, .property-editor-checkbox');
-
-            if (input.attr('type') === 'checkbox') {
-                values[key] = input.is(':checked');
-            } else if (input.attr('type') === 'number') {
-                values[key] = parseFloat(input.val());
-            } else {
-                values[key] = input.val();
-            }
-        });
-        return values;
     }
 }
