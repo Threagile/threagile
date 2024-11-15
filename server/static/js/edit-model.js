@@ -145,7 +145,8 @@ $(document).ready(function() {
   }
 
   function openPropertyEditor(nodeData, id, schema) {
-    const classEditor = new EditorGenerator(nodeData, schema, id);
+
+    const classEditor = new EditorGenerator(nodeData, schema, $('#' + id));
     // TODO: do not hard code hidden properties
     classEditor.generateEditor(['communication_links', 'data_assets_processed', 'data_assets_stored',
       'data_assets_sent', 'data_assets_received', 'data_assets', 'technical_assets',

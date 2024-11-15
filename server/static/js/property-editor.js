@@ -1,11 +1,11 @@
 class EditorGenerator {
-    constructor(object, schema, formContainerId) {
+    constructor(object, schema, formContainer) {
         this.object = object;
         this.schema = schema;
-        this.formContainer = $('#' + formContainerId);
+        this.formContainer = formContainer;
     }
 
-    generateEditor(ignoreFields) {
+    generateEditor(ignoreFields = []) {
         this.formContainer.empty();
 
         for (const [key, property] of Object.entries(this.schema)) {
@@ -13,16 +13,11 @@ class EditorGenerator {
                 continue;
             }
 
-            const label = $('<label>').text(key).addClass('property-editor-label');
+            const label = $('<label>')
+                .text(key)
+                .addClass('property-editor-label');
             let input;
-
-            let propertyType = property.type;
-            if (Array.isArray(property.type)) {
-                propertyType = property.type[0];
-                if (propertyType === 'array') {
-                    propertyType = 'arrayOf ' + property.items.type;
-                }
-            }
+            const propertyType = Array.isArray(property.type) ? property.type[0] : property.type;
 
             switch (propertyType) {
                 case 'string':
@@ -32,9 +27,7 @@ class EditorGenerator {
                             .val(this.object[key] || '')
                             .on('change', () => {
                                 this.object[key] = input.val();
-                            });;
-
-                        // Use jQuery UI datepicker
+                            });
                         input.datepicker();
                     } else if (property.enum) {
                         input = $('<select>')
@@ -42,7 +35,6 @@ class EditorGenerator {
                             .on('change', () => {
                                 this.object[key] = input.val();
                             });
-
                         property.enum.forEach((option) => {
                             input.append($('<option>').val(option).text(option));
                         });
@@ -52,7 +44,7 @@ class EditorGenerator {
                             .val(this.object[key] || '')
                             .on('change', () => {
                                 this.object[key] = input.val();
-                            });;
+                            });
                     }
                     break;
 
@@ -77,8 +69,113 @@ class EditorGenerator {
                         });
                     break;
 
+                case 'object': {
+                    const subContainer = $('<div>').addClass('property-editor-object').hide();
+                    const toggleButton = $('<span>')
+                        .text('>')
+                        .addClass('property-editor-toggle')
+                        .on('click', () => {
+                            subContainer.toggle();
+                            toggleButton.text(toggleButton.text() === '>' ? 'v' : '>');
+                        });
+
+                    const subObject = this.object[key] || {};
+                    const subSchema = property.properties || {};
+
+                    const subEditor = new EditorGenerator(subObject, subSchema, '');
+                    subEditor.formContainer = subContainer; // Set the container manually
+                    subEditor.generateEditor();
+
+                    this.object[key] = subObject;
+
+                    input = $('<div>')
+                        .append(toggleButton, label, subContainer);
+                    break;
+                }
+
+                case 'array': {
+                    const arrayContainer = $('<div>').addClass('property-editor-array');
+                    const arrayItems = this.object[key] || [];
+                    const itemSchema = property.items || {};
+
+                    const renderArrayItems = () => {
+                        arrayContainer.empty();
+
+                        arrayItems.forEach((item, index) => {
+                            const itemContainer = $('<div>').addClass('array-item');
+                            const deleteButton = $('<button>')
+                                .text('x')
+                                .addClass('array-item-delete')
+                                .on('click', () => {
+                                    arrayItems.splice(index, 1);
+                                    renderArrayItems();
+                                });
+
+                            if (itemSchema.type === 'object' || itemSchema.properties) {
+                                // Handle array of objects
+                                const subEditor = new EditorGenerator(arrayItems[index], itemSchema.properties, '');
+                                subEditor.formContainer = itemContainer; // Set the container manually
+                                subEditor.generateEditor();
+                            } else if (itemSchema.type === 'string') {
+                                // Handle array of strings
+                                const input = $('<input type="text">')
+                                    .addClass('property-editor-input')
+                                    .val(item || '')
+                                    .on('change', () => {
+                                        arrayItems[index] = input.val();
+                                    });
+                                itemContainer.append(input);
+                            } else if (itemSchema.type === 'number' || itemSchema.type === 'integer') {
+                                // Handle array of numbers
+                                const input = $('<input type="number">')
+                                    .addClass('property-editor-input')
+                                    .val(item !== undefined ? item : '')
+                                    .on('input', () => {
+                                        arrayItems[index] = parseFloat(input.val());
+                                    });
+                                itemContainer.append(input);
+                            } else {
+                                // Fallback for unsupported item types
+                                itemContainer.append(
+                                    $('<label>')
+                                        .text('Unsupported item type: ' + (itemSchema.type || 'unknown'))
+                                        .addClass('property-editor-label')
+                                );
+                            }
+
+                            itemContainer.append(deleteButton);
+                            arrayContainer.append(itemContainer);
+                        });
+                    };
+
+                    const addButton = $('<button>')
+                                .text('Add')
+                                .on('click', () => {
+                                    if (itemSchema.type === 'object') {
+                                        arrayItems.push({});
+                                    } else if (itemSchema.type === 'string') {
+                                        arrayItems.push('');
+                                    } else if (itemSchema.type === 'number' || itemSchema.type === 'integer') {
+                                        arrayItems.push(0); // Default value for numbers
+                                    } else {
+                                        console.warn('Unsupported item type for addition:', itemSchema.type);
+                                        return;
+                                    }
+                                    renderArrayItems();
+                                });
+
+                    renderArrayItems();
+                    input = $('<div>')
+                        .append(arrayContainer, addButton);
+
+                    this.object[key] = arrayItems;
+                    break;
+                }
+
                 default:
-                    input = $('<label>').text('Unsupported type ' + propertyType).addClass('property-editor-label');
+                    input = $('<label>')
+                        .text('Unsupported type ' + propertyType)
+                        .addClass('property-editor-label');
             }
 
             const fieldContainer = $('<div>').addClass('property-editor-field');
