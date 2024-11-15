@@ -148,8 +148,10 @@ $(document).ready(function() {
 
     const classEditor = new EditorGenerator(nodeData, schema, $('#' + id));
     // TODO: do not hard code hidden properties
-    classEditor.generateEditor(['communication_links', 'data_assets_processed', 'data_assets_stored',
+    const hiddenProperties = ['communication_links', 'data_assets_processed', 'data_assets_stored',
       'data_assets_sent', 'data_assets_received', 'data_assets', 'technical_assets',
-      'trust_boundaries', 'shared_runtimes', 'individual_risk_categories']);
+      'trust_boundaries', 'shared_runtimes', 'individual_risk_categories'];
+    const extendableProperties = ['questions', 'abuse_cases', 'security_requirements', 'risk_tracking'];
+    classEditor.generateEditor(hiddenProperties, extendableProperties);
   }
 });
