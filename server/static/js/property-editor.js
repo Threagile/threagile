@@ -151,7 +151,7 @@ class EditorGenerator {
                                         '',
                                         this.customEnumFields
                                     );
-                                    entrySubEditor.generateEditor();
+                                    entrySubEditor.generateEditor(ignoreFields, extendableProperties, callback);
                                     valueEditor = entrySubEditor.formContainer;
                                 } else {
                                     valueEditor = $('<input type="text">')
@@ -183,7 +183,7 @@ class EditorGenerator {
                     } else {
                         const subEditor = new EditorGenerator(subObject, subSchema, '', '', this.customEnumFields);
                         subEditor.formContainer = subContainer; // Set the container manually
-                        subEditor.generateEditor();
+                        subEditor.generateEditor(ignoreFields, extendableProperties, callback);
                         this.object[key] = subObject;
 
                         input = $('<div>')
@@ -272,7 +272,7 @@ class EditorGenerator {
                                 // Handle array of objects
                                 const subEditor = new EditorGenerator(arrayItems[index], itemSchema.properties, '', '', this.customEnumFields);
                                 subEditor.formContainer = itemContainer; // Set the container manually
-                                subEditor.generateEditor();
+                                subEditor.generateEditor(ignoreFields, extendableProperties, callback);
                             } else {
                                 // Fallback for unsupported item types
                                 itemContainer.append(
@@ -459,7 +459,7 @@ class EditorGenerator {
                             '',
                             customEnumFields
                         );
-                        entrySubEditor.generateEditor();
+                        entrySubEditor.generateEditor([], [], callback);
                         valueEditor = entrySubEditor.formContainer;
                     } else {
                         valueEditor = $('<input type="text">')

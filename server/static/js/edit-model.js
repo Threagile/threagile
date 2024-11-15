@@ -182,6 +182,7 @@ $(document).ready(function() {
   function showTrustBoundaries(data) {
     const editor = new EditorGenerator(data, schema.properties, $('#trustBoundaries'), undefined, generateEnumFields());
     editor.generateEditorForObject('trust_boundaries', (key, value) => {
+      console.log('trust_boundaries changed + ' + key + ' = ' + value);
       updateDiagramModel(diagramYaml, $('#showDataAssetsCheckBox').is(':checked'));
     });
   }
