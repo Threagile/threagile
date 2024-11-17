@@ -14,8 +14,6 @@ import (
 
 type customRiskRule string
 
-// exported as symbol (here simply as variable to interface to bundle many functions under one symbol) named "RiskRule"
-
 func main() {
 	getInfo := flag.Bool("get-info", false, "get rule info")
 	generateRisks := flag.Bool("generate-risks", false, "generate risks")
