@@ -2,20 +2,35 @@
 
 [![Threagile Community Chat](https://badges.gitter.im/Threagile/community.svg)](https://gitter.im/Threagile/community)
 
-#### Agile Threat Modeling Toolkit
-Threagile (see [https://threagile.io](https://threagile.io) for more details) is an open-source toolkit for
+## Agile Threat Modeling Toolkit
+Threagile (see [threagile.io](https://threagile.io) for more details) is an open-source toolkit for
 agile threat modeling:
 
 It allows to model an architecture with its assets in an agile fashion as a YAML file directly inside the IDE.
 Upon execution of the Threagile toolkit all standard risk rules (as well as individual custom rules if present)
-are checked against the architecture model.
+are checked against the architecture model. You can find more information about model schema [here](./docs/model.md).
 
+The tool have various [commands](./docs/commands.md) and is highly configurable via [flags](./docs/flags.md) and [config](./docs/config.md).
 
-#### Execution via Docker Container
+We know that modifying yaml file via text editor may be tough and to simplify it we introduced:
+
+- [includes](./docs/includes.md)
+- [macros](./docs/macros.md)
+
+Efforts on UI are ongoing and there are few attempts to do it although that is far from being ready.
+
+[Here](./docs/how-to.md) may be useful use cases on how others are using the tool and may be helpful to simplify onboarding of Threagile tool for your team.
+
+## Execution via Docker Container
 The easiest way to execute Threagile on the commandline is via its Docker container:
 
+```shell
     docker run --rm -it threagile/threagile --help
+```
 
+Which will give you an output with possible flags that can be used with Threagile.
+
+```
       _____ _                          _ _
      |_   _| |__  _ __ ___  __ _  __ _(_) | ___
        | | | '_ \| '__/ _ \/ _` |/ _` | | |/ _ \
@@ -118,3 +133,14 @@ The easiest way to execute Threagile on the commandline is via its Docker contai
 
     If you want to execute a certain model macro on the model yaml file (here the macro add-build-pipeline):
      docker run --rm -it -v "$(pwd)":/app/work threagile/threagile --model /app/work/threagile.yaml --output /app/work --execute-model-macro add-build-pipeline
+```
+
+## Releases
+
+The information about releases can be found at [releases page](./docs/releases.md).
+
+## Contribution
+
+You are very welcome to contribute into the project in any way. If you'd like to add new feature or fix the bug in the code base  please follow [contribution guide](./CONTRIBUTING.md).
+
+Otherwise please create GitHub discussion or issue and contributors will find some time to respond.

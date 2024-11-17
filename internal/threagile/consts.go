@@ -1,9 +1,8 @@
 package threagile
 
 const (
-	TempDir   = "/dev/shm" // TODO: make configurable via cmdline arg?
+	TempDir   = "/dev/shm"
 	AppDir    = "/app"
-	PluginDir = "/app"
 	DataDir   = "/data"
 	OutputDir = "."
 	ServerDir = "/server"
