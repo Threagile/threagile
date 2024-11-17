@@ -243,13 +243,13 @@ func WriteDataFlowDiagramGraphvizDOT(parsedModel *types.Model,
 
 	diagramInvisibleConnectionsTweaks, err := makeDiagramInvisibleConnectionsTweaks(parsedModel)
 	if err != nil {
-		return nil, fmt.Errorf("error while making diagram invisible connections tweaks: %s", err)
+		return nil, fmt.Errorf("error while making diagram invisible connections tweaks: %w", err)
 	}
 	dotContent.WriteString(diagramInvisibleConnectionsTweaks)
 
 	diagramSameRankNodeTweaks, err := makeDiagramSameRankNodeTweaks(parsedModel)
 	if err != nil {
-		return nil, fmt.Errorf("error while making diagram same-rank node tweaks: %s", err)
+		return nil, fmt.Errorf("error while making diagram same-rank node tweaks: %w", err)
 	}
 	dotContent.WriteString(diagramSameRankNodeTweaks)
 
@@ -260,12 +260,12 @@ func WriteDataFlowDiagramGraphvizDOT(parsedModel *types.Model,
 	// Write the DOT file
 	file, err := os.Create(filepath.Clean(diagramFilenameDOT))
 	if err != nil {
-		return nil, fmt.Errorf("error creating %s: %v", diagramFilenameDOT, err)
+		return nil, fmt.Errorf("error creating %s: %w", diagramFilenameDOT, err)
 	}
 	defer func() { _ = file.Close() }()
 	_, err = fmt.Fprintln(file, dotContent.String())
 	if err != nil {
-		return nil, fmt.Errorf("error writing %s: %v", diagramFilenameDOT, err)
+		return nil, fmt.Errorf("error writing %s: %w", diagramFilenameDOT, err)
 	}
 	return file, nil
 }
@@ -399,7 +399,7 @@ func GenerateDataFlowDiagramGraphvizImage(dotFile *os.File, targetDir string,
 	// tmp files
 	tmpFileDOT, err := os.CreateTemp(tempFolder, "diagram-*-.gv")
 	if err != nil {
-		return fmt.Errorf("error creating temp file: %v", err)
+		return fmt.Errorf("error creating temp file: %w", err)
 	}
 	if !keepGraphVizDataFile {
 		defer func() { _ = os.Remove(tmpFileDOT.Name()) }()
@@ -407,7 +407,7 @@ func GenerateDataFlowDiagramGraphvizImage(dotFile *os.File, targetDir string,
 
 	tmpFilePNG, err := os.CreateTemp(tempFolder, "diagram-*-.png")
 	if err != nil {
-		return fmt.Errorf("error creating temp file: %v", err)
+		return fmt.Errorf("error creating temp file: %w", err)
 	}
 	if !keepGraphVizDataFile {
 		defer func() { _ = os.Remove(tmpFilePNG.Name()) }()
@@ -416,11 +416,11 @@ func GenerateDataFlowDiagramGraphvizImage(dotFile *os.File, targetDir string,
 	// copy into tmp file as input
 	inputDOT, err := os.ReadFile(dotFile.Name())
 	if err != nil {
-		return fmt.Errorf("error reading %s: %v", dotFile.Name(), err)
+		return fmt.Errorf("error reading %s: %w", dotFile.Name(), err)
 	}
 	err = os.WriteFile(tmpFileDOT.Name(), inputDOT, 0600)
 	if err != nil {
-		return fmt.Errorf("error creating %s: %v", tmpFileDOT.Name(), err)
+		return fmt.Errorf("error creating %s: %w", tmpFileDOT.Name(), err)
 	}
 
 	// exec
@@ -430,16 +430,16 @@ func GenerateDataFlowDiagramGraphvizImage(dotFile *os.File, targetDir string,
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
 	if err != nil {
-		return fmt.Errorf("graph rendering call failed with error: %v", err)
+		return fmt.Errorf("graph rendering call failed with error: %w", err)
 	}
 	// copy into resulting file
 	inputPNG, err := os.ReadFile(tmpFilePNG.Name())
 	if err != nil {
-		return fmt.Errorf("failed to copy to file %s: %v", tmpFilePNG.Name(), err)
+		return fmt.Errorf("failed to copy to file %s: %w", tmpFilePNG.Name(), err)
 	}
 	err = os.WriteFile(filepath.Join(targetDir, dataFlowDiagramFilenamePNG), inputPNG, 0600)
 	if err != nil {
-		return fmt.Errorf("failed to create %s: %v", filepath.Join(targetDir, dataFlowDiagramFilenamePNG), err)
+		return fmt.Errorf("failed to create %s: %w", filepath.Join(targetDir, dataFlowDiagramFilenamePNG), err)
 	}
 	return nil
 }
@@ -455,11 +455,10 @@ func makeDiagramSameRankNodeTweaks(parsedModel *types.Model) (string, error) {
 				for _, id := range assetIDs {
 					err := parsedModel.CheckTechnicalAssetExists(id, "diagram tweak same-rank", true)
 					if err != nil {
-						return "", fmt.Errorf("error while checking technical asset existence: %s", err)
+						return "", fmt.Errorf("error while checking technical asset existence: %w", err)
 					}
 					if len(parsedModel.GetTechnicalAssetTrustBoundaryId(parsedModel.TechnicalAssets[id])) > 0 {
-						return "", fmt.Errorf("technical assets (referenced in same rank diagram tweak) are inside trust boundaries: " +
-							fmt.Sprintf("%v", parsedModel.DiagramTweakSameRankAssets))
+						return "", fmt.Errorf("technical assets (referenced in same rank diagram tweak) are inside trust boundaries: %v", parsedModel.DiagramTweakSameRankAssets)
 					}
 					tweak += " " + hash(id) + "; "
 				}
@@ -479,11 +478,11 @@ func makeDiagramInvisibleConnectionsTweaks(parsedModel *types.Model) (string, er
 			if len(assetIDs) == 2 {
 				err := parsedModel.CheckTechnicalAssetExists(assetIDs[0], "diagram tweak connections", true)
 				if err != nil {
-					return "", fmt.Errorf("error while checking technical asset existence: %s", err)
+					return "", fmt.Errorf("error while checking technical asset existence: %w", err)
 				}
 				err = parsedModel.CheckTechnicalAssetExists(assetIDs[1], "diagram tweak connections", true)
 				if err != nil {
-					return "", fmt.Errorf("error while checking technical asset existence: %s", err)
+					return "", fmt.Errorf("error while checking technical asset existence: %w", err)
 				}
 
 				tweak += "\n" + hash(assetIDs[0]) + " -> " + hash(assetIDs[1]) + " [style=invis]; \n"
@@ -574,12 +573,12 @@ func WriteDataAssetDiagramGraphvizDOT(parsedModel *types.Model, diagramFilenameD
 	// Write the DOT file
 	file, err := os.Create(filepath.Clean(diagramFilenameDOT))
 	if err != nil {
-		return nil, fmt.Errorf("error creating %s: %v", diagramFilenameDOT, err)
+		return nil, fmt.Errorf("error creating %s: %w", diagramFilenameDOT, err)
 	}
 	defer func() { _ = file.Close() }()
 	_, err = fmt.Fprintln(file, dotContent.String())
 	if err != nil {
-		return nil, fmt.Errorf("error writing %s: %v", diagramFilenameDOT, err)
+		return nil, fmt.Errorf("error writing %s: %w", diagramFilenameDOT, err)
 	}
 	return file, nil
 }
@@ -848,24 +847,24 @@ func GenerateDataAssetDiagramGraphvizImage(dotFile *os.File, targetDir string,
 	// tmp files
 	tmpFileDOT, err := os.CreateTemp(tempFolder, "diagram-*-.gv")
 	if err != nil {
-		return fmt.Errorf("error creating temp file: %v", err)
+		return fmt.Errorf("error creating temp file: %w", err)
 	}
 	defer func() { _ = os.Remove(tmpFileDOT.Name()) }()
 
 	tmpFilePNG, err := os.CreateTemp(tempFolder, "diagram-*-.png")
 	if err != nil {
-		return fmt.Errorf("error creating temp file: %v", err)
+		return fmt.Errorf("error creating temp file: %w", err)
 	}
 	defer func() { _ = os.Remove(tmpFilePNG.Name()) }()
 
 	// copy into tmp file as input
 	inputDOT, err := os.ReadFile(dotFile.Name())
 	if err != nil {
-		return fmt.Errorf("error reading %s: %v", dotFile.Name(), err)
+		return fmt.Errorf("error reading %s: %w", dotFile.Name(), err)
 	}
 	err = os.WriteFile(tmpFileDOT.Name(), inputDOT, 0600)
 	if err != nil {
-		return fmt.Errorf("error creating %s: %v", tmpFileDOT.Name(), err)
+		return fmt.Errorf("error creating %s: %w", tmpFileDOT.Name(), err)
 	}
 
 	// exec
@@ -874,16 +873,16 @@ func GenerateDataAssetDiagramGraphvizImage(dotFile *os.File, targetDir string,
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
 	if err != nil {
-		return fmt.Errorf("graph rendering call failed with error: %v", err)
+		return fmt.Errorf("graph rendering call failed with error: %w", err)
 	}
 	// copy into resulting file
 	inputPNG, err := os.ReadFile(tmpFilePNG.Name())
 	if err != nil {
-		return fmt.Errorf("failed to copy to file %s: %v", tmpFilePNG.Name(), err)
+		return fmt.Errorf("failed to copy to file %s: %w", tmpFilePNG.Name(), err)
 	}
 	err = os.WriteFile(filepath.Join(targetDir, dataAssetDiagramFilenamePNG), inputPNG, 0600)
 	if err != nil {
-		return fmt.Errorf("failed to create %s: %v", filepath.Join(targetDir, dataAssetDiagramFilenamePNG), err)
+		return fmt.Errorf("failed to create %s: %w", filepath.Join(targetDir, dataAssetDiagramFilenamePNG), err)
 	}
 	return nil
 }

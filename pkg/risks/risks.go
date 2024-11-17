@@ -3,10 +3,10 @@ package risks
 import (
 	"embed"
 	"fmt"
+	"github.com/threagile/threagile/pkg/risks/script"
 	"io/fs"
 
 	"github.com/threagile/threagile/pkg/risks/builtin"
-	"github.com/threagile/threagile/pkg/risks/script"
 	"github.com/threagile/threagile/pkg/types"
 )
 

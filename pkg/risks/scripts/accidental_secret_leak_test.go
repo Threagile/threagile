@@ -66,7 +66,7 @@ func TestAccidentalSecretLeakRuleGenerateRisksTechAssetNotContainSecretsNotRisks
 // 			"ta1": {
 // 				Technologies: types.TechnologyList{
 // 					{
-// 						Path: "git repository",
+// 						Name: "git repository",
 // 						Attributes: map[string]bool{
 // 							types.MayContainSecrets: true,
 // 						},
@@ -91,7 +91,7 @@ func TestAccidentalSecretLeakRuleGenerateRisksTechAssetNotContainSecretsNotRisks
 // 			"ta1": {
 // 				Technologies: types.TechnologyList{
 // 					{
-// 						Path: "git repository",
+// 						Name: "git repository",
 // 						Attributes: map[string]bool{
 // 							types.MayContainSecrets: true,
 // 						},
@@ -115,7 +115,7 @@ func TestAccidentalSecretLeakRuleGenerateRisksTechAssetNotContainSecretsNotRisks
 // 			"ta1": {
 // 				Technologies: types.TechnologyList{
 // 					{
-// 						Path: "git repository",
+// 						Name: "git repository",
 // 						Attributes: map[string]bool{
 // 							types.MayContainSecrets: true,
 // 						},

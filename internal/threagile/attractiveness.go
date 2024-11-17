@@ -1,8 +1,8 @@
 package threagile
 
 type Attractiveness struct {
-	Quantity        int
-	Confidentiality AttackerFocus
-	Integrity       AttackerFocus
-	Availability    AttackerFocus
+	Quantity        int           `json:"quantity,omitempty" yaml:"quantity"`
+	Confidentiality AttackerFocus `json:"confidentiality" yaml:"confidentiality"`
+	Integrity       AttackerFocus `json:"integrity" yaml:"integrity"`
+	Availability    AttackerFocus `json:"availability" yaml:"availability"`
 }

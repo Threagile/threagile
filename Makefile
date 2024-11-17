@@ -10,7 +10,7 @@ ASSETS			= 							\
 	pkg/types/technologies.yaml	\
 	server
 BIN				= 							\
-	risk_demo_rule 							\
+	risk_demo	 							\
 	threagile
 
 # Commands and Flags
@@ -22,17 +22,17 @@ RM		= rm -rf
 GOSEC	= /opt/homebrew/bin/gosec
 
 # Targets
-.phony: all prep run_tests clean tidy install uninstall gosec gv
+.phony: all prep test-all clean tidy install uninstall gosec gv dist update lint
 
 default: all
 
-all: prep run_tests $(addprefix bin/,$(BIN))
+all: prep test-all $(addprefix bin/,$(BIN))
 
 prep:
 	@# env GO111MODULE=on go mod vendor
 	$(MKDIR) bin
 
-run_tests:
+test-all:
 	$(GO) test ./...
 
 clean:
@@ -59,12 +59,21 @@ uninstall:
 gosec:
 	$(GOSEC) ./...
 
+dist: update gosec all
+
+update:
+	go get -u ./...
+	go mod tidy
+
+lint:
+	$(if $(shell which golangci-lint), golangci-lint run ./..., @echo "No golangci-lint found, consider running: \n   go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest")
+
 gv: out/tmp/diagram.png
 
 out/tmp/diagram.png: out/tmp/diagram.gv
 	dot -Tpng $< -o $@
 
-bin/risk_demo_rule: cmd/risk_demo/main.go
+bin/risk_demo: cmd/risk_demo/main.go
 	$(GO) build $(GOFLAGS) -o $@ $<
 
 bin/threagile: cmd/threagile/main.go

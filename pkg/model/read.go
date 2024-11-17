@@ -31,16 +31,18 @@ func (what ReadResult) ExplainRisk(cfg explainRiskConfig, risk string, reporter 
 type configReader interface {
 	GetBuildTimestamp() string
 	GetVerbose() bool
-
+	GetInteractive() bool
 	GetAppFolder() string
+	GetPluginFolder() string
+	GetDataFolder() string
 	GetOutputFolder() string
 	GetServerFolder() string
 	GetTempFolder() string
 	GetKeyFolder() string
-
 	GetInputFile() string
 	GetDataFlowDiagramFilenamePNG() string
 	GetDataAssetDiagramFilenamePNG() string
+	GetDataFlowDiagramFilenameDOT() string
 	GetDataAssetDiagramFilenameDOT() string
 	GetReportFilename() string
 	GetExcelRisksFilename() string
@@ -48,34 +50,42 @@ type configReader interface {
 	GetJsonRisksFilename() string
 	GetJsonTechnicalAssetsFilename() string
 	GetJsonStatsFilename() string
+	GetTemplateFilename() string
 	GetTechnologyFilename() string
-
-	GetRiskRulesPlugins() []string
+	GetRiskRulePlugins() []string
 	GetSkipRiskRules() []string
 	GetExecuteModelMacro() string
-
+	GetRiskExcelConfigHideColumns() []string
+	GetRiskExcelConfigSortByColumns() []string
+	GetRiskExcelConfigWidthOfColumns() map[string]float64
+	GetServerMode() bool
+	GetDiagramDPI() int
 	GetServerPort() int
 	GetGraphvizDPI() int
-
+	GetMaxGraphvizDPI() int
+	GetBackupHistoryFilesToKeep() int
+	GetAddModelTitle() bool
 	GetKeepDiagramSourceFiles() bool
 	GetIgnoreOrphanedRiskTracking() bool
+	GetThreagileVersion() string
+	GetProgressReporter() types.ProgressReporter
 }
 
 func ReadAndAnalyzeModel(config configReader, builtinRiskRules types.RiskRules, progressReporter types.ProgressReporter) (*ReadResult, error) {
 	progressReporter.Infof("Writing into output directory: %v", config.GetOutputFolder())
 	progressReporter.Infof("Parsing model: %v", config.GetInputFile())
 
-	customRiskRules := LoadCustomRiskRules(config.GetRiskRulesPlugins(), progressReporter)
+	customRiskRules := LoadCustomRiskRules(config.GetPluginFolder(), config.GetRiskRulePlugins(), progressReporter)
 
 	modelInput := new(input.Model).Defaults()
 	loadError := modelInput.Load(config.GetInputFile())
 	if loadError != nil {
-		return nil, fmt.Errorf("unable to load model yaml: %v", loadError)
+		return nil, fmt.Errorf("unable to load model yaml: %w", loadError)
 	}
 
 	parsedModel, parseError := ParseModel(config, modelInput, builtinRiskRules, customRiskRules)
 	if parseError != nil {
-		return nil, fmt.Errorf("unable to parse model yaml: %v", parseError)
+		return nil, fmt.Errorf("unable to parse model yaml: %w", parseError)
 	}
 
 	introTextRAA := applyRAA(parsedModel, progressReporter)
@@ -83,12 +93,12 @@ func ReadAndAnalyzeModel(config configReader, builtinRiskRules types.RiskRules, 
 	applyRiskGeneration(parsedModel, builtinRiskRules.Merge(customRiskRules), config.GetSkipRiskRules(), progressReporter)
 	err := parsedModel.ApplyWildcardRiskTrackingEvaluation(config.GetIgnoreOrphanedRiskTracking(), progressReporter)
 	if err != nil {
-		return nil, fmt.Errorf("unable to apply wildcard risk tracking evaluation: %v", err)
+		return nil, fmt.Errorf("unable to apply wildcard risk tracking evaluation: %w", err)
 	}
 
 	err = parsedModel.CheckRiskTracking(config.GetIgnoreOrphanedRiskTracking(), progressReporter)
 	if err != nil {
-		return nil, fmt.Errorf("unable to check risk tracking: %v", err)
+		return nil, fmt.Errorf("unable to check risk tracking: %w", err)
 	}
 
 	return &ReadResult{

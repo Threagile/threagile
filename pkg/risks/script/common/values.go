@@ -9,19 +9,19 @@ func (what Values) Copy() (Values, error) {
 	for name, value := range what {
 		switch castValue := value.(type) {
 		case *AnyValue:
-			values[name] = SomeValueWithPath(castValue.Value(), castValue.Path(), nil, castValue.History()...)
+			values[name] = SomeValue(castValue.Value(), castValue.Event())
 
 		case *ArrayValue:
-			values[name] = SomeArrayValueWithPath(castValue.ArrayValue(), castValue.Path(), nil, castValue.History()...)
+			values[name] = SomeArrayValue(castValue.ArrayValue(), castValue.Event())
 
 		case *BoolValue:
-			values[name] = SomeBoolValueWithPath(castValue.BoolValue(), castValue.Path(), nil, castValue.History()...)
+			values[name] = SomeBoolValue(castValue.BoolValue(), castValue.Event())
 
 		case *DecimalValue:
-			values[name] = SomeDecimalValueWithPath(castValue.DecimalValue(), castValue.Path(), nil, castValue.History()...)
+			values[name] = SomeDecimalValue(castValue.DecimalValue(), castValue.Event())
 
 		case *StringValue:
-			values[name] = SomeStringValueWithPath(castValue.StringValue(), castValue.Path(), nil, castValue.History()...)
+			values[name] = SomeStringValue(castValue.StringValue(), castValue.Event())
 
 		default:
 			return nil, fmt.Errorf("can't copy value of type %T", value)

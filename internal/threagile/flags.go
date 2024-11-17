@@ -10,7 +10,7 @@ const (
 	interactiveFlagName      = "interactive"
 	interactiveFlagShorthand = "i"
 
-	verboseFlagName      = "verbose"
+	verboseFlagName      = "Verbose"
 	verboseFlagShorthand = "v"
 
 	appDirFlagName  = "app-dir"

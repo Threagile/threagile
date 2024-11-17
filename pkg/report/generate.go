@@ -119,7 +119,7 @@ func Generate(config reportConfigReader, readResult *model.ReadResult, commands 
 		}
 		dotFile, err := WriteDataFlowDiagramGraphvizDOT(readResult.ParsedModel, gvFile, diagramDPI, config.GetAddModelTitle(), progressReporter)
 		if err != nil {
-			return fmt.Errorf("error while generating data flow diagram: %s", err)
+			return fmt.Errorf("error while generating data flow diagram: %w", err)
 		}
 
 		err = GenerateDataFlowDiagramGraphvizImage(dotFile, config.GetOutputFolder(),
@@ -141,7 +141,7 @@ func Generate(config reportConfigReader, readResult *model.ReadResult, commands 
 		}
 		dotFile, err := WriteDataAssetDiagramGraphvizDOT(readResult.ParsedModel, gvFile, diagramDPI, progressReporter)
 		if err != nil {
-			return fmt.Errorf("error while generating data asset diagram: %s", err)
+			return fmt.Errorf("error while generating data asset diagram: %w", err)
 		}
 		err = GenerateDataAssetDiagramGraphvizImage(dotFile, config.GetOutputFolder(),
 			config.GetTempFolder(), config.GetDataAssetDiagramFilenamePNG(), progressReporter)
@@ -155,7 +155,7 @@ func Generate(config reportConfigReader, readResult *model.ReadResult, commands 
 		progressReporter.Info("Writing risks json")
 		err := WriteRisksJSON(readResult.ParsedModel, filepath.Join(config.GetOutputFolder(), config.GetJsonRisksFilename()))
 		if err != nil {
-			return fmt.Errorf("error while writing risks json: %s", err)
+			return fmt.Errorf("error while writing risks json: %w", err)
 		}
 	}
 
@@ -164,7 +164,7 @@ func Generate(config reportConfigReader, readResult *model.ReadResult, commands 
 		progressReporter.Info("Writing technical assets json")
 		err := WriteTechnicalAssetsJSON(readResult.ParsedModel, filepath.Join(config.GetOutputFolder(), config.GetJsonTechnicalAssetsFilename()))
 		if err != nil {
-			return fmt.Errorf("error while writing technical assets json: %s", err)
+			return fmt.Errorf("error while writing technical assets json: %w", err)
 		}
 	}
 
@@ -173,7 +173,7 @@ func Generate(config reportConfigReader, readResult *model.ReadResult, commands 
 		progressReporter.Info("Writing stats json")
 		err := WriteStatsJSON(readResult.ParsedModel, filepath.Join(config.GetOutputFolder(), config.GetJsonStatsFilename()))
 		if err != nil {
-			return fmt.Errorf("error while writing stats json: %s", err)
+			return fmt.Errorf("error while writing stats json: %w", err)
 		}
 	}
 

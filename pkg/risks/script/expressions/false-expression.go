@@ -2,9 +2,7 @@ package expressions
 
 import (
 	"fmt"
-
 	"github.com/threagile/threagile/pkg/risks/script/common"
-	"github.com/threagile/threagile/pkg/risks/script/event"
 )
 
 type FalseExpression struct {
@@ -41,15 +39,7 @@ func (what *FalseExpression) EvalBool(scope *common.Scope) (*common.BoolValue, s
 		return common.EmptyBoolValue(), errorLiteral, fmt.Errorf("%q: error evaluating false-expression: %w", what.literal, evalError)
 	}
 
-	history := value.History()
-	if len(history) == 1 {
-		theEvent := history[0]
-		theEvent.Negate()
-
-		return common.SomeBoolValueWithPath(!value.BoolValue(), value.Path(), scope.Stack(), theEvent), "", nil
-	}
-
-	return common.SomeBoolValue(!value.BoolValue(), scope.Stack(), event.NewValueEvent(value)), "", nil
+	return common.SomeBoolValue(!value.BoolValue(), value.Event()), "", nil
 }
 
 func (what *FalseExpression) EvalAny(scope *common.Scope) (common.Value, string, error) {

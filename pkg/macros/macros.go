@@ -332,7 +332,7 @@ func (what MacroQuestion) NoMoreQuestions() bool {
 }
 
 func (what MacroQuestion) IsValueConstrained() bool {
-	return what.PossibleAnswers != nil && len(what.PossibleAnswers) > 0
+	return len(what.PossibleAnswers) > 0
 }
 
 func (what MacroQuestion) IsMatchingValueConstraint(answer string) bool {

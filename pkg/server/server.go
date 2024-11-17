@@ -24,13 +24,14 @@ import (
 type serverConfigReader interface {
 	GetBuildTimestamp() string
 	GetVerbose() bool
-	GetThreagileVersion() string
-
+	GetInteractive() bool
 	GetAppFolder() string
+	GetPluginFolder() string
+	GetDataFolder() string
+	GetOutputFolder() string
 	GetServerFolder() string
 	GetTempFolder() string
 	GetKeyFolder() string
-
 	GetInputFile() string
 	GetDataFlowDiagramFilenamePNG() string
 	GetDataAssetDiagramFilenamePNG() string
@@ -42,19 +43,21 @@ type serverConfigReader interface {
 	GetJsonRisksFilename() string
 	GetJsonTechnicalAssetsFilename() string
 	GetJsonStatsFilename() string
+	GetTemplateFilename() string
 	GetTechnologyFilename() string
-
-	GetRiskRulesPlugins() []string
+	GetRiskRulePlugins() []string
 	GetSkipRiskRules() []string
 	GetExecuteModelMacro() string
-
+	GetServerMode() bool
+	GetDiagramDPI() int
 	GetServerPort() int
 	GetGraphvizDPI() int
+	GetMaxGraphvizDPI() int
 	GetBackupHistoryFilesToKeep() int
-
+	GetAddModelTitle() bool
 	GetKeepDiagramSourceFiles() bool
 	GetIgnoreOrphanedRiskTracking() bool
-
+	GetThreagileVersion() string
 	GetProgressReporter() types.ProgressReporter
 }
 
@@ -211,7 +214,7 @@ func RunServer(config serverConfigReader, builtinRiskRules types.RiskRules) {
 	router.PUT("/models/:model-id/shared-runtimes/:shared-runtime-id", s.setSharedRuntime)
 	router.DELETE("/models/:model-id/shared-runtimes/:shared-runtime-id", s.deleteSharedRuntime)
 
-	s.customRiskRules = model.LoadCustomRiskRules(s.config.GetRiskRulesPlugins(), config.GetProgressReporter())
+	s.customRiskRules = model.LoadCustomRiskRules(s.config.GetPluginFolder(), s.config.GetRiskRulePlugins(), config.GetProgressReporter())
 
 	fmt.Println("Threagile s running...")
 	_ = router.Run(":" + strconv.Itoa(s.config.GetServerPort())) // listen and serve on 0.0.0.0:8080 or whatever port was specified

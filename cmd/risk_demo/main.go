@@ -2,9 +2,9 @@ package main
 
 import (
 	"bufio"
-	"encoding/json"
 	"flag"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"io"
 	"os"
 
@@ -23,14 +23,14 @@ func main() {
 
 	if *getInfo {
 		rule := new(customRiskRule)
-		riskData, marshalError := json.Marshal(new(model.CustomRiskCategory).Init(rule.Category(), rule.SupportedTags()))
+		riskData, marshalError := yaml.Marshal(new(model.CustomRiskCategory).Init(rule.Category(), rule.SupportedTags()))
 
 		if marshalError != nil {
 			_, _ = fmt.Fprintf(os.Stderr, "failed to print risk data: %v", marshalError)
 			os.Exit(-2)
 		}
 
-		_, _ = fmt.Fprint(os.Stdout, riskData)
+		_, _ = os.Stdout.Write(riskData)
 		os.Exit(0)
 	}
 
@@ -43,7 +43,7 @@ func main() {
 		}
 
 		var input types.Model
-		inError := json.Unmarshal(inData, &input)
+		inError := yaml.Unmarshal(inData, &input)
 		if inError != nil {
 			_, _ = fmt.Fprintf(os.Stderr, "failed to parse model: %v\n", inError)
 			os.Exit(-2)
@@ -55,13 +55,13 @@ func main() {
 			os.Exit(-2)
 		}
 
-		outData, marshalError := json.Marshal(generatedRisks)
+		outData, marshalError := yaml.Marshal(generatedRisks)
 		if marshalError != nil {
 			_, _ = fmt.Fprintf(os.Stderr, "failed to print generated risks: %v\n", marshalError)
 			os.Exit(-2)
 		}
 
-		_, _ = fmt.Fprint(os.Stdout, outData)
+		_, _ = os.Stdout.Write(outData)
 		os.Exit(0)
 	}
 

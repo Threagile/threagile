@@ -5,7 +5,6 @@ import (
 
 	"github.com/shopspring/decimal"
 	"github.com/threagile/threagile/pkg/risks/script/common"
-	"github.com/threagile/threagile/pkg/risks/script/event"
 )
 
 type CountExpression struct {
@@ -93,97 +92,100 @@ func (what *CountExpression) evalDecimal(scope *common.Scope, inValue common.Val
 	switch castValue := inValue.Value().(type) {
 	case []any:
 		if what.expression == nil {
-			return common.SomeDecimalValue(decimal.NewFromInt(int64(len(castValue))), scope.Stack()), "", nil
+			return common.SomeDecimalValue(decimal.NewFromInt(int64(len(castValue))), nil), "", nil
 		}
 
-		events := make([]event.Event, 0)
 		var count int64 = 0
+		values := make([]common.Value, 0)
 		for index, item := range castValue {
-			indexValue := common.SomeDecimalValue(decimal.NewFromInt(int64(index)), scope.Stack())
-			itemValue := common.SomeValueWithPath(item, inValue.Path(), scope.Stack(), event.NewValueEvent(inValue))
-			value, errorLiteral, expressionError := what.evalDecimalOnce(scope, indexValue, itemValue, fmt.Sprintf("#%v", index))
+			if len(what.index) > 0 {
+				scope.Set(what.index, common.SomeDecimalValue(decimal.NewFromInt(int64(index)), nil))
+			}
+
+			itemValue := scope.SetItem(common.SomeValue(item, inValue.Event()))
+			if len(what.item) > 0 {
+				scope.Set(what.item, itemValue)
+			}
+
+			value, errorLiteral, expressionError := what.expression.EvalBool(scope)
 			if expressionError != nil {
 				return common.EmptyDecimalValue(), errorLiteral, fmt.Errorf("error evaluating expression #%v of all-expression: %w", index+1, expressionError)
 			}
 
 			if value.BoolValue() {
-				events = append(events, event.NewValueEvent(value))
+				values = append(values, value)
 				count++
 			}
 		}
 
-		return common.SomeDecimalValue(decimal.NewFromInt(count), scope.Stack(), events...), "", nil
+		return common.SomeDecimalValue(decimal.NewFromInt(count), inValue.Event().From(values...)), "", nil
 
 	case []common.Value:
 		if what.expression == nil {
-			return common.SomeDecimalValue(decimal.NewFromInt(int64(len(castValue))), scope.Stack()), "", nil
+			return common.SomeDecimalValue(decimal.NewFromInt(int64(len(castValue))), nil), "", nil
 		}
 
-		events := make([]event.Event, 0)
 		var count int64 = 0
+		values := make([]common.Value, 0)
 		for index, item := range castValue {
-			indexValue := common.SomeDecimalValue(decimal.NewFromInt(int64(index)), scope.Stack())
-			itemValue := common.SomeValueWithPath(item, inValue.Path(), scope.Stack(), event.NewValueEvent(inValue))
-			value, errorLiteral, expressionError := what.evalDecimalOnce(scope, indexValue, itemValue, fmt.Sprintf("#%v", index))
+			if len(what.index) > 0 {
+				scope.Set(what.index, common.SomeDecimalValue(decimal.NewFromInt(int64(index)), nil))
+			}
+
+			itemValue := scope.SetItem(common.SomeValue(item.Value(), inValue.Event()))
+			if len(what.item) > 0 {
+				scope.Set(what.item, itemValue)
+			}
+
+			value, errorLiteral, expressionError := what.expression.EvalBool(scope)
 			if expressionError != nil {
-				return common.EmptyDecimalValue(), errorLiteral, expressionError
+				return common.EmptyDecimalValue(), errorLiteral, fmt.Errorf("error evaluating expression #%v of all-expression: %w", index+1, expressionError)
 			}
 
 			if value.BoolValue() {
-				events = append(events, event.NewValueEvent(value))
+				values = append(values, value)
 				count++
 			}
 		}
 
-		return common.SomeDecimalValue(decimal.NewFromInt(count), scope.Stack(), events...), "", nil
+		return common.SomeDecimalValue(decimal.NewFromInt(count), inValue.Event().From(values...)), "", nil
 
 	case map[string]any:
 		if what.expression == nil {
-			return common.SomeDecimalValue(decimal.NewFromInt(int64(len(castValue))), scope.Stack()), "", nil
+			return common.SomeDecimalValue(decimal.NewFromInt(int64(len(castValue))), nil), "", nil
 		}
 
-		events := make([]event.Event, 0)
 		var count int64 = 0
+		values := make([]common.Value, 0)
 		for name, item := range castValue {
-			indexValue := common.SomeStringValue(name, scope.Stack())
-			itemValue := common.SomeValueWithPath(item, inValue.Path(), scope.Stack(), event.NewValueEvent(inValue))
-			value, errorLiteral, expressionError := what.evalDecimalOnce(scope, indexValue, itemValue, fmt.Sprintf("%q", name))
+			if len(what.index) > 0 {
+				scope.Set(what.index, common.SomeStringValue(name, nil))
+			}
+
+			itemValue := scope.SetItem(common.SomeValue(item, inValue.Event()))
+			if len(what.item) > 0 {
+				scope.Set(what.item, itemValue)
+			}
+
+			value, errorLiteral, expressionError := what.expression.EvalBool(scope)
 			if expressionError != nil {
-				return common.EmptyDecimalValue(), errorLiteral, expressionError
+				return common.EmptyDecimalValue(), errorLiteral, fmt.Errorf("error evaluating expression %q of all-expression: %w", name, expressionError)
 			}
 
 			if value.BoolValue() {
-				events = append(events, event.NewValueEvent(value))
+				values = append(values, value)
 				count++
 			}
 		}
 
-		return common.SomeDecimalValue(decimal.NewFromInt(count), scope.Stack(), events...), "", nil
+		return common.SomeDecimalValue(decimal.NewFromInt(count), inValue.Event().From(values...)), "", nil
 
 	case common.Value:
-		return what.evalDecimal(scope, castValue)
+		return what.evalDecimal(scope, common.SomeValue(castValue.Value(), inValue.Event()))
 
 	default:
 		return common.EmptyDecimalValue(), what.Literal(), fmt.Errorf("failed to eval all-expression: expected iterable type, got %T", inValue)
 	}
-}
-
-func (what *CountExpression) evalDecimalOnce(scope *common.Scope, indexValue common.Value, itemValue common.Value, index string) (*common.BoolValue, string, error) {
-	if len(what.index) > 0 {
-		scope.Set(what.index, indexValue)
-	}
-
-	scope.SetItem(itemValue)
-	if len(what.item) > 0 {
-		scope.Set(what.item, itemValue)
-	}
-
-	value, errorLiteral, expressionError := what.expression.EvalBool(scope)
-	if expressionError != nil {
-		return value, errorLiteral, fmt.Errorf("error evaluating expression %v of all-expression: %w", index, expressionError)
-	}
-
-	return value, "", nil
 }
 
 func (what *CountExpression) EvalAny(scope *common.Scope) (common.Value, string, error) {

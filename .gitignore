@@ -32,3 +32,4 @@ stats.json
 # IDE stuff
 /.idea/
 /config.json
+/tmp/

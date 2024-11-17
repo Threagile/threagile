@@ -2,22 +2,31 @@ package script
 
 import (
 	"fmt"
-	"strings"
-
-	"github.com/threagile/threagile/pkg/input"
 	"github.com/threagile/threagile/pkg/risks/script/common"
-	"github.com/threagile/threagile/pkg/risks/script/event"
 	"github.com/threagile/threagile/pkg/risks/script/expressions"
 	"github.com/threagile/threagile/pkg/risks/script/statements"
+	"strings"
+
 	"github.com/threagile/threagile/pkg/types"
 	"gopkg.in/yaml.v3"
 )
 
 type Script struct {
-	id    map[string]any
-	match common.Statement
-	data  map[string]any
-	utils map[string]*statements.MethodStatement
+	id        map[string]any
+	match     common.Statement
+	data      map[string]any
+	utils     map[string]*statements.MethodStatement
+	formatter formatter
+}
+
+type formatter interface {
+	AddLineNumbers(script any) string
+}
+
+func NewScript(f formatter) *Script {
+	s := new(Script)
+	s.formatter = f
+	return s
 }
 
 func (what *Script) NewScope(risk *types.RiskCategory) (*common.Scope, error) {
@@ -29,7 +38,7 @@ func (what *Script) NewScope(risk *types.RiskCategory) (*common.Scope, error) {
 	scope := new(common.Scope)
 	scopeError := scope.Init(risk, methods)
 	if scopeError != nil {
-		return scope, fmt.Errorf("error initializing scope: %w\n", scopeError)
+		return scope, fmt.Errorf("error initializing scope: %w", scopeError)
 	}
 
 	return scope, nil
@@ -61,7 +70,7 @@ func (what *Script) ParseScripts(items map[string]any) (map[string]*Script, erro
 					return nil, fmt.Errorf("unexpected format %T in data definition for %q", riskScript, scriptID)
 				}
 
-				script, scriptError := new(Script).ParseScript(risk)
+				script, scriptError := NewScript(what.formatter).ParseScript(risk)
 				if scriptError != nil {
 					return nil, fmt.Errorf("failed to parse script of data definition for %q: %w", scriptID, scriptError)
 				}
@@ -98,7 +107,7 @@ func (what *Script) ParseCategory(script map[string]any) (*Script, error) {
 				return what.ParseScript(castValue)
 
 			default:
-				return what, fmt.Errorf("failed to parse %q: unexpected script type %T\nscript:\n%v", key, value, new(input.Strings).AddLineNumbers(value))
+				return what, fmt.Errorf("failed to parse %q: unexpected script type %T\nscript:\n%v", key, value, what.formatter.AddLineNumbers(value))
 			}
 		}
 	}
@@ -133,13 +142,13 @@ func (what *Script) ParseScript(script map[string]any) (*Script, error) {
 				what.data = castValue
 
 			default:
-				return what, fmt.Errorf("failed to parse %q: unexpected script type %T\nscript:\n%v", key, value, new(input.Strings).AddLineNumbers(value))
+				return what, fmt.Errorf("failed to parse %q: unexpected script type %T\nscript:\n%v", key, value, what.formatter.AddLineNumbers(value))
 			}
 
 		case common.Match:
 			item, errorScript, itemError := new(statements.MethodStatement).Parse(value)
 			if itemError != nil {
-				return what, fmt.Errorf("failed to parse %q: %v\nscript:\n%v", key, itemError, new(input.Strings).AddLineNumbers(errorScript))
+				return what, fmt.Errorf("failed to parse %q: %v\nscript:\n%v", key, itemError, what.formatter.AddLineNumbers(errorScript))
 			}
 
 			what.match = item
@@ -147,7 +156,7 @@ func (what *Script) ParseScript(script map[string]any) (*Script, error) {
 		case common.Utils:
 			item, errorScript, itemError := what.parseUtils(value)
 			if itemError != nil {
-				return what, fmt.Errorf("failed to parse %q: %v\nscript:\n%v", key, itemError, new(input.Strings).AddLineNumbers(errorScript))
+				return what, fmt.Errorf("failed to parse %q: %v\nscript:\n%v", key, itemError, what.formatter.AddLineNumbers(errorScript))
 			}
 
 			what.utils = item
@@ -157,8 +166,38 @@ func (what *Script) ParseScript(script map[string]any) (*Script, error) {
 	return what, nil
 }
 
+func (what *Script) GetTechnicalAssetsByRiskID(scope *common.Scope, riskID string) ([]any, error) {
+	value, valueOk := what.getItem(scope.Model, "technical_assets")
+	if !valueOk {
+		return nil, fmt.Errorf("no technical assets in scope")
+	}
+
+	techAssets, techAssetsOk := value.(map[string]common.Value)
+	if !techAssetsOk {
+		return nil, fmt.Errorf("unexpected format of technical assets %T", techAssets)
+	}
+
+	matchingTechAssets := make([]any, 0)
+	for techAssetName, techAsset := range techAssets {
+		_ = techAssetName
+
+		isMatch, _, matchError := what.matchRisk(scope, techAsset)
+		if matchError != nil {
+			return nil, matchError
+		}
+
+		if !isMatch.BoolValue() {
+			continue
+		}
+
+		matchingTechAssets = append(matchingTechAssets, techAsset)
+	}
+
+	return matchingTechAssets, nil
+}
+
 func (what *Script) GenerateRisks(scope *common.Scope) ([]*types.Risk, string, error) {
-	value, valueOk := what.getItem(scope.Model, `technical_assets`)
+	value, valueOk := what.getItem(scope.Model, "technical_assets")
 	if !valueOk {
 		return nil, "", fmt.Errorf("no technical assets in scope")
 	}
@@ -170,7 +209,7 @@ func (what *Script) GenerateRisks(scope *common.Scope) ([]*types.Risk, string, e
 
 	risks := make([]*types.Risk, 0)
 	for techAssetName, techAsset := range techAssets {
-		techAssetValue := common.SomeValueWithPath(techAsset, event.NewPath(fmt.Sprintf("technical asset '%v'", techAssetName)), scope.Stack())
+		techAssetValue := common.SomeValue(techAsset, common.NewEvent(common.NewValueProperty(techAsset), common.NewPath(fmt.Sprintf("technical asset '%v'", techAssetName))))
 		isMatch, errorMatchLiteral, matchError := what.matchRisk(scope, techAssetValue)
 		if matchError != nil {
 			return nil, errorMatchLiteral, matchError
@@ -180,7 +219,7 @@ func (what *Script) GenerateRisks(scope *common.Scope) ([]*types.Risk, string, e
 			continue
 		}
 
-		risk, errorRiskLiteral, riskError := what.generateRisk(scope, techAssetName, techAssetValue, isMatch.History())
+		risk, errorRiskLiteral, riskError := what.generateRisk(scope, techAssetName, techAssetValue, isMatch.Event())
 		if riskError != nil {
 			return nil, errorRiskLiteral, riskError
 		}
@@ -234,7 +273,7 @@ func (what *Script) matchRisk(outerScope *common.Scope, techAsset common.Value) 
 	return common.EmptyBoolValue(), "", nil
 }
 
-func (what *Script) generateRisk(outerScope *common.Scope, techAssetName string, techAsset common.Value, isMatchEvent event.History) (*types.Risk, string, error) {
+func (what *Script) generateRisk(outerScope *common.Scope, techAssetName string, techAsset common.Value, isMatchEvent *common.Event) (*types.Risk, string, error) {
 	if what.data == nil {
 		return nil, "", fmt.Errorf("no data template")
 	}
@@ -298,11 +337,20 @@ func (what *Script) generateRisk(outerScope *common.Scope, techAssetName string,
 			continue
 		}
 
-		newValue = common.SomeValueWithPath(newValue, event.NewPath(title), nil)
-		description := newValue.Description().String()
-		history := newValue.History()
-		_, _ = description, history
-		ratingExplanation = append(ratingExplanation, what.explain(newValue.Description().String(), newValue.History())...)
+		text := fmt.Sprintf("'%v' is '%v'", title, newValue.PlainValue())
+		explanation := what.Explain([]*common.Event{newValue.Event()})
+		if len(explanation) > 0 {
+			ratingExplanation = append(ratingExplanation, text+" because")
+			for n, line := range explanation {
+				if n < len(explanation)-1 {
+					ratingExplanation = append(ratingExplanation, line+", and")
+				} else {
+					ratingExplanation = append(ratingExplanation, line)
+				}
+			}
+		} else {
+			ratingExplanation = append(ratingExplanation, text)
+		}
 	}
 
 	riskData, marshalError := yaml.Marshal(riskMap)
@@ -318,10 +366,25 @@ func (what *Script) generateRisk(outerScope *common.Scope, techAssetName string,
 
 	risk.CategoryId, _ = what.getItemString(scope.Risk, "id")
 
+	riskExplanation := make([]string, 0)
 	text := fmt.Sprintf("Risk '%v' has been flagged for technical asset '%v'", scope.Category.Title, techAssetName)
 
-	riskExplanation := make([]string, 0)
-	riskExplanation = append(riskExplanation, what.explain(text, isMatchEvent)...)
+	var explanation []string
+	if isMatchEvent != nil {
+		explanation = what.Explain(isMatchEvent.Events)
+		if len(explanation) > 0 {
+			riskExplanation = append(riskExplanation, text+" because")
+			for n, line := range explanation {
+				if n < len(explanation)-1 {
+					riskExplanation = append(riskExplanation, line+", and")
+				} else {
+					riskExplanation = append(riskExplanation, line)
+				}
+			}
+		} else {
+			riskExplanation = append(riskExplanation, text)
+		}
+	}
 
 	risk.RiskExplanation = riskExplanation
 	risk.RatingExplanation = ratingExplanation
@@ -329,17 +392,13 @@ func (what *Script) generateRisk(outerScope *common.Scope, techAssetName string,
 	return &risk, "", nil
 }
 
-func (what *Script) explain(text string, history event.History) []string {
-	explanation := make([]string, 0)
-	if len(history) > 0 {
-		explanation = append(explanation, event.IndentAndConcatenate(history.Text().Lines())...)
+func (what *Script) Explain(history []*common.Event) []string {
+	text := make([]string, 0)
+	for _, event := range history {
+		text = append(text, event.Indented(0)...)
 	}
 
-	if len(explanation) == 0 {
-		return append([]string{text}, explanation...)
-	}
-
-	return append([]string{text + " because"}, explanation...)
+	return text
 }
 
 func (what *Script) getRiskID(outerScope *common.Scope, techAsset common.Value, risk *types.Risk) (string, string, error) {

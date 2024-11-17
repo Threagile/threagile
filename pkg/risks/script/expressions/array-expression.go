@@ -46,7 +46,7 @@ func (what *ArrayExpression) EvalArray(scope *common.Scope) (*common.ArrayValue,
 		values = append(values, value)
 	}
 
-	return common.SomeArrayValue(values, scope.Stack()), "", nil
+	return common.SomeArrayValue(values, common.NewEvent(common.NewValueProperty(values), common.NewPath("array value")).From(values...)), "", nil
 }
 
 func (what *ArrayExpression) EvalAny(scope *common.Scope) (common.Value, string, error) {

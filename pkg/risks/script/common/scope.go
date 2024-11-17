@@ -1,11 +1,10 @@
 package common
 
 import (
+	"gopkg.in/yaml.v3"
 	"strings"
 
-	"github.com/threagile/threagile/pkg/risks/script/event"
 	"github.com/threagile/threagile/pkg/types"
-	"gopkg.in/yaml.v3"
 )
 
 type Scope struct {
@@ -18,7 +17,7 @@ type Scope struct {
 	Methods     map[string]Statement
 	Deferred    []Statement
 	Explain     ExplainStatement
-	CallStack   Stack
+	CallStack   History
 	HasReturned bool
 	item        Value
 	returnValue Value
@@ -83,19 +82,12 @@ func (what *Scope) Defer(statement Statement) {
 	what.Deferred = append(what.Deferred, statement)
 }
 
-func (what *Scope) Events() []event.Event {
-	return what.CallStack.History()
-}
-
-func (what *Scope) Stack() Stack {
+func (what *Scope) PushCall(event *Event) History {
+	what.CallStack = what.CallStack.New(event)
 	return what.CallStack
 }
 
-func (what *Scope) PushHistory(event ...event.Event) {
-	what.CallStack = append(what.CallStack, event)
-}
-
-func (what *Scope) PopHistory() {
+func (what *Scope) PopCall() {
 	if len(what.CallStack) > 0 {
 		what.CallStack = what.CallStack[:len(what.CallStack)-1]
 	}
@@ -115,40 +107,39 @@ func (what *Scope) Get(name string) (Value, bool) {
 		switch strings.ToLower(path[0]) {
 		// value name starts with `$model`: refers to `what.Model`
 		case "$model":
-			value, ok := what.get(path[1:], what.Model, event.Path{"threat model", "'" + strings.Join(path[1:], ".") + "'"}, nil)
+			value, ok := what.get(path[1:], what.Model, NewPath("threat model", strings.Join(path[1:], ".")))
 			if ok {
 				return value, true
 			}
 
 		// value name starts with `$risk`: refers to `what.Risk`
 		case "$risk":
-			value, ok := what.get(path[1:], what.Risk, event.Path{"risk category", "'" + strings.Join(path[1:], ".") + "'"}, nil)
+			value, ok := what.get(path[1:], what.Risk, NewPath("risk category", strings.Join(path[1:], ".")))
 			if ok {
 				return value, true
 			}
 		}
-
-		return nil, false
 	}
 
 	// value name starts with a dot: refers to `what.item`
 	if len(path[0]) == 0 {
-		if len(path[1:]) == 0 {
-			return what.item, true
-		}
+		if len(path[1:]) > 0 {
+			if what.item == nil {
+				return nil, false
+			}
 
-		if what.item == nil {
+			switch castValue := what.item.Value().(type) {
+			case map[string]any:
+				value, ok := what.get(path[1:], castValue, what.item.Event().Path().Copy().AddPathLeaf(strings.Join(path[1:], ".")))
+				if ok {
+					return value, true
+				}
+			}
+
 			return nil, false
 		}
 
-		switch castValue := what.item.Value().(type) {
-		case map[string]any:
-			return what.get(path[1:], castValue, append(what.item.Path(), "'"+strings.Join(path[1:], ".")+"'"), Stack{what.item.History()})
-
-		default:
-		}
-
-		return SomeValueWithPath(nil, append(what.item.Path(), "'"+strings.Join(path[1:], ".")+"'"), Stack{what.item.History()}), false
+		return what.item, true
 	}
 
 	// value name starts with something else: refers to `what.Vars`
@@ -167,11 +158,43 @@ func (what *Scope) Get(name string) (Value, bool) {
 
 	value, isMap := variable.Value().(map[string]any)
 	if isMap {
-		return what.get(path[1:], value, append(variable.Path(), "'"+strings.Join(path[1:], ".")+"'"), Stack{variable.History()})
+		return what.get(path[1:], value, variable.Event().Path().Copy().AddPathLeaf(strings.Join(path[1:], ".")))
 	}
 
 	// value name does not resolve
 	return nil, false
+}
+
+func (what *Scope) GetHistory() []*Event {
+	history := make([]*Event, 0)
+	for _, event := range what.CallStack {
+		newHistory := what.getHistory(event)
+		if newHistory != nil {
+			history = append(history, newHistory...)
+		}
+	}
+
+	return history
+}
+
+func (what *Scope) getHistory(event *Event) []*Event {
+	history := make([]*Event, 0)
+	if event == nil {
+		return history
+	}
+
+	if event.Origin != nil && len(event.Origin.Path) > 0 {
+		return append(history, event)
+	}
+
+	for _, subEvent := range event.Events {
+		newHistory := what.getHistory(subEvent)
+		if newHistory != nil {
+			history = append(history, newHistory...)
+		}
+	}
+
+	return history
 }
 
 func (what *Scope) GetItem() Value {
@@ -197,7 +220,7 @@ func (what *Scope) GetReturnValue() Value {
 	return what.returnValue
 }
 
-func (what *Scope) get(path []string, item map[string]any, valuePath event.Path, stack Stack) (Value, bool) {
+func (what *Scope) get(path []string, item map[string]any, valuePath *Path) (Value, bool) {
 	if len(path) == 0 {
 		return nil, false
 	}
@@ -208,7 +231,7 @@ func (what *Scope) get(path []string, item map[string]any, valuePath event.Path,
 
 	field, ok := item[strings.ToLower(path[0])]
 	if !ok {
-		return SomeValueWithPath(nil, valuePath, stack), false
+		return SomeValue(nil, NewEvent(NewValueProperty(nil), valuePath)), false
 	}
 
 	if len(path) == 1 {
@@ -217,13 +240,13 @@ func (what *Scope) get(path []string, item map[string]any, valuePath event.Path,
 			return castField, true
 
 		default:
-			return SomeValueWithPath(castField, valuePath, stack), true
+			return SomeValue(castField, NewEvent(NewValueProperty(castField), valuePath)), true
 		}
 	}
 
 	value, isMap := field.(map[string]any)
 	if isMap {
-		return what.get(path[1:], value, valuePath, stack)
+		return what.get(path[1:], value, valuePath)
 	}
 
 	return nil, false

@@ -25,13 +25,13 @@ func (what *Threagile) initExecute() *Threagile {
 
 			r, err := model.ReadAndAnalyzeModel(cfg, risks.GetBuiltInRiskRules(), progressReporter)
 			if err != nil {
-				return fmt.Errorf("unable to read and analyze model: %v", err)
+				return fmt.Errorf("unable to read and analyze model: %w", err)
 			}
 
 			macrosId := args[0]
 			err = macros.ExecuteModelMacro(r.ModelInput, cfg.GetInputFile(), r.ParsedModel, macrosId)
 			if err != nil {
-				return fmt.Errorf("unable to execute model macro: %v", err)
+				return fmt.Errorf("unable to execute model macro: %w", err)
 			}
 			return nil
 		},

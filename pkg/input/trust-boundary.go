@@ -15,17 +15,17 @@ func (what *TrustBoundary) Merge(other TrustBoundary) error {
 	var mergeError error
 	what.ID, mergeError = new(Strings).MergeSingleton(what.ID, other.ID)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge id: %v", mergeError)
+		return fmt.Errorf("failed to merge id: %w", mergeError)
 	}
 
 	what.Description, mergeError = new(Strings).MergeSingleton(what.Description, other.Description)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge description: %v", mergeError)
+		return fmt.Errorf("failed to merge description: %w", mergeError)
 	}
 
 	what.Type, mergeError = new(Strings).MergeSingleton(what.Type, other.Type)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge type: %v", mergeError)
+		return fmt.Errorf("failed to merge type: %w", mergeError)
 	}
 
 	what.Tags = new(Strings).MergeUniqueSlice(what.Tags, other.Tags)
@@ -43,7 +43,7 @@ func (what *TrustBoundary) MergeMap(first map[string]TrustBoundary, second map[s
 		if ok {
 			mergeError := mapItem.Merge(mapValue)
 			if mergeError != nil {
-				return first, fmt.Errorf("failed to merge trust boundary %q: %v", mapKey, mergeError)
+				return first, fmt.Errorf("failed to merge trust boundary %q: %w", mapKey, mergeError)
 			}
 
 			first[mapKey] = mapItem
