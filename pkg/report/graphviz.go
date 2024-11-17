@@ -458,8 +458,7 @@ func makeDiagramSameRankNodeTweaks(parsedModel *types.Model) (string, error) {
 						return "", fmt.Errorf("error while checking technical asset existence: %w", err)
 					}
 					if len(parsedModel.GetTechnicalAssetTrustBoundaryId(parsedModel.TechnicalAssets[id])) > 0 {
-						return "", fmt.Errorf("technical assets (referenced in same rank diagram tweak) are inside trust boundaries: " +
-							fmt.Sprintf("%v", parsedModel.DiagramTweakSameRankAssets))
+						return "", fmt.Errorf("technical assets (referenced in same rank diagram tweak) are inside trust boundaries: %v", parsedModel.DiagramTweakSameRankAssets)
 					}
 					tweak += " " + hash(id) + "; "
 				}

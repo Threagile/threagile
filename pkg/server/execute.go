@@ -218,7 +218,7 @@ func (s *server) doItViaRuntimeCall(modelFile string, outputDir string,
 	cmd = exec.Command(self, args...) // #nosec G204
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		panic(fmt.Errorf(string(out)))
+		panic(fmt.Errorf("%v", string(out)))
 	} else {
 		if s.config.GetVerbose() && len(out) > 0 {
 			fmt.Println("---")

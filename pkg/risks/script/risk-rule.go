@@ -82,7 +82,7 @@ func (what *RiskRule) GenerateRisks(parsedModel *types.Model) ([]*types.Risk, er
 			msg = append(msg, fmt.Sprintf("in:\n%v\n", new(input.Strings).IndentPrintf(1, errorLiteral)))
 		}
 
-		return nil, fmt.Errorf(strings.Join(msg, "\n"))
+		return nil, fmt.Errorf("%v", strings.Join(msg, "\n"))
 	}
 
 	return newRisks, nil
