@@ -10,7 +10,7 @@ ASSETS			= 							\
 	pkg/types/technologies.yaml	\
 	server
 BIN				= 							\
-	risk_demo_rule 							\
+	risk_demo	 							\
 	threagile
 
 # Commands and Flags
@@ -64,7 +64,7 @@ gv: out/tmp/diagram.png
 out/tmp/diagram.png: out/tmp/diagram.gv
 	dot -Tpng $< -o $@
 
-bin/risk_demo_rule: cmd/risk_demo/main.go
+bin/risk_demo: cmd/risk_demo/main.go
 	$(GO) build $(GOFLAGS) -o $@ $<
 
 bin/threagile: cmd/threagile/main.go

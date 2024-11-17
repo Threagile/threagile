@@ -91,19 +91,19 @@ func (model *Model) Load(inputFilename string) error {
 func (model *Model) Merge(dir string, includeFilename string) error {
 	modelYaml, readError := os.ReadFile(filepath.Clean(filepath.Join(dir, includeFilename)))
 	if readError != nil {
-		return fmt.Errorf("unable to read model file: %v", readError)
+		return fmt.Errorf("unable to read model file: %w", readError)
 	}
 
 	var fileStructure map[string]any
 	unmarshalStructureError := yaml.Unmarshal(modelYaml, &fileStructure)
 	if unmarshalStructureError != nil {
-		return fmt.Errorf("unable to parse model structure: %v", unmarshalStructureError)
+		return fmt.Errorf("unable to parse model structure: %w", unmarshalStructureError)
 	}
 
 	var includedModel Model
 	unmarshalError := yaml.Unmarshal(modelYaml, &includedModel)
 	if unmarshalError != nil {
-		return fmt.Errorf("unable to parse model yaml: %v", unmarshalError)
+		return fmt.Errorf("unable to parse model yaml: %w", unmarshalError)
 	}
 
 	var mergeError error
@@ -113,62 +113,62 @@ func (model *Model) Merge(dir string, includeFilename string) error {
 			for _, includeFile := range includedModel.Includes {
 				mergeError = model.Merge(filepath.Join(dir, filepath.Dir(includeFilename)), includeFile)
 				if mergeError != nil {
-					return fmt.Errorf("failed to merge model include %q: %v", includeFile, mergeError)
+					return fmt.Errorf("failed to merge model include %q: %w", includeFile, mergeError)
 				}
 			}
 
 		case strings.ToLower("threagile_version"):
 			model.ThreagileVersion, mergeError = new(Strings).MergeSingleton(model.ThreagileVersion, includedModel.ThreagileVersion)
 			if mergeError != nil {
-				return fmt.Errorf("failed to merge threagile version: %v", mergeError)
+				return fmt.Errorf("failed to merge threagile version: %w", mergeError)
 			}
 
 		case strings.ToLower("title"):
 			model.Title, mergeError = new(Strings).MergeSingleton(model.Title, includedModel.Title)
 			if mergeError != nil {
-				return fmt.Errorf("failed to merge title: %v", mergeError)
+				return fmt.Errorf("failed to merge title: %w", mergeError)
 			}
 
 		case strings.ToLower("author"):
 			mergeError = model.Author.Merge(includedModel.Author)
 			if mergeError != nil {
-				return fmt.Errorf("failed to merge author: %v", mergeError)
+				return fmt.Errorf("failed to merge author: %w", mergeError)
 			}
 
 		case strings.ToLower("contributors"):
 			model.Contributors, mergeError = new(Author).MergeList(append(model.Contributors, includedModel.Author))
 			if mergeError != nil {
-				return fmt.Errorf("failed to merge contributors: %v", mergeError)
+				return fmt.Errorf("failed to merge contributors: %w", mergeError)
 			}
 
 		case strings.ToLower("date"):
 			model.Date, mergeError = new(Strings).MergeSingleton(model.Date, includedModel.Date)
 			if mergeError != nil {
-				return fmt.Errorf("failed to merge date: %v", mergeError)
+				return fmt.Errorf("failed to merge date: %w", mergeError)
 			}
 
 		case strings.ToLower("application_description"):
 			mergeError = model.AppDescription.Merge(includedModel.AppDescription)
 			if mergeError != nil {
-				return fmt.Errorf("failed to merge application description: %v", mergeError)
+				return fmt.Errorf("failed to merge application description: %w", mergeError)
 			}
 
 		case strings.ToLower("business_overview"):
 			mergeError = model.BusinessOverview.Merge(includedModel.BusinessOverview)
 			if mergeError != nil {
-				return fmt.Errorf("failed to merge business overview: %v", mergeError)
+				return fmt.Errorf("failed to merge business overview: %w", mergeError)
 			}
 
 		case strings.ToLower("technical_overview"):
 			mergeError = model.TechnicalOverview.Merge(includedModel.TechnicalOverview)
 			if mergeError != nil {
-				return fmt.Errorf("failed to merge technical overview: %v", mergeError)
+				return fmt.Errorf("failed to merge technical overview: %w", mergeError)
 			}
 
 		case strings.ToLower("business_criticality"):
 			model.BusinessCriticality, mergeError = new(Strings).MergeSingleton(model.BusinessCriticality, includedModel.BusinessCriticality)
 			if mergeError != nil {
-				return fmt.Errorf("failed to merge business criticality: %v", mergeError)
+				return fmt.Errorf("failed to merge business criticality: %w", mergeError)
 			}
 
 		case strings.ToLower("management_summary_comment"):
@@ -177,19 +177,19 @@ func (model *Model) Merge(dir string, includeFilename string) error {
 		case strings.ToLower("security_requirements"):
 			model.SecurityRequirements, mergeError = new(Strings).MergeMap(model.SecurityRequirements, includedModel.SecurityRequirements)
 			if mergeError != nil {
-				return fmt.Errorf("failed to merge security requirements: %v", mergeError)
+				return fmt.Errorf("failed to merge security requirements: %w", mergeError)
 			}
 
 		case strings.ToLower("questions"):
 			model.Questions, mergeError = new(Strings).MergeMap(model.Questions, includedModel.Questions)
 			if mergeError != nil {
-				return fmt.Errorf("failed to merge questions: %v", mergeError)
+				return fmt.Errorf("failed to merge questions: %w", mergeError)
 			}
 
 		case strings.ToLower("abuse_cases"):
 			model.AbuseCases, mergeError = new(Strings).MergeMap(model.AbuseCases, includedModel.AbuseCases)
 			if mergeError != nil {
-				return fmt.Errorf("failed to merge abuse cases: %v", mergeError)
+				return fmt.Errorf("failed to merge abuse cases: %w", mergeError)
 			}
 
 		case strings.ToLower("tags_available"):
@@ -198,37 +198,37 @@ func (model *Model) Merge(dir string, includeFilename string) error {
 		case strings.ToLower("data_assets"):
 			model.DataAssets, mergeError = new(DataAsset).MergeMap(model.DataAssets, includedModel.DataAssets)
 			if mergeError != nil {
-				return fmt.Errorf("failed to merge data assets: %v", mergeError)
+				return fmt.Errorf("failed to merge data assets: %w", mergeError)
 			}
 
 		case strings.ToLower("technical_assets"):
 			model.TechnicalAssets, mergeError = new(TechnicalAsset).MergeMap(model.TechnicalAssets, includedModel.TechnicalAssets)
 			if mergeError != nil {
-				return fmt.Errorf("failed to merge technical assets: %v", mergeError)
+				return fmt.Errorf("failed to merge technical assets: %w", mergeError)
 			}
 
 		case strings.ToLower("trust_boundaries"):
 			model.TrustBoundaries, mergeError = new(TrustBoundary).MergeMap(model.TrustBoundaries, includedModel.TrustBoundaries)
 			if mergeError != nil {
-				return fmt.Errorf("failed to merge trust boundaries: %v", mergeError)
+				return fmt.Errorf("failed to merge trust boundaries: %w", mergeError)
 			}
 
 		case strings.ToLower("shared_runtimes"):
 			model.SharedRuntimes, mergeError = new(SharedRuntime).MergeMap(model.SharedRuntimes, includedModel.SharedRuntimes)
 			if mergeError != nil {
-				return fmt.Errorf("failed to merge shared runtimes: %v", mergeError)
+				return fmt.Errorf("failed to merge shared runtimes: %w", mergeError)
 			}
 
 		case strings.ToLower("custom_risk_categories"):
 			mergeError = model.CustomRiskCategories.Add(includedModel.CustomRiskCategories...)
 			if mergeError != nil {
-				return fmt.Errorf("failed to merge risk categories: %v", mergeError)
+				return fmt.Errorf("failed to merge risk categories: %w", mergeError)
 			}
 
 		case strings.ToLower("risk_tracking"):
 			model.RiskTracking, mergeError = new(RiskTracking).MergeMap(model.RiskTracking, includedModel.RiskTracking)
 			if mergeError != nil {
-				return fmt.Errorf("failed to merge risk tracking: %v", mergeError)
+				return fmt.Errorf("failed to merge risk tracking: %w", mergeError)
 			}
 
 		case "diagram_tweak_nodesep":

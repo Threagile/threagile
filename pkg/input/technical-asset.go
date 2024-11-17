@@ -36,22 +36,22 @@ func (what *TechnicalAsset) Merge(other TechnicalAsset) error {
 	var mergeError error
 	what.ID, mergeError = new(Strings).MergeSingleton(what.ID, other.ID)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge id: %v", mergeError)
+		return fmt.Errorf("failed to merge id: %w", mergeError)
 	}
 
 	what.Description, mergeError = new(Strings).MergeSingleton(what.Description, other.Description)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge description: %v", mergeError)
+		return fmt.Errorf("failed to merge description: %w", mergeError)
 	}
 
 	what.Type, mergeError = new(Strings).MergeSingleton(what.Type, other.Type)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge type: %v", mergeError)
+		return fmt.Errorf("failed to merge type: %w", mergeError)
 	}
 
 	what.Usage, mergeError = new(Strings).MergeSingleton(what.Usage, other.Usage)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge usage: %v", mergeError)
+		return fmt.Errorf("failed to merge usage: %w", mergeError)
 	}
 
 	if !what.UsedAsClientByHuman {
@@ -66,12 +66,12 @@ func (what *TechnicalAsset) Merge(other TechnicalAsset) error {
 
 	what.Size, mergeError = new(Strings).MergeSingleton(what.Size, other.Size)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge size: %v", mergeError)
+		return fmt.Errorf("failed to merge size: %w", mergeError)
 	}
 
 	what.Technology, mergeError = new(Strings).MergeSingleton(what.Technology, other.Technology)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge technology: %v", mergeError)
+		return fmt.Errorf("failed to merge technology: %w", mergeError)
 	}
 
 	what.Tags = new(Strings).MergeUniqueSlice(what.Tags, other.Tags)
@@ -82,32 +82,32 @@ func (what *TechnicalAsset) Merge(other TechnicalAsset) error {
 
 	what.Machine, mergeError = new(Strings).MergeSingleton(what.Machine, other.Machine)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge machine: %v", mergeError)
+		return fmt.Errorf("failed to merge machine: %w", mergeError)
 	}
 
 	what.Encryption, mergeError = new(Strings).MergeSingleton(what.Encryption, other.Encryption)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge encryption: %v", mergeError)
+		return fmt.Errorf("failed to merge encryption: %w", mergeError)
 	}
 
 	what.Owner, mergeError = new(Strings).MergeSingleton(what.Owner, other.Owner)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge owner: %v", mergeError)
+		return fmt.Errorf("failed to merge owner: %w", mergeError)
 	}
 
 	what.Confidentiality, mergeError = new(Strings).MergeSingleton(what.Confidentiality, other.Confidentiality)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge confidentiality: %v", mergeError)
+		return fmt.Errorf("failed to merge confidentiality: %w", mergeError)
 	}
 
 	what.Integrity, mergeError = new(Strings).MergeSingleton(what.Integrity, other.Integrity)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge integrity: %v", mergeError)
+		return fmt.Errorf("failed to merge integrity: %w", mergeError)
 	}
 
 	what.Availability, mergeError = new(Strings).MergeSingleton(what.Availability, other.Availability)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge availability: %v", mergeError)
+		return fmt.Errorf("failed to merge availability: %w", mergeError)
 	}
 
 	what.JustificationCiaRating = new(Strings).MergeMultiline(what.JustificationCiaRating, other.JustificationCiaRating)
@@ -136,7 +136,7 @@ func (what *TechnicalAsset) Merge(other TechnicalAsset) error {
 
 	what.CommunicationLinks, mergeError = new(CommunicationLink).MergeMap(what.CommunicationLinks, other.CommunicationLinks)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge communication_links: %v", mergeError)
+		return fmt.Errorf("failed to merge communication_links: %w", mergeError)
 	}
 
 	return nil
@@ -148,7 +148,7 @@ func (what *TechnicalAsset) MergeMap(first map[string]TechnicalAsset, second map
 		if ok {
 			mergeError := mapItem.Merge(mapValue)
 			if mergeError != nil {
-				return first, fmt.Errorf("failed to merge technical asset %q: %v", mapKey, mergeError)
+				return first, fmt.Errorf("failed to merge technical asset %q: %w", mapKey, mergeError)
 			}
 
 			first[mapKey] = mapItem

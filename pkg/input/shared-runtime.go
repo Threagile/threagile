@@ -13,12 +13,12 @@ func (what *SharedRuntime) Merge(other SharedRuntime) error {
 	var mergeError error
 	what.ID, mergeError = new(Strings).MergeSingleton(what.ID, other.ID)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge id: %v", mergeError)
+		return fmt.Errorf("failed to merge id: %w", mergeError)
 	}
 
 	what.Description, mergeError = new(Strings).MergeSingleton(what.Description, other.Description)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge description: %v", mergeError)
+		return fmt.Errorf("failed to merge description: %w", mergeError)
 	}
 
 	what.Tags = new(Strings).MergeUniqueSlice(what.Tags, other.Tags)
@@ -34,7 +34,7 @@ func (what *SharedRuntime) MergeMap(first map[string]SharedRuntime, second map[s
 		if ok {
 			mergeError := mapItem.Merge(mapValue)
 			if mergeError != nil {
-				return first, fmt.Errorf("failed to merge shared runtime %q: %v", mapKey, mergeError)
+				return first, fmt.Errorf("failed to merge shared runtime %q: %w", mapKey, mergeError)
 			}
 
 			first[mapKey] = mapItem

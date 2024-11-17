@@ -14,7 +14,7 @@ func (what *Threagile) initServer() *Threagile {
 		Short: "Run server",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cfg := what.readConfig(cmd, what.buildTimestamp)
-			cfg.ServerMode = true
+			cfg.SetServerMode(true)
 			serverError := cfg.CheckServerFolder()
 			if serverError != nil {
 				return serverError

@@ -20,49 +20,49 @@ func (what *DataAsset) Merge(other DataAsset) error {
 	var mergeError error
 	what.ID, mergeError = new(Strings).MergeSingleton(what.ID, other.ID)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge id: %v", mergeError)
+		return fmt.Errorf("failed to merge id: %w", mergeError)
 	}
 
 	what.Description, mergeError = new(Strings).MergeSingleton(what.Description, other.Description)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge description: %v", mergeError)
+		return fmt.Errorf("failed to merge description: %w", mergeError)
 	}
 
 	what.Usage, mergeError = new(Strings).MergeSingleton(what.Usage, other.Usage)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge usage: %v", mergeError)
+		return fmt.Errorf("failed to merge usage: %w", mergeError)
 	}
 
 	what.Tags = new(Strings).MergeUniqueSlice(what.Tags, other.Tags)
 
 	what.Origin, mergeError = new(Strings).MergeSingleton(what.Origin, other.Origin)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge origin: %v", mergeError)
+		return fmt.Errorf("failed to merge origin: %w", mergeError)
 	}
 
 	what.Owner, mergeError = new(Strings).MergeSingleton(what.Owner, other.Owner)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge owner: %v", mergeError)
+		return fmt.Errorf("failed to merge owner: %w", mergeError)
 	}
 
 	what.Quantity, mergeError = new(Strings).MergeSingleton(what.Quantity, other.Quantity)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge quantity: %v", mergeError)
+		return fmt.Errorf("failed to merge quantity: %w", mergeError)
 	}
 
 	what.Confidentiality, mergeError = new(Strings).MergeSingleton(what.Confidentiality, other.Confidentiality)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge confidentiality: %v", mergeError)
+		return fmt.Errorf("failed to merge confidentiality: %w", mergeError)
 	}
 
 	what.Integrity, mergeError = new(Strings).MergeSingleton(what.Integrity, other.Integrity)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge integrity: %v", mergeError)
+		return fmt.Errorf("failed to merge integrity: %w", mergeError)
 	}
 
 	what.Availability, mergeError = new(Strings).MergeSingleton(what.Availability, other.Availability)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge availability: %v", mergeError)
+		return fmt.Errorf("failed to merge availability: %w", mergeError)
 	}
 
 	what.JustificationCiaRating = new(Strings).MergeMultiline(what.JustificationCiaRating, other.JustificationCiaRating)
@@ -76,7 +76,7 @@ func (what *DataAsset) MergeMap(first map[string]DataAsset, second map[string]Da
 		if ok {
 			mergeError := mapItem.Merge(mapValue)
 			if mergeError != nil {
-				return first, fmt.Errorf("failed to merge data asset %q: %v", mapKey, mergeError)
+				return first, fmt.Errorf("failed to merge data asset %q: %w", mapKey, mergeError)
 			}
 
 			first[mapKey] = mapItem

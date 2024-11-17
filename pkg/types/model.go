@@ -123,6 +123,8 @@ func (model *Model) ApplyWildcardRiskTrackingEvaluation(ignoreOrphanedRiskTracki
 					Status:          riskTracking.Status,
 					Date:            riskTracking.Date,
 				}
+
+				progressReporter.Infof("  => %v", syntheticRiskId)
 			}
 		}
 
@@ -140,7 +142,15 @@ func (model *Model) ApplyWildcardRiskTrackingEvaluation(ignoreOrphanedRiskTracki
 func (model *Model) CheckRiskTracking(ignoreOrphanedRiskTracking bool, progressReporter ProgressReporter) error {
 	progressReporter.Info("Checking risk tracking")
 	for _, tracking := range model.RiskTracking {
-		if _, ok := model.GeneratedRisksBySyntheticId[tracking.SyntheticRiskId]; !ok {
+		foundSome := false
+		var matchingRiskIdExpression = regexp.MustCompile(strings.ReplaceAll(regexp.QuoteMeta(tracking.SyntheticRiskId), `\*`, `[^@]+`))
+		for syntheticRiskId := range model.GeneratedRisksBySyntheticId {
+			if matchingRiskIdExpression.Match([]byte(syntheticRiskId)) {
+				foundSome = true
+			}
+		}
+
+		if !foundSome {
 			if ignoreOrphanedRiskTracking {
 				progressReporter.Infof("Risk tracking references unknown risk (risk id not found): %v", tracking.SyntheticRiskId)
 			} else {

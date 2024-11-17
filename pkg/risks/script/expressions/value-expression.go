@@ -2,13 +2,12 @@ package expressions
 
 import (
 	"fmt"
+	"github.com/threagile/threagile/pkg/risks/script/common"
 	"regexp"
 	"strconv"
 	"strings"
 
 	"github.com/shopspring/decimal"
-	"github.com/threagile/threagile/pkg/risks/script/common"
-	"github.com/threagile/threagile/pkg/risks/script/event"
 )
 
 type ValueExpression struct {
@@ -59,23 +58,23 @@ func (what *ValueExpression) ParseAny(script any) (common.Expression, any, error
 }
 
 func (what *ValueExpression) EvalArray(scope *common.Scope) (*common.ArrayValue, string, error) {
-	return what.evalArray(scope, common.SomeValue(what.value, scope.Stack()))
+	return what.evalArray(scope, common.SomeValue(what.value, nil))
 }
 
 func (what *ValueExpression) EvalBool(scope *common.Scope) (*common.BoolValue, string, error) {
-	return what.evalBool(scope, common.SomeValue(what.value, scope.Stack()))
+	return what.evalBool(scope, common.SomeValue(what.value, nil))
 }
 
 func (what *ValueExpression) EvalDecimal(scope *common.Scope) (*common.DecimalValue, string, error) {
-	return what.evalDecimal(scope, common.SomeValue(what.value, scope.Stack()))
+	return what.evalDecimal(scope, common.SomeValue(what.value, nil))
 }
 
 func (what *ValueExpression) EvalString(scope *common.Scope) (*common.StringValue, string, error) {
-	return what.evalString(scope, common.SomeValue(what.value, scope.Stack()))
+	return what.evalString(scope, common.SomeValue(what.value, nil))
 }
 
 func (what *ValueExpression) EvalAny(scope *common.Scope) (common.Value, string, error) {
-	return what.evalAny(scope, common.SomeValue(what.value, scope.Stack()))
+	return what.evalAny(scope, common.SomeValue(what.value, nil))
 }
 
 func (what *ValueExpression) evalArray(scope *common.Scope, anyValue common.Value) (*common.ArrayValue, string, error) {
@@ -100,7 +99,7 @@ func (what *ValueExpression) evalArray(scope *common.Scope, anyValue common.Valu
 			array = append(array, value)
 		}
 
-		return common.SomeArrayValue(array, scope.Stack()), "", nil
+		return common.SomeArrayValue(array, nil), "", nil
 
 	case nil:
 		return common.EmptyArrayValue(), "", nil
@@ -119,7 +118,7 @@ func (what *ValueExpression) evalBool(scope *common.Scope, anyValue common.Value
 		return castValue, "", nil
 
 	case nil:
-		return common.SomeBoolValue(false, scope.Stack()), "", nil
+		return common.SomeBoolValue(false, nil), "", nil
 
 	default:
 		return common.EmptyBoolValue(), what.Literal(), fmt.Errorf("failed to eval value-expression: value type %T is not a bool", what.value)
@@ -135,7 +134,7 @@ func (what *ValueExpression) evalDecimal(scope *common.Scope, anyValue common.Va
 		return castValue, "", nil
 
 	case nil:
-		return common.SomeDecimalValue(decimal.Zero, scope.Stack()), "", nil
+		return common.SomeDecimalValue(decimal.Zero, nil), "", nil
 
 	default:
 		return common.EmptyDecimalValue(), what.Literal(), fmt.Errorf("failed to eval value-expression: value type %T is not a decimal", what.value)
@@ -148,7 +147,7 @@ func (what *ValueExpression) evalString(scope *common.Scope, anyValue common.Val
 		return what.stringToString(scope, castValue)
 
 	case nil:
-		return common.SomeStringValue("", scope.Stack()), "", nil
+		return common.SomeStringValue("", nil), "", nil
 
 	default:
 		return common.EmptyStringValue(), what.Literal(), fmt.Errorf("failed to eval value-expression: value type %T is not a string", what.value)
@@ -170,7 +169,7 @@ func (what *ValueExpression) evalAny(scope *common.Scope, anyValue common.Value)
 		return what.evalArray(scope, castValue)
 
 	case nil:
-		return common.NilValue(), "", nil
+		return common.SomeValue(nil, nil), "", nil
 
 	default:
 		return nil, what.Literal(), fmt.Errorf("failed to eval value-expression: value type is %T", what.value)
@@ -184,13 +183,13 @@ func (what *ValueExpression) stringToBool(scope *common.Scope, valueString *comm
 	}
 
 	if value == nil {
-		return common.SomeBoolValueWithPath(false, valueString.Path(), scope.Stack(), valueString.History()...), "", nil
+		return common.SomeBoolValue(false, valueString.Event()), "", nil
 	}
 
 	switch castValue := value.Value().(type) {
 	case string: // string literal
 		if len(castValue) == 0 {
-			return common.SomeBoolValueWithPath(false, value.Path(), scope.Stack(), value.History()...), "", nil
+			return common.SomeBoolValue(false, value.Event()), "", nil
 		}
 
 		boolValue, parseError := strconv.ParseBool(castValue)
@@ -198,13 +197,13 @@ func (what *ValueExpression) stringToBool(scope *common.Scope, valueString *comm
 			return common.EmptyBoolValue(), what.Literal(), fmt.Errorf("failed to parse value-expression: %w", parseError)
 		}
 
-		return common.SomeBoolValueWithPath(boolValue, value.Path(), scope.Stack(), value.History()...), "", nil
+		return common.SomeBoolValue(boolValue, value.Event()), "", nil
 
 	case bool: // bool value
-		return common.SomeBoolValueWithPath(castValue, value.Path(), scope.Stack(), value.History()...), "", nil
+		return common.SomeBoolValue(castValue, value.Event()), "", nil
 
 	case nil: // empty value
-		return common.SomeBoolValueWithPath(false, value.Path(), scope.Stack(), value.History()...), "", nil
+		return common.SomeBoolValue(false, value.Event()), "", nil
 
 	case common.Value:
 		return what.evalBool(scope, castValue)
@@ -222,7 +221,7 @@ func (what *ValueExpression) stringToDecimal(scope *common.Scope, valueString *c
 
 	switch castValue := value.Value().(type) {
 	case decimal.Decimal:
-		return common.SomeDecimalValue(castValue, scope.Stack(), event.NewValueEvent(value)), "", nil
+		return common.SomeDecimalValue(castValue, value.Event()), "", nil
 
 	case string:
 		decimalValue, parseError := decimal.NewFromString(castValue)
@@ -230,10 +229,10 @@ func (what *ValueExpression) stringToDecimal(scope *common.Scope, valueString *c
 			return common.EmptyDecimalValue(), what.Literal(), fmt.Errorf("failed to parse value-expression: %w", parseError)
 		}
 
-		return common.SomeDecimalValue(decimalValue, scope.Stack(), event.NewValueEvent(value)), "", nil
+		return common.SomeDecimalValue(decimalValue, value.Event()), "", nil
 
 	case nil:
-		return common.SomeDecimalValue(decimal.Zero, scope.Stack(), event.NewValueEvent(value)), "", nil
+		return common.SomeDecimalValue(decimal.Zero, value.Event()), "", nil
 
 	default:
 		return common.EmptyDecimalValue(), what.Literal(), fmt.Errorf("expected value-expression to eval to a decimal instead of %T", value)
@@ -248,7 +247,7 @@ func (what *ValueExpression) stringToString(scope *common.Scope, valueString *co
 
 	switch castValue := value.Value().(type) {
 	case string:
-		return common.SomeStringValue(castValue, scope.Stack(), event.NewValueEvent(value)), "", nil
+		return common.SomeStringValue(castValue, value.Event()), "", nil
 
 	case *common.StringValue:
 		return castValue, "", nil
@@ -282,19 +281,15 @@ func (what *ValueExpression) evalStringReference(scope *common.Scope, ref *commo
 
 	if regexp.MustCompile(`^` + funcRe + `$`).MatchString(resolvedValue.StringValue()) {
 		genericValue, genericErrorLiteral, genericEvalError := what.resolveMethodCall(scope, funcRe, resolvedValue)
-		if genericEvalError != nil {
-			return common.NilValue(), genericErrorLiteral, genericEvalError
-		}
-
-		return common.SomeValue(genericValue, scope.Stack(), event.NewValueEvent(genericValue)), "", nil
+		return common.SomeValue(genericValue, ref.Event()), genericErrorLiteral, genericEvalError
 	}
 
-	return resolvedValue, "", nil
+	return common.SomeValue(resolvedValue, ref.Event()), "", nil
 }
 
 func (what *ValueExpression) resolveStringValues(scope *common.Scope, reString string, value *common.StringValue) *common.StringValue {
 	replacements := 0
-	events := value.History()
+	values := make([]common.Value, 0)
 	text := regexp.MustCompile(reString).ReplaceAllStringFunc(value.StringValue(), func(name string) string {
 		cleanName := name[1 : len(name)-1]
 		item, ok := scope.Get(strings.ToLower(cleanName))
@@ -305,15 +300,14 @@ func (what *ValueExpression) resolveStringValues(scope *common.Scope, reString s
 		switch castItem := item.Value().(type) {
 		case string:
 			replacements++
-			events = append(events, event.NewValueEvent(item))
 			return castItem
 
 		case common.Value:
+			values = append(values, castItem)
 			stringValue := castItem.PlainValue()
 			switch castStringValue := stringValue.(type) {
 			case string:
 				replacements++
-				events = append(events, event.NewValueEvent(item))
 				return castStringValue
 
 			default:
@@ -326,35 +320,29 @@ func (what *ValueExpression) resolveStringValues(scope *common.Scope, reString s
 	})
 
 	if replacements > 0 {
-		return what.resolveStringValues(scope, reString, common.SomeStringValue(text, scope.Stack(), events...))
+		return what.resolveStringValues(scope, reString, common.SomeStringValue(text, value.Event().From(values...)))
 	}
 
-	return common.SomeStringValue(text, scope.Stack(), events...)
+	return common.SomeStringValue(text, value.Event())
 }
 
 func (what *ValueExpression) resolveMethodCalls(scope *common.Scope, reString string, value *common.StringValue) (*common.StringValue, string, error) {
 	replacements := 0
-	events := make([]event.Event, 0)
+	values := make([]common.Value, 0)
 	text := regexp.MustCompile(reString).ReplaceAllStringFunc(value.StringValue(), func(name string) string {
-		returnValue, _, callError := what.resolveMethodCall(scope, reString, common.SomeStringValue(name, scope.Stack(), event.NewValueEvent(value)))
+		returnValue, _, callError := what.resolveMethodCall(scope, reString, common.SomeStringValue(name, value.Event()))
 		if callError != nil {
 			return name
 		}
 
 		if returnValue != nil {
-			stringValue, valueError := common.ToStringValue(returnValue)
+			stringValue, valueError := common.ToString(returnValue)
 			if valueError != nil {
 				return name
 			}
 
 			replacements++
-
-			if len(returnValue.Path()) == 0 {
-				events = append(events, returnValue.History()...)
-			} else {
-				events = append(events, event.NewValueEvent(stringValue))
-			}
-
+			values = append(values, stringValue)
 			return stringValue.StringValue()
 		}
 
@@ -362,10 +350,10 @@ func (what *ValueExpression) resolveMethodCalls(scope *common.Scope, reString st
 	})
 
 	if replacements == 0 {
-		return value, "", nil
+		return common.SomeStringValue(text, value.Event().From(values...)), "", nil
 	}
 
-	return what.resolveMethodCalls(scope, reString, common.SomeStringValue(text, scope.Stack(), append(value.History(), events...)...))
+	return what.resolveMethodCalls(scope, reString, common.SomeStringValue(text, value.Event().From(values...)))
 }
 
 func (what *ValueExpression) resolveMethodCall(scope *common.Scope, reString string, value *common.StringValue) (common.Value, string, error) {
@@ -381,7 +369,7 @@ func (what *ValueExpression) resolveMethodCall(scope *common.Scope, reString str
 	if len(strings.TrimSpace(match[2])) > 0 {
 		// todo: better arg parsing for '{var1}, {var2}'
 		for _, arg := range strings.Split(match[2], ",") {
-			val, errorLiteral, evalError := what.evalStringReference(scope, common.SomeStringValue(strings.TrimSpace(arg), scope.Stack(), event.NewValueEvent(value)))
+			val, errorLiteral, evalError := what.evalStringReference(scope, common.SomeStringValue(strings.TrimSpace(arg), value.Event()))
 			if evalError != nil {
 				return nil, errorLiteral, fmt.Errorf("failed to eval method parameter: %w", evalError)
 			}
@@ -407,7 +395,7 @@ func (what *ValueExpression) resolveMethodCall(scope *common.Scope, reString str
 	}
 
 	if common.IsBuiltIn(name) {
-		callValue, callError := common.CallBuiltIn(name, scope.Stack(), value.History(), args...)
+		callValue, callError := common.CallBuiltIn(name, args...)
 		if callError != nil {
 			return common.NilValue(), what.Literal(), fmt.Errorf("failed to call %q: %w", name, callError)
 		}

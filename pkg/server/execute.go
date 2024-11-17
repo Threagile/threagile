@@ -179,7 +179,7 @@ func (s *server) doItViaRuntimeCall(modelFile string, outputDir string,
 	dpi int) {
 	// Remember to also add the same args to the exec based sub-process calls!
 	var cmd *exec.Cmd
-	args := []string{"-model", modelFile, "-output", outputDir, "-execute-model-macro", s.config.GetExecuteModelMacro(), "-custom-risk-rules-plugins", strings.Join(s.config.GetRiskRulesPlugins(), ","), "-skip-risk-rules", strings.Join(s.config.GetSkipRiskRules(), ","), "-diagram-dpi", strconv.Itoa(dpi)}
+	args := []string{"-model", modelFile, "-output", outputDir, "-execute-model-macro", s.config.GetExecuteModelMacro(), "-custom-risk-rules-plugins", strings.Join(s.config.GetRiskRulePlugins(), ","), "-skip-risk-rules", strings.Join(s.config.GetSkipRiskRules(), ","), "-diagram-dpi", strconv.Itoa(dpi)}
 	if s.config.GetVerbose() {
 		args = append(args, "-verbose")
 	}

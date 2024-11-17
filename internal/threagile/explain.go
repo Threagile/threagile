@@ -75,7 +75,13 @@ func (what *Threagile) explainRules(cmd *cobra.Command, _ []string) error {
 	cmd.Println("----------------------")
 	cmd.Println("Custom risk rules:")
 	cmd.Println("----------------------")
-	customRiskRules := model.LoadCustomRiskRules(strings.Split(what.flags.customRiskRulesPluginFlag, ","), DefaultProgressReporter{Verbose: what.flags.verboseFlag})
+	cfg := new(Config).Defaults(what.buildTimestamp)
+	configError := cfg.Load(what.flags.configFlag)
+	if configError != nil {
+		cmd.Printf("WARNING: failed to load config file %q: %v\n", what.flags.configFlag, configError)
+	}
+
+	customRiskRules := model.LoadCustomRiskRules(cfg.GetPluginFolder(), strings.Split(what.flags.customRiskRulesPluginFlag, ","), DefaultProgressReporter{Verbose: what.flags.verboseFlag})
 	for _, rule := range customRiskRules {
 		cmd.Printf("%v: %v\n", rule.Category().ID, rule.Category().Description)
 	}

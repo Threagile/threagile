@@ -15,113 +15,167 @@ import (
 )
 
 type Config struct {
-	BuildTimestamp string
-	Verbose        bool
-	Interactive    bool
+	BuildTimestampValue string `json:"BuildTimestamp,omitempty" yaml:"BuildTimestamp"`
+	VerboseValue        bool   `json:"Verbose,omitempty" yaml:"Verbose"`
+	InteractiveValue    bool   `json:"Interactive,omitempty" yaml:"Interactive"`
 
-	AppFolder    string
-	DataFolder   string
-	OutputFolder string
-	ServerFolder string
-	TempFolder   string
-	KeyFolder    string
+	AppFolderValue    string `json:"AppFolder,omitempty" yaml:"AppFolder"`
+	PluginFolderValue string `json:"PluginFolder,omitempty" yaml:"PluginFolder"`
+	DataFolderValue   string `json:"DataFolder,omitempty" yaml:"DataFolder"`
+	OutputFolderValue string `json:"OutputFolder,omitempty" yaml:"OutputFolder"`
+	ServerFolderValue string `json:"ServerFolder,omitempty" yaml:"ServerFolder"`
+	TempFolderValue   string `json:"TempFolder,omitempty" yaml:"TempFolder"`
+	KeyFolderValue    string `json:"KeyFolder,omitempty" yaml:"KeyFolder"`
 
-	InputFile                   string
-	DataFlowDiagramFilenamePNG  string
-	DataAssetDiagramFilenamePNG string
-	DataFlowDiagramFilenameDOT  string
-	DataAssetDiagramFilenameDOT string
-	ReportFilename              string
-	ExcelRisksFilename          string
-	ExcelTagsFilename           string
-	JsonRisksFilename           string
-	JsonTechnicalAssetsFilename string
-	JsonStatsFilename           string
-	TemplateFilename            string
-	ReportLogoImagePath         string
-	TechnologyFilename          string
+	InputFileValue                   string `json:"InputFile,omitempty" yaml:"InputFile"`
+	DataFlowDiagramFilenamePNGValue  string `json:"DataFlowDiagramFilenamePNG,omitempty" yaml:"DataFlowDiagramFilenamePNG"`
+	DataAssetDiagramFilenamePNGValue string `json:"DataAssetDiagramFilenamePNG,omitempty" yaml:"DataAssetDiagramFilenamePNG"`
+	DataFlowDiagramFilenameDOTValue  string `json:"DataFlowDiagramFilenameDOT,omitempty" yaml:"DataFlowDiagramFilenameDOT"`
+	DataAssetDiagramFilenameDOTValue string `json:"DataAssetDiagramFilenameDOT,omitempty" yaml:"DataAssetDiagramFilenameDOT"`
+	ReportFilenameValue              string `json:"ReportFilename,omitempty" yaml:"ReportFilename"`
+	ExcelRisksFilenameValue          string `json:"ExcelRisksFilename,omitempty" yaml:"ExcelRisksFilename"`
+	ExcelTagsFilenameValue           string `json:"ExcelTagsFilename,omitempty" yaml:"ExcelTagsFilename"`
+	JsonRisksFilenameValue           string `json:"JsonRisksFilename,omitempty" yaml:"JsonRisksFilename"`
+	JsonTechnicalAssetsFilenameValue string `json:"JsonTechnicalAssetsFilename,omitempty" yaml:"JsonTechnicalAssetsFilename"`
+	JsonStatsFilenameValue           string `json:"JsonStatsFilename,omitempty" yaml:"JsonStatsFilename"`
+	TemplateFilenameValue            string `json:"TemplateFilename,omitempty" yaml:"TemplateFilename"`
+	ReportLogoImagePathValue         string `json:"ReportLogoImagePath,omitempty" yaml:"ReportLogoImagePath"`
+	TechnologyFilenameValue          string `json:"TechnologyFilename,omitempty" yaml:"TechnologyFilename"`
 
-	RiskRulesPlugins  []string
-	SkipRiskRules     []string
-	ExecuteModelMacro string
-	RiskExcel         riskExcelConfig
+	RiskRulePluginsValue   []string        `json:"RiskRulePlugins,omitempty" yaml:"RiskRulePlugins"`
+	SkipRiskRulesValue     []string        `json:"SkipRiskRules,omitempty" yaml:"SkipRiskRules"`
+	ExecuteModelMacroValue string          `json:"ExecuteModelMacro,omitempty" yaml:"ExecuteModelMacro"`
+	RiskExcelValue         RiskExcelConfig `json:"RiskExcel" yaml:"RiskExcel"`
 
-	ServerMode               bool
-	DiagramDPI               int
-	ServerPort               int
-	GraphvizDPI              int
-	MaxGraphvizDPI           int
-	BackupHistoryFilesToKeep int
+	ServerModeValue               bool `json:"ServerMode,omitempty" yaml:"ServerMode"`
+	DiagramDPIValue               int  `json:"DiagramDPI,omitempty" yaml:"DiagramDPI"`
+	ServerPortValue               int  `json:"ServerPort,omitempty" yaml:"ServerPort"`
+	GraphvizDPIValue              int  `json:"GraphvizDPI,omitempty" yaml:"GraphvizDPI"`
+	MaxGraphvizDPIValue           int  `json:"MaxGraphvizDPI,omitempty" yaml:"MaxGraphvizDPI"`
+	BackupHistoryFilesToKeepValue int  `json:"BackupHistoryFilesToKeep,omitempty" yaml:"BackupHistoryFilesToKeep"`
 
-	AddModelTitle              bool
-	KeepDiagramSourceFiles     bool
-	IgnoreOrphanedRiskTracking bool
+	AddModelTitleValue              bool `json:"AddModelTitle,omitempty" yaml:"AddModelTitle"`
+	KeepDiagramSourceFilesValue     bool `json:"KeepDiagramSourceFiles,omitempty" yaml:"KeepDiagramSourceFiles"`
+	IgnoreOrphanedRiskTrackingValue bool `json:"IgnoreOrphanedRiskTracking,omitempty" yaml:"IgnoreOrphanedRiskTracking"`
 
-	Attractiveness Attractiveness
+	AttractivenessValue Attractiveness `json:"Attractiveness" yaml:"Attractiveness"`
 
-	ReportConfiguration report.ReportConfiguation
+	ReportConfigurationValue report.ReportConfiguation `json:"ReportConfiguration" yaml:"ReportConfiguration"`
 }
 
-type riskExcelConfig struct {
-	HideColumns        []string
-	SortByColumns      []string
-	WidthOfColumns     map[string]float64
-	ShrinkColumnsToFit bool
-	WrapText           bool
-	ColorText          bool
+type ConfigGetter interface {
+	GetBuildTimestamp() string
+	GetVerbose() bool
+	GetInteractive() bool
+	GetAppFolder() string
+	GetPluginFolder() string
+	GetDataFolder() string
+	GetOutputFolder() string
+	GetServerFolder() string
+	GetTempFolder() string
+	GetKeyFolder() string
+	GetInputFile() string
+	GetDataFlowDiagramFilenamePNG() string
+	GetDataAssetDiagramFilenamePNG() string
+	GetDataFlowDiagramFilenameDOT() string
+	GetDataAssetDiagramFilenameDOT() string
+	GetReportFilename() string
+	GetExcelRisksFilename() string
+	GetExcelTagsFilename() string
+	GetJsonRisksFilename() string
+	GetJsonTechnicalAssetsFilename() string
+	GetJsonStatsFilename() string
+	GetTemplateFilename() string
+	GetTechnologyFilename() string
+	GetReportLogoImagePath() string
+	GetRiskRulePlugins() []string
+	GetSkipRiskRules() []string
+	GetExecuteModelMacro() string
+	GetRiskExcelConfigHideColumns() []string
+	GetRiskExcelConfigSortByColumns() []string
+	GetRiskExcelConfigWidthOfColumns() map[string]float64
+	GetServerMode() bool
+	GetDiagramDPI() int
+	GetServerPort() int
+	GetGraphvizDPI() int
+	GetMaxGraphvizDPI() int
+	GetBackupHistoryFilesToKeep() int
+	GetAddModelTitle() bool
+	GetKeepDiagramSourceFiles() bool
+	GetIgnoreOrphanedRiskTracking() bool
+	// GetAttractiveness() Attractiveness
+	// GetReportConfiguration() report.ReportConfiguation
+	GetThreagileVersion() string
+	GetProgressReporter() types.ProgressReporter
+}
+
+type ConfigSetter interface {
+	SetVerbose(verbose bool)
+	SetInteractive(interactive bool)
+	SetAppFolder(appFolder string)
+	SetPluginFolder(pluginFolder string)
+	SetOutputFolder(outputFolder string)
+	SetServerFolder(serverFolder string)
+	SetTempFolder(tempFolder string)
+	SetInputFile(inputFile string)
+	SetTemplateFilename(templateFilename string)
+	SetRiskRulePlugins(riskRulePlugins []string)
+	SetSkipRiskRules(skipRiskRules []string)
 }
 
 func (c *Config) Defaults(buildTimestamp string) *Config {
 	*c = Config{
-		BuildTimestamp: buildTimestamp,
-		Verbose:        false,
-		Interactive:    false,
+		BuildTimestampValue: buildTimestamp,
+		VerboseValue:        false,
+		InteractiveValue:    false,
 
-		AppFolder:    AppDir,
-		DataFolder:   DataDir,
-		OutputFolder: OutputDir,
-		ServerFolder: ServerDir,
-		TempFolder:   TempDir,
-		KeyFolder:    KeyDir,
+		AppFolderValue:    AppDir,
+		PluginFolderValue: PluginDir,
+		DataFolderValue:   DataDir,
+		OutputFolderValue: OutputDir,
+		ServerFolderValue: ServerDir,
+		TempFolderValue:   TempDir,
+		KeyFolderValue:    KeyDir,
 
-		InputFile:                   InputFile,
-		DataFlowDiagramFilenamePNG:  DataFlowDiagramFilenamePNG,
-		DataAssetDiagramFilenamePNG: DataAssetDiagramFilenamePNG,
-		DataFlowDiagramFilenameDOT:  DataFlowDiagramFilenameDOT,
-		DataAssetDiagramFilenameDOT: DataAssetDiagramFilenameDOT,
-		ReportFilename:              ReportFilename,
-		ExcelRisksFilename:          ExcelRisksFilename,
-		ExcelTagsFilename:           ExcelTagsFilename,
-		JsonRisksFilename:           JsonRisksFilename,
-		JsonTechnicalAssetsFilename: JsonTechnicalAssetsFilename,
-		JsonStatsFilename:           JsonStatsFilename,
-		TemplateFilename:            TemplateFilename,
-		ReportLogoImagePath:         ReportLogoImagePath,
-		TechnologyFilename:          "",
+		InputFileValue:                   InputFile,
+		DataFlowDiagramFilenamePNGValue:  DataFlowDiagramFilenamePNG,
+		DataAssetDiagramFilenamePNGValue: DataAssetDiagramFilenamePNG,
+		DataFlowDiagramFilenameDOTValue:  DataFlowDiagramFilenameDOT,
+		DataAssetDiagramFilenameDOTValue: DataAssetDiagramFilenameDOT,
+		ReportFilenameValue:              ReportFilename,
+		ExcelRisksFilenameValue:          ExcelRisksFilename,
+		ExcelTagsFilenameValue:           ExcelTagsFilename,
+		JsonRisksFilenameValue:           JsonRisksFilename,
+		JsonTechnicalAssetsFilenameValue: JsonTechnicalAssetsFilename,
+		JsonStatsFilenameValue:           JsonStatsFilename,
+		TemplateFilenameValue:            TemplateFilename,
+		ReportLogoImagePathValue:         ReportLogoImagePath,
+		TechnologyFilenameValue:          "",
 
-		RiskRulesPlugins:  make([]string, 0),
-		SkipRiskRules:     make([]string, 0),
-		ExecuteModelMacro: "",
-		RiskExcel: riskExcelConfig{
+		RiskRulePluginsValue:   make([]string, 0),
+		SkipRiskRulesValue:     make([]string, 0),
+		ExecuteModelMacroValue: "",
+		RiskExcelValue: RiskExcelConfig{
 			HideColumns:        make([]string, 0),
 			SortByColumns:      make([]string, 0),
+			WidthOfColumns:     make(map[string]float64),
 			ShrinkColumnsToFit: true,
 			WrapText:           false,
 			ColorText:          true,
 		},
 
-		ServerMode:               false,
-		DiagramDPI:               DefaultDiagramDPI,
-		ServerPort:               DefaultServerPort,
-		GraphvizDPI:              DefaultGraphvizDPI,
-		MaxGraphvizDPI:           MaxGraphvizDPI,
-		BackupHistoryFilesToKeep: DefaultBackupHistoryFilesToKeep,
+		ServerModeValue:               false,
+		DiagramDPIValue:               DefaultDiagramDPI,
+		ServerPortValue:               DefaultServerPort,
+		GraphvizDPIValue:              DefaultGraphvizDPI,
+		MaxGraphvizDPIValue:           MaxGraphvizDPI,
+		BackupHistoryFilesToKeepValue: DefaultBackupHistoryFilesToKeep,
 
-		AddModelTitle:              false,
-		KeepDiagramSourceFiles:     false,
-		IgnoreOrphanedRiskTracking: false,
+		AddModelTitleValue:              false,
+		KeepDiagramSourceFilesValue:     false,
+		IgnoreOrphanedRiskTrackingValue: false,
 
-		Attractiveness: Attractiveness{
+		AttractivenessValue: Attractiveness{
 			Quantity: 0,
 			Confidentiality: AttackerFocus{
 				Asset:                 0,
@@ -140,7 +194,7 @@ func (c *Config) Defaults(buildTimestamp string) *Config {
 			},
 		},
 
-		ReportConfiguration: report.ReportConfiguation{
+		ReportConfigurationValue: report.ReportConfiguation{
 			HideChapter: make(map[report.ChaptersToShowHide]bool),
 		},
 	}
@@ -173,33 +227,37 @@ func (c *Config) Load(configFilename string) error {
 	c.Merge(config, values)
 
 	errorList := make([]error, 0)
-	c.TempFolder = c.CleanPath(c.TempFolder)
-	tempDirError := os.MkdirAll(c.TempFolder, 0700)
+	c.TempFolderValue = c.CleanPath(c.TempFolderValue)
+	tempDirError := os.MkdirAll(c.TempFolderValue, 0700)
 	if tempDirError != nil {
-		errorList = append(errorList, fmt.Errorf("failed to create temp dir %q: %w", c.TempFolder, tempDirError))
+		errorList = append(errorList, fmt.Errorf("failed to create temp dir %q: %w", c.TempFolderValue, tempDirError))
 	}
 
-	c.OutputFolder = c.CleanPath(c.OutputFolder)
-	outDirError := os.MkdirAll(c.OutputFolder, 0700)
+	c.OutputFolderValue = c.CleanPath(c.OutputFolderValue)
+	outDirError := os.MkdirAll(c.OutputFolderValue, 0700)
 	if outDirError != nil {
-		errorList = append(errorList, fmt.Errorf("failed to create output dir %q: %w", c.OutputFolder, outDirError))
+		errorList = append(errorList, fmt.Errorf("failed to create output dir %q: %w", c.OutputFolderValue, outDirError))
 	}
 
-	c.AppFolder = c.CleanPath(c.AppFolder)
-	appDirError := c.checkDir(c.AppFolder, "app")
+	c.AppFolderValue = c.CleanPath(c.AppFolderValue)
+	appDirError := c.checkDir(c.AppFolderValue, "app")
 	if appDirError != nil {
 		errorList = append(errorList, appDirError)
 	}
 
-	c.DataFolder = c.CleanPath(c.DataFolder)
-	dataDirError := c.checkDir(c.DataFolder, "data")
+	c.PluginFolderValue = c.CleanPath(c.PluginFolderValue)
+	pluginDirError := c.checkDir(c.PluginFolderValue, "plugin")
+	if pluginDirError != nil {
+		errorList = append(errorList, pluginDirError)
+	}
+
+	c.DataFolderValue = c.CleanPath(c.DataFolderValue)
+	dataDirError := c.checkDir(c.DataFolderValue, "data")
 	if dataDirError != nil {
 		errorList = append(errorList, dataDirError)
 	}
 
-	if c.TechnologyFilename != "" {
-		c.TechnologyFilename = c.CleanPath(c.TechnologyFilename)
-	}
+	c.TechnologyFilenameValue = c.CleanPath(c.TechnologyFilenameValue)
 
 	serverFolderError := c.CheckServerFolder()
 	if serverFolderError != nil {
@@ -214,16 +272,16 @@ func (c *Config) Load(configFilename string) error {
 }
 
 func (c *Config) CheckServerFolder() error {
-	if c.ServerMode {
-		c.ServerFolder = c.CleanPath(c.ServerFolder)
-		serverDirError := c.checkDir(c.ServerFolder, "server")
+	if c.ServerModeValue {
+		c.ServerFolderValue = c.CleanPath(c.ServerFolderValue)
+		serverDirError := c.checkDir(c.ServerFolderValue, "server")
 		if serverDirError != nil {
 			return serverDirError
 		}
 
-		keyDirError := os.MkdirAll(filepath.Join(c.ServerFolder, c.KeyFolder), 0700)
+		keyDirError := os.MkdirAll(filepath.Join(c.ServerFolderValue, c.KeyFolderValue), 0700)
 		if keyDirError != nil {
-			return fmt.Errorf("failed to create key dir %q: %v", filepath.Join(c.ServerFolder, c.KeyFolder), keyDirError)
+			return fmt.Errorf("failed to create key dir %q: %w", filepath.Join(c.ServerFolderValue, c.KeyFolderValue), keyDirError)
 		}
 	}
 
@@ -233,71 +291,86 @@ func (c *Config) CheckServerFolder() error {
 func (c *Config) Merge(config Config, values map[string]any) {
 	for key := range values {
 		switch strings.ToLower(key) {
+		case strings.ToLower("BuildTimestamp"):
+			c.BuildTimestampValue = config.BuildTimestampValue
+
 		case strings.ToLower("Verbose"):
-			c.Verbose = config.Verbose
+			c.VerboseValue = config.VerboseValue
+
+		case strings.ToLower("Interactive"):
+			c.InteractiveValue = config.InteractiveValue
 
 		case strings.ToLower("AppFolder"):
-			c.AppFolder = config.AppFolder
+			c.AppFolderValue = config.AppFolderValue
+
+		case strings.ToLower("PluginFolder"):
+			c.PluginFolderValue = config.PluginFolderValue
 
 		case strings.ToLower("DataFolder"):
-			c.DataFolder = config.DataFolder
+			c.DataFolderValue = config.DataFolderValue
 
 		case strings.ToLower("OutputFolder"):
-			c.OutputFolder = config.OutputFolder
+			c.OutputFolderValue = config.OutputFolderValue
 
 		case strings.ToLower("ServerFolder"):
-			c.ServerFolder = config.ServerFolder
+			c.ServerFolderValue = config.ServerFolderValue
 
 		case strings.ToLower("TempFolder"):
-			c.TempFolder = config.TempFolder
+			c.TempFolderValue = config.TempFolderValue
 
 		case strings.ToLower("KeyFolder"):
-			c.KeyFolder = config.KeyFolder
+			c.KeyFolderValue = config.KeyFolderValue
 
 		case strings.ToLower("InputFile"):
-			c.InputFile = config.InputFile
+			c.InputFileValue = config.InputFileValue
 
 		case strings.ToLower("DataFlowDiagramFilenamePNG"):
-			c.DataFlowDiagramFilenamePNG = config.DataFlowDiagramFilenamePNG
+			c.DataFlowDiagramFilenamePNGValue = config.DataFlowDiagramFilenamePNGValue
 
 		case strings.ToLower("DataAssetDiagramFilenamePNG"):
-			c.DataAssetDiagramFilenamePNG = config.DataAssetDiagramFilenamePNG
+			c.DataAssetDiagramFilenamePNGValue = config.DataAssetDiagramFilenamePNGValue
 
 		case strings.ToLower("DataFlowDiagramFilenameDOT"):
-			c.DataFlowDiagramFilenameDOT = config.DataFlowDiagramFilenameDOT
+			c.DataFlowDiagramFilenameDOTValue = config.DataFlowDiagramFilenameDOTValue
 
 		case strings.ToLower("DataAssetDiagramFilenameDOT"):
-			c.DataAssetDiagramFilenameDOT = config.DataAssetDiagramFilenameDOT
+			c.DataAssetDiagramFilenameDOTValue = config.DataAssetDiagramFilenameDOTValue
 
 		case strings.ToLower("ReportFilename"):
-			c.ReportFilename = config.ReportFilename
+			c.ReportFilenameValue = config.ReportFilenameValue
 
 		case strings.ToLower("ExcelRisksFilename"):
-			c.ExcelRisksFilename = config.ExcelRisksFilename
+			c.ExcelRisksFilenameValue = config.ExcelRisksFilenameValue
 
 		case strings.ToLower("ExcelTagsFilename"):
-			c.ExcelTagsFilename = config.ExcelTagsFilename
+			c.ExcelTagsFilenameValue = config.ExcelTagsFilenameValue
 
 		case strings.ToLower("JsonRisksFilename"):
-			c.JsonRisksFilename = config.JsonRisksFilename
+			c.JsonRisksFilenameValue = config.JsonRisksFilenameValue
 
 		case strings.ToLower("JsonTechnicalAssetsFilename"):
-			c.JsonTechnicalAssetsFilename = config.JsonTechnicalAssetsFilename
+			c.JsonTechnicalAssetsFilenameValue = config.JsonTechnicalAssetsFilenameValue
 
 		case strings.ToLower("JsonStatsFilename"):
-			c.JsonStatsFilename = config.JsonStatsFilename
+			c.JsonStatsFilenameValue = config.JsonStatsFilenameValue
 
 		case strings.ToLower("TemplateFilename"):
-			c.TemplateFilename = config.TemplateFilename
+			c.TemplateFilenameValue = config.TemplateFilenameValue
 
 		case strings.ToLower("ReportLogoImagePath"):
-			c.ReportLogoImagePath = config.ReportLogoImagePath
+			c.TemplateFilenameValue = config.ReportLogoImagePathValue
 
 		case strings.ToLower("TechnologyFilename"):
-			c.TechnologyFilename = config.TechnologyFilename
+			c.TechnologyFilenameValue = config.TechnologyFilenameValue
 
-		case strings.ToLower("RiskRulesPlugins"):
-			c.RiskRulesPlugins = config.RiskRulesPlugins
+		case strings.ToLower("RiskRulePlugins"):
+			c.RiskRulePluginsValue = config.RiskRulePluginsValue
+
+		case strings.ToLower("SkipRiskRules"):
+			c.SkipRiskRulesValue = config.SkipRiskRulesValue
+
+		case strings.ToLower("ExecuteModelMacro"):
+			c.ExecuteModelMacroValue = config.ExecuteModelMacroValue
 
 		case strings.ToLower("RiskExcel"):
 			configMap, mapOk := values[key].(map[string]any)
@@ -308,63 +381,60 @@ func (c *Config) Merge(config Config, values map[string]any) {
 			for valueName := range configMap {
 				switch strings.ToLower(valueName) {
 				case strings.ToLower("HideColumns"):
-					c.RiskExcel.HideColumns = append(c.RiskExcel.HideColumns, config.RiskExcel.HideColumns...)
+					c.RiskExcelValue.HideColumns = append(c.RiskExcelValue.HideColumns, config.RiskExcelValue.HideColumns...)
 
 				case strings.ToLower("SortByColumns"):
-					c.RiskExcel.SortByColumns = append(c.RiskExcel.SortByColumns, config.RiskExcel.SortByColumns...)
+					c.RiskExcelValue.SortByColumns = append(c.RiskExcelValue.SortByColumns, config.RiskExcelValue.SortByColumns...)
 
 				case strings.ToLower("WidthOfColumns"):
-					if c.RiskExcel.WidthOfColumns == nil {
-						c.RiskExcel.WidthOfColumns = make(map[string]float64)
+					if c.RiskExcelValue.WidthOfColumns == nil {
+						c.RiskExcelValue.WidthOfColumns = make(map[string]float64)
 					}
 
-					for name, value := range config.RiskExcel.WidthOfColumns {
-						c.RiskExcel.WidthOfColumns[name] = value
+					for name, value := range config.RiskExcelValue.WidthOfColumns {
+						c.RiskExcelValue.WidthOfColumns[name] = value
 					}
 
 				case strings.ToLower("ShrinkColumnsToFit"):
-					c.RiskExcel.ShrinkColumnsToFit = config.RiskExcel.ShrinkColumnsToFit
+					c.RiskExcelValue.ShrinkColumnsToFit = config.RiskExcelValue.ShrinkColumnsToFit
 
 				case strings.ToLower("WrapText"):
-					c.RiskExcel.WrapText = config.RiskExcel.WrapText
+					c.RiskExcelValue.WrapText = config.RiskExcelValue.WrapText
 
 				case strings.ToLower("ColorText"):
-					c.RiskExcel.ColorText = config.RiskExcel.ColorText
+					c.RiskExcelValue.ColorText = config.RiskExcelValue.ColorText
 				}
 			}
 
-		case strings.ToLower("SkipRiskRules"):
-			c.SkipRiskRules = config.SkipRiskRules
-
-		case strings.ToLower("ExecuteModelMacro"):
-			c.ExecuteModelMacro = config.ExecuteModelMacro
+		case strings.ToLower("ServerMode"):
+			// not configurable via config file
 
 		case strings.ToLower("DiagramDPI"):
-			c.DiagramDPI = config.DiagramDPI
+			c.DiagramDPIValue = config.DiagramDPIValue
 
 		case strings.ToLower("ServerPort"):
-			c.ServerPort = config.ServerPort
+			c.ServerPortValue = config.ServerPortValue
 
 		case strings.ToLower("GraphvizDPI"):
-			c.GraphvizDPI = config.GraphvizDPI
+			c.GraphvizDPIValue = config.GraphvizDPIValue
 
 		case strings.ToLower("MaxGraphvizDPI"):
-			c.MaxGraphvizDPI = config.MaxGraphvizDPI
+			c.MaxGraphvizDPIValue = config.MaxGraphvizDPIValue
 
 		case strings.ToLower("BackupHistoryFilesToKeep"):
-			c.BackupHistoryFilesToKeep = config.BackupHistoryFilesToKeep
+			c.BackupHistoryFilesToKeepValue = config.BackupHistoryFilesToKeepValue
 
 		case strings.ToLower("AddModelTitle"):
-			c.AddModelTitle = config.AddModelTitle
+			c.AddModelTitleValue = config.AddModelTitleValue
 
 		case strings.ToLower("KeepDiagramSourceFiles"):
-			c.KeepDiagramSourceFiles = config.KeepDiagramSourceFiles
+			c.KeepDiagramSourceFilesValue = config.KeepDiagramSourceFilesValue
 
 		case strings.ToLower("IgnoreOrphanedRiskTracking"):
-			c.IgnoreOrphanedRiskTracking = config.IgnoreOrphanedRiskTracking
+			c.IgnoreOrphanedRiskTrackingValue = config.IgnoreOrphanedRiskTrackingValue
 
 		case strings.ToLower("Attractiveness"):
-			c.Attractiveness = config.Attractiveness
+			c.AttractivenessValue = config.AttractivenessValue
 
 		case strings.ToLower("ReportConfiguration"):
 			configMap, mapOk := values[key].(map[string]any)
@@ -374,12 +444,12 @@ func (c *Config) Merge(config Config, values map[string]any) {
 			for valueName := range configMap {
 				switch strings.ToLower(valueName) {
 				case strings.ToLower("HideChapter"):
-					if c.ReportConfiguration.HideChapter == nil {
-						c.ReportConfiguration.HideChapter = make(map[report.ChaptersToShowHide]bool)
+					if c.ReportConfigurationValue.HideChapter == nil {
+						c.ReportConfigurationValue.HideChapter = make(map[report.ChaptersToShowHide]bool)
 					}
 
-					for chapter, value := range config.ReportConfiguration.HideChapter {
-						c.ReportConfiguration.HideChapter[chapter] = value
+					for chapter, value := range config.ReportConfigurationValue.HideChapter {
+						c.ReportConfigurationValue.HideChapter[chapter] = value
 						if value {
 							log.Println("Hiding chapter: ", chapter)
 						}
@@ -397,7 +467,7 @@ func (c *Config) CleanPath(path string) string {
 func (c *Config) checkDir(dir string, name string) error {
 	dirInfo, dirError := os.Stat(dir)
 	if dirError != nil {
-		return fmt.Errorf("%v folder %q not good: %v", name, dir, dirError)
+		return fmt.Errorf("%v folder %q not good: %w", name, dir, dirError)
 	}
 
 	if !dirInfo.IsDir() {
@@ -435,142 +505,205 @@ func (c *Config) UserHomeDir() string {
 }
 
 func (c *Config) GetBuildTimestamp() string {
-	return c.BuildTimestamp
+	return c.BuildTimestampValue
 }
 
 func (c *Config) GetVerbose() bool {
-	return c.Verbose
+	return c.VerboseValue
+}
+
+func (c *Config) SetVerbose(verbose bool) {
+	c.VerboseValue = verbose
+}
+
+func (c *Config) GetInteractive() bool {
+	return c.InteractiveValue
+}
+
+func (c *Config) SetInteractive(interactive bool) {
+	c.InteractiveValue = interactive
 }
 
 func (c *Config) GetAppFolder() string {
-	return c.AppFolder
+	return c.AppFolderValue
+}
+
+func (c *Config) SetAppFolder(appFolder string) {
+	c.AppFolderValue = appFolder
+}
+
+func (c *Config) GetPluginFolder() string {
+	return c.PluginFolderValue
+}
+
+func (c *Config) SetPluginFolder(pluginFolder string) {
+	c.PluginFolderValue = pluginFolder
 }
 
 func (c *Config) GetDataFolder() string {
-	return c.DataFolder
+	return c.DataFolderValue
 }
 
 func (c *Config) GetOutputFolder() string {
-	return c.OutputFolder
+	return c.OutputFolderValue
+}
+
+func (c *Config) SetOutputFolder(outputFolder string) {
+	c.OutputFolderValue = outputFolder
 }
 
 func (c *Config) GetServerFolder() string {
-	return c.ServerFolder
+	return c.ServerFolderValue
+}
+
+func (c *Config) SetServerFolder(serverFolder string) {
+	c.ServerFolderValue = serverFolder
 }
 
 func (c *Config) GetTempFolder() string {
-	return c.TempFolder
+	return c.TempFolderValue
+}
+
+func (c *Config) SetTempFolder(tempFolder string) {
+	c.TempFolderValue = tempFolder
 }
 
 func (c *Config) GetKeyFolder() string {
-	return c.KeyFolder
+	return c.KeyFolderValue
 }
 
 func (c *Config) GetTechnologyFilename() string {
-	return c.TechnologyFilename
+	return c.TechnologyFilenameValue
 }
 
 func (c *Config) GetInputFile() string {
-	return c.InputFile
+	return c.InputFileValue
+}
+
+func (c *Config) SetInputFile(inputFile string) {
+	c.InputFileValue = inputFile
 }
 
 func (c *Config) GetDataFlowDiagramFilenamePNG() string {
-	return c.DataFlowDiagramFilenamePNG
+	return c.DataFlowDiagramFilenamePNGValue
 }
 
 func (c *Config) GetDataAssetDiagramFilenamePNG() string {
-	return c.DataAssetDiagramFilenamePNG
+	return c.DataAssetDiagramFilenamePNGValue
 }
 
 func (c *Config) GetDataFlowDiagramFilenameDOT() string {
-	return c.DataFlowDiagramFilenameDOT
+	return c.DataFlowDiagramFilenameDOTValue
 }
 
 func (c *Config) GetDataAssetDiagramFilenameDOT() string {
-	return c.DataAssetDiagramFilenameDOT
+	return c.DataAssetDiagramFilenameDOTValue
 }
 
 func (c *Config) GetReportFilename() string {
-	return c.ReportFilename
+	return c.ReportFilenameValue
 }
 
 func (c *Config) GetExcelRisksFilename() string {
-	return c.ExcelRisksFilename
+	return c.ExcelRisksFilenameValue
 }
 
 func (c *Config) GetExcelTagsFilename() string {
-	return c.ExcelTagsFilename
+	return c.ExcelTagsFilenameValue
 }
 
 func (c *Config) GetJsonRisksFilename() string {
-	return c.JsonRisksFilename
+	return c.JsonRisksFilenameValue
 }
 
 func (c *Config) GetJsonTechnicalAssetsFilename() string {
-	return c.JsonTechnicalAssetsFilename
+	return c.JsonTechnicalAssetsFilenameValue
 }
 
 func (c *Config) GetJsonStatsFilename() string {
-	return c.JsonStatsFilename
-}
-
-func (c *Config) GetTemplateFilename() string {
-	return c.TemplateFilename
+	return c.JsonStatsFilenameValue
 }
 
 func (c *Config) GetReportLogoImagePath() string {
-	return c.ReportLogoImagePath
+	return c.ReportLogoImagePathValue
 }
 
-func (c *Config) GetRiskRulesPlugins() []string {
-	return c.RiskRulesPlugins
+func (c *Config) GetTemplateFilename() string {
+	return c.TemplateFilenameValue
+}
+
+func (c *Config) SetTemplateFilename(templateFilename string) {
+	c.TemplateFilenameValue = templateFilename
+}
+
+func (c *Config) GetRiskRulePlugins() []string {
+	return c.RiskRulePluginsValue
+}
+func (c *Config) SetRiskRulePlugins(riskRulePlugins []string) {
+	c.RiskRulePluginsValue = riskRulePlugins
 }
 
 func (c *Config) GetSkipRiskRules() []string {
-	return c.SkipRiskRules
+	return c.SkipRiskRulesValue
+}
+
+func (c *Config) SetSkipRiskRules(skipRiskRules []string) {
+	c.SkipRiskRulesValue = skipRiskRules
 }
 
 func (c *Config) GetExecuteModelMacro() string {
-	return c.ExecuteModelMacro
+	return c.ExecuteModelMacroValue
 }
 
 func (c *Config) GetRiskExcelConfigHideColumns() []string {
-	return c.RiskExcel.HideColumns
+	return c.RiskExcelValue.HideColumns
 }
 
 func (c *Config) GetRiskExcelConfigSortByColumns() []string {
-	return c.RiskExcel.SortByColumns
+	return c.RiskExcelValue.SortByColumns
 }
 
 func (c *Config) GetRiskExcelConfigWidthOfColumns() map[string]float64 {
-	return c.RiskExcel.WidthOfColumns
+	return c.RiskExcelValue.WidthOfColumns
 }
 
 func (c *Config) GetRiskExcelWrapText() bool {
-	return c.RiskExcel.WrapText
+	return c.RiskExcelValue.WrapText
 }
 
 func (c *Config) GetRiskExcelShrinkColumnsToFit() bool {
-	return c.RiskExcel.ShrinkColumnsToFit
+	return c.RiskExcelValue.ShrinkColumnsToFit
 }
 func (c *Config) GetRiskExcelColorText() bool {
-	return c.RiskExcel.ColorText
+	return c.RiskExcelValue.ColorText
 }
 
 func (c *Config) GetServerMode() bool {
-	return c.ServerMode
+	return c.ServerModeValue
+}
+
+func (c *Config) SetServerMode(serverMode bool) {
+	c.ServerModeValue = serverMode
 }
 
 func (c *Config) GetDiagramDPI() int {
-	return c.DiagramDPI
+	return c.DiagramDPIValue
+}
+
+func (c *Config) SetDiagramDPI(diagramDPI int) {
+	c.DiagramDPIValue = diagramDPI
 }
 
 func (c *Config) GetServerPort() int {
-	return c.ServerPort
+	return c.ServerPortValue
+}
+
+func (c *Config) SetServerPort(serverPort int) {
+	c.ServerPortValue = serverPort
 }
 
 func (c *Config) GetGraphvizDPI() int {
-	return c.GraphvizDPI
+	return c.GraphvizDPIValue
 }
 
 func (c *Config) GetMinGraphvizDPI() int {
@@ -578,23 +711,27 @@ func (c *Config) GetMinGraphvizDPI() int {
 }
 
 func (c *Config) GetMaxGraphvizDPI() int {
-	return c.MaxGraphvizDPI
+	return c.MaxGraphvizDPIValue
 }
 
 func (c *Config) GetBackupHistoryFilesToKeep() int {
-	return c.BackupHistoryFilesToKeep
+	return c.BackupHistoryFilesToKeepValue
 }
 
 func (c *Config) GetAddModelTitle() bool {
-	return c.AddModelTitle
+	return c.AddModelTitleValue
 }
 
 func (c *Config) GetKeepDiagramSourceFiles() bool {
-	return c.KeepDiagramSourceFiles
+	return c.KeepDiagramSourceFilesValue
 }
 
 func (c *Config) GetIgnoreOrphanedRiskTracking() bool {
-	return c.IgnoreOrphanedRiskTracking
+	return c.IgnoreOrphanedRiskTrackingValue
+}
+
+func (c *Config) SetIgnoreOrphanedRiskTracking(ignoreOrphanedRiskTracking bool) {
+	c.IgnoreOrphanedRiskTrackingValue = ignoreOrphanedRiskTracking
 }
 
 func (c *Config) GetThreagileVersion() string {
@@ -602,9 +739,9 @@ func (c *Config) GetThreagileVersion() string {
 }
 
 func (c *Config) GetProgressReporter() types.ProgressReporter {
-	return DefaultProgressReporter{Verbose: c.Verbose}
+	return DefaultProgressReporter{Verbose: c.VerboseValue}
 }
 
 func (c *Config) GetReportConfigurationHideChapters() map[report.ChaptersToShowHide]bool {
-	return c.ReportConfiguration.HideChapter
+	return c.ReportConfigurationValue.HideChapter
 }

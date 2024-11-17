@@ -2,7 +2,6 @@ package statements
 
 import (
 	"fmt"
-
 	"github.com/threagile/threagile/pkg/risks/script/common"
 	"github.com/threagile/threagile/pkg/risks/script/expressions"
 )
@@ -39,10 +38,7 @@ func (what *ReturnStatement) Run(scope *common.Scope) (string, error) {
 		return errorLiteral, evalError
 	}
 
-	if value != nil {
-		scope.SetReturnValue(value)
-	}
-
+	scope.SetReturnValue(common.AddValueHistory(value, scope.GetHistory()))
 	scope.HasReturned = true
 
 	return "", nil

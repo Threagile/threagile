@@ -2,181 +2,203 @@ package common
 
 import (
 	"fmt"
-
-	"github.com/threagile/threagile/pkg/risks/script/event"
+	"github.com/threagile/threagile/pkg/risks/script/property"
 )
 
-func Compare(firstValue Value, secondValue Value, as string, stack Stack) (event.Event, error) {
-	castFirstValue := firstValue
-	castSecondValue := secondValue
+func Compare(first Value, second Value, as string) (*Event, error) {
+	firstValue := first
+	secondValue := second
 	if len(as) > 0 {
 		var castError error
-		castFirstValue, castError = CastValue(firstValue, stack, as)
+		firstValue, castError = CastValue(firstValue, as)
 		if castError != nil {
 			return nil, fmt.Errorf("failed to cast value to %q: %w", as, castError)
 		}
 
-		castSecondValue, castError = CastValue(secondValue, stack, as)
+		secondValue, castError = CastValue(secondValue, as)
 		if castError != nil {
 			return nil, fmt.Errorf("failed to cast value to %q: %w", as, castError)
 		}
 	}
 
-	return compare(castFirstValue, firstValue, castSecondValue, secondValue)
+	return compare(firstValue, secondValue)
 }
 
-func compare(castFirstValue Value, origFirstValue Value, castSecondValue Value, origSecondValue Value) (event.Event, error) {
-	switch first := castFirstValue.(type) {
+func compare(firstValue Value, secondValue Value) (*Event, error) {
+	switch first := firstValue.(type) {
 	case *ArrayValue:
-		second, conversionError := ToArrayValue(castSecondValue)
+		second, conversionError := ToArrayValue(secondValue)
 		if conversionError != nil {
 			return nil, conversionError
 		}
 
-		return compareArrays(first, origFirstValue, second, origSecondValue)
+		return compareArrays(first, second)
 
 	case *BoolValue:
-		second, conversionError := ToBoolValue(castSecondValue)
+		second, conversionError := ToBoolValue(secondValue)
 		if conversionError != nil {
 			return nil, conversionError
 		}
 
 		if first.BoolValue() == second.BoolValue() {
-			return event.NewEqual(origFirstValue, origSecondValue), nil
+			return NewEventFrom(NewEqualProperty(second), first, second), nil
 		}
 
-		return event.NewNotEqual(origFirstValue, origSecondValue), nil
+		return NewEventFrom(NewNotEqualProperty(second), first, second), nil
 
 	case *DecimalValue:
-		second, conversionError := ToDecimalValue(castSecondValue)
+		second, conversionError := ToDecimalValue(secondValue)
 		if conversionError != nil {
 			return nil, conversionError
 		}
 
 		value := first.DecimalValue().Cmp(second.DecimalValue())
+		prop := NewEqualProperty(secondValue)
 		if value < 0 {
-			return event.NewLess(origFirstValue, origSecondValue), nil
+			prop = NewLessProperty(secondValue)
 		} else if value > 0 {
-			return event.NewGreater(origFirstValue, origSecondValue), nil
+			prop = NewGreaterProperty(secondValue)
 		}
 
-		return event.NewEqual(origFirstValue, origSecondValue), nil
+		return NewEventFrom(prop, first, second), nil
 
 	case *StringValue:
-		second, conversionError := ToStringValue(castSecondValue)
+		second, conversionError := ToStringValue(secondValue)
 		if conversionError != nil {
 			return nil, conversionError
 		}
 
 		if first.StringValue() == second.StringValue() {
-			return event.NewEqual(origFirstValue, origSecondValue), nil
+			return NewEventFrom(NewEqualProperty(second), first, second), nil
 		}
 
-		return event.NewNotEqual(origFirstValue, origSecondValue), nil
+		return NewEventFrom(NewNotEqualProperty(second), first, second), nil
 
 	case *AnyValue:
-		if castFirstValue.Value() == nil {
-			return compare(nil, origFirstValue, castSecondValue, origSecondValue)
+		if firstValue.Value() == nil {
+			return compare(nil, secondValue)
 		}
 
 	case nil:
-		switch second := castSecondValue.(type) {
+		switch second := secondValue.(type) {
 		case *ArrayValue:
 			if len(second.ArrayValue()) == 0 {
-				return event.NewEqual(origFirstValue, origSecondValue), nil
+				return NewEventFrom(NewEqualProperty(second), first, second), nil
 			}
 
-			return event.NewNotEqual(origFirstValue, origSecondValue), nil
+			return NewEventFrom(NewNotEqualProperty(second), first, second), nil
 
 		case *BoolValue:
 			if !second.BoolValue() {
-				return event.NewEqual(origFirstValue, origSecondValue), nil
+				return NewEventFrom(NewEqualProperty(second), first, second), nil
 			}
 
-			return event.NewNotEqual(origFirstValue, origSecondValue), nil
+			return NewEventFrom(NewNotEqualProperty(second), first, second), nil
 
 		case *DecimalValue:
 			if second.DecimalValue().IsZero() {
-				return event.NewEqual(origFirstValue, origSecondValue), nil
+				return NewEventFrom(NewEqualProperty(second), first, second), nil
 			}
 
-			return event.NewNotEqual(origFirstValue, origSecondValue), nil
+			return NewEventFrom(NewNotEqualProperty(second), first, second), nil
 
 		case *StringValue:
 			if len(second.StringValue()) == 0 {
-				return event.NewEqual(origFirstValue, origSecondValue), nil
+				return NewEventFrom(NewEqualProperty(second), first, second), nil
 			}
 
-			return event.NewNotEqual(origFirstValue, origSecondValue), nil
+			return NewEventFrom(NewNotEqualProperty(second), first, second), nil
 
 		case *AnyValue:
 			if second.Value() == nil {
-				return event.NewEqual(origFirstValue, origSecondValue), nil
+				return NewEvent(NewEqualProperty(nil), nil), nil
 			}
 
 		case nil:
-			return event.NewEqual(origFirstValue, origSecondValue), nil
+			return NewEvent(NewEqualProperty(nil), nil), nil
 		}
 	}
 
-	return nil, fmt.Errorf("can't compare %T to %T", origFirstValue, origSecondValue)
+	return nil, fmt.Errorf("can't compare %T to %T", firstValue, secondValue)
 }
 
-func compareArrays(firstValue *ArrayValue, origFirstValue Value, secondValue *ArrayValue, origSecondValue Value) (event.Event, error) {
+func compareArrays(firstValue *ArrayValue, secondValue *ArrayValue) (*Event, error) {
 	if len(firstValue.ArrayValue()) != len(secondValue.ArrayValue()) {
-		return event.NewNotEqual(origFirstValue, origSecondValue), nil
+		return NewEventFrom(NewNotEqualProperty(firstValue), firstValue, secondValue), nil
 	}
 
 	for index, first := range firstValue.ArrayValue() {
 		second := secondValue.ArrayValue()[index]
-		result, compareError := compare(first, first, second, second)
+		event, compareError := compare(first, second)
 		if compareError != nil {
-			return result, compareError
+			return event, compareError
 		}
 
-		if !IsSame(result) {
-			return event.NewNotEqual(origFirstValue, origSecondValue), nil
+		if !IsSame(event.Property) {
+			return NewEventFrom(NewNotEqualProperty(firstValue), firstValue, secondValue), nil
 		}
 	}
 
-	return event.NewEqual(origFirstValue, origSecondValue), nil
+	return NewEventFrom(NewEqualProperty(firstValue), firstValue, secondValue), nil
 }
 
-func IsSame(e event.Event) bool {
-	if e == nil {
+func IsSame(value *Property) bool {
+	if value == nil {
 		return false
 	}
 
-	switch e.(type) {
-	case *event.Equal:
+	switch value.Property.(type) {
+	case *property.Equal:
 		return true
 	}
 
 	return false
 }
 
-func IsGreater(e event.Event) bool {
-	if e == nil {
+func IsGreater(value *Property) bool {
+	if value == nil {
 		return false
 	}
 
-	switch e.(type) {
-	case *event.Greater:
+	switch value.Property.(type) {
+	case *property.Greater:
 		return true
 	}
 
 	return false
 }
 
-func IsLess(e event.Event) bool {
-	if e == nil {
+func IsLess(value *Property) bool {
+	if value == nil {
 		return false
 	}
 
-	switch e.(type) {
-	case *event.Less:
+	switch value.Property.(type) {
+	case *property.Less:
 		return true
 	}
 
 	return false
+}
+
+func ToString(value any) (*StringValue, error) {
+	switch castValue := value.(type) {
+	case string:
+		return SomeStringValue(castValue, nil), nil
+
+	case *StringValue:
+		return castValue, nil
+
+	case *AnyValue:
+		aString, valueError := ToString(castValue.Value())
+		stringValue := SomeStringValue(aString.StringValue(), castValue.Event())
+		if valueError != nil {
+			return stringValue, valueError
+		}
+
+		return stringValue, nil
+
+	default:
+		return EmptyStringValue(), fmt.Errorf("expected string, got %T", value)
+	}
 }

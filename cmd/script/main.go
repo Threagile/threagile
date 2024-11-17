@@ -8,6 +8,7 @@ import (
 	"gopkg.in/yaml.v3"
 	"os"
 	"path/filepath"
+
 	"strings"
 )
 
@@ -17,7 +18,7 @@ func main() {
 	flag.Parse()
 
 	if len(scriptFilename) == 0 {
-		scriptFilename = filepath.Join("test", "risk-category.yaml")
+		scriptFilename = filepath.Join("pkg", "risks", "scripts", "accidental-secret-leak.yaml")
 	}
 
 	scriptFilename = filepath.Clean(scriptFilename)

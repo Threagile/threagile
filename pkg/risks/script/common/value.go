@@ -1,11 +1,10 @@
 package common
 
-import (
-	"github.com/threagile/threagile/pkg/risks/script/event"
-)
-
 type Value interface {
-	event.Value
 	PlainValue() any
 	Value() any
+	Name() Path
+	SetName(name ...string)
+	Event() *Event
+	Text() []string
 }

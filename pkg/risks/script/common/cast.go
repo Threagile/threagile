@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/shopspring/decimal"
-	"github.com/threagile/threagile/pkg/risks/script/event"
 	"github.com/threagile/threagile/pkg/types"
 )
 
@@ -40,9 +39,9 @@ var (
 	}
 )
 
-type castFunc func(value Value, stack Stack, events ...event.Event) (Value, error)
+type castFunc func(value Value) (Value, error)
 
-func CastValue(value Value, stack Stack, castType string) (Value, error) {
+func CastValue(value Value, castType string) (Value, error) {
 	if value == nil {
 		return NilValue(), nil
 	}
@@ -52,10 +51,10 @@ func CastValue(value Value, stack Stack, castType string) (Value, error) {
 		return nil, fmt.Errorf("unknown cast type %v", castType)
 	}
 
-	return caster(value, stack, value.History()...)
+	return caster(value)
 }
 
-func toConfidentiality(value Value, stack Stack, events ...event.Event) (Value, error) {
+func toConfidentiality(value Value) (Value, error) {
 	switch castValue := value.Value().(type) {
 	case string:
 		converted, conversionError := types.Confidentiality(0).Find(castValue)
@@ -63,23 +62,23 @@ func toConfidentiality(value Value, stack Stack, events ...event.Event) (Value, 
 			return nil, conversionError
 		}
 
-		return SomeDecimalValue(decimal.NewFromInt(int64(converted)), stack, events...), nil
+		return SomeDecimalValue(decimal.NewFromInt(int64(converted)), value.Event()), nil
 
 	case int:
-		return SomeDecimalValue(decimal.NewFromInt(int64(castValue)), stack, events...), nil
+		return SomeDecimalValue(decimal.NewFromInt(int64(castValue)), value.Event()), nil
 
 	case int64:
-		return SomeDecimalValue(decimal.NewFromInt(castValue), stack, events...), nil
+		return SomeDecimalValue(decimal.NewFromInt(castValue), value.Event()), nil
 
 	case Value:
-		return toConfidentiality(castValue, stack, events...)
+		return toConfidentiality(castValue)
 
 	default:
 		return nil, fmt.Errorf("toConfidentiality: unexpected type %T", value)
 	}
 }
 
-func toCriticality(value Value, stack Stack, events ...event.Event) (Value, error) {
+func toCriticality(value Value) (Value, error) {
 	switch castValue := value.Value().(type) {
 	case string:
 		converted, conversionError := types.Criticality(0).Find(castValue)
@@ -87,23 +86,23 @@ func toCriticality(value Value, stack Stack, events ...event.Event) (Value, erro
 			return nil, conversionError
 		}
 
-		return SomeDecimalValue(decimal.NewFromInt(int64(converted)), stack, events...), nil
+		return SomeDecimalValue(decimal.NewFromInt(int64(converted)), value.Event()), nil
 
 	case int:
-		return SomeDecimalValue(decimal.NewFromInt(int64(castValue)), stack, events...), nil
+		return SomeDecimalValue(decimal.NewFromInt(int64(castValue)), value.Event()), nil
 
 	case int64:
-		return SomeDecimalValue(decimal.NewFromInt(castValue), stack, events...), nil
+		return SomeDecimalValue(decimal.NewFromInt(castValue), value.Event()), nil
 
 	case Value:
-		return toCriticality(castValue, stack, events...)
+		return toCriticality(castValue)
 
 	default:
 		return nil, fmt.Errorf("toConfidentiality: unexpected type %T", value)
 	}
 }
 
-func toAuthentication(value Value, stack Stack, events ...event.Event) (Value, error) {
+func toAuthentication(value Value) (Value, error) {
 	switch castValue := value.Value().(type) {
 	case string:
 		converted, conversionError := types.Authentication(0).Find(castValue)
@@ -111,23 +110,23 @@ func toAuthentication(value Value, stack Stack, events ...event.Event) (Value, e
 			return nil, conversionError
 		}
 
-		return SomeDecimalValue(decimal.NewFromInt(int64(converted)), stack, events...), nil
+		return SomeDecimalValue(decimal.NewFromInt(int64(converted)), value.Event()), nil
 
 	case int:
-		return SomeDecimalValue(decimal.NewFromInt(int64(castValue)), stack, events...), nil
+		return SomeDecimalValue(decimal.NewFromInt(int64(castValue)), value.Event()), nil
 
 	case int64:
-		return SomeDecimalValue(decimal.NewFromInt(castValue), stack, events...), nil
+		return SomeDecimalValue(decimal.NewFromInt(castValue), value.Event()), nil
 
 	case Value:
-		return toAuthentication(castValue, stack, events...)
+		return toAuthentication(castValue)
 
 	default:
 		return nil, fmt.Errorf("toConfidentiality: unexpected type %T", value)
 	}
 }
 
-func toAuthorization(value Value, stack Stack, events ...event.Event) (Value, error) {
+func toAuthorization(value Value) (Value, error) {
 	switch castValue := value.Value().(type) {
 	case string:
 		converted, conversionError := types.Authorization(0).Find(castValue)
@@ -135,23 +134,23 @@ func toAuthorization(value Value, stack Stack, events ...event.Event) (Value, er
 			return nil, conversionError
 		}
 
-		return SomeDecimalValue(decimal.NewFromInt(int64(converted)), stack, events...), nil
+		return SomeDecimalValue(decimal.NewFromInt(int64(converted)), value.Event()), nil
 
 	case int:
-		return SomeDecimalValue(decimal.NewFromInt(int64(castValue)), stack, events...), nil
+		return SomeDecimalValue(decimal.NewFromInt(int64(castValue)), value.Event()), nil
 
 	case int64:
-		return SomeDecimalValue(decimal.NewFromInt(castValue), stack, events...), nil
+		return SomeDecimalValue(decimal.NewFromInt(castValue), value.Event()), nil
 
 	case Value:
-		return toAuthorization(castValue, stack, events...)
+		return toAuthorization(castValue)
 
 	default:
 		return nil, fmt.Errorf("toConfidentiality: unexpected type %T", value)
 	}
 }
 
-func toProbability(value Value, stack Stack, events ...event.Event) (Value, error) {
+func toProbability(value Value) (Value, error) {
 	switch castValue := value.Value().(type) {
 	case string:
 		converted, conversionError := types.DataBreachProbability(0).Find(castValue)
@@ -159,23 +158,23 @@ func toProbability(value Value, stack Stack, events ...event.Event) (Value, erro
 			return nil, conversionError
 		}
 
-		return SomeDecimalValue(decimal.NewFromInt(int64(converted)), stack, events...), nil
+		return SomeDecimalValue(decimal.NewFromInt(int64(converted)), value.Event()), nil
 
 	case int:
-		return SomeDecimalValue(decimal.NewFromInt(int64(castValue)), stack, events...), nil
+		return SomeDecimalValue(decimal.NewFromInt(int64(castValue)), value.Event()), nil
 
 	case int64:
-		return SomeDecimalValue(decimal.NewFromInt(castValue), stack, events...), nil
+		return SomeDecimalValue(decimal.NewFromInt(castValue), value.Event()), nil
 
 	case Value:
-		return toProbability(castValue, stack, events...)
+		return toProbability(castValue)
 
 	default:
 		return nil, fmt.Errorf("toConfidentiality: unexpected type %T", value)
 	}
 }
 
-func toEncryption(value Value, stack Stack, events ...event.Event) (Value, error) {
+func toEncryption(value Value) (Value, error) {
 	switch castValue := value.Value().(type) {
 	case string:
 		converted, conversionError := types.EncryptionStyle(0).Find(castValue)
@@ -183,23 +182,23 @@ func toEncryption(value Value, stack Stack, events ...event.Event) (Value, error
 			return nil, conversionError
 		}
 
-		return SomeDecimalValue(decimal.NewFromInt(int64(converted)), stack, events...), nil
+		return SomeDecimalValue(decimal.NewFromInt(int64(converted)), value.Event()), nil
 
 	case int:
-		return SomeDecimalValue(decimal.NewFromInt(int64(castValue)), stack, events...), nil
+		return SomeDecimalValue(decimal.NewFromInt(int64(castValue)), value.Event()), nil
 
 	case int64:
-		return SomeDecimalValue(decimal.NewFromInt(castValue), stack, events...), nil
+		return SomeDecimalValue(decimal.NewFromInt(castValue), value.Event()), nil
 
 	case Value:
-		return toEncryption(castValue, stack, events...)
+		return toEncryption(castValue)
 
 	default:
 		return nil, fmt.Errorf("toConfidentiality: unexpected type %T", value)
 	}
 }
 
-func toQuantity(value Value, stack Stack, events ...event.Event) (Value, error) {
+func toQuantity(value Value) (Value, error) {
 	switch castValue := value.Value().(type) {
 	case string:
 		converted, conversionError := types.Quantity(0).Find(castValue)
@@ -207,23 +206,23 @@ func toQuantity(value Value, stack Stack, events ...event.Event) (Value, error) 
 			return nil, conversionError
 		}
 
-		return SomeDecimalValue(decimal.NewFromInt(int64(converted)), stack, events...), nil
+		return SomeDecimalValue(decimal.NewFromInt(int64(converted)), value.Event()), nil
 
 	case int:
-		return SomeDecimalValue(decimal.NewFromInt(int64(castValue)), stack, events...), nil
+		return SomeDecimalValue(decimal.NewFromInt(int64(castValue)), value.Event()), nil
 
 	case int64:
-		return SomeDecimalValue(decimal.NewFromInt(castValue), stack, events...), nil
+		return SomeDecimalValue(decimal.NewFromInt(castValue), value.Event()), nil
 
 	case Value:
-		return toQuantity(castValue, stack, events...)
+		return toQuantity(castValue)
 
 	default:
 		return nil, fmt.Errorf("toConfidentiality: unexpected type %T", value)
 	}
 }
 
-func toImpact(value Value, stack Stack, events ...event.Event) (Value, error) {
+func toImpact(value Value) (Value, error) {
 	switch castValue := value.Value().(type) {
 	case string:
 		converted, conversionError := types.RiskExploitationImpact(0).Find(castValue)
@@ -231,23 +230,23 @@ func toImpact(value Value, stack Stack, events ...event.Event) (Value, error) {
 			return nil, conversionError
 		}
 
-		return SomeDecimalValue(decimal.NewFromInt(int64(converted)), stack, events...), nil
+		return SomeDecimalValue(decimal.NewFromInt(int64(converted)), value.Event()), nil
 
 	case int:
-		return SomeDecimalValue(decimal.NewFromInt(int64(castValue)), stack, events...), nil
+		return SomeDecimalValue(decimal.NewFromInt(int64(castValue)), value.Event()), nil
 
 	case int64:
-		return SomeDecimalValue(decimal.NewFromInt(castValue), stack, events...), nil
+		return SomeDecimalValue(decimal.NewFromInt(castValue), value.Event()), nil
 
 	case Value:
-		return toImpact(castValue, stack, events...)
+		return toImpact(castValue)
 
 	default:
 		return nil, fmt.Errorf("toConfidentiality: unexpected type %T", value)
 	}
 }
 
-func toLikelihood(value Value, stack Stack, events ...event.Event) (Value, error) {
+func toLikelihood(value Value) (Value, error) {
 	switch castValue := value.Value().(type) {
 	case string:
 		converted, conversionError := types.RiskExploitationLikelihood(0).Find(castValue)
@@ -255,23 +254,23 @@ func toLikelihood(value Value, stack Stack, events ...event.Event) (Value, error
 			return nil, conversionError
 		}
 
-		return SomeDecimalValue(decimal.NewFromInt(int64(converted)), stack, events...), nil
+		return SomeDecimalValue(decimal.NewFromInt(int64(converted)), value.Event()), nil
 
 	case int:
-		return SomeDecimalValue(decimal.NewFromInt(int64(castValue)), stack, events...), nil
+		return SomeDecimalValue(decimal.NewFromInt(int64(castValue)), value.Event()), nil
 
 	case int64:
-		return SomeDecimalValue(decimal.NewFromInt(castValue), stack, events...), nil
+		return SomeDecimalValue(decimal.NewFromInt(castValue), value.Event()), nil
 
 	case Value:
-		return toLikelihood(castValue, stack, events...)
+		return toLikelihood(castValue)
 
 	default:
 		return nil, fmt.Errorf("toConfidentiality: unexpected type %T", value)
 	}
 }
 
-func toSize(value Value, stack Stack, events ...event.Event) (Value, error) {
+func toSize(value Value) (Value, error) {
 	switch castValue := value.Value().(type) {
 	case string:
 		converted, conversionError := types.TechnicalAssetSize(0).Find(castValue)
@@ -279,16 +278,16 @@ func toSize(value Value, stack Stack, events ...event.Event) (Value, error) {
 			return nil, conversionError
 		}
 
-		return SomeDecimalValue(decimal.NewFromInt(int64(converted)), stack, events...), nil
+		return SomeDecimalValue(decimal.NewFromInt(int64(converted)), value.Event()), nil
 
 	case int:
-		return SomeDecimalValue(decimal.NewFromInt(int64(castValue)), stack, events...), nil
+		return SomeDecimalValue(decimal.NewFromInt(int64(castValue)), value.Event()), nil
 
 	case int64:
-		return SomeDecimalValue(decimal.NewFromInt(castValue), stack, events...), nil
+		return SomeDecimalValue(decimal.NewFromInt(castValue), value.Event()), nil
 
 	case Value:
-		return toSize(castValue, stack, events...)
+		return toSize(castValue)
 
 	default:
 		return nil, fmt.Errorf("toConfidentiality: unexpected type %T", value)

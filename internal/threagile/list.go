@@ -22,7 +22,13 @@ func (what *Threagile) initList() *Threagile {
 			cmd.Println("----------------------")
 			cmd.Println("Custom risk rules:")
 			cmd.Println("----------------------")
-			customRiskRules := model.LoadCustomRiskRules(strings.Split(what.flags.customRiskRulesPluginFlag, ","), DefaultProgressReporter{Verbose: what.flags.verboseFlag})
+			cfg := new(Config).Defaults(what.buildTimestamp)
+			configError := cfg.Load(what.flags.configFlag)
+			if configError != nil {
+				cmd.Printf("WARNING: failed to load config file %q: %v\n", what.flags.configFlag, configError)
+			}
+
+			customRiskRules := model.LoadCustomRiskRules(cfg.GetPluginFolder(), strings.Split(what.flags.customRiskRulesPluginFlag, ","), DefaultProgressReporter{Verbose: what.flags.verboseFlag})
 			for id, customRule := range customRiskRules {
 				cmd.Println(id, "-->", customRule.Category().Title, "--> with tags:", customRule.SupportedTags())
 			}
