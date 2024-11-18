@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"log"
 	"os"
 	"path/filepath"
@@ -74,6 +75,7 @@ type ConfigGetter interface {
 	GetServerFolder() string
 	GetTempFolder() string
 	GetKeyFolder() string
+	GetTechnologyFilename() string
 	GetInputFile() string
 	GetDataFlowDiagramFilenamePNG() string
 	GetDataAssetDiagramFilenamePNG() string
@@ -85,28 +87,32 @@ type ConfigGetter interface {
 	GetJsonRisksFilename() string
 	GetJsonTechnicalAssetsFilename() string
 	GetJsonStatsFilename() string
-	GetTemplateFilename() string
-	GetTechnologyFilename() string
 	GetReportLogoImagePath() string
+	GetTemplateFilename() string
 	GetRiskRulePlugins() []string
 	GetSkipRiskRules() []string
 	GetExecuteModelMacro() string
 	GetRiskExcelConfigHideColumns() []string
 	GetRiskExcelConfigSortByColumns() []string
 	GetRiskExcelConfigWidthOfColumns() map[string]float64
+	GetRiskExcelWrapText() bool
+	GetRiskExcelShrinkColumnsToFit() bool
+	GetRiskExcelColorText() bool
 	GetServerMode() bool
 	GetDiagramDPI() int
 	GetServerPort() int
 	GetGraphvizDPI() int
+	GetMinGraphvizDPI() int
 	GetMaxGraphvizDPI() int
 	GetBackupHistoryFilesToKeep() int
 	GetAddModelTitle() bool
 	GetKeepDiagramSourceFiles() bool
 	GetIgnoreOrphanedRiskTracking() bool
-	// GetAttractiveness() Attractiveness
-	// GetReportConfiguration() report.ReportConfiguation
+	GetAttractiveness() Attractiveness
+	GetReportConfiguration() report.ReportConfiguation
 	GetThreagileVersion() string
 	GetProgressReporter() types.ProgressReporter
+	GetReportConfigurationHideChapters() map[report.ChaptersToShowHide]bool
 }
 
 type ConfigSetter interface {
@@ -121,6 +127,10 @@ type ConfigSetter interface {
 	SetTemplateFilename(templateFilename string)
 	SetRiskRulePlugins(riskRulePlugins []string)
 	SetSkipRiskRules(skipRiskRules []string)
+	SetServerMode(serverMode bool)
+	SetDiagramDPI(diagramDPI int)
+	SetServerPort(serverPort int)
+	SetIgnoreOrphanedRiskTracking(ignoreOrphanedRiskTracking bool)
 }
 
 func (c *Config) Defaults(buildTimestamp string) *Config {
@@ -213,15 +223,28 @@ func (c *Config) Load(configFilename string) error {
 	}
 
 	values := make(map[string]any)
-	parseError := json.Unmarshal(data, &values)
-	if parseError != nil {
-		return fmt.Errorf("failed to parse config file %q: %w", configFilename, parseError)
-	}
-
 	var config Config
-	unmarshalError := json.Unmarshal(data, &config)
-	if unmarshalError != nil {
-		return fmt.Errorf("failed to parse config file %q: %w", configFilename, unmarshalError)
+
+	if strings.HasSuffix(configFilename, ".yaml") {
+		parseError := yaml.Unmarshal(data, &values)
+		if parseError != nil {
+			return fmt.Errorf("failed to parse keys of yaml config file %q: %w", configFilename, parseError)
+		}
+
+		unmarshalError := yaml.Unmarshal(data, &config)
+		if unmarshalError != nil {
+			return fmt.Errorf("failed to parse yaml config file %q: %w", configFilename, unmarshalError)
+		}
+	} else {
+		parseError := json.Unmarshal(data, &values)
+		if parseError != nil {
+			return fmt.Errorf("failed to parse keys of json config file %q: %w", configFilename, parseError)
+		}
+
+		unmarshalError := json.Unmarshal(data, &config)
+		if unmarshalError != nil {
+			return fmt.Errorf("failed to parse json config file %q: %w", configFilename, unmarshalError)
+		}
 	}
 
 	c.Merge(config, values)
@@ -441,6 +464,7 @@ func (c *Config) Merge(config Config, values map[string]any) {
 			if !mapOk {
 				continue
 			}
+
 			for valueName := range configMap {
 				switch strings.ToLower(valueName) {
 				case strings.ToLower("HideChapter"):
@@ -639,6 +663,7 @@ func (c *Config) SetTemplateFilename(templateFilename string) {
 func (c *Config) GetRiskRulePlugins() []string {
 	return c.RiskRulePluginsValue
 }
+
 func (c *Config) SetRiskRulePlugins(riskRulePlugins []string) {
 	c.RiskRulePluginsValue = riskRulePlugins
 }
@@ -674,6 +699,7 @@ func (c *Config) GetRiskExcelWrapText() bool {
 func (c *Config) GetRiskExcelShrinkColumnsToFit() bool {
 	return c.RiskExcelValue.ShrinkColumnsToFit
 }
+
 func (c *Config) GetRiskExcelColorText() bool {
 	return c.RiskExcelValue.ColorText
 }
@@ -732,6 +758,14 @@ func (c *Config) GetIgnoreOrphanedRiskTracking() bool {
 
 func (c *Config) SetIgnoreOrphanedRiskTracking(ignoreOrphanedRiskTracking bool) {
 	c.IgnoreOrphanedRiskTrackingValue = ignoreOrphanedRiskTracking
+}
+
+func (c *Config) GetAttractiveness() Attractiveness {
+	return c.AttractivenessValue
+}
+
+func (c *Config) GetReportConfiguration() report.ReportConfiguation {
+	return c.ReportConfigurationValue
 }
 
 func (c *Config) GetThreagileVersion() string {
