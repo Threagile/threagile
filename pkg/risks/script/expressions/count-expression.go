@@ -183,6 +183,9 @@ func (what *CountExpression) evalDecimal(scope *common.Scope, inValue common.Val
 	case common.Value:
 		return what.evalDecimal(scope, common.SomeValue(castValue.Value(), inValue.Event()))
 
+	case nil:
+		return common.EmptyDecimalValue(), "", nil
+
 	default:
 		return common.EmptyDecimalValue(), what.Literal(), fmt.Errorf("failed to eval all-expression: expected iterable type, got %T", inValue)
 	}

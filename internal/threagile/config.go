@@ -17,6 +17,9 @@ import (
 )
 
 type Config struct {
+	ConfigGetter
+	ConfigSetter
+
 	BuildTimestampValue string `json:"BuildTimestamp,omitempty" yaml:"BuildTimestamp"`
 	VerboseValue        bool   `json:"Verbose,omitempty" yaml:"Verbose"`
 	InteractiveValue    bool   `json:"Interactive,omitempty" yaml:"Interactive"`
@@ -63,6 +66,75 @@ type Config struct {
 	AttractivenessValue Attractiveness `json:"Attractiveness" yaml:"Attractiveness"`
 
 	ReportConfigurationValue report.ReportConfiguation `json:"ReportConfiguration" yaml:"ReportConfiguration"`
+}
+
+type ConfigGetter interface {
+	GetBuildTimestamp() string
+	GetVerbose() bool
+	GetInteractive() bool
+	GetAppFolder() string
+	GetPluginFolder() string
+	GetDataFolder() string
+	GetOutputFolder() string
+	GetServerFolder() string
+	GetTempFolder() string
+	GetKeyFolder() string
+	GetTechnologyFilename() string
+	GetInputFile() string
+	GetDataFlowDiagramFilenamePNG() string
+	GetDataAssetDiagramFilenamePNG() string
+	GetDataFlowDiagramFilenameDOT() string
+	GetDataAssetDiagramFilenameDOT() string
+	GetReportFilename() string
+	GetExcelRisksFilename() string
+	GetExcelTagsFilename() string
+	GetJsonRisksFilename() string
+	GetJsonTechnicalAssetsFilename() string
+	GetJsonStatsFilename() string
+	GetReportLogoImagePath() string
+	GetTemplateFilename() string
+	GetRiskRulePlugins() []string
+	GetSkipRiskRules() []string
+	GetExecuteModelMacro() string
+	GetRiskExcelConfigHideColumns() []string
+	GetRiskExcelConfigSortByColumns() []string
+	GetRiskExcelConfigWidthOfColumns() map[string]float64
+	GetRiskExcelWrapText() bool
+	GetRiskExcelShrinkColumnsToFit() bool
+	GetRiskExcelColorText() bool
+	GetServerMode() bool
+	GetDiagramDPI() int
+	GetServerPort() int
+	GetGraphvizDPI() int
+	GetMinGraphvizDPI() int
+	GetMaxGraphvizDPI() int
+	GetBackupHistoryFilesToKeep() int
+	GetAddModelTitle() bool
+	GetKeepDiagramSourceFiles() bool
+	GetIgnoreOrphanedRiskTracking() bool
+	GetAttractiveness() Attractiveness
+	GetReportConfiguration() report.ReportConfiguation
+	GetThreagileVersion() string
+	GetProgressReporter() types.ProgressReporter
+	GetReportConfigurationHideChapters() map[report.ChaptersToShowHide]bool
+}
+
+type ConfigSetter interface {
+	SetVerbose(verbose bool)
+	SetInteractive(interactive bool)
+	SetAppFolder(appFolder string)
+	SetPluginFolder(pluginFolder string)
+	SetOutputFolder(outputFolder string)
+	SetServerFolder(serverFolder string)
+	SetTempFolder(tempFolder string)
+	SetInputFile(inputFile string)
+	SetTemplateFilename(templateFilename string)
+	SetRiskRulePlugins(riskRulePlugins []string)
+	SetSkipRiskRules(skipRiskRules []string)
+	SetServerMode(serverMode bool)
+	SetDiagramDPI(diagramDPI int)
+	SetServerPort(serverPort int)
+	SetIgnoreOrphanedRiskTracking(ignoreOrphanedRiskTracking bool)
 }
 
 func (c *Config) Defaults(buildTimestamp string) *Config {

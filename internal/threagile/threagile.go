@@ -18,6 +18,11 @@ func (what *Threagile) Execute() {
 		what.rootCmd.Println(err)
 		os.Exit(1)
 	}
+
+	cfg := what.readConfig(what.rootCmd, what.buildTimestamp)
+	if what.flags.interactiveFlag || cfg.GetInteractive() {
+		what.run(what.rootCmd, nil)
+	}
 }
 
 func (what *Threagile) Init(buildTimestamp string) *Threagile {
