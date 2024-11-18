@@ -3,6 +3,7 @@ package threagile
 const (
 	TempDir   = "/dev/shm"
 	AppDir    = "/app"
+	PluginDir = "/app"
 	DataDir   = "/data"
 	OutputDir = "."
 	ServerDir = "/server"
