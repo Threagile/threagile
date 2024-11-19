@@ -120,6 +120,9 @@ func (what *ContainsExpression) evalBool(scope *common.Scope, item common.Value,
 	case common.Value:
 		return what.evalBool(scope, item, common.SomeValue(castValue.Value(), inValue.Event()))
 
+	case nil:
+		return common.SomeBoolValue(false, nil), "", nil
+
 	default:
 		return common.EmptyBoolValue(), "", fmt.Errorf("failed to eval contains-expression: expected iterable type, got %T", inValue)
 	}

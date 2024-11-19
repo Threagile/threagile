@@ -185,6 +185,9 @@ func (what *AllExpression) evalBool(scope *common.Scope, inValue common.Value) (
 	case common.Value:
 		return what.evalBool(scope, common.SomeValue(castValue.Value(), inValue.Event()))
 
+	case nil:
+		return common.SomeBoolValue(false, nil), "", nil
+
 	default:
 		return common.EmptyBoolValue(), what.Literal(), fmt.Errorf("failed to eval all-expression: expected iterable type, got %T", inValue)
 	}

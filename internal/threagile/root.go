@@ -82,13 +82,19 @@ func (what *Threagile) initRoot() *Threagile {
 	what.rootCmd.PersistentFlags().BoolVar(&what.flags.generateTagsExcelFlag, generateTagsExcelFlagName, true, "generate tags excel")
 	what.rootCmd.PersistentFlags().BoolVar(&what.flags.generateReportPDFFlag, generateReportPDFFlagName, true, "generate report pdf, including diagrams")
 	what.rootCmd.PersistentFlags().BoolVar(&what.flags.generateReportADOCFlag, generateReportADOCFlagName, true, "generate report adoc, including diagrams")
+
+	_ = what.rootCmd.PersistentFlags().Parse(os.Args[1:])
+
 	return what
 }
 
 func (what *Threagile) run(cmd *cobra.Command, _ []string) {
 	if !what.flags.interactiveFlag {
-		cmd.Println("Please add the --interactive flag to run in interactive mode.")
-		return
+		cfg := what.readConfig(cmd, what.buildTimestamp)
+		if !cfg.GetInteractive() {
+			cmd.Println("Please add the --interactive flag to run in interactive mode.")
+			return
+		}
 	}
 
 	completer := readline.NewPrefixCompleter()
