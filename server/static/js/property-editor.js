@@ -23,6 +23,7 @@ class EditorGenerator {
             const label = $('<label>')
                 .text(key)
                 .addClass('property-editor-label');
+            const value = this.object[key];
             let input;
             const propertyType = Array.isArray(property.type) ? property.type[0] : property.type;
 
@@ -64,8 +65,9 @@ class EditorGenerator {
                                 this.object[key] = input.val();
                                 callback(key, input.val());
                             });
+
                         this.customEnumFields[key].forEach((option) => {
-                            input.append($('<option>').val(option).text(option));
+                            input.append($('<option>').val(option).text(option).prop('selected', value === option));
                         });
                     } else {
                         input = $('<input type="text">')
