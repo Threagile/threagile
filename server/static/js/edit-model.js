@@ -35,8 +35,7 @@ $(document).ready(function() {
                 const yamlData = jsyaml.load(e.target.result);
                 console.log(yamlData);
 
-                const showDataAssets = $('#showDataAssetsCheckBox').is(':checked');
-                updateDiagramModel(yamlData, showDataAssets);
+                updateDiagramModel(yamlData);
             } catch (error) {
                 console.error('Error parsing YAML:', error);
                 alert('Failed to parse YAML file.');
@@ -46,15 +45,11 @@ $(document).ready(function() {
     }
   });
 
-  $('#showDataAssetsCheckBox').on('change', function() {
-    updateDiagramModel(diagramYaml, $('#showDataAssetsCheckBox').is(':checked'));
-  });
-
   $('#btnRestoreChanges').on('click', function() {
     if (currentFile) {
       const yamlData = jsyaml.load(currentFile);
       console.log(yamlData);
-      updateDiagramModel(diagramYaml, $('#showDataAssetsCheckBox').is(':checked'));
+      updateDiagramModel(diagramYaml);
     }
   });
 
@@ -83,20 +78,10 @@ $(document).ready(function() {
     }
   }
 
-  function updateDiagramModel(yamlData, showDataAssets) {
+  function updateDiagramModel(yamlData) {
     diagramYaml = yamlData;
 
     let nodeDataArray = [];
-    if (showDataAssets) {
-      for (const daKey in yamlData.data_assets) {
-        if (yamlData.data_assets.hasOwnProperty(daKey)) {
-          const data_asset = yamlData.data_assets[daKey];
-          console.log(`${daKey}: ${data_asset}`);
-          nodeDataArray.push({ key: data_asset.id, threagile_model: data_asset, type: 'data_asset', caption: daKey, color: 'lightgreen' });
-        }
-      }
-    }
-
     let nodesLinks = [];
     for (const taKey in yamlData.technical_assets) {
       if (yamlData.technical_assets.hasOwnProperty(taKey)) {
@@ -109,33 +94,7 @@ $(document).ready(function() {
             const communicationLink = technical_asset.communication_links[clKey];
             console.log(`${clKey}: ${communicationLink}`);
             nodesLinks.push({ from: technical_asset.id, to: communicationLink.target });
-
-            if (showDataAssets && communicationLink.data_assets_sent) {
-              communicationLink.data_assets_sent.forEach((dataAsset) => {
-                nodesLinks.push({ from: technical_asset.id, to: dataAsset });
-                nodesLinks.push({ from: communicationLink.target, to: dataAsset });
-              })
-            }
-
-            if (showDataAssets && communicationLink.data_assets_received) {
-              communicationLink.data_assets_received.forEach((dataAsset) => {
-                nodesLinks.push({ from: technical_asset.id, to: dataAsset });
-                nodesLinks.push({ from: communicationLink.target, to: dataAsset });
-              })
-            }
           }
-        }
-
-        if (showDataAssets && technical_asset.data_assets_processed) {
-          technical_asset.data_assets_processed.forEach((dataAsset) => {
-            nodesLinks.push({ from: technical_asset.id, to: dataAsset });
-          });
-        }
-
-        if (showDataAssets && technical_asset.data_assets_stored) {
-          technical_asset.data_assets_stored.forEach((dataAsset) => {
-            nodesLinks.push({ from: technical_asset.id, to: dataAsset });
-          });
         }
       }
     }
@@ -154,7 +113,7 @@ $(document).ready(function() {
           schema.properties.technical_assets.additionalProperties.properties;
     const assetEditor = new EditorGenerator(nodeData, editorSchema, $('#itemPropertyEditor'), title, generateEnumFields());
     assetEditor.generateEditor([], ['communication_links'], () => {
-      updateDiagramModel(diagramYaml, $('#showDataAssetsCheckBox').is(':checked'));
+      updateDiagramModel(diagramYaml);
     });
   }
 
@@ -170,14 +129,14 @@ $(document).ready(function() {
   function showTechnicalAssets(data) {
     const editor = new EditorGenerator(data, schema.properties, $('#technicalAssets'), undefined, generateEnumFields());
     editor.generateEditorForKeys('technical_assets', (key, value) => {
-      updateDiagramModel(diagramYaml, $('#showDataAssetsCheckBox').is(':checked'));
+      updateDiagramModel(diagramYaml);
     });
   }
 
   function showDataAssetsObjects(data) {
     const editor = new EditorGenerator(data, schema.properties, $('#dataAssets'), undefined, generateEnumFields());
-    editor.generateEditorForKeys('data_assets', (key, value) => {
-      updateDiagramModel(diagramYaml, $('#showDataAssetsCheckBox').is(':checked'));
+    editor.generateEditorForObject('data_assets', (key, value) => {
+      updateDiagramModel(diagramYaml);
     });
   }
 
@@ -185,14 +144,14 @@ $(document).ready(function() {
     const editor = new EditorGenerator(data, schema.properties, $('#trustBoundaries'), undefined, generateEnumFields());
     editor.generateEditorForObject('trust_boundaries', (key, value) => {
       console.log('trust_boundaries changed + ' + key + ' = ' + value);
-      updateDiagramModel(diagramYaml, $('#showDataAssetsCheckBox').is(':checked'));
+      updateDiagramModel(diagramYaml);
     });
   }
 
   function showSharedRuntimes(data) {
     const editor = new EditorGenerator(data, schema.properties, $('#sharedRuntimes'), undefined, generateEnumFields());
     editor.generateEditorForObject('shared_runtimes', (key, value) => {
-      updateDiagramModel(diagramYaml, $('#showDataAssetsCheckBox').is(':checked'));
+      updateDiagramModel(diagramYaml);
     });
   }
 
