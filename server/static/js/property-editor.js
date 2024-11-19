@@ -211,6 +211,7 @@ class EditorGenerator {
                     const arrayContainer = $('<div>').addClass('property-editor-array');
                     const arrayItems = this.object[key] || [];
                     const itemSchema = property.items || { type: 'string' }; // Default to strings if items schema is missing
+                    const customEnum = this.customEnumFields[key];
 
                     const renderArrayItems = () => {
                         arrayContainer.empty();
@@ -305,13 +306,13 @@ class EditorGenerator {
                     const addButton = $('<button>')
                         .text('Add')
                         .on('click', () => {
-                            callback(key, 'added');
                             if (itemSchema.enum) {
                                 arrayItems.push(itemSchema.enum[0]); // Default to the first enum value
                             } else if (itemSchema.type === 'object') {
                                 arrayItems.push({});
                             } else if (itemSchema.type === 'string') {
-                                arrayItems.push(''); // Default to empty string
+                                const defaultValue = customEnum && customEnum.length > 0 ? customEnum[0] : '';
+                                arrayItems.push(defaultValue);
                             } else if (itemSchema.type === 'number' || itemSchema.type === 'integer') {
                                 arrayItems.push(0); // Default value for numbers
                             } else {
@@ -319,6 +320,7 @@ class EditorGenerator {
                                 return;
                             }
                             renderArrayItems();
+                            callback(key, 'added');
                         });
 
                     renderArrayItems();
