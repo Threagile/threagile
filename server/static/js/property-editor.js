@@ -228,12 +228,11 @@ class EditorGenerator {
                                 });
 
                             if (itemSchema.enum) {
-                                // Handle array of enums (dropdowns)
                                 const select = $('<select>')
                                     .addClass('property-editor-input')
                                     .on('change', () => {
                                         arrayItems[index] = select.val();
-                                        callback(key + '[' + index + ']', selec.val());
+                                        callback(key + '[' + index + ']', select.val());
                                     });
 
                                 itemSchema.enum.forEach((option) => {
