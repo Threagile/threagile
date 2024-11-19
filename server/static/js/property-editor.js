@@ -44,8 +44,18 @@ class EditorGenerator {
                                 this.object[key] = input.val();
                                 callback(key, input.val());
                             });
+
                         property.enum.forEach((option) => {
-                            input.append($('<option>').val(option).text(option));
+                            const optionElement = $('<option>')
+                                .val(option)
+                                .text(option);
+
+                            // Set the 'selected' attribute if the option matches the current value
+                            if (this.object[key] === option) {
+                                optionElement.prop('selected', true);
+                            }
+
+                            input.append(optionElement);
                         });
                     } else if (this.customEnumFields[key]) {
                         input = $('<select>')
