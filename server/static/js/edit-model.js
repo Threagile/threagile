@@ -28,14 +28,14 @@ $(document).ready(function() {
       .add(
         new go.Panel("Auto")
           .add(
-            new go.Shape("RoundedRectangle", {  // surrounds the Placeholder
+            new go.Shape("RoundedRectangle", {
                 parameter1: 14,
                 fill: "rgba(128,128,128,0.33)"
               }),
-            new go.Placeholder(    // represents the area of all member parts,
-                { padding: 5})  // with some extra padding around them
+            new go.Placeholder(
+                { padding: 5})
           ),
-        new go.TextBlock({         // group title
+        new go.TextBlock({
             alignment: go.Spot.Right, font: "Bold 12pt Sans-Serif"
           })
           .bind("caption")
@@ -147,6 +147,7 @@ $(document).ready(function() {
     showDataAssetsObjects(yamlData);
     showTrustBoundaries(yamlData);
     showSharedRuntimes(yamlData);
+    showRiskTrackingObjects(yamlData);
   }
 
   function openAssetEditor(nodeData, nodeType, title) {
@@ -161,10 +162,8 @@ $(document).ready(function() {
 
   function showProjectFields(nodeData) {
     const projectEditor = new EditorGenerator(nodeData, schema.properties, $('#projectInfo'), undefined, generateEnumFields());
-    const hiddenProperties = ['communication_links', 'data_assets_processed', 'data_assets_stored',
-      'data_assets_sent', 'data_assets_received', 'data_assets', 'technical_assets',
-      'trust_boundaries', 'shared_runtimes', 'individual_risk_categories', 'includes'];
-    const extendableProperties = ['questions', 'abuse_cases', 'security_requirements', 'risk_tracking'];
+    const hiddenProperties = ['data_assets', 'technical_assets',  'trust_boundaries', 'shared_runtimes', 'risk_tracking'];
+    const extendableProperties = ['questions', 'abuse_cases', 'security_requirements', 'individual_risk_categories'];
     projectEditor.generateEditor(hiddenProperties, extendableProperties);
   }
 
@@ -178,6 +177,13 @@ $(document).ready(function() {
   function showDataAssetsObjects(data) {
     const editor = new EditorGenerator(data, schema.properties, $('#dataAssets'), undefined, generateEnumFields());
     editor.generateEditorForObject('data_assets', (key, value) => {
+      updateDiagramModel(diagramYaml);
+    });
+  }
+
+  function showRiskTrackingObjects(data) {
+    const editor = new EditorGenerator(data, schema.properties, $('#riskTrackingPropertyEditor'), undefined, generateEnumFields());
+    editor.generateEditorForObject('risk_tracking', (key, value) => {
       updateDiagramModel(diagramYaml);
     });
   }

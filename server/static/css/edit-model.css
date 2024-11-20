@@ -40,16 +40,21 @@ body {
   border: 1px solid #ccc;
 }
 
-.checkbox-label {
-  font-size: 0.6em;
-}
-
 .property-editor {
   border: 1px solid #ccc;
   padding: 10px;
   width: 20%;
   height: 680px;
   background-color: azure;
+  overflow-y: auto; /* Enable vertical scroll */
+}
+
+.risk-property-editor {
+  border: 1px solid #ccc;
+  padding: 10px;
+  width: 50%;
+  height: 320px;
+  background-color: #efb9b9;
   overflow-y: auto; /* Enable vertical scroll */
 }
 
