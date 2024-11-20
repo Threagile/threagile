@@ -39,6 +39,9 @@ type serverConfigReader interface {
 	GetDataAssetDiagramFilenameDOT() string
 	GetReportFilename() string
 	GetExcelRisksFilename() string
+	GetRiskExcelConfigHideColumns() []string
+	GetRiskExcelConfigSortByColumns() []string
+	GetRiskExcelConfigWidthOfColumns() map[string]float64
 	GetExcelTagsFilename() string
 	GetJsonRisksFilename() string
 	GetJsonTechnicalAssetsFilename() string
@@ -169,6 +172,8 @@ func RunServer(config serverConfigReader, builtinRiskRules types.RiskRules) {
 	// TODO router.GET("/meta/model-macros", listModelMacros)
 
 	router.GET("/meta/stats", s.stats)
+
+	router.POST("/edit-model/analyze", s.editModelAnalyze)
 
 	router.POST("/direct/analyze", s.analyze)
 	router.POST("/direct/check", s.check)

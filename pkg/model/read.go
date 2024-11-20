@@ -83,6 +83,11 @@ func ReadAndAnalyzeModel(config configReader, builtinRiskRules types.RiskRules, 
 		return nil, fmt.Errorf("unable to load model yaml: %w", loadError)
 	}
 
+	return AnalyzeModel(modelInput, config, builtinRiskRules, customRiskRules, progressReporter)
+}
+
+func AnalyzeModel(modelInput *input.Model, config configReader, builtinRiskRules types.RiskRules, customRiskRules types.RiskRules, progressReporter types.ProgressReporter) (*ReadResult, error) {
+
 	parsedModel, parseError := ParseModel(config, modelInput, builtinRiskRules, customRiskRules)
 	if parseError != nil {
 		return nil, fmt.Errorf("unable to parse model yaml: %w", parseError)

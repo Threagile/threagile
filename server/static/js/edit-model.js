@@ -86,6 +86,31 @@ $(document).ready(function() {
     }
   });
 
+  $('#btnAnalyze').on('click', function() {
+    try {
+      $.ajax({
+        url: "/edit-model/analyze",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(diagramYaml),
+        success: function(response) {
+          const risksByCategory = response.data.ParsedModel.generated_risks_by_category;
+          renderRiskTables(risksByCategory);
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+          $("#riskAnalyzeContent").html("Error happened: <span>" + jqXHR.responseJSON.error + "</span>")
+          console.error("Request failed:", textStatus, errorThrown);
+          alert('Analysis failed');
+        }
+      });
+
+    } catch (e) {
+
+      console.error("Error analyzing model")
+    }
+
+  });
+
   function nodeClicked(e, obj) {
     var evt = e.copy();
     var node = obj.part;
@@ -219,4 +244,56 @@ $(document).ready(function() {
       "data_assets_received": data_assets
     }
   }
+
+  function renderRiskTables(generatedRisksByCategory) {
+    const container = $("#riskAnalyzeContent");
+    container.empty(); // Clear any existing content
+
+    // Iterate over each category in the risks object
+    $.each(generatedRisksByCategory, function(category, risks) {
+        // Create a table for the category
+        const table = $("<table>").addClass("risk-table").css({
+            border: "1px solid black",
+            width: "100%",
+            marginBottom: "20px"
+        });
+
+        // Add a caption for the category
+        const caption = $("<caption>")
+            .text(`Category: ${category}`)
+            .css({ fontWeight: "bold", textAlign: "left", marginBottom: "10px" });
+        table.append(caption);
+
+        // Add a header row
+        const headerRow = $("<tr>").append(
+            $("<th>").text("Synthetic ID"),
+            $("<th>").text("Title"),
+            $("<th>").text("Severity"),
+            $("<th>").text("Likelihood"),
+            $("<th>").text("Impact"),
+            $("<th>").text("Most Relevant Asset"),
+            $("<th>").text("Communication Link"),
+            $("<th>").text("Data Breach Assets")
+        ).css({ backgroundColor: "#f2f2f2", textAlign: "left" });
+        table.append(headerRow);
+
+        // Add a row for each risk
+        risks.forEach(risk => {
+            const row = $("<tr>").append(
+                $("<td>").text(risk.synthetic_id),
+                $("<td>").html(risk.title),
+                $("<td>").text(risk.severity),
+                $("<td>").text(risk.exploitation_likelihood),
+                $("<td>").text(risk.exploitation_impact),
+                $("<td>").text(risk.most_relevant_technical_asset || "N/A"),
+                $("<td>").text(risk.most_relevant_communication_link || "N/A"),
+                $("<td>").text(risk.data_breach_technical_assets.join(", ") || "N/A")
+            ).css({ borderBottom: "1px solid black" });
+            table.append(row);
+        });
+
+        // Append the table to the container
+        container.append(table);
+    });
+}
 });

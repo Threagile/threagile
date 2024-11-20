@@ -37,7 +37,9 @@ class EditorGenerator {
                                 this.object[key] = input.val();
                                 callback(key, input.val());
                             });
-                        input.datepicker();
+                        input.datepicker({
+                            dateFormat: "yy-mm-dd" // ISO 8601 format
+                        });
                     } else if (property.enum) {
                         input = $('<select>')
                             .addClass('property-editor-input')
