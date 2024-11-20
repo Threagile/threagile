@@ -2,8 +2,6 @@ package threagile
 
 import (
 	"fmt"
-	"strings"
-
 	"github.com/spf13/cobra"
 	"github.com/threagile/threagile/pkg/macros"
 	"github.com/threagile/threagile/pkg/model"
@@ -16,19 +14,15 @@ func (what *Threagile) initList() *Threagile {
 		Use:   ListRiskRulesCommand,
 		Short: "Print available risk rules",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			what.processArgs(cmd, args)
+
 			cmd.Println(Logo + "\n\n" + fmt.Sprintf(VersionText, what.buildTimestamp))
 			cmd.Println("The following risk rules are available (can be extended via custom risk rules):")
 			cmd.Println()
 			cmd.Println("----------------------")
 			cmd.Println("Custom risk rules:")
 			cmd.Println("----------------------")
-			cfg := new(Config).Defaults(what.buildTimestamp)
-			configError := cfg.Load(what.flags.configFlag)
-			if configError != nil {
-				cmd.Printf("WARNING: failed to load config file %q: %v\n", what.flags.configFlag, configError)
-			}
-
-			customRiskRules := model.LoadCustomRiskRules(cfg.GetPluginFolder(), strings.Split(what.flags.customRiskRulesPluginFlag, ","), DefaultProgressReporter{Verbose: what.flags.verboseFlag})
+			customRiskRules := model.LoadCustomRiskRules(what.config.GetPluginFolder(), what.config.GetRiskRulePlugins(), DefaultProgressReporter{Verbose: what.config.GetVerbose()})
 			for id, customRule := range customRiskRules {
 				cmd.Println(id, "-->", customRule.Category().Title, "--> with tags:", customRule.SupportedTags())
 			}
@@ -49,6 +43,8 @@ func (what *Threagile) initList() *Threagile {
 		Use:   ListModelMacrosCommand,
 		Short: "Print model macros",
 		Run: func(cmd *cobra.Command, args []string) {
+			what.processArgs(cmd, args)
+
 			cmd.Println(Logo + "\n\n" + fmt.Sprintf(VersionText, what.buildTimestamp))
 			cmd.Println("The following model macros are available (can be extended via custom model macros):")
 			cmd.Println()
@@ -75,12 +71,14 @@ func (what *Threagile) initList() *Threagile {
 		Use:   ListTypesCommand,
 		Short: "Print type information (enum values to be used in models)",
 		Run: func(cmd *cobra.Command, args []string) {
+			what.processArgs(cmd, args)
+
 			cmd.Println(Logo + "\n\n" + fmt.Sprintf(VersionText, what.buildTimestamp))
 			cmd.Println()
 			cmd.Println()
 			cmd.Println("The following types are available (can be extended for custom rules):")
 			cmd.Println()
-			for name, values := range types.GetBuiltinTypeValues(what.readConfig(cmd, what.buildTimestamp)) {
+			for name, values := range types.GetBuiltinTypeValues(what.config) {
 				cmd.Println(fmt.Sprintf("  %v: %v", name, values))
 			}
 		},

@@ -17,6 +17,8 @@ func (what *Threagile) initCreate() *Threagile {
 		Short: "Create example threagile model",
 		Long:  "\n" + Logo + "\n\n" + fmt.Sprintf(VersionText, what.buildTimestamp) + "\n\njust create an example model named threagile-example-model.yaml in the output directory",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			what.processArgs(cmd, args)
+
 			appDir, err := cmd.Flags().GetString(appDirFlagName)
 			if err != nil {
 				cmd.Printf("Unable to read app-dir flag: %v", err)
@@ -48,23 +50,25 @@ func (what *Threagile) initCreate() *Threagile {
 		Short: "Create stub threagile model",
 		Long:  "\n" + Logo + "\n\n" + fmt.Sprintf(VersionText, what.buildTimestamp) + "\n\njust create a minimal stub model named threagile-stub-model.yaml in the output directory",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg := what.readConfig(cmd, what.buildTimestamp)
+			what.processArgs(cmd, args)
 
-			err := examples.CreateStubModelFile(cfg.GetAppFolder(), cfg.GetOutputFolder(), InputFile)
+			err := examples.CreateStubModelFile(what.config.GetAppFolder(), what.config.GetOutputFolder(), InputFile)
 			if err != nil {
 				cmd.Printf("Unable to copy stub model: %v", err)
 				return err
 			}
 
-			if !what.flags.interactiveFlag {
+			if !what.config.GetInteractive() {
 				cmd.Println(Logo + "\n\n" + fmt.Sprintf(VersionText, what.buildTimestamp))
 			}
-			cmd.Printf("A minimal stub model was created named threagile-stub-model.yaml in %q.\n", cfg.GetOutputFolder())
-			if !what.flags.interactiveFlag {
+
+			cmd.Printf("A minimal stub model was created named threagile-stub-model.yaml in %q.\n", what.config.GetOutputFolder())
+			if !what.config.GetInteractive() {
 				cmd.Println()
 				cmd.Println(Examples)
 				cmd.Println()
 			}
+
 			return nil
 		},
 	})
@@ -74,6 +78,8 @@ func (what *Threagile) initCreate() *Threagile {
 		Short: "Create editing support",
 		Long:  "\n" + Logo + "\n\n" + fmt.Sprintf(VersionText, what.buildTimestamp) + "\n\njust create some editing support stuff in the output directory",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			what.processArgs(cmd, args)
+
 			appDir, err := cmd.Flags().GetString(appDirFlagName)
 			if err != nil {
 				cmd.Printf("Unable to read app-dir flag: %v", err)

@@ -15,16 +15,16 @@ func (what *Threagile) initAnalyze() *Threagile {
 		Short:   "Analyze model",
 		Aliases: []string{"analyze", "analyse", "run", "analyse-model"},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg := what.readConfig(cmd, what.buildTimestamp)
+			what.processArgs(cmd, args)
 			commands := what.readCommands()
-			progressReporter := DefaultProgressReporter{Verbose: cfg.GetVerbose()}
+			progressReporter := DefaultProgressReporter{Verbose: what.config.GetVerbose()}
 
-			r, err := model.ReadAndAnalyzeModel(cfg, risks.GetBuiltInRiskRules(), progressReporter)
+			r, err := model.ReadAndAnalyzeModel(what.config, risks.GetBuiltInRiskRules(), progressReporter)
 			if err != nil {
 				return fmt.Errorf("failed to read and analyze model: %w", err)
 			}
 
-			err = report.Generate(cfg, r, commands, risks.GetBuiltInRiskRules(), progressReporter)
+			err = report.Generate(what.config, r, commands, risks.GetBuiltInRiskRules(), progressReporter)
 			if err != nil {
 				return fmt.Errorf("failed to generate reports: %w", err)
 			}

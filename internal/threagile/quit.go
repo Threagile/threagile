@@ -12,6 +12,7 @@ func (what *Threagile) initQuit() *Threagile {
 		Short:   "quit client",
 		Aliases: []string{"exit", "bye", "x", "q"},
 		Run: func(cmd *cobra.Command, args []string) {
+			what.processArgs(cmd, args)
 			os.Exit(0)
 		},
 		CompletionOptions: cobra.CompletionOptions{
