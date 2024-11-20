@@ -53,8 +53,8 @@ type Config struct {
 	RiskExcelValue         RiskExcelConfig `json:"RiskExcel" yaml:"RiskExcel"`
 
 	ServerModeValue               bool `json:"ServerMode,omitempty" yaml:"ServerMode"`
-	DiagramDPIValue               int  `json:"DiagramDPI,omitempty" yaml:"DiagramDPI"`
 	ServerPortValue               int  `json:"ServerPort,omitempty" yaml:"ServerPort"`
+	DiagramDPIValue               int  `json:"DiagramDPI,omitempty" yaml:"DiagramDPI"`
 	GraphvizDPIValue              int  `json:"GraphvizDPI,omitempty" yaml:"GraphvizDPI"`
 	MaxGraphvizDPIValue           int  `json:"MaxGraphvizDPI,omitempty" yaml:"MaxGraphvizDPI"`
 	BackupHistoryFilesToKeepValue int  `json:"BackupHistoryFilesToKeep,omitempty" yaml:"BackupHistoryFilesToKeep"`
@@ -62,6 +62,16 @@ type Config struct {
 	AddModelTitleValue              bool `json:"AddModelTitle,omitempty" yaml:"AddModelTitle"`
 	KeepDiagramSourceFilesValue     bool `json:"KeepDiagramSourceFiles,omitempty" yaml:"KeepDiagramSourceFiles"`
 	IgnoreOrphanedRiskTrackingValue bool `json:"IgnoreOrphanedRiskTracking,omitempty" yaml:"IgnoreOrphanedRiskTracking"`
+
+	SkipDataFlowDiagramValue     bool `json:"SkipDataFlowDiagram,omitempty" yaml:"SkipDataFlowDiagram"`
+	SkipDataAssetDiagramValue    bool `json:"SkipDataAssetDiagram,omitempty" yaml:"SkipDataAssetDiagram"`
+	SkipRisksJSONValue           bool `json:"SkipRisksJSON,omitempty" yaml:"SkipRisksJSON"`
+	SkipTechnicalAssetsJSONValue bool `json:"SkipTechnicalAssetsJSON,omitempty" yaml:"SkipTechnicalAssetsJSON"`
+	SkipStatsJSONValue           bool `json:"SkipStatsJSON,omitempty" yaml:"SkipStatsJSON"`
+	SkipRisksExcelValue          bool `json:"SkipRisksExcel,omitempty" yaml:"SkipRisksExcel"`
+	SkipTagsExcelValue           bool `json:"SkipTagsExcel,omitempty" yaml:"SkipTagsExcel"`
+	SkipReportPDFValue           bool `json:"SkipReportPDF,omitempty" yaml:"SkipReportPDF"`
+	SkipReportADOCValue          bool `json:"SkipReportADOC,omitempty" yaml:"SkipReportADOC"`
 
 	AttractivenessValue Attractiveness `json:"Attractiveness" yaml:"Attractiveness"`
 
@@ -103,8 +113,8 @@ type ConfigGetter interface {
 	GetRiskExcelShrinkColumnsToFit() bool
 	GetRiskExcelColorText() bool
 	GetServerMode() bool
-	GetDiagramDPI() int
 	GetServerPort() int
+	GetDiagramDPI() int
 	GetGraphvizDPI() int
 	GetMinGraphvizDPI() int
 	GetMaxGraphvizDPI() int
@@ -112,13 +122,21 @@ type ConfigGetter interface {
 	GetAddModelTitle() bool
 	GetKeepDiagramSourceFiles() bool
 	GetIgnoreOrphanedRiskTracking() bool
+	GetSkipDataFlowDiagram() bool
+	GetSkipDataAssetDiagram() bool
+	GetSkipRisksJSON() bool
+	GetSkipTechnicalAssetsJSON() bool
+	GetSkipStatsJSON() bool
+	GetSkipRisksExcel() bool
+	GetSkipTagsExcel() bool
+	GetSkipReportPDF() bool
+	GetSkipReportADOC() bool
 	GetAttractiveness() Attractiveness
 	GetReportConfiguration() report.ReportConfiguation
 	GetThreagileVersion() string
 	GetProgressReporter() types.ProgressReporter
 	GetReportConfigurationHideChapters() map[report.ChaptersToShowHide]bool
 }
-
 type ConfigSetter interface {
 	SetVerbose(verbose bool)
 	SetInteractive(interactive bool)
@@ -132,8 +150,8 @@ type ConfigSetter interface {
 	SetRiskRulePlugins(riskRulePlugins []string)
 	SetSkipRiskRules(skipRiskRules []string)
 	SetServerMode(serverMode bool)
-	SetDiagramDPI(diagramDPI int)
 	SetServerPort(serverPort int)
+	SetDiagramDPI(diagramDPI int)
 	SetIgnoreOrphanedRiskTracking(ignoreOrphanedRiskTracking bool)
 }
 
@@ -436,7 +454,7 @@ func (c *Config) Merge(config Config, values map[string]any) {
 			}
 
 		case strings.ToLower("ServerMode"):
-			// not configurable via config file
+			c.ServerModeValue = config.ServerModeValue
 
 		case strings.ToLower("DiagramDPI"):
 			c.DiagramDPIValue = config.DiagramDPIValue
@@ -718,20 +736,20 @@ func (c *Config) SetServerMode(serverMode bool) {
 	c.ServerModeValue = serverMode
 }
 
-func (c *Config) GetDiagramDPI() int {
-	return c.DiagramDPIValue
-}
-
-func (c *Config) SetDiagramDPI(diagramDPI int) {
-	c.DiagramDPIValue = diagramDPI
-}
-
 func (c *Config) GetServerPort() int {
 	return c.ServerPortValue
 }
 
 func (c *Config) SetServerPort(serverPort int) {
 	c.ServerPortValue = serverPort
+}
+
+func (c *Config) GetDiagramDPI() int {
+	return c.DiagramDPIValue
+}
+
+func (c *Config) SetDiagramDPI(diagramDPI int) {
+	c.DiagramDPIValue = diagramDPI
 }
 
 func (c *Config) GetGraphvizDPI() int {
@@ -764,6 +782,42 @@ func (c *Config) GetIgnoreOrphanedRiskTracking() bool {
 
 func (c *Config) SetIgnoreOrphanedRiskTracking(ignoreOrphanedRiskTracking bool) {
 	c.IgnoreOrphanedRiskTrackingValue = ignoreOrphanedRiskTracking
+}
+
+func (c *Config) GetSkipDataFlowDiagram() bool {
+	return c.SkipDataFlowDiagramValue
+}
+
+func (c *Config) GetSkipDataAssetDiagram() bool {
+	return c.SkipDataAssetDiagramValue
+}
+
+func (c *Config) GetSkipRisksJSON() bool {
+	return c.SkipRisksJSONValue
+}
+
+func (c *Config) GetSkipTechnicalAssetsJSON() bool {
+	return c.SkipTechnicalAssetsJSONValue
+}
+
+func (c *Config) GetSkipStatsJSON() bool {
+	return c.SkipStatsJSONValue
+}
+
+func (c *Config) GetSkipRisksExcel() bool {
+	return c.SkipRisksExcelValue
+}
+
+func (c *Config) GetSkipTagsExcel() bool {
+	return c.SkipTagsExcelValue
+}
+
+func (c *Config) GetSkipReportPDF() bool {
+	return c.SkipReportPDFValue
+}
+
+func (c *Config) GetSkipReportADOC() bool {
+	return c.SkipReportADOCValue
 }
 
 func (c *Config) GetAttractiveness() Attractiveness {

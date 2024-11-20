@@ -8,6 +8,7 @@ import (
 
 type Threagile struct {
 	flags          Flags
+	config         *Config
 	rootCmd        *cobra.Command
 	buildTimestamp string
 }
@@ -19,13 +20,15 @@ func (what *Threagile) Execute() {
 		os.Exit(1)
 	}
 
-	cfg := what.readConfig(what.rootCmd, what.buildTimestamp)
-	if what.flags.interactiveFlag || cfg.GetInteractive() {
+	if what.config.GetServerMode() {
+		serverError := what.runServer()
+		what.rootCmd.Println(serverError)
+	} else if what.config.GetInteractive() {
 		what.run(what.rootCmd, nil)
 	}
 }
 
 func (what *Threagile) Init(buildTimestamp string) *Threagile {
 	what.buildTimestamp = buildTimestamp
-	return what.initRoot().initAnalyze().initCreate().initExecute().initExplain().initList().initPrint().initQuit().initServer().initVersion()
+	return what.initRoot().initAnalyze().initCreate().initExecute().initExplain().initList().initPrint().initQuit().initServer().initVersion().processSystemArgs(what.rootCmd)
 }

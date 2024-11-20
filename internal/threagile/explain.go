@@ -2,8 +2,6 @@ package threagile
 
 import (
 	"fmt"
-	"strings"
-
 	"github.com/spf13/cobra"
 	"github.com/threagile/threagile/pkg/macros"
 	"github.com/threagile/threagile/pkg/model"
@@ -50,13 +48,14 @@ func (what *Threagile) initExplainNew() *Threagile {
 	return what
 }
 
-func (what *Threagile) explainRisk(cmd *cobra.Command, _ []string) error {
-	cfg := what.readConfig(cmd, what.buildTimestamp)
-	progressReporter := DefaultProgressReporter{Verbose: cfg.GetVerbose()}
+func (what *Threagile) explainRisk(cmd *cobra.Command, args []string) error {
+	what.processArgs(cmd, args)
+
+	progressReporter := DefaultProgressReporter{Verbose: what.config.GetVerbose()}
 
 	// todo: reuse model if already loaded
 
-	result, runError := model.ReadAndAnalyzeModel(cfg, risks.GetBuiltInRiskRules(), progressReporter)
+	result, runError := model.ReadAndAnalyzeModel(what.config, risks.GetBuiltInRiskRules(), progressReporter)
 	if runError != nil {
 		cmd.Printf("Failed to read and analyze model: %v", runError)
 		return runError
@@ -68,20 +67,16 @@ func (what *Threagile) explainRisk(cmd *cobra.Command, _ []string) error {
 	return fmt.Errorf("not implemented yet")
 }
 
-func (what *Threagile) explainRules(cmd *cobra.Command, _ []string) error {
+func (what *Threagile) explainRules(cmd *cobra.Command, args []string) error {
+	what.processArgs(cmd, args)
+
 	cmd.Println(Logo + "\n\n" + fmt.Sprintf(VersionText, what.buildTimestamp))
 	cmd.Println("Explanation for risk rules:")
 	cmd.Println()
 	cmd.Println("----------------------")
 	cmd.Println("Custom risk rules:")
 	cmd.Println("----------------------")
-	cfg := new(Config).Defaults(what.buildTimestamp)
-	configError := cfg.Load(what.flags.configFlag)
-	if configError != nil {
-		cmd.Printf("WARNING: failed to load config file %q: %v\n", what.flags.configFlag, configError)
-	}
-
-	customRiskRules := model.LoadCustomRiskRules(cfg.GetPluginFolder(), strings.Split(what.flags.customRiskRulesPluginFlag, ","), DefaultProgressReporter{Verbose: what.flags.verboseFlag})
+	customRiskRules := model.LoadCustomRiskRules(what.config.GetPluginFolder(), what.config.GetRiskRulePlugins(), DefaultProgressReporter{Verbose: what.config.GetVerbose()})
 	for _, rule := range customRiskRules {
 		cmd.Printf("%v: %v\n", rule.Category().ID, rule.Category().Description)
 	}
@@ -99,6 +94,8 @@ func (what *Threagile) explainRules(cmd *cobra.Command, _ []string) error {
 }
 
 func (what *Threagile) explainMacros(cmd *cobra.Command, args []string) {
+	what.processArgs(cmd, args)
+
 	cmd.Println(Logo + "\n\n" + fmt.Sprintf(VersionText, what.buildTimestamp))
 	cmd.Println("Explanation for the model macros:")
 	cmd.Println()
@@ -122,12 +119,14 @@ func (what *Threagile) explainMacros(cmd *cobra.Command, args []string) {
 }
 
 func (what *Threagile) explainTypes(cmd *cobra.Command, args []string) {
+	what.processArgs(cmd, args)
+
 	cmd.Println(Logo + "\n\n" + fmt.Sprintf(VersionText, what.buildTimestamp))
 	fmt.Println("Explanation for the types:")
 	cmd.Println()
 	cmd.Println("The following types are available (can be extended for custom rules):")
 	cmd.Println()
-	for name, values := range types.GetBuiltinTypeValues(what.readConfig(cmd, what.buildTimestamp)) {
+	for name, values := range types.GetBuiltinTypeValues(what.config) {
 		cmd.Println(name)
 		for _, candidate := range values {
 			cmd.Printf("\t %v: %v\n", candidate, candidate.Explain())

@@ -20,19 +20,21 @@ func (what *Threagile) initExecute() *Threagile {
 		Short: "Execute model macro",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg := what.readConfig(cmd, what.buildTimestamp)
-			progressReporter := DefaultProgressReporter{Verbose: cfg.GetVerbose()}
+			what.processArgs(cmd, args)
 
-			r, err := model.ReadAndAnalyzeModel(cfg, risks.GetBuiltInRiskRules(), progressReporter)
+			progressReporter := DefaultProgressReporter{Verbose: what.config.GetVerbose()}
+
+			r, err := model.ReadAndAnalyzeModel(what.config, risks.GetBuiltInRiskRules(), progressReporter)
 			if err != nil {
 				return fmt.Errorf("unable to read and analyze model: %w", err)
 			}
 
 			macrosId := args[0]
-			err = macros.ExecuteModelMacro(r.ModelInput, cfg.GetInputFile(), r.ParsedModel, macrosId)
+			err = macros.ExecuteModelMacro(r.ModelInput, what.config.GetInputFile(), r.ParsedModel, macrosId)
 			if err != nil {
 				return fmt.Errorf("unable to execute model macro: %w", err)
 			}
+
 			return nil
 		},
 	})
