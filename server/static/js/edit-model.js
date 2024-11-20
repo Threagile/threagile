@@ -23,6 +23,24 @@ $(document).ready(function() {
       new go.TextBlock({ margin: 2, textAlign: 'center' }).bind('text', 'caption')
     );
 
+  myDiagram.groupTemplate =
+    new go.Group("Vertical")
+      .add(
+        new go.Panel("Auto")
+          .add(
+            new go.Shape("RoundedRectangle", {  // surrounds the Placeholder
+                parameter1: 14,
+                fill: "rgba(128,128,128,0.33)"
+              }),
+            new go.Placeholder(    // represents the area of all member parts,
+                { padding: 5})  // with some extra padding around them
+          ),
+        new go.TextBlock({         // group title
+            alignment: go.Spot.Right, font: "Bold 12pt Sans-Serif"
+          })
+          .bind("caption")
+      );
+
 
   $('#fileInput').on('change', function(event) {
     const file = event.target.files[0];
@@ -83,18 +101,42 @@ $(document).ready(function() {
 
     let nodeDataArray = [];
     let nodesLinks = [];
-    for (const taKey in yamlData.technical_assets) {
-      if (yamlData.technical_assets.hasOwnProperty(taKey)) {
-        const technical_asset = yamlData.technical_assets[taKey];
-        console.log(`${taKey}: ${technical_asset}`);
-        nodeDataArray.push({ key: technical_asset.id, threagile_model: technical_asset, type: 'technical_asset', caption: taKey, color: 'lightblue' });
 
-        if (technical_asset.communication_links) {
-          for (const clKey in technical_asset.communication_links) {
-            const communicationLink = technical_asset.communication_links[clKey];
-            console.log(`${clKey}: ${communicationLink}`);
-            nodesLinks.push({ from: technical_asset.id, to: communicationLink.target });
+    for (const tbKey in yamlData.trust_boundaries) {
+      if (!yamlData.trust_boundaries.hasOwnProperty(tbKey)) {
+        continue;
+      }
+
+      const trust_boundary = yamlData.trust_boundaries[tbKey];
+      nodeDataArray.push({ key: trust_boundary.id, threagile_model: trust_boundary, type: 'trust_boundary', caption: tbKey, isGroup: true });
+    }
+
+    for (const taKey in yamlData.technical_assets) {
+      if (!yamlData.technical_assets.hasOwnProperty(taKey)) {
+        continue;
+      }
+      const technical_asset = yamlData.technical_assets[taKey];
+      let diagramNode = { key: technical_asset.id, threagile_model: technical_asset, type: 'technical_asset', caption: taKey, color: 'lightblue' };
+      for (const tbKey in yamlData.trust_boundaries) {
+        if (!yamlData.trust_boundaries.hasOwnProperty(tbKey)) {
+          continue;
+        }
+
+        const trust_boundary = yamlData.trust_boundaries[tbKey];
+        for (let i = 0; i < trust_boundary.technical_assets_inside.length; i++) {
+          if (trust_boundary.technical_assets_inside[i] === technical_asset.id) {
+            diagramNode.group = trust_boundary.id;
           }
+        }
+      }
+
+      nodeDataArray.push(diagramNode);
+
+      if (technical_asset.communication_links) {
+        for (const clKey in technical_asset.communication_links) {
+          const communicationLink = technical_asset.communication_links[clKey];
+          console.log(`${clKey}: ${communicationLink}`);
+          nodesLinks.push({ from: technical_asset.id, to: communicationLink.target });
         }
       }
     }
