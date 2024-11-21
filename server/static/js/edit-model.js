@@ -94,8 +94,13 @@ $(document).ready(function() {
         contentType: "application/json",
         data: JSON.stringify(diagramYaml),
         success: function(response) {
-          const risksByCategory = response.data.ParsedModel.generated_risks_by_category;
-          renderRiskTables(risksByCategory);
+          try {
+            const risksByCategory = response.data.ParsedModel.generated_risks_by_category;
+            renderRiskTables(risksByCategory);
+          } catch (e) {
+            console.error("Error analyzing model");
+            alert("Error rendering risk tables");
+          }
         },
         error: function(jqXHR, textStatus, errorThrown) {
           $("#riskAnalyzeContent").html("Error happened: <span>" + jqXHR.responseJSON.error + "</span>")
@@ -105,10 +110,9 @@ $(document).ready(function() {
       });
 
     } catch (e) {
-
-      console.error("Error analyzing model")
+      console.error("Error analyzing model");
+      alert("Error analyzing model");
     }
-
   });
 
   function nodeClicked(e, obj) {
@@ -299,17 +303,19 @@ $(document).ready(function() {
 
         // Add a row for each risk
         risks.forEach(risk => {
-            const row = $("<tr>").append(
-                $("<td>").text(risk.synthetic_id),
-                $("<td>").html(risk.title),
-                $("<td>").text(risk.severity),
-                $("<td>").text(risk.exploitation_likelihood),
-                $("<td>").text(risk.exploitation_impact),
-                $("<td>").text(risk.most_relevant_technical_asset || "N/A"),
-                $("<td>").text(risk.most_relevant_communication_link || "N/A"),
-                $("<td>").text(risk.data_breach_technical_assets.join(", ") || "N/A")
-            ).css({ borderBottom: "1px solid black" });
-            table.append(row);
+          const data_breach_technical_assets = risk.data_breach_technical_assets  || [];
+
+          const row = $("<tr>").append(
+              $("<td>").text(risk.synthetic_id),
+              $("<td>").html(risk.title),
+              $("<td>").text(risk.severity),
+              $("<td>").text(risk.exploitation_likelihood),
+              $("<td>").text(risk.exploitation_impact),
+              $("<td>").text(risk.most_relevant_technical_asset || "N/A"),
+              $("<td>").text(risk.most_relevant_communication_link || "N/A"),
+              $("<td>").text(data_breach_technical_assets.join(", ") || "N/A")
+          ).css({ borderBottom: "1px solid black" });
+          table.append(row);
         });
 
         // Append the table to the container
