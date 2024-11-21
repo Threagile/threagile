@@ -201,21 +201,21 @@ $(document).ready(function() {
 
   function showDataAssetsObjects(data) {
     const editor = new EditorGenerator(data, schema.properties, $('#dataAssets'), undefined, generateEnumFields());
-    editor.generateEditorForObject('data_assets', (key, value) => {
+    editor.generateEditorForObject('data_assets', 'Add data asset', (key, value) => {
       updateDiagramModel(diagramYaml);
     });
   }
 
   function showRiskTrackingObjects(data) {
     const editor = new EditorGenerator(data, schema.properties, $('#riskTrackingPropertyEditor'), undefined, generateEnumFields());
-    editor.generateEditorForObject('risk_tracking', (key, value) => {
+    editor.generateEditorForObject('risk_tracking', 'Add risk tracking', (key, value) => {
       updateDiagramModel(diagramYaml);
     });
   }
 
   function showTrustBoundaries(data) {
     const editor = new EditorGenerator(data, schema.properties, $('#trustBoundaries'), undefined, generateEnumFields());
-    editor.generateEditorForObject('trust_boundaries', (key, value) => {
+    editor.generateEditorForObject('trust_boundaries', 'Add trust boundary', (key, value) => {
       console.log('trust_boundaries changed + ' + key + ' = ' + value);
       updateDiagramModel(diagramYaml);
     });
@@ -223,7 +223,7 @@ $(document).ready(function() {
 
   function showSharedRuntimes(data) {
     const editor = new EditorGenerator(data, schema.properties, $('#sharedRuntimes'), undefined, generateEnumFields());
-    editor.generateEditorForObject('shared_runtimes', (key, value) => {
+    editor.generateEditorForObject('shared_runtimes', 'Add shared runtime', (key, value) => {
       updateDiagramModel(diagramYaml);
     });
   }

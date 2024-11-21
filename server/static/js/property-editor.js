@@ -432,7 +432,7 @@ class EditorGenerator {
         }
     }
 
-    generateEditorForObject(objectKey, callback = (key, value) => {}) {
+    generateEditorForObject(objectKey, addCaption, callback = (key, value) => {}) {
         this.formContainer.empty();
         if (this.title) {
             const title = $('<label>')
@@ -449,7 +449,7 @@ class EditorGenerator {
             const subObject = this.object[key] || {};
             const extendableContainer = $('<div>').addClass('property-editor-extendable');
             const addButton = $('<button>')
-                .text('Add Entry')
+                .text(addCaption)
                 .on('click', () => {
                     const newKey = prompt('Enter key for the new entry:');
                     if (!newKey) return;
