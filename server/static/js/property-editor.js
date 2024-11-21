@@ -131,6 +131,13 @@ class EditorGenerator {
 
                                 if (property.additionalProperties?.type === 'object') {
                                     subObject[newKey] = {};
+
+                                    const nestedProperties = property.additionalProperties.properties || {};
+                                    for (const [nestedKey, nestedProperty] of Object.entries(nestedProperties)) {
+                                        if (nestedProperty.enum) {
+                                            subObject[newKey][nestedKey] = nestedProperty.enum[0]; // Initialize with first enum value
+                                        }
+                                    }
                                 } else {
                                     subObject[newKey] = '';
                                 }
@@ -370,6 +377,14 @@ class EditorGenerator {
                         return;
                     }
                     subObject[newKey] = {};
+                    const nestedProperties = property.additionalProperties.properties || {};
+                    for (const [nestedKey, nestedProperty] of Object.entries(nestedProperties)) {
+                        if (nestedProperty.enum) {
+                            subObject[newKey][nestedKey] = nestedProperty.enum[0]; // Initialize with first enum value
+                        }
+                    }
+
+
                     renderExtendableEntries();
                     callback(key, newKey);
                 });
@@ -441,6 +456,13 @@ class EditorGenerator {
 
                     if (property.additionalProperties?.type === 'object') {
                         subObject[newKey] = {};
+
+                        const nestedProperties = property.additionalProperties.properties || {};
+                        for (const [nestedKey, nestedProperty] of Object.entries(nestedProperties)) {
+                            if (nestedProperty.enum) {
+                                subObject[newKey][nestedKey] = nestedProperty.enum[0]; // Initialize with first enum value
+                            }
+                        }
                     } else {
                         subObject[newKey] = '';
                     }
