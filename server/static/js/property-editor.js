@@ -7,7 +7,7 @@ class EditorGenerator {
         this.customEnumFields = customEnumFields;
     }
 
-    generateEditor(ignoreFields = [], extendableProperties = [], callback = (key, value) => {}) {
+    generateEditor(ignoreFields = [], extendableProperties = {}, callback = (key, value) => {}) {
         this.formContainer.empty();
         if (this.title) {
             const title = $('<label>')
@@ -121,10 +121,11 @@ class EditorGenerator {
                     const subObject = this.object[key] || {};
                     const subSchema = property.properties || {};
 
-                    if (extendableProperties.includes(key)) {
+                    if (extendableProperties[key]) {
                         const extendableContainer = $('<div>').addClass('property-editor-extendable');
+                        const addEntryCaption = extendableProperties[key].addCaption ? extendableProperties[key].addCaption : 'Add entry'
                         const addButton = $('<button>')
-                            .text('Add Entry')
+                            .text(addEntryCaption)
                             .on('click', () => {
                                 const newKey = prompt('Enter key for the new entry:');
                                 if (!newKey) return;
@@ -353,7 +354,7 @@ class EditorGenerator {
         }
     }
 
-    generateEditorForKeys(objectKey, callback = (key, value) => {}) {
+    generateEditorForKeys(objectKey, addCaption, callback = (key, value) => {}) {
         this.formContainer.empty();
         if (this.title) {
             const title = $('<label>')
@@ -370,7 +371,7 @@ class EditorGenerator {
             const subObject = this.object[key] || {};
             const extendableContainer = $('<div>').addClass('property-editor-extendable');
             const addButton = $('<button>')
-                .text('Add Entry')
+                .text(addCaption)
                 .on('click', () => {
                     const newKey = prompt('Enter key for the new entry:');
                     if (!newKey) {
@@ -501,7 +502,7 @@ class EditorGenerator {
                             '',
                             customEnumFields
                         );
-                        entrySubEditor.generateEditor([], [], callback);
+                        entrySubEditor.generateEditor([], {}, callback);
                         valueEditor = entrySubEditor.formContainer;
                     } else {
                         valueEditor = $('<input type="text">')

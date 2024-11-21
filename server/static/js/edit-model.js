@@ -180,7 +180,13 @@ $(document).ready(function() {
           schema.properties.data_assets.additionalProperties.properties :
           schema.properties.technical_assets.additionalProperties.properties;
     const assetEditor = new EditorGenerator(nodeData, editorSchema, $('#itemPropertyEditor'), title, generateEnumFields());
-    assetEditor.generateEditor([], ['communication_links'], () => {
+    const hiddenProperties = [];
+    const extendableProperties = {
+      'communication_links': {
+        addCaption: 'Add communication link'
+      }
+    };
+    assetEditor.generateEditor(hiddenProperties, extendableProperties, () => {
       updateDiagramModel(diagramYaml);
     });
   }
@@ -188,13 +194,27 @@ $(document).ready(function() {
   function showProjectFields(nodeData) {
     const projectEditor = new EditorGenerator(nodeData, schema.properties, $('#projectInfo'), undefined, generateEnumFields());
     const hiddenProperties = ['data_assets', 'technical_assets',  'trust_boundaries', 'shared_runtimes', 'risk_tracking'];
-    const extendableProperties = ['questions', 'abuse_cases', 'security_requirements', 'individual_risk_categories'];
+    const extendableProperties = {
+      'questions': {
+        addCaption: 'Add question'
+      },
+      'abuse_cases': {
+        addCaption: 'Add abuse case'
+
+      },
+      'security_requirements': {
+        addCaption: 'Add security requirement'
+      },
+      'individual_risk_categories': {
+        addCaption: 'Add individual risk category'
+      }
+    };
     projectEditor.generateEditor(hiddenProperties, extendableProperties);
   }
 
   function showTechnicalAssets(data) {
     const editor = new EditorGenerator(data, schema.properties, $('#technicalAssets'), undefined, generateEnumFields());
-    editor.generateEditorForKeys('technical_assets', (key, value) => {
+    editor.generateEditorForKeys('technical_assets', 'Add technical asset', (key, value) => {
       updateDiagramModel(diagramYaml);
     });
   }
