@@ -7,7 +7,7 @@ class EditorGenerator {
         this.customEnumFields = customEnumFields;
     }
 
-    generateEditor(ignoreFields = [], extendableProperties = {}, callback = (key, value) => {}) {
+    generateEditor(ignoreFields = [], extendableProperties = {}, callback = (key, value, oldValue) => {}) {
         this.formContainer.empty();
         if (this.title) {
             const title = $('<label>')
@@ -30,22 +30,28 @@ class EditorGenerator {
             switch (propertyType) {
                 case 'string':
                     if (property.format === 'date') {
+                        let oldValue = this.object[key] || '';
                         input = $('<input type="text">')
                             .addClass('property-editor-input')
-                            .val(this.object[key] || '')
+                            .val(oldValue)
                             .on('change', () => {
-                                this.object[key] = input.val();
-                                callback(key, input.val());
+                                const newValue = input.val();
+                                this.object[key] = newValue;
+                                callback(key, newValue, oldValue);
+                                oldValue = newValue;
                             });
                         input.datepicker({
                             dateFormat: "yy-mm-dd" // ISO 8601 format
                         });
                     } else if (property.enum) {
+                        let oldValue = this.object[key] || property.enum[0];
                         input = $('<select>')
                             .addClass('property-editor-input')
                             .on('change', () => {
-                                this.object[key] = input.val();
-                                callback(key, input.val());
+                                const newValue = input.val();
+                                this.object[key] = newValue;
+                                callback(key, newValue, oldValue);
+                                oldValue = newValue;
                             });
 
                         property.enum.forEach((option) => {
@@ -61,47 +67,59 @@ class EditorGenerator {
                             input.append(optionElement);
                         });
                     } else if (this.customEnumFields[key]) {
+                        let oldValue = this.object[key] || this.customEnumFields[key][0];
                         input = $('<select>')
                             .addClass('property-editor-input')
                             .on('change', () => {
-                                this.object[key] = input.val();
-                                callback(key, input.val());
+                                const newValue = input.val();
+                                this.object[key] = newValue;
+                                callback(key, newValue, oldValue);
+                                oldValue = newValue;
                             });
 
                         this.customEnumFields[key].forEach((option) => {
                             input.append($('<option>').val(option).text(option).prop('selected', value === option));
                         });
                     } else {
+                        let oldValue = this.object[key] || '';
                         input = $('<input type="text">')
                             .addClass('property-editor-input')
-                            .val(this.object[key] || '')
+                            .val(oldValue)
                             .on('change', () => {
-                                this.object[key] = input.val();
-                                callback(key, input.val());
+                                const newValue = input.val();
+                                this.object[key] = newValue;
+                                callback(key, newValue, oldValue);
+                                oldValue = newValue;
                             });
                     }
                     break;
 
                 case 'integer':
-                case 'number':
+                case 'number': {
+                    let oldValue = this.object[key] !== undefined ? this.object[key] : '0';
                     input = $('<input type="number">')
                         .addClass('property-editor-input')
-                        .val(this.object[key] !== undefined ? this.object[key] : '')
+                        .val(oldValue)
                         .attr('min', property.minimum || null)
                         .attr('max', property.maximum || null)
                         .on('input', () => {
-                            this.object[key] = parseFloat(input.val());
-                            callback(key, input.val());
+                            const newValue = input.val();
+                            this.object[key] = parseFloat(newValue);
+                            callback(key, newValue, oldValue);
+                            oldValue = newValue;
                         });
                     break;
-
+                    }
                 case 'boolean':
+                    let oldValue = this.object[key] !== undefined ? this.object[key] : '0';
                     input = $('<input type="checkbox">')
                         .addClass('property-editor-checkbox')
                         .prop('checked', this.object[key] || false)
                         .on('change', () => {
+                            const newValue = input.is(':checked');
                             this.object[key] = input.is(':checked');
-                            callback(key, input.val());
+                            callback(key, newValue, oldValue);
+                            oldValue = newValue;
                         });
                     break;
 
@@ -143,7 +161,7 @@ class EditorGenerator {
                                     subObject[newKey] = '';
                                 }
                                 renderExtendableEntries();
-                                callback(key, newKey);
+                                callback(key, newKey, undefined);
                             });
 
                         const renderExtendableEntries = () => {
@@ -153,9 +171,10 @@ class EditorGenerator {
                                 const entryContainer = $('<div>').addClass('extendable-entry');
 
                                 // Key input
+                                let oldKey = entryKey;
                                 const keyInput = $('<input type="text">')
                                     .addClass('property-editor-input')
-                                    .val(entryKey)
+                                    .val(oldKey)
                                     .on('change', () => {
                                         const newKey = keyInput.val();
                                         if (newKey !== entryKey) {
@@ -163,7 +182,8 @@ class EditorGenerator {
                                             subObject[newKey] = entryValue;
                                         }
                                         renderExtendableEntries();
-                                        callback(key, newKey);
+                                        callback(key, newKey, oldKey);
+                                        oldKey = newKey;
                                     });
 
                                 // Value editor
@@ -179,12 +199,14 @@ class EditorGenerator {
                                     entrySubEditor.generateEditor(ignoreFields, extendableProperties, callback);
                                     valueEditor = entrySubEditor.formContainer;
                                 } else {
+                                    let oldValue = entryValue || '';
                                     valueEditor = $('<input type="text">')
                                         .addClass('property-editor-input')
-                                        .val(entryValue || '')
+                                        .val(oldValue)
                                         .on('change', () => {
-                                            subObject[entryKey] = valueEditor.val();
-                                            callback(entryKey, valueEditor.val());
+                                            let newValue = valueEditor.val();
+                                            subObject[entryKey] = newValue;
+                                            callback(entryKey, newValue, oldValue);
                                         });
                                 }
 
@@ -193,7 +215,7 @@ class EditorGenerator {
                                     .on('click', () => {
                                         delete subObject[entryKey];
                                         renderExtendableEntries();
-                                        callback(entryKey, 'DELETED');
+                                        callback(entryKey, 'DELETED', undefined);
                                     });
 
                                 entryContainer.append(keyInput, valueEditor, deleteButton);
@@ -236,7 +258,7 @@ class EditorGenerator {
                                 .on('click', () => {
                                     arrayItems.splice(index, 1);
                                     renderArrayItems();
-                                    callback(key + '[' + index + ']', 'DELETED');
+                                    callback(key + '[' + index + ']', 'DELETED', item);
                                 });
 
                             if (itemSchema.enum) {
@@ -257,7 +279,6 @@ class EditorGenerator {
 
                                 itemContainer.append(select);
                             } else if (this.customEnumFields[key]) {
-                                // Handle array of custom enums (dropdowns)
                                 const select = $('<select>')
                                     .addClass('property-editor-input')
                                     .on('change', () => {
@@ -276,23 +297,26 @@ class EditorGenerator {
                                 itemContainer.append(select);
                             }
                             else if (itemSchema.type === 'string') {
-                                // Handle array of strings (text input)
+                                let oldValue = item || '';
                                 const input = $('<input type="text">')
                                     .addClass('property-editor-input')
-                                    .val(item || '')
+                                    .val(oldValue)
                                     .on('change', () => {
-                                        arrayItems[index] = input.val();
-                                        callback(key + '[' + index + ']', input.val());
+                                        const newValue = input.val();
+                                        arrayItems[index] = newValue;
+                                        callback(key + '[' + index + ']', newValue, oldValue);
+                                        oldValue = newValue;
                                     });
                                 itemContainer.append(input);
                             } else if (itemSchema.type === 'number' || itemSchema.type === 'integer') {
-                                // Handle array of numbers
+                                let oldValue = item !== undefined ? item : '0';
                                 const input = $('<input type="number">')
                                     .addClass('property-editor-input')
-                                    .val(item !== undefined ? item : '')
+                                    .val(oldValue)
                                     .on('input', () => {
-                                        arrayItems[index] = parseFloat(input.val());
-                                        callback(key + '[' + index + ']', input.val());
+                                        const newValue = input.val();
+                                        arrayItems[index] = parseFloat(newValue);
+                                        callback(key + '[' + index + ']', newValue, oldValue);
                                     });
                                 itemContainer.append(input);
                             } else if (itemSchema.type === 'object' || itemSchema.properties) {
@@ -354,7 +378,7 @@ class EditorGenerator {
         }
     }
 
-    generateEditorForKeys(objectKey, addCaption, callback = (key, value) => {}) {
+    generateEditorForKeys(objectKey, addCaption, callback = (key, value, oldValue) => {}) {
         this.formContainer.empty();
         if (this.title) {
             const title = $('<label>')
@@ -387,7 +411,7 @@ class EditorGenerator {
 
 
                     renderExtendableEntries();
-                    callback(key, newKey);
+                    callback(key, newKey, undefined);
                 });
 
             const renderExtendableEntries = () => {
@@ -397,9 +421,10 @@ class EditorGenerator {
                     const entryContainer = $('<div>').addClass('extendable-entry');
 
                     // Key input
+                    let oldKey = entryKey;
                     const keyInput = $('<input type="text">')
                         .addClass('property-editor-input')
-                        .val(entryKey)
+                        .val(oldKey)
                         .on('change', () => {
                             const newKey = keyInput.val();
                             if (newKey !== entryKey) {
@@ -407,7 +432,8 @@ class EditorGenerator {
                                 subObject[newKey] = entryValue;
                             }
                             renderExtendableEntries();
-                            callback(key, newKey);
+                            callback(key, newKey, oldKey);
+                            oldKey = newKey;
                         });
 
                     const deleteButton = $('<button>')
@@ -415,7 +441,7 @@ class EditorGenerator {
                         .on('click', () => {
                             delete subObject[entryKey];
                             renderExtendableEntries();
-                            callback(entryKey, 'DELETED');
+                            callback(entryKey, 'DELETED', entryKey);
                         });
 
                     entryContainer.append(keyInput, deleteButton);
@@ -433,7 +459,7 @@ class EditorGenerator {
         }
     }
 
-    generateEditorForObject(objectKey, addCaption, callback = (key, value) => {}) {
+    generateEditorForObject(objectKey, addCaption, callback = (key, value, oldValue) => {}) {
         this.formContainer.empty();
         if (this.title) {
             const title = $('<label>')
@@ -468,7 +494,7 @@ class EditorGenerator {
                         subObject[newKey] = '';
                     }
                     renderExtendableEntries();
-                    callback(key, newKey);
+                    callback(key, newKey, undefined);
                 });
 
             let customEnumFields = this.customEnumFields;
@@ -478,7 +504,7 @@ class EditorGenerator {
                 for (const [entryKey, entryValue] of Object.entries(subObject)) {
                     const entryContainer = $('<div>').addClass('extendable-entry');
 
-                    // Key input
+                    let oldKey = entryKey;
                     const keyInput = $('<input type="text">')
                         .addClass('property-editor-input')
                         .val(entryKey)
@@ -489,7 +515,8 @@ class EditorGenerator {
                                 subObject[newKey] = entryValue;
                             }
                             renderExtendableEntries();
-                            callback(key, newKey);
+                            callback(key, newKey, oldKey);
+                            oldKey = newKey;
                         });
 
                     // Value editor
@@ -505,21 +532,25 @@ class EditorGenerator {
                         entrySubEditor.generateEditor([], {}, callback);
                         valueEditor = entrySubEditor.formContainer;
                     } else {
+                        let oldValue = entryValue || '';
                         valueEditor = $('<input type="text">')
                             .addClass('property-editor-input')
-                            .val(entryValue || '')
+                            .val(oldValue)
                             .on('change', () => {
-                                subObject[entryKey] = valueEditor.val();
-                                callback(entryKey, valueEditor.val());
+                                const newValue = valueEditor.val();
+                                subObject[entryKey] = newValue;
+                                callback(entryKey, newValue, oldValue);
+                                oldValue = newValue;
                             });
                     }
 
                     const deleteButton = $('<button>')
                         .text('x')
                         .on('click', () => {
+                            const oldValue = subObject[entryKey];
                             delete subObject[entryKey];
                             renderExtendableEntries();
-                            callback(entryKey, 'DELETED');
+                            callback(entryKey, 'DELETED', oldValue);
                         });
 
                     entryContainer.append(keyInput, valueEditor, deleteButton);
