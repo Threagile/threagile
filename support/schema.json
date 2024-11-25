@@ -771,7 +771,7 @@
                   "description": "VPN",
                   "type": "boolean"
                 },
-                  "ip_filtered": {
+                "ip_filtered": {
                   "description": "IP filtered",
                   "type": "boolean"
                 },

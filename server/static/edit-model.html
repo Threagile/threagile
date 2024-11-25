@@ -1,0 +1,53 @@
+<html>
+    <head>
+        <title>Threagile - Agile Threat Modeling</title>
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+        <link rel="manifest" href="/site.webmanifest">
+        <script src="https://cdn.jsdelivr.net/npm/gojs@3.0.13/release/go.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/create-gojs-kit@3.0.13/dist/extensions/ArrangingLayout.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
+        <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+        <link href="https://code.jquery.com/ui/1.14.1/themes/base/jquery-ui.css" rel="stylesheet" />
+        <script src="https://code.jquery.com/ui/1.14.1/jquery-ui.min.js" integrity="sha256-AlTido85uXPlSyyaZNsjJXeCs07eSv3r43kyCVc8ChI=" crossorigin="anonymous"></script>
+    </head>
+    <body>
+        <div class="input-container">
+          <input type="file" id="fileInput" accept=".yaml, .yml">
+        </div>
+
+        <div class="buttons-container">
+          <button id="btnRestoreChanges">Restore Changes</button>
+          <button id="btnExportDiagram">Export</button>
+          <button id="btnAnalyze">Analyze</button>
+        </div>
+
+        <div class="diagram-container">
+          <div id="projectTabs" class="tabs property-editor">
+            <ul>
+              <li><a href="#projectInfo">Project Info</a></li>
+              <li><a href="#technicalAssets">Technical Assets</a></li>
+              <li><a href="#dataAssets">Data Assets</a></li>
+              <li><a href="#trustBoundaries">Trust Boundaries</a></li>
+              <li><a href="#sharedRuntimes">Shared Runtimes</a></li>
+            </ul>
+            <div id="projectInfo"></div>
+            <div id="technicalAssets"></div>
+            <div id="dataAssets"></div>
+            <div id="trustBoundaries"></div>
+            <div id="sharedRuntimes"></div>
+          </div>
+          <div id="myDiagramDiv" class="diagram"></div>
+          <div id="itemPropertyEditor" class="property-editor"></div>
+        </div>
+        <div class="diagram-container">
+          <div id="riskTrackingPropertyEditor" class="risk-property-editor"></div>
+          <div id="riskAnalyzeContent" class="risk-property-editor">
+        </div>
+    </body>
+    <script src="./js/schema.js"></script>
+    <script src="./js/property-editor.js"></script>
+    <script src="./js/edit-model.js"></script>
+    <link href="./css/edit-model.css" rel="stylesheet" />
+</html>

@@ -1,0 +1,100 @@
+body {
+  font-family: sans-serif;
+  -webkit-font-smoothing: auto;
+  -moz-font-smoothing: auto;
+  -moz-osx-font-smoothing: grayscale;
+  font-smoothing: auto;
+  text-rendering: optimizeLegibility;
+  font-smooth: always;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  background: white;
+  font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+  font-weight: 300;
+  font-size: 1.2em;
+  color: #5a5a5a;
+}
+
+.input-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.diagram-container {
+  width: 100%;
+  margin-top: 20px;
+  display: flex;
+}
+
+.buttons-container {
+  margin-top: 10px;
+  display: flex;
+  gap: 10px;
+}
+
+.diagram {
+  width: 60%;
+  height: 700px;
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+}
+
+.property-editor {
+  border: 1px solid #ccc;
+  padding: 10px;
+  width: 20%;
+  height: 680px;
+  background-color: azure;
+  overflow-y: auto; /* Enable vertical scroll */
+}
+
+.risk-property-editor {
+  border: 1px solid #ccc;
+  padding: 10px;
+  width: 50%;
+  height: 320px;
+  background-color: #efb9b9;
+  overflow-y: auto; /* Enable vertical scroll */
+}
+
+.property-editor-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  font-size: 0.6em;
+}
+
+.property-editor-label {
+  width: 200px;
+  font-weight: bold;
+  margin-right: 10px;
+  text-align: right;
+}
+
+.property-editor-field {
+  flex: 1;
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.property-editor-input {
+  width: 100%;
+  padding: 5px;
+}
+
+.property-editor-checkbox {
+  margin-left: 5px;
+}
+
+.property-editor-title {
+    font-size: 1.5em;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.field-delimiter {
+    border-top: 1px solid #ccc;
+    margin: 10px 0;
+}

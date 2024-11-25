@@ -16,6 +16,9 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/threagile/threagile/pkg/input"
+	"github.com/threagile/threagile/pkg/model"
+	"github.com/threagile/threagile/pkg/risks"
 )
 
 func (s *server) analyze(ginContext *gin.Context) {
@@ -226,4 +229,47 @@ func (s *server) doItViaRuntimeCall(modelFile string, outputDir string,
 			fmt.Println("---")
 		}
 	}
+}
+
+func (s *server) editModelAnalyze(ginContext *gin.Context) {
+	defer func() {
+		var err error
+		if r := recover(); r != nil {
+			s.errorCount++
+			err = r.(error)
+			log.Println(err)
+			ginContext.JSON(http.StatusBadRequest, gin.H{
+				"error": strings.TrimSpace(err.Error()),
+			})
+		}
+	}()
+
+	var modelInput input.Model
+	if err := ginContext.ShouldBindJSON(&modelInput); err != nil {
+		ginContext.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid JSON provided",
+		})
+		return
+	}
+	log.Printf("Received JSON: %+v\n", modelInput)
+
+	progressReporter := DefaultProgressReporter{
+		Verbose:       s.config.GetVerbose(),
+		SuppressError: true,
+	}
+	customRiskRules := model.LoadCustomRiskRules(s.config.GetPluginFolder(), s.config.GetRiskRulePlugins(), progressReporter)
+	builtinRiskRules := risks.GetBuiltInRiskRules()
+
+	result, err := model.AnalyzeModel(&modelInput, s.config, builtinRiskRules, customRiskRules, progressReporter)
+	if err != nil {
+		ginContext.JSON(http.StatusBadRequest, gin.H{
+			"error": "Unable to analyze model: " + err.Error(),
+		})
+		return
+	}
+
+	ginContext.JSON(http.StatusOK, gin.H{
+		"message": "Analyzed successfully",
+		"data":    result,
+	})
 }

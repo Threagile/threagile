@@ -7,8 +7,8 @@ import (
 	"github.com/threagile/threagile/pkg/types"
 )
 
-func TestCrossSiteRequestForgeryRuleGenerateRisksEmptyModelNotRisksCreated(t *testing.T) {
-	rule := NewCrossSiteRequestForgeryRule()
+func TestContainerPlatformEscapeRuleGenerateRisksEmptyModelNotRisksCreated(t *testing.T) {
+	rule := NewContainerPlatformEscapeRule()
 
 	risks, err := rule.GenerateRisks(&types.Model{})
 
@@ -16,8 +16,8 @@ func TestCrossSiteRequestForgeryRuleGenerateRisksEmptyModelNotRisksCreated(t *te
 	assert.Empty(t, risks)
 }
 
-func TestCrossSiteRequestForgeryRuleGenerateRisksOutOfScopeNotRisksCreated(t *testing.T) {
-	rule := NewCrossSiteRequestForgeryRule()
+func TestContainerPlatformEscapeRuleGenerateRisksOutOfScopeNotRisksCreated(t *testing.T) {
+	rule := NewContainerPlatformEscapeRule()
 
 	risks, err := rule.GenerateRisks(&types.Model{
 		TechnicalAssets: map[string]*types.TechnicalAsset{
@@ -31,8 +31,8 @@ func TestCrossSiteRequestForgeryRuleGenerateRisksOutOfScopeNotRisksCreated(t *te
 	assert.Empty(t, risks)
 }
 
-func TestCrossSiteRequestForgeryRuleGenerateRisksTechAssetNotWebApplicationNotRisksCreated(t *testing.T) {
-	rule := NewCrossSiteRequestForgeryRule()
+func TestContainerPlatformEscapeRuleRuleGenerateRisksTechAssetNotContainerPlatformNotRisksCreated(t *testing.T) {
+	rule := NewContainerPlatformEscapeRule()
 
 	risks, err := rule.GenerateRisks(&types.Model{
 		TechnicalAssets: map[string]*types.TechnicalAsset{
@@ -41,7 +41,7 @@ func TestCrossSiteRequestForgeryRuleGenerateRisksTechAssetNotWebApplicationNotRi
 					{
 						Name: "tool",
 						Attributes: map[string]bool{
-							types.WebApplication: false,
+							types.ContainerPlatform: false,
 						},
 					},
 				},
@@ -53,208 +53,66 @@ func TestCrossSiteRequestForgeryRuleGenerateRisksTechAssetNotWebApplicationNotRi
 	assert.Empty(t, risks)
 }
 
-func TestCrossSiteRequestForgeryRuleGenerateRisksTechAssetWebApplicationWithoutIncomingCommunicationNotRisksCreated(t *testing.T) {
-	rule := NewCrossSiteRequestForgeryRule()
+func TestContainerPlatformEscapeRuleGenerateRisksTechAssetContainerPlatformRisksCreated(t *testing.T) {
+	rule := NewContainerPlatformEscapeRule()
 
 	risks, err := rule.GenerateRisks(&types.Model{
 		TechnicalAssets: map[string]*types.TechnicalAsset{
 			"ta1": {
-				Technologies: types.TechnologyList{
-					{
-						Name: "web-app",
-						Attributes: map[string]bool{
-							types.WebApplication: true,
-						},
-					},
-				},
-			},
-		},
-	})
-
-	assert.Nil(t, err)
-	assert.Empty(t, risks)
-}
-
-func TestCrossSiteRequestForgeryRuleGenerateRisksTechAssetWebApplicationIncomingRequestNotWebAccessProtocolNotRiskCreated(t *testing.T) {
-	rule := NewCrossSiteRequestForgeryRule()
-
-	risks, err := rule.GenerateRisks(&types.Model{
-		TechnicalAssets: map[string]*types.TechnicalAsset{
-			"web-app": {
-				Id: "web-app",
-				Technologies: types.TechnologyList{
-					{
-						Name: "web-app",
-						Attributes: map[string]bool{
-							types.WebApplication: true,
-						},
-					},
-				},
-			},
-			"file-scrapper": {
+				Id:    "ta1",
+				Title: "Docker",
 				Technologies: types.TechnologyList{
 					{
 						Name: "tool",
-					},
-				},
-			},
-		},
-		IncomingTechnicalCommunicationLinksMappedByTargetId: map[string][]*types.CommunicationLink{
-			"web-app": {
-				{
-					Protocol: types.LocalFileAccess,
-					SourceId: "file-scrapper",
-					TargetId: "web-app",
-				},
-			},
-		},
-	})
-
-	assert.Nil(t, err)
-	assert.Empty(t, risks)
-}
-
-func TestCrossSiteRequestForgeryRuleGenerateRisksTechAssetWebApplicationIncomingRequestWebAccessProtocolRiskCreated(t *testing.T) {
-	rule := NewCrossSiteRequestForgeryRule()
-
-	risks, err := rule.GenerateRisks(&types.Model{
-		TechnicalAssets: map[string]*types.TechnicalAsset{
-			"web-app": {
-				Id:    "web-app",
-				Title: "Web Application",
-				Technologies: types.TechnologyList{
-					{
-						Name: "web-app",
 						Attributes: map[string]bool{
-							types.WebApplication: true,
+							types.ContainerPlatform: true,
 						},
 					},
 				},
-			},
-			"user": {
-				Title: "user",
-				Technologies: types.TechnologyList{
-					{
-						Name: "user",
-					},
-				},
-			},
-		},
-		IncomingTechnicalCommunicationLinksMappedByTargetId: map[string][]*types.CommunicationLink{
-			"web-app": {
-				{
-					Title:    "HTTP",
-					Protocol: types.HTTP,
-					SourceId: "user",
-					TargetId: "web-app",
-				},
+				Machine: types.Container,
 			},
 		},
 	})
 
 	assert.Nil(t, err)
 	assert.NotEmpty(t, risks)
-	assert.Equal(t, "<b>Cross-Site Request Forgery (CSRF)</b> risk at <b>Web Application</b> via <b>HTTP</b> from <b>user</b>", risks[0].Title)
-	assert.Equal(t, types.VeryLikely, risks[0].ExploitationLikelihood)
-	assert.Equal(t, types.LowImpact, risks[0].ExploitationImpact)
+	assert.Equal(t, "<b>Container Platform Escape</b> risk at <b>Docker</b>", risks[0].Title)
+	assert.Equal(t, types.MediumImpact, risks[0].ExploitationImpact)
+	assert.NotEmpty(t, risks[0].DataBreachTechnicalAssetIDs)
+	assert.Equal(t, "ta1", risks[0].DataBreachTechnicalAssetIDs[0])
 }
 
-func TestCrossSiteRequestForgeryRuleGenerateRisksTechAssetWebApplicationIncomingRequestWebAccessProtocolViaDevOpsRiskCreatedWithLikelyLikelihood(t *testing.T) {
-	rule := NewCrossSiteRequestForgeryRule()
+func TestContainerPlatformEscapeRuleGenerateRisksTechAssetProcessStrictlyConfidentialDataAssetHighImpactRiskCreated(t *testing.T) {
+	rule := NewContainerPlatformEscapeRule()
 
 	risks, err := rule.GenerateRisks(&types.Model{
 		TechnicalAssets: map[string]*types.TechnicalAsset{
-			"web-app": {
-				Id:    "web-app",
-				Title: "Web Application",
+			"ta1": {
+				Id:    "ta1",
+				Title: "Docker",
 				Technologies: types.TechnologyList{
 					{
-						Name: "web-app",
+						Name: "tool",
 						Attributes: map[string]bool{
-							types.WebApplication: true,
+							types.ContainerPlatform: true,
 						},
 					},
 				},
-			},
-			"ci/cd": {
-				Title: "ci/cd",
-				Technologies: types.TechnologyList{
-					{
-						Name: "ci/cd",
-					},
-				},
-			},
-		},
-		IncomingTechnicalCommunicationLinksMappedByTargetId: map[string][]*types.CommunicationLink{
-			"web-app": {
-				{
-					Title:    "HTTP",
-					Protocol: types.HTTP,
-					SourceId: "ci/cd",
-					TargetId: "web-app",
-					Usage:    types.DevOps,
-				},
-			},
-		},
-	})
-
-	assert.Nil(t, err)
-	assert.NotEmpty(t, risks)
-	assert.Equal(t, "<b>Cross-Site Request Forgery (CSRF)</b> risk at <b>Web Application</b> via <b>HTTP</b> from <b>ci/cd</b>", risks[0].Title)
-	assert.Equal(t, types.Likely, risks[0].ExploitationLikelihood)
-	assert.Equal(t, types.LowImpact, risks[0].ExploitationImpact)
-}
-
-func TestCrossSiteRequestForgeryRuleGenerateRisksTechAssetWebApplicationIncomingRequestWebAccessProtocolRiskCreatedWithMediumImpactWhenIntegrityIsMissionCritical(t *testing.T) {
-	rule := NewCrossSiteRequestForgeryRule()
-
-	risks, err := rule.GenerateRisks(&types.Model{
-		TechnicalAssets: map[string]*types.TechnicalAsset{
-			"web-app": {
-				Id:    "web-app",
-				Title: "Web Application",
-				Technologies: types.TechnologyList{
-					{
-						Name: "web-app",
-						Attributes: map[string]bool{
-							types.WebApplication: true,
-						},
-					},
-				},
-			},
-			"user": {
-				Title: "user",
-				Technologies: types.TechnologyList{
-					{
-						Name: "user",
-					},
-				},
+				Machine:             types.Container,
+				DataAssetsProcessed: []string{"strictly-confidential-data-asset"},
 			},
 		},
 		DataAssets: map[string]*types.DataAsset{
-			"mission-critical-data": {
-				Id:        "mission-critical-data",
-				Title:     "Mission Critical Data",
-				Integrity: types.MissionCritical,
-			},
-		},
-
-		IncomingTechnicalCommunicationLinksMappedByTargetId: map[string][]*types.CommunicationLink{
-			"web-app": {
-				{
-					Title:              "HTTP",
-					Protocol:           types.HTTP,
-					SourceId:           "user",
-					TargetId:           "web-app",
-					DataAssetsReceived: []string{"mission-critical-data"},
-				},
+			"strictly-confidential-data-asset": {
+				Confidentiality: types.StrictlyConfidential,
 			},
 		},
 	})
 
 	assert.Nil(t, err)
 	assert.NotEmpty(t, risks)
-	assert.Equal(t, "<b>Cross-Site Request Forgery (CSRF)</b> risk at <b>Web Application</b> via <b>HTTP</b> from <b>user</b>", risks[0].Title)
-	assert.Equal(t, types.VeryLikely, risks[0].ExploitationLikelihood)
-	assert.Equal(t, types.MediumImpact, risks[0].ExploitationImpact)
+	assert.Equal(t, "<b>Container Platform Escape</b> risk at <b>Docker</b>", risks[0].Title)
+	assert.Equal(t, types.HighImpact, risks[0].ExploitationImpact)
+	assert.NotEmpty(t, risks[0].DataBreachTechnicalAssetIDs)
+	assert.Equal(t, "ta1", risks[0].DataBreachTechnicalAssetIDs[0])
 }
