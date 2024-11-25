@@ -15,14 +15,11 @@ But most viable product here would be adding an ability to do changes to your mo
 
 Here’s a quick demonstration of the project:
 
-<video width="600" controls>
-  <source src="./edit-model.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
-
-Or download and play it locally:
-
-[Download Video](./edit-model.mp4)
+<iframe width="560" height="315"
+        src="https://www.youtube.com/watch?v=G9nwg-nqOCw"
+        frameborder="0"
+        allowfullscreen>
+</iframe>
 
 Most important note that the model is fully in the memory of the browser and to store it somewhere you need to export it to your hard drive.
 
