@@ -22,7 +22,7 @@ Here’s a quick demonstration of the project:
 
 Or download and play it locally:
 
-[Download Video](videos/my-video.mp4)
+[Download Video](./edit-model.mp4)
 
 Most important note that the model is fully in the memory of the browser and to store it somewhere you need to export it to your hard drive.
 
