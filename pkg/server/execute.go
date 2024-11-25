@@ -269,7 +269,7 @@ func (s *server) editModelAnalyze(ginContext *gin.Context) {
 	}
 
 	ginContext.JSON(http.StatusOK, gin.H{
-		"message": "JSON received successfully",
+		"message": "Analyzed successfully",
 		"data":    result,
 	})
 }
