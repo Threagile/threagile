@@ -60,6 +60,7 @@ type Config struct {
 	BackupHistoryFilesToKeepValue int  `json:"BackupHistoryFilesToKeep,omitempty" yaml:"BackupHistoryFilesToKeep"`
 
 	AddModelTitleValue              bool `json:"AddModelTitle,omitempty" yaml:"AddModelTitle"`
+	AddLegendValue                  bool `json:"AddLegend,omitempty" yaml:"AddLegend"`
 	KeepDiagramSourceFilesValue     bool `json:"KeepDiagramSourceFiles,omitempty" yaml:"KeepDiagramSourceFiles"`
 	IgnoreOrphanedRiskTrackingValue bool `json:"IgnoreOrphanedRiskTracking,omitempty" yaml:"IgnoreOrphanedRiskTracking"`
 
@@ -120,6 +121,7 @@ type ConfigGetter interface {
 	GetMaxGraphvizDPI() int
 	GetBackupHistoryFilesToKeep() int
 	GetAddModelTitle() bool
+	GetAddLegend() bool
 	GetKeepDiagramSourceFiles() bool
 	GetIgnoreOrphanedRiskTracking() bool
 	GetSkipDataFlowDiagram() bool
@@ -204,6 +206,7 @@ func (c *Config) Defaults(buildTimestamp string) *Config {
 		BackupHistoryFilesToKeepValue: DefaultBackupHistoryFilesToKeep,
 
 		AddModelTitleValue:              false,
+		AddLegendValue:                  false,
 		KeepDiagramSourceFilesValue:     false,
 		IgnoreOrphanedRiskTrackingValue: false,
 
@@ -473,6 +476,9 @@ func (c *Config) Merge(config Config, values map[string]any) {
 
 		case strings.ToLower("AddModelTitle"):
 			c.AddModelTitleValue = config.AddModelTitleValue
+
+		case strings.ToLower("AddLegend"):
+			c.AddLegendValue = config.AddLegendValue
 
 		case strings.ToLower("KeepDiagramSourceFiles"):
 			c.KeepDiagramSourceFilesValue = config.KeepDiagramSourceFilesValue
@@ -770,6 +776,10 @@ func (c *Config) GetBackupHistoryFilesToKeep() int {
 
 func (c *Config) GetAddModelTitle() bool {
 	return c.AddModelTitleValue
+}
+
+func (c *Config) GetAddLegend() bool {
+	return c.AddLegendValue
 }
 
 func (c *Config) GetKeepDiagramSourceFiles() bool {

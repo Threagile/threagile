@@ -45,7 +45,8 @@ This config keys is used when application run in [analyze mode](./mode-analyze.m
 | `DiagramDPI`                  | int                   | The same as `-diagram-dpi` [flags](./flags.md)                     | see [flags](./flags.md) |
 | `GraphvizDPI`                 | TBD                   | The same as `-verbose` or `--v` at [flags](./flags.md)             | see [flags](./flags.md) |
 | `MaxGraphvizDPI`              | TBD                   | The same as `-verbose` or `--v` at [flags](./flags.md)             | see [flags](./flags.md) |
-| `AddModelTitle`               | TBD                   | Identify if model title shall be added to diagram             | false |
+| `AddModelTitle`               | TBD                   | Identify if model title shall be added to diagram                  | false                   |
+| `AddLegend`                   | TBD                   | Identify if legend shall be added to diagram                       | false                   |
 
 ### Excel config keys
 

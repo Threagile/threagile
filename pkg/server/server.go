@@ -58,6 +58,7 @@ type serverConfigReader interface {
 	GetMaxGraphvizDPI() int
 	GetBackupHistoryFilesToKeep() int
 	GetAddModelTitle() bool
+	GetAddLegend() bool
 	GetKeepDiagramSourceFiles() bool
 	GetIgnoreOrphanedRiskTracking() bool
 	GetThreagileVersion() string
