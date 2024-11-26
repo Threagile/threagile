@@ -76,6 +76,7 @@ type reportConfigReader interface {
 
 	GetKeepDiagramSourceFiles() bool
 	GetAddModelTitle() bool
+	GetAddLegend() bool
 	GetReportConfigurationHideChapters() map[ChaptersToShowHide]bool
 }
 
@@ -117,7 +118,7 @@ func Generate(config reportConfigReader, readResult *model.ReadResult, commands 
 			gvFile = tmpFileGV.Name()
 			defer func() { _ = os.Remove(gvFile) }()
 		}
-		dotFile, err := WriteDataFlowDiagramGraphvizDOT(readResult.ParsedModel, gvFile, diagramDPI, config.GetAddModelTitle(), progressReporter)
+		dotFile, err := WriteDataFlowDiagramGraphvizDOT(readResult.ParsedModel, gvFile, diagramDPI, config.GetAddModelTitle(), config.GetAddLegend(), progressReporter)
 		if err != nil {
 			return fmt.Errorf("error while generating data flow diagram: %w", err)
 		}

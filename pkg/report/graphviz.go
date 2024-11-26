@@ -15,12 +15,60 @@ import (
 )
 
 func WriteDataFlowDiagramGraphvizDOT(parsedModel *types.Model,
-	diagramFilenameDOT string, dpi int, addModelTitle bool,
+	diagramFilenameDOT string, dpi int, addModelTitle bool, addLegend bool,
 	progressReporter progressReporter) (*os.File, error) {
 	progressReporter.Info("Writing data flow diagram input")
 
 	var dotContent strings.Builder
 	dotContent.WriteString("digraph generatedModel { concentrate=false \n")
+
+	if addLegend {
+		dotContent.WriteString("subgraph cluster_shape_legend { \n")
+		dotContent.WriteString("  label=\"Shape legend\"; \n")
+		dotContent.WriteString("  color=\"lightgrey\"; \n")
+		dotContent.WriteString("  style=\"dashed\"; \n")
+		dotContent.WriteString(makeLegendNode("external_entity_item", "External Entity", "0", "black", "box", "solid", "filled", "2.0", VeryLightGray, "1", Black))
+		dotContent.WriteString(makeLegendNode("process_item", "Process", "0", "black", "ellipse", "solid", "filled", "2.0", VeryLightGray, "1", Black))
+		dotContent.WriteString(makeLegendNode("datastore_item", "Datastore", "0", "black", "cylinder", "solid", "filled", "2.0", VeryLightGray, "1", Black))
+		dotContent.WriteString(makeLegendNode("used_as_client_item", "Used as client", "0", "black", "octagon", "solid", "filled", "2.0", VeryLightGray, "1", Black))
+		dotContent.WriteString("} \n")
+
+		dotContent.WriteString("subgraph cluster_tenant_legend { \n")
+		dotContent.WriteString("  label=\"Tenant legend\"; \n")
+		dotContent.WriteString("  color=\"lightgrey\"; \n")
+		dotContent.WriteString("  style=\"dashed\"; \n")
+		dotContent.WriteString(makeLegendNode("single_tenant", "Single tenant", "0", "black", "box", "solid", "filled", "2.0", VeryLightGray, "1", Black))
+		dotContent.WriteString(makeLegendNode("multi_tenant", "Multitenant", "1", "black", "box", "solid", "filled", "2.0", VeryLightGray, "1", Black))
+		dotContent.WriteString("} \n")
+
+		dotContent.WriteString("subgraph cluster_label_legend { \n")
+		dotContent.WriteString("  label=\"Label color legend\"; \n")
+		dotContent.WriteString("  color=\"lightgrey\"; \n")
+		dotContent.WriteString("  style=\"dashed\"; \n")
+		dotContent.WriteString(makeLegendNode("mission_critical", "Mission Critical Asset", "0", Red, "box", "solid", "filled", "3.0", VeryLightGray, "1", Red))
+		dotContent.WriteString(makeLegendNode("critical", "Critical Asset", "0", Amber, "box", "solid", "filled", "3.0", VeryLightGray, "1", Amber))
+		dotContent.WriteString(makeLegendNode("other", "Important and Other Assets", "0", Black, "box", "solid", "filled", "2.0", VeryLightGray, "1", Black))
+		dotContent.WriteString("} \n")
+
+		dotContent.WriteString("subgraph cluster_border_line_legend { \n")
+		dotContent.WriteString("  label=\"Label color legend\"; \n")
+		dotContent.WriteString("  color=\"lightgrey\"; \n")
+		dotContent.WriteString("  style=\"dashed\"; \n")
+		dotContent.WriteString(makeLegendNode("dotted", "Model forgery attempt", "0", Black, "box", "dotted ", "filled", "2.0", VeryLightGray, "1", Black))
+		dotContent.WriteString(makeLegendNode("solid", "Normal", "0", Black, "box", "solid", "filled", "2.0", VeryLightGray, "1", Black))
+		dotContent.WriteString("} \n")
+
+		dotContent.WriteString("subgraph cluster_fill_legend { \n")
+		dotContent.WriteString("  label=\"Shape fill legend (darker for physical machines, brighter for container and even more brighter for serverless\"; \n")
+		dotContent.WriteString("  color=\"lightgrey\"; \n")
+		dotContent.WriteString("  style=\"dashed\"; \n")
+		dotContent.WriteString(makeLegendNode("invalid_item", "No data processed or stored, or using unknown technology, or no communication links", "0", "black", "box", "solid", "filled", "2.0", LightPink, "1", Black))
+		dotContent.WriteString(makeLegendNode("internet", "Asset used over the internet", "0", "black", "box", "solid", "filled", "2.0", ExtremeLightBlue, "1", Black))
+		dotContent.WriteString(makeLegendNode("out_of_scope", "Out of scope", "0", "black", "box", "solid", "filled", "2.0", OutOfScopeFancy, "1", Black))
+		dotContent.WriteString(makeLegendNode("custom_developed_part", "Custom developed part", "0", "black", "box", "solid", "filled", "2.0", CustomDevelopedParts, "1", Black))
+		dotContent.WriteString(makeLegendNode("other_assets", "Other assets", "0", "black", "box", "solid", "filled", "2.0", VeryLightGray, "1", Black))
+		dotContent.WriteString("} \n")
+	}
 
 	// Metadata init ===============================================================================
 	tweaks := ""
@@ -252,10 +300,7 @@ func WriteDataFlowDiagramGraphvizDOT(parsedModel *types.Model,
 		return nil, fmt.Errorf("error while making diagram same-rank node tweaks: %w", err)
 	}
 	dotContent.WriteString(diagramSameRankNodeTweaks)
-
 	dotContent.WriteString("}")
-
-	//fmt.Println(dotContent.String())
 
 	// Write the DOT file
 	file, err := os.Create(filepath.Clean(diagramFilenameDOT))
@@ -268,6 +313,14 @@ func WriteDataFlowDiagramGraphvizDOT(parsedModel *types.Model,
 		return nil, fmt.Errorf("error writing %s: %w", diagramFilenameDOT, err)
 	}
 	return file, nil
+}
+
+func makeLegendNode(id, title, compartmentBorder, labelColor, shape, borderLineStyle, shapeStyle, borderPenWidth, shapeFillColor, shapePeripheries, shapeBorderColor string) string {
+	return "  " + id + ` [
+label=<<table border="0" cellborder="` + compartmentBorder + `" cellpadding="2" cellspacing="0"><tr><td><font point-size="15" color="` + DarkBlue + `">list of technologies` + `</font><br/><font point-size="15" color="` + LightGray + `">technical asset size</font></td></tr><tr><td><b><font color="` + labelColor + `">` + encode(title) + `</font></b><br/></td></tr><tr><td>attacker attractiveness level</td></tr></table>>
+shape=` + shape + ` style="` + borderLineStyle + `,` + shapeStyle + `" penwidth="` + borderPenWidth + `" fillcolor="` + shapeFillColor + `"
+peripheries=` + shapePeripheries + `
+color="` + shapeBorderColor + "\"\n  ]; "
 }
 
 // Pen Widths:
@@ -362,35 +415,6 @@ func determineArrowColor(cl *types.CommunicationLink, parsedModel *types.Model) 
 	}
 	// default
 	return Black
-	/*
-		} else if dataFlow.Authentication != NoneAuthentication {
-			return Black
-		} else {
-			// check for red
-			for _, sentDataAsset := range dataFlow.DataAssetsSent { // first check if any red?
-				if ParsedModelRoot.DataAssets[sentDataAsset].Integrity == MissionCritical {
-					return Red
-				}
-			}
-			for _, receivedDataAsset := range dataFlow.DataAssetsReceived { // first check if any red?
-				if ParsedModelRoot.DataAssets[receivedDataAsset].Integrity == MissionCritical {
-					return Red
-				}
-			}
-			// check for amber
-			for _, sentDataAsset := range dataFlow.DataAssetsSent { // then check if any amber?
-				if ParsedModelRoot.DataAssets[sentDataAsset].Integrity == Critical {
-					return Amber
-				}
-			}
-			for _, receivedDataAsset := range dataFlow.DataAssetsReceived { // then check if any amber?
-				if ParsedModelRoot.DataAssets[receivedDataAsset].Integrity == Critical {
-					return Amber
-				}
-			}
-			return Black
-		}
-	*/
 }
 
 func GenerateDataFlowDiagramGraphvizImage(dotFile *os.File, targetDir string,
@@ -638,48 +662,48 @@ func makeTechAssetNode(parsedModel *types.Model, technicalAsset *types.Technical
 		return "  " + hash(technicalAsset.Id) + ` [ shape="box" style="filled" fillcolor="` + color + `"
 				label=<<b>` + encode(technicalAsset.Title) + `</b>> penwidth="3.0" color="` + color + `" ];
 				`
-	} else {
-		var shape, title string
-		var lineBreak = ""
-		switch technicalAsset.Type {
-		case types.ExternalEntity:
-			shape = "box"
-			title = technicalAsset.Title
-		case types.Process:
-			shape = "ellipse"
-			title = technicalAsset.Title
-		case types.Datastore:
-			shape = "cylinder"
-			title = technicalAsset.Title
-			if technicalAsset.Redundant {
-				lineBreak = "<br/>"
-			}
-		}
-
-		if technicalAsset.UsedAsClientByHuman {
-			shape = "octagon"
-		}
-
-		// RAA = Relative Attacker Attractiveness
-		raa := technicalAsset.RAA
-		var attackerAttractivenessLabel string
-		if technicalAsset.OutOfScope {
-			attackerAttractivenessLabel = "<font point-size=\"15\" color=\"#603112\">RAA: out of scope</font>"
-		} else {
-			attackerAttractivenessLabel = "<font point-size=\"15\" color=\"#603112\">RAA: " + fmt.Sprintf("%.0f", raa) + " %</font>"
-		}
-
-		compartmentBorder := "0"
-		if technicalAsset.MultiTenant {
-			compartmentBorder = "1"
-		}
-
-		return "  " + hash(technicalAsset.Id) + ` [
-	label=<<table border="0" cellborder="` + compartmentBorder + `" cellpadding="2" cellspacing="0"><tr><td><font point-size="15" color="` + DarkBlue + `">` + lineBreak + technicalAsset.Technologies.String() + `</font><br/><font point-size="15" color="` + LightGray + `">` + technicalAsset.Size.String() + `</font></td></tr><tr><td><b><font color="` + determineTechnicalAssetLabelColor(technicalAsset, parsedModel) + `">` + encode(title) + `</font></b><br/></td></tr><tr><td>` + attackerAttractivenessLabel + `</td></tr></table>>
-	shape=` + shape + ` style="` + determineShapeBorderLineStyle(technicalAsset) + `,` + determineShapeStyle(technicalAsset) + `" penwidth="` + determineShapeBorderPenWidth(technicalAsset, parsedModel) + `" fillcolor="` + determineShapeFillColor(technicalAsset, parsedModel) + `"
-	peripheries=` + strconv.Itoa(determineShapePeripheries(technicalAsset)) + `
-	color="` + determineShapeBorderColor(technicalAsset, parsedModel) + "\"\n  ]; "
 	}
+
+	var shape, title string
+	var lineBreak = ""
+	switch technicalAsset.Type {
+	case types.ExternalEntity:
+		shape = "box"
+		title = technicalAsset.Title
+	case types.Process:
+		shape = "ellipse"
+		title = technicalAsset.Title
+	case types.Datastore:
+		shape = "cylinder"
+		title = technicalAsset.Title
+		if technicalAsset.Redundant {
+			lineBreak = "<br/>"
+		}
+	}
+
+	if technicalAsset.UsedAsClientByHuman {
+		shape = "octagon"
+	}
+
+	// RAA = Relative Attacker Attractiveness
+	raa := technicalAsset.RAA
+	var attackerAttractivenessLabel string
+	if technicalAsset.OutOfScope {
+		attackerAttractivenessLabel = "<font point-size=\"15\" color=\"#603112\">RAA: out of scope</font>"
+	} else {
+		attackerAttractivenessLabel = "<font point-size=\"15\" color=\"#603112\">RAA: " + fmt.Sprintf("%.0f", raa) + " %</font>"
+	}
+
+	compartmentBorder := "0"
+	if technicalAsset.MultiTenant {
+		compartmentBorder = "1"
+	}
+
+	return "  " + hash(technicalAsset.Id) + ` [
+label=<<table border="0" cellborder="` + compartmentBorder + `" cellpadding="2" cellspacing="0"><tr><td><font point-size="15" color="` + DarkBlue + `">` + lineBreak + technicalAsset.Technologies.String() + `</font><br/><font point-size="15" color="` + LightGray + `">` + technicalAsset.Size.String() + `</font></td></tr><tr><td><b><font color="` + determineTechnicalAssetLabelColor(technicalAsset, parsedModel) + `">` + encode(title) + `</font></b><br/></td></tr><tr><td>` + attackerAttractivenessLabel + `</td></tr></table>>
+shape=` + shape + ` style="` + determineShapeBorderLineStyle(technicalAsset) + `,` + determineShapeStyle(technicalAsset) + `" penwidth="` + determineShapeBorderPenWidth(technicalAsset, parsedModel) + `" fillcolor="` + determineShapeFillColor(technicalAsset, parsedModel) + `"
+peripheries=` + strconv.Itoa(determineShapePeripheries(technicalAsset)) + `
+color="` + determineShapeBorderColor(technicalAsset, parsedModel) + "\"\n  ]; "
 }
 
 func determineShapeStyle(ta *types.TechnicalAsset) string {
@@ -744,29 +768,6 @@ func determineShapeBorderColor(ta *types.TechnicalAsset, parsedModel *types.Mode
 		}
 	}
 	return Black
-	/*
-		if what.Integrity == MissionCritical {
-			for _, dataFlow := range IncomingTechnicalCommunicationLinksMappedByTargetId[what.ID] {
-				if !dataFlow.Readonly && dataFlow.Authentication == NoneAuthentication {
-					return Red
-				}
-			}
-		}
-
-		if what.Integrity == Critical {
-			for _, dataFlow := range IncomingTechnicalCommunicationLinksMappedByTargetId[what.ID] {
-				if !dataFlow.Readonly && dataFlow.Authentication == NoneAuthentication {
-					return Amber
-				}
-			}
-		}
-
-		if len(what.DataAssetsProcessed) == 0 && len(what.DataAssetsStored) == 0 {
-			return Pink // pink, because it's strange when too many technical assets process no data... some are ok, but many in a diagram is a sign of model forgery...
-		}
-
-		return Black
-	*/
 }
 
 func determineShapePeripheries(ta *types.TechnicalAsset) int {
@@ -786,7 +787,6 @@ func determineShapeBorderLineStyle(ta *types.TechnicalAsset) string {
 
 // red when >= confidential data stored in unencrypted technical asset
 func determineTechnicalAssetLabelColor(ta *types.TechnicalAsset, model *types.Model) string {
-	// TODO: Just move into main.go and let the generated risk determine the color, don't duplicate the logic here
 	// Check for red
 	if ta.Integrity == types.MissionCritical {
 		return Red
@@ -816,29 +816,6 @@ func determineTechnicalAssetLabelColor(ta *types.TechnicalAsset, model *types.Mo
 		}
 	}
 	return Black
-	/*
-		if what.Encrypted {
-			return Black
-		} else {
-			if what.Confidentiality == StrictlyConfidential {
-				return Red
-			}
-			for _, storedDataAsset := range what.DataAssetsStored {
-				if ParsedModelRoot.DataAssets[storedDataAsset].Confidentiality == StrictlyConfidential {
-					return Red
-				}
-			}
-			if what.Confidentiality == Confidential {
-				return Amber
-			}
-			for _, storedDataAsset := range what.DataAssetsStored {
-				if ParsedModelRoot.DataAssets[storedDataAsset].Confidentiality == Confidential {
-					return Amber
-				}
-			}
-			return Black
-		}
-	*/
 }
 
 func GenerateDataAssetDiagramGraphvizImage(dotFile *os.File, targetDir string,
