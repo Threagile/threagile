@@ -798,7 +798,7 @@ func (adoc adocReport) assetRegister(f *os.File) {
 	writeLine(f, "")
 
 	for _, dataAsset := range sortedDataAssetsByTitle(adoc.model) {
-		writeLine(f, "<<"+dataAsset.Id+",*"+dataAsset.Title+"*"+">>::")
+		writeLine(f, "<<dataAsset:"+dataAsset.Id+",*"+dataAsset.Title+"*"+">>::")
 		writeLine(f, "  "+dataAsset.Description)
 		writeLine(f, "")
 	}
@@ -1899,6 +1899,7 @@ func (adoc adocReport) dataAssets(f *os.File) {
 			suffix += "s"
 		}
 		writeLine(f, "<<<")
+		writeLine(f, "[[dataAsset:"+dataAsset.Id+"]]")
 		writeLine(f, "== "+colorPrefix+dataAsset.Title+": "+suffix+colorSuffix)
 		writeLine(f, fixBasicHtml(dataAsset.Description)+"\n\n")
 
