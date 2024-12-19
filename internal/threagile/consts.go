@@ -83,7 +83,7 @@ const (
 		"If you want to execute Threagile in interactive mode (via docker):  \n" +
 		" docker run --rm -it -v \"$(pwd)\":app/work threagile/threagile -i --verbose --model --output app/work \n\n" +
 		"If you want to run Threagile as a server (REST API) on some port (here 8080):  \n" +
-		" docker run --rm -it --shm-size=256m  -p 8080:8080 --name --mount 'type=volume,src=threagile-storage,dst=/data,readonly=false' threagile/threagile server --server-port 8080 \n\n" +
+		" docker run --rm -it --shm-size=256m  -p 8080:8080 --mount 'type=volume,src=threagile-storage,dst=/data,readonly=false' threagile/threagile server --server-port 8080 \n\n" +
 		"If you want to find out about the different enum values usable in the model yaml file: \n" +
 		" docker run --rm -it threagile/threagile " + ListTypesCommand + "\n\n" +
 		"If you want to use some nice editing help (syntax validation, autocompletion, and live templates) in your favourite IDE: \n" +
