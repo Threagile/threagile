@@ -101,6 +101,5 @@ const (
 		" - graphics-go (BSD License): https://github.com/BurntSushi/graphics-go/blob/master/LICENSE\n" +
 		" - google-uuid (BSD License): https://github.com/google/uuid/blob/master/LICENSE\n" +
 		" - gin-gonic (MIT License): https://github.com/gin-gonic/gin/blob/master/LICENSE\n" +
-		" - swagger-ui (Apache License): https://swagger.io/license/\n" +
 		" - cobra-cli (Apache License): https://github.com/spf13/cobra-cli/blob/main/LICENSE.txt\n"
 )

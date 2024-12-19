@@ -121,13 +121,6 @@ func RunServer(config serverConfigReader, builtinRiskRules types.RiskRules) {
 	router.StaticFile("/schema.json", filepath.Join(s.config.GetAppFolder(), "schema.json"))
 	router.StaticFile("/live-templates.txt", filepath.Join(s.config.GetAppFolder(), "live-templates.txt"))
 	router.StaticFile("/openapi.yaml", filepath.Join(s.config.GetAppFolder(), "openapi.yaml"))
-	router.StaticFile("/swagger-ui/", filepath.Join(s.config.GetServerFolder(), "static", "swagger-ui/index.html"))
-	router.StaticFile("/swagger-ui/index.html", filepath.Join(s.config.GetServerFolder(), "static", "swagger-ui/index.html"))
-	router.StaticFile("/swagger-ui/oauth2-redirect.html", filepath.Join(s.config.GetServerFolder(), "static", "swagger-ui/oauth2-redirect.html"))
-	router.StaticFile("/swagger-ui/swagger-ui.css", filepath.Join(s.config.GetServerFolder(), "static", "swagger-ui/swagger-ui.css"))
-	router.StaticFile("/swagger-ui/swagger-ui.js", filepath.Join(s.config.GetServerFolder(), "static", "swagger-ui/swagger-ui.js"))
-	router.StaticFile("/swagger-ui/swagger-ui-bundle.js", filepath.Join(s.config.GetServerFolder(), "static", "swagger-ui/swagger-ui-bundle.js"))
-	router.StaticFile("/swagger-ui/swagger-ui-standalone-preset.js", filepath.Join(s.config.GetServerFolder(), "static", "swagger-ui/swagger-ui-standalone-preset.js")) // <==
 
 	router.GET("/threagile-example-model.yaml", s.exampleFile)
 	router.GET("/threagile-stub-model.yaml", s.stubFile)
