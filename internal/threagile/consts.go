@@ -6,7 +6,7 @@ const (
 	PluginDir = "/app"
 	DataDir   = "/data"
 	OutputDir = "."
-	ServerDir = "/server"
+	ServerDir = "/app/server"
 	KeyDir    = "keys"
 
 	DefaultServerPort = 8080
