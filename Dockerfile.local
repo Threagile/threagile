@@ -3,7 +3,7 @@
 ######
 ## Stage 1: Build application with Go's build tools
 ######
-FROM docker.io/library/golang:alpine as build
+FROM docker.io/library/golang:alpine AS build
 
 COPY . /app
 WORKDIR /app
@@ -33,8 +33,8 @@ RUN cp /app/demo/stub/threagile.yaml /app/demo/stub/threagile-stub-model.yaml
 ######
 ## Stage 2: Make final small image
 ######
-#FROM alpine:edge as finalize
-FROM alpine:latest as finalize
+#FROM alpine:edge AS finalize
+FROM alpine:latest AS finalize
 
 # label used in other scripts to filter
 LABEL type="threagile"

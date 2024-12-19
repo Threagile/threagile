@@ -3,7 +3,7 @@
 ######
 ## Stage 1: Clone the Git repository
 ######
-FROM alpine/git as clone
+FROM alpine/git AS clone
 WORKDIR /app
 
 RUN git clone https://github.com/threagile/threagile.git
@@ -14,7 +14,7 @@ RUN git clone https://github.com/threagile/threagile.git
 ######
 ## Stage 2: Build application with Go's build tools
 ######
-FROM golang as build
+FROM golang AS build
 WORKDIR /app
 
 ENV GO111MODULE=on
@@ -38,7 +38,7 @@ RUN cp /app/demo/stub/threagile.yaml /app/demo/stub/threagile-stub-model.yaml
 ######
 ## Stage 3: Make final small image
 ######
-FROM alpine as deploy
+FROM alpine AS deploy
 WORKDIR /app
 
 # label used in other scripts to filter
