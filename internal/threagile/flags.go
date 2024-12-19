@@ -7,7 +7,7 @@ package threagile
 const (
 	configFlagName = "config"
 
-	verboseFlagName      = "Verbose"
+	verboseFlagName      = "verbose"
 	verboseFlagShorthand = "v"
 
 	interactiveFlagName      = "interactive"
