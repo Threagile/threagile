@@ -71,7 +71,7 @@ const (
 	VersionText = "Documentation: https://threagile.io\n" +
 		"Docker Images: https://hub.docker.com/r/threagile/threagile\n" +
 		"Sourcecode: https://github.com/threagile\n" +
-		"License: Open-Source (MIT License)" +
+		"License: Open-Source (MIT License)\n" +
 		"Version: " + ThreagileVersion + " (%v)"
 	Examples = "Examples:\n\n" +
 		"If you want to create an example model (via docker) as a starting point to learn about Threagile just run: \n" +

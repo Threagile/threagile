@@ -1,6 +1,6 @@
 module github.com/threagile/threagile
 
-go 1.23.4
+go 1.23
 
 require (
 	github.com/chzyer/readline v1.5.1
