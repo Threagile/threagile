@@ -86,7 +86,7 @@ const (
 		" docker run --rm -it --shm-size=256m  -p 8080:8080 --name --mount 'type=volume,src=threagile-storage,dst=/data,readonly=false' threagile/threagile server --server-port 8080 \n\n" +
 		"If you want to find out about the different enum values usable in the model yaml file: \n" +
 		" docker run --rm -it threagile/threagile " + ListTypesCommand + "\n\n" +
-		"If you want to use some nice editing help (syntax validation, autocompletion, and live templates) in your favourite IDE: " +
+		"If you want to use some nice editing help (syntax validation, autocompletion, and live templates) in your favourite IDE: \n" +
 		" docker run --rm -it -v \"$(pwd)\":app/work threagile/threagile " + CreateEditingSupportCommand + " --output app/work\n\n" +
 		"If you want to list all available model macros (which are macros capable of reading a model yaml file, asking you questions in a wizard-style and then update the model yaml file accordingly): \n" +
 		" docker run --rm -it threagile/threagile " + ListModelMacrosCommand + " \n\n" +
