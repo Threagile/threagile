@@ -182,36 +182,43 @@ func (s *server) doItViaRuntimeCall(modelFile string, outputDir string,
 	dpi int) {
 	// Remember to also add the same args to the exec based sub-process calls!
 	var cmd *exec.Cmd
-	args := []string{"-model", modelFile, "-output", outputDir, "-execute-model-macro", s.config.GetExecuteModelMacro(), "-custom-risk-rules-plugins", strings.Join(s.config.GetRiskRulePlugins(), ","), "-skip-risk-rules", strings.Join(s.config.GetSkipRiskRules(), ","), "-diagram-dpi", strconv.Itoa(dpi)}
+	args := []string{"analyze-model",
+		"--model", modelFile,
+		"--output", outputDir,
+		"--execute-model-macro", s.config.GetExecuteModelMacro(),
+		"--custom-risk-rules-plugin", strings.Join(s.config.GetRiskRulePlugins(), ","),
+		"--skip-risk-rules", strings.Join(s.config.GetSkipRiskRules(), ","),
+		"--diagram-dpi", strconv.Itoa(dpi),
+	}
 	if s.config.GetVerbose() {
-		args = append(args, "-verbose")
+		args = append(args, "--verbose")
 	}
 	if s.config.GetIgnoreOrphanedRiskTracking() { // TODO why add all them as arguments, when they are also variables on outer level?
-		args = append(args, "-ignore-orphaned-risk-tracking")
+		args = append(args, "--ignore-orphaned-risk-tracking")
 	}
 	if generateDataFlowDiagram {
-		args = append(args, "-generate-data-flow-diagram")
+		args = append(args, "--generate-data-flow-diagram")
 	}
 	if generateDataAssetDiagram {
-		args = append(args, "-generate-data-asset-diagram")
+		args = append(args, "--generate-data-asset-diagram")
 	}
 	if generateReportPdf {
-		args = append(args, "-generate-report-pdf")
+		args = append(args, "--generate-report-pdf")
 	}
 	if generateRisksExcel {
-		args = append(args, "-generate-risks-excel")
+		args = append(args, "--generate-risks-excel")
 	}
 	if generateTagsExcel {
-		args = append(args, "-generate-tags-excel")
+		args = append(args, "--generate-tags-excel")
 	}
 	if generateRisksJSON {
-		args = append(args, "-generate-risks-json")
+		args = append(args, "--generate-risks-json")
 	}
 	if generateTechnicalAssetsJSON {
-		args = append(args, "-generate-technical-assets-json")
+		args = append(args, "--generate-technical-assets-json")
 	}
 	if generateStatsJSON {
-		args = append(args, "-generate-stats-json")
+		args = append(args, "--generate-stats-json")
 	}
 	self, nameError := os.Executable()
 	if nameError != nil {
