@@ -246,12 +246,12 @@ individual_risk_categories: # used for adding custom manually identified risks
 # seeding the risk tracking part here based on already identified and not yet handled risks.
 risk_tracking:
 
-  unencrypted-asset@some-component: # wildcards "*" between the @ characters are possible
-    status: accepted # values: unchecked, in-discussion, accepted, in-progress, mitigated, false-positive
-    justification: Risk accepted as tolerable
-    ticket: XYZ-1234
-    date: 2020-01-04
-    checked_by: John Doe
+#  unencrypted-asset@some-component: # wildcards "*" between the @ characters are possible
+#    status: accepted # values: unchecked, in-discussion, accepted, in-progress, mitigated, false-positive
+#    justification: Risk accepted as tolerable
+#    ticket: XYZ-1234
+#    date: 2020-01-04
+#    checked_by: John Doe
 
 
 
