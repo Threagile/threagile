@@ -59,7 +59,7 @@ uninstall:
 gosec:
 	$(GOSEC) ./...
 
-dist: update gosec all
+dist: update gosec lint all
 
 update:
 	go get -u ./...

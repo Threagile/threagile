@@ -235,15 +235,17 @@ func (m *AddBuildPipeline) GetNextQuestion(model *types.Model) (nextQuestion Mac
 func (m *AddBuildPipeline) ApplyAnswer(questionID string, answer ...string) (message string, validResult bool, err error) {
 	m.macroState[questionID] = answer
 	m.questionsAnswered = append(m.questionsAnswered, questionID)
-	if questionID == "code-inspection-used" {
+	switch questionID {
+	case "code-inspection-used":
 		m.codeInspectionUsed = strings.EqualFold(m.macroState["code-inspection-used"][0], "yes")
-	} else if questionID == "container-technology-used" {
+	case "container-technology-used":
 		m.containerTechUsed = strings.EqualFold(m.macroState["container-technology-used"][0], "yes")
-	} else if questionID == "within-trust-boundary" {
+	case "within-trust-boundary":
 		m.withinTrustBoundary = strings.EqualFold(m.macroState["within-trust-boundary"][0], "yes")
-	} else if questionID == "selected-trust-boundary" {
+	case "selected-trust-boundary":
 		m.createNewTrustBoundary = strings.EqualFold(m.macroState["selected-trust-boundary"][0], createNewTrustBoundaryLabel)
 	}
+
 	return "Answer processed", true, nil
 }
 

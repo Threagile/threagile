@@ -542,7 +542,7 @@ func (c *Config) ExpandPath(path string) string {
 	}
 
 	if strings.HasPrefix(path, "$HOME") {
-		path = strings.Replace(path, "$HOME", home, -1)
+		path = strings.ReplaceAll(path, "$HOME", home)
 	}
 
 	return path
