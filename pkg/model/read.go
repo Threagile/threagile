@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"gopkg.in/yaml.v3"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/threagile/threagile/pkg/input"
@@ -189,6 +190,8 @@ func writeToFile(name string, item any, filename string, progressReporter types.
 		progressReporter.Warnf("Unable to export %v: %v", name, exportError)
 		return
 	}
+
+	_ = os.MkdirAll(filepath.Dir(filename), 0750)
 
 	writeError := os.WriteFile(filename, exported, 0600)
 	if writeError != nil {
