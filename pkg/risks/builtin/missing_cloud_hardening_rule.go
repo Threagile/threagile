@@ -276,6 +276,11 @@ func (r *MissingCloudHardeningRule) GenerateRisks(input *types.Model) ([]*types.
 		// TODO add more tag-specific risks like also for aws:lambda etc. here
 	}
 
+	_ = addedAWS
+	_ = addedAzure
+	_ = addedGCP
+	_ = addedOCP
+
 	return risks, nil
 }
 

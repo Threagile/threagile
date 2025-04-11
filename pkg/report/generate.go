@@ -84,6 +84,9 @@ func Generate(config reportConfigReader, readResult *model.ReadResult, commands 
 	generateDataFlowDiagram := commands.DataFlowDiagram
 	generateDataAssetsDiagram := commands.DataAssetDiagram
 
+	_ = os.MkdirAll(filepath.Clean(config.GetOutputFolder()), 0750)
+	_ = os.MkdirAll(filepath.Clean(config.GetTempFolder()), 0700)
+
 	if commands.ReportPDF || commands.ReportADOC { // as the PDF report includes both diagrams
 		if !generateDataFlowDiagram {
 			dataFlowFile := filepath.Join(config.GetOutputFolder(), config.GetDataFlowDiagramFilenamePNG())

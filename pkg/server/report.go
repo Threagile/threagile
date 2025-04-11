@@ -103,42 +103,48 @@ func (s *server) streamResponse(ginContext *gin.Context, responseType responseTy
 	}
 	defer func() { _ = os.RemoveAll(tmpOutputDir) }()
 	err = os.WriteFile(tmpModelFile.Name(), []byte(yamlText), 0400)
-	if responseType == dataFlowDiagram {
+	switch responseType {
+	case dataFlowDiagram:
 		s.doItViaRuntimeCall(tmpModelFile.Name(), tmpOutputDir, true, false, false, false, false, false, false, false, dpi)
 		if err != nil {
 			handleErrorInServiceCall(err, ginContext)
 			return
 		}
 		ginContext.File(filepath.Clean(filepath.Join(tmpOutputDir, s.config.GetDataFlowDiagramFilenamePNG())))
-	} else if responseType == dataAssetDiagram {
+
+	case dataAssetDiagram:
 		s.doItViaRuntimeCall(tmpModelFile.Name(), tmpOutputDir, false, true, false, false, false, false, false, false, dpi)
 		if err != nil {
 			handleErrorInServiceCall(err, ginContext)
 			return
 		}
 		ginContext.File(filepath.Clean(filepath.Join(tmpOutputDir, s.config.GetDataAssetDiagramFilenamePNG())))
-	} else if responseType == reportPDF {
+
+	case reportPDF:
 		s.doItViaRuntimeCall(tmpModelFile.Name(), tmpOutputDir, false, false, true, false, false, false, false, false, dpi)
 		if err != nil {
 			handleErrorInServiceCall(err, ginContext)
 			return
 		}
 		ginContext.FileAttachment(filepath.Clean(filepath.Join(tmpOutputDir, s.config.GetReportFilename())), s.config.GetReportFilename())
-	} else if responseType == risksExcel {
+
+	case risksExcel:
 		s.doItViaRuntimeCall(tmpModelFile.Name(), tmpOutputDir, false, false, false, true, false, false, false, false, dpi)
 		if err != nil {
 			handleErrorInServiceCall(err, ginContext)
 			return
 		}
 		ginContext.FileAttachment(filepath.Clean(filepath.Join(tmpOutputDir, s.config.GetExcelRisksFilename())), s.config.GetExcelRisksFilename())
-	} else if responseType == tagsExcel {
+
+	case tagsExcel:
 		s.doItViaRuntimeCall(tmpModelFile.Name(), tmpOutputDir, false, false, false, false, true, false, false, false, dpi)
 		if err != nil {
 			handleErrorInServiceCall(err, ginContext)
 			return
 		}
 		ginContext.FileAttachment(filepath.Clean(filepath.Join(tmpOutputDir, s.config.GetExcelTagsFilename())), s.config.GetExcelTagsFilename())
-	} else if responseType == risksJSON {
+
+	case risksJSON:
 		s.doItViaRuntimeCall(tmpModelFile.Name(), tmpOutputDir, false, false, false, false, false, true, false, false, dpi)
 		if err != nil {
 			handleErrorInServiceCall(err, ginContext)
@@ -150,7 +156,8 @@ func (s *server) streamResponse(ginContext *gin.Context, responseType responseTy
 			return
 		}
 		ginContext.Data(http.StatusOK, "application/json", jsonData) // stream directly with JSON content-type in response instead of file download
-	} else if responseType == technicalAssetsJSON {
+
+	case technicalAssetsJSON:
 		s.doItViaRuntimeCall(tmpModelFile.Name(), tmpOutputDir, false, false, false, false, false, true, true, false, dpi)
 		if err != nil {
 			handleErrorInServiceCall(err, ginContext)
@@ -162,7 +169,8 @@ func (s *server) streamResponse(ginContext *gin.Context, responseType responseTy
 			return
 		}
 		ginContext.Data(http.StatusOK, "application/json", jsonData) // stream directly with JSON content-type in response instead of file download
-	} else if responseType == statsJSON {
+
+	case statsJSON:
 		s.doItViaRuntimeCall(tmpModelFile.Name(), tmpOutputDir, false, false, false, false, false, false, false, true, dpi)
 		if err != nil {
 			handleErrorInServiceCall(err, ginContext)
