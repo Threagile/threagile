@@ -22,6 +22,7 @@ const (
 	keyDirFlagName    = "key-dir"
 
 	inputFileFlagName               = "model"
+	importedFileFlagName            = "imported-model"
 	dataFlowDiagramPNGFileFlagName  = "data-flow-diagram-png"
 	dataAssetDiagramPNGFileFlagName = "data-asset-diagram-png"
 	dataFlowDiagramDOTFileFlagName  = "data-flow-diagram-dot"

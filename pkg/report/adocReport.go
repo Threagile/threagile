@@ -51,17 +51,17 @@ func copyFile(source string, destination string) error {
 }
 
 func fixBasicHtml(inputWithHtml string) string {
-	result := strings.Replace(inputWithHtml, "<b>", "*", -1)
-	result = strings.Replace(result, "</b>", "*", -1)
+	result := strings.ReplaceAll(inputWithHtml, "<b>", "*")
+	result = strings.ReplaceAll(result, "</b>", "*")
 
-	result = strings.Replace(result, "<i>", "_", -1)
-	result = strings.Replace(result, "</i>", "_", -1)
+	result = strings.ReplaceAll(result, "<i>", "_")
+	result = strings.ReplaceAll(result, "</i>", "_")
 
-	result = strings.Replace(result, "<u>", "[.underline]#", -1)
-	result = strings.Replace(result, "</u>", "#", -1)
+	result = strings.ReplaceAll(result, "<u>", "[.underline]#")
+	result = strings.ReplaceAll(result, "</u>", "#")
 
-	result = strings.Replace(result, "<br>", "\n", -1)
-	result = strings.Replace(result, "</br>", "\n", -1)
+	result = strings.ReplaceAll(result, "<br>", "\n")
+	result = strings.ReplaceAll(result, "</br>", "\n")
 
 	linkAndName := regexp.MustCompile(`<a href=\"(.*)\".*>(.*)</a>`)
 	result = linkAndName.ReplaceAllString(result, "${1}[${2}]")

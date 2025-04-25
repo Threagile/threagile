@@ -2,6 +2,9 @@ package model
 
 import (
 	"fmt"
+	"gopkg.in/yaml.v3"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/threagile/threagile/pkg/input"
@@ -40,6 +43,7 @@ type configReader interface {
 	GetTempFolder() string
 	GetKeyFolder() string
 	GetInputFile() string
+	GetImportedInputFile() string
 	GetDataFlowDiagramFilenamePNG() string
 	GetDataAssetDiagramFilenamePNG() string
 	GetDataFlowDiagramFilenameDOT() string
@@ -84,7 +88,12 @@ func ReadAndAnalyzeModel(config configReader, builtinRiskRules types.RiskRules, 
 		return nil, fmt.Errorf("unable to load model yaml: %w", loadError)
 	}
 
-	return AnalyzeModel(modelInput, config, builtinRiskRules, customRiskRules, progressReporter)
+	result, analysisError := AnalyzeModel(modelInput, config, builtinRiskRules, customRiskRules, progressReporter)
+	if analysisError == nil {
+		writeToFile("model yaml", result.ParsedModel, config.GetImportedInputFile(), progressReporter)
+	}
+
+	return result, analysisError
 }
 
 func AnalyzeModel(modelInput *input.Model, config configReader, builtinRiskRules types.RiskRules, customRiskRules types.RiskRules, progressReporter types.ProgressReporter) (*ReadResult, error) {
@@ -165,4 +174,30 @@ func applyRiskGeneration(parsedModel *types.Model, rules types.RiskRules,
 			parsedModel.GeneratedRisksBySyntheticId[strings.ToLower(risk.SyntheticId)] = risk
 		}
 	}
+}
+
+func writeToFile(name string, item any, filename string, progressReporter types.ProgressReporter) {
+	if item == nil {
+		return
+	}
+
+	if filename == "" {
+		return
+	}
+
+	exported, exportError := yaml.Marshal(item)
+	if exportError != nil {
+		progressReporter.Warnf("Unable to export %v: %v", name, exportError)
+		return
+	}
+
+	_ = os.MkdirAll(filepath.Dir(filename), 0750)
+
+	writeError := os.WriteFile(filename, exported, 0600)
+	if writeError != nil {
+		progressReporter.Warnf("Unable to write %v to %q: %v", name, filename, writeError)
+		return
+	}
+
+	progressReporter.Infof("Wrote %v to %q", name, filename)
 }

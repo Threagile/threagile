@@ -40,7 +40,7 @@ func (what *CustomRiskCategory) GenerateRisks(parsedModel *types.Model) ([]*type
 	generatedRisks := make([]*types.Risk, 0)
 	runError := what.runner.Run(parsedModel, &generatedRisks, "-generate-risks")
 	if runError != nil {
-		return nil, fmt.Errorf("Failed to generate risks for custom risk rule %q: %w\n", what.runner.Filename, runError)
+		return nil, fmt.Errorf("failed to generate risks for custom risk rule %q: %w", what.runner.Filename, runError)
 	}
 
 	return generatedRisks, nil

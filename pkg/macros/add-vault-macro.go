@@ -155,11 +155,14 @@ func (m *AddVaultMacro) GetNextQuestion(parsedModel *types.Model) (nextQuestion 
 func (m *AddVaultMacro) ApplyAnswer(questionID string, answer ...string) (message string, validResult bool, err error) {
 	m.macroState[questionID] = answer
 	m.questionsAnswered = append(m.questionsAnswered, questionID)
-	if questionID == "within-trust-boundary" {
+	switch questionID {
+	case "within-trust-boundary":
 		m.withinTrustBoundary = strings.EqualFold(m.macroState["within-trust-boundary"][0], "yes")
-	} else if questionID == "selected-trust-boundary" {
+
+	case "selected-trust-boundary":
 		m.createNewTrustBoundary = strings.EqualFold(m.macroState["selected-trust-boundary"][0], createNewTrustBoundaryLabel)
 	}
+
 	return "Answer processed", true, nil
 }
 
@@ -287,13 +290,14 @@ func (m *AddVaultMacro) applyChange(modelInput *input.Model, parsedModel *types.
 		}
 
 		authentication := types.NoneAuthentication.String()
-		if m.macroState["authentication-type"][0] == authenticationTypes[0] {
+		switch m.macroState["authentication-type"][0] {
+		case authenticationTypes[0]:
 			authentication = types.ClientCertificate.String()
-		} else if m.macroState["authentication-type"][0] == authenticationTypes[1] {
+		case authenticationTypes[1]:
 			authentication = types.Externalized.String()
-		} else if m.macroState["authentication-type"][0] == authenticationTypes[2] {
+		case authenticationTypes[2]:
 			authentication = types.Externalized.String()
-		} else if m.macroState["authentication-type"][0] == authenticationTypes[3] {
+		case authenticationTypes[3]:
 			authentication = types.Credentials.String()
 		}
 		for _, clientID := range m.macroState["clients"] { // add a connection from each client

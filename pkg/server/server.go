@@ -33,6 +33,7 @@ type serverConfigReader interface {
 	GetTempFolder() string
 	GetKeyFolder() string
 	GetInputFile() string
+	GetImportedInputFile() string
 	GetDataFlowDiagramFilenamePNG() string
 	GetDataAssetDiagramFilenamePNG() string
 	GetDataFlowDiagramFilenameDOT() string

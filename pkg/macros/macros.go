@@ -111,7 +111,7 @@ func ExecuteModelMacro(modelInput *input.Model, inputFile string, parsedModel *t
 					fmt.Print("Enter number to select/deselect (or 0 when finished): ")
 					answer, err := reader.ReadString('\n')
 					// convert CRLF to LF
-					answer = strings.TrimSpace(strings.Replace(answer, "\n", "", -1))
+					answer = strings.TrimSpace(strings.ReplaceAll(answer, "\n", ""))
 					if err != nil {
 						return err
 					}
@@ -152,7 +152,7 @@ func ExecuteModelMacro(modelInput *input.Model, inputFile string, parsedModel *t
 			fmt.Print(": ")
 			answer, err := reader.ReadString('\n')
 			// convert CRLF to LF
-			answer = strings.TrimSpace(strings.Replace(answer, "\n", "", -1))
+			answer = strings.TrimSpace(strings.ReplaceAll(answer, "\n", ""))
 			if err != nil {
 				return err
 			}
@@ -222,13 +222,15 @@ func ExecuteModelMacro(modelInput *input.Model, inputFile string, parsedModel *t
 		fmt.Print("Apply these changes to the model file?\nType Yes or No: ")
 		answer, err := reader.ReadString('\n')
 		// convert CRLF to LF
-		answer = strings.TrimSpace(strings.Replace(answer, "\n", "", -1))
+		answer = strings.TrimSpace(strings.ReplaceAll(answer, "\n", ""))
 		if err != nil {
 			return err
 		}
 		answer = strings.ToLower(answer)
 		fmt.Println()
-		if answer == "yes" || answer == "y" {
+
+		switch answer {
+		case "yes", "y":
 			message, validResult, err = macros.Execute(modelInput, parsedModel)
 			if err != nil {
 				return err
@@ -260,7 +262,8 @@ func ExecuteModelMacro(modelInput *input.Model, inputFile string, parsedModel *t
 			}
 			fmt.Println("Model file successfully updated")
 			return nil
-		} else if answer == "no" || answer == "n" {
+
+		case "no", "n":
 			fmt.Println("Quitting without executing the model macro")
 			return nil
 		}
