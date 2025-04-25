@@ -42,7 +42,6 @@ LABEL type="threagile"
 # add certificates, graphviz, fonts
 RUN apk add --update --no-cache ca-certificates
 RUN apk add --update --no-cache graphviz ttf-freefont
-RUN apk add --update --no-cache go-task
 
 # https://stackoverflow.com/questions/66963068/docker-alpine-executable-binary-not-found-even-if-in-path
 RUN apk add libc6-compat
