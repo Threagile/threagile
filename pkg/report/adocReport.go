@@ -557,6 +557,7 @@ func (adoc adocReport) addCategories(f *os.File, risksByCategory map[string][]*t
 		} else {
 			writeLine(f, firstParagraph(riskCategory.Mitigation))
 		}
+		writeLine(f, "")
 	}
 }
 
@@ -951,6 +952,7 @@ func (adoc adocReport) securityRequirements(f *os.File) {
 		description := adoc.model.SecurityRequirements[title]
 		writeLine(f, title+"::")
 		writeLine(f, "  "+description)
+		writeLine(f, "")
 	}
 	writeLine(f, "\n\n")
 	writeLine(f, "_This list is not complete and regulatory or law relevant security requirements have to be "+
@@ -979,6 +981,7 @@ func (adoc adocReport) abuseCases(f *os.File) {
 		description := adoc.model.AbuseCases[title]
 		writeLine(f, title+"::")
 		writeLine(f, "  "+description)
+		writeLine(f, "")
 	}
 	writeLine(f, "\n\n")
 	writeLine(f, "_This list is not complete and regulatory or law relevant abuse cases have to be "+
@@ -1051,6 +1054,7 @@ func (adoc adocReport) tagListing(f *os.File) {
 		if len(description) > 0 {
 			writeLine(f, tag+"::")
 			writeLine(f, "  "+description)
+			writeLine(f, "")
 		}
 	}
 }
@@ -1237,6 +1241,7 @@ func (adoc adocReport) raa(f *os.File, introTextRAA string) {
 		}
 		writeLine(f, fullLine+">>::")
 		writeLine(f, "  "+technicalAsset.Description)
+		writeLine(f, "")
 	}
 }
 
@@ -1314,6 +1319,7 @@ Each one should be checked in the model whether it should better be included in 
 			outOfScopeAssetCount++
 			writeLine(f, "<<"+technicalAsset.Id+",[OutOfScope]#"+technicalAsset.Title+" : out-of-scope#>>::")
 			writeLine(f, "  "+technicalAsset.JustificationOutOfScope)
+			writeLine(f, "")
 		}
 	}
 
@@ -1418,6 +1424,7 @@ func (adoc adocReport) questions(f *os.File) {
 			writeLine(f, "*[ModelFailure]#"+question+"#*::")
 			writeLine(f, "[GreyText]#_- answer pending -_#")
 		}
+		writeLine(f, "")
 	}
 }
 
@@ -1533,20 +1540,26 @@ func (adoc adocReport) riskCategories(f *os.File) {
 		}
 		writeLine(f, "*Description* ("+category.STRIDE.Title()+"): "+cweLink+"::")
 		writeLine(f, fixBasicHtml(category.Description))
+		writeLine(f, "")
 		writeLine(f, "*Impact*::")
 		writeLine(f, fixBasicHtml(category.Impact))
+		writeLine(f, "")
 		writeLine(f, "*Detection Logic*::")
 		writeLine(f, fixBasicHtml(category.DetectionLogic))
+		writeLine(f, "")
 		writeLine(f, "*Risk Rating*::")
 		writeLine(f, fixBasicHtml(category.RiskAssessment))
+		writeLine(f, "")
 
 		writeLine(f, "[RiskStatusFalsePositive]#*False Positives*#::")
 		if len(category.FalsePositives) > 0 {
 			writeLine(f, "[RiskStatusFalsePositive]#"+category.FalsePositives+"#")
 		}
+		writeLine(f, "")
 
 		writeLine(f, "[RiskStatusMitigated]#*Mitigation*# ("+category.Function.Title()+"): "+category.Action+"::")
 		writeLine(f, fixBasicHtml(category.Mitigation))
+		writeLine(f, "")
 
 		asvsChapter := category.ASVS
 		asvsLink := "n/a"
