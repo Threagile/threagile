@@ -70,6 +70,8 @@ const (
 	generateTagsExcelFlagName           = "generate-tags-excel"
 	generateReportPDFFlagName           = "generate-report-pdf"
 	generateReportADOCFlagName          = "generate-report-adoc"
+
+	mapElevatedToHighFlagName = "map-elevated-to-high"
 )
 
 type Flags struct {
