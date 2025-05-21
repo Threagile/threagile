@@ -64,6 +64,7 @@ type serverConfigReader interface {
 	GetIgnoreOrphanedRiskTracking() bool
 	GetThreagileVersion() string
 	GetProgressReporter() types.ProgressReporter
+	GetMapElevatedToHigh() bool
 }
 
 type server struct {

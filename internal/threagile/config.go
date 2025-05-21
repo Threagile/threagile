@@ -78,6 +78,8 @@ type Config struct {
 	AttractivenessValue Attractiveness `json:"Attractiveness" yaml:"Attractiveness"`
 
 	ReportConfigurationValue report.ReportConfiguation `json:"ReportConfiguration" yaml:"ReportConfiguration"`
+
+	MapElevatedToHighValue bool `json:"MapElevatedToHigh,omitempty" yaml:"MapElevatedToHigh"`
 }
 
 type ConfigGetter interface {
@@ -135,6 +137,7 @@ type ConfigGetter interface {
 	GetSkipReportPDF() bool
 	GetSkipReportADOC() bool
 	GetAttractiveness() Attractiveness
+	GetMapElevatedToHigh() bool
 	GetReportConfiguration() report.ReportConfiguation
 	GetThreagileVersion() string
 	GetProgressReporter() types.ProgressReporter
@@ -156,6 +159,7 @@ type ConfigSetter interface {
 	SetServerPort(serverPort int)
 	SetDiagramDPI(diagramDPI int)
 	SetIgnoreOrphanedRiskTracking(ignoreOrphanedRiskTracking bool)
+	SetMapElevatedToHigh(mapElevatedToHigh bool)
 }
 
 func (c *Config) Defaults(buildTimestamp string) *Config {
@@ -233,6 +237,7 @@ func (c *Config) Defaults(buildTimestamp string) *Config {
 		ReportConfigurationValue: report.ReportConfiguation{
 			HideChapter: make(map[report.ChaptersToShowHide]bool),
 		},
+		MapElevatedToHighValue: true,
 	}
 
 	return c
@@ -514,6 +519,8 @@ func (c *Config) Merge(config Config, values map[string]any) {
 					}
 				}
 			}
+		case strings.ToLower("MapElevatedToHigh"):
+			c.MapElevatedToHighValue = config.MapElevatedToHighValue
 		}
 	}
 }
@@ -804,6 +811,14 @@ func (c *Config) GetIgnoreOrphanedRiskTracking() bool {
 
 func (c *Config) SetIgnoreOrphanedRiskTracking(ignoreOrphanedRiskTracking bool) {
 	c.IgnoreOrphanedRiskTrackingValue = ignoreOrphanedRiskTracking
+}
+
+func (c *Config) GetMapElevatedToHigh() bool {
+	return c.MapElevatedToHighValue
+}
+
+func (c *Config) SetMapElevatedToHigh(mapElevatedToHigh bool) {
+	c.MapElevatedToHighValue = mapElevatedToHigh
 }
 
 func (c *Config) GetSkipDataFlowDiagram() bool {

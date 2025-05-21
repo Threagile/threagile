@@ -124,6 +124,7 @@ func (what *Threagile) initFlags() *Threagile {
 
 	// AttractivenessValue not available as flags
 	// ReportConfigurationValue not available as flags
+	what.rootCmd.PersistentFlags().BoolVar(&what.flags.MapElevatedToHighValue, mapElevatedToHighFlagName, what.config.GetMapElevatedToHigh(), "map elevated severity to high severity")
 
 	return what
 }
@@ -499,6 +500,10 @@ func (what *Threagile) processArgs(cmd *cobra.Command, args []string) bool {
 
 	// AttractivenessValue not available as flags
 	// ReportConfigurationValue not available as flags
+
+	if what.isFlagOverridden(cmd, mapElevatedToHighFlagName) {
+		what.config.MapElevatedToHighValue = what.flags.MapElevatedToHighValue
+	}
 
 	what.initFlags()
 

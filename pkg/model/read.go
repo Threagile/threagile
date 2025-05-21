@@ -2,10 +2,11 @@ package model
 
 import (
 	"fmt"
-	"gopkg.in/yaml.v3"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"gopkg.in/yaml.v3"
 
 	"github.com/threagile/threagile/pkg/input"
 	"github.com/threagile/threagile/pkg/types"
@@ -74,6 +75,7 @@ type configReader interface {
 	GetIgnoreOrphanedRiskTracking() bool
 	GetThreagileVersion() string
 	GetProgressReporter() types.ProgressReporter
+	GetMapElevatedToHigh() bool
 }
 
 func ReadAndAnalyzeModel(config configReader, builtinRiskRules types.RiskRules, progressReporter types.ProgressReporter) (*ReadResult, error) {
@@ -114,6 +116,14 @@ func AnalyzeModel(modelInput *input.Model, config configReader, builtinRiskRules
 	err = parsedModel.CheckRiskTracking(config.GetIgnoreOrphanedRiskTracking(), progressReporter)
 	if err != nil {
 		return nil, fmt.Errorf("unable to check risk tracking: %w", err)
+	}
+
+	if config.GetMapElevatedToHigh() {
+		for _, risk := range parsedModel.GeneratedRisksBySyntheticId {
+			if risk.Severity == types.ElevatedSeverity {
+				risk.Severity = types.HighSeverity
+			}
+		}
 	}
 
 	return &ReadResult{
