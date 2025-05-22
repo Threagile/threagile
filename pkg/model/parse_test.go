@@ -177,12 +177,14 @@ func createTechnicalAsset(confidentiality types.Confidentiality, integrity types
 
 func createDataAsset(confidentiality types.Confidentiality, integrity types.Criticality, availability types.Criticality) input.DataAsset {
 	return input.DataAsset{
-		ID:              uuid.New().String(),
-		Usage:           "business",
-		Quantity:        "few",
-		Confidentiality: confidentiality.String(),
-		Integrity:       integrity.String(),
-		Availability:    availability.String(),
+		ID:                 uuid.New().String(),
+		Usage:              "business",
+		Quantity:           "few",
+		Confidentiality:    confidentiality.String(),
+		Integrity:          integrity.String(),
+		Availability:       availability.String(),
+		DataClassification: "public",
+		PersonalDataKind:   "none",
 	}
 }
 

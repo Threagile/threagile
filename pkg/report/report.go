@@ -3783,6 +3783,34 @@ func (r *pdfReporter) createDataAssets(parsedModel *types.Model) {
 		}
 		r.pdfColorGray()
 		r.pdf.CellFormat(5, 6, "", "0", 0, "", false, 0, "")
+		r.pdf.CellFormat(40, 6, "Data classification:", "0", 0, "", false, 0, "")
+		r.pdfColorBlack()
+		r.pdf.CellFormat(40, 6, dataAsset.DataClassification.String(), "0", 0, "", false, 0, "")
+		r.pdfColorGray()
+		r.pdf.CellFormat(115, 6, dataAsset.DataClassification.RatingStringInScale(), "0", 0, "", false, 0, "")
+		r.pdfColorBlack()
+		r.pdf.Ln(-1)
+
+		if r.pdf.GetY() > 265 {
+			r.pageBreak()
+			r.pdf.SetY(36)
+		}
+		r.pdfColorGray()
+		r.pdf.CellFormat(5, 6, "", "0", 0, "", false, 0, "")
+		r.pdf.CellFormat(40, 6, "Personal data:", "0", 0, "", false, 0, "")
+		r.pdfColorBlack()
+		r.pdf.CellFormat(40, 6, dataAsset.PersonalDataKind.String(), "0", 0, "", false, 0, "")
+		r.pdfColorGray()
+		r.pdf.CellFormat(115, 6, dataAsset.PersonalDataKind.RatingStringInScale(), "0", 0, "", false, 0, "")
+		r.pdfColorBlack()
+		r.pdf.Ln(-1)
+
+		if r.pdf.GetY() > 265 {
+			r.pageBreak()
+			r.pdf.SetY(36)
+		}
+		r.pdfColorGray()
+		r.pdf.CellFormat(5, 6, "", "0", 0, "", false, 0, "")
 		r.pdf.CellFormat(40, 6, "Processed by:", "0", 0, "", false, 0, "")
 		r.pdfColorBlack()
 		processedByText := ""

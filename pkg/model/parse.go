@@ -103,6 +103,16 @@ func ParseModel(config technologyMapConfigReader, modelInput *input.Model, built
 			return nil, fmt.Errorf("unknown 'availability' value of data asset %q: %v", title, asset.Availability)
 		}
 
+		dataClassification, err := types.ParseDataClassification(asset.DataClassification)
+		if err != nil {
+			return nil, fmt.Errorf("unknown 'data_classification' value of data asset %q: %v", title, asset.DataClassification)
+		}
+
+		personalDataKind, err := types.ParsePersonalDataKind(asset.PersonalDataKind)
+		if err != nil {
+			return nil, fmt.Errorf("unknown 'personal_data' value of data asset %q: %v", title, asset.PersonalDataKind)
+		}
+
 		err = checkIdSyntax(id)
 		if err != nil {
 			return nil, err
@@ -127,6 +137,8 @@ func ParseModel(config technologyMapConfigReader, modelInput *input.Model, built
 			Integrity:              integrity,
 			Availability:           availability,
 			JustificationCiaRating: fmt.Sprintf("%v", asset.JustificationCiaRating),
+			DataClassification:     dataClassification,
+			PersonalDataKind:       personalDataKind,
 		}
 	}
 

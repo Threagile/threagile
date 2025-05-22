@@ -14,6 +14,8 @@ type DataAsset struct {
 	Integrity              string   `yaml:"integrity,omitempty" json:"integrity,omitempty"`
 	Availability           string   `yaml:"availability,omitempty" json:"availability,omitempty"`
 	JustificationCiaRating string   `yaml:"justification_cia_rating,omitempty" json:"justification_cia_rating,omitempty"`
+	DataClassification     string   `yaml:"data_classification,omitempty" json:"data_classification,omitempty"`
+	PersonalDataKind       string   `yaml:"personal_data,omitempty" json:"personal_data,omitempty"`
 }
 
 func (what *DataAsset) Merge(other DataAsset) error {
@@ -66,6 +68,16 @@ func (what *DataAsset) Merge(other DataAsset) error {
 	}
 
 	what.JustificationCiaRating = new(Strings).MergeMultiline(what.JustificationCiaRating, other.JustificationCiaRating)
+
+	what.DataClassification, mergeError = new(Strings).MergeSingleton(what.DataClassification, other.DataClassification)
+	if mergeError != nil {
+		return fmt.Errorf("failed to merge data classification: %w", mergeError)
+	}
+
+	what.PersonalDataKind, mergeError = new(Strings).MergeSingleton(what.PersonalDataKind, other.PersonalDataKind)
+	if mergeError != nil {
+		return fmt.Errorf("failed to merge personal data kind: %w", mergeError)
+	}
 
 	return nil
 }

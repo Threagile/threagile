@@ -315,6 +315,28 @@
               "string",
               "null"
             ]
+          },
+          "data_classification": {
+            "description": "Data classification",
+            "type": "string",
+            "enum": [
+              "public",
+              "internal-use",
+              "confidential",
+              "restricted",
+              "no-data-stored"              
+            ]
+          },
+          "personal_data": {
+            "description": "Personal data type",
+            "type": "string",
+            "enum": [
+              "none",
+              "unknown",
+              "personal",
+              "nonpublic",
+              "sensitive"
+            ]
           }
         },
         "required": [
