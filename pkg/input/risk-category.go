@@ -7,6 +7,7 @@ import (
 
 type RiskCategory struct {
 	ID                         string                    `yaml:"id,omitempty" json:"id,omitempty"`
+	SourceFile                 string                    `yaml:"source-file,omitempty" json:"source-file,omitempty"`
 	Title                      string                    `json:"title,omitempty" yaml:"title,omitempty"`
 	Description                string                    `yaml:"description,omitempty" json:"description,omitempty"`
 	Impact                     string                    `yaml:"impact,omitempty" json:"impact,omitempty"`
@@ -23,11 +24,12 @@ type RiskCategory struct {
 	ModelFailurePossibleReason bool                      `yaml:"model_failure_possible_reason,omitempty" json:"model_failure_possible_reason,omitempty"`
 	CWE                        int                       `yaml:"cwe,omitempty" json:"cwe,omitempty"`
 	RisksIdentified            map[string]RiskIdentified `yaml:"risks_identified,omitempty" json:"risks_identified,omitempty"`
+	IsTemplate                 bool                      `yaml:"is_template,omitempty" json:"is_template,omitempty"`
 }
 
 type RiskCategories []*RiskCategory
 
-func (what *RiskCategory) Merge(other RiskCategory) error {
+func (what *RiskCategory) Merge(config configReader, other RiskCategory) error {
 	var mergeError error
 	what.ID, mergeError = new(Strings).MergeSingleton(what.ID, other.ID)
 	if mergeError != nil {
@@ -102,7 +104,7 @@ func (what *RiskCategory) Merge(other RiskCategory) error {
 		what.CWE = other.CWE
 	}
 
-	what.RisksIdentified, mergeError = new(RiskIdentified).MergeMap(what.RisksIdentified, other.RisksIdentified)
+	what.RisksIdentified, mergeError = new(RiskIdentified).MergeMap(config, what.RisksIdentified, other.RisksIdentified)
 	if mergeError != nil {
 		return fmt.Errorf("failed to merge identified risks: %w", mergeError)
 	}

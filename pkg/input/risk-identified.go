@@ -67,7 +67,7 @@ func (what *RiskIdentified) Merge(other RiskIdentified) error {
 	return nil
 }
 
-func (what *RiskIdentified) MergeMap(first map[string]RiskIdentified, second map[string]RiskIdentified) (map[string]RiskIdentified, error) {
+func (what *RiskIdentified) MergeMap(config configReader, first map[string]RiskIdentified, second map[string]RiskIdentified) (map[string]RiskIdentified, error) {
 	for mapKey, mapValue := range second {
 		mapItem, ok := first[mapKey]
 		if ok {

@@ -7,9 +7,9 @@ import (
 )
 
 type Author struct {
-	Name     string `yaml:"name,omitempty" json:"name,omitempty"`
-	Contact  string `yaml:"contact,omitempty" json:"contact,omitempty"`
-	Homepage string `yaml:"homepage,omitempty" json:"homepage,omitempty"`
+	Name       string `yaml:"name,omitempty" json:"name,omitempty"`
+	Contact    string `yaml:"contact,omitempty" json:"contact,omitempty"`
+	Homepage   string `yaml:"homepage,omitempty" json:"homepage,omitempty"`
 }
 
 func (what *Author) Merge(other Author) error {

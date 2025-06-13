@@ -7,8 +7,8 @@ import (
 	"github.com/threagile/threagile/pkg/risks/script/statements"
 	"strings"
 
+	"github.com/goccy/go-yaml"
 	"github.com/threagile/threagile/pkg/types"
-	"gopkg.in/yaml.v3"
 )
 
 type Script struct {

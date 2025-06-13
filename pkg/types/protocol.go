@@ -7,9 +7,8 @@ package types
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/goccy/go-yaml"
 	"strings"
-
-	"gopkg.in/yaml.v3"
 )
 
 type Protocol int
@@ -233,20 +232,6 @@ func (what *Protocol) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (what Protocol) MarshalYAML() (interface{}, error) {
-	return what.String(), nil
-}
-
-func (what *Protocol) UnmarshalYAML(node *yaml.Node) error {
-	value, findError := what.find(node.Value)
-	if findError != nil {
-		return findError
-	}
-
-	*what = value
-	return nil
-}
-
 func (what Protocol) find(value string) (Protocol, error) {
 	for index, description := range ProtocolTypeDescription {
 		if strings.EqualFold(value, description.Name) {
@@ -255,4 +240,20 @@ func (what Protocol) find(value string) (Protocol, error) {
 	}
 
 	return Protocol(0), fmt.Errorf("unknown protocol value %q", value)
+}
+
+func init() {
+	yaml.RegisterCustomMarshaler[Protocol](func(what Protocol) ([]byte, error) {
+		return []byte(what.String()), nil
+	})
+
+	yaml.RegisterCustomUnmarshaler[Protocol](func(what *Protocol, data []byte) error {
+		value, findError := what.find(strings.TrimSpace(string(data)))
+		if findError != nil {
+			return findError
+		}
+
+		*what = value
+		return nil
+	})
 }

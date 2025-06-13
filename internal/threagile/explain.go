@@ -51,11 +51,9 @@ func (what *Threagile) initExplainNew() *Threagile {
 func (what *Threagile) explainRisk(cmd *cobra.Command, args []string) error {
 	what.processArgs(cmd, args)
 
-	progressReporter := DefaultProgressReporter{Verbose: what.config.GetVerbose()}
-
 	// todo: reuse model if already loaded
 
-	result, runError := model.ReadAndAnalyzeModel(what.config, risks.GetBuiltInRiskRules(), progressReporter)
+	result, runError := model.ReadAndAnalyzeModel(what.config, risks.GetBuiltInRiskRules())
 	if runError != nil {
 		cmd.Printf("Failed to read and analyze model: %v", runError)
 		return runError

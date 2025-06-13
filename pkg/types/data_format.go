@@ -7,9 +7,8 @@ package types
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/goccy/go-yaml"
 	"strings"
-
-	"gopkg.in/yaml.v3"
 )
 
 type DataFormat int
@@ -99,20 +98,6 @@ func (what *DataFormat) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (what DataFormat) MarshalYAML() (interface{}, error) {
-	return what.String(), nil
-}
-
-func (what *DataFormat) UnmarshalYAML(node *yaml.Node) error {
-	value, findError := what.find(node.Value)
-	if findError != nil {
-		return findError
-	}
-
-	*what = value
-	return nil
-}
-
 func (what DataFormat) find(value string) (DataFormat, error) {
 	for index, description := range DataFormatTypeDescription {
 		if strings.EqualFold(value, description.Name) {
@@ -121,4 +106,20 @@ func (what DataFormat) find(value string) (DataFormat, error) {
 	}
 
 	return DataFormat(0), fmt.Errorf("unknown data format value %q", value)
+}
+
+func init() {
+	yaml.RegisterCustomMarshaler[DataFormat](func(what DataFormat) ([]byte, error) {
+		return []byte(what.String()), nil
+	})
+
+	yaml.RegisterCustomUnmarshaler[DataFormat](func(what *DataFormat, data []byte) error {
+		value, findError := what.find(strings.TrimSpace(string(data)))
+		if findError != nil {
+			return findError
+		}
+
+		*what = value
+		return nil
+	})
 }

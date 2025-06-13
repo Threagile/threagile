@@ -3,6 +3,7 @@ package input
 import "fmt"
 
 type DataAsset struct {
+	SourceFile             string   `yaml:"-" json:"-"`
 	ID                     string   `yaml:"id,omitempty" json:"id,omitempty"`
 	Description            string   `yaml:"description,omitempty" json:"description,omitempty"`
 	Usage                  string   `yaml:"usage,omitempty" json:"usage,omitempty"`
@@ -14,6 +15,7 @@ type DataAsset struct {
 	Integrity              string   `yaml:"integrity,omitempty" json:"integrity,omitempty"`
 	Availability           string   `yaml:"availability,omitempty" json:"availability,omitempty"`
 	JustificationCiaRating string   `yaml:"justification_cia_rating,omitempty" json:"justification_cia_rating,omitempty"`
+	IsTemplate             bool     `yaml:"is_template,omitempty" json:"is_template,omitempty"`
 }
 
 func (what *DataAsset) Merge(other DataAsset) error {
@@ -70,10 +72,12 @@ func (what *DataAsset) Merge(other DataAsset) error {
 	return nil
 }
 
-func (what *DataAsset) MergeMap(first map[string]DataAsset, second map[string]DataAsset) (map[string]DataAsset, error) {
+func (what *DataAsset) MergeMap(config configReader, first map[string]DataAsset, second map[string]DataAsset) (map[string]DataAsset, error) {
 	for mapKey, mapValue := range second {
 		mapItem, ok := first[mapKey]
 		if ok {
+			config.GetProgressReporter().Warnf("data asset %q from %q redefined in %q", mapKey, mapValue.SourceFile, mapItem.SourceFile)
+
 			mergeError := mapItem.Merge(mapValue)
 			if mergeError != nil {
 				return first, fmt.Errorf("failed to merge data asset %q: %w", mapKey, mergeError)

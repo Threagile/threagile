@@ -3,9 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/goccy/go-yaml"
 	"github.com/threagile/threagile/pkg/risks/script"
 	"github.com/threagile/threagile/pkg/types"
-	"gopkg.in/yaml.v3"
 	"os"
 	"path/filepath"
 

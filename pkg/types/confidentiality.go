@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"strings"
 
-	"gopkg.in/yaml.v3"
+	"github.com/goccy/go-yaml"
 )
 
 type Confidentiality int
@@ -117,16 +117,18 @@ func (what *Confidentiality) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (what Confidentiality) MarshalYAML() (interface{}, error) {
-	return what.String(), nil
-}
+func init() {
+	yaml.RegisterCustomMarshaler[Confidentiality](func(what Confidentiality) ([]byte, error) {
+		return []byte(what.String()), nil
+	})
 
-func (what *Confidentiality) UnmarshalYAML(node *yaml.Node) error {
-	value, findError := what.Find(node.Value)
-	if findError != nil {
-		return findError
-	}
+	yaml.RegisterCustomUnmarshaler[Confidentiality](func(what *Confidentiality, data []byte) error {
+		value, findError := what.Find(strings.TrimSpace(string(data)))
+		if findError != nil {
+			return findError
+		}
 
-	*what = value
-	return nil
+		*what = value
+		return nil
+	})
 }

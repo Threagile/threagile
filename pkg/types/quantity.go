@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"strings"
 
-	"gopkg.in/yaml.v3"
+	"github.com/goccy/go-yaml"
 )
 
 type Quantity int
@@ -89,16 +89,18 @@ func (what *Quantity) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (what Quantity) MarshalYAML() (interface{}, error) {
-	return what.String(), nil
-}
+func init() {
+	yaml.RegisterCustomMarshaler[Quantity](func(what Quantity) ([]byte, error) {
+		return []byte(what.String()), nil
+	})
 
-func (what *Quantity) UnmarshalYAML(node *yaml.Node) error {
-	value, findError := what.Find(node.Value)
-	if findError != nil {
-		return findError
-	}
+	yaml.RegisterCustomUnmarshaler[Quantity](func(what *Quantity, data []byte) error {
+		value, findError := what.Find(strings.TrimSpace(string(data)))
+		if findError != nil {
+			return findError
+		}
 
-	*what = value
-	return nil
+		*what = value
+		return nil
+	})
 }

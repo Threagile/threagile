@@ -22,9 +22,7 @@ func (what *Threagile) initExecute() *Threagile {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			what.processArgs(cmd, args)
 
-			progressReporter := DefaultProgressReporter{Verbose: what.config.GetVerbose()}
-
-			r, err := model.ReadAndAnalyzeModel(what.config, risks.GetBuiltInRiskRules(), progressReporter)
+			r, err := model.ReadAndAnalyzeModel(what.config, risks.GetBuiltInRiskRules())
 			if err != nil {
 				return fmt.Errorf("unable to read and analyze model: %w", err)
 			}

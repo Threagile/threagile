@@ -1,6 +1,7 @@
 package input
 
 type Overview struct {
+	SourceFile  string              `yaml:"source-file,omitempty" json:"source-file,omitempty"`
 	Description string              `yaml:"description,omitempty" json:"description,omitempty"`
 	Images      []map[string]string `yaml:"images,omitempty" json:"images,omitempty"` // yes, array of map here, as array keeps the order of the image keys
 }

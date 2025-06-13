@@ -7,9 +7,8 @@ package types
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/goccy/go-yaml"
 	"strings"
-
-	"gopkg.in/yaml.v3"
 )
 
 type Usage int
@@ -75,20 +74,6 @@ func (what *Usage) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (what Usage) MarshalYAML() (interface{}, error) {
-	return what.String(), nil
-}
-
-func (what *Usage) UnmarshalYAML(node *yaml.Node) error {
-	value, findError := what.find(node.Value)
-	if findError != nil {
-		return findError
-	}
-
-	*what = value
-	return nil
-}
-
 func (what Usage) find(value string) (Usage, error) {
 	for index, description := range UsageTypeDescription {
 		if strings.EqualFold(value, description.Name) {
@@ -97,4 +82,20 @@ func (what Usage) find(value string) (Usage, error) {
 	}
 
 	return Usage(0), fmt.Errorf("unknown usage type value %q", value)
+}
+
+func init() {
+	yaml.RegisterCustomMarshaler[Usage](func(what Usage) ([]byte, error) {
+		return []byte(what.String()), nil
+	})
+
+	yaml.RegisterCustomUnmarshaler[Usage](func(what *Usage, data []byte) error {
+		value, findError := what.find(strings.TrimSpace(string(data)))
+		if findError != nil {
+			return findError
+		}
+
+		*what = value
+		return nil
+	})
 }

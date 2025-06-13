@@ -7,9 +7,8 @@ package types
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/goccy/go-yaml"
 	"strings"
-
-	"gopkg.in/yaml.v3"
 )
 
 type TechnicalAssetMachine int
@@ -75,20 +74,6 @@ func (what *TechnicalAssetMachine) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (what TechnicalAssetMachine) MarshalYAML() (interface{}, error) {
-	return what.String(), nil
-}
-
-func (what *TechnicalAssetMachine) UnmarshalYAML(node *yaml.Node) error {
-	value, findError := what.find(node.Value)
-	if findError != nil {
-		return findError
-	}
-
-	*what = value
-	return nil
-}
-
 func (what TechnicalAssetMachine) find(value string) (TechnicalAssetMachine, error) {
 	for index, description := range TechnicalAssetMachineTypeDescription {
 		if strings.EqualFold(value, description.Name) {
@@ -97,4 +82,20 @@ func (what TechnicalAssetMachine) find(value string) (TechnicalAssetMachine, err
 	}
 
 	return TechnicalAssetMachine(0), fmt.Errorf("unknown technical asset machine value %q", value)
+}
+
+func init() {
+	yaml.RegisterCustomMarshaler[TechnicalAssetMachine](func(what TechnicalAssetMachine) ([]byte, error) {
+		return []byte(what.String()), nil
+	})
+
+	yaml.RegisterCustomUnmarshaler[TechnicalAssetMachine](func(what *TechnicalAssetMachine, data []byte) error {
+		value, findError := what.find(strings.TrimSpace(string(data)))
+		if findError != nil {
+			return findError
+		}
+
+		*what = value
+		return nil
+	})
 }

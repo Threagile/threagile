@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/akedrou/textdiff"
+	"github.com/threagile/threagile/internal/threagile"
 	"github.com/threagile/threagile/pkg/input"
 	"os"
 	"path/filepath"
@@ -15,7 +16,7 @@ import (
 func TestParseModelYaml(t *testing.T) {
 	flatModelFile := filepath.Join("..", "..", "test", "all.yaml")
 	flatModel := *new(input.Model).Defaults()
-	flatLoadError := flatModel.Load(flatModelFile)
+	flatLoadError := flatModel.Load(new(threagile.Config).Defaults(""), flatModelFile)
 	if flatLoadError != nil {
 		t.Errorf("unable to parse model yaml %q: %v", flatModelFile, flatLoadError)
 		return
@@ -32,7 +33,7 @@ func TestParseModelYaml(t *testing.T) {
 
 	splitModelFile := filepath.Join("..", "..", "test", "main.yaml")
 	splitModel := *new(input.Model).Defaults()
-	splitLoadError := splitModel.Load(splitModelFile)
+	splitLoadError := splitModel.Load(new(threagile.Config).Defaults(""), splitModelFile)
 	if splitLoadError != nil {
 		t.Errorf("unable to parse model yaml %q: %v", splitModelFile, splitLoadError)
 		return
@@ -48,7 +49,7 @@ func TestParseModelYaml(t *testing.T) {
 		return
 	}
 
-	if string(flatData) != string(splitData) {
+	if string(flatData) != strings.Replace(string(splitData), "../../test/main.yaml", "../../test/all.yaml", 1) {
 		t.Errorf("parsing split model files is broken; diff: %v", textdiff.Unified(flatModelFile, splitModelFile, string(flatData), string(splitData)))
 		return
 	}
@@ -57,7 +58,7 @@ func TestParseModelYaml(t *testing.T) {
 func TestParseModelJson(t *testing.T) {
 	modelFile := filepath.Join("..", "..", "test", "all.yaml")
 	model := *new(input.Model).Defaults()
-	flatLoadError := model.Load(modelFile)
+	flatLoadError := model.Load(new(threagile.Config).Defaults(""), modelFile)
 	if flatLoadError != nil {
 		t.Errorf("unable to parse model yaml %q: %v", modelFile, flatLoadError)
 		return

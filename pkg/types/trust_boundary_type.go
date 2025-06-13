@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"strings"
 
-	"gopkg.in/yaml.v3"
+	"github.com/goccy/go-yaml"
 )
 
 type TrustBoundaryType int
@@ -94,20 +94,6 @@ func (what *TrustBoundaryType) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (what TrustBoundaryType) MarshalYAML() (interface{}, error) {
-	return what.String(), nil
-}
-
-func (what *TrustBoundaryType) UnmarshalYAML(node *yaml.Node) error {
-	value, findError := what.find(node.Value)
-	if findError != nil {
-		return findError
-	}
-
-	*what = value
-	return nil
-}
-
 func (what TrustBoundaryType) find(value string) (TrustBoundaryType, error) {
 	for index, description := range TrustBoundaryTypeDescription {
 		if strings.EqualFold(value, description.Name) {
@@ -116,4 +102,20 @@ func (what TrustBoundaryType) find(value string) (TrustBoundaryType, error) {
 	}
 
 	return TrustBoundaryType(0), fmt.Errorf("unknown trust boundary type value %q", value)
+}
+
+func init() {
+	yaml.RegisterCustomMarshaler[TrustBoundaryType](func(what TrustBoundaryType) ([]byte, error) {
+		return []byte(what.String()), nil
+	})
+
+	yaml.RegisterCustomUnmarshaler[TrustBoundaryType](func(what *TrustBoundaryType, data []byte) error {
+		value, findError := what.find(strings.TrimSpace(string(data)))
+		if findError != nil {
+			return findError
+		}
+
+		*what = value
+		return nil
+	})
 }

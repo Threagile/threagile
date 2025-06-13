@@ -11,12 +11,7 @@ import (
 	"github.com/threagile/threagile/pkg/types"
 )
 
-type technologyMapConfigReader interface {
-	GetAppFolder() string
-	GetTechnologyFilename() string
-}
-
-func ParseModel(config technologyMapConfigReader, modelInput *input.Model, builtinRiskRules types.RiskRules, customRiskRules types.RiskRules) (*types.Model, error) {
+func ParseModel(config configReader, modelInput *input.Model, builtinRiskRules types.RiskRules, customRiskRules types.RiskRules) (*types.Model, error) {
 	technologies := make(types.TechnologyMap)
 	technologiesLoadError := technologies.LoadWithConfig(config, "technologies.yaml")
 	if technologiesLoadError != nil {

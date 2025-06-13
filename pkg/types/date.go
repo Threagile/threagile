@@ -3,7 +3,7 @@ package types
 import (
 	"time"
 
-	"gopkg.in/yaml.v3"
+	"github.com/goccy/go-yaml"
 )
 
 const (
@@ -30,17 +30,12 @@ func (what *Date) UnmarshalJSON(bytes []byte) error {
 	return nil
 }
 
-func (what Date) MarshalYAML() (interface{}, error) {
-	return what.Format(yamlDateFormat), nil
-}
+func init() {
+	yaml.RegisterCustomMarshaler[Date](func(what Date) ([]byte, error) {
+		return what.MarshalJSON()
+	})
 
-func (what *Date) UnmarshalYAML(node *yaml.Node) error {
-	date, parseError := time.Parse(yamlDateFormat, node.Value)
-	if parseError != nil {
-		return parseError
-	}
-
-	what.Time = date
-
-	return nil
+	yaml.RegisterCustomUnmarshaler[Date](func(what *Date, data []byte) error {
+		return what.UnmarshalJSON(data)
+	})
 }

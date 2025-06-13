@@ -40,7 +40,7 @@ func (what *RiskTracking) Merge(other RiskTracking) error {
 	return nil
 }
 
-func (what *RiskTracking) MergeMap(first map[string]RiskTracking, second map[string]RiskTracking) (map[string]RiskTracking, error) {
+func (what *RiskTracking) MergeMap(config configReader, first map[string]RiskTracking, second map[string]RiskTracking) (map[string]RiskTracking, error) {
 	for mapKey, mapValue := range second {
 		mapItem, ok := first[mapKey]
 		if ok {

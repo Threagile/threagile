@@ -1,8 +1,13 @@
 package input
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type CommunicationLink struct {
+	SourceFile             string   `yaml:"-" json:"-"`
+	ID                     string   `yaml:"id,omitempty" json:"id,omitempty"`
+	Source                 string   `yaml:"source,omitempty" json:"source,omitempty"`
 	Target                 string   `yaml:"target,omitempty" json:"target,omitempty"`
 	Description            string   `yaml:"description,omitempty" json:"description,omitempty"`
 	Protocol               string   `yaml:"protocol,omitempty" json:"protocol,omitempty"`
@@ -17,6 +22,7 @@ type CommunicationLink struct {
 	DataAssetsReceived     []string `yaml:"data_assets_received,omitempty" json:"data_assets_received,omitempty"`
 	DiagramTweakWeight     int      `yaml:"diagram_tweak_weight,omitempty" json:"diagram_tweak_weight,omitempty"`
 	DiagramTweakConstraint bool     `yaml:"diagram_tweak_constraint,omitempty" json:"diagram_tweak_constraint,omitempty"`
+	IsTemplate             bool     `yaml:"is_template,omitempty" json:"is_template,omitempty"`
 }
 
 func (what *CommunicationLink) Merge(other CommunicationLink) error {
@@ -80,13 +86,15 @@ func (what *CommunicationLink) Merge(other CommunicationLink) error {
 	return nil
 }
 
-func (what *CommunicationLink) MergeMap(first map[string]CommunicationLink, second map[string]CommunicationLink) (map[string]CommunicationLink, error) {
+func (what *CommunicationLink) MergeMap(config configReader, first map[string]CommunicationLink, second map[string]CommunicationLink) (map[string]CommunicationLink, error) {
 	for mapKey, mapValue := range second {
 		mapItem, ok := first[mapKey]
 		if ok {
+			config.GetProgressReporter().Warnf("communication link %q from %q redefined in %q", mapKey, mapValue.SourceFile, mapItem.SourceFile)
+
 			mergeError := mapItem.Merge(mapValue)
 			if mergeError != nil {
-				return first, fmt.Errorf("failed to merge commuinication link %q: %w", mapKey, mergeError)
+				return first, fmt.Errorf("failed to merge communication link %q: %w", mapKey, mergeError)
 			}
 
 			first[mapKey] = mapItem

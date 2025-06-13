@@ -59,7 +59,7 @@ func (what *styleCreator) NewStyle(style *excelize.Style) int {
 	return styleID
 }
 
-func (what *ExcelStyles) Init(excel *excelize.File, config reportConfigReader) (*ExcelStyles, error) {
+func (what *ExcelStyles) Init(excel *excelize.File, config configReader) (*ExcelStyles, error) {
 	if excel == nil {
 		return what, fmt.Errorf("no excel file provided to create styles")
 	}

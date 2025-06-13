@@ -38,6 +38,7 @@ const (
 	CreateStubModelCommand      = "create-stub-model"
 	CreateEditingSupportCommand = "create-editing-support"
 	ListTypesCommand            = "list-types"
+	ImportModelCommand          = "import-model"
 	ListRiskRulesCommand        = "list-risk-rules"
 	ListModelMacrosCommand      = "list-model-macros"
 	Print3rdPartyCommand        = "print-3rd-party-licenses"

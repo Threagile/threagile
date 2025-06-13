@@ -2,18 +2,17 @@ package threagile
 
 import (
 	"fmt"
-
 	"github.com/spf13/cobra"
 	"github.com/threagile/threagile/pkg/model"
 	"github.com/threagile/threagile/pkg/report"
 	"github.com/threagile/threagile/pkg/risks"
 )
 
-func (what *Threagile) initAnalyze() *Threagile {
+func (what *Threagile) initImport() *Threagile {
 	analyze := &cobra.Command{
-		Use:     AnalyzeModelCommand,
-		Short:   "Analyze model",
-		Aliases: []string{"analyze", "analyse", "run", "analyse-model"},
+		Use:     ImportModelCommand,
+		Short:   "Import model (convert to internal representation)",
+		Aliases: []string{"import"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			what.processArgs(cmd, args)
 			commands := what.readCommands()
@@ -27,6 +26,7 @@ func (what *Threagile) initAnalyze() *Threagile {
 			if err != nil {
 				return fmt.Errorf("failed to generate reports: %w", err)
 			}
+
 			return nil
 		},
 		CompletionOptions: cobra.CompletionOptions{

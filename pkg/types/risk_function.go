@@ -5,11 +5,10 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package types
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 
-	"gopkg.in/yaml.v3"
+	"github.com/goccy/go-yaml"
 )
 
 type RiskFunction int
@@ -61,31 +60,13 @@ func (what RiskFunction) Title() string {
 }
 
 func (what RiskFunction) MarshalJSON() ([]byte, error) {
-	return json.Marshal(what.String())
+	return []byte(what.String()), nil
 }
 
 func (what *RiskFunction) UnmarshalJSON(data []byte) error {
-	var text string
-	unmarshalError := json.Unmarshal(data, &text)
-	if unmarshalError != nil {
-		return unmarshalError
-	}
+	text := strings.TrimSpace(string(data))
 
 	value, findError := what.find(text)
-	if findError != nil {
-		return findError
-	}
-
-	*what = value
-	return nil
-}
-
-func (what RiskFunction) MarshalYAML() (interface{}, error) {
-	return what.String(), nil
-}
-
-func (what *RiskFunction) UnmarshalYAML(node *yaml.Node) error {
-	value, findError := what.find(node.Value)
 	if findError != nil {
 		return findError
 	}
@@ -102,4 +83,20 @@ func (what RiskFunction) find(value string) (RiskFunction, error) {
 	}
 
 	return RiskFunction(0), fmt.Errorf("unknown risk function value %q", value)
+}
+
+func init() {
+	yaml.RegisterCustomMarshaler[RiskFunction](func(what RiskFunction) ([]byte, error) {
+		return []byte(what.String()), nil
+	})
+
+	yaml.RegisterCustomUnmarshaler[RiskFunction](func(what *RiskFunction, data []byte) error {
+		value, findError := what.find(strings.TrimSpace(string(data)))
+		if findError != nil {
+			return findError
+		}
+
+		*what = value
+		return nil
+	})
 }

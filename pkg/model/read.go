@@ -2,6 +2,9 @@ package model
 
 import (
 	"fmt"
+	"github.com/goccy/go-yaml"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/threagile/threagile/pkg/input"
@@ -28,81 +31,42 @@ func (what ReadResult) ExplainRisk(cfg explainRiskConfig, risk string, reporter 
 
 // TODO: consider about splitting this function into smaller ones for better reusability
 
-type configReader interface {
-	GetBuildTimestamp() string
-	GetVerbose() bool
-	GetInteractive() bool
-	GetAppFolder() string
-	GetPluginFolder() string
-	GetDataFolder() string
-	GetOutputFolder() string
-	GetServerFolder() string
-	GetTempFolder() string
-	GetKeyFolder() string
-	GetInputFile() string
-	GetDataFlowDiagramFilenamePNG() string
-	GetDataAssetDiagramFilenamePNG() string
-	GetDataFlowDiagramFilenameDOT() string
-	GetDataAssetDiagramFilenameDOT() string
-	GetReportFilename() string
-	GetExcelRisksFilename() string
-	GetExcelTagsFilename() string
-	GetJsonRisksFilename() string
-	GetJsonTechnicalAssetsFilename() string
-	GetJsonStatsFilename() string
-	GetTemplateFilename() string
-	GetTechnologyFilename() string
-	GetRiskRulePlugins() []string
-	GetSkipRiskRules() []string
-	GetExecuteModelMacro() string
-	GetRiskExcelConfigHideColumns() []string
-	GetRiskExcelConfigSortByColumns() []string
-	GetRiskExcelConfigWidthOfColumns() map[string]float64
-	GetServerMode() bool
-	GetDiagramDPI() int
-	GetServerPort() int
-	GetGraphvizDPI() int
-	GetMaxGraphvizDPI() int
-	GetBackupHistoryFilesToKeep() int
-	GetAddModelTitle() bool
-	GetAddLegend() bool
-	GetKeepDiagramSourceFiles() bool
-	GetIgnoreOrphanedRiskTracking() bool
-	GetThreagileVersion() string
-	GetProgressReporter() types.ProgressReporter
-}
+func ReadAndAnalyzeModel(config configReader, builtinRiskRules types.RiskRules) (*ReadResult, error) {
+	config.GetProgressReporter().Infof("Writing into output directory: %v", config.GetOutputFolder())
+	config.GetProgressReporter().Infof("Parsing model: %v", config.GetInputFile())
 
-func ReadAndAnalyzeModel(config configReader, builtinRiskRules types.RiskRules, progressReporter types.ProgressReporter) (*ReadResult, error) {
-	progressReporter.Infof("Writing into output directory: %v", config.GetOutputFolder())
-	progressReporter.Infof("Parsing model: %v", config.GetInputFile())
-
-	customRiskRules := LoadCustomRiskRules(config.GetPluginFolder(), config.GetRiskRulePlugins(), progressReporter)
+	customRiskRules := LoadCustomRiskRules(config.GetPluginFolder(), config.GetRiskRulePlugins(), config.GetProgressReporter())
 
 	modelInput := new(input.Model).Defaults()
-	loadError := modelInput.Load(config.GetInputFile())
+	loadError := modelInput.Load(config, config.GetInputFile())
 	if loadError != nil {
 		return nil, fmt.Errorf("unable to load model yaml: %w", loadError)
 	}
 
-	return AnalyzeModel(modelInput, config, builtinRiskRules, customRiskRules, progressReporter)
+	result, analysisError := AnalyzeModel(modelInput, config, builtinRiskRules, customRiskRules)
+	if analysisError == nil {
+		writeToFile("model yaml", result.ParsedModel, config.GetImportedInputFile(), config.GetProgressReporter())
+	}
+
+	return result, analysisError
 }
 
-func AnalyzeModel(modelInput *input.Model, config configReader, builtinRiskRules types.RiskRules, customRiskRules types.RiskRules, progressReporter types.ProgressReporter) (*ReadResult, error) {
+func AnalyzeModel(modelInput *input.Model, config configReader, builtinRiskRules types.RiskRules, customRiskRules types.RiskRules) (*ReadResult, error) {
 
 	parsedModel, parseError := ParseModel(config, modelInput, builtinRiskRules, customRiskRules)
 	if parseError != nil {
 		return nil, fmt.Errorf("unable to parse model yaml: %w", parseError)
 	}
 
-	introTextRAA := applyRAA(parsedModel, progressReporter)
+	introTextRAA := applyRAA(parsedModel, config.GetProgressReporter())
 
-	applyRiskGeneration(parsedModel, builtinRiskRules.Merge(customRiskRules), config.GetSkipRiskRules(), progressReporter)
-	err := parsedModel.ApplyWildcardRiskTrackingEvaluation(config.GetIgnoreOrphanedRiskTracking(), progressReporter)
+	applyRiskGeneration(parsedModel, builtinRiskRules.Merge(customRiskRules), config.GetSkipRiskRules(), config.GetProgressReporter())
+	err := parsedModel.ApplyWildcardRiskTrackingEvaluation(config.GetIgnoreOrphanedRiskTracking(), config.GetProgressReporter())
 	if err != nil {
 		return nil, fmt.Errorf("unable to apply wildcard risk tracking evaluation: %w", err)
 	}
 
-	err = parsedModel.CheckRiskTracking(config.GetIgnoreOrphanedRiskTracking(), progressReporter)
+	err = parsedModel.CheckRiskTracking(config.GetIgnoreOrphanedRiskTracking(), config.GetProgressReporter())
 	if err != nil {
 		return nil, fmt.Errorf("unable to check risk tracking: %w", err)
 	}
@@ -165,4 +129,30 @@ func applyRiskGeneration(parsedModel *types.Model, rules types.RiskRules,
 			parsedModel.GeneratedRisksBySyntheticId[strings.ToLower(risk.SyntheticId)] = risk
 		}
 	}
+}
+
+func writeToFile(name string, item any, filename string, progressReporter types.ProgressReporter) {
+	if item == nil {
+		return
+	}
+
+	if filename == "" {
+		return
+	}
+
+	exported, exportError := yaml.Marshal(item)
+	if exportError != nil {
+		progressReporter.Warnf("Unable to export %v: %v", name, exportError)
+		return
+	}
+
+	_ = os.MkdirAll(filepath.Dir(filename), 0750)
+
+	writeError := os.WriteFile(filename, exported, 0600)
+	if writeError != nil {
+		progressReporter.Warnf("Unable to write %v to %q: %v", name, filename, writeError)
+		return
+	}
+
+	progressReporter.Infof("Wrote %v to %q", name, filename)
 }

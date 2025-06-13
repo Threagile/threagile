@@ -267,7 +267,7 @@ func (s *server) editModelAnalyze(ginContext *gin.Context) {
 	customRiskRules := model.LoadCustomRiskRules(s.config.GetPluginFolder(), s.config.GetRiskRulePlugins(), progressReporter)
 	builtinRiskRules := risks.GetBuiltInRiskRules()
 
-	result, err := model.AnalyzeModel(&modelInput, s.config, builtinRiskRules, customRiskRules, progressReporter)
+	result, err := model.AnalyzeModel(&modelInput, s.config, builtinRiskRules, customRiskRules)
 	if err != nil {
 		ginContext.JSON(http.StatusBadRequest, gin.H{
 			"error": "Unable to analyze model: " + err.Error(),

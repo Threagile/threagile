@@ -2,7 +2,7 @@ package input
 
 import (
 	"fmt"
-	"gopkg.in/yaml.v3"
+	"github.com/goccy/go-yaml"
 	"slices"
 	"strings"
 )
@@ -41,7 +41,7 @@ func (what *Strings) MergeMultiline(first string, second string) string {
 	return text
 }
 
-func (what *Strings) MergeMap(first map[string]string, second map[string]string) (map[string]string, error) {
+func (what *Strings) MergeMap(config configReader, first map[string]string, second map[string]string) (map[string]string, error) {
 	for mapKey, mapValue := range second {
 		_, ok := first[mapKey]
 		if ok {

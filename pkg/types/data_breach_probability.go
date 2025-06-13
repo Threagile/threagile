@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"strings"
 
-	"gopkg.in/yaml.v3"
+	"github.com/goccy/go-yaml"
 )
 
 type DataBreachProbability int
@@ -85,16 +85,18 @@ func (what *DataBreachProbability) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (what DataBreachProbability) MarshalYAML() (interface{}, error) {
-	return what.String(), nil
-}
+func init() {
+	yaml.RegisterCustomMarshaler[DataBreachProbability](func(what DataBreachProbability) ([]byte, error) {
+		return []byte(what.String()), nil
+	})
 
-func (what *DataBreachProbability) UnmarshalYAML(node *yaml.Node) error {
-	value, findError := what.Find(node.Value)
-	if findError != nil {
-		return findError
-	}
+	yaml.RegisterCustomUnmarshaler[DataBreachProbability](func(what *DataBreachProbability, data []byte) error {
+		value, findError := what.Find(strings.TrimSpace(string(data)))
+		if findError != nil {
+			return findError
+		}
 
-	*what = value
-	return nil
+		*what = value
+		return nil
+	})
 }

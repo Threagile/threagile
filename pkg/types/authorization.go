@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"strings"
 
-	"gopkg.in/yaml.v3"
+	"github.com/goccy/go-yaml"
 )
 
 type Authorization int
@@ -77,16 +77,18 @@ func (what *Authorization) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (what Authorization) MarshalYAML() (interface{}, error) {
-	return what.String(), nil
-}
+func init() {
+	yaml.RegisterCustomMarshaler[Authorization](func(what Authorization) ([]byte, error) {
+		return []byte(what.String()), nil
+	})
 
-func (what *Authorization) UnmarshalYAML(node *yaml.Node) error {
-	value, findError := what.Find(node.Value)
-	if findError != nil {
-		return findError
-	}
+	yaml.RegisterCustomUnmarshaler[Authorization](func(what *Authorization, data []byte) error {
+		value, findError := what.Find(strings.TrimSpace(string(data)))
+		if findError != nil {
+			return findError
+		}
 
-	*what = value
-	return nil
+		*what = value
+		return nil
+	})
 }

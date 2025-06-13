@@ -10,7 +10,7 @@ import (
 	"runtime"
 	"strings"
 
-	"gopkg.in/yaml.v3"
+	"github.com/goccy/go-yaml"
 
 	"github.com/threagile/threagile/pkg/report"
 	"github.com/threagile/threagile/pkg/types"
@@ -33,6 +33,7 @@ type Config struct {
 	KeyFolderValue    string `json:"KeyFolder,omitempty" yaml:"KeyFolder"`
 
 	InputFileValue                   string `json:"InputFile,omitempty" yaml:"InputFile"`
+	ImportedInputFileValue           string `json:"ImportedInputFile,omitempty" yaml:"ImportedInputFile"`
 	DataFlowDiagramFilenamePNGValue  string `json:"DataFlowDiagramFilenamePNG,omitempty" yaml:"DataFlowDiagramFilenamePNG"`
 	DataAssetDiagramFilenamePNGValue string `json:"DataAssetDiagramFilenamePNG,omitempty" yaml:"DataAssetDiagramFilenamePNG"`
 	DataFlowDiagramFilenameDOTValue  string `json:"DataFlowDiagramFilenameDOT,omitempty" yaml:"DataFlowDiagramFilenameDOT"`
@@ -92,6 +93,7 @@ type ConfigGetter interface {
 	GetKeyFolder() string
 	GetTechnologyFilename() string
 	GetInputFile() string
+	GetImportedInputFile() string
 	GetDataFlowDiagramFilenamePNG() string
 	GetDataAssetDiagramFilenamePNG() string
 	GetDataFlowDiagramFilenameDOT() string
@@ -632,6 +634,10 @@ func (c *Config) GetTechnologyFilename() string {
 
 func (c *Config) GetInputFile() string {
 	return c.InputFileValue
+}
+
+func (c *Config) GetImportedInputFile() string {
+	return c.ImportedInputFileValue
 }
 
 func (c *Config) SetInputFile(inputFile string) {

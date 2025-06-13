@@ -5,11 +5,10 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package types
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 
-	"gopkg.in/yaml.v3"
+	"github.com/goccy/go-yaml"
 )
 
 type STRIDE int
@@ -67,31 +66,13 @@ func (what STRIDE) Title() string {
 }
 
 func (what STRIDE) MarshalJSON() ([]byte, error) {
-	return json.Marshal(what.String())
+	return []byte(what.String()), nil
 }
 
 func (what *STRIDE) UnmarshalJSON(data []byte) error {
-	var text string
-	unmarshalError := json.Unmarshal(data, &text)
-	if unmarshalError != nil {
-		return unmarshalError
-	}
+	text := strings.TrimSpace(string(data))
 
 	value, findError := what.find(text)
-	if findError != nil {
-		return findError
-	}
-
-	*what = value
-	return nil
-}
-
-func (what STRIDE) MarshalYAML() (interface{}, error) {
-	return what.String(), nil
-}
-
-func (what *STRIDE) UnmarshalYAML(node *yaml.Node) error {
-	value, findError := what.find(node.Value)
 	if findError != nil {
 		return findError
 	}
@@ -108,4 +89,20 @@ func (what STRIDE) find(value string) (STRIDE, error) {
 	}
 
 	return STRIDE(0), fmt.Errorf("unknown STRIDE value %q", value)
+}
+
+func init() {
+	yaml.RegisterCustomMarshaler[STRIDE](func(what STRIDE) ([]byte, error) {
+		return []byte(what.String()), nil
+	})
+
+	yaml.RegisterCustomUnmarshaler[STRIDE](func(what *STRIDE, data []byte) error {
+		value, findError := what.find(strings.TrimSpace(string(data)))
+		if findError != nil {
+			return findError
+		}
+
+		*what = value
+		return nil
+	})
 }

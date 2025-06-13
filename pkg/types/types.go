@@ -15,7 +15,7 @@ type TypeEnum interface {
 	Explain() string
 }
 
-func GetBuiltinTypeValues(cfg technologyMapConfigReader) map[string][]TypeEnum {
+func GetBuiltinTypeValues(cfg configReader) map[string][]TypeEnum {
 	return map[string][]TypeEnum{
 		"Authentication":  AuthenticationValues(),
 		"Authorization":   AuthorizationValues(),

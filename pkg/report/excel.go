@@ -12,7 +12,7 @@ import (
 	"github.com/xuri/excelize/v2"
 )
 
-func WriteRisksExcelToFile(parsedModel *types.Model, filename string, config reportConfigReader) error {
+func WriteRisksExcelToFile(parsedModel *types.Model, filename string, config configReader) error {
 	columns := new(ExcelColumns).GetColumns()
 	excel := excelize.NewFile()
 	sheetName := parsedModel.Title
@@ -258,7 +258,7 @@ func WriteRisksExcelToFile(parsedModel *types.Model, filename string, config rep
 }
 
 // TODO: eventually when len(sortedTagsAvailable) == 0 is: write a hint in the Excel that no tags are used
-func WriteTagsExcelToFile(parsedModel *types.Model, filename string, config reportConfigReader) error {
+func WriteTagsExcelToFile(parsedModel *types.Model, filename string, config configReader) error {
 	excelRow := 0
 	excel := excelize.NewFile()
 	sheetName := parsedModel.Title

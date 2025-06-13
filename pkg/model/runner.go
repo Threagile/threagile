@@ -5,7 +5,7 @@ package model
 import (
 	"bytes"
 	"fmt"
-	"gopkg.in/yaml.v3"
+	"github.com/goccy/go-yaml"
 	"os"
 	"os/exec"
 )

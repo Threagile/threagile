@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"gopkg.in/yaml.v3"
+	"github.com/goccy/go-yaml"
 )
 
 //go:embed technologies.yaml
@@ -14,12 +14,7 @@ var technologiesLocation embed.FS
 
 type TechnologyMap map[string]Technology
 
-type technologyMapConfigReader interface {
-	GetAppFolder() string
-	GetTechnologyFilename() string
-}
-
-func (what TechnologyMap) LoadWithConfig(config technologyMapConfigReader, defaultFilename string) error {
+func (what *TechnologyMap) LoadWithConfig(config configReader, defaultFilename string) error {
 	technologiesFilename := filepath.Join(config.GetAppFolder(), defaultFilename)
 	_, statError := os.Stat(technologiesFilename)
 	if statError == nil {
@@ -42,20 +37,20 @@ func (what TechnologyMap) LoadWithConfig(config technologyMapConfigReader, defau
 		}
 
 		for name, technology := range additionalTechnologies {
-			what[name] = technology
+			(*what)[name] = technology
 		}
 	}
 
 	return nil
 }
 
-func (what TechnologyMap) LoadDefault() error {
+func (what *TechnologyMap) LoadDefault() error {
 	defaultTechnologyFile, readError := technologiesLocation.ReadFile("technologies.yaml")
 	if readError != nil {
 		return fmt.Errorf("error reading default technologies: %w", readError)
 	}
 
-	unmarshalError := yaml.Unmarshal(defaultTechnologyFile, &what)
+	unmarshalError := yaml.Unmarshal(defaultTechnologyFile, what)
 	if unmarshalError != nil {
 		return fmt.Errorf("error parsing default technologies: %w", unmarshalError)
 	}
@@ -63,7 +58,7 @@ func (what TechnologyMap) LoadDefault() error {
 	return nil
 }
 
-func (what TechnologyMap) LoadFromFile(filename string) error {
+func (what *TechnologyMap) LoadFromFile(filename string) error {
 	// #nosec G304 // fine for potential file for now because used mostly internally or as part of CI/CD
 	data, readError := os.ReadFile(filename)
 	if readError != nil {
@@ -78,7 +73,7 @@ func (what TechnologyMap) LoadFromFile(filename string) error {
 	return nil
 }
 
-func (what TechnologyMap) Save(filename string) error {
+func (what *TechnologyMap) Save(filename string) error {
 	data, marshalError := yaml.Marshal(what)
 	if marshalError != nil {
 		return fmt.Errorf("error marshalling technologies: %w", marshalError)
@@ -92,7 +87,7 @@ func (what TechnologyMap) Save(filename string) error {
 	return nil
 }
 
-func (what TechnologyMap) Copy(from Technology) error {
+func (what *TechnologyMap) Copy(from Technology) error {
 	data, marshalError := yaml.Marshal(from)
 	if marshalError != nil {
 		return fmt.Errorf("error marshalling technologies: %w", marshalError)
@@ -106,8 +101,8 @@ func (what TechnologyMap) Copy(from Technology) error {
 	return nil
 }
 
-func (what TechnologyMap) Get(name string) *Technology {
-	technology, exists := what[name]
+func (what *TechnologyMap) Get(name string) *Technology {
+	technology, exists := (*what)[name]
 	if !exists {
 		return nil
 	}
@@ -115,7 +110,7 @@ func (what TechnologyMap) Get(name string) *Technology {
 	return &technology
 }
 
-func (what TechnologyMap) GetAll(names ...string) ([]*Technology, error) {
+func (what *TechnologyMap) GetAll(names ...string) ([]*Technology, error) {
 	technologies := make([]*Technology, 0)
 	for _, name := range names {
 		technicalAssetTechnology := what.Get(name)
@@ -129,9 +124,9 @@ func (what TechnologyMap) GetAll(names ...string) ([]*Technology, error) {
 	return technologies, nil
 }
 
-func (what TechnologyMap) PropagateAttributes() {
+func (what *TechnologyMap) PropagateAttributes() {
 	technologyList := make([]Technology, 0)
-	for name, value := range what {
+	for name, value := range *what {
 		technology := new(Technology)
 		*technology = value
 		technology.Attributes = make(map[string]bool)
@@ -143,17 +138,17 @@ func (what TechnologyMap) PropagateAttributes() {
 		technologyList = append(technologyList, *technology)
 	}
 
-	for name := range what {
-		delete(what, name)
+	for name := range *what {
+		delete((*what), name)
 	}
 
 	for _, technology := range technologyList {
-		what[technology.Name] = technology
+		(*what)[technology.Name] = technology
 	}
 }
 
-func (what TechnologyMap) propagateAttributes(name string, attributes map[string]bool) {
-	tech, ok := what[name]
+func (what *TechnologyMap) propagateAttributes(name string, attributes map[string]bool) {
+	tech, ok := (*what)[name]
 	if ok {
 		what.propagateAttributes(tech.Parent, attributes)
 	}
@@ -163,7 +158,7 @@ func (what TechnologyMap) propagateAttributes(name string, attributes map[string
 	}
 }
 
-func TechnicalAssetTechnologyValues(cfg technologyMapConfigReader) []TypeEnum {
+func TechnicalAssetTechnologyValues(cfg configReader) []TypeEnum {
 	technologies := make(TechnologyMap)
 	_ = technologies.LoadWithConfig(cfg, "technologies.yaml")
 	technologies.PropagateAttributes()

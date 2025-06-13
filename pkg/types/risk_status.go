@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"strings"
 
-	"gopkg.in/yaml.v3"
+	"github.com/goccy/go-yaml"
 )
 
 type RiskStatus int
@@ -90,20 +90,6 @@ func (what *RiskStatus) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (what RiskStatus) MarshalYAML() (interface{}, error) {
-	return what.String(), nil
-}
-
-func (what *RiskStatus) UnmarshalYAML(node *yaml.Node) error {
-	value, findError := what.find(node.Value)
-	if findError != nil {
-		return findError
-	}
-
-	*what = value
-	return nil
-}
-
 func (what RiskStatus) find(value string) (RiskStatus, error) {
 	for index, description := range RiskStatusTypeDescription {
 		if strings.EqualFold(value, description.Name) {
@@ -112,4 +98,20 @@ func (what RiskStatus) find(value string) (RiskStatus, error) {
 	}
 
 	return RiskStatus(0), fmt.Errorf("unknown risk status value %q", value)
+}
+
+func init() {
+	yaml.RegisterCustomMarshaler[RiskStatus](func(what RiskStatus) ([]byte, error) {
+		return []byte(what.String()), nil
+	})
+
+	yaml.RegisterCustomUnmarshaler[RiskStatus](func(what *RiskStatus, data []byte) error {
+		value, findError := what.find(strings.TrimSpace(string(data)))
+		if findError != nil {
+			return findError
+		}
+
+		*what = value
+		return nil
+	})
 }

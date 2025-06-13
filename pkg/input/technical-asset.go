@@ -3,6 +3,7 @@ package input
 import "fmt"
 
 type TechnicalAsset struct {
+	SourceFile              string                       `yaml:"-" json:"-"`
 	ID                      string                       `yaml:"id,omitempty" json:"id,omitempty"`
 	Description             string                       `yaml:"description,omitempty" json:"description,omitempty"`
 	Type                    string                       `yaml:"type,omitempty" json:"type,omitempty"`
@@ -30,9 +31,10 @@ type TechnicalAsset struct {
 	DataFormatsAccepted     []string                     `yaml:"data_formats_accepted,omitempty" json:"data_formats_accepted,omitempty"`
 	DiagramTweakOrder       int                          `yaml:"diagram_tweak_order,omitempty" json:"diagram_tweak_order,omitempty"`
 	CommunicationLinks      map[string]CommunicationLink `yaml:"communication_links,omitempty" json:"communication_links,omitempty"`
+	IsTemplate              bool                         `yaml:"is_template,omitempty" json:"is_template,omitempty"`
 }
 
-func (what *TechnicalAsset) Merge(other TechnicalAsset) error {
+func (what *TechnicalAsset) Merge(config configReader, other TechnicalAsset) error {
 	var mergeError error
 	what.ID, mergeError = new(Strings).MergeSingleton(what.ID, other.ID)
 	if mergeError != nil {
@@ -134,7 +136,7 @@ func (what *TechnicalAsset) Merge(other TechnicalAsset) error {
 		what.DiagramTweakOrder = other.DiagramTweakOrder
 	}
 
-	what.CommunicationLinks, mergeError = new(CommunicationLink).MergeMap(what.CommunicationLinks, other.CommunicationLinks)
+	what.CommunicationLinks, mergeError = new(CommunicationLink).MergeMap(config, what.CommunicationLinks, other.CommunicationLinks)
 	if mergeError != nil {
 		return fmt.Errorf("failed to merge communication_links: %w", mergeError)
 	}
@@ -142,11 +144,13 @@ func (what *TechnicalAsset) Merge(other TechnicalAsset) error {
 	return nil
 }
 
-func (what *TechnicalAsset) MergeMap(first map[string]TechnicalAsset, second map[string]TechnicalAsset) (map[string]TechnicalAsset, error) {
+func (what *TechnicalAsset) MergeMap(config configReader, first map[string]TechnicalAsset, second map[string]TechnicalAsset) (map[string]TechnicalAsset, error) {
 	for mapKey, mapValue := range second {
 		mapItem, ok := first[mapKey]
 		if ok {
-			mergeError := mapItem.Merge(mapValue)
+			config.GetProgressReporter().Warnf("technical asset %q from %q redefined in %q", mapKey, mapValue.SourceFile, mapItem.SourceFile)
+
+			mergeError := mapItem.Merge(config, mapValue)
 			if mergeError != nil {
 				return first, fmt.Errorf("failed to merge technical asset %q: %w", mapKey, mergeError)
 			}
@@ -158,4 +162,12 @@ func (what *TechnicalAsset) MergeMap(first map[string]TechnicalAsset, second map
 	}
 
 	return first, nil
+}
+
+func (what *TechnicalAsset) Prune() {
+	for name := range (*what).CommunicationLinks {
+		if what.CommunicationLinks[name].IsTemplate {
+			delete(what.CommunicationLinks, name)
+		}
+	}
 }

@@ -185,14 +185,3 @@ func createDataAsset(confidentiality types.Confidentiality, integrity types.Crit
 		Availability:    availability.String(),
 	}
 }
-
-type mockConfig struct {
-}
-
-func (m *mockConfig) GetAppFolder() string {
-	return ""
-}
-
-func (m *mockConfig) GetTechnologyFilename() string {
-	return ""
-}
