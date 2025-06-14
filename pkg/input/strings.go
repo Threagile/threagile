@@ -14,21 +14,25 @@ const (
 type Strings struct {
 }
 
-func (what *Strings) MergeSingleton(first string, second string) (string, error) {
+func (what *Strings) MergeSingleton(config configReader, first string, second string) (string, bool, error) {
 	if len(first) > 0 {
 		if len(second) > 0 {
 			if !strings.EqualFold(first, second) {
-				return first, fmt.Errorf("conflicting string values: %q versus %q", first, second)
+				if !config.GetMergeModels() {
+					return first, false, fmt.Errorf("conflicting string values: %q versus %q", first, second)
+				}
+
+				return second, false, fmt.Errorf("conflicting string values: %q versus %q", first, second)
 			}
 		}
 
-		return first, nil
+		return first, false, nil
 	}
 
-	return second, nil
+	return second, false, nil
 }
 
-func (what *Strings) MergeMultiline(first string, second string) string {
+func (what *Strings) MergeMultiline(_ configReader, first string, second string) string {
 	text := first
 	if len(first) > 0 {
 		if len(second) > 0 && !strings.EqualFold(first, second) {
@@ -41,20 +45,29 @@ func (what *Strings) MergeMultiline(first string, second string) string {
 	return text
 }
 
-func (what *Strings) MergeMap(config configReader, first map[string]string, second map[string]string) (map[string]string, error) {
+func (what *Strings) MergeMap(config configReader, first map[string]string, second map[string]string) (map[string]string, bool, error) {
+	var hasConflict bool
 	for mapKey, mapValue := range second {
 		_, ok := first[mapKey]
 		if ok {
-			return nil, fmt.Errorf("duplicate item %q", mapKey)
+			if !config.GetMergeModels() {
+				return nil, true, fmt.Errorf("duplicate item %q", mapKey)
+			}
+
+			hasConflict = true
 		}
 
 		first[mapKey] = mapValue
 	}
 
-	return first, nil
+	if hasConflict {
+		return first, false, fmt.Errorf("duplicate items")
+	}
+
+	return first, false, nil
 }
 
-func (what *Strings) MergeUniqueSlice(first []string, second []string) []string {
+func (what *Strings) MergeUniqueSlice(_ configReader, first []string, second []string) []string {
 	for _, item := range second {
 		if !slices.Contains(first, item) {
 			first = append(first, item)

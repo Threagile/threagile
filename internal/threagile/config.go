@@ -23,6 +23,7 @@ type Config struct {
 	BuildTimestampValue string `json:"BuildTimestamp,omitempty" yaml:"BuildTimestamp"`
 	VerboseValue        bool   `json:"Verbose,omitempty" yaml:"Verbose"`
 	InteractiveValue    bool   `json:"Interactive,omitempty" yaml:"Interactive"`
+	MergeModelsValue    bool   `json:"MergeModels,omitempty" yaml:"MergeModels"`
 
 	AppFolderValue    string `json:"AppFolder,omitempty" yaml:"AppFolder"`
 	PluginFolderValue string `json:"PluginFolder,omitempty" yaml:"PluginFolder"`
@@ -84,6 +85,7 @@ type ConfigGetter interface {
 	GetBuildTimestamp() string
 	GetVerbose() bool
 	GetInteractive() bool
+	GetMergeModels() bool
 	GetAppFolder() string
 	GetPluginFolder() string
 	GetDataFolder() string
@@ -164,6 +166,7 @@ func (c *Config) Defaults(buildTimestamp string) *Config {
 		BuildTimestampValue: buildTimestamp,
 		VerboseValue:        false,
 		InteractiveValue:    false,
+		MergeModelsValue:    false,
 
 		AppFolderValue:    AppDir,
 		PluginFolderValue: PluginDir,
@@ -351,6 +354,9 @@ func (c *Config) Merge(config Config, values map[string]any) {
 
 		case strings.ToLower("Interactive"):
 			c.InteractiveValue = config.InteractiveValue
+
+		case strings.ToLower("MergeModels"):
+			c.MergeModelsValue = config.MergeModelsValue
 
 		case strings.ToLower("AppFolder"):
 			c.AppFolderValue = config.AppFolderValue
@@ -574,6 +580,10 @@ func (c *Config) SetVerbose(verbose bool) {
 
 func (c *Config) GetInteractive() bool {
 	return c.InteractiveValue
+}
+
+func (c *Config) GetMergeModels() bool {
+	return c.MergeModelsValue
 }
 
 func (c *Config) SetInteractive(interactive bool) {

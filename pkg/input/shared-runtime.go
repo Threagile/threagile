@@ -1,6 +1,9 @@
 package input
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
 
 type SharedRuntime struct {
 	SourceFile             string   `yaml:"-" json:"-"`
@@ -11,34 +14,51 @@ type SharedRuntime struct {
 	IsTemplate             bool     `yaml:"is_template,omitempty" json:"is_template,omitempty"`
 }
 
-func (what *SharedRuntime) Merge(other SharedRuntime) error {
+func (what *SharedRuntime) Merge(config configReader, other SharedRuntime) (bool, error) {
+	var mergeErrors error
 	var mergeError error
-	what.ID, mergeError = new(Strings).MergeSingleton(what.ID, other.ID)
+	var isFatal bool
+	what.ID, isFatal, mergeError = new(Strings).MergeSingleton(config, what.ID, other.ID)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge id: %w", mergeError)
+		if !config.GetMergeModels() || isFatal {
+			return isFatal, fmt.Errorf("failed to merge id: %w", mergeError)
+		}
+
+		mergeErrors = errors.Join(fmt.Errorf("failed to merge id: %w", mergeError), mergeErrors)
 	}
 
-	what.Description, mergeError = new(Strings).MergeSingleton(what.Description, other.Description)
+	what.Description, isFatal, mergeError = new(Strings).MergeSingleton(config, what.Description, other.Description)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge description: %w", mergeError)
+		if !config.GetMergeModels() || isFatal {
+			return isFatal, fmt.Errorf("failed to merge description: %w", mergeError)
+		}
+
+		mergeErrors = errors.Join(fmt.Errorf("failed to merge description: %w", mergeError), mergeErrors)
 	}
 
-	what.Tags = new(Strings).MergeUniqueSlice(what.Tags, other.Tags)
+	what.Tags = new(Strings).MergeUniqueSlice(config, what.Tags, other.Tags)
 
-	what.TechnicalAssetsRunning = new(Strings).MergeUniqueSlice(what.TechnicalAssetsRunning, other.TechnicalAssetsRunning)
+	what.TechnicalAssetsRunning = new(Strings).MergeUniqueSlice(config, what.TechnicalAssetsRunning, other.TechnicalAssetsRunning)
 
-	return nil
+	return isFatal, mergeErrors
 }
 
-func (what *SharedRuntime) MergeMap(config configReader, first map[string]SharedRuntime, second map[string]SharedRuntime) (map[string]SharedRuntime, error) {
+func (what *SharedRuntime) MergeMap(config configReader, first map[string]SharedRuntime, second map[string]SharedRuntime) (map[string]SharedRuntime, bool, error) {
+	var mergeErrors error
+	var mergeError error
+	var isFatal bool
 	for mapKey, mapValue := range second {
 		mapItem, ok := first[mapKey]
 		if ok {
 			config.GetProgressReporter().Warnf("shared runtime %q from %q redefined in %q", mapKey, mapValue.SourceFile, mapItem.SourceFile)
 
-			mergeError := mapItem.Merge(mapValue)
+			isFatal, mergeError = mapItem.Merge(config, mapValue)
 			if mergeError != nil {
-				return first, fmt.Errorf("failed to merge shared runtime %q: %w", mapKey, mergeError)
+				if !config.GetMergeModels() || isFatal {
+					return first, isFatal, fmt.Errorf("failed to merge shared runtime %q: %w", mapKey, mergeError)
+				}
+
+				mergeErrors = errors.Join(fmt.Errorf("failed to merge shared runtime %q: %w", mapKey, mergeError), mergeErrors)
 			}
 
 			first[mapKey] = mapItem
@@ -47,5 +67,5 @@ func (what *SharedRuntime) MergeMap(config configReader, first map[string]Shared
 		}
 	}
 
-	return first, nil
+	return first, isFatal, mergeErrors
 }

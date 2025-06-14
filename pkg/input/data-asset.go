@@ -1,6 +1,9 @@
 package input
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
 
 type DataAsset struct {
 	SourceFile             string   `yaml:"-" json:"-"`
@@ -18,69 +21,114 @@ type DataAsset struct {
 	IsTemplate             bool     `yaml:"is_template,omitempty" json:"is_template,omitempty"`
 }
 
-func (what *DataAsset) Merge(other DataAsset) error {
+func (what *DataAsset) Merge(config configReader, other DataAsset) (bool, error) {
+	var mergeErrors error
 	var mergeError error
-	what.ID, mergeError = new(Strings).MergeSingleton(what.ID, other.ID)
+	var isFatal bool
+	what.ID, isFatal, mergeError = new(Strings).MergeSingleton(config, what.ID, other.ID)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge id: %w", mergeError)
+		if !config.GetMergeModels() || isFatal {
+			return isFatal, fmt.Errorf("failed to merge id: %w", mergeError)
+		}
+
+		mergeErrors = errors.Join(fmt.Errorf("failed to merge id: %w", mergeError), mergeErrors)
 	}
 
-	what.Description, mergeError = new(Strings).MergeSingleton(what.Description, other.Description)
+	what.Description, isFatal, mergeError = new(Strings).MergeSingleton(config, what.Description, other.Description)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge description: %w", mergeError)
+		if !config.GetMergeModels() || isFatal {
+			return isFatal, fmt.Errorf("failed to merge description: %w", mergeError)
+		}
+
+		mergeErrors = errors.Join(fmt.Errorf("failed to merge description: %w", mergeError), mergeErrors)
 	}
 
-	what.Usage, mergeError = new(Strings).MergeSingleton(what.Usage, other.Usage)
+	what.Usage, isFatal, mergeError = new(Strings).MergeSingleton(config, what.Usage, other.Usage)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge usage: %w", mergeError)
+		if !config.GetMergeModels() || isFatal {
+			return isFatal, fmt.Errorf("failed to merge usage: %w", mergeError)
+		}
+
+		mergeErrors = errors.Join(fmt.Errorf("failed to merge usage: %w", mergeError), mergeErrors)
 	}
 
-	what.Tags = new(Strings).MergeUniqueSlice(what.Tags, other.Tags)
+	what.Tags = new(Strings).MergeUniqueSlice(config, what.Tags, other.Tags)
 
-	what.Origin, mergeError = new(Strings).MergeSingleton(what.Origin, other.Origin)
+	what.Origin, isFatal, mergeError = new(Strings).MergeSingleton(config, what.Origin, other.Origin)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge origin: %w", mergeError)
+		if !config.GetMergeModels() || isFatal {
+			return isFatal, fmt.Errorf("failed to merge origin: %w", mergeError)
+		}
+
+		mergeErrors = errors.Join(fmt.Errorf("failed to merge origin: %w", mergeError), mergeErrors)
 	}
 
-	what.Owner, mergeError = new(Strings).MergeSingleton(what.Owner, other.Owner)
+	what.Owner, isFatal, mergeError = new(Strings).MergeSingleton(config, what.Owner, other.Owner)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge owner: %w", mergeError)
+		if !config.GetMergeModels() || isFatal {
+			return isFatal, fmt.Errorf("failed to merge owner: %w", mergeError)
+		}
+
+		mergeErrors = errors.Join(fmt.Errorf("failed to merge owner: %w", mergeError), mergeErrors)
 	}
 
-	what.Quantity, mergeError = new(Strings).MergeSingleton(what.Quantity, other.Quantity)
+	what.Quantity, isFatal, mergeError = new(Strings).MergeSingleton(config, what.Quantity, other.Quantity)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge quantity: %w", mergeError)
+		if !config.GetMergeModels() || isFatal {
+			return isFatal, fmt.Errorf("failed to merge quantity: %w", mergeError)
+		}
+
+		mergeErrors = errors.Join(fmt.Errorf("failed to merge quantity: %w", mergeError), mergeErrors)
 	}
 
-	what.Confidentiality, mergeError = new(Strings).MergeSingleton(what.Confidentiality, other.Confidentiality)
+	what.Confidentiality, isFatal, mergeError = new(Strings).MergeSingleton(config, what.Confidentiality, other.Confidentiality)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge confidentiality: %w", mergeError)
+		if !config.GetMergeModels() || isFatal {
+			return isFatal, fmt.Errorf("failed to merge confidentiality: %w", mergeError)
+		}
+
+		mergeErrors = errors.Join(fmt.Errorf("failed to merge confidentiality: %w", mergeError), mergeErrors)
 	}
 
-	what.Integrity, mergeError = new(Strings).MergeSingleton(what.Integrity, other.Integrity)
+	what.Integrity, isFatal, mergeError = new(Strings).MergeSingleton(config, what.Integrity, other.Integrity)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge integrity: %w", mergeError)
+		if !config.GetMergeModels() || isFatal {
+			return isFatal, fmt.Errorf("failed to merge integrity: %w", mergeError)
+		}
+
+		mergeErrors = errors.Join(fmt.Errorf("failed to merge integrity: %w", mergeError), mergeErrors)
 	}
 
-	what.Availability, mergeError = new(Strings).MergeSingleton(what.Availability, other.Availability)
+	what.Availability, isFatal, mergeError = new(Strings).MergeSingleton(config, what.Availability, other.Availability)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge availability: %w", mergeError)
+		if !config.GetMergeModels() || isFatal {
+			return isFatal, fmt.Errorf("failed to merge availability: %w", mergeError)
+		}
+
+		mergeErrors = errors.Join(fmt.Errorf("failed to merge availability: %w", mergeError), mergeErrors)
 	}
 
-	what.JustificationCiaRating = new(Strings).MergeMultiline(what.JustificationCiaRating, other.JustificationCiaRating)
+	what.JustificationCiaRating = new(Strings).MergeMultiline(config, what.JustificationCiaRating, other.JustificationCiaRating)
 
-	return nil
+	return isFatal, mergeErrors
 }
 
-func (what *DataAsset) MergeMap(config configReader, first map[string]DataAsset, second map[string]DataAsset) (map[string]DataAsset, error) {
+func (what *DataAsset) MergeMap(config configReader, first map[string]DataAsset, second map[string]DataAsset) (map[string]DataAsset, bool, error) {
+	var mergeErrors error
+	var mergeError error
+	var isFatal bool
 	for mapKey, mapValue := range second {
 		mapItem, ok := first[mapKey]
 		if ok {
 			config.GetProgressReporter().Warnf("data asset %q from %q redefined in %q", mapKey, mapValue.SourceFile, mapItem.SourceFile)
 
-			mergeError := mapItem.Merge(mapValue)
+			isFatal, mergeError = mapItem.Merge(config, mapValue)
 			if mergeError != nil {
-				return first, fmt.Errorf("failed to merge data asset %q: %w", mapKey, mergeError)
+				if !config.GetMergeModels() || isFatal {
+					return first, isFatal, fmt.Errorf("failed to merge data asset %q: %w", mapKey, mergeError)
+				}
+
+				mergeErrors = errors.Join(fmt.Errorf("failed to merge data asset %q: %w", mapKey, mergeError), mergeErrors)
 			}
 
 			first[mapKey] = mapItem
@@ -89,5 +137,5 @@ func (what *DataAsset) MergeMap(config configReader, first map[string]DataAsset,
 		}
 	}
 
-	return first, nil
+	return first, isFatal, mergeErrors
 }

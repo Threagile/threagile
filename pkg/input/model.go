@@ -91,9 +91,13 @@ func (model *Model) Load(config configReader, inputFilename string) error {
 	}
 
 	for _, includeFile := range model.Includes {
-		mergeError := model.Merge(config, filepath.Dir(model.SourceFile), filepath.Clean(includeFile))
+		isFatal, mergeError := model.Merge(config, filepath.Dir(model.SourceFile), filepath.Clean(includeFile))
 		if mergeError != nil {
-			log.Fatalf("Unable to merge model include %q: %v", includeFile, mergeError)
+			if !config.GetMergeModels() || isFatal {
+				log.Fatalf("Unable to merge model include %q: %v", includeFile, mergeError)
+			}
+
+			config.GetProgressReporter().Infof("merged included model %v (%v -> %v)", includeFile, model.SourceFile, filepath.Clean(includeFile))
 		}
 	}
 
@@ -105,6 +109,17 @@ func (model *Model) Load(config configReader, inputFilename string) error {
 
 func (model *Model) UpdateSourceFile(name string) {
 	model.SourceFile = filepath.Clean(name)
+
+	model.Author.SourceFile = model.SourceFile
+
+	for id, item := range model.Contributors {
+		item.SourceFile = model.SourceFile
+		model.Contributors[id] = item
+	}
+
+	model.AppDescription.SourceFile = model.SourceFile
+	model.BusinessOverview.SourceFile = model.SourceFile
+	model.TechnicalOverview.SourceFile = model.SourceFile
 
 	for id, item := range model.DataAssets {
 		item.SourceFile = model.SourceFile
@@ -129,6 +144,11 @@ func (model *Model) UpdateSourceFile(name string) {
 	for id, item := range model.CommunicationLinks {
 		item.SourceFile = model.SourceFile
 		model.CommunicationLinks[id] = item
+	}
+
+	for id, item := range model.CustomRiskCategories {
+		item.SourceFile = model.SourceFile
+		model.CustomRiskCategories[id] = item
 	}
 }
 
@@ -205,16 +225,16 @@ func (model *Model) AddLinks(config configReader) {
 	}
 }
 
-func (model *Model) Merge(config configReader, dir string, includeFilename string) error {
+func (model *Model) Merge(config configReader, dir string, includeFilename string) (bool, error) {
 	modelYaml, readError := os.ReadFile(filepath.Clean(filepath.Join(dir, includeFilename)))
 	if readError != nil {
-		return fmt.Errorf("unable to read model file: %w", readError)
+		return true, fmt.Errorf("unable to read model file: %w", readError)
 	}
 
 	var fileStructure map[string]any
 	unmarshalStructureError := yaml.UnmarshalWithOptions(modelYaml, &fileStructure, yaml.AllowDuplicateMapKey(), yaml.ReferenceFiles(model.References...))
 	if unmarshalStructureError != nil {
-		return fmt.Errorf("unable to parse model structure: %w", unmarshalStructureError)
+		return true, fmt.Errorf("unable to parse model structure (%v): %w", filepath.Clean(filepath.Join(dir, includeFilename)), unmarshalStructureError)
 	}
 
 	var includedModel Model
@@ -251,138 +271,219 @@ func (model *Model) Merge(config configReader, dir string, includeFilename strin
 
 	unmarshalError := yaml.UnmarshalWithOptions(modelYaml, &includedModel, yaml.AllowDuplicateMapKey(), yaml.ReferenceFiles(includedModel.References...))
 	if unmarshalError != nil {
-		return fmt.Errorf("unable to parse model yaml: %w", unmarshalError)
+		return true, fmt.Errorf("unable to parse model yaml %v: %w", filepath.Clean(filepath.Join(dir, includeFilename)), unmarshalError)
 	}
 
 	var mergeError error
+	var isFatal bool
 	for item := range fileStructure {
 		switch strings.ToLower(item) {
 		case strings.ToLower("includes"):
 			for _, includeFile := range includedModel.Includes {
-				mergeError = model.Merge(config, filepath.Join(dir, filepath.Dir(includeFilename)), includeFile)
+				isFatal, mergeError = model.Merge(config, filepath.Join(dir, filepath.Dir(includeFilename)), includeFile)
 				if mergeError != nil {
-					return fmt.Errorf("failed to merge model include %q: %w", includeFile, mergeError)
+					if !config.GetMergeModels() || isFatal {
+						return isFatal, fmt.Errorf("failed to merge model include %q (%v -> %v): %w", includeFile, includedModel.SourceFile, model.SourceFile, mergeError)
+					}
+
+					config.GetProgressReporter().Infof("merged model include %v (%v -> %v)", includeFile, includedModel.SourceFile, model.SourceFile)
 				}
 			}
 
 		case strings.ToLower("threagile_version"):
-			model.ThreagileVersion, mergeError = new(Strings).MergeSingleton(model.ThreagileVersion, includedModel.ThreagileVersion)
+			model.ThreagileVersion, isFatal, mergeError = new(Strings).MergeSingleton(config, model.ThreagileVersion, includedModel.ThreagileVersion)
 			if mergeError != nil {
-				return fmt.Errorf("failed to merge threagile version: %w", mergeError)
+				if !config.GetMergeModels() || isFatal {
+					return isFatal, fmt.Errorf("failed to merge threagile version (%v -> %v): %w", includedModel.SourceFile, model.SourceFile, mergeError)
+				}
+
+				config.GetProgressReporter().Infof("merged threagile version (%v -> %v)", includedModel.SourceFile, model.SourceFile)
 			}
 
 		case strings.ToLower("title"):
-			model.Title, mergeError = new(Strings).MergeSingleton(model.Title, includedModel.Title)
+			model.Title, isFatal, mergeError = new(Strings).MergeSingleton(config, model.Title, includedModel.Title)
 			if mergeError != nil {
-				return fmt.Errorf("failed to merge title: %w", mergeError)
+				if !config.GetMergeModels() || isFatal {
+					return isFatal, fmt.Errorf("failed to merge title (%v -> %v): %w", includedModel.SourceFile, model.SourceFile, mergeError)
+				}
+
+				config.GetProgressReporter().Infof("merged title (%v -> %v)", includedModel.SourceFile, model.SourceFile)
 			}
 
 		case strings.ToLower("author"):
-			mergeError = model.Author.Merge(includedModel.Author)
+			isFatal, mergeError = model.Author.Merge(config, includedModel.Author)
 			if mergeError != nil {
-				return fmt.Errorf("failed to merge author: %w", mergeError)
+				if !config.GetMergeModels() || isFatal {
+					return isFatal, fmt.Errorf("failed to merge author (%v -> %v): %w", includedModel.SourceFile, model.SourceFile, mergeError)
+				}
+
+				config.GetProgressReporter().Infof("merged author (%v -> %v)", includedModel.SourceFile, model.SourceFile)
 			}
 
 		case strings.ToLower("contributors"):
-			model.Contributors, mergeError = new(Author).MergeList(append(model.Contributors, includedModel.Author))
+			model.Contributors, isFatal, mergeError = new(Author).MergeList(config, append(model.Contributors, includedModel.Author))
 			if mergeError != nil {
-				return fmt.Errorf("failed to merge contributors: %w", mergeError)
+				if !config.GetMergeModels() || isFatal {
+					return isFatal, fmt.Errorf("failed to merge contributors (%v -> %v): %w", includedModel.SourceFile, model.SourceFile, mergeError)
+				}
+
+				config.GetProgressReporter().Infof("merged contributors (%v -> %v)", includedModel.SourceFile, model.SourceFile)
 			}
 
 		case strings.ToLower("date"):
-			model.Date, mergeError = new(Strings).MergeSingleton(model.Date, includedModel.Date)
+			model.Date, isFatal, mergeError = new(Strings).MergeSingleton(config, model.Date, includedModel.Date)
 			if mergeError != nil {
-				return fmt.Errorf("failed to merge date: %w", mergeError)
+				if !config.GetMergeModels() || isFatal {
+					return isFatal, fmt.Errorf("failed to merge date (%v -> %v): %w", includedModel.SourceFile, model.SourceFile, mergeError)
+				}
+
+				config.GetProgressReporter().Infof("merged model date (%v -> %v)", includedModel.SourceFile, model.SourceFile)
 			}
 
 		case strings.ToLower("application_description"):
-			mergeError = model.AppDescription.Merge(includedModel.AppDescription)
+			isFatal, mergeError = model.AppDescription.Merge(config, includedModel.AppDescription)
 			if mergeError != nil {
-				return fmt.Errorf("failed to merge application description: %w", mergeError)
+				if !config.GetMergeModels() || isFatal {
+					return isFatal, fmt.Errorf("failed to merge application description (%v -> %v): %w", includedModel.SourceFile, model.SourceFile, mergeError)
+				}
+
+				config.GetProgressReporter().Infof("merged application description (%v -> %v)", includedModel.SourceFile, model.SourceFile)
 			}
 
 		case strings.ToLower("business_overview"):
-			mergeError = model.BusinessOverview.Merge(includedModel.BusinessOverview)
+			isFatal, mergeError = model.BusinessOverview.Merge(config, includedModel.BusinessOverview)
 			if mergeError != nil {
-				return fmt.Errorf("failed to merge business overview: %w", mergeError)
+				if !config.GetMergeModels() || isFatal {
+					return isFatal, fmt.Errorf("failed to merge business overview (%v -> %v): %w", includedModel.SourceFile, model.SourceFile, mergeError)
+				}
+
+				config.GetProgressReporter().Infof("merged business overview (%v -> %v)", includedModel.SourceFile, model.SourceFile)
 			}
 
 		case strings.ToLower("technical_overview"):
-			mergeError = model.TechnicalOverview.Merge(includedModel.TechnicalOverview)
+			isFatal, mergeError = model.TechnicalOverview.Merge(config, includedModel.TechnicalOverview)
 			if mergeError != nil {
-				return fmt.Errorf("failed to merge technical overview: %w", mergeError)
+				if !config.GetMergeModels() || isFatal {
+					return isFatal, fmt.Errorf("failed to merge technical overview (%v -> %v): %w", includedModel.SourceFile, model.SourceFile, mergeError)
+				}
+
+				config.GetProgressReporter().Infof("merged technical overview (%v -> %v)", includedModel.SourceFile, model.SourceFile)
 			}
 
 		case strings.ToLower("business_criticality"):
-			model.BusinessCriticality, mergeError = new(Strings).MergeSingleton(model.BusinessCriticality, includedModel.BusinessCriticality)
+			model.BusinessCriticality, isFatal, mergeError = new(Strings).MergeSingleton(config, model.BusinessCriticality, includedModel.BusinessCriticality)
 			if mergeError != nil {
-				return fmt.Errorf("failed to merge business criticality: %w", mergeError)
+				if !config.GetMergeModels() || isFatal {
+					return isFatal, fmt.Errorf("failed to merge business criticality (%v -> %v): %w", includedModel.SourceFile, model.SourceFile, mergeError)
+				}
+
+				config.GetProgressReporter().Infof("merged business criticality (%v -> %v)", includedModel.SourceFile, model.SourceFile)
 			}
 
 		case strings.ToLower("management_summary_comment"):
-			model.ManagementSummaryComment = new(Strings).MergeMultiline(model.ManagementSummaryComment, includedModel.ManagementSummaryComment)
+			model.ManagementSummaryComment = new(Strings).MergeMultiline(config, model.ManagementSummaryComment, includedModel.ManagementSummaryComment)
 
 		case strings.ToLower("security_requirements"):
-			model.SecurityRequirements, mergeError = new(Strings).MergeMap(config, model.SecurityRequirements, includedModel.SecurityRequirements)
+			model.SecurityRequirements, isFatal, mergeError = new(Strings).MergeMap(config, model.SecurityRequirements, includedModel.SecurityRequirements)
 			if mergeError != nil {
-				return fmt.Errorf("failed to merge security requirements: %w", mergeError)
+				if !config.GetMergeModels() || isFatal {
+					return isFatal, fmt.Errorf("failed to merge security requirements (%v -> %v): %w", includedModel.SourceFile, model.SourceFile, mergeError)
+				}
+
+				config.GetProgressReporter().Infof("merged security requirements (%v -> %v)", includedModel.SourceFile, model.SourceFile)
 			}
 
 		case strings.ToLower("questions"):
-			model.Questions, mergeError = new(Strings).MergeMap(config, model.Questions, includedModel.Questions)
+			model.Questions, isFatal, mergeError = new(Strings).MergeMap(config, model.Questions, includedModel.Questions)
 			if mergeError != nil {
-				return fmt.Errorf("failed to merge questions: %w", mergeError)
+				if !config.GetMergeModels() || isFatal {
+					return isFatal, fmt.Errorf("failed to merge questions (%v -> %v): %w", includedModel.SourceFile, model.SourceFile, mergeError)
+				}
+
+				config.GetProgressReporter().Infof("merged questions (%v -> %v)", includedModel.SourceFile, model.SourceFile)
 			}
 
 		case strings.ToLower("abuse_cases"):
-			model.AbuseCases, mergeError = new(Strings).MergeMap(config, model.AbuseCases, includedModel.AbuseCases)
+			model.AbuseCases, isFatal, mergeError = new(Strings).MergeMap(config, model.AbuseCases, includedModel.AbuseCases)
 			if mergeError != nil {
-				return fmt.Errorf("failed to merge abuse cases: %w", mergeError)
+				if !config.GetMergeModels() || isFatal {
+					return isFatal, fmt.Errorf("failed to merge abuse cases (%v -> %v): %w", includedModel.SourceFile, model.SourceFile, mergeError)
+				}
+
+				config.GetProgressReporter().Infof("merged abuse cases (%v -> %v)", includedModel.SourceFile, model.SourceFile)
 			}
 
 		case strings.ToLower("tags_available"):
-			model.TagsAvailable = new(Strings).MergeUniqueSlice(model.TagsAvailable, includedModel.TagsAvailable)
+			model.TagsAvailable = new(Strings).MergeUniqueSlice(config, model.TagsAvailable, includedModel.TagsAvailable)
 
 		case strings.ToLower("data_assets"):
-			model.DataAssets, mergeError = new(DataAsset).MergeMap(config, model.DataAssets, includedModel.DataAssets)
+			model.DataAssets, isFatal, mergeError = new(DataAsset).MergeMap(config, model.DataAssets, includedModel.DataAssets)
 			if mergeError != nil {
-				return fmt.Errorf("failed to merge data assets: %w", mergeError)
+				if !config.GetMergeModels() || isFatal {
+					return isFatal, fmt.Errorf("failed to merge data assets (%v -> %v): %w", includedModel.SourceFile, model.SourceFile, mergeError)
+				}
+
+				config.GetProgressReporter().Infof("merged data assets (%v -> %v)", includedModel.SourceFile, model.SourceFile)
 			}
 
 		case strings.ToLower("technical_assets"):
-			model.TechnicalAssets, mergeError = new(TechnicalAsset).MergeMap(config, model.TechnicalAssets, includedModel.TechnicalAssets)
+			model.TechnicalAssets, isFatal, mergeError = new(TechnicalAsset).MergeMap(config, model.TechnicalAssets, includedModel.TechnicalAssets)
 			if mergeError != nil {
-				return fmt.Errorf("failed to merge technical assets: %w", mergeError)
+				if !config.GetMergeModels() || isFatal {
+					return isFatal, fmt.Errorf("failed to merge technical assets (%v -> %v): %w", includedModel.SourceFile, model.SourceFile, mergeError)
+				}
+
+				config.GetProgressReporter().Infof("merged technical assets (%v -> %v)", includedModel.SourceFile, model.SourceFile)
 			}
 
 		case strings.ToLower("trust_boundaries"):
-			model.TrustBoundaries, mergeError = new(TrustBoundary).MergeMap(config, model.TrustBoundaries, includedModel.TrustBoundaries)
+			model.TrustBoundaries, isFatal, mergeError = new(TrustBoundary).MergeMap(config, model.TrustBoundaries, includedModel.TrustBoundaries)
 			if mergeError != nil {
-				return fmt.Errorf("failed to merge trust boundaries: %w", mergeError)
+				if !config.GetMergeModels() || isFatal {
+					return isFatal, fmt.Errorf("failed to merge trust boundaries (%v -> %v): %w", includedModel.SourceFile, model.SourceFile, mergeError)
+				}
+
+				config.GetProgressReporter().Infof("merged trust boundaries (%v -> %v)", includedModel.SourceFile, model.SourceFile)
 			}
 
 		case strings.ToLower("shared_runtimes"):
-			model.SharedRuntimes, mergeError = new(SharedRuntime).MergeMap(config, model.SharedRuntimes, includedModel.SharedRuntimes)
+			model.SharedRuntimes, isFatal, mergeError = new(SharedRuntime).MergeMap(config, model.SharedRuntimes, includedModel.SharedRuntimes)
 			if mergeError != nil {
-				return fmt.Errorf("failed to merge shared runtimes: %w", mergeError)
+				if !config.GetMergeModels() || isFatal {
+					return isFatal, fmt.Errorf("failed to merge shared runtimes (%v -> %v): %w", includedModel.SourceFile, model.SourceFile, mergeError)
+				}
+
+				config.GetProgressReporter().Infof("merged shared runtimes (%v -> %v)", includedModel.SourceFile, model.SourceFile)
 			}
 
 		case strings.ToLower("communication_links"):
-			model.CommunicationLinks, mergeError = new(CommunicationLink).MergeMap(config, model.CommunicationLinks, includedModel.CommunicationLinks)
+			model.CommunicationLinks, isFatal, mergeError = new(CommunicationLink).MergeMap(config, model.CommunicationLinks, includedModel.CommunicationLinks)
 			if mergeError != nil {
-				return fmt.Errorf("failed to merge communication links: %w", mergeError)
+				if !config.GetMergeModels() || isFatal {
+					return isFatal, fmt.Errorf("failed to merge communication links (%v -> %v): %w", includedModel.SourceFile, model.SourceFile, mergeError)
+				}
+
+				config.GetProgressReporter().Infof("merged communication links (%v -> %v)", includedModel.SourceFile, model.SourceFile)
 			}
 
 		case strings.ToLower("custom_risk_categories"):
-			mergeError = model.CustomRiskCategories.Add(includedModel.CustomRiskCategories...)
+			isFatal, mergeError = model.CustomRiskCategories.Add(config, includedModel.CustomRiskCategories...)
 			if mergeError != nil {
-				return fmt.Errorf("failed to merge risk categories: %w", mergeError)
+				if !config.GetMergeModels() || isFatal {
+					return isFatal, fmt.Errorf("failed to merge risk categories (%v -> %v): %w", includedModel.SourceFile, model.SourceFile, mergeError)
+				}
+
+				config.GetProgressReporter().Infof("merged custom risk categories (%v -> %v)", includedModel.SourceFile, model.SourceFile)
 			}
 
 		case strings.ToLower("risk_tracking"):
-			model.RiskTracking, mergeError = new(RiskTracking).MergeMap(config, model.RiskTracking, includedModel.RiskTracking)
+			model.RiskTracking, isFatal, mergeError = new(RiskTracking).MergeMap(config, model.RiskTracking, includedModel.RiskTracking)
 			if mergeError != nil {
-				return fmt.Errorf("failed to merge risk tracking: %w", mergeError)
+				if !config.GetMergeModels() || isFatal {
+					return isFatal, fmt.Errorf("failed to merge risk tracking (%v -> %v): %w", includedModel.SourceFile, model.SourceFile, mergeError)
+				}
+
+				config.GetProgressReporter().Infof("merged risk tracking (%v -> %v)", includedModel.SourceFile, model.SourceFile)
 			}
 
 		case "diagram_tweak_nodesep":
@@ -412,7 +513,7 @@ func (model *Model) Merge(config configReader, dir string, includeFilename strin
 		}
 	}
 
-	return nil
+	return false, nil
 }
 
 func (model *Model) AddTagToModelInput(tag string, dryRun bool, changes *[]string) {

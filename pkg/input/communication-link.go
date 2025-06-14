@@ -1,6 +1,7 @@
 package input
 
 import (
+	"errors"
 	"fmt"
 )
 
@@ -25,34 +26,74 @@ type CommunicationLink struct {
 	IsTemplate             bool     `yaml:"is_template,omitempty" json:"is_template,omitempty"`
 }
 
-func (what *CommunicationLink) Merge(other CommunicationLink) error {
+func (what *CommunicationLink) Merge(config configReader, other CommunicationLink) (bool, error) {
+	var mergeErrors error
 	var mergeError error
-	what.Target, mergeError = new(Strings).MergeSingleton(what.Target, other.Target)
+	var isFatal bool
+	what.ID, isFatal, mergeError = new(Strings).MergeSingleton(config, what.ID, other.ID)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge target: %w", mergeError)
+		if !config.GetMergeModels() || isFatal {
+			return isFatal, fmt.Errorf("failed to merge id: %w", mergeError)
+		}
+
+		mergeErrors = errors.Join(fmt.Errorf("failed to merge id: %w", mergeError), mergeErrors)
 	}
 
-	what.Description, mergeError = new(Strings).MergeSingleton(what.Description, other.Description)
+	what.Source, isFatal, mergeError = new(Strings).MergeSingleton(config, what.Source, other.Source)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge description: %w", mergeError)
+		if !config.GetMergeModels() || isFatal {
+			return isFatal, fmt.Errorf("failed to merge source: %w", mergeError)
+		}
+
+		mergeErrors = errors.Join(fmt.Errorf("failed to merge source: %w", mergeError), mergeErrors)
 	}
 
-	what.Protocol, mergeError = new(Strings).MergeSingleton(what.Protocol, other.Protocol)
+	what.Target, isFatal, mergeError = new(Strings).MergeSingleton(config, what.Target, other.Target)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge protocol: %w", mergeError)
+		if !config.GetMergeModels() || isFatal {
+			return isFatal, fmt.Errorf("failed to merge target: %w", mergeError)
+		}
+
+		mergeErrors = errors.Join(fmt.Errorf("failed to merge target: %w", mergeError), mergeErrors)
 	}
 
-	what.Authentication, mergeError = new(Strings).MergeSingleton(what.Authentication, other.Authentication)
+	what.Description, isFatal, mergeError = new(Strings).MergeSingleton(config, what.Description, other.Description)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge authentication: %w", mergeError)
+		if !config.GetMergeModels() || isFatal {
+			return isFatal, fmt.Errorf("failed to merge description: %w", mergeError)
+		}
+
+		mergeErrors = errors.Join(fmt.Errorf("failed to merge description: %w", mergeError), mergeErrors)
 	}
 
-	what.Authorization, mergeError = new(Strings).MergeSingleton(what.Authorization, other.Authorization)
+	what.Protocol, isFatal, mergeError = new(Strings).MergeSingleton(config, what.Protocol, other.Protocol)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge authorization: %w", mergeError)
+		if !config.GetMergeModels() || isFatal {
+			return isFatal, fmt.Errorf("failed to merge protocol: %w", mergeError)
+		}
+
+		mergeErrors = errors.Join(fmt.Errorf("failed to merge protocol: %w", mergeError), mergeErrors)
 	}
 
-	what.Tags = new(Strings).MergeUniqueSlice(what.Tags, other.Tags)
+	what.Authentication, isFatal, mergeError = new(Strings).MergeSingleton(config, what.Authentication, other.Authentication)
+	if mergeError != nil {
+		if !config.GetMergeModels() || isFatal {
+			return isFatal, fmt.Errorf("failed to merge authentication: %w", mergeError)
+		}
+
+		mergeErrors = errors.Join(fmt.Errorf("failed to merge authentication: %w", mergeError), mergeErrors)
+	}
+
+	what.Authorization, isFatal, mergeError = new(Strings).MergeSingleton(config, what.Authorization, other.Authorization)
+	if mergeError != nil {
+		if !config.GetMergeModels() || isFatal {
+			return isFatal, fmt.Errorf("failed to merge authorization: %w", mergeError)
+		}
+
+		mergeErrors = errors.Join(fmt.Errorf("failed to merge authorization: %w", mergeError), mergeErrors)
+	}
+
+	what.Tags = new(Strings).MergeUniqueSlice(config, what.Tags, other.Tags)
 
 	if !what.VPN {
 		what.VPN = other.VPN
@@ -66,14 +107,18 @@ func (what *CommunicationLink) Merge(other CommunicationLink) error {
 		what.Readonly = other.Readonly
 	}
 
-	what.Usage, mergeError = new(Strings).MergeSingleton(what.Usage, other.Usage)
+	what.Usage, isFatal, mergeError = new(Strings).MergeSingleton(config, what.Usage, other.Usage)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge usage: %w", mergeError)
+		if !config.GetMergeModels() || isFatal {
+			return isFatal, fmt.Errorf("failed to merge usage: %w", mergeError)
+		}
+
+		mergeErrors = errors.Join(fmt.Errorf("failed to merge usage: %w", mergeError), mergeErrors)
 	}
 
-	what.DataAssetsSent = new(Strings).MergeUniqueSlice(what.DataAssetsSent, other.DataAssetsSent)
+	what.DataAssetsSent = new(Strings).MergeUniqueSlice(config, what.DataAssetsSent, other.DataAssetsSent)
 
-	what.DataAssetsReceived = new(Strings).MergeUniqueSlice(what.DataAssetsReceived, other.DataAssetsReceived)
+	what.DataAssetsReceived = new(Strings).MergeUniqueSlice(config, what.DataAssetsReceived, other.DataAssetsReceived)
 
 	if what.DiagramTweakWeight == 0 {
 		what.DiagramTweakWeight = other.DiagramTweakWeight
@@ -83,18 +128,23 @@ func (what *CommunicationLink) Merge(other CommunicationLink) error {
 		what.DiagramTweakConstraint = other.DiagramTweakConstraint
 	}
 
-	return nil
+	return isFatal, mergeErrors
 }
 
-func (what *CommunicationLink) MergeMap(config configReader, first map[string]CommunicationLink, second map[string]CommunicationLink) (map[string]CommunicationLink, error) {
+func (what *CommunicationLink) MergeMap(config configReader, first map[string]CommunicationLink, second map[string]CommunicationLink) (map[string]CommunicationLink, bool, error) {
+	var mergeErrors error
+	var mergeError error
+	var isFatal bool
 	for mapKey, mapValue := range second {
 		mapItem, ok := first[mapKey]
 		if ok {
-			config.GetProgressReporter().Warnf("communication link %q from %q redefined in %q", mapKey, mapValue.SourceFile, mapItem.SourceFile)
-
-			mergeError := mapItem.Merge(mapValue)
+			isFatal, mergeError = mapItem.Merge(config, mapValue)
 			if mergeError != nil {
-				return first, fmt.Errorf("failed to merge communication link %q: %w", mapKey, mergeError)
+				if !config.GetMergeModels() || isFatal {
+					return first, isFatal, fmt.Errorf("failed to merge communication link %q: %w", mapKey, mergeError)
+				}
+
+				mergeErrors = errors.Join(fmt.Errorf("failed to merge communication link %q: %w", mapKey, mergeError), mergeErrors)
 			}
 
 			first[mapKey] = mapItem
@@ -103,5 +153,5 @@ func (what *CommunicationLink) MergeMap(config configReader, first map[string]Co
 		}
 	}
 
-	return first, nil
+	return first, isFatal, mergeErrors
 }

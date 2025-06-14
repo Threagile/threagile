@@ -1,6 +1,7 @@
 package input
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 )
@@ -29,71 +30,125 @@ type RiskCategory struct {
 
 type RiskCategories []*RiskCategory
 
-func (what *RiskCategory) Merge(config configReader, other RiskCategory) error {
+func (what *RiskCategory) Merge(config configReader, other RiskCategory) (bool, error) {
+	var mergeErrors error
 	var mergeError error
-	what.ID, mergeError = new(Strings).MergeSingleton(what.ID, other.ID)
+	var isFatal bool
+	what.ID, isFatal, mergeError = new(Strings).MergeSingleton(config, what.ID, other.ID)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge id: %w", mergeError)
+		if !config.GetMergeModels() || isFatal {
+			return isFatal, fmt.Errorf("failed to merge id: %w", mergeError)
+		}
+
+		mergeErrors = errors.Join(fmt.Errorf("failed to merge id: %w", mergeError), mergeErrors)
 	}
 
-	what.Description, mergeError = new(Strings).MergeSingleton(what.Description, other.Description)
+	what.Description, isFatal, mergeError = new(Strings).MergeSingleton(config, what.Description, other.Description)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge description: %w", mergeError)
+		if !config.GetMergeModels() || isFatal {
+			return isFatal, fmt.Errorf("failed to merge description: %w", mergeError)
+		}
+
+		mergeErrors = errors.Join(fmt.Errorf("failed to merge description: %w", mergeError), mergeErrors)
 	}
 
-	what.Impact, mergeError = new(Strings).MergeSingleton(what.Impact, other.Impact)
+	what.Impact, isFatal, mergeError = new(Strings).MergeSingleton(config, what.Impact, other.Impact)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge impact: %w", mergeError)
+		if !config.GetMergeModels() || isFatal {
+			return isFatal, fmt.Errorf("failed to merge impact: %w", mergeError)
+		}
+
+		mergeErrors = errors.Join(fmt.Errorf("failed to merge impact: %w", mergeError), mergeErrors)
 	}
 
-	what.ASVS, mergeError = new(Strings).MergeSingleton(what.ASVS, other.ASVS)
+	what.ASVS, isFatal, mergeError = new(Strings).MergeSingleton(config, what.ASVS, other.ASVS)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge asvs: %w", mergeError)
+		if !config.GetMergeModels() || isFatal {
+			return isFatal, fmt.Errorf("failed to merge asvs: %w", mergeError)
+		}
+
+		mergeErrors = errors.Join(fmt.Errorf("failed to merge asvs: %w", mergeError), mergeErrors)
 	}
 
-	what.CheatSheet, mergeError = new(Strings).MergeSingleton(what.CheatSheet, other.CheatSheet)
+	what.CheatSheet, isFatal, mergeError = new(Strings).MergeSingleton(config, what.CheatSheet, other.CheatSheet)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge cheat_sheet: %w", mergeError)
+		if !config.GetMergeModels() || isFatal {
+			return isFatal, fmt.Errorf("failed to merge cheat sheet: %w", mergeError)
+		}
+
+		mergeErrors = errors.Join(fmt.Errorf("failed to merge cheat sheet: %w", mergeError), mergeErrors)
 	}
 
-	what.Action, mergeError = new(Strings).MergeSingleton(what.Action, other.Action)
+	what.Action, isFatal, mergeError = new(Strings).MergeSingleton(config, what.Action, other.Action)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge action: %w", mergeError)
+		if !config.GetMergeModels() || isFatal {
+			return isFatal, fmt.Errorf("failed to merge action: %w", mergeError)
+		}
+
+		mergeErrors = errors.Join(fmt.Errorf("failed to merge action: %w", mergeError), mergeErrors)
 	}
 
-	what.Mitigation, mergeError = new(Strings).MergeSingleton(what.Mitigation, other.Mitigation)
+	what.Mitigation, isFatal, mergeError = new(Strings).MergeSingleton(config, what.Mitigation, other.Mitigation)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge mitigation: %w", mergeError)
+		if !config.GetMergeModels() || isFatal {
+			return isFatal, fmt.Errorf("failed to merge mitigation: %w", mergeError)
+		}
+
+		mergeErrors = errors.Join(fmt.Errorf("failed to merge mitigation: %w", mergeError), mergeErrors)
 	}
 
-	what.Check, mergeError = new(Strings).MergeSingleton(what.Check, other.Check)
+	what.Check, isFatal, mergeError = new(Strings).MergeSingleton(config, what.Check, other.Check)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge check: %w", mergeError)
+		if !config.GetMergeModels() || isFatal {
+			return isFatal, fmt.Errorf("failed to merge check: %w", mergeError)
+		}
+
+		mergeErrors = errors.Join(fmt.Errorf("failed to merge check: %w", mergeError), mergeErrors)
 	}
 
-	what.Function, mergeError = new(Strings).MergeSingleton(what.Function, other.Function)
+	what.Function, isFatal, mergeError = new(Strings).MergeSingleton(config, what.Function, other.Function)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge function: %w", mergeError)
+		if !config.GetMergeModels() || isFatal {
+			return isFatal, fmt.Errorf("failed to merge function: %w", mergeError)
+		}
+
+		mergeErrors = errors.Join(fmt.Errorf("failed to merge function: %w", mergeError), mergeErrors)
 	}
 
-	what.STRIDE, mergeError = new(Strings).MergeSingleton(what.STRIDE, other.STRIDE)
+	what.STRIDE, isFatal, mergeError = new(Strings).MergeSingleton(config, what.STRIDE, other.STRIDE)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge STRIDE: %w", mergeError)
+		if !config.GetMergeModels() || isFatal {
+			return isFatal, fmt.Errorf("failed to merge STRIDE: %w", mergeError)
+		}
+
+		mergeErrors = errors.Join(fmt.Errorf("failed to merge STRIDE: %w", mergeError), mergeErrors)
 	}
 
-	what.DetectionLogic, mergeError = new(Strings).MergeSingleton(what.DetectionLogic, other.DetectionLogic)
+	what.DetectionLogic, isFatal, mergeError = new(Strings).MergeSingleton(config, what.DetectionLogic, other.DetectionLogic)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge detection_logic: %w", mergeError)
+		if !config.GetMergeModels() || isFatal {
+			return isFatal, fmt.Errorf("failed to merge detection logic: %w", mergeError)
+		}
+
+		mergeErrors = errors.Join(fmt.Errorf("failed to merge detection logic: %w", mergeError), mergeErrors)
 	}
 
-	what.RiskAssessment, mergeError = new(Strings).MergeSingleton(what.RiskAssessment, other.RiskAssessment)
+	what.RiskAssessment, isFatal, mergeError = new(Strings).MergeSingleton(config, what.RiskAssessment, other.RiskAssessment)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge risk_assessment: %w", mergeError)
+		if !config.GetMergeModels() || isFatal {
+			return isFatal, fmt.Errorf("failed to merge risk assessment: %w", mergeError)
+		}
+
+		mergeErrors = errors.Join(fmt.Errorf("failed to merge risk assessment: %w", mergeError), mergeErrors)
 	}
 
-	what.FalsePositives, mergeError = new(Strings).MergeSingleton(what.FalsePositives, other.FalsePositives)
+	what.FalsePositives, isFatal, mergeError = new(Strings).MergeSingleton(config, what.FalsePositives, other.FalsePositives)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge false_positives: %w", mergeError)
+		if !config.GetMergeModels() || isFatal {
+			return isFatal, fmt.Errorf("failed to merge false positives: %w", mergeError)
+		}
+
+		mergeErrors = errors.Join(fmt.Errorf("failed to merge false positives: %w", mergeError), mergeErrors)
 	}
 
 	if !what.ModelFailurePossibleReason {
@@ -104,24 +159,33 @@ func (what *RiskCategory) Merge(config configReader, other RiskCategory) error {
 		what.CWE = other.CWE
 	}
 
-	what.RisksIdentified, mergeError = new(RiskIdentified).MergeMap(config, what.RisksIdentified, other.RisksIdentified)
+	what.RisksIdentified, isFatal, mergeError = new(RiskIdentified).MergeMap(config, what.RisksIdentified, other.RisksIdentified)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge identified risks: %w", mergeError)
+		if !config.GetMergeModels() || isFatal {
+			return isFatal, fmt.Errorf("failed to merge identified risks: %w", mergeError)
+		}
+
+		mergeErrors = errors.Join(fmt.Errorf("failed to merge identified risks: %w", mergeError), mergeErrors)
 	}
 
-	return nil
+	return isFatal, mergeErrors
 }
 
-func (what *RiskCategories) Add(items ...*RiskCategory) error {
+func (what *RiskCategories) Add(config configReader, items ...*RiskCategory) (bool, error) {
+	var addErrors error
 	for _, item := range items {
 		for _, value := range *what {
 			if strings.EqualFold(value.ID, item.ID) {
-				return fmt.Errorf("duplicate item %q in risk category list", value.ID)
+				if !config.GetMergeModels() {
+					return false, fmt.Errorf("duplicate item %q in risk category list", value.ID)
+				}
+
+				addErrors = errors.Join(fmt.Errorf("duplicate item %q in risk category list", value.ID), addErrors)
 			}
 		}
 
 		*what = append(*what, item)
 	}
 
-	return nil
+	return false, addErrors
 }

@@ -1,6 +1,9 @@
 package input
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
 
 type TrustBoundary struct {
 	SourceFile            string   `yaml:"-" json:"-"`
@@ -13,41 +16,62 @@ type TrustBoundary struct {
 	IsTemplate            bool     `yaml:"is_template,omitempty" json:"is_template,omitempty"`
 }
 
-func (what *TrustBoundary) Merge(other TrustBoundary) error {
+func (what *TrustBoundary) Merge(config configReader, other TrustBoundary) (bool, error) {
+	var mergeErrors error
 	var mergeError error
-	what.ID, mergeError = new(Strings).MergeSingleton(what.ID, other.ID)
+	var isFatal bool
+	what.ID, isFatal, mergeError = new(Strings).MergeSingleton(config, what.ID, other.ID)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge id: %w", mergeError)
+		if !config.GetMergeModels() || isFatal {
+			return isFatal, fmt.Errorf("failed to merge id: %w", mergeError)
+		}
+
+		mergeErrors = errors.Join(fmt.Errorf("failed to merge id: %w", mergeError), mergeErrors)
 	}
 
-	what.Description, mergeError = new(Strings).MergeSingleton(what.Description, other.Description)
+	what.Description, isFatal, mergeError = new(Strings).MergeSingleton(config, what.Description, other.Description)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge description: %w", mergeError)
+		if !config.GetMergeModels() || isFatal {
+			return isFatal, fmt.Errorf("failed to merge description: %w", mergeError)
+		}
+
+		mergeErrors = errors.Join(fmt.Errorf("failed to merge description: %w", mergeError), mergeErrors)
 	}
 
-	what.Type, mergeError = new(Strings).MergeSingleton(what.Type, other.Type)
+	what.Type, isFatal, mergeError = new(Strings).MergeSingleton(config, what.Type, other.Type)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge type: %w", mergeError)
+		if !config.GetMergeModels() || isFatal {
+			return isFatal, fmt.Errorf("failed to merge type: %w", mergeError)
+		}
+
+		mergeErrors = errors.Join(fmt.Errorf("failed to merge type: %w", mergeError), mergeErrors)
 	}
 
-	what.Tags = new(Strings).MergeUniqueSlice(what.Tags, other.Tags)
+	what.Tags = new(Strings).MergeUniqueSlice(config, what.Tags, other.Tags)
 
-	what.TechnicalAssetsInside = new(Strings).MergeUniqueSlice(what.TechnicalAssetsInside, other.TechnicalAssetsInside)
+	what.TechnicalAssetsInside = new(Strings).MergeUniqueSlice(config, what.TechnicalAssetsInside, other.TechnicalAssetsInside)
 
-	what.TrustBoundariesNested = new(Strings).MergeUniqueSlice(what.TrustBoundariesNested, other.TrustBoundariesNested)
+	what.TrustBoundariesNested = new(Strings).MergeUniqueSlice(config, what.TrustBoundariesNested, other.TrustBoundariesNested)
 
-	return nil
+	return isFatal, mergeErrors
 }
 
-func (what *TrustBoundary) MergeMap(config configReader, first map[string]TrustBoundary, second map[string]TrustBoundary) (map[string]TrustBoundary, error) {
+func (what *TrustBoundary) MergeMap(config configReader, first map[string]TrustBoundary, second map[string]TrustBoundary) (map[string]TrustBoundary, bool, error) {
+	var mergeErrors error
+	var mergeError error
+	var isFatal bool
 	for mapKey, mapValue := range second {
 		mapItem, ok := first[mapKey]
 		if ok {
 			config.GetProgressReporter().Warnf("trust boundary %q from %q redefined in %q", mapKey, mapValue.SourceFile, mapItem.SourceFile)
 
-			mergeError := mapItem.Merge(mapValue)
+			isFatal, mergeError = mapItem.Merge(config, mapValue)
 			if mergeError != nil {
-				return first, fmt.Errorf("failed to merge trust boundary %q: %w", mapKey, mergeError)
+				if !config.GetMergeModels() || isFatal {
+					return first, isFatal, fmt.Errorf("failed to merge trust boundary %q: %w", mapKey, mergeError)
+				}
+
+				mergeErrors = errors.Join(fmt.Errorf("failed to merge trust boundary %q: %w", mapKey, mergeError), mergeErrors)
 			}
 
 			first[mapKey] = mapItem
@@ -56,5 +80,5 @@ func (what *TrustBoundary) MergeMap(config configReader, first map[string]TrustB
 		}
 	}
 
-	return first, nil
+	return first, isFatal, nil
 }

@@ -6,6 +6,7 @@ type configReader interface {
 	GetBuildTimestamp() string
 	GetVerbose() bool
 	GetInteractive() bool
+	GetMergeModels() bool
 	GetAppFolder() string
 	GetPluginFolder() string
 	GetDataFolder() string

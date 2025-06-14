@@ -49,7 +49,7 @@ func TestParseModelYaml(t *testing.T) {
 		return
 	}
 
-	if string(flatData) != strings.Replace(string(splitData), "../../test/main.yaml", "../../test/all.yaml", 1) {
+	if string(flatData) != strings.ReplaceAll(string(splitData), "../../test/main.yaml", "../../test/all.yaml") {
 		t.Errorf("parsing split model files is broken; diff: %v", textdiff.Unified(flatModelFile, splitModelFile, string(flatData), string(splitData)))
 		return
 	}

@@ -1,6 +1,9 @@
 package input
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
 
 type RiskTracking struct {
 	Status        string `yaml:"status,omitempty" json:"status,omitempty"`
@@ -10,43 +13,72 @@ type RiskTracking struct {
 	CheckedBy     string `yaml:"checked_by,omitempty" json:"checked_by,omitempty"`
 }
 
-func (what *RiskTracking) Merge(other RiskTracking) error {
+func (what *RiskTracking) Merge(config configReader, other RiskTracking) (bool, error) {
+	var mergeErrors error
 	var mergeError error
-	what.Status, mergeError = new(Strings).MergeSingleton(what.Status, other.Status)
+	var isFatal bool
+	what.Status, isFatal, mergeError = new(Strings).MergeSingleton(config, what.Status, other.Status)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge status: %w", mergeError)
+		if !config.GetMergeModels() || isFatal {
+			return isFatal, fmt.Errorf("failed to merge status: %w", mergeError)
+		}
+
+		mergeErrors = errors.Join(fmt.Errorf("failed to merge status: %w", mergeError), mergeErrors)
 	}
 
-	what.Justification, mergeError = new(Strings).MergeSingleton(what.Justification, other.Justification)
+	what.Justification, isFatal, mergeError = new(Strings).MergeSingleton(config, what.Justification, other.Justification)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge justification: %w", mergeError)
+		if !config.GetMergeModels() || isFatal {
+			return isFatal, fmt.Errorf("failed to merge justification: %w", mergeError)
+		}
+
+		mergeErrors = errors.Join(fmt.Errorf("failed to merge justification: %w", mergeError), mergeErrors)
 	}
 
-	what.Ticket, mergeError = new(Strings).MergeSingleton(what.Ticket, other.Ticket)
+	what.Ticket, isFatal, mergeError = new(Strings).MergeSingleton(config, what.Ticket, other.Ticket)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge ticket: %w", mergeError)
+		if !config.GetMergeModels() || isFatal {
+			return isFatal, fmt.Errorf("failed to merge ticket: %w", mergeError)
+		}
+
+		mergeErrors = errors.Join(fmt.Errorf("failed to merge ticket: %w", mergeError), mergeErrors)
 	}
 
-	what.Date, mergeError = new(Strings).MergeSingleton(what.Date, other.Date)
+	what.Date, isFatal, mergeError = new(Strings).MergeSingleton(config, what.Date, other.Date)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge date: %w", mergeError)
+		if !config.GetMergeModels() || isFatal {
+			return isFatal, fmt.Errorf("failed to merge date: %w", mergeError)
+		}
+
+		mergeErrors = errors.Join(fmt.Errorf("failed to merge date: %w", mergeError), mergeErrors)
 	}
 
-	what.CheckedBy, mergeError = new(Strings).MergeSingleton(what.CheckedBy, other.CheckedBy)
+	what.CheckedBy, isFatal, mergeError = new(Strings).MergeSingleton(config, what.CheckedBy, other.CheckedBy)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge checked_by: %w", mergeError)
+		if !config.GetMergeModels() || isFatal {
+			return isFatal, fmt.Errorf("failed to merge checked-by: %w", mergeError)
+		}
+
+		mergeErrors = errors.Join(fmt.Errorf("failed to merge checked-by: %w", mergeError), mergeErrors)
 	}
 
-	return nil
+	return isFatal, mergeErrors
 }
 
-func (what *RiskTracking) MergeMap(config configReader, first map[string]RiskTracking, second map[string]RiskTracking) (map[string]RiskTracking, error) {
+func (what *RiskTracking) MergeMap(config configReader, first map[string]RiskTracking, second map[string]RiskTracking) (map[string]RiskTracking, bool, error) {
+	var mergeErrors error
+	var mergeError error
+	var isFatal bool
 	for mapKey, mapValue := range second {
 		mapItem, ok := first[mapKey]
 		if ok {
-			mergeError := mapItem.Merge(mapValue)
+			isFatal, mergeError = mapItem.Merge(config, mapValue)
 			if mergeError != nil {
-				return first, fmt.Errorf("failed to merge risk tracking %q: %w", mapKey, mergeError)
+				if !config.GetMergeModels() || isFatal {
+				return first, isFatal, fmt.Errorf("failed to merge risk tracking %q: %w", mapKey, mergeError)
+				}
+
+				mergeErrors = errors.Join(fmt.Errorf("failed to merge risk tracking %q: %w", mapKey, mergeError), mergeErrors)
 			}
 
 			first[mapKey] = mapItem
@@ -55,5 +87,5 @@ func (what *RiskTracking) MergeMap(config configReader, first map[string]RiskTra
 		}
 	}
 
-	return first, nil
+	return first, isFatal, mergeErrors
 }

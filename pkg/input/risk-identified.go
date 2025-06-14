@@ -1,6 +1,9 @@
 package input
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
 
 type RiskIdentified struct {
 	Severity                      string   `yaml:"severity,omitempty" json:"severity,omitempty"`
@@ -15,65 +18,110 @@ type RiskIdentified struct {
 	MostRelevantSharedRuntime     string   `yaml:"most_relevant_shared_runtime,omitempty" json:"most_relevant_shared_runtime,omitempty"`
 }
 
-func (what *RiskIdentified) Merge(other RiskIdentified) error {
+func (what *RiskIdentified) Merge(config configReader, other RiskIdentified) (bool, error) {
+	var mergeErrors error
 	var mergeError error
-	what.Severity, mergeError = new(Strings).MergeSingleton(what.Severity, other.Severity)
+	var isFatal bool
+	what.Severity, isFatal, mergeError = new(Strings).MergeSingleton(config, what.Severity, other.Severity)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge severity: %w", mergeError)
+		if !config.GetMergeModels() || isFatal {
+			return isFatal, fmt.Errorf("failed to merge severity: %w", mergeError)
+		}
+
+		mergeErrors = errors.Join(fmt.Errorf("failed to merge false severity: %w", mergeError), mergeErrors)
 	}
 
-	what.ExploitationLikelihood, mergeError = new(Strings).MergeSingleton(what.ExploitationLikelihood, other.ExploitationLikelihood)
+	what.ExploitationLikelihood, isFatal, mergeError = new(Strings).MergeSingleton(config, what.ExploitationLikelihood, other.ExploitationLikelihood)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge exploitation_likelihood: %w", mergeError)
+		if !config.GetMergeModels() || isFatal {
+			return isFatal, fmt.Errorf("failed to merge exploitation likelihood: %w", mergeError)
+		}
+
+		mergeErrors = errors.Join(fmt.Errorf("failed to merge exploitation likelihood: %w", mergeError), mergeErrors)
 	}
 
-	what.ExploitationImpact, mergeError = new(Strings).MergeSingleton(what.ExploitationImpact, other.ExploitationImpact)
+	what.ExploitationImpact, isFatal, mergeError = new(Strings).MergeSingleton(config, what.ExploitationImpact, other.ExploitationImpact)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge exploitation_impact: %w", mergeError)
+		if !config.GetMergeModels() || isFatal {
+			return isFatal, fmt.Errorf("failed to merge exploitation impact: %w", mergeError)
+		}
+
+		mergeErrors = errors.Join(fmt.Errorf("failed to merge exploitation impact: %w", mergeError), mergeErrors)
 	}
 
-	what.DataBreachProbability, mergeError = new(Strings).MergeSingleton(what.DataBreachProbability, other.DataBreachProbability)
+	what.DataBreachProbability, isFatal, mergeError = new(Strings).MergeSingleton(config, what.DataBreachProbability, other.DataBreachProbability)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge date: %w", mergeError)
+		if !config.GetMergeModels() || isFatal {
+			return isFatal, fmt.Errorf("failed to merge date: %w", mergeError)
+		}
+
+		mergeErrors = errors.Join(fmt.Errorf("failed to merge date: %w", mergeError), mergeErrors)
 	}
 
-	what.DataBreachTechnicalAssets = new(Strings).MergeUniqueSlice(what.DataBreachTechnicalAssets, other.DataBreachTechnicalAssets)
+	what.DataBreachTechnicalAssets = new(Strings).MergeUniqueSlice(config, what.DataBreachTechnicalAssets, other.DataBreachTechnicalAssets)
 
-	what.MostRelevantDataAsset, mergeError = new(Strings).MergeSingleton(what.MostRelevantDataAsset, other.MostRelevantDataAsset)
+	what.MostRelevantDataAsset, isFatal, mergeError = new(Strings).MergeSingleton(config, what.MostRelevantDataAsset, other.MostRelevantDataAsset)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge most_relevant_data_asset: %w", mergeError)
+		if !config.GetMergeModels() || isFatal {
+			return isFatal, fmt.Errorf("failed to merge most relevant data asset: %w", mergeError)
+		}
+
+		mergeErrors = errors.Join(fmt.Errorf("failed to merge most relevant data asset: %w", mergeError), mergeErrors)
 	}
 
-	what.MostRelevantTechnicalAsset, mergeError = new(Strings).MergeSingleton(what.MostRelevantTechnicalAsset, other.MostRelevantTechnicalAsset)
+	what.MostRelevantTechnicalAsset, isFatal, mergeError = new(Strings).MergeSingleton(config, what.MostRelevantTechnicalAsset, other.MostRelevantTechnicalAsset)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge most_relevant_technical_asset: %w", mergeError)
+		if !config.GetMergeModels() || isFatal {
+			return isFatal, fmt.Errorf("failed to merge most relevant technical asset: %w", mergeError)
+		}
+
+		mergeErrors = errors.Join(fmt.Errorf("failed to merge most relevant technical asset: %w", mergeError), mergeErrors)
 	}
 
-	what.MostRelevantCommunicationLink, mergeError = new(Strings).MergeSingleton(what.MostRelevantCommunicationLink, other.MostRelevantCommunicationLink)
+	what.MostRelevantCommunicationLink, isFatal, mergeError = new(Strings).MergeSingleton(config, what.MostRelevantCommunicationLink, other.MostRelevantCommunicationLink)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge most_relevant_communication_link: %w", mergeError)
+		if !config.GetMergeModels() || isFatal {
+			return isFatal, fmt.Errorf("failed to merge most relevant communication link: %w", mergeError)
+		}
+
+		mergeErrors = errors.Join(fmt.Errorf("failed to merge most relevant communication link: %w", mergeError), mergeErrors)
 	}
 
-	what.MostRelevantTrustBoundary, mergeError = new(Strings).MergeSingleton(what.MostRelevantTrustBoundary, other.MostRelevantTrustBoundary)
+	what.MostRelevantTrustBoundary, isFatal, mergeError = new(Strings).MergeSingleton(config, what.MostRelevantTrustBoundary, other.MostRelevantTrustBoundary)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge most_relevant_trust_boundary: %w", mergeError)
+		if !config.GetMergeModels() || isFatal {
+			return isFatal, fmt.Errorf("failed to merge most relevant trust boundary: %w", mergeError)
+		}
+
+		mergeErrors = errors.Join(fmt.Errorf("failed to merge most relevant trust boundary: %w", mergeError), mergeErrors)
 	}
 
-	what.MostRelevantSharedRuntime, mergeError = new(Strings).MergeSingleton(what.MostRelevantSharedRuntime, other.MostRelevantSharedRuntime)
+	what.MostRelevantSharedRuntime, isFatal, mergeError = new(Strings).MergeSingleton(config, what.MostRelevantSharedRuntime, other.MostRelevantSharedRuntime)
 	if mergeError != nil {
-		return fmt.Errorf("failed to merge most_relevant_shared_runtime: %w", mergeError)
+		if !config.GetMergeModels() || isFatal {
+			return isFatal, fmt.Errorf("failed to merge most relevant shared runtime: %w", mergeError)
+		}
+
+		mergeErrors = errors.Join(fmt.Errorf("failed to merge most relevant shared runtime: %w", mergeError), mergeErrors)
 	}
 
-	return nil
+	return isFatal, mergeErrors
 }
 
-func (what *RiskIdentified) MergeMap(config configReader, first map[string]RiskIdentified, second map[string]RiskIdentified) (map[string]RiskIdentified, error) {
+func (what *RiskIdentified) MergeMap(config configReader, first map[string]RiskIdentified, second map[string]RiskIdentified) (map[string]RiskIdentified, bool, error) {
+	var mergeErrors error
+	var mergeError error
+	var isFatal bool
 	for mapKey, mapValue := range second {
 		mapItem, ok := first[mapKey]
 		if ok {
-			mergeError := mapItem.Merge(mapValue)
+			isFatal, mergeError = mapItem.Merge(config, mapValue)
 			if mergeError != nil {
-				return first, fmt.Errorf("failed to merge risk %q: %w", mapKey, mergeError)
+				if !config.GetMergeModels() || isFatal {
+					return first, isFatal, fmt.Errorf("failed to merge risk %q: %w", mapKey, mergeError)
+				}
+
+				mergeErrors = errors.Join(fmt.Errorf("failed to merge risk %q: %w", mapKey, mergeError), mergeErrors)
 			}
 
 			first[mapKey] = mapItem
@@ -82,5 +130,5 @@ func (what *RiskIdentified) MergeMap(config configReader, first map[string]RiskI
 		}
 	}
 
-	return first, nil
+	return first, isFatal, mergeErrors
 }

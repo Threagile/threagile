@@ -15,6 +15,9 @@ func (m *mockConfig) GetVerbose() bool {
 func (m *mockConfig) GetInteractive() bool {
 	return false
 }
+func (m *mockConfig) GetMergeModels() bool {
+	return false
+}
 func (m *mockConfig) GetAppFolder() string {
 	return ""
 }

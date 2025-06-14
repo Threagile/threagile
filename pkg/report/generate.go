@@ -41,6 +41,16 @@ func (c *GenerateCommands) Defaults() *GenerateCommands {
 }
 
 func Generate(config configReader, readResult *model.ReadResult, commands *GenerateCommands, riskRules types.RiskRules) error {
+	outputDirError := os.MkdirAll(config.GetOutputFolder(), 0700)
+	if outputDirError != nil {
+		return fmt.Errorf("failed to create output dir %q: %w", config.GetOutputFolder(), outputDirError)
+	}
+
+	tempDirError := os.MkdirAll(config.GetTempFolder(), 0700)
+	if tempDirError != nil {
+		return fmt.Errorf("failed to create temp dir %q: %w", config.GetTempFolder(), tempDirError)
+	}
+
 	generateDataFlowDiagram := commands.DataFlowDiagram
 	generateDataAssetsDiagram := commands.DataAssetDiagram
 

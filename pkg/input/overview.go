@@ -6,7 +6,7 @@ type Overview struct {
 	Images      []map[string]string `yaml:"images,omitempty" json:"images,omitempty"` // yes, array of map here, as array keeps the order of the image keys
 }
 
-func (what *Overview) Merge(other Overview) error {
+func (what *Overview) Merge(_ configReader, other Overview) (bool, error) {
 	if len(what.Description) > 0 {
 		if len(other.Description) > 0 {
 			what.Description += lineSeparator + other.Description
@@ -17,5 +17,5 @@ func (what *Overview) Merge(other Overview) error {
 
 	what.Images = append(what.Images, other.Images...)
 
-	return nil
+	return false, nil
 }
