@@ -16,7 +16,7 @@ Thank you so much! :clap:
 
 Before running the project please install
 
-- [go 1.21.0](https://go.dev/doc/install)
+- [go 1.24.2](https://go.dev/doc/install)
 - [Docker](https://docs.docker.com/engine/install/)
 - [pre-commit](https://pre-commit.com/)
 - [golangci-lint](https://golangci-lint.run/welcome/install/#local-installation)
