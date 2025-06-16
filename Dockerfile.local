@@ -65,6 +65,7 @@ COPY --from=build --chown=threagile:threagile /app/threagile /app/
 COPY --from=build --chown=threagile:threagile /app/risk_demo_rule /app/
 COPY --from=build --chown=threagile:threagile /app/LICENSE.txt /app/
 COPY --from=build --chown=threagile:threagile /app/report/template/background.pdf /app/
+COPY --from=build --chown=threagile:threagile /app/report/threagile-logo.png /app/
 COPY --from=build --chown=threagile:threagile /app/support/openapi.yaml /app/
 COPY --from=build --chown=threagile:threagile /app/support/schema.json /app/
 COPY --from=build --chown=threagile:threagile /app/support/live-templates.txt /app/
