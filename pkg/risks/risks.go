@@ -3,10 +3,12 @@ package risks
 import (
 	"embed"
 	"fmt"
-	"github.com/threagile/threagile/pkg/risks/script"
 	"io/fs"
 
+	"github.com/threagile/threagile/pkg/risks/script"
+
 	"github.com/threagile/threagile/pkg/risks/builtin"
+	"github.com/threagile/threagile/pkg/risks/privacy"
 	"github.com/threagile/threagile/pkg/types"
 )
 
@@ -55,6 +57,18 @@ func GetBuiltInRiskRules() types.RiskRules {
 		builtin.NewWrongCommunicationLinkContentRule(),
 		builtin.NewWrongTrustBoundaryContentRule(),
 		builtin.NewXmlExternalEntityRule(),
+		privacy.NewDataDisclosureByUnnecessaryPropagationRule(),
+		privacy.NewDataDisclosureByUnnecessaryRetentionRule(),
+		privacy.NewDataMinimizationAndDestructionRule(),
+		privacy.NewDataMinimizationAndExclusionRule(),
+		privacy.NewDisclosureByPublishingRule(),
+		privacy.NewImproperPIManagementRule(),
+		privacy.NewInsecureDataStorageRule(),
+		privacy.NewInsufficientAccessManagementRule(),
+		privacy.NewLackOfDataAccessMechanismRule(),
+		privacy.NewLinkingThroughUniqueOrQuasiIdCombination(),
+		privacy.NewReceivingIdentifyingDataRule(),
+		privacy.NewStoringIdentifyingDataRule(),
 	} {
 		rules[rule.Category().ID] = rule
 	}

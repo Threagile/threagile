@@ -1,0 +1,586 @@
+threagile_version: 1.0.0
+
+#
+# For a perfect editing experience within your IDE of choice you can easily
+# get model syntax validation and autocompletion (very handy for enum values)
+# as well as live templates: Just import the schema.json into your IDE and assign
+# it as "schema" to each Threagile YAML file. Also try to import individual parts
+# from the live-templates.txt file into your IDE as live editing templates.
+#
+# You might also want to try the REST API when running in server mode...
+
+# /* THIS EXAMPLE GENERATES THE THREAT (custom-privacy-data-disclosure-by-unnecessary-propagation) AS BELOW:
+# Threats generation for browser Technical Asset:
+# - car0make - No Threat - Not a PI
+# - date0of0birth - No Threat - Received but sent by the browser
+# - citizenship - No Threat - Received but processed by the browser
+# - disability0info - *THREAT* - Received but neither processed, nor stored, nor sent by the browser
+# - employee0location - No Threat - Received but stored
+# - ethnic0origin - *THREAT* - Received but neither processed, nor stored, nor sent by the browser
+# - bio0fingerprint - No Threat - Received but sent back by the browser (see data assets received link for Application Server)
+# - tel0num0work - No Threat - Not received by the browser
+# */
+
+
+title: Some Example Application
+
+date: 2020-07-01
+
+author:
+  name: John Doe
+  homepage: www.example.com
+
+
+
+
+management_summary_comment: >
+  Just some <b>more</b> custom summary possible here...
+
+business_criticality: important # values: archive, operational, important, critical, mission-critical
+
+
+business_overview:
+  description: Some more <i>demo text</i> here and even images...
+  images:
+#    - custom-image-1.png: Some dummy image 1
+#    - custom-image-2.png: Some dummy image 2
+
+
+technical_overview:
+  description: Some more <i>demo text</i> here and even images...
+  images:
+#    - custom-image-1.png: Some dummy image 1
+#    - custom-image-2.png: Some dummy image 2
+
+unlawfulprocessing: false
+
+deidentified: false
+
+erasuremodification: true
+
+questions: # simply use "" as answer to signal "unanswered"
+  How are the admin clients managed/protected against compromise?: ""
+  How are the development clients managed/protected against compromise?: >
+    Managed by XYZ
+  How are the build pipeline components managed/protected against compromise?: >
+    Managed by XYZ
+
+
+
+abuse_cases:
+  Denial-of-Service: >
+    As a hacker I want to disturb the functionality of the backend system in order to cause indirect
+    financial damage via unusable features.
+  CPU-Cycle Theft: >
+    As a hacker I want to steal CPU cycles in order to transform them into money via installed crypto currency miners.
+  Ransomware: >
+    As a hacker I want to encrypt the storage and file systems in order to demand ransom.
+  Identity Theft: >
+    As a hacker I want to steal identity data in order to reuse credentials and/or keys on other targets of the same company or outside.
+  PII Theft: >
+    As a hacker I want to steal PII (Personally Identifiable Information) data in order to blackmail the company and/or damage
+    their repudiation by publishing them.
+
+  ERP-System Compromise: >
+    As a hacker I want to access the ERP-System in order to steal/modify sensitive business data.
+  Database Compromise: >
+    As a hacker I want to access the database backend of the ERP-System in order to steal/modify sensitive
+    business data.
+  Contract Filesystem Compromise: >
+    As a hacker I want to access the filesystem storing the contract PDFs in order to steal/modify contract data.
+  Cross-Site Scripting Attacks: >
+    As a hacker I want to execute Cross-Site Scripting (XSS) and similar attacks in order to takeover victim sessions and
+    cause reputational damage.
+  Denial-of-Service of Enduser Functionality: >
+    As a hacker I want to disturb the functionality of the enduser parts of the application in order to cause direct financial
+    damage (lower sales).
+  Denial-of-Service of ERP/DB Functionality: >
+    As a hacker I want to disturb the functionality of the ERP system and/or it's database in order to cause indirect
+    financial damage via unusable internal ERP features (not related to customer portal).
+
+
+security_requirements:
+  Input Validation: Strict input validation is required to reduce the overall attack surface.
+  Securing Administrative Access: Administrative access must be secured with strong encryption and multi-factor authentication.
+  EU-DSGVO: Mandatory EU-Datenschutzgrundverordnung
+
+
+
+# Tags can be used for anything, it's just a tag. Also risk rules can act based on tags if you like.
+# Tags can be used for example to name the products used (which is more concrete than the technology types that only specify the type)
+tags_available:
+  - linux
+  - apache
+  - mysql
+  - jboss
+  - keycloak
+  - jenkins
+  - git
+  - oracle
+  - some-erp
+  - vmware
+  - aws
+  - aws:ec2
+  - aws:s3
+
+
+
+
+data_assets:
+
+
+#  Customer Contracts: &customer-contracts # this example shows the inheritance-like features of YAML
+#    id: customer-contracts
+#    description: Customer Contracts (PDF)
+#    usage: business # values: business, devops
+#    tags:
+#    origin: Customer
+#    owner: Company XYZ
+#    quantity: many # values: very-few, few, many, very-many
+#    dataassettype: no-pi # values: pi, no-pi
+#    consent: yes-granular # values: yes-granular, yes-not-granular, no-consent 
+#    confidentiality: confidential # values: public, internal, restricted, confidential, strictly-confidential
+#    integrity: critical # values: archive, operational, important, critical, mission-critical
+#    availability: operational # values: archive, operational, important, critical, mission-critical
+#    justification_cia_rating: >
+#      Contract data might contain financial data as well as personally identifiable information (PII). The integrity and
+#      availability of contract data is required for clearing payment disputes.
+#    thirdpartysharing: false
+
+  Car Make: &customer-contracts # this example shows the inheritance-like features of YAML
+    id: car0make
+    pinametype: data-asset
+    description: Car Make
+    usage: business # values: business, devops
+    tags:
+    origin: Customer
+    owner: Company XYZ
+    quantity: many # values: very-few, few, many, very-many
+    dataassettype: no-pi # values: pi, no-pi
+    consent: yes-granular # values: yes-granular, yes-not-granular, no-consent 
+    confidentiality: confidential # values: public, internal, restricted, confidential, strictly-confidential
+    integrity: critical # values: archive, operational, important, critical, mission-critical
+    availability: operational # values: archive, operational, important, critical, mission-critical
+    justification_cia_rating: >
+      Contract data might contain financial data as well as personally identifiable information (PII). The integrity and
+      availability of contract data is required for clearing payment disputes.
+    thirdpartysharing: false
+
+  Citizenship: &customer-contracts # this example shows the inheritance-like features of YAML
+    id: citizenship
+    pinametype: citizen-immigration-status
+    description: citizenship
+    usage: business # values: business, devops
+    tags:
+    origin: Customer
+    owner: Company XYZ
+    quantity: many # values: very-few, few, many, very-many
+    dataassettype: pi # values: pi, no-pi
+    consent: yes-granular # values: yes-granular, yes-not-granular, no-consent 
+    confidentiality: confidential # values: public, internal, restricted, confidential, strictly-confidential
+    integrity: critical # values: archive, operational, important, critical, mission-critical
+    availability: operational # values: archive, operational, important, critical, mission-critical
+    justification_cia_rating: >
+      Contract data might contain financial data as well as personally identifiable information (PII). The integrity and
+      availability of contract data is required for clearing payment disputes.
+    thirdpartysharing: false
+
+  date of birth: &customer-contracts # this example shows the inheritance-like features of YAML
+    id: date0of0birth
+    pinametype: other-pi-quasi-identifier
+    description: date of birth
+    usage: business # values: business, devops
+    tags:
+    origin: Customer
+    owner: Company XYZ
+    quantity: many # values: very-few, few, many, very-many
+    dataassettype: pi # values: pi, no-pi
+    consent: yes-granular # values: yes-granular, yes-not-granular, no-consent 
+    confidentiality: confidential # values: public, internal, restricted, confidential, strictly-confidential
+    integrity: critical # values: archive, operational, important, critical, mission-critical
+    availability: operational # values: archive, operational, important, critical, mission-critical
+    justification_cia_rating: >
+      Contract data might contain financial data as well as personally identifiable information (PII). The integrity and
+      availability of contract data is required for clearing payment disputes.
+    thirdpartysharing: false
+
+  disability info: &customer-contracts # this example shows the inheritance-like features of YAML
+    id: disability0info
+    pinametype: other-pi-quasi-identifier
+    description: disability info
+    usage: business # values: business, devops
+    tags:
+    origin: Customer
+    owner: Company XYZ
+    quantity: many # values: very-few, few, many, very-many
+    dataassettype: pi # values: pi, no-pi
+    consent: yes-granular # values: yes-granular, yes-not-granular, no-consent 
+    confidentiality: confidential # values: public, internal, restricted, confidential, strictly-confidential
+    integrity: critical # values: archive, operational, important, critical, mission-critical
+    availability: operational # values: archive, operational, important, critical, mission-critical
+    justification_cia_rating: >
+      Contract data might contain financial data as well as personally identifiable information (PII). The integrity and
+      availability of contract data is required for clearing payment disputes.
+    thirdpartysharing: false
+
+  employee location: &customer-contracts # this example shows the inheritance-like features of YAML
+    id: employee0location
+    pinametype: location-data
+    description: employee location
+    usage: business # values: business, devops
+    tags:
+    origin: Customer
+    owner: Company XYZ
+    quantity: many # values: very-few, few, many, very-many
+    dataassettype: pi # values: pi, no-pi
+    consent: yes-granular # values: yes-granular, yes-not-granular, no-consent 
+    confidentiality: confidential # values: public, internal, restricted, confidential, strictly-confidential
+    integrity: critical # values: archive, operational, important, critical, mission-critical
+    availability: operational # values: archive, operational, important, critical, mission-critical
+    justification_cia_rating: >
+      Contract data might contain financial data as well as personally identifiable information (PII). The integrity and
+      availability of contract data is required for clearing payment disputes.
+    thirdpartysharing: false
+
+  ethnic origin: &customer-contracts # this example shows the inheritance-like features of YAML
+    id: ethnic0origin
+    pinametype: racial-ethnic-origin
+    description: ethnic origin
+    usage: business # values: business, devops
+    tags:
+    origin: Customer
+    owner: Company XYZ
+    quantity: many # values: very-few, few, many, very-many
+    dataassettype: pi # values: pi, no-pi
+    consent: yes-granular # values: yes-granular, yes-not-granular, no-consent 
+    confidentiality: confidential # values: public, internal, restricted, confidential, strictly-confidential
+    integrity: critical # values: archive, operational, important, critical, mission-critical
+    availability: operational # values: archive, operational, important, critical, mission-critical
+    justification_cia_rating: >
+      Contract data might contain financial data as well as personally identifiable information (PII). The integrity and
+      availability of contract data is required for clearing payment disputes.
+    thirdpartysharing: false
+
+  bio-fingerprint: &customer-contracts # this example shows the inheritance-like features of YAML
+    id: bio0fingerprint
+    pinametype: biometrics
+    description: bio0fingerprint
+    usage: business # values: business, devops
+    tags:
+    origin: Customer
+    owner: Company XYZ
+    quantity: many # values: very-few, few, many, very-many
+    dataassettype: pi # values: pi, no-pi
+    consent: yes-granular # values: yes-granular, yes-not-granular, no-consent 
+    confidentiality: confidential # values: public, internal, restricted, confidential, strictly-confidential
+    integrity: critical # values: archive, operational, important, critical, mission-critical
+    availability: operational # values: archive, operational, important, critical, mission-critical
+    justification_cia_rating: >
+      Contract data might contain financial data as well as personally identifiable information (PII). The integrity and
+      availability of contract data is required for clearing payment disputes.
+    thirdpartysharing: false
+
+  tel-num-work: &customer-contracts # this example shows the inheritance-like features of YAML
+    id: tel0num0work
+    pinametype: other-pi-quasi-identifier
+    description: tel-num-work
+    usage: business # values: business, devops
+    tags:
+    origin: Customer
+    owner: Company XYZ
+    quantity: many # values: very-few, few, many, very-many
+    dataassettype: pi # values: pi, no-pi
+    consent: yes-granular # values: yes-granular, yes-not-granular, no-consent 
+    confidentiality: confidential # values: public, internal, restricted, confidential, strictly-confidential
+    integrity: critical # values: archive, operational, important, critical, mission-critical
+    availability: operational # values: archive, operational, important, critical, mission-critical
+    justification_cia_rating: >
+      Contract data might contain financial data as well as personally identifiable information (PII). The integrity and
+      availability of contract data is required for clearing payment disputes.
+    thirdpartysharing: false
+
+# /*
+# Threats generation for browser Technical Asset:
+# - car0make - No Threat - Not a PI
+# - date0of0birth - No Threat - Received but sent by the browser
+# - citizenship - No Threat - Received but processed by the browser
+# - disability0info - *THREAT* - Received but neither processed, nor stored, nor sent by the browser
+# - employee0location - No Threat - Received but stored
+# - ethnic0origin - *THREAT* - Received but neither processed, nor stored, nor sent by the browser
+# - bio0fingerprint - No Threat - Received but sent back by the browser (see data assets received link for Application Server)
+# - tel0num0work - No Threat - Not received by the browser
+# */
+technical_assets:
+  Browser:
+      id: browser
+      #diagram_tweak_order: 99 # affects left to right positioning (only within a trust boundary)
+      description: Browser
+      type: external-entity # values: external-entity, process, datastore
+      usage: business # values: business, devops
+      used_as_client_by_human: true
+      out_of_scope: true
+      justification_out_of_scope:
+      size: application # values: system, service, application, component
+      technology: browser # values: see help
+      tags:
+        - linux
+        - git
+      internet: true
+      machine: physical # values: physical, virtual, container, serverless
+      encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-enduser-individual-key
+      owner: Company ABC
+      confidentiality: confidential # values: public, internal, restricted, confidential, strictly-confidential
+      integrity: important # values: archive, operational, important, critical, mission-critical
+      availability: important # values: archive, operational, important, critical, mission-critical
+      justification_cia_rating: >
+        The code repo pipeline might contain sensitive configuration values like backend credentials, certificates etc. and is
+        therefore rated as confidential.
+      multi_tenant: false
+      redundant: false
+      custom_developed_parts: false
+      data_assets_processed: # sequence of IDs to reference
+        - citizenship
+      data_assets_stored: # sequence of IDs to reference
+        - employee0location
+      data_formats_accepted: # sequence of formats like: json, xml, serialization, file, csv
+        - file
+      communication_links:
+        browser to application server:
+          target: app-server
+          description: Browser to application
+          protocol: https # values: see help
+          authentication: credentials # values: none, credentials, session-id, token, client-certificate, two-factor
+          authorization: technical-user # values: none, technical-user, enduser-identity-propagation
+          tags:
+          vpn: false
+          ip_filtered: false
+          readonly: false
+          usage: business # values: business, devops
+          data_assets_sent: # sequence of IDs to reference
+            - date0of0birth
+          data_assets_received: # sequence of IDs to reference
+
+# /*
+# Threats generation for out-of-scope-service Technical Asset:
+# - car0make - No Threat - Not a PI
+# - date0of0birth - No Threat - Received but sent by the out-of-scope-service
+# - citizenship - No Threat - Received but processed by the out-of-scope-service
+# - disability0info - *THREAT* - Received but neither processed, nor stored, nor sent by the out-of-scope-service
+# - employee0location - No Threat - Received but stored
+# - ethnic0origin - *THREAT* - Received but neither processed, nor stored, nor sent by the out-of-scope-service
+# - bio0fingerprint - No Threat - Received but sent back by the out-of-scope-service (see data assets received link for Application Server)
+# - tel0num0work - No Threat - Not received by the out-of-scope-service
+# */
+  ServiceOutOfScope:
+      id: out-of-scope-service
+      #diagram_tweak_order: 99 # affects left to right positioning (only within a trust boundary)
+      description: Browser
+      type: process # values: external-entity, process, datastore
+      usage: business # values: business, devops
+      used_as_client_by_human: true
+      out_of_scope: true
+      justification_out_of_scope:
+      size: application # values: system, service, application, component
+      technology: browser # values: see help
+      tags:
+        - linux
+        - git
+      internet: true
+      machine: physical # values: physical, virtual, container, serverless
+      encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-enduser-individual-key
+      owner: Company ABC
+      confidentiality: confidential # values: public, internal, restricted, confidential, strictly-confidential
+      integrity: important # values: archive, operational, important, critical, mission-critical
+      availability: important # values: archive, operational, important, critical, mission-critical
+      justification_cia_rating: >
+        The code repo pipeline might contain sensitive configuration values like backend credentials, certificates etc. and is
+        therefore rated as confidential.
+      multi_tenant: false
+      redundant: false
+      custom_developed_parts: false
+      data_assets_processed: # sequence of IDs to reference
+        - citizenship
+      data_assets_stored: # sequence of IDs to reference
+        - employee0location
+      data_formats_accepted: # sequence of formats like: json, xml, serialization, file, csv
+        - file
+      communication_links:
+        browser to application server:
+          target: app-server
+          description: Browser to application
+          protocol: https # values: see help
+          authentication: credentials # values: none, credentials, session-id, token, client-certificate, two-factor
+          authorization: technical-user # values: none, technical-user, enduser-identity-propagation
+          tags:
+          vpn: false
+          ip_filtered: false
+          readonly: false
+          usage: business # values: business, devops
+          data_assets_sent: # sequence of IDs to reference
+            - date0of0birth
+          data_assets_received: # sequence of IDs to reference
+
+  ServiceInScope:
+      id: in-scope-service
+      #diagram_tweak_order: 99 # affects left to right positioning (only within a trust boundary)
+      description: Browser
+      type: process # values: external-entity, process, datastore
+      usage: business # values: business, devops
+      used_as_client_by_human: true
+      out_of_scope: false
+      justification_out_of_scope:
+      size: application # values: system, service, application, component
+      technology: browser # values: see help
+      tags:
+        - linux
+        - git
+      internet: true
+      machine: physical # values: physical, virtual, container, serverless
+      encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-enduser-individual-key
+      owner: Company ABC
+      confidentiality: confidential # values: public, internal, restricted, confidential, strictly-confidential
+      integrity: important # values: archive, operational, important, critical, mission-critical
+      availability: important # values: archive, operational, important, critical, mission-critical
+      justification_cia_rating: >
+        The code repo pipeline might contain sensitive configuration values like backend credentials, certificates etc. and is
+        therefore rated as confidential.
+      multi_tenant: false
+      redundant: false
+      custom_developed_parts: false
+      data_assets_processed: # sequence of IDs to reference
+        - citizenship
+      data_assets_stored: # sequence of IDs to reference
+        - employee0location
+      data_formats_accepted: # sequence of formats like: json, xml, serialization, file, csv
+        - file
+      communication_links:
+        browser to application server:
+          target: app-server
+          description: Browser to application
+          protocol: https # values: see help
+          authentication: credentials # values: none, credentials, session-id, token, client-certificate, two-factor
+          authorization: technical-user # values: none, technical-user, enduser-identity-propagation
+          tags:
+          vpn: false
+          ip_filtered: false
+          readonly: false
+          usage: business # values: business, devops
+          data_assets_sent: # sequence of IDs to reference
+            - date0of0birth
+          data_assets_received: # sequence of IDs to reference
+
+
+  application server:
+      id: app-server
+      #diagram_tweak_order: 99 # affects left to right positioning (only within a trust boundary)
+      description: Git repository server
+      type: process # values: external-entity, process, datastore
+      usage: devops # values: business, devops
+      used_as_client_by_human: true
+      out_of_scope: false
+      justification_out_of_scope:
+      size: system # values: system, service, application, component
+      technology: application-server # values: see help
+      tags:
+        - linux
+        - git
+      internet: false
+      machine: virtual # values: physical, virtual, container, serverless
+      encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-enduser-individual-key
+      owner: Company ABC
+      confidentiality: confidential # values: public, internal, restricted, confidential, strictly-confidential
+      integrity: important # values: archive, operational, important, critical, mission-critical
+      availability: important # values: archive, operational, important, critical, mission-critical
+      justification_cia_rating: >
+        The code repo pipeline might contain sensitive configuration values like backend credentials, certificates etc. and is
+        therefore rated as confidential.
+      multi_tenant: true
+      redundant: false
+      custom_developed_parts: false
+      data_assets_processed: # sequence of IDs to reference
+      data_assets_stored: # sequence of IDs to reference
+      data_formats_accepted: # sequence of formats like: json, xml, serialization, file, csv
+        - file
+      communication_links:
+        app server to browser:
+          target: browser
+          description: Link to the browser
+          protocol: https # values: see help
+          authentication: credentials # values: none, credentials, session-id, token, client-certificate, two-factor
+          authorization: technical-user # values: none, technical-user, enduser-identity-propagation
+          tags:
+          vpn: false
+          ip_filtered: false
+          readonly: false
+          usage: business # values: business, devops
+          data_assets_sent: # sequence of IDs to reference
+            - car0make
+            - date0of0birth
+            - citizenship
+            - disability0info
+            - employee0location
+            - ethnic0origin
+            - bio0fingerprint
+          data_assets_received: # sequence of IDs to reference
+            - bio0fingerprint
+        app server to out of scope service:
+          target: out-of-scope-service
+          description: Link to the browser
+          protocol: https # values: see help
+          authentication: credentials # values: none, credentials, session-id, token, client-certificate, two-factor
+          authorization: technical-user # values: none, technical-user, enduser-identity-propagation
+          tags:
+          vpn: false
+          ip_filtered: false
+          readonly: false
+          usage: business # values: business, devops
+          data_assets_sent: # sequence of IDs to reference
+            - car0make
+            - date0of0birth
+            - citizenship
+            - disability0info
+            - employee0location
+            - ethnic0origin
+            - bio0fingerprint
+          data_assets_received: # sequence of IDs to reference
+            - bio0fingerprint
+        app server to in-scope service:
+          target: in-scope-service
+          description: Link to the browser
+          protocol: https # values: see help
+          authentication: credentials # values: none, credentials, session-id, token, client-certificate, two-factor
+          authorization: technical-user # values: none, technical-user, enduser-identity-propagation
+          tags:
+          vpn: false
+          ip_filtered: false
+          readonly: false
+          usage: business # values: business, devops
+          data_assets_sent: # sequence of IDs to reference
+            - car0make
+            - date0of0birth
+            - citizenship
+            - disability0info
+            - employee0location
+            - ethnic0origin
+            - bio0fingerprint
+          data_assets_received: # sequence of IDs to reference
+            - bio0fingerprint
+
+trust_boundaries:
+
+shared_runtimes:
+
+
+
+#diagram_tweak_edge_layout: spline # values: spline, polyline, false, ortho (this suppresses edge labels), curved (this suppresses edge labels and can cause problems with edges)
+
+#diagram_tweak_suppress_edge_labels: true
+#diagram_tweak_layout_left_to_right: true
+#diagram_tweak_nodesep: 2
+#diagram_tweak_ranksep: 2
+#diagram_tweak_invisible_connections_between_assets:
+#  - tech-asset-source-id-A:tech-asset-target-id-B
+#  - tech-asset-source-id-C:tech-asset-target-id-D
+#diagram_tweak_same_rank_assets:
+#  - tech-asset-source-id-E:tech-asset-target-id-F:tech-asset-source-id-G:tech-asset-target-id-H
+#  - tech-asset-source-id-M:tech-asset-target-id-N:tech-asset-source-id-O

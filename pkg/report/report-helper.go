@@ -135,7 +135,11 @@ func identifiedDataBreachProbabilityStillAtRisk(parsedModel *types.Model, dataAs
 	highestProbability := types.Improbable
 	for _, risk := range filteredByStillAtRisk(parsedModel) {
 		for _, techAsset := range risk.DataBreachTechnicalAssetIDs {
-			if contains(parsedModel.TechnicalAssets[techAsset].DataAssetsProcessed, dataAsset.Id) {
+			techAssetObj := parsedModel.TechnicalAssets[techAsset]
+			if techAssetObj == nil || dataAsset == nil || len(parsedModel.TechnicalAssets[techAsset].DataAssetsProcessed) == 0 {
+				continue
+			}
+			if contains(techAssetObj.DataAssetsProcessed, dataAsset.Id) {
 				if risk.DataBreachProbability > highestProbability {
 					highestProbability = risk.DataBreachProbability
 					break
