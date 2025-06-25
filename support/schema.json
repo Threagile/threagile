@@ -226,6 +226,39 @@
             "description": "ID",
             "type": "string"
           },
+          "pinametype": {
+            "description": "PINameType",
+            "type": "string",
+            "enum": [
+              "data-asset",
+              "biometrics",
+              "browsing-history",
+              "business-created-profiles",
+              "citizen-immigration-status",
+              "driver-license-info",
+              "email-address",
+              "employment-data",
+              "financial-account-credentials",
+              "genetic-data",
+              "geolocation",
+              "ip-address",
+              "location-data",
+              "message-contents",
+              "name",
+              "other-non-pi",
+              "other-pi-direct-identifier",
+              "other-pi-quasi-identifier",
+              "passport-number",
+              "purchase-history",
+              "racial-ethnic-origin",
+              "religious-philosophical-beliefs",
+              "sensitive-personal-information",
+              "sexual-orientation",
+              "social-security",
+              "state-id-info",
+              "union-membership"
+            ]
+          },
           "description": {
             "description": "Description",
             "type": [
@@ -1309,6 +1342,32 @@
       "items": {
         "type": "string"
       }
+    },
+    "delete_post_functional_need": {
+      "description": "Set to true if the retention policies are followed for ALL data, e.g., after functional need for data is complete, the corresponding data is deleted. Set to false otherwise.",
+      "type": [
+        "boolean"
+      ]
+    },
+    "deidentified": {
+      "description": "Set to true if the data is de-identified, e.g., the data is anonymized or pseudonymized. Set to false otherwise.",
+      "type": [
+        "boolean"
+      ]
+    },
+    "public_disclosure_signed": {
+      "description": "Set to true if the user has permitted to share their data publically or other interested parties. Set to false otherwise.",
+      "type": [
+        "boolean"
+      ]
+    },
+    "hasdatalifecyclemgmt": {
+      "description": "Set to true if the model has uses proper data lifecycle management process. It usually consists of creation, storage, sharing & usage, archival, and destruction for ALL data handled by model. Set to false otherwise.",
+      "type": "boolean"
+    },
+    "piuseraccessmechanism": {
+      "description": "Set to true if the model has a mechanism in place to let users access their personal data. It could be direct access feature or ability to request access. Set to false otherwise.",
+      "type": "boolean"
     }
   },
   "required": [

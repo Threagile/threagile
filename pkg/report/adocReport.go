@@ -1442,6 +1442,58 @@ func (adoc adocReport) writeQuestions() error {
 	return nil
 }
 
+func (adoc adocReport) privacyParameters() error {
+	filename := "Privacy_Parameters.adoc"
+	f, err := os.Create(filepath.Join(adoc.targetDirectory, filename))
+	defer func() { _ = f.Close() }()
+	if err != nil {
+		return err
+	}
+	adoc.writeMainLine("<<<")
+	adoc.writeMainLine("include::" + filename + "[leveloffset=+1]")
+
+	writeLine(f, "")
+	writeLine(f, "This chapter lists privacy parameters for the model.")
+	writeLine(f, "")
+
+	writeLine(f, "")
+	writeLine(f, "*"+"delete_post_functional_need"+"*::")
+	if adoc.model.DeletePostFunctionalNeed {
+		writeLine(f, "_"+"TRUE"+"_")
+	} else {
+		writeLine(f, "_"+"FALSE"+"_")
+	}
+	writeLine(f, "")
+	writeLine(f, "*"+"deidentified"+"*::")
+	if adoc.model.Deidentified {
+		writeLine(f, "_"+"TRUE"+"_")
+	} else {
+		writeLine(f, "_"+"FALSE"+"_")
+	}
+	writeLine(f, "")
+	writeLine(f, "*"+"public_disclosure_signed"+"*::")
+	if adoc.model.PublicDisclosureSigned {
+		writeLine(f, "_"+"TRUE"+"_")
+	} else {
+		writeLine(f, "_"+"FALSE"+"_")
+	}
+	writeLine(f, "")
+	writeLine(f, "*"+"hasdatalifecyclemgmt"+"*::")
+	if adoc.model.HasDataLifeCycleMgmt {
+		writeLine(f, "_"+"TRUE"+"_")
+	} else {
+		writeLine(f, "_"+"FALSE"+"_")
+	}
+	writeLine(f, "")
+	writeLine(f, "*"+"piuseraccessmechanism"+"*::")
+	if adoc.model.PIUserAccessMechanism {
+		writeLine(f, "_"+"TRUE"+"_")
+	} else {
+		writeLine(f, "_"+"FALSE"+"_")
+	}
+	return nil
+}
+
 func (adoc adocReport) riskTrackingStatus(f *os.File, risk *types.Risk) {
 	tracking := adoc.model.GetRiskTrackingWithDefault(risk)
 

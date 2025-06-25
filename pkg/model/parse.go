@@ -61,6 +61,11 @@ func ParseModel(config technologyMapConfigReader, modelInput *input.Model, built
 		DiagramTweakLayoutLeftToRight:  modelInput.DiagramTweakLayoutLeftToRight,
 		DiagramTweakInvisibleConnectionsBetweenAssets: modelInput.DiagramTweakInvisibleConnectionsBetweenAssets,
 		DiagramTweakSameRankAssets:                    modelInput.DiagramTweakSameRankAssets,
+		DeletePostFunctionalNeed:                      modelInput.DeletePostFunctionalNeed,
+		Deidentified:                                  modelInput.Deidentified,
+		PublicDisclosureSigned:                        modelInput.PublicDisclosureSigned,
+		HasDataLifeCycleMgmt:                          modelInput.HasDataLifeCycleMgmt,
+		PIUserAccessMechanism:                         modelInput.PIUserAccessMechanism,
 	}
 
 	parsedModel.CommunicationLinks = make(map[string]*types.CommunicationLink)
@@ -102,6 +107,10 @@ func ParseModel(config technologyMapConfigReader, modelInput *input.Model, built
 		if err != nil {
 			return nil, fmt.Errorf("unknown 'availability' value of data asset %q: %v", title, asset.Availability)
 		}
+		pinametype, err := types.ParsePINameType(asset.PINameType)
+		if err != nil {
+			return nil, fmt.Errorf("unknown 'pinametype' value of data asset %q: %v", title, asset.PINameType)
+		}
 
 		err = checkIdSyntax(id)
 		if err != nil {
@@ -127,6 +136,7 @@ func ParseModel(config technologyMapConfigReader, modelInput *input.Model, built
 			Integrity:              integrity,
 			Availability:           availability,
 			JustificationCiaRating: fmt.Sprintf("%v", asset.JustificationCiaRating),
+			PINameType:             pinametype,
 		}
 	}
 
@@ -402,16 +412,6 @@ func ParseModel(config technologyMapConfigReader, modelInput *input.Model, built
 				return nil, fmt.Errorf("missing target technical asset %q for communication link: %q", commLink.TargetId, commLink.Title)
 			}
 			dataAssetsProcessedByTarget := targetTechAsset.DataAssetsProcessed
-			for _, dataAssetSent := range commLink.DataAssetsSent {
-				if !contains(dataAssetsProcessedByTarget, dataAssetSent) {
-					dataAssetsProcessedByTarget = append(dataAssetsProcessedByTarget, dataAssetSent)
-				}
-			}
-			for _, dataAssetReceived := range commLink.DataAssetsReceived {
-				if !contains(dataAssetsProcessedByTarget, dataAssetReceived) {
-					dataAssetsProcessedByTarget = append(dataAssetsProcessedByTarget, dataAssetReceived)
-				}
-			}
 			targetTechAsset.DataAssetsProcessed = dataAssetsProcessedByTarget
 			parsedModel.TechnicalAssets[commLink.TargetId] = targetTechAsset
 		}

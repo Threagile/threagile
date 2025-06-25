@@ -48,6 +48,11 @@ type Model struct {
 	DiagramTweakLayoutLeftToRight                 bool                          `json:"diagram_tweak_layout_left_to_right,omitempty" yaml:"diagram_tweak_layout_left_to_right,omitempty"`
 	DiagramTweakInvisibleConnectionsBetweenAssets []string                      `json:"diagram_tweak_invisible_connections_between_assets,omitempty" yaml:"diagram_tweak_invisible_connections_between_assets,omitempty"`
 	DiagramTweakSameRankAssets                    []string                      `json:"diagram_tweak_same_rank_assets,omitempty" yaml:"diagram_tweak_same_rank_assets,omitempty"`
+	DeletePostFunctionalNeed                      bool                          `json:"delete_post_functional_need,omitempty" yaml:"delete_post_functional_need,omitempty"`
+	Deidentified                                  bool                          `json:"deidentified,omitempty" yaml:"deidentified,omitempty"`
+	PublicDisclosureSigned                        bool                          `json:"public_disclosure_signed,omitempty" yaml:"public_disclosure_signed,omitempty"`
+	HasDataLifeCycleMgmt                          bool                          `json:"hasdatalifecyclemgmt,omitempty" yaml:"hasdatalifecyclemgmt,omitempty"`
+	PIUserAccessMechanism                         bool                          `json:"piuseraccessmechanism,omitempty" yaml:"piuseraccessmechanism,omitempty"`
 
 	// TODO: those are generated based on items above and needs to be private
 	IncomingTechnicalCommunicationLinksMappedByTargetId   map[string][]*CommunicationLink `json:"incoming_technical_communication_links_mapped_by_target_id,omitempty" yaml:"incoming_technical_communication_links_mapped_by_target_id,omitempty"`
@@ -523,10 +528,13 @@ func (model *Model) IdentifiedDataBreachProbability(what *DataAsset) DataBreachP
 	highestProbability := Improbable
 	for _, risk := range model.AllRisks() {
 		for _, techAsset := range risk.DataBreachTechnicalAssetIDs {
-			if contains(model.TechnicalAssets[techAsset].DataAssetsProcessed, what.Id) {
-				if risk.DataBreachProbability > highestProbability {
-					highestProbability = risk.DataBreachProbability
-					break
+			ta := model.TechnicalAssets[techAsset]
+			if ta != nil && what != nil && (len(ta.DataAssetsProcessed) > 0) {
+				if contains(model.TechnicalAssets[techAsset].DataAssetsProcessed, what.Id) {
+					if risk.DataBreachProbability > highestProbability {
+						highestProbability = risk.DataBreachProbability
+						break
+					}
 				}
 			}
 		}
@@ -538,9 +546,12 @@ func (model *Model) IdentifiedDataBreachProbabilityRisks(what *DataAsset) []*Ris
 	result := make([]*Risk, 0)
 	for _, risk := range model.AllRisks() {
 		for _, techAsset := range risk.DataBreachTechnicalAssetIDs {
-			if contains(model.TechnicalAssets[techAsset].DataAssetsProcessed, what.Id) {
-				result = append(result, risk)
-				break
+			ta := model.TechnicalAssets[techAsset]
+			if ta != nil && what != nil && (len(ta.DataAssetsProcessed) > 0) {
+				if contains(model.TechnicalAssets[techAsset].DataAssetsProcessed, what.Id) {
+					result = append(result, risk)
+					break
+				}
 			}
 		}
 	}
@@ -876,4 +887,58 @@ func (model *Model) GeneratedRisksByCategoryWithCurrentStatus() map[string][]*Ri
 		}
 	}
 	return generatedRisksByCategoryWithCurrentStatus
+}
+
+func (model *Model) GetMapOfDASentByTechnicalAsset() map[string]map[string]bool {
+	daSent := make(map[string]map[string]bool)
+	for _, ta := range model.TechnicalAssets {
+		daSent[ta.Id] = make(map[string]bool)
+	}
+
+	for _, ta := range model.TechnicalAssets {
+		for _, c := range ta.CommunicationLinks {
+			daSent[c.SourceId] = addDAToMap(daSent[c.SourceId], c.DataAssetsSent)
+			daSent[c.TargetId] = addDAToMap(daSent[c.TargetId], c.DataAssetsReceived)
+		}
+	}
+	return daSent
+}
+
+func (model *Model) GetPI(setDA []string) []string {
+	listDIs := []string{}
+	for _, daID := range setDA {
+		daObj := model.DataAssets[daID]
+		if daObj.PINameType.IsPI() {
+			listDIs = append(listDIs, daObj.Id)
+		}
+	}
+	return listDIs
+}
+
+/*
+Return a global map of data assets received by each technical asset. Technical asset ID is the key.
+The value is a map of data asset IDs received by the technical asset.
+*/
+func (model *Model) GetDARecvd() map[string]map[string]bool {
+	daRecvd := make(map[string]map[string]bool)
+	for _, ta := range model.TechnicalAssets {
+		daRecvd[ta.Id] = make(map[string]bool)
+	}
+
+	for _, ta := range model.TechnicalAssets {
+		for _, c := range ta.CommunicationLinks {
+			daRecvd[c.TargetId] = addDAToMap(daRecvd[c.TargetId], c.DataAssetsSent)
+			daRecvd[c.SourceId] = addDAToMap(daRecvd[c.SourceId], c.DataAssetsReceived)
+		}
+	}
+	return daRecvd
+}
+
+func (what *Model) IsSameTrustBoundary(taID string, otherAssetId string) bool {
+	trustBoundaryOfMyAsset := what.DirectContainingTrustBoundaryMappedByTechnicalAssetId[taID]
+	trustBoundaryOfOtherAsset := what.DirectContainingTrustBoundaryMappedByTechnicalAssetId[otherAssetId]
+	if trustBoundaryOfMyAsset == nil || trustBoundaryOfOtherAsset == nil {
+		return false
+	}
+	return trustBoundaryOfMyAsset.Id == trustBoundaryOfOtherAsset.Id
 }

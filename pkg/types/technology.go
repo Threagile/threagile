@@ -1,6 +1,8 @@
 package types
 
-import "strings"
+import (
+	"strings"
+)
 
 const (
 	AI                     = "ai"
@@ -107,4 +109,31 @@ func (what Technology) Explain() string {
 	}
 
 	return strings.Join(text, "\n")
+}
+
+func (what Technology) IsAuthenticatingTechnology() bool {
+	_, isAuthenticatingTech := authenticatingTechnologies[what.String()]
+	return isAuthenticatingTech
+}
+
+var persistStgTech = map[string]bool{
+	"file-server":             true,
+	"local-file-system":       true,
+	"identity-store-database": true,
+	"data-lake":               true,
+	"hsm":                     true,
+	"block-storage":           true,
+	"database":                true}
+
+var orgPersistStgTags = map[string]bool{
+	"s3-bucket": true,
+	"hsm":       true,
+	"kms-aws":   true}
+
+var authenticatingTechnologies = map[string]bool{
+	LDAPServer:            true,
+	IdentityProvider:      true,
+	IdentityStoreLDAP:     true,
+	IdentityStoreDatabase: true,
+	Vault:                 true,
 }
