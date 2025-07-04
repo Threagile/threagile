@@ -41,8 +41,7 @@ func TestAccidentalSecretLeakRuleGenerateRisksTechAssetNotContainSecretsNotRisks
 					{
 						Name: "tool",
 						Attributes: map[string]bool{
-							types.MayContainSecrets:                                 false,
-							types.IsUsuallyAbleToPropagateIdentityToOutgoingTargets: true,
+							types.MayContainSecrets: false,
 						},
 					},
 				},

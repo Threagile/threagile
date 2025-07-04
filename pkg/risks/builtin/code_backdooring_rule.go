@@ -14,7 +14,7 @@ func (*CodeBackdooringRule) Category() *types.RiskCategory {
 	return &types.RiskCategory{
 		ID:    "code-backdooring",
 		Title: "Code Backdooring",
-		Description: "For each build-pipeline component Code Backdooring risks might arise where attackers compromise the build-pipeline " +
+		Description: "For each build pipeline component Code Backdooring risks might arise where attackers compromise the build pipeline " +
 			"in order to let backdoored artifacts be shipped into production. Aside from direct code backdooring this includes " +
 			"backdooring of dependencies and even of more lower-level build infrastructure, like backdooring compilers (similar to what the XcodeGhost malware did) or dependencies.",
 		Impact: "If this risk remains unmitigated, attackers might be able to execute code on and completely takeover " +

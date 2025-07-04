@@ -46,7 +46,7 @@ func (r *CrossSiteRequestForgeryRule) GenerateRisks(parsedModel *types.Model) ([
 	risks := make([]*types.Risk, 0)
 	for _, id := range parsedModel.SortedTechnicalAssetIDs() {
 		technicalAsset := parsedModel.TechnicalAssets[id]
-		if technicalAsset.OutOfScope || !technicalAsset.Technologies.GetAttribute(types.WebApplication) {
+		if r.skipAsset(technicalAsset) {
 			continue
 		}
 		incomingFlows := parsedModel.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id]
@@ -58,6 +58,10 @@ func (r *CrossSiteRequestForgeryRule) GenerateRisks(parsedModel *types.Model) ([
 		}
 	}
 	return risks, nil
+}
+
+func (csrf CrossSiteRequestForgeryRule) skipAsset(technicalAsset *types.TechnicalAsset) bool {
+	return technicalAsset.OutOfScope || !technicalAsset.Technologies.GetAttribute(types.WebApplication)
 }
 
 func (r *CrossSiteRequestForgeryRule) createRisk(parsedModel *types.Model, technicalAsset *types.TechnicalAsset, incomingFlow *types.CommunicationLink) *types.Risk {
