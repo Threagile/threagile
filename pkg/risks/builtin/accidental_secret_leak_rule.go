@@ -48,7 +48,7 @@ func (r *AccidentalSecretLeakRule) GenerateRisks(parsedModel *types.Model) ([]*t
 	risks := make([]*types.Risk, 0)
 	for _, id := range parsedModel.SortedTechnicalAssetIDs() {
 		techAsset := parsedModel.TechnicalAssets[id]
-		if techAsset.OutOfScope || !techAsset.Technologies.GetAttribute(types.MayContainSecrets) {
+		if skipAsset(techAsset) {
 			continue
 		}
 
@@ -61,6 +61,10 @@ func (r *AccidentalSecretLeakRule) GenerateRisks(parsedModel *types.Model) ([]*t
 		risks = append(risks, risk)
 	}
 	return risks, nil
+}
+
+func skipAsset(techAsset *types.TechnicalAsset) bool {
+	return techAsset.OutOfScope || !techAsset.Technologies.GetAttribute(types.MayContainSecrets)
 }
 
 func (r *AccidentalSecretLeakRule) createRisk(parsedModel *types.Model, technicalAsset *types.TechnicalAsset, prefix, details string) *types.Risk {
