@@ -2435,6 +2435,60 @@ func (r *pdfReporter) createQuestions(parsedModel *types.Model) {
 	}
 }
 
+func (r *pdfReporter) createPrivacyListing(parsedModel *types.Model) {
+	uni := r.pdf.UnicodeTranslatorFromDescriptor("")
+	r.pdf.SetTextColor(0, 0, 0)
+	chapTitle := "Privacy_Parameters"
+	r.addHeadline(chapTitle, false)
+	r.defineLinkTarget("{PrivacyParameters}")
+	r.currentChapterTitleBreadcrumb = chapTitle
+	r.pdfColorBlack()
+
+	html := r.pdf.HTMLBasicNew()
+	html.Write(5, "This chapter lists the application's privacy-based inputs or parameters for the model.")
+
+	if len(parsedModel.Questions) == 0 {
+		r.pdfColorLightGray()
+		html.Write(5, "<br><br><br>")
+		html.Write(5, "No custom questions arose during the threat modeling process.")
+	}
+	r.pdfColorBlack()
+	html.Write(5, "<b>"+uni("delete_post_functional_need")+"</b><br>")
+	if parsedModel.DeletePostFunctionalNeed {
+		html.Write(5, "<i>"+uni("TRUE")+"</i>")
+	} else {
+		html.Write(5, "<i>"+uni("FALSE")+"</i>")
+	}
+	r.pdfColorBlack()
+	html.Write(5, "<b>"+uni("deidentified")+"</b><br>")
+	if parsedModel.Deidentified {
+		html.Write(5, "<i>"+uni("TRUE")+"</i>")
+	} else {
+		html.Write(5, "<i>"+uni("FALSE")+"</i>")
+	}
+	r.pdfColorBlack()
+	html.Write(5, "<b>"+uni("public_disclosure_signed")+"</b><br>")
+	if parsedModel.PublicDisclosureSigned {
+		html.Write(5, "<i>"+uni("TRUE")+"</i>")
+	} else {
+		html.Write(5, "<i>"+uni("FALSE")+"</i>")
+	}
+	r.pdfColorBlack()
+	html.Write(5, "<b>"+uni("hasdatalifecyclemgmt")+"</b><br>")
+	if parsedModel.HasDataLifeCycleMgmt {
+		html.Write(5, "<i>"+uni("TRUE")+"</i>")
+	} else {
+		html.Write(5, "<i>"+uni("FALSE")+"</i>")
+	}
+	r.pdfColorBlack()
+	html.Write(5, "<b>"+uni("piuseraccessmechanism")+"</b><br>")
+	if parsedModel.PIUserAccessMechanism {
+		html.Write(5, "<i>"+uni("TRUE")+"</i>")
+	} else {
+		html.Write(5, "<i>"+uni("FALSE")+"</i>")
+	}
+}
+
 func (r *pdfReporter) createTagListing(parsedModel *types.Model) {
 	r.pdf.SetTextColor(0, 0, 0)
 	chapTitle := "Tag Listing"
@@ -3960,6 +4014,9 @@ func identifiedDataBreachProbabilityRisksStillAtRisk(parsedModel *types.Model, d
 	result := make([]*types.Risk, 0)
 	for _, risk := range filteredByStillAtRisk(parsedModel) {
 		for _, techAsset := range risk.DataBreachTechnicalAssetIDs {
+			if parsedModel.TechnicalAssets[techAsset] == nil || dataAsset == nil {
+				continue
+			}
 			if contains(parsedModel.TechnicalAssets[techAsset].DataAssetsProcessed, dataAsset.Id) {
 				result = append(result, risk)
 				break
@@ -3972,6 +4029,9 @@ func identifiedDataBreachProbabilityRisksStillAtRisk(parsedModel *types.Model, d
 func isDataBreachPotentialStillAtRisk(parsedModel *types.Model, dataAsset *types.DataAsset) bool {
 	for _, risk := range filteredByStillAtRisk(parsedModel) {
 		for _, techAsset := range risk.DataBreachTechnicalAssetIDs {
+			if parsedModel.TechnicalAssets[techAsset] == nil || dataAsset == nil {
+				continue
+			}
 			if contains(parsedModel.TechnicalAssets[techAsset].DataAssetsProcessed, dataAsset.Id) {
 				return true
 			}
