@@ -157,6 +157,7 @@ func TestCodeBackdooringRuleGenerateRisksTechAssetNotInternetButComingThroughVPN
 			"git-lab-ci-cd": {
 				{
 					SourceId: "vpn",
+					TargetId: "git-lab-ci-cd",
 					VPN:      true,
 				},
 			},
@@ -195,6 +196,7 @@ func TestCodeBackdooringRuleGenerateRisksTechAssetNotInternetButComingThroughVPN
 			"git-lab-ci-cd": {
 				{
 					SourceId: "vpn",
+					TargetId: "git-lab-ci-cd",
 					VPN:      true,
 				},
 			},
@@ -243,6 +245,7 @@ func TestCodeBackdooringRuleGenerateRisksNotImportantDataAssetNoAddingTargetRisk
 			"git-lab-ci-cd": {
 				{
 					SourceId: "reverse-proxy",
+					TargetId: "git-lab-ci-cd",
 				},
 			},
 		},
@@ -298,6 +301,7 @@ func TestCodeBackdooringRuleGenerateRisksNotDevOpsDataAssetNoAddingTargetRisksCr
 			"git-lab-ci-cd": {
 				{
 					SourceId: "reverse-proxy",
+					TargetId: "git-lab-ci-cd",
 					VPN:      false,
 				},
 			},
@@ -354,6 +358,7 @@ func TestCodeBackdoogingRuleGenerateRisksDevOpsImportantDataAssetNoAddingTargetR
 			"git-lab-ci-cd": {
 				{
 					SourceId: "reverse-proxy",
+					TargetId: "git-lab-ci-cd",
 					VPN:      false,
 				},
 			},

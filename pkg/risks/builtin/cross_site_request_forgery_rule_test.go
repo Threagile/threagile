@@ -104,6 +104,7 @@ func TestCrossSiteRequestForgeryRuleGenerateRisksTechAssetWebApplicationIncoming
 				{
 					Protocol: types.LocalFileAccess,
 					SourceId: "file-scrapper",
+					TargetId: "web-app",
 				},
 			},
 		},
@@ -145,6 +146,7 @@ func TestCrossSiteRequestForgeryRuleGenerateRisksTechAssetWebApplicationIncoming
 					Title:    "HTTP",
 					Protocol: types.HTTP,
 					SourceId: "user",
+					TargetId: "web-app",
 				},
 			},
 		},
