@@ -69,7 +69,6 @@ func TestCrossSiteScriptingRuleGenerateRisksTechAssetWebApplicationRisksCreated(
 						},
 					},
 				},
-				Machine: types.Container,
 			},
 		},
 	})
@@ -96,7 +95,6 @@ func TestCrossSiteScriptingRuleGenerateRisksTechAssetProcessStrictlyConfidential
 						},
 					},
 				},
-				Machine:             types.Container,
 				DataAssetsProcessed: []string{"strictly-confidential-data-asset"},
 			},
 		},

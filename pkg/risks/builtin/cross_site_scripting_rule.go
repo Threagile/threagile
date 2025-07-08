@@ -44,12 +44,17 @@ func (r *CrossSiteScriptingRule) GenerateRisks(input *types.Model) ([]*types.Ris
 	risks := make([]*types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
-		if technicalAsset.OutOfScope || !technicalAsset.Technologies.GetAttribute(types.WebApplication) { // TODO: also mobile clients or rich-clients as long as they use web-view...
+		if r.skipAsset(technicalAsset) {
 			continue
 		}
 		risks = append(risks, r.createRisk(input, technicalAsset))
 	}
 	return risks, nil
+}
+
+
+func (asl CrossSiteScriptingRule) skipAsset(technicalAsset *types.TechnicalAsset) bool {
+	return technicalAsset.OutOfScope || !technicalAsset.Technologies.GetAttribute(types.WebApplication) // TODO: also mobile clients or rich-clients as long as they use web-view...
 }
 
 func (r *CrossSiteScriptingRule) createRisk(parsedModel *types.Model, technicalAsset *types.TechnicalAsset) *types.Risk {
