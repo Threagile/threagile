@@ -1,7 +1,3 @@
-/*
-Copyright © 2024 NAME HERE <EMAIL ADDRESS>
-*/
-
 package builtin
 
 import (
@@ -44,9 +40,21 @@ func Test_IsAcrossTrustBoundaryNetworkOnly_SourceIdIsNotNetworkBoundaryReturnFal
 		TargetId: "target",
 	}
 	parsedModel := &types.Model{
+		TrustBoundaries: map[string]*types.TrustBoundary{
+			// definition of tbs
+			"trust-boundary": { // tb
+				Id:                    "trust-boundary",             // parent tb
+				TrustBoundariesNested: []string{"trust-boundary-2"}, // child tb
+			},
+		},
 		DirectContainingTrustBoundaryMappedByTechnicalAssetId: map[string]*types.TrustBoundary{
-			"source": {
-				Id:   "trust-boundary",
+			// which ta is in which trust boundaries
+			"source": { // ta
+				Id:   "trust-boundary", // tb
+				Type: types.ExecutionEnvironment,
+			},
+			"target": { // ta
+				Id:   "trust-boundary-2", // tb
 				Type: types.ExecutionEnvironment,
 			},
 		},

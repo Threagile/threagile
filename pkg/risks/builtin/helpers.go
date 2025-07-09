@@ -7,27 +7,37 @@ import (
 )
 
 func isAcrossTrustBoundaryNetworkOnly(parsedModel *types.Model, communicationLink *types.CommunicationLink) bool {
-	trustBoundaryOfSourceAsset, trustBoundaryOfSourceAssetOk := parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[communicationLink.SourceId]
-	if !trustBoundaryOfSourceAssetOk {
+	trustBoundaryOfSourceAsset, trustBoundaryOfSourceAssetOk :=
+		parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[communicationLink.SourceId]
+	if !isNetworkOnly(parsedModel, trustBoundaryOfSourceAssetOk, trustBoundaryOfSourceAsset) {
 		return false
 	}
-	if !trustBoundaryOfSourceAsset.Type.IsNetworkBoundary() { // find and use the parent boundary then
-		parentTrustBoundary := parsedModel.FindParentTrustBoundary(trustBoundaryOfSourceAsset)
-		if parentTrustBoundary != nil {
-			return false
-		}
-	}
-	trustBoundaryOfTargetAsset, trustBoundaryOfTargetAssetOk := parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[communicationLink.TargetId]
-	if !trustBoundaryOfTargetAssetOk {
+
+	trustBoundaryOfTargetAsset, trustBoundaryOfTargetAssetOk :=
+		parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[communicationLink.TargetId]
+	if !isNetworkOnly(parsedModel, trustBoundaryOfTargetAssetOk, trustBoundaryOfTargetAsset) {
 		return false
 	}
-	if !trustBoundaryOfTargetAsset.Type.IsNetworkBoundary() { // find and use the parent boundary then
-		parentTrustBoundary := parsedModel.FindParentTrustBoundary(trustBoundaryOfTargetAsset)
-		if parentTrustBoundary != nil {
-			return false
-		}
-	}
+
+	return isAcrossNetworkTrustBoundary(trustBoundaryOfSourceAsset, trustBoundaryOfTargetAsset)
+}
+
+func isAcrossNetworkTrustBoundary(
+	trustBoundaryOfSourceAsset *types.TrustBoundary, trustBoundaryOfTargetAsset *types.TrustBoundary) bool {
 	return trustBoundaryOfSourceAsset.Id != trustBoundaryOfTargetAsset.Id && trustBoundaryOfTargetAsset.Type.IsNetworkBoundary()
+}
+
+func isNetworkOnly(parsedModel *types.Model, trustBoundaryOk bool, trustBoundary *types.TrustBoundary) bool {
+	if !trustBoundaryOk {
+		return false
+	}
+	if !trustBoundary.Type.IsNetworkBoundary() { // find and use the parent boundary then
+		parentTrustBoundary := parsedModel.FindParentTrustBoundary(trustBoundary)
+		if parentTrustBoundary != nil {
+			return false
+		}
+	}
+	return true
 }
 
 func contains(a []string, x string) bool {
