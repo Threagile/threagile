@@ -41,20 +41,18 @@ func Test_IsAcrossTrustBoundaryNetworkOnly_SourceIdIsNotNetworkBoundaryReturnFal
 	}
 	parsedModel := &types.Model{
 		TrustBoundaries: map[string]*types.TrustBoundary{
-			// definition of tbs
-			"trust-boundary": { // tb
-				Id:                    "trust-boundary",             // parent tb
-				TrustBoundariesNested: []string{"trust-boundary-2"}, // child tb
+			"trust-boundary": { 
+				Id:                    "trust-boundary",             
+				TrustBoundariesNested: []string{"trust-boundary-2"},
 			},
 		},
 		DirectContainingTrustBoundaryMappedByTechnicalAssetId: map[string]*types.TrustBoundary{
-			// which ta is in which trust boundaries
-			"source": { // ta
-				Id:   "trust-boundary", // tb
+			"source": { 
+				Id:   "trust-boundary", 
 				Type: types.ExecutionEnvironment,
 			},
-			"target": { // ta
-				Id:   "trust-boundary-2", // tb
+			"target": { 
+				Id:   "trust-boundary-2", 
 				Type: types.ExecutionEnvironment,
 			},
 		},
