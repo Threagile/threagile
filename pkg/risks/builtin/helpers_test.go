@@ -41,18 +41,18 @@ func Test_IsAcrossTrustBoundaryNetworkOnly_SourceIdIsNotNetworkBoundaryReturnFal
 	}
 	parsedModel := &types.Model{
 		TrustBoundaries: map[string]*types.TrustBoundary{
-			"trust-boundary": { 
-				Id:                    "trust-boundary",             
+			"trust-boundary": {
+				Id:                    "trust-boundary",
 				TrustBoundariesNested: []string{"trust-boundary-2"},
 			},
 		},
 		DirectContainingTrustBoundaryMappedByTechnicalAssetId: map[string]*types.TrustBoundary{
-			"source": { 
-				Id:   "trust-boundary", 
+			"source": {
+				Id:   "trust-boundary",
 				Type: types.ExecutionEnvironment,
 			},
-			"target": { 
-				Id:   "trust-boundary-2", 
+			"target": {
+				Id:   "trust-boundary-2",
 				Type: types.ExecutionEnvironment,
 			},
 		},
@@ -135,17 +135,18 @@ func Test_isSameExecutionEnvironment_EmptyDataReturnTrue(t *testing.T) {
 	assert.True(t, result)
 }
 
-func Test_isSameExecutionEnvironemnt_NoTrustBoundaryOfMyAssetReturnTrue(t *testing.T) {
+func Test_isSameExecutionEnvironemnt_NoTrustBoundaryOfMyAssetReturnFalse(t *testing.T) {
 	ta := &types.TechnicalAsset{
 		Id: "asset",
 	}
 	parsedModel := &types.Model{
-		DirectContainingTrustBoundaryMappedByTechnicalAssetId: map[string]*types.TrustBoundary{},
+		DirectContainingTrustBoundaryMappedByTechnicalAssetId: map[string]*types.TrustBoundary{
+			"other-asset": {},
+		},
 	}
 
 	result := isSameExecutionEnvironment(parsedModel, ta, "other-asset")
-
-	assert.True(t, result)
+	assert.False(t, result)
 }
 
 func Test_isSameExecutionEnvironment_NoTrustBoundaryOfOtherAssetReturnFalse(t *testing.T) {
@@ -163,15 +164,30 @@ func Test_isSameExecutionEnvironment_NoTrustBoundaryOfOtherAssetReturnFalse(t *t
 	assert.False(t, result)
 }
 
+func Test_isSameExecutionEnvironemnt_NoTrustBoundaryOfEitherAssetReturnTrue(t *testing.T) {
+	ta := &types.TechnicalAsset{
+		Id: "asset",
+	}
+	parsedModel := &types.Model{
+		DirectContainingTrustBoundaryMappedByTechnicalAssetId: map[string]*types.TrustBoundary{},
+	}
+
+	result := isSameExecutionEnvironment(parsedModel, ta, "other-asset")
+
+	assert.True(t, result)
+}
+
 func Test_isSameExecutionEnvironment_TrustBoundariesAreDifferentReturnFalse(t *testing.T) {
 	ta := &types.TechnicalAsset{
 		Id: "asset",
 	}
 	trustBoundary := types.TrustBoundary{
-		Id: "trust-boundary",
+		Id:   "trust-boundary",
+		Type: types.ExecutionEnvironment,
 	}
 	anotherTrustBoundary := types.TrustBoundary{
-		Id: "another-trust-boundary",
+		Id:   "other-trust-boundary",
+		Type: types.ExecutionEnvironment,
 	}
 	parsedModel := &types.Model{
 		DirectContainingTrustBoundaryMappedByTechnicalAssetId: map[string]*types.TrustBoundary{
@@ -185,12 +201,13 @@ func Test_isSameExecutionEnvironment_TrustBoundariesAreDifferentReturnFalse(t *t
 	assert.False(t, result)
 }
 
-func Test_isSameExecutionEnvironment_TrustBoundariesAreSameReturnFalse(t *testing.T) {
+func Test_isSameExecutionEnvironment_TrustBoundariesAreSameReturnTrue(t *testing.T) {
 	ta := &types.TechnicalAsset{
 		Id: "asset",
 	}
 	trustBoundary := types.TrustBoundary{
-		Id: "trust-boundary",
+		Id:   "trust-boundary",
+		Type: types.ExecutionEnvironment,
 	}
 	parsedModel := &types.Model{
 		DirectContainingTrustBoundaryMappedByTechnicalAssetId: map[string]*types.TrustBoundary{
@@ -201,7 +218,46 @@ func Test_isSameExecutionEnvironment_TrustBoundariesAreSameReturnFalse(t *testin
 
 	result := isSameExecutionEnvironment(parsedModel, ta, "other-asset")
 
-	assert.False(t, result)
+	assert.True(t, result)
+}
+
+func Test_isSameExecutionEnvironment_TrustBoundariesAreNotBothExecutionEnvironmentReturnFalse(t *testing.T) {
+
+	tests := []struct {
+		name                        string
+		assetTrustBoundaryType      types.TrustBoundaryType
+		otherAssetTrustBoundaryType types.TrustBoundaryType
+	}{
+		{"ExecutionEnvironment, NetworkCloudProvider", types.ExecutionEnvironment, types.NetworkCloudProvider},
+		{"NetworkCloudProvider, ExecutionEnvironment", types.NetworkCloudProvider, types.ExecutionEnvironment},
+		{"NetworkCloudProvider, NetworkCloudProvider", types.NetworkCloudProvider, types.NetworkCloudProvider},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ta := &types.TechnicalAsset{
+				Id: "asset",
+			}
+			trustBoundary := types.TrustBoundary{
+				Id:   "trust-boundary",
+				Type: tt.assetTrustBoundaryType,
+			}
+			anotherTrustBoundary := types.TrustBoundary{
+				Id:   "other-trust-boundary",
+				Type: tt.otherAssetTrustBoundaryType,
+			}
+			parsedModel := &types.Model{
+				DirectContainingTrustBoundaryMappedByTechnicalAssetId: map[string]*types.TrustBoundary{
+					"asset":       &trustBoundary,
+					"other-asset": &anotherTrustBoundary,
+				},
+			}
+
+			result := isSameExecutionEnvironment(parsedModel, ta, "other-asset")
+
+			assert.False(t, result)
+		})
+	}
 }
 
 func Test_isSameTrustBoundaryNetworkOnly_EmptyDataReturnTrue(t *testing.T) {
