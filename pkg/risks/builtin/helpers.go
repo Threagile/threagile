@@ -76,7 +76,6 @@ func isSameExecutionEnvironment(parsedModel *types.Model, ta *types.TechnicalAss
 }
 
 func isSameTrustBoundaryNetworkOnly(parsedModel *types.Model, ta *types.TechnicalAsset, otherAssetId string) bool {
-
 	trustBoundaryOfMyAsset, trustBoundaryOfMyAssetOk := parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[ta.Id]
 	useParentBoundary(&trustBoundaryOfMyAsset, parsedModel, &trustBoundaryOfMyAssetOk)
 
@@ -86,11 +85,8 @@ func isSameTrustBoundaryNetworkOnly(parsedModel *types.Model, ta *types.Technica
 	if trustBoundaryOfMyAssetOk != trustBoundaryOfOtherAssetOk {
 		return false
 	}
-	if !trustBoundaryOfMyAssetOk && !trustBoundaryOfOtherAssetOk {
+	if !trustBoundaryOfMyAssetOk {
 		return true
-	}
-	if trustBoundaryOfMyAsset == nil || trustBoundaryOfOtherAsset == nil {
-		return trustBoundaryOfMyAsset == trustBoundaryOfOtherAsset
 	}
 	return trustBoundaryOfMyAsset.Id == trustBoundaryOfOtherAsset.Id
 }
