@@ -185,14 +185,14 @@ func Test_isSameExecutionEnvironment_TrustBoundariesAreDifferentReturnFalse(t *t
 		Id:   "trust-boundary",
 		Type: types.ExecutionEnvironment,
 	}
-	anotherTrustBoundary := types.TrustBoundary{
+	otherTrustBoundary := types.TrustBoundary{
 		Id:   "other-trust-boundary",
 		Type: types.ExecutionEnvironment,
 	}
 	parsedModel := &types.Model{
 		DirectContainingTrustBoundaryMappedByTechnicalAssetId: map[string]*types.TrustBoundary{
 			"asset":       &trustBoundary,
-			"other-asset": &anotherTrustBoundary,
+			"other-asset": &otherTrustBoundary,
 		},
 	}
 
@@ -269,17 +269,19 @@ func Test_isSameTrustBoundaryNetworkOnly_EmptyDataReturnTrue(t *testing.T) {
 	assert.True(t, result)
 }
 
-func Test_isSameTrustBoundaryNetworkOnly_NoTrustBoundaryOfMyAssetReturnTrue(t *testing.T) {
+func Test_isSameTrustBoundaryNetworkOnly_NoTrustBoundaryOfMyAssetReturnFalse(t *testing.T) {
 	ta := &types.TechnicalAsset{
 		Id: "asset",
 	}
 	parsedModel := &types.Model{
-		DirectContainingTrustBoundaryMappedByTechnicalAssetId: map[string]*types.TrustBoundary{},
+		DirectContainingTrustBoundaryMappedByTechnicalAssetId: map[string]*types.TrustBoundary{
+			"other-asset": {},
+		},
 	}
 
 	result := isSameTrustBoundaryNetworkOnly(parsedModel, ta, "other-asset")
 
-	assert.True(t, result)
+	assert.False(t, result)
 }
 
 func Test_isSameTrustBoundaryNetworkOnly_NoTrustBoundaryOfOtherAssetReturnFalse(t *testing.T) {
@@ -297,6 +299,19 @@ func Test_isSameTrustBoundaryNetworkOnly_NoTrustBoundaryOfOtherAssetReturnFalse(
 	assert.False(t, result)
 }
 
+func Test_isSameExecutionEnvironemntNetworkOnly_NoTrustBoundaryOfEitherAssetReturnTrue(t *testing.T) {
+	ta := &types.TechnicalAsset{
+		Id: "asset",
+	}
+	parsedModel := &types.Model{
+		DirectContainingTrustBoundaryMappedByTechnicalAssetId: map[string]*types.TrustBoundary{},
+	}
+
+	result := isSameExecutionEnvironment(parsedModel, ta, "other-asset")
+
+	assert.True(t, result)
+}
+
 func Test_isSameTrustBoundaryNetworkOnly_TrustBoundariesAreDifferentReturnFalse(t *testing.T) {
 	ta := &types.TechnicalAsset{
 		Id: "asset",
@@ -304,13 +319,13 @@ func Test_isSameTrustBoundaryNetworkOnly_TrustBoundariesAreDifferentReturnFalse(
 	trustBoundary := types.TrustBoundary{
 		Id: "trust-boundary",
 	}
-	anotherTrustBoundary := types.TrustBoundary{
-		Id: "another-trust-boundary",
+	otherTrustBoundary := types.TrustBoundary{
+		Id: "other-trust-boundary",
 	}
 	parsedModel := &types.Model{
 		DirectContainingTrustBoundaryMappedByTechnicalAssetId: map[string]*types.TrustBoundary{
 			"asset":       &trustBoundary,
-			"other-asset": &anotherTrustBoundary,
+			"other-asset": &otherTrustBoundary,
 		},
 	}
 
@@ -338,29 +353,31 @@ func Test_isSameTrustBoundaryNetworkOnly_TrustBoundariesAreSameReturnTrue(t *tes
 	assert.True(t, result)
 }
 
-func Test_isSameTrustBoundaryNetworkOnly_TrustBoundariesAreDifferentButParentIsSameReturnFalse(t *testing.T) {
+func Test_isSameTrustBoundaryNetworkOnly_IsNetworkBoundaryTrustBoundariesAreDifferentButParentIsSameReturnFalse(t *testing.T) {
 	ta := &types.TechnicalAsset{
 		Id: "asset",
 	}
 	parentTrustBoundary := types.TrustBoundary{
 		Id:                    "parent-trust-boundary",
-		TrustBoundariesNested: []string{"trust-boundary", "another-trust-boundary"},
+		TrustBoundariesNested: []string{"trust-boundary", "other-trust-boundary"},
 	}
 	trustBoundary := types.TrustBoundary{
-		Id: "trust-boundary",
+		Id:   "trust-boundary",
+		Type: types.NetworkCloudProvider,
 	}
-	anotherTrustBoundary := types.TrustBoundary{
-		Id: "another-trust-boundary",
+	otherTrustBoundary := types.TrustBoundary{
+		Id:   "other-trust-boundary",
+		Type: types.NetworkCloudProvider,
 	}
 	parsedModel := &types.Model{
 		DirectContainingTrustBoundaryMappedByTechnicalAssetId: map[string]*types.TrustBoundary{
 			"asset":       &trustBoundary,
-			"other-asset": &anotherTrustBoundary,
+			"other-asset": &otherTrustBoundary,
 		},
 		TrustBoundaries: map[string]*types.TrustBoundary{
-			"trust-boundary":         &trustBoundary,
-			"another-trust-boundary": &anotherTrustBoundary,
-			"parent-trust-boundary":  &parentTrustBoundary,
+			"trust-boundary":        &trustBoundary,
+			"other-trust-boundary":  &otherTrustBoundary,
+			"parent-trust-boundary": &parentTrustBoundary,
 		},
 	}
 
@@ -380,18 +397,18 @@ func Test_isSameTrustBoundaryNetworkOnly_TrustBoundariesAreDifferentButParentIsD
 	trustBoundary := types.TrustBoundary{
 		Id: "trust-boundary",
 	}
-	anotherTrustBoundary := types.TrustBoundary{
-		Id: "another-trust-boundary",
+	otherTrustBoundary := types.TrustBoundary{
+		Id: "other-trust-boundary",
 	}
 	parsedModel := &types.Model{
 		DirectContainingTrustBoundaryMappedByTechnicalAssetId: map[string]*types.TrustBoundary{
 			"asset":       &trustBoundary,
-			"other-asset": &anotherTrustBoundary,
+			"other-asset": &otherTrustBoundary,
 		},
 		TrustBoundaries: map[string]*types.TrustBoundary{
-			"trust-boundary":         &trustBoundary,
-			"another-trust-boundary": &anotherTrustBoundary,
-			"parent-trust-boundary":  &parentTrustBoundary,
+			"trust-boundary":        &trustBoundary,
+			"other-trust-boundary":  &otherTrustBoundary,
+			"parent-trust-boundary": &parentTrustBoundary,
 		},
 	}
 
