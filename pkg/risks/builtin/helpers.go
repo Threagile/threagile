@@ -92,8 +92,12 @@ func isSameTrustBoundaryNetworkOnly(parsedModel *types.Model, ta *types.Technica
 }
 
 func useParentBoundary(trustBoundaryOfAsset **types.TrustBoundary, parsedModel *types.Model, trustBoundaryOfAssetOk *bool) {
-	if trustBoundaryOfAsset != nil && *trustBoundaryOfAsset != nil && !(*trustBoundaryOfAsset).Type.IsNetworkBoundary() {
-		*trustBoundaryOfAsset = parsedModel.FindParentTrustBoundary(*trustBoundaryOfAsset)
+	if trustBoundaryOfAsset == nil {
+		return
+	}
+	tb := *trustBoundaryOfAsset
+	if tb != nil && !tb.Type.IsNetworkBoundary() {
+		*trustBoundaryOfAsset = parsedModel.FindParentTrustBoundary(tb)
 		*trustBoundaryOfAssetOk = *trustBoundaryOfAsset != nil
 	}
 }
