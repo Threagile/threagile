@@ -66,7 +66,7 @@ func isSameExecutionEnvironment(parsedModel *types.Model, ta *types.TechnicalAss
 	if trustBoundaryOfMyAssetOk != trustBoundaryOfOtherAssetOk {
 		return false
 	}
-	if !trustBoundaryOfMyAssetOk && !trustBoundaryOfOtherAssetOk {
+	if !trustBoundaryOfMyAssetOk {
 		return true
 	}
 	if trustBoundaryOfMyAsset.Type == types.ExecutionEnvironment && trustBoundaryOfOtherAsset.Type == types.ExecutionEnvironment {
