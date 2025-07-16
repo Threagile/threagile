@@ -40,7 +40,7 @@ func (r *IncompleteModelRule) GenerateRisks(input *types.Model) ([]*types.Risk, 
 	risks := make([]*types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
-		if technicalAsset.OutOfScope {
+		if r.skipAsset(technicalAsset) {
 			continue
 		}
 		if technicalAsset.Technologies.IsUnknown() {
@@ -53,6 +53,10 @@ func (r *IncompleteModelRule) GenerateRisks(input *types.Model) ([]*types.Risk, 
 		}
 	}
 	return risks, nil
+}
+
+func (im IncompleteModelRule) skipAsset(technicalAsset *types.TechnicalAsset) bool {
+	return technicalAsset.OutOfScope
 }
 
 func (r *IncompleteModelRule) createRiskTechAsset(technicalAsset *types.TechnicalAsset) *types.Risk {
