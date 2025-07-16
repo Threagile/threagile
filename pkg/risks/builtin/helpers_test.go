@@ -463,19 +463,45 @@ func Test_isSameTrustBoundaryNetworkOnly_DifferentNotNetworkBoundaryReturnFalse(
 }
 
 func Test_contains(t *testing.T) {
-	result := contains([]string{"a", "b"}, "b")
+	tests := []struct {
+		name     string
+		as       []string
+		b        string
+		expected bool
+	}{
+		{"as null", nil, "foo", false},
+		{"no match", []string{"foo", "bar"}, "bat", false},
+		{"match", []string{"foo", "bar"}, "foo", true},
+		{"no match different case", []string{"foo", "bar"}, "FOO", false},
+	}
 
-	assert.True(t, result)
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			result := contains(test.as, test.b)
+			assert.Equal(t, test.expected, result)
+		})
+	}
 }
 
-func Test_contains_NotFoundReturnFalse(t *testing.T) {
-	result := contains([]string{"a", "b"}, "c")
+func Test_containsCaseInsensitiveAny(t *testing.T) {
+	tests := []struct {
+		name     string
+		as       []string
+		bs       []string
+		expected bool
+	}{
+		{"as null, bs null", nil, nil, false},
+		{"as null, bs not null", nil, []string{"foo", "bar"}, false},
+		{"as not null, bs null", []string{"foo", "bar"}, nil, false},
+		{"no match", []string{"foo", "bar"}, []string{"bat", "baz"}, false},
+		{"match same case", []string{"foo", "bar"}, []string{"bat", "foo"}, true},
+		{"match different case", []string{"FOO", "bar"}, []string{"bat", "foo"}, true},
+	}
 
-	assert.False(t, result)
-}
-
-func Test_contains_EmptyDataReturnFalse(t *testing.T) {
-	result := contains([]string{}, "c")
-
-	assert.False(t, result)
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			result := containsCaseInsensitiveAny(test.as, test.bs...)
+			assert.Equal(t, test.expected, result)
+		})
+	}
 }
