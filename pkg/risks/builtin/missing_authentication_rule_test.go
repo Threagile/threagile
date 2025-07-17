@@ -38,7 +38,8 @@ func TestMissingAuthenticationRuleGenerateRisksTechnicalAssetWithoutCommunicatio
 	risks, err := rule.GenerateRisks(&types.Model{
 		TechnicalAssets: map[string]*types.TechnicalAsset{
 			"ta1": {
-				Title: "Test Technical Asset",
+				Title:           "Test Technical Asset",
+				Confidentiality: types.Confidential,
 			},
 		},
 	})
@@ -115,7 +116,7 @@ func TestMissingAuthenticationRuleGenerateRisksCallerFromDatastoreNoRisksCreated
 	assert.Empty(t, risks)
 }
 
-func TestMissingAuthenticationRuleGenerateRisksCallerTechnologyTolerateUnprotectedCommunicationsNoRisksCreated(t *testing.T) {
+func TestMissingAuthenticationRuleGenerateRisksCallerTechnologyToleratesUnprotectedCommunicationsNoRisksCreated(t *testing.T) {
 	rule := NewMissingAuthenticationRule()
 
 	risks, err := rule.GenerateRisks(&types.Model{
@@ -151,66 +152,54 @@ func TestMissingAuthenticationRuleGenerateRisksCallerTechnologyTolerateUnprotect
 	assert.Empty(t, risks)
 }
 
-func TestMissingAuthenticationRuleGenerateRisksAuthenticationPresentedNoRisksCreated(t *testing.T) {
-	rule := NewMissingAuthenticationRule()
+func TestMissingAuthenticationRuleGenerateRisksWithParameterisedAuthenticationAndProtocolNoRisksCreated(t *testing.T) {
+	tests := []struct {
+		name           string
+		authentication types.Authentication
+		protocol       types.Protocol
+		expected       bool
+	}{
+		{"Authentication: none, Local: true", types.NoneAuthentication, types.LocalFileAccess, false},
+		{"Authentication: provided, Local: true", types.ClientCertificate, types.LocalFileAccess, false},
+		{"Authentication: provided, Local: false", types.ClientCertificate, types.HTTPS, false},
+	}
 
-	risks, err := rule.GenerateRisks(&types.Model{
-		TechnicalAssets: map[string]*types.TechnicalAsset{
-			"ta1": {
-				Id:          "ta1",
-				Title:       "Test Technical Asset",
-				MultiTenant: true, // require less code instead of adding processed data
-			},
-			"ta2": {
-				Id:    "ta2",
-				Title: "User Interface",
-			},
-		},
-		IncomingTechnicalCommunicationLinksMappedByTargetId: map[string][]*types.CommunicationLink{
-			"ta1": {
-				{
-					SourceId:       "ta2",
-					Authentication: types.ClientCertificate,
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			rule := NewMissingAuthenticationRule()
+
+			risks, err := rule.GenerateRisks(&types.Model{
+				TechnicalAssets: map[string]*types.TechnicalAsset{
+					"ta1": {
+						Id:          "ta1",
+						Title:       "Test Technical Asset 1",
+						MultiTenant: true, // require less code instead of adding processed data
+					},
+					"ta2": {
+						Id:    "ta2",
+						Title: "Test Technical Asset 2",
+						MultiTenant: true, // require less code instead of adding processed data
+					},
 				},
-			},
-		},
-	})
+				IncomingTechnicalCommunicationLinksMappedByTargetId: map[string][]*types.CommunicationLink{
+					"ta1": {
+						{
+							Title: 		    "Communication Link",
+							SourceId:       "ta2",
+							Authentication: tt.authentication,
+							Protocol:       tt.protocol,
+						},
+					},
+				},
+			})
 
-	assert.Nil(t, err)
-	assert.Empty(t, risks)
+			assert.Nil(t, err)
+			assert.Empty(t, risks)
+		})
+	}
 }
 
-func TestMissingAuthenticationRuleGenerateRisksLocalProcessRisksCreated(t *testing.T) {
-	rule := NewMissingAuthenticationRule()
-
-	risks, err := rule.GenerateRisks(&types.Model{
-		TechnicalAssets: map[string]*types.TechnicalAsset{
-			"ta1": {
-				Id:          "ta1",
-				Title:       "Test Technical Asset",
-				MultiTenant: true, // require less code instead of adding processed data
-			},
-			"ta2": {
-				Id:    "ta2",
-				Title: "File scrapper",
-			},
-		},
-		IncomingTechnicalCommunicationLinksMappedByTargetId: map[string][]*types.CommunicationLink{
-			"ta1": {
-				{
-					SourceId:       "ta2",
-					Authentication: types.NoneAuthentication,
-					Protocol:       types.LocalFileAccess,
-				},
-			},
-		},
-	})
-
-	assert.Nil(t, err)
-	assert.Empty(t, risks)
-}
-
-func TestMissingAuthenticationRuleGenerateRisksNoneAuthenticationMultiTenantNonLocalProcessRisksCreated(t *testing.T) {
+func TestMissingAuthenticationRuleGenerateRisksNoneAuthenticationNonLocalProcessRisksCreated(t *testing.T) {
 	rule := NewMissingAuthenticationRule()
 
 	risks, err := rule.GenerateRisks(&types.Model{
