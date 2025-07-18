@@ -7,7 +7,7 @@ import (
 	"github.com/threagile/threagile/pkg/types"
 )
 
-func TestMissingBuildInfrastructureRuleGenerateRisksEmptyModelNotRisksCreated(t *testing.T) {
+func TestMissingBuildInfrastructureRuleGenerateRisksEmptyModelNoRisksCreated(t *testing.T) {
 	rule := NewMissingBuildInfrastructureRule()
 
 	risks, err := rule.GenerateRisks(&types.Model{})
@@ -39,6 +39,7 @@ func TestMissingBuildInfrastructureRuleGenerateRisksCustomDevelopedPartWithoutBu
 			"ta1": {
 				Title:                "Test Technical Asset",
 				CustomDevelopedParts: true,
+				OutOfScope: 		 false,
 			},
 		},
 	})
@@ -57,6 +58,7 @@ func TestMissingBuildInfrastructureRuleGenerateRisksCustomDevelopedPartWithBuild
 			"ta1": {
 				Title:                "Test Technical Asset",
 				CustomDevelopedParts: true,
+				OutOfScope: 		 false,
 			},
 			"ArgoCD": {
 				Technologies: types.TechnologyList{
