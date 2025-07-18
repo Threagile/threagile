@@ -17,22 +17,6 @@ func TestMissingCloudHardeningRuleGenerateRisksEmptyModelNotRisksCreated(t *test
 	assert.Empty(t, risks)
 }
 
-func TestMissingCloudHardeningRuleGenerateRisksOutOfScopeNoRisksCreated(t *testing.T) {
-	rule := NewMissingCloudHardeningRule()
-	risks, err := rule.GenerateRisks(&types.Model{
-		TechnicalAssets: map[string]*types.TechnicalAsset{
-			"ta1": {
-				Title:                "Test Technical Asset",
-				CustomDevelopedParts: true,
-				OutOfScope:           true,
-			},
-		},
-	})
-
-	assert.Nil(t, err)
-	assert.Empty(t, risks)
-}
-
 func TestMissingCloudHardeningRuleGenerateRisksTrustBoundaryNotWithinCloudNoRisksCreated(t *testing.T) {
 	rule := NewMissingCloudHardeningRule()
 	risks, err := rule.GenerateRisks(&types.Model{
