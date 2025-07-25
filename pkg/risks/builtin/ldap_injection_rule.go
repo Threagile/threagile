@@ -42,9 +42,12 @@ func (*LdapInjectionRule) SupportedTags() []string {
 func (r *LdapInjectionRule) GenerateRisks(input *types.Model) ([]*types.Risk, error) {
 	risks := make([]*types.Risk, 0)
 	for _, technicalAsset := range input.TechnicalAssets {
+		if technicalAsset.OutOfScope {
+			continue
+		}
 		incomingFlows := input.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id]
 		for _, incomingFlow := range incomingFlows {
-			if input.TechnicalAssets[incomingFlow.SourceId].OutOfScope {
+			if r.skipAsset(input, incomingFlow) {
 				continue
 			}
 			if incomingFlow.Protocol == types.LDAP || incomingFlow.Protocol == types.LDAPS {
@@ -57,6 +60,10 @@ func (r *LdapInjectionRule) GenerateRisks(input *types.Model) ([]*types.Risk, er
 		}
 	}
 	return risks, nil
+}
+
+func (li *LdapInjectionRule) skipAsset(input *types.Model, incomingFlow *types.CommunicationLink) bool {
+	return input.TechnicalAssets[incomingFlow.SourceId].OutOfScope
 }
 
 func (r *LdapInjectionRule) createRisk(input *types.Model, technicalAsset *types.TechnicalAsset, incomingFlow *types.CommunicationLink, likelihood types.RiskExploitationLikelihood) *types.Risk {

@@ -7,7 +7,7 @@ import (
 	"github.com/threagile/threagile/pkg/types"
 )
 
-func TestMissingAuthenticationSecondFactorRuleGenerateRisksEmptyModelNotRisksCreated(t *testing.T) {
+func TestMissingAuthenticationSecondFactorRuleGenerateRisksEmptyModelNoRisksCreated(t *testing.T) {
 	rule := NewMissingAuthenticationSecondFactorRule(NewMissingAuthenticationRule())
 
 	risks, err := rule.GenerateRisks(&types.Model{})
@@ -16,7 +16,7 @@ func TestMissingAuthenticationSecondFactorRuleGenerateRisksEmptyModelNotRisksCre
 	assert.Empty(t, risks)
 }
 
-func TestMissingAuthenticationSecondFactorRuleGenerateRisksOutOfScopeNotRisksCreated(t *testing.T) {
+func TestMissingAuthenticationSecondFactorRuleGenerateRisksOutOfScopeNoRisksCreated(t *testing.T) {
 	rule := NewMissingAuthenticationSecondFactorRule(NewMissingAuthenticationRule())
 
 	risks, err := rule.GenerateRisks(&types.Model{
@@ -32,7 +32,7 @@ func TestMissingAuthenticationSecondFactorRuleGenerateRisksOutOfScopeNotRisksCre
 	assert.Empty(t, risks)
 }
 
-func TestMissingAuthenticationSecondFactorRuleGenerateRisksTrafficForwardingTechnologyNotRisksCreated(t *testing.T) {
+func TestMissingAuthenticationSecondFactorRuleGenerateRisksTrafficForwardingTechnologyNoRisksCreated(t *testing.T) {
 	rule := NewMissingAuthenticationSecondFactorRule(NewMissingAuthenticationRule())
 
 	risks, err := rule.GenerateRisks(&types.Model{
@@ -55,7 +55,7 @@ func TestMissingAuthenticationSecondFactorRuleGenerateRisksTrafficForwardingTech
 	assert.Empty(t, risks)
 }
 
-func TestMissingAuthenticationSecondFactorRuleGenerateRisksUnprotectedCommunicationToleratedNotRisksCreated(t *testing.T) {
+func TestMissingAuthenticationSecondFactorRuleGenerateRisksUnprotectedCommunicationToleratedNoRisksCreated(t *testing.T) {
 	rule := NewMissingAuthenticationSecondFactorRule(NewMissingAuthenticationRule())
 
 	risks, err := rule.GenerateRisks(&types.Model{
@@ -92,6 +92,7 @@ func TestMissingAuthenticationSecondFactorRuleGenerateRisksCallerFromDatastoreNo
 				Id:    "ta2",
 				Title: "Test Datastore",
 				Type:  types.Datastore,
+				MultiTenant: true, // require less code instead of adding processed data
 			},
 		},
 		IncomingTechnicalCommunicationLinksMappedByTargetId: map[string][]*types.CommunicationLink{
@@ -187,6 +188,7 @@ func TestMissingAuthenticationSecondFactorRuleUsedAsClientByHumanCriticalIntegri
 				Id:                  "ta2",
 				Title:               "Browser",
 				UsedAsClientByHuman: true,
+				MultiTenant: true, // require less code instead of adding processed data
 			},
 		},
 		IncomingTechnicalCommunicationLinksMappedByTargetId: map[string][]*types.CommunicationLink{
@@ -225,6 +227,7 @@ func TestMissingAuthenticationSecondFactorRuleUsedAsClientByHumanConfidentialDat
 				Id:                  "ta2",
 				Title:               "Browser",
 				UsedAsClientByHuman: true,
+				MultiTenant: true, // require less code instead of adding processed data
 			},
 		},
 		IncomingTechnicalCommunicationLinksMappedByTargetId: map[string][]*types.CommunicationLink{
@@ -296,7 +299,7 @@ func TestMissingAuthenticationSecondFactorRuleNotUsedAsClientByHumanAndNotTraffi
 	assert.Empty(t, risks)
 }
 
-func TestMissingAuthenticationSecondFactorRuleNotTrafficForwardingCriticalIntegrityDataAccessRiskyDataSentTwoFactorAuthenticationEnabledNoRisksCreated(t *testing.T) {
+func TestMissingAuthenticationSecondFactorRuleNotTrafficForwardingCriticalIntegrityDataAccessTwoFactorAuthenticationDisabledNoRisksCreated(t *testing.T) {
 	rule := NewMissingAuthenticationSecondFactorRule(NewMissingAuthenticationRule())
 
 	risks, err := rule.GenerateRisks(&types.Model{
@@ -492,6 +495,7 @@ func TestMissingAuthenticationSecondFactorRuleCallersCallerNotUsedAsClientByHuma
 						Name: "tool",
 					},
 				},
+				UsedAsClientByHuman: false,
 			},
 		},
 		IncomingTechnicalCommunicationLinksMappedByTargetId: map[string][]*types.CommunicationLink{

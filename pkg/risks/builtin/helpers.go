@@ -7,6 +7,12 @@ import (
 )
 
 func isAcrossTrustBoundaryNetworkOnly(parsedModel *types.Model, communicationLink *types.CommunicationLink) bool {
+
+	isAcrossNetworkTrustBoundary := func(
+		trustBoundaryOfSourceAsset *types.TrustBoundary, trustBoundaryOfTargetAsset *types.TrustBoundary) bool {
+		return trustBoundaryOfSourceAsset.Id != trustBoundaryOfTargetAsset.Id && trustBoundaryOfTargetAsset.Type.IsNetworkBoundary()
+	}
+
 	trustBoundaryOfSourceAsset, trustBoundaryOfSourceAssetOk :=
 		parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[communicationLink.SourceId]
 	if !isNetworkOnly(parsedModel, trustBoundaryOfSourceAssetOk, trustBoundaryOfSourceAsset) {
@@ -22,11 +28,6 @@ func isAcrossTrustBoundaryNetworkOnly(parsedModel *types.Model, communicationLin
 	return isAcrossNetworkTrustBoundary(trustBoundaryOfSourceAsset, trustBoundaryOfTargetAsset)
 }
 
-func isAcrossNetworkTrustBoundary(
-	trustBoundaryOfSourceAsset *types.TrustBoundary, trustBoundaryOfTargetAsset *types.TrustBoundary) bool {
-	return trustBoundaryOfSourceAsset.Id != trustBoundaryOfTargetAsset.Id && trustBoundaryOfTargetAsset.Type.IsNetworkBoundary()
-}
-
 func isNetworkOnly(parsedModel *types.Model, trustBoundaryOk bool, trustBoundary *types.TrustBoundary) bool {
 	if !trustBoundaryOk {
 		return false
@@ -40,19 +41,19 @@ func isNetworkOnly(parsedModel *types.Model, trustBoundaryOk bool, trustBoundary
 	return true
 }
 
-func contains(a []string, x string) bool {
-	for _, n := range a {
-		if x == n {
+func contains(as []string, b string) bool {
+	for _, a := range as {
+		if b == a {
 			return true
 		}
 	}
 	return false
 }
 
-func containsCaseInsensitiveAny(a []string, x ...string) bool {
-	for _, n := range a {
-		for _, c := range x {
-			if strings.TrimSpace(strings.ToLower(c)) == strings.TrimSpace(strings.ToLower(n)) {
+func containsCaseInsensitiveAny(as []string, bs ...string) bool {
+	for _, a := range as {
+		for _, b := range bs {
+			if strings.TrimSpace(strings.ToLower(b)) == strings.TrimSpace(strings.ToLower(a)) {
 				return true
 			}
 		}
@@ -76,6 +77,18 @@ func isSameExecutionEnvironment(parsedModel *types.Model, ta *types.TechnicalAss
 }
 
 func isSameTrustBoundaryNetworkOnly(parsedModel *types.Model, ta *types.TechnicalAsset, otherAssetId string) bool {
+
+	useParentBoundary := func(trustBoundaryOfAsset **types.TrustBoundary, parsedModel *types.Model, trustBoundaryOfAssetOk *bool) {
+		if trustBoundaryOfAsset == nil {
+			return
+		}
+		tb := *trustBoundaryOfAsset
+		if tb != nil && !tb.Type.IsNetworkBoundary() {
+			*trustBoundaryOfAsset = parsedModel.FindParentTrustBoundary(tb)
+			*trustBoundaryOfAssetOk = *trustBoundaryOfAsset != nil
+		}
+	}
+
 	trustBoundaryOfMyAsset, trustBoundaryOfMyAssetOk := parsedModel.DirectContainingTrustBoundaryMappedByTechnicalAssetId[ta.Id]
 	useParentBoundary(&trustBoundaryOfMyAsset, parsedModel, &trustBoundaryOfMyAssetOk)
 
@@ -89,15 +102,4 @@ func isSameTrustBoundaryNetworkOnly(parsedModel *types.Model, ta *types.Technica
 		return true
 	}
 	return trustBoundaryOfMyAsset.Id == trustBoundaryOfOtherAsset.Id
-}
-
-func useParentBoundary(trustBoundaryOfAsset **types.TrustBoundary, parsedModel *types.Model, trustBoundaryOfAssetOk *bool) {
-	if trustBoundaryOfAsset == nil {
-		return
-	}
-	tb := *trustBoundaryOfAsset
-	if tb != nil && !tb.Type.IsNetworkBoundary() {
-		*trustBoundaryOfAsset = parsedModel.FindParentTrustBoundary(tb)
-		*trustBoundaryOfAssetOk = *trustBoundaryOfAsset != nil
-	}
 }

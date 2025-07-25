@@ -45,16 +45,8 @@ func (r *MissingAuthenticationSecondFactorRule) GenerateRisks(input *types.Model
 	risks := make([]*types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
-		if technicalAsset.OutOfScope ||
-			technicalAsset.Technologies.GetAttribute(types.IsTrafficForwarding) ||
-			technicalAsset.Technologies.GetAttribute(types.IsUnprotectedCommunicationsTolerated) {
-			continue
-		}
 
-		if input.HighestProcessedConfidentiality(technicalAsset) < types.Confidential &&
-			input.HighestProcessedIntegrity(technicalAsset) < types.Critical &&
-			input.HighestProcessedAvailability(technicalAsset) < types.Critical &&
-			!technicalAsset.MultiTenant {
+		if r.skipAsset(technicalAsset, input) {
 			continue
 		}
 
@@ -66,11 +58,7 @@ func (r *MissingAuthenticationSecondFactorRule) GenerateRisks(input *types.Model
 				continue
 			}
 			if caller.UsedAsClientByHuman {
-				moreRisky := input.HighestCommunicationLinkConfidentiality(commLink) >= types.Confidential ||
-					input.HighestCommunicationLinkIntegrity(commLink) >= types.Critical
-				if moreRisky && commLink.Authentication != types.TwoFactor {
-					risks = append(risks, r.missingAuthenticationRule.createRisk(input, technicalAsset, commLink, commLink, "", types.MediumImpact, types.Unlikely, true, r.Category()))
-				}
+				risks = appendRisk(input, risks, r, technicalAsset, commLink, commLink, "")
 			} else if caller.Technologies.GetAttribute(types.IsTrafficForwarding) {
 				// Now try to walk a call chain up (1 hop only) to find a caller's caller used by human
 				callersCommLinks := input.IncomingTechnicalCommunicationLinksMappedByTargetId[caller.Id]
@@ -80,15 +68,41 @@ func (r *MissingAuthenticationSecondFactorRule) GenerateRisks(input *types.Model
 						!callersCaller.UsedAsClientByHuman {
 						continue
 					}
-
-					moreRisky := input.HighestCommunicationLinkConfidentiality(callersCommLink) >= types.Confidential ||
-						input.HighestCommunicationLinkIntegrity(callersCommLink) >= types.Critical
-					if moreRisky && callersCommLink.Authentication != types.TwoFactor {
-						risks = append(risks, r.missingAuthenticationRule.createRisk(input, technicalAsset, commLink, callersCommLink, caller.Title, types.MediumImpact, types.Unlikely, true, r.Category()))
-					}
+					risks = appendRisk(input, risks, r, technicalAsset, commLink, callersCommLink, caller.Title)
 				}
 			}
 		}
 	}
-	return risks, nil
+		return risks, nil
+}
+
+func appendRisk(
+	input *types.Model, risks []*types.Risk, r *MissingAuthenticationSecondFactorRule, 
+	technicalAsset *types.TechnicalAsset, commLink *types.CommunicationLink, 
+	callersCommLink *types.CommunicationLink, title string) []*types.Risk {
+	moreRisky :=
+		input.HighestCommunicationLinkConfidentiality(callersCommLink) >= types.Confidential ||
+			input.HighestCommunicationLinkIntegrity(callersCommLink) >= types.Critical
+	if moreRisky && callersCommLink.Authentication != types.TwoFactor {
+		risks = append(risks, r.missingAuthenticationRule.createRisk(input, technicalAsset, commLink, callersCommLink, title, types.MediumImpact, types.Unlikely, true, r.Category()))
+	}
+
+	return risks
+}
+
+func (masf *MissingAuthenticationSecondFactorRule) skipAsset(technicalAsset *types.TechnicalAsset, input *types.Model) bool {
+	if technicalAsset.OutOfScope ||
+		technicalAsset.Technologies.GetAttribute(types.IsTrafficForwarding) ||
+		technicalAsset.Technologies.GetAttribute(types.IsUnprotectedCommunicationsTolerated) {
+		return true
+	}
+
+	if input.HighestProcessedConfidentiality(technicalAsset) < types.Confidential &&
+		input.HighestProcessedIntegrity(technicalAsset) < types.Critical &&
+		input.HighestProcessedAvailability(technicalAsset) < types.Critical &&
+		!technicalAsset.MultiTenant {
+		return true
+	}
+
+	return false
 }

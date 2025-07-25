@@ -49,16 +49,7 @@ func (r *MissingIdentityPropagationRule) GenerateRisks(input *types.Model) ([]*t
 	risks := make([]*types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
-		if technicalAsset.OutOfScope {
-			continue
-		}
-		if !technicalAsset.Technologies.GetAttribute(types.IsUsuallyProcessingEndUserRequests) {
-			continue
-		}
-		if technicalAsset.MultiTenant && technicalAsset.Confidentiality < types.Restricted && technicalAsset.Integrity < types.Important && technicalAsset.Availability < types.Important {
-			continue
-		}
-		if !technicalAsset.MultiTenant && technicalAsset.Confidentiality < types.Confidential && technicalAsset.Integrity < types.Critical && technicalAsset.Availability < types.Critical {
+		if r.skipAsset(technicalAsset) {
 			continue
 		}
 
@@ -66,15 +57,10 @@ func (r *MissingIdentityPropagationRule) GenerateRisks(input *types.Model) ([]*t
 		commLinks := input.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id]
 		for _, commLink := range commLinks {
 			caller := input.TechnicalAssets[commLink.SourceId]
-			if !caller.Technologies.GetAttribute(types.IsUsuallyAbleToPropagateIdentityToOutgoingTargets) || caller.Type == types.Datastore {
+			if r.skipCommunicationLinkAsset(caller, commLink) {
 				continue
 			}
-			if commLink.Authentication == types.NoneAuthentication || commLink.Authorization == types.EndUserIdentityPropagation {
-				continue
-			}
-			if commLink.Usage == types.DevOps && commLink.Authorization != types.NoneAuthorization {
-				continue
-			}
+
 			highRisk := technicalAsset.Confidentiality == types.StrictlyConfidential ||
 				technicalAsset.Integrity == types.MissionCritical ||
 				technicalAsset.Availability == types.MissionCritical
@@ -82,6 +68,35 @@ func (r *MissingIdentityPropagationRule) GenerateRisks(input *types.Model) ([]*t
 		}
 	}
 	return risks, nil
+}
+
+func (r *MissingIdentityPropagationRule) skipCommunicationLinkAsset(caller *types.TechnicalAsset, commLink *types.CommunicationLink) bool {
+	if !caller.Technologies.GetAttribute(types.IsUsuallyAbleToPropagateIdentityToOutgoingTargets) || caller.Type == types.Datastore {
+		return true
+	}
+	if commLink.Authentication == types.NoneAuthentication || commLink.Authorization == types.EndUserIdentityPropagation {
+		return true
+	}
+	if commLink.Usage == types.DevOps && commLink.Authorization != types.NoneAuthorization {
+		return true
+	}
+	return false
+}
+
+func (r *MissingIdentityPropagationRule) skipAsset(technicalAsset *types.TechnicalAsset) bool {
+	if technicalAsset.OutOfScope {
+		return true
+	}
+	if !technicalAsset.Technologies.GetAttribute(types.IsUsuallyProcessingEndUserRequests) {
+		return true
+	}
+	if technicalAsset.MultiTenant && technicalAsset.Confidentiality < types.Restricted && technicalAsset.Integrity < types.Important && technicalAsset.Availability < types.Important {
+		return true
+	}
+	if !technicalAsset.MultiTenant && technicalAsset.Confidentiality < types.Confidential && technicalAsset.Integrity < types.Critical && technicalAsset.Availability < types.Critical {
+		return true
+	}
+	return false
 }
 
 func (r *MissingIdentityPropagationRule) createRisk(input *types.Model, technicalAsset *types.TechnicalAsset, incomingAccess *types.CommunicationLink, moreRisky bool) *types.Risk {
