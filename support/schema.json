@@ -832,6 +832,14 @@
             }
           }
         },
+        "allOf": [
+          {
+            "anyOf": [
+              { "required": ["technology"] },
+              { "required": ["technologies"] }
+            ]
+          }
+        ],
         "required": [
           "id",
           "description",
@@ -840,7 +848,6 @@
           "used_as_client_by_human",
           "out_of_scope",
           "size",
-          "technology",
           "internet",
           "machine",
           "encryption",
