@@ -1,0 +1,643 @@
+threagile_version: 1.0.0
+
+# NOTE:
+# This input file is to test for disclosure by publishing rule. 
+# Specifically, it includes the LAST TWO of the following test cases where model-level input "public_disclosure_signed" is set TRUE.
+
+# 1. Public disclosure NOT signed, & PI received/stored, & external -> Risk
+# 2. Public disclosure NOT signed, & PI received/stored, & non-external -> No Risk
+# 3. Public disclosure NOT signed, & PI received/stored & ta is on internet -> Risk
+# 4. Public disclosure NOT signed, & NO PI -> No Risk
+# 5. Public disclosure signed, & PI received/stored & ta is on internet -> No Risk
+# 6. Public disclosure signed, & NO PI -> No Risk
+
+
+
+#
+# For a perfect editing experience within your IDE of choice you can easily
+# get model syntax validation and autocompletion (very handy for enum values)
+# as well as live templates: Just import the schema.json into your IDE and assign
+# it as "schema" to each Threagile YAML file. Also try to import individual parts
+# from the live-templates.txt file into your IDE as live editing templates.
+#
+# You might also want to try the REST API when running in server mode...
+
+
+
+title: Some Example Application
+
+date: 2020-07-01
+
+author:
+  name: John Doe
+  homepage: www.example.com
+
+
+
+
+management_summary_comment: >
+  Just some <b>more</b> custom summary possible here...
+
+business_criticality: important # values: archive, operational, important, critical, mission-critical
+
+
+business_overview:
+  description: Some more <i>demo text</i> here and even images...
+  images:
+#    - custom-image-1.png: Some dummy image 1
+#    - custom-image-2.png: Some dummy image 2
+
+
+technical_overview:
+  description: Some more <i>demo text</i> here and even images...
+  images:
+#    - custom-image-1.png: Some dummy image 1
+#    - custom-image-2.png: Some dummy image 2
+
+unlawfulprocessing: false
+
+deidentified: false
+
+erasuremodification: true
+
+public_disclosure_signed: true 
+
+questions: # simply use "" as answer to signal "unanswered"
+  How are the admin clients managed/protected against compromise?: ""
+  How are the development clients managed/protected against compromise?: >
+    Managed by XYZ
+  How are the build pipeline components managed/protected against compromise?: >
+    Managed by XYZ
+
+
+
+abuse_cases:
+  Denial-of-Service: >
+    As a hacker I want to disturb the functionality of the backend system in order to cause indirect
+    financial damage via unusable features.
+  CPU-Cycle Theft: >
+    As a hacker I want to steal CPU cycles in order to transform them into money via installed crypto currency miners.
+  Ransomware: >
+    As a hacker I want to encrypt the storage and file systems in order to demand ransom.
+  Identity Theft: >
+    As a hacker I want to steal identity data in order to reuse credentials and/or keys on other targets of the same company or outside.
+  PII Theft: >
+    As a hacker I want to steal PII (Personally Identifiable Information) data in order to blackmail the company and/or damage
+    their repudiation by publishing them.
+
+  ERP-System Compromise: >
+    As a hacker I want to access the ERP-System in order to steal/modify sensitive business data.
+  Database Compromise: >
+    As a hacker I want to access the database backend of the ERP-System in order to steal/modify sensitive
+    business data.
+  Contract Filesystem Compromise: >
+    As a hacker I want to access the filesystem storing the contract PDFs in order to steal/modify contract data.
+  Cross-Site Scripting Attacks: >
+    As a hacker I want to execute Cross-Site Scripting (XSS) and similar attacks in order to takeover victim sessions and
+    cause reputational damage.
+  Denial-of-Service of Enduser Functionality: >
+    As a hacker I want to disturb the functionality of the enduser parts of the application in order to cause direct financial
+    damage (lower sales).
+  Denial-of-Service of ERP/DB Functionality: >
+    As a hacker I want to disturb the functionality of the ERP system and/or it's database in order to cause indirect
+    financial damage via unusable internal ERP features (not related to customer portal).
+
+
+security_requirements:
+  Input Validation: Strict input validation is required to reduce the overall attack surface.
+  Securing Administrative Access: Administrative access must be secured with strong encryption and multi-factor authentication.
+  EU-DSGVO: Mandatory EU-Datenschutzgrundverordnung
+
+
+
+# Tags can be used for anything, it's just a tag. Also risk rules can act based on tags if you like.
+# Tags can be used for example to name the products used (which is more concrete than the technology types that only specify the type)
+tags_available:
+  - linux
+  - apache
+  - mysql
+  - jboss
+  - keycloak
+  - jenkins
+  - git
+  - oracle
+  - some-erp
+  - vmware
+  - aws
+  - aws:ec2
+  - aws:s3
+
+
+
+
+data_assets:
+
+
+#  Customer Contracts: &customer-contracts # this example shows the inheritance-like features of YAML
+#    id: customer-contracts
+#    description: Customer Contracts (PDF)
+#    usage: business # values: business, devops
+#    tags:
+#    origin: Customer
+#    owner: Company XYZ
+#    quantity: many # values: very-few, few, many, very-many
+#    dataassettype: no-pi # values: pi, no-pi
+#    consent: yes-granular # values: yes-granular, yes-not-granular, no-consent 
+#    confidentiality: confidential # values: public, internal, restricted, confidential, strictly-confidential
+#    integrity: critical # values: archive, operational, important, critical, mission-critical
+#    availability: operational # values: archive, operational, important, critical, mission-critical
+#    justification_cia_rating: >
+#      Contract data might contain financial data as well as personally identifiable information (PII). The integrity and
+#      availability of contract data is required for clearing payment disputes.
+#    thirdpartysharing: false
+
+  Email: &customer-email # this example shows the inheritance-like features of YAML
+    id: email0address
+    pinametype: email-address
+    description: Email Address
+    usage: business # values: business, devops
+    tags:
+    origin: Customer
+    owner: Company XYZ
+    quantity: many # values: very-few, few, many, very-many
+    dataassettype: pi # values: pi, no-pi
+    consent: yes-granular # values: yes-granular, yes-not-granular, no-consent 
+    confidentiality: confidential # values: public, internal, restricted, confidential, strictly-confidential
+    integrity: critical # values: archive, operational, important, critical, mission-critical
+    availability: operational # values: archive, operational, important, critical, mission-critical
+    justification_cia_rating: >
+      Contract data might contain financial data as well as personally identifiable information (PII). The integrity and
+      availability of contract data is required for clearing payment disputes.
+    thirdpartysharing: false
+
+  Full Name: &customer-email # this example shows the inheritance-like features of YAML
+    id: full0name
+    pinametype: name
+    description: full name
+    usage: business # values: business, devops
+    tags:
+    origin: Customer
+    owner: Company XYZ
+    quantity: many # values: very-few, few, many, very-many
+    dataassettype: pi # values: pi, no-pi
+    consent: yes-granular # values: yes-granular, yes-not-granular, no-consent 
+    confidentiality: confidential # values: public, internal, restricted, confidential, strictly-confidential
+    integrity: critical # values: archive, operational, important, critical, mission-critical
+    availability: operational # values: archive, operational, important, critical, mission-critical
+    justification_cia_rating: >
+      Contract data might contain financial data as well as personally identifiable information (PII). The integrity and
+      availability of contract data is required for clearing payment disputes.
+    thirdpartysharing: false
+
+  Home Address: &customer-email # this example shows the inheritance-like features of YAML
+    id: home0address
+    pinametype: other-pi-direct-identifier
+    description: home address
+    usage: business # values: business, devops
+    tags:
+    origin: Customer
+    owner: Company XYZ
+    quantity: many # values: very-few, few, many, very-many
+    dataassettype: pi # values: pi, no-pi
+    consent: yes-granular # values: yes-granular, yes-not-granular, no-consent 
+    confidentiality: confidential # values: public, internal, restricted, confidential, strictly-confidential
+    integrity: critical # values: archive, operational, important, critical, mission-critical
+    availability: operational # values: archive, operational, important, critical, mission-critical
+    justification_cia_rating: >
+      Contract data might contain financial data as well as personally identifiable information (PII). The integrity and
+      availability of contract data is required for clearing payment disputes.
+    thirdpartysharing: false
+
+
+
+  Car Make: &customer-contracts # this example shows the inheritance-like features of YAML
+    id: car0make
+    pinametype: data-asset
+    description: car make
+    usage: business # values: business, devops
+    tags:
+    origin: Customer
+    owner: Company XYZ
+    quantity: many # values: very-few, few, many, very-many
+    dataassettype: no-pi # values: pi, no-pi
+    consent: yes-granular # values: yes-granular, yes-not-granular, no-consent 
+    confidentiality: confidential # values: public, internal, restricted, confidential, strictly-confidential
+    integrity: critical # values: archive, operational, important, critical, mission-critical
+    availability: operational # values: archive, operational, important, critical, mission-critical
+    justification_cia_rating: >
+      Contract data might contain financial data as well as personally identifiable information (PII). The integrity and
+      availability of contract data is required for clearing payment disputes.
+    thirdpartysharing: false
+
+technical_assets:
+  load balancer: #NO RISK (# 5. Public disclosure signed, & PI received/stored & ta is on internet)
+      id: load-balancer
+      #diagram_tweak_order: 99 # affects left to right positioning (only within a trust boundary)
+      description: load balancer
+      type: process # values: external-entity, process, datastore
+      usage: devops # values: business, devops
+      used_as_client_by_human: true
+      out_of_scope: false
+      justification_out_of_scope:
+      size: system # values: system, service, application, component
+      technology: load-balancer # values: see help
+      tags:
+        - linux
+        - git
+      internet: true
+      machine: virtual # values: physical, virtual, container, serverless
+      encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-enduser-individual-key
+      owner: Company ABC
+      confidentiality: confidential # values: public, internal, restricted, confidential, strictly-confidential
+      integrity: important # values: archive, operational, important, critical, mission-critical
+      availability: important # values: archive, operational, important, critical, mission-critical
+      justification_cia_rating: >
+        The code repo pipeline might contain sensitive configuration values like backend credentials, certificates etc. and is
+        therefore rated as confidential.
+      multi_tenant: true
+      redundant: false
+      custom_developed_parts: false
+      data_assets_processed: # sequence of IDs to reference
+      data_assets_stored: # sequence of IDs to reference
+      data_formats_accepted: # sequence of formats like: json, xml, serialization, file, csv
+        - file
+      communication_links:
+        LB to Browser:
+          target: browser
+          description: Link to the browser
+          protocol: https # values: see help
+          authentication: token # values: none, credentials, session-id, token, client-certificate, two-factor
+          authorization: technical-user # values: none, technical-user, enduser-identity-propagation
+          tags:
+          vpn: false
+          ip_filtered: false
+          readonly: false
+          usage: business # values: business, devops
+          data_assets_sent: # sequence of IDs to reference
+            - email0address
+          data_assets_received: # sequence of IDs to reference
+
+  
+
+  load balancer2: #NO RISK (# 6. Public disclosure signed, & NO PI -> No Risk)
+      id: load-balancer-2
+      #diagram_tweak_order: 99 # affects left to right positioning (only within a trust boundary)
+      description: load balancer 2
+      type: process # values: external-entity, process, datastore
+      usage: devops # values: business, devops
+      used_as_client_by_human: true
+      out_of_scope: false
+      justification_out_of_scope:
+      size: system # values: system, service, application, component
+      technology: load-balancer # values: see help
+      tags:
+        - linux
+        - git
+      internet: true
+      machine: virtual # values: physical, virtual, container, serverless
+      encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-enduser-individual-key
+      owner: Company ABC
+      confidentiality: confidential # values: public, internal, restricted, confidential, strictly-confidential
+      integrity: important # values: archive, operational, important, critical, mission-critical
+      availability: important # values: archive, operational, important, critical, mission-critical
+      justification_cia_rating: >
+        The code repo pipeline might contain sensitive configuration values like backend credentials, certificates etc. and is
+        therefore rated as confidential.
+      multi_tenant: true
+      redundant: false
+      custom_developed_parts: false
+      data_assets_processed: # sequence of IDs to reference
+      data_assets_stored: # sequence of IDs to reference
+      data_formats_accepted: # sequence of formats like: json, xml, serialization, file, csv
+        - file
+      communication_links:
+        LB2 to Browser:
+          target: browser
+          description: Link from load balancer 2 to the browser
+          protocol: https # values: see help
+          authentication: token # values: none, credentials, session-id, token, client-certificate, two-factor
+          authorization: technical-user # values: none, technical-user, enduser-identity-propagation
+          tags:
+          vpn: false
+          ip_filtered: false
+          readonly: false
+          usage: business # values: business, devops
+          data_assets_sent: # sequence of IDs to reference
+          data_assets_received: # sequence of IDs to reference
+
+
+
+  application server: #NO RISK (Public disclosure signed, & PI received/stored, & non-external)
+      id: app-server
+      #diagram_tweak_order: 99 # affects left to right positioning (only within a trust boundary)
+      description: Application server
+      type: process # values: external-entity, process, datastore
+      usage: devops # values: business, devops
+      used_as_client_by_human: true
+      out_of_scope: false
+      justification_out_of_scope:
+      size: system # values: system, service, application, component
+      technology: application-server # values: see help
+      tags:
+        - linux
+        - git
+      internet: false
+      machine: virtual # values: physical, virtual, container, serverless
+      encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-enduser-individual-key
+      owner: Company ABC
+      confidentiality: confidential # values: public, internal, restricted, confidential, strictly-confidential
+      integrity: important # values: archive, operational, important, critical, mission-critical
+      availability: important # values: archive, operational, important, critical, mission-critical
+      justification_cia_rating: >
+        The code repo pipeline might contain sensitive configuration values like backend credentials, certificates etc. and is
+        therefore rated as confidential.
+      multi_tenant: true
+      redundant: false
+      custom_developed_parts: false
+      data_assets_processed: # sequence of IDs to reference
+        - full0name
+      data_assets_stored: # sequence of IDs to reference
+        - email0address
+        - full0name
+        - home0address
+      data_formats_accepted: # sequence of formats like: json, xml, serialization, file, csv
+        - file
+      communication_links:
+        app server to LB:
+          target: load-balancer
+          description: Link to the load-balancer
+          protocol: https # values: see help
+          authentication: none # values: none, credentials, session-id, token, client-certificate, two-factor
+          authorization: none # values: none, technical-user, enduser-identity-propagation
+          tags:
+          vpn: false
+          ip_filtered: false
+          readonly: false
+          usage: business # values: business, devops
+          data_assets_sent: # sequence of IDs to reference
+            - email0address
+          data_assets_received: # sequence of IDs to reference
+
+  Monitoring: #NO RISK
+      id: monitoring
+      #diagram_tweak_order: 99 # affects left to right positioning (only within a trust boundary)
+      description: Monitoring server
+      type: process # values: external-entity, process, datastore
+      usage: devops # values: business, devops
+      used_as_client_by_human: true
+      out_of_scope: false
+      justification_out_of_scope:
+      size: system # values: system, service, application, component
+      technology: monitoring # values: see help
+      tags:
+        - linux
+        - git
+      internet: false
+      machine: virtual # values: physical, virtual, container, serverless
+      encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-enduser-individual-key
+      owner: Company ABC
+      confidentiality: confidential # values: public, internal, restricted, confidential, strictly-confidential
+      integrity: important # values: archive, operational, important, critical, mission-critical
+      availability: important # values: archive, operational, important, critical, mission-critical
+      justification_cia_rating: >
+        The code repo pipeline might contain sensitive configuration values like backend credentials, certificates etc. and is
+        therefore rated as confidential.
+      multi_tenant: true
+      redundant: false
+      custom_developed_parts: false
+      data_assets_processed: # sequence of IDs to reference
+        - full0name
+      data_assets_stored: # sequence of IDs to reference
+        - email0address
+        - full0name
+      data_formats_accepted: # sequence of formats like: json, xml, serialization, file, csv
+        - file
+      communication_links:
+        app server to LB:
+          target: load-balancer
+          description: Link to the load-balancer
+          protocol: https # values: see help
+          authentication: token # values: none, credentials, session-id, token, client-certificate, two-factor
+          authorization: none # values: none, technical-user, enduser-identity-propagation
+          tags:
+          vpn: false
+          ip_filtered: false
+          readonly: false
+          usage: business # values: business, devops
+          data_assets_sent: # sequence of IDs to reference
+            - email0address
+          data_assets_received: # sequence of IDs to reference
+
+  Datastore-Logs: #NO RISK
+      id: datastore-logs
+      #diagram_tweak_order: 99 # affects left to right positioning (only within a trust boundary)
+      description: datastore
+      type: datastore # values: external-entity, process, datastore
+      usage: devops # values: business, devops
+      used_as_client_by_human: true
+      out_of_scope: false
+      justification_out_of_scope:
+      size: system # values: system, service, application, component
+      technology: database # values: see help
+      tags:
+        - linux
+        - git
+      internet: false
+      machine: virtual # values: physical, virtual, container, serverless
+      encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-enduser-individual-key
+      owner: Company ABC
+      confidentiality: confidential # values: public, internal, restricted, confidential, strictly-confidential
+      integrity: important # values: archive, operational, important, critical, mission-critical
+      availability: important # values: archive, operational, important, critical, mission-critical
+      justification_cia_rating: >
+        The code repo pipeline might contain sensitive configuration values like backend credentials, certificates etc. and is
+        therefore rated as confidential.
+      multi_tenant: true
+      redundant: false
+      custom_developed_parts: false
+      data_assets_processed: # sequence of IDs to reference
+      data_assets_stored: # sequence of IDs to reference
+        - email0address
+        - full0name
+      data_formats_accepted: # sequence of formats like: json, xml, serialization, file, csv
+        - file
+      communication_links:
+        app server to LB:
+          target: load-balancer
+          description: Link to the load-balancer
+          protocol: https # values: see help
+          authentication: none # values: none, credentials, session-id, token, client-certificate, two-factor
+          authorization: technical-user # values: none, technical-user, enduser-identity-propagation
+          tags:
+          vpn: false
+          ip_filtered: false
+          readonly: false
+          usage: business # values: business, devops
+          data_assets_sent: # sequence of IDs to reference
+            - email0address
+
+  Monitoring2: #NO RISK
+      id: monitoring-2
+      #diagram_tweak_order: 99 # affects left to right positioning (only within a trust boundary)
+      description: Monitoring server
+      type: process # values: external-entity, process, datastore
+      usage: devops # values: business, devops
+      used_as_client_by_human: true
+      out_of_scope: false
+      justification_out_of_scope:
+      size: system # values: system, service, application, component
+      technology: monitoring # values: see help
+      tags:
+        - linux
+        - git
+      internet: false
+      machine: virtual # values: physical, virtual, container, serverless
+      encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-enduser-individual-key
+      owner: Company ABC
+      confidentiality: confidential # values: public, internal, restricted, confidential, strictly-confidential
+      integrity: important # values: archive, operational, important, critical, mission-critical
+      availability: important # values: archive, operational, important, critical, mission-critical
+      justification_cia_rating: >
+        The code repo pipeline might contain sensitive configuration values like backend credentials, certificates etc. and is
+        therefore rated as confidential.
+      multi_tenant: true
+      redundant: false
+      custom_developed_parts: false
+      data_assets_processed: # sequence of IDs to reference
+      data_assets_stored: # sequence of IDs to reference
+        - email0address
+        - car0make
+      data_formats_accepted: # sequence of formats like: json, xml, serialization, file, csv
+        - file
+      communication_links:
+        app server to LB:
+          target: load-balancer
+          description: Link to the load-balancer
+          protocol: https # values: see help
+          authentication: token # values: none, credentials, session-id, token, client-certificate, two-factor
+          authorization: technical-user # values: none, technical-user, enduser-identity-propagation
+          tags:
+          vpn: false
+          ip_filtered: false
+          readonly: false
+          usage: business # values: business, devops
+          data_assets_sent: # sequence of IDs to reference
+            - email0address
+          data_assets_received: # sequence of IDs to reference
+
+  Datastore: #NO RISK
+      id: datastore
+      #diagram_tweak_order: 99 # affects left to right positioning (only within a trust boundary)
+      description: datastore
+      type: datastore # values: external-entity, process, datastore
+      usage: devops # values: business, devops
+      used_as_client_by_human: true
+      out_of_scope: false
+      justification_out_of_scope:
+      size: system # values: system, service, application, component
+      technology: database # values: see help
+      tags:
+        - linux
+        - git
+      internet: false
+      machine: virtual # values: physical, virtual, container, serverless
+      encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-enduser-individual-key
+      owner: Company ABC
+      confidentiality: confidential # values: public, internal, restricted, confidential, strictly-confidential
+      integrity: important # values: archive, operational, important, critical, mission-critical
+      availability: important # values: archive, operational, important, critical, mission-critical
+      justification_cia_rating: >
+        The code repo pipeline might contain sensitive configuration values like backend credentials, certificates etc. and is
+        therefore rated as confidential.
+      multi_tenant: true
+      redundant: false
+      custom_developed_parts: false
+      data_assets_processed: # sequence of IDs to reference
+      data_assets_stored: # sequence of IDs to reference
+        - car0make
+      data_formats_accepted: # sequence of formats like: json, xml, serialization, file, csv
+        - file
+      communication_links:
+        app server to LB:
+          target: load-balancer
+          description: Link to the load-balancer
+          protocol: https # values: see help
+          authentication: none # values: none, credentials, session-id, token, client-certificate, two-factor
+          authorization: none # values: none, technical-user, enduser-identity-propagation
+          tags:
+          vpn: false
+          ip_filtered: false
+          readonly: false
+          usage: business # values: business, devops
+          data_assets_sent: # sequence of IDs to reference
+            - car0make
+          data_assets_received: # sequence of IDs to reference
+
+  Browser: #NO RISK (# 5. Public disclosure signed, & PI received/stored & external)
+      id: browser
+      #diagram_tweak_order: 99 # affects left to right positioning (only within a trust boundary)
+      description: browser
+      type: external-entity # values: external-entity, process, datastore
+      usage: devops # values: business, devops
+      used_as_client_by_human: true
+      out_of_scope: false
+      justification_out_of_scope:
+      size: system # values: system, service, application, component
+      technology: browser # values: see help
+      tags:
+        - linux
+        - git
+      internet: false
+      machine: virtual # values: physical, virtual, container, serverless
+      encryption: none # values: none, transparent, data-with-symmetric-shared-key, data-with-asymmetric-shared-key, data-with-enduser-individual-key
+      owner: Company ABC
+      confidentiality: confidential # values: public, internal, restricted, confidential, strictly-confidential
+      integrity: important # values: archive, operational, important, critical, mission-critical
+      availability: important # values: archive, operational, important, critical, mission-critical
+      justification_cia_rating: >
+        The code repo pipeline might contain sensitive configuration values like backend credentials, certificates etc. and is
+        therefore rated as confidential.
+      multi_tenant: true
+      redundant: false
+      custom_developed_parts: false
+      data_assets_processed: # sequence of IDs to reference
+        - email0address
+      data_assets_stored: # sequence of IDs to reference
+        - email0address
+      data_formats_accepted: # sequence of formats like: json, xml, serialization, file, csv
+        - file
+      communication_links:
+
+trust_boundaries:
+  CC:
+    id: cc-tb
+    description: Trust Boundary
+    type: network-cloud-security-group # values: see help
+    tags:
+    technical_assets_inside: # sequence of IDs to reference
+      - app-server
+      - monitoring
+      - datastore-logs
+      - monitoring-2
+      - datastore
+      - load-balancer
+    trust_boundaries_nested: # sequence of IDs to reference
+
+
+
+shared_runtimes:
+
+
+
+#diagram_tweak_edge_layout: spline # values: spline, polyline, false, ortho (this suppresses edge labels), curved (this suppresses edge labels and can cause problems with edges)
+
+#diagram_tweak_suppress_edge_labels: true
+#diagram_tweak_layout_left_to_right: true
+#diagram_tweak_nodesep: 2
+#diagram_tweak_ranksep: 2
+#diagram_tweak_invisible_connections_between_assets:
+#  - tech-asset-source-id-A:tech-asset-target-id-B
+#  - tech-asset-source-id-C:tech-asset-target-id-D
+#diagram_tweak_same_rank_assets:
+#  - tech-asset-source-id-E:tech-asset-target-id-F:tech-asset-source-id-G:tech-asset-target-id-H
+#  - tech-asset-source-id-M:tech-asset-target-id-N:tech-asset-source-id-O
