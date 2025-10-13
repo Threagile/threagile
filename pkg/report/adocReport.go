@@ -301,6 +301,10 @@ func (adoc adocReport) WriteReport(model *types.Model,
 	if err != nil {
 		return fmt.Errorf("error creating risk categories: %w", err)
 	}
+	err = adoc.privacyParameters()
+	if err != nil {
+		return fmt.Errorf("error creating privacy parameters: %w", err)
+	}
 	err = adoc.writeTechnicalAssets()
 	if err != nil {
 		return fmt.Errorf("error creating technical assets: %w", err)

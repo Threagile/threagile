@@ -54,7 +54,7 @@ var OrgPersistStgTags = map[string]bool{
 
 func isPersistentStorage(t *types.TechnicalAsset) bool {
 
-	var flag bool = false
+	var flag = false
 	if t.Type == types.Datastore {
 		return true
 	}
@@ -73,8 +73,6 @@ func isPersistentStorage(t *types.TechnicalAsset) bool {
 	}
 	return flag
 }
-
-var threshQuasiIDSID = 3
 
 func (r *StoringIdentifyingDataRule) GenerateRisks(model *types.Model) ([]*types.Risk, error) {
 	risks := make([]*types.Risk, 0)

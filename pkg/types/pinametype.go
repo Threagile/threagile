@@ -122,7 +122,6 @@ func (what PINameType) Find(value string) (PINameType, error) {
 }
 
 func ParsePINameType(value string) (PIName PINameType, err error) {
-	fmt.Errorf("value: %s", value)
 	return PINameType(0).Find(value)
 }
 

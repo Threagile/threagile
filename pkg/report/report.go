@@ -108,6 +108,7 @@ func (r *pdfReporter) WriteReportPDF(reportFilename string,
 	r.createModelFailures(model)
 	r.createQuestions(model)
 	r.createRiskCategories(model)
+	//r.createPrivacyListing(model)
 	r.createTechnicalAssets(model)
 	r.createDataAssets(model)
 	r.createTrustBoundaries(model)
@@ -2432,60 +2433,6 @@ func (r *pdfReporter) createQuestions(parsedModel *types.Model) {
 			html.Write(5, "<i>- answer pending -</i>")
 			r.pdfColorBlack()
 		}
-	}
-}
-
-func (r *pdfReporter) createPrivacyListing(parsedModel *types.Model) {
-	uni := r.pdf.UnicodeTranslatorFromDescriptor("")
-	r.pdf.SetTextColor(0, 0, 0)
-	chapTitle := "Privacy_Parameters"
-	r.addHeadline(chapTitle, false)
-	r.defineLinkTarget("{PrivacyParameters}")
-	r.currentChapterTitleBreadcrumb = chapTitle
-	r.pdfColorBlack()
-
-	html := r.pdf.HTMLBasicNew()
-	html.Write(5, "This chapter lists the application's privacy-based inputs or parameters for the model.")
-
-	if len(parsedModel.Questions) == 0 {
-		r.pdfColorLightGray()
-		html.Write(5, "<br><br><br>")
-		html.Write(5, "No custom questions arose during the threat modeling process.")
-	}
-	r.pdfColorBlack()
-	html.Write(5, "<b>"+uni("delete_post_functional_need")+"</b><br>")
-	if parsedModel.DeletePostFunctionalNeed {
-		html.Write(5, "<i>"+uni("TRUE")+"</i>")
-	} else {
-		html.Write(5, "<i>"+uni("FALSE")+"</i>")
-	}
-	r.pdfColorBlack()
-	html.Write(5, "<b>"+uni("deidentified")+"</b><br>")
-	if parsedModel.Deidentified {
-		html.Write(5, "<i>"+uni("TRUE")+"</i>")
-	} else {
-		html.Write(5, "<i>"+uni("FALSE")+"</i>")
-	}
-	r.pdfColorBlack()
-	html.Write(5, "<b>"+uni("public_disclosure_signed")+"</b><br>")
-	if parsedModel.PublicDisclosureSigned {
-		html.Write(5, "<i>"+uni("TRUE")+"</i>")
-	} else {
-		html.Write(5, "<i>"+uni("FALSE")+"</i>")
-	}
-	r.pdfColorBlack()
-	html.Write(5, "<b>"+uni("hasdatalifecyclemgmt")+"</b><br>")
-	if parsedModel.HasDataLifeCycleMgmt {
-		html.Write(5, "<i>"+uni("TRUE")+"</i>")
-	} else {
-		html.Write(5, "<i>"+uni("FALSE")+"</i>")
-	}
-	r.pdfColorBlack()
-	html.Write(5, "<b>"+uni("piuseraccessmechanism")+"</b><br>")
-	if parsedModel.PIUserAccessMechanism {
-		html.Write(5, "<i>"+uni("TRUE")+"</i>")
-	} else {
-		html.Write(5, "<i>"+uni("FALSE")+"</i>")
 	}
 }
 

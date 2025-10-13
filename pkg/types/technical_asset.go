@@ -152,7 +152,7 @@ func (what ByTechnicalAssetQuickWinsAndTitleSort) Swap(i, j int) { what[i], what
 	}
 */
 func (what TechnicalAsset) IsPersistentStorageIDS() bool {
-	var flag bool = false
+	var flag = false
 	if what.Type == Datastore {
 		return true
 	}

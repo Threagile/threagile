@@ -62,7 +62,7 @@ func (r *DataMinimizationAndExclusionRule) GenerateRisks(parsedModel *types.Mode
 		}
 
 		nonReqDataAsset := make([]string, 0)
-		for k, _ := range daRecvdInMap {
+		for k := range daRecvdInMap {
 			_, p := daProcessedOrStoredMap[k]
 			if !p {
 				nonReqDataAsset = append(nonReqDataAsset, k)
