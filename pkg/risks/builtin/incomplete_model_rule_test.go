@@ -32,7 +32,7 @@ func TestIncompleteModelRuleGenerateRisksOutOfScopeNotRisksCreated(t *testing.T)
 	assert.Empty(t, risks)
 }
 
-func TestIncompleteModelRuleGenerateRisksTechnicalAssetWithoutCommunicationLinksNoRisksCreated(t *testing.T) {
+func TestIncompleteModelRuleGenerateRisksTechnicalAssetWithKnownTechnologiesAndWithoutCommunicationLinksNoRisksCreated(t *testing.T) {
 	rule := NewIncompleteModelRule()
 
 	risks, err := rule.GenerateRisks(&types.Model{

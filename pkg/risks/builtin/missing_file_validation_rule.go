@@ -44,7 +44,7 @@ func (r *MissingFileValidationRule) GenerateRisks(input *types.Model) ([]*types.
 	risks := make([]*types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
-		if technicalAsset.OutOfScope || !technicalAsset.CustomDevelopedParts {
+		if r.skipAsset(technicalAsset) {
 			continue
 		}
 		for _, format := range technicalAsset.DataFormatsAccepted {
@@ -54,6 +54,10 @@ func (r *MissingFileValidationRule) GenerateRisks(input *types.Model) ([]*types.
 		}
 	}
 	return risks, nil
+}
+
+func (r *MissingFileValidationRule) skipAsset(technicalAsset *types.TechnicalAsset) bool {
+	return technicalAsset.OutOfScope || !technicalAsset.CustomDevelopedParts
 }
 
 func (r *MissingFileValidationRule) createRisk(input *types.Model, technicalAsset *types.TechnicalAsset) *types.Risk {

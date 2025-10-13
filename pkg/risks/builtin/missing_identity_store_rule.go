@@ -42,7 +42,7 @@ func (*MissingIdentityStoreRule) SupportedTags() []string {
 func (r *MissingIdentityStoreRule) GenerateRisks(input *types.Model) ([]*types.Risk, error) {
 	risks := make([]*types.Risk, 0)
 	for _, technicalAsset := range input.TechnicalAssets {
-		if !technicalAsset.OutOfScope && technicalAsset.Technologies.GetAttribute(types.IsIdentityStore) {
+		if r.skipAsset(technicalAsset) {
 			// everything fine, no risk, as we have an in-scope identity store in the model
 			return risks, nil
 		}
@@ -82,6 +82,10 @@ func (r *MissingIdentityStoreRule) GenerateRisks(input *types.Model) ([]*types.R
 		risks = append(risks, r.createRisk(mostRelevantAsset, impact))
 	}
 	return risks, nil
+}
+
+func (r *MissingIdentityStoreRule) skipAsset(technicalAsset *types.TechnicalAsset) bool {
+	return !technicalAsset.OutOfScope && technicalAsset.Technologies.GetAttribute(types.IsIdentityStore)
 }
 
 func (r *MissingIdentityStoreRule) createRisk(technicalAsset *types.TechnicalAsset, impact types.RiskExploitationImpact) *types.Risk {

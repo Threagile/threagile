@@ -48,26 +48,36 @@ func (r *DosRiskyAccessAcrossTrustBoundaryRule) GenerateRisks(input *types.Model
 	risks := make([]*types.Risk, 0)
 	for _, id := range input.SortedTechnicalAssetIDs() {
 		technicalAsset := input.TechnicalAssets[id]
-		if !technicalAsset.OutOfScope && !technicalAsset.Technologies.GetAttribute(types.LoadBalancer) &&
-			technicalAsset.Availability >= types.Critical {
-			for _, incomingAccess := range input.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id] {
-				sourceAsset := input.TechnicalAssets[incomingAccess.SourceId]
-				if sourceAsset.Technologies.GetAttribute(types.IsTrafficForwarding) {
-					// Now try to walk a call chain up (1 hop only) to find a caller's caller used by human
-					callersCommLinks := input.IncomingTechnicalCommunicationLinksMappedByTargetId[sourceAsset.Id]
-					for _, callersCommLink := range callersCommLinks {
-						risks = r.checkRisk(input, technicalAsset, callersCommLink, incomingAccess.Id, sourceAsset.Title, risks)
-					}
-				} else {
-					risks = r.checkRisk(input, technicalAsset, incomingAccess, "", "", risks)
+
+		if r.skipAsset(technicalAsset) {
+			continue
+		}
+
+		for _, incomingAccess := range input.IncomingTechnicalCommunicationLinksMappedByTargetId[technicalAsset.Id] {
+			sourceAsset := input.TechnicalAssets[incomingAccess.SourceId]
+			if sourceAsset.Technologies.GetAttribute(types.IsTrafficForwarding) {
+				// Now try to walk a call chain up (1 hop only) to find a caller's caller used by human
+				callersCommLinks := input.IncomingTechnicalCommunicationLinksMappedByTargetId[sourceAsset.Id]
+				for _, callersCommLink := range callersCommLinks {
+					risks = r.potentiallyAddRisk(input, technicalAsset, callersCommLink, incomingAccess.Id, sourceAsset.Title, risks)
 				}
+			} else {
+				risks = r.potentiallyAddRisk(input, technicalAsset, incomingAccess, "", "", risks)
 			}
 		}
 	}
 	return risks, nil
 }
 
-func (r *DosRiskyAccessAcrossTrustBoundaryRule) checkRisk(input *types.Model, technicalAsset *types.TechnicalAsset, incomingAccess *types.CommunicationLink, linkId string, hopBetween string, risks []*types.Risk) []*types.Risk {
+func (asl DosRiskyAccessAcrossTrustBoundaryRule) skipAsset(techAsset *types.TechnicalAsset) bool {
+	return techAsset.OutOfScope || !techAsset.Technologies.GetAttribute(types.LoadBalancer) &&
+		techAsset.Availability < types.Critical
+}
+
+func (r *DosRiskyAccessAcrossTrustBoundaryRule) potentiallyAddRisk(
+	input *types.Model, technicalAsset *types.TechnicalAsset, incomingAccess *types.CommunicationLink,
+	linkId string, hopBetween string, risks []*types.Risk) []*types.Risk {
+
 	if !isAcrossTrustBoundaryNetworkOnly(input, incomingAccess) {
 		return risks
 	}

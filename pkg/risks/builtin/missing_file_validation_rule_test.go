@@ -7,7 +7,7 @@ import (
 	"github.com/threagile/threagile/pkg/types"
 )
 
-func TestMissingFileValidationRuleGenerateRisksEmptyModelNotRisksCreated(t *testing.T) {
+func TestMissingFileValidationRuleGenerateRisksEmptyModelNoRisksCreated(t *testing.T) {
 	rule := NewMissingFileValidationRule()
 
 	risks, err := rule.GenerateRisks(&types.Model{})

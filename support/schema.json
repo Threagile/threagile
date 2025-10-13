@@ -1,5 +1,5 @@
 {
-  "$schema": "https://threagile.io/schema#",
+  "$schema": "https://json-schema.org/draft-07/schema#",
   "id": "https://threagile.io/schema.json",
   "title": "Threagile",
   "description": "Agile Threat Modeling",
@@ -205,7 +205,7 @@
       "uniqueItems": true
     },
     "tags_available": {
-      "description": "Tags available",
+      "description": "Tags are used to add custom metadata to model elements, enabling filtering, classification, and the creation of tailored risk rules. They help provide context and drive more precise, organization-specific threat modeling.",
       "type": [
         "array",
         "null"
@@ -216,14 +216,14 @@
       }
     },
     "data_assets": {
-      "description": "Data assets",
+      "description": "Data assets represent types of data processed, stored, or transmitted in the system, such as personal data, credentials, or logs—along with their sensitivity, confidentiality, and integrity requirements. They help assess the impact of risks based on the value of the data involved.",
       "type": "object",
       "uniqueItems": true,
       "additionalProperties": {
         "type": "object",
         "properties": {
           "id": {
-            "description": "ID",
+            "description": "A unique identifier for the data asset.",
             "type": "string"
           },
           "pinametype": {
@@ -260,14 +260,14 @@
             ]
           },
           "description": {
-            "description": "Description",
+            "description": "A description for the data asset.",
             "type": [
               "string",
               "null"
             ]
           },
           "usage": {
-            "description": "Usage",
+            "description": "Describes how the data is handled — typically as business, or devops, to indicate its role in the system and influence certain risk evaluations, such as inappropriate access or exposure.",
             "type": "string",
             "enum": [
               "business",
@@ -286,21 +286,21 @@
             }
           },
           "origin": {
-            "description": "Origin",
+            "description": "Specifies where the data originally comes from — such as client, server, external, or another source — to help assess trust levels, data flow risks, and whether sensitive data enters from untrusted sources.",
             "type": [
               "string",
               "null"
             ]
           },
           "owner": {
-            "description": "Owner",
+            "description": "The person or team responsible for the data asset's management, security, and compliance, ensuring accountability for protecting and maintaining the asset.",
             "type": [
               "string",
               "null"
             ]
           },
           "quantity": {
-            "description": "Quantity",
+            "description": "Describes the approximate amount of data for a data asset, helping to gauge the potential impact of data-related risks. The values like very-few, few, many, and very-many represent increasing scales of data volume, allowing the model to differentiate risk severity based on how much data could be affected.",
             "type": "string",
             "enum": [
               "very-few",
@@ -310,7 +310,7 @@
             ]
           },
           "confidentiality": {
-            "description": "Confidentiality",
+            "description": "Refers to the level of protection required to keep data secret and prevent unauthorized access. It is used to assess the potential impact if sensitive information is exposed.",
             "type": "string",
             "enum": [
               "public",
@@ -321,7 +321,7 @@
             ]
           },
           "integrity": {
-            "description": "Integrity",
+            "description": "Refers to the importance of keeping data accurate, complete, and unaltered by unauthorized parties, helping to evaluate the impact if data is tampered with or corrupted.",
             "type": "string",
             "enum": [
               "archive",
@@ -332,7 +332,7 @@
             ]
           },
           "availability": {
-            "description": "Availability",
+            "description": "Measures how critical it is for data to be accessible and operational when needed, guiding the assessment of risks related to downtime or loss of service.",
             "type": "string",
             "enum": [
               "archive",
@@ -362,25 +362,25 @@
       }
     },
     "technical_assets": {
-      "description": "Technical assets",
+      "description": "Any hardware, software, or system component that supports the processing, storage, or transmission of data, such as servers, applications, databases, or network devices.",
       "type": "object",
       "uniqueItems": true,
       "additionalProperties": {
         "type": "object",
         "properties": {
           "id": {
-            "description": "ID",
+            "description": "A unique identifier for the technical asset.",
             "type": "string"
           },
           "description": {
-            "description": "Description",
+            "description": "A description for the technical asset.",
             "type": [
               "string",
               "null"
             ]
           },
           "type": {
-            "description": "Type",
+            "description": "Defines the role or function in the architecture, such as application, database, load-balancer, client-system, or external-entity, which helps determine how it interacts with other assets and what risks apply to it.",
             "type": "string",
             "enum": [
               "external-entity",
@@ -389,7 +389,7 @@
             ]
           },
           "usage": {
-            "description": "Usage",
+            "description": "Indicates whether it primarily serves business functions or devops purposes, helping to assess risks based on its role and exposure in the system.",
             "type": "string",
             "enum": [
               "business",
@@ -397,11 +397,11 @@
             ]
           },
           "used_as_client_by_human": {
-            "description": "Used as client by human",
+            "description": "Indicates whether a technical asset is directly used by a human, such as a web browser or mobile app. This affects risk evaluation related to user interaction, like spoofing or social engineering.",
             "type": "boolean"
           },
           "out_of_scope": {
-            "description": "Out of scope",
+            "description": "Marks a technical asset as outside the scope of the threat model. This means the asset is shown in diagrams but is not analyzed for risks, helping focus attention on relevant parts of the system.",
             "type": "boolean"
           },
           "justification_out_of_scope": {
@@ -412,7 +412,7 @@
             ]
           },
           "size": {
-            "description": "Size",
+            "description": "Reflects its relative complexity or capacity, with values like component, system etc. This helps estimate the asset's importance and the potential impact if it is compromised.",
             "type": "string",
             "enum": [
               "system",
@@ -553,7 +553,7 @@
             }
           },
           "tags": {
-            "description": "Tags",
+            "description": "Custom labels used to categorize or describe assets, such as cloud, internal, public-facing, or third-party. They support filtering, documentation, and custom risk rules tailored to your environment.",
             "type": [
               "array",
               "null"
@@ -564,11 +564,11 @@
             }
           },
           "internet": {
-            "description": "Internet",
+            "description": "Set to true if a technical asset is accessible from the public internet. This increases its exposure and affects the severity and likelihood of certain risks, such as unauthorized access or denial of service.",
             "type": "boolean"
           },
           "machine": {
-            "description": "Machine",
+            "description": "Describes the type of environment the technical asset runs on, such as virtual, container, physical, or serverless. This helps assess risks related to deployment, isolation, and infrastructure.",
             "type": "string",
             "enum": [
               "physical",
@@ -578,7 +578,7 @@
             ]
           },
           "encryption": {
-            "description": "Encryption",
+            "description": "Specifies whether and how data handled by a technical asset is protected using encryption. It helps evaluate the risk of data exposure by indicating if encryption is applied for data at rest, in transit, or both.",
             "type": "string",
             "enum": [
               "none",
@@ -589,14 +589,14 @@
             ]
           },
           "owner": {
-            "description": "Owner",
+            "description": "Refers to the person, team, or organizational unit responsible for managing and securing a technical asset, ensuring accountability for its protection and compliance.",
             "type": [
               "string",
               "null"
             ]
           },
           "confidentiality": {
-            "description": "Confidentiality",
+            "description": "Defines how important it is to keep asset information secret and protected from unauthorized access, guiding risk assessments related to data leaks or exposure.",
             "type": "string",
             "enum": [
               "public",
@@ -607,7 +607,7 @@
             ]
           },
           "integrity": {
-            "description": "Integrity",
+            "description": "Refers to the importance of maintaining the accuracy and trustworthiness of the system component by preventing unauthorized modification or corruption.",
             "type": "string",
             "enum": [
               "archive",
@@ -618,7 +618,7 @@
             ]
           },
           "availability": {
-            "description": "Availability",
+            "description": "Indicates how critical it is for the technical asset to be accessible and operational when needed, helping assess risks related to downtime or service interruptions.",
             "type": "string",
             "enum": [
               "archive",
@@ -636,19 +636,19 @@
             ]
           },
           "multi_tenant": {
-            "description": "Multi tenant",
+            "description": "Whether the technical asset supports multiple tenants or customers sharing the same instance, affecting risk related to data isolation and access control.",
             "type": "boolean"
           },
           "redundant": {
-            "description": "Redundant",
+            "description": "Specifies whether the technical asset has redundancy (e.g., backup systems or failover), which impacts availability and resilience risk assessments.",
             "type": "boolean"
           },
           "custom_developed_parts": {
-            "description": "Custom developed parts",
+            "description": "Marks if the asset contains custom-developed code or components, which may introduce unique security risks compared to off-the-shelf software.",
             "type": "boolean"
           },
           "data_assets_processed": {
-            "description": "Data assets processed; ; all data assets stored or sent or received via a communication link (be it as a source or a target) are implicitly also processed and do not need to be listed here.",
+            "description": "All data assets stored or sent or received via a communication link (be it as a source or a target) are implicitly also processed and do not need to be listed here.",
             "type": [
               "array",
               "null"
@@ -659,7 +659,7 @@
             }
           },
           "data_assets_stored": {
-            "description": "Data assets stored",
+            "description": "Lists data assets that the technical asset stores persistently, important for confidentiality, integrity, and availability risks.",
             "type": [
               "array",
               "null"
@@ -670,7 +670,7 @@
             }
           },
           "data_formats_accepted": {
-            "description": "Data formats accepted",
+            "description": "Specifies the types or formats of data the asset can accept (e.g., JSON, XML), useful for input validation and injection risk analysis.",
             "type": [
               "array",
               "null"
@@ -689,11 +689,11 @@
             }
           },
           "diagram_tweak_order": {
-            "description": "diagram tweak order (affects left to right positioning)",
+            "description": "A numeric value used to control the layering or order of technical assets in generated diagrams, helping improve visual clarity (affects left to right positioning).",
             "type": "integer"
           },
           "communication_links": {
-            "description": "Communication links",
+            "description": "Defines connections between technical assets for data or control flow, essential for modeling trust boundaries and attack paths.",
             "type": [
               "object",
               "null"
@@ -865,6 +865,14 @@
             }
           }
         },
+        "allOf": [
+          {
+            "anyOf": [
+              { "required": ["technology"] },
+              { "required": ["technologies"] }
+            ]
+          }
+        ],
         "required": [
           "id",
           "description",
@@ -873,7 +881,6 @@
           "used_as_client_by_human",
           "out_of_scope",
           "size",
-          "technology",
           "internet",
           "machine",
           "encryption",

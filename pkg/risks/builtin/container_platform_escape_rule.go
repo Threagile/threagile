@@ -50,11 +50,20 @@ func (r *ContainerPlatformEscapeRule) GenerateRisks(parsedModel *types.Model) ([
 	risks := make([]*types.Risk, 0)
 	for _, id := range parsedModel.SortedTechnicalAssetIDs() {
 		technicalAsset := parsedModel.TechnicalAssets[id]
-		if !technicalAsset.OutOfScope && technicalAsset.Technologies.GetAttribute(types.ContainerPlatform) {
+
+		if r.skipAsset(technicalAsset) {
+			continue
+		}
+
+		if technicalAsset.Technologies.GetAttribute(types.ContainerPlatform) {
 			risks = append(risks, r.createRisk(parsedModel, technicalAsset))
 		}
 	}
 	return risks, nil
+}
+
+func (asl ContainerPlatformEscapeRule) skipAsset(techAsset *types.TechnicalAsset) bool {
+	return techAsset.OutOfScope
 }
 
 func (r *ContainerPlatformEscapeRule) createRisk(parsedModel *types.Model, technicalAsset *types.TechnicalAsset) *types.Risk {

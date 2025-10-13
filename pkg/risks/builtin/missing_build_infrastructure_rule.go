@@ -48,32 +48,21 @@ func (r *MissingBuildInfrastructureRule) GenerateRisks(input *types.Model) ([]*t
 	var mostRelevantAsset *types.TechnicalAsset
 	for _, id := range input.SortedTechnicalAssetIDs() { // use the sorted one to always get the same tech asset with the highest sensitivity as example asset
 		technicalAsset := input.TechnicalAssets[id]
-		if technicalAsset.Technologies.GetAttribute(types.BuildPipeline) {
-			hasBuildPipeline = true
-		}
-		if technicalAsset.Technologies.GetAttribute(types.SourcecodeRepository) {
-			hasSourcecodeRepo = true
-		}
-		if technicalAsset.Technologies.GetAttribute(types.DevOpsClient) {
-			hasDevOpsClient = true
-		}
-		if !technicalAsset.CustomDevelopedParts || technicalAsset.OutOfScope {
+		
+		getTechFlags(technicalAsset, &hasBuildPipeline, &hasSourcecodeRepo, &hasDevOpsClient)
+
+		if r.skipAsset(technicalAsset) {
 			continue
 		}
+	
 		hasCustomDevelopedParts = true
 		if impact == types.LowImpact {
 			mostRelevantAsset = technicalAsset
-			if input.HighestProcessedConfidentiality(technicalAsset) >= types.Confidential ||
-				input.HighestProcessedIntegrity(technicalAsset) >= types.Critical ||
-				input.HighestProcessedAvailability(technicalAsset) >= types.Critical {
-				impact = types.MediumImpact
-			}
+			evaluateImpactFromHighestCIAValues(input, technicalAsset, &impact)
 		}
-		if technicalAsset.Confidentiality >= types.Confidential ||
-			technicalAsset.Integrity >= types.Critical ||
-			technicalAsset.Availability >= types.Critical {
-			impact = types.MediumImpact
-		}
+		
+		evaluateImpactFromTechnicalAssetCIAValues(technicalAsset, &impact)
+
 		// just for referencing the most interesting asset
 		if technicalAsset.HighestSensitivityScore() > mostRelevantAsset.HighestSensitivityScore() {
 			mostRelevantAsset = technicalAsset
@@ -84,6 +73,41 @@ func (r *MissingBuildInfrastructureRule) GenerateRisks(input *types.Model) ([]*t
 		risks = append(risks, r.createRisk(mostRelevantAsset, impact))
 	}
 	return risks, nil
+}
+
+func (r *MissingBuildInfrastructureRule) skipAsset(technicalAsset *types.TechnicalAsset) bool {
+	if !technicalAsset.CustomDevelopedParts || technicalAsset.OutOfScope {
+		return true
+	}
+	return false
+}
+
+func evaluateImpactFromHighestCIAValues(input *types.Model, technicalAsset *types.TechnicalAsset, impact *types.RiskExploitationImpact) {
+	if input.HighestProcessedConfidentiality(technicalAsset) >= types.Confidential ||
+		input.HighestProcessedIntegrity(technicalAsset) >= types.Critical ||
+		input.HighestProcessedAvailability(technicalAsset) >= types.Critical {
+		*impact = types.MediumImpact
+	}
+}
+
+func evaluateImpactFromTechnicalAssetCIAValues(technicalAsset *types.TechnicalAsset, impact *types.RiskExploitationImpact) {
+	if technicalAsset.Confidentiality >= types.Confidential ||
+		technicalAsset.Integrity >= types.Critical ||
+		technicalAsset.Availability >= types.Critical {
+		*impact = types.MediumImpact
+	}
+}
+
+func getTechFlags(technicalAsset *types.TechnicalAsset, hasBuildPipeline, hasSourcecodeRepo, hasDevOpsClient *bool) {
+	if technicalAsset.Technologies.GetAttribute(types.BuildPipeline) {
+		*hasBuildPipeline = true
+	}
+	if technicalAsset.Technologies.GetAttribute(types.SourcecodeRepository) {
+		*hasSourcecodeRepo = true
+	}
+	if technicalAsset.Technologies.GetAttribute(types.DevOpsClient) {
+		*hasDevOpsClient = true
+	}
 }
 
 func (r *MissingBuildInfrastructureRule) createRisk(technicalAsset *types.TechnicalAsset, impact types.RiskExploitationImpact) *types.Risk {

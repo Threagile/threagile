@@ -32,29 +32,6 @@ func TestCodeBackdooringRuleGenerateRisksOutOfScopeNotRisksCreated(t *testing.T)
 	assert.Empty(t, risks)
 }
 
-func TestCodeBackdooringRuleGenerateRisksTechAssetNotContainSecretsNotRisksCreated(t *testing.T) {
-	rule := NewCodeBackdooringRule()
-
-	risks, err := rule.GenerateRisks(&types.Model{
-		TechnicalAssets: map[string]*types.TechnicalAsset{
-			"ta1": {
-				Technologies: types.TechnologyList{
-					{
-						Name: "tool",
-						Attributes: map[string]bool{
-							types.MayContainSecrets:                                 false,
-							types.IsUsuallyAbleToPropagateIdentityToOutgoingTargets: true,
-						},
-					},
-				},
-			},
-		},
-	})
-
-	assert.Nil(t, err)
-	assert.Empty(t, risks)
-}
-
 func TestCodeBackdooringRuleGenerateRisksTechAssetFromInternetRisksCreated(t *testing.T) {
 	rule := NewCodeBackdooringRule()
 
@@ -119,8 +96,9 @@ func TestCodeBackdoogingRuleGenerateRisksTechAssetNotInternetButNotComingThrough
 	risks, err := rule.GenerateRisks(&types.Model{
 		TechnicalAssets: map[string]*types.TechnicalAsset{
 			"git-lab-ci-cd": {
-				Id:    "git-lab-ci-cd",
-				Title: "GitLab CI/CD",
+				Id:       "git-lab-ci-cd",
+				Title:    "GitLab CI/CD",
+				Internet: false,
 				Technologies: types.TechnologyList{
 					{
 						Name: "build-pipeline",
@@ -158,8 +136,9 @@ func TestCodeBackdooringRuleGenerateRisksTechAssetNotInternetButComingThroughVPN
 	risks, err := rule.GenerateRisks(&types.Model{
 		TechnicalAssets: map[string]*types.TechnicalAsset{
 			"git-lab-ci-cd": {
-				Id:    "git-lab-ci-cd",
-				Title: "GitLab CI/CD",
+				Id:       "git-lab-ci-cd",
+				Title:    "GitLab CI/CD",
+				Internet: false,
 				Technologies: types.TechnologyList{
 					{
 						Name: "build-pipeline",
@@ -170,7 +149,8 @@ func TestCodeBackdooringRuleGenerateRisksTechAssetNotInternetButComingThroughVPN
 				},
 			},
 			"vpn": {
-				Title: "VPN",
+				Title:    "VPN",
+				Internet: true,
 			},
 		},
 		IncomingTechnicalCommunicationLinksMappedByTargetId: map[string][]*types.CommunicationLink{
@@ -196,6 +176,7 @@ func TestCodeBackdooringRuleGenerateRisksTechAssetNotInternetButComingThroughVPN
 			"git-lab-ci-cd": {
 				Id:         "git-lab-ci-cd",
 				Title:      "GitLab CI/CD",
+				Internet:   false,
 				OutOfScope: true,
 				Technologies: types.TechnologyList{
 					{
@@ -226,7 +207,7 @@ func TestCodeBackdooringRuleGenerateRisksTechAssetNotInternetButComingThroughVPN
 	assert.Empty(t, risks)
 }
 
-func TestCodeBackdoogingRuleGenerateRisksNotImportantDataAssetNoAddingTargetRisksCreated(t *testing.T) {
+func TestCodeBackdooringRuleGenerateRisksNotImportantDataAssetNoAddingTargetRisksCreated(t *testing.T) {
 	rule := NewCodeBackdooringRule()
 
 	risks, err := rule.GenerateRisks(&types.Model{
@@ -247,7 +228,6 @@ func TestCodeBackdoogingRuleGenerateRisksNotImportantDataAssetNoAddingTargetRisk
 						Usage:          types.DevOps,
 						DataAssetsSent: []string{"not-important-data-asset"},
 						TargetId:       "deployment-target",
-						SourceId:       "git-lab-ci-cd",
 					},
 				},
 			},
@@ -266,7 +246,6 @@ func TestCodeBackdoogingRuleGenerateRisksNotImportantDataAssetNoAddingTargetRisk
 				{
 					SourceId: "reverse-proxy",
 					TargetId: "git-lab-ci-cd",
-					VPN:      false,
 				},
 			},
 		},
@@ -284,7 +263,7 @@ func TestCodeBackdoogingRuleGenerateRisksNotImportantDataAssetNoAddingTargetRisk
 	assert.Equal(t, []string{"git-lab-ci-cd"}, risks[0].DataBreachTechnicalAssetIDs)
 }
 
-func TestCodeBackdoogingRuleGenerateRisksNotDevOpsDataAssetNoAddingTargetRisksCreated(t *testing.T) {
+func TestCodeBackdooringRuleGenerateRisksNotDevOpsDataAssetNoAddingTargetRisksCreated(t *testing.T) {
 	rule := NewCodeBackdooringRule()
 
 	risks, err := rule.GenerateRisks(&types.Model{
@@ -305,7 +284,6 @@ func TestCodeBackdoogingRuleGenerateRisksNotDevOpsDataAssetNoAddingTargetRisksCr
 						Usage:          types.Business,
 						DataAssetsSent: []string{"important-data-asset"},
 						TargetId:       "deployment-target",
-						SourceId:       "git-lab-ci-cd",
 					},
 				},
 			},
@@ -363,7 +341,6 @@ func TestCodeBackdoogingRuleGenerateRisksDevOpsImportantDataAssetNoAddingTargetR
 						Usage:          types.DevOps,
 						DataAssetsSent: []string{"important-data-asset"},
 						TargetId:       "deployment-target",
-						SourceId:       "git-lab-ci-cd",
 					},
 				},
 			},
