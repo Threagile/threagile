@@ -3,16 +3,16 @@ package input
 import "fmt"
 
 type DataAsset struct {
-	ID                     string   `yaml:"id,omitempty" json:"id,omitempty"`
-	Description            string   `yaml:"description,omitempty" json:"description,omitempty"`
-	Usage                  string   `yaml:"usage,omitempty" json:"usage,omitempty"`
+	ID                     string   `yaml:"id" json:"id"`
+	Description            string   `yaml:"description" json:"description"`
+	Usage                  string   `yaml:"usage" json:"usage"`
 	Tags                   []string `yaml:"tags,omitempty" json:"tags,omitempty"`
 	Origin                 string   `yaml:"origin,omitempty" json:"origin,omitempty"`
 	Owner                  string   `yaml:"owner,omitempty" json:"owner,omitempty"`
-	Quantity               string   `yaml:"quantity,omitempty" json:"quantity,omitempty"`
-	Confidentiality        string   `yaml:"confidentiality,omitempty" json:"confidentiality,omitempty"`
-	Integrity              string   `yaml:"integrity,omitempty" json:"integrity,omitempty"`
-	Availability           string   `yaml:"availability,omitempty" json:"availability,omitempty"`
+	Quantity               string   `yaml:"quantity" json:"quantity"`
+	Confidentiality        string   `yaml:"confidentiality" json:"confidentiality"`
+	Integrity              string   `yaml:"integrity" json:"integrity"`
+	Availability           string   `yaml:"availability" json:"availability"`
 	JustificationCiaRating string   `yaml:"justification_cia_rating,omitempty" json:"justification_cia_rating,omitempty"`
 }
 
