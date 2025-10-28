@@ -1874,7 +1874,7 @@ func (adoc adocReport) technicalAssets(f *os.File) {
 		if len(incomingCommLinks) > 0 {
 			writeLine(f, "=== Incoming Communication Links: "+strconv.Itoa(len(incomingCommLinks)))
 			for _, incomingCommLink := range incomingCommLinks {
-				writeLine(f, "==== "+incomingCommLink.Title+" (outgoing)")
+				writeLine(f, "==== "+incomingCommLink.Title+" (incoming)")
 				writeLine(f, fixBasicHtml(incomingCommLink.Description))
 
 				tagsUsedText := joinedOrNoneString(incomingCommLink.Tags, "")
