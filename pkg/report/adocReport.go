@@ -1620,7 +1620,6 @@ func (adoc adocReport) riskCategories(f *os.File) {
 
 		// risk details
 		writeLine(f, "")
-		writeLine(f, "<<<")
 		writeLine(f, "=== Risk Findings")
 		writeLine(f, ":fn-risk-findings: footnote:riskfinding[Risk finding paragraphs are clickable and link to the corresponding chapter.]")
 		times := strconv.Itoa(len(risksStr)) + " time"
