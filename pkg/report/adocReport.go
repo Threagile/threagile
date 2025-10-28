@@ -26,8 +26,9 @@ type adocReport struct {
 
 	riskRules types.RiskRules
 
-	iconsType string
-	tocDepth  int
+	iconsType        string
+	tocDepth         int
+	hideEmptyChapter bool
 }
 
 func copyFile(source string, destination string) error {
@@ -68,13 +69,14 @@ func fixBasicHtml(inputWithHtml string) string {
 	return result
 }
 
-func NewAdocReport(targetDirectory string, riskRules types.RiskRules) adocReport {
+func NewAdocReport(targetDirectory string, riskRules types.RiskRules, hideEmptyChapter bool) adocReport {
 	adoc := adocReport{
-		targetDirectory: filepath.Join(targetDirectory, "adocReport"),
-		iconsType:       "font",
-		tocDepth:        2,
-		imagesDir:       filepath.Join(targetDirectory, "adocReport", "images"),
-		riskRules:       riskRules,
+		targetDirectory:  filepath.Join(targetDirectory, "adocReport"),
+		iconsType:        "font",
+		tocDepth:         2,
+		imagesDir:        filepath.Join(targetDirectory, "adocReport", "images"),
+		riskRules:        riskRules,
+		hideEmptyChapter: hideEmptyChapter,
 	}
 	return adoc
 }
@@ -561,7 +563,7 @@ func (adoc adocReport) addCategories(f *os.File, risksByCategory map[string][]*t
 	}
 }
 
-func (adoc adocReport) impactAnalysis(f *os.File, initialRisks bool) {
+func (adoc adocReport) impactAnalysis(f *os.File, initialRisks bool) int {
 
 	count := 0
 	catCount := 0
@@ -600,6 +602,8 @@ func (adoc adocReport) impactAnalysis(f *os.File, initialRisks bool) {
 	adoc.addCategories(f, adoc.model.GeneratedRisksByCategoryWithCurrentStatus(), initialRisks, types.ElevatedSeverity, false, false)
 	adoc.addCategories(f, adoc.model.GeneratedRisksByCategoryWithCurrentStatus(), initialRisks, types.MediumSeverity, false, false)
 	adoc.addCategories(f, adoc.model.GeneratedRisksByCategoryWithCurrentStatus(), initialRisks, types.LowSeverity, false, false)
+
+	return count
 }
 
 func (adoc adocReport) writeImpactInitialRisks() error {
@@ -826,10 +830,13 @@ func (adoc adocReport) writeImpactRemainingRisks() error {
 	if err != nil {
 		return err
 	}
-	adoc.writeMainLine("<<<")
-	adoc.writeMainLine("include::" + filename + "[leveloffset=+1]")
 
-	adoc.impactAnalysis(irr, false)
+	nRemaining := adoc.impactAnalysis(irr, false)
+	if nRemaining > 0 || !adoc.hideEmptyChapter {
+		adoc.writeMainLine("<<<")
+		adoc.writeMainLine("include::" + filename + "[leveloffset=+1]")
+	}
+
 	return nil
 }
 
@@ -943,12 +950,13 @@ func (adoc adocReport) writeDataFlowDiagram(diagramFilenamePNG string) error {
 	return nil
 }
 
-func (adoc adocReport) securityRequirements(f *os.File) {
+func (adoc adocReport) securityRequirements(f *os.File) int {
 	writeLine(f, "= Security Requirements")
 	writeLine(f, "This chapter lists the custom security requirements which have been defined for the modeled target.")
 
 	writeLine(f, "\n")
-	for _, title := range sortedKeysOfSecurityRequirements(adoc.model) {
+	requirements := sortedKeysOfSecurityRequirements(adoc.model)
+	for _, title := range requirements {
 		description := adoc.model.SecurityRequirements[title]
 		writeLine(f, title+"::")
 		writeLine(f, "  "+description)
@@ -957,6 +965,7 @@ func (adoc adocReport) securityRequirements(f *os.File) {
 	writeLine(f, "\n\n")
 	writeLine(f, "_This list is not complete and regulatory or law relevant security requirements have to be "+
 		"taken into account as well. Also custom individual security requirements might exist for the project._")
+	return len(requirements)
 }
 
 func (adoc adocReport) writeSecurityRequirements() error {
@@ -966,18 +975,21 @@ func (adoc adocReport) writeSecurityRequirements() error {
 	if err != nil {
 		return err
 	}
-	adoc.writeMainLine("<<<")
-	adoc.writeMainLine("include::" + filename + "[leveloffset=+1]")
 
-	adoc.securityRequirements(sr)
+	nRequirements := adoc.securityRequirements(sr)
+	if nRequirements > 0 || !adoc.hideEmptyChapter {
+		adoc.writeMainLine("<<<")
+		adoc.writeMainLine("include::" + filename + "[leveloffset=+1]")
+	}
 	return nil
 }
 
-func (adoc adocReport) abuseCases(f *os.File) {
+func (adoc adocReport) abuseCases(f *os.File) int {
 	writeLine(f, "= Abuse Cases")
 	writeLine(f, "This chapter lists the custom abuse cases which have been defined for the modeled target.")
 	writeLine(f, "\n")
-	for _, title := range sortedKeysOfAbuseCases(adoc.model) {
+	cases := sortedKeysOfAbuseCases(adoc.model)
+	for _, title := range cases {
 		description := adoc.model.AbuseCases[title]
 		writeLine(f, title+"::")
 		writeLine(f, "  "+description)
@@ -986,6 +998,7 @@ func (adoc adocReport) abuseCases(f *os.File) {
 	writeLine(f, "\n\n")
 	writeLine(f, "_This list is not complete and regulatory or law relevant abuse cases have to be "+
 		"taken into account as well. Also custom individual abuse cases might exist for the project._")
+	return len(cases)
 }
 
 func (adoc adocReport) writeAbuseCases() error {
@@ -995,10 +1008,12 @@ func (adoc adocReport) writeAbuseCases() error {
 	if err != nil {
 		return err
 	}
-	adoc.writeMainLine("<<<")
-	adoc.writeMainLine("include::" + filename + "[leveloffset=+1]")
 
-	adoc.abuseCases(ac)
+	nCases := adoc.abuseCases(ac)
+	if nCases > 0 || !adoc.hideEmptyChapter {
+		adoc.writeMainLine("<<<")
+		adoc.writeMainLine("include::" + filename + "[leveloffset=+1]")
+	}
 	return nil
 }
 
@@ -1396,11 +1411,11 @@ func (adoc adocReport) writeModelFailures() error {
 	return nil
 }
 
-func (adoc adocReport) questions(f *os.File) {
-	questions := "Question"
+func (adoc adocReport) questions(f *os.File) int {
+	questionStr := "Question"
 	count := len(adoc.model.Questions)
 	if count > 1 {
-		questions += "s"
+		questionStr += "s"
 	}
 	colorPrefix := ""
 	colorSuffix := ""
@@ -1408,7 +1423,7 @@ func (adoc adocReport) questions(f *os.File) {
 		colorPrefix = "[ModelFailure]#"
 		colorSuffix = "#"
 	}
-	writeLine(f, "= "+colorPrefix+"Questions: "+strconv.Itoa(questionsUnanswered(adoc.model))+" / "+strconv.Itoa(count)+" "+questions+colorSuffix)
+	writeLine(f, "= "+colorPrefix+"Questions: "+strconv.Itoa(questionsUnanswered(adoc.model))+" / "+strconv.Itoa(count)+" "+questionStr+colorSuffix)
 	writeLine(f, "")
 	writeLine(f, "This chapter lists custom questions that arose during the threat modeling process.")
 	writeLine(f, "")
@@ -1419,7 +1434,8 @@ func (adoc adocReport) questions(f *os.File) {
 	}
 	writeLine(f, "")
 
-	for _, question := range sortedKeysOfQuestions(adoc.model) {
+	questions := sortedKeysOfQuestions(adoc.model)
+	for _, question := range questions {
 		answer := adoc.model.Questions[question]
 		if len(strings.TrimSpace(answer)) > 0 {
 			writeLine(f, "*"+question+"*::")
@@ -1430,6 +1446,7 @@ func (adoc adocReport) questions(f *os.File) {
 		}
 		writeLine(f, "")
 	}
+	return len(questions)
 }
 
 func (adoc adocReport) writeQuestions() error {
@@ -1439,10 +1456,13 @@ func (adoc adocReport) writeQuestions() error {
 	if err != nil {
 		return err
 	}
-	adoc.writeMainLine("<<<")
-	adoc.writeMainLine("include::" + filename + "[leveloffset=+1]")
 
-	adoc.questions(f)
+	nQuestions := adoc.questions(f)
+	if nQuestions > 0 || !adoc.hideEmptyChapter {
+		adoc.writeMainLine("<<<")
+		adoc.writeMainLine("include::" + filename + "[leveloffset=+1]")
+	}
+
 	return nil
 }
 
