@@ -23,10 +23,10 @@ $ docker run -it -u $(id -u):$(id -g) -v /tmp/threagile-test/adocReport:/documen
     --attribute allow-uri-read --require asciidoctor-kroki \
     --attribute DOC_VERSION=V1.0 \
     --attribute pdf-themesdir=/documents/theme --attribute pdf-theme=pdf \
-    /documents/00_main.adoc
+    /documents/000_main.adoc
 ```
 
-The generated report can then be found at `/tmp/threagile-test/adocReport/00_main.pdf`
+The generated report can then be found at `/tmp/threagile-test/adocReport/000_main.pdf`
 
 ## Report Generation with custom main
 
@@ -77,7 +77,7 @@ $ docker run -it -u $(id -u):$(id -g) -v /tmp/threagile-test/adocReport:/documen
     --attribute allow-uri-read --require asciidoctor-kroki \
     --attribute DOC_VERSION=V1.0 \
     --attribute pdf-themesdir=/documents/theme --attribute pdf-theme=my-pdf \
-    /documents/00_main.adoc
+    /documents/000_main.adoc
 ```
 
-The generated report can then be found at `/tmp/threagile-test/adocReport/00_main.pdf`
+The generated report can then be found at `/tmp/threagile-test/adocReport/000_main.pdf`
