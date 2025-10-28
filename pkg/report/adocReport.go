@@ -1816,7 +1816,6 @@ func (adoc adocReport) technicalAssets(f *os.File) {
 | Internet:         | `+strconv.FormatBool(technicalAsset.Internet)+`
 | Machine:          | `+technicalAsset.Machine.String()+`
 | Encryption:       | `+technicalAsset.Encryption.String()+`
-| Encryption:       | `+technicalAsset.Encryption.String()+`
 | Multi-Tenant:     | `+strconv.FormatBool(technicalAsset.MultiTenant)+`
 | Redundant:        | `+strconv.FormatBool(technicalAsset.Redundant)+`
 | Custom-Developed: | `+strconv.FormatBool(technicalAsset.CustomDevelopedParts)+`
