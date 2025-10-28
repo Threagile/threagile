@@ -1335,9 +1335,14 @@ Each one should be checked in the model whether it should better be included in 
 	outOfScopeAssetCount := 0
 	for _, technicalAsset := range sortedTechnicalAssetsByRAAAndTitle(adoc.model) {
 		if technicalAsset.OutOfScope {
+			JustificationOutOfScope := technicalAsset.JustificationOutOfScope
+			if len(JustificationOutOfScope) == 0 {
+				JustificationOutOfScope = "Missing out of scope justification."
+			}
+
 			outOfScopeAssetCount++
 			writeLine(f, "<<"+technicalAsset.Id+",[OutOfScope]#"+technicalAsset.Title+" : out-of-scope#>>::")
-			writeLine(f, "  "+technicalAsset.JustificationOutOfScope)
+			writeLine(f, "  "+JustificationOutOfScope)
 			writeLine(f, "")
 		}
 	}
