@@ -1933,6 +1933,7 @@ func (adoc adocReport) dataAssets(f *os.File) {
 		colorPrefix, colorSuffix := colorPrefixByDataBreachProbability(dataBreachProbability, false)
 		if !isDataBreachPotentialStillAtRisk(adoc.model, dataAsset) {
 			colorPrefix = ""
+			colorSuffix = ""
 		}
 		risksStr := adoc.model.IdentifiedDataBreachProbabilityRisks(dataAsset)
 		countStillAtRisk := len(types.ReduceToOnlyStillAtRisk(risksStr))
