@@ -44,8 +44,8 @@ tasks:
         deps: [create-example-project]
         dir: /tmp/threagile-test/adocReport
         cmds:
-          - "{{.DOCKER_ASCIIDOCTOR}} --attribute DOC_VERSION={{.GIT_SHORT_SHA}} --attribute pdf-themesdir=/documents/theme --attribute pdf-theme=pdf /documents/00_main.adoc"
-          - cp /tmp/threagile-test/adocReport/00_main.pdf /tmp/report.pdf
+          - "{{.DOCKER_ASCIIDOCTOR}} --attribute DOC_VERSION={{.GIT_SHORT_SHA}} --attribute pdf-themesdir=/documents/theme --attribute pdf-theme=pdf /documents/000_main.adoc"
+          - cp /tmp/threagile-test/adocReport/000_main.pdf /tmp/report.pdf
           - echo "Open report with \"xdg-open /tmp/report.pdf\""
 
     create-example-project:
