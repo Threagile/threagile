@@ -47,6 +47,7 @@ type Config struct {
 	TemplateFilenameValue            string `json:"TemplateFilename,omitempty" yaml:"TemplateFilename"`
 	ReportLogoImagePathValue         string `json:"ReportLogoImagePath,omitempty" yaml:"ReportLogoImagePath"`
 	TechnologyFilenameValue          string `json:"TechnologyFilename,omitempty" yaml:"TechnologyFilename"`
+	HideEmptyChaptersValue           bool   `json:"HideEmptyChapters,omitempty" yaml:"HideEmptyChapters"`
 
 	RiskRulePluginsValue   []string        `json:"RiskRulePlugins,omitempty" yaml:"RiskRulePlugins"`
 	SkipRiskRulesValue     []string        `json:"SkipRiskRules,omitempty" yaml:"SkipRiskRules"`
@@ -186,6 +187,7 @@ func (c *Config) Defaults(buildTimestamp string) *Config {
 		TemplateFilenameValue:            TemplateFilename,
 		ReportLogoImagePathValue:         ReportLogoImagePath,
 		TechnologyFilenameValue:          "",
+		HideEmptyChaptersValue:           false,
 
 		RiskRulePluginsValue:   make([]string, 0),
 		SkipRiskRulesValue:     make([]string, 0),
@@ -417,6 +419,9 @@ func (c *Config) Merge(config Config, values map[string]any) {
 		case strings.ToLower("TechnologyFilename"):
 			c.TechnologyFilenameValue = config.TechnologyFilenameValue
 
+		case strings.ToLower("HideEmptyChapters"):
+			c.HideEmptyChaptersValue = config.HideEmptyChaptersValue
+
 		case strings.ToLower("RiskRulePlugins"):
 			c.RiskRulePluginsValue = config.RiskRulePluginsValue
 
@@ -632,6 +637,10 @@ func (c *Config) GetKeyFolder() string {
 
 func (c *Config) GetTechnologyFilename() string {
 	return c.TechnologyFilenameValue
+}
+
+func (c *Config) GetHideEmptyChapters() bool {
+	return c.HideEmptyChaptersValue
 }
 
 func (c *Config) GetInputFile() string {
