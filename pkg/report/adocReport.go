@@ -325,6 +325,10 @@ func (adoc adocReport) WriteReport(model *types.Model,
 			return fmt.Errorf("error creating risk rules checked: %w", err)
 		}
 	}
+	err = adoc.writeAppendixRating()
+	if err != nil {
+		return fmt.Errorf("error creating appendix for the rating mappings")
+	}
 	err = adoc.writeDisclaimer()
 	if err != nil {
 		return fmt.Errorf("error creating disclaimer: %w", err)
@@ -1826,13 +1830,13 @@ func (adoc adocReport) technicalAssets(f *os.File) {
 
 		writeLine(f, "=== Asset Rating")
 		writeLine(f, `
-[cols="h,2,1",frame=none,grid=none]
+[cols="h,2",frame=none,grid=none]
 |===
-| Owner:             2+| `+technicalAsset.Owner+`
-| Confidentiality:     | `+technicalAsset.Confidentiality.String()+` | `+technicalAsset.Confidentiality.RatingStringInScale()+`
-| Integrity:           | `+technicalAsset.Integrity.String()+` | `+technicalAsset.Integrity.RatingStringInScale()+`
-| Availability:        | `+technicalAsset.Availability.String()+` | `+technicalAsset.Availability.RatingStringInScale()+`
-| CIA-Justification: 2+| `+technicalAsset.JustificationCiaRating)
+| Owner:             | `+technicalAsset.Owner+`
+| Confidentiality:   | `+technicalAsset.Confidentiality.String()+`<<ref-confidentiality-values,*>>
+| Integrity:         | `+technicalAsset.Integrity.String()+`<<ref-criticality-values,*>>
+| Availability:      | `+technicalAsset.Availability.String()+`<<ref-criticality-values,*>>
+| CIA-Justification: | `+technicalAsset.JustificationCiaRating)
 		if technicalAsset.OutOfScope {
 			writeLine(f, "| Asset Out-of-Scope Justification: 2+| "+technicalAsset.JustificationOutOfScope)
 		}
@@ -1971,24 +1975,24 @@ func (adoc adocReport) dataAssets(f *os.File) {
 		}
 
 		writeLine(f, `
-[cols="h,2,1",frame=none,grid=none]
+[cols="h,2",frame=none,grid=none]
 |===
-| ID:                2+| `+dataAsset.Id+`
-| Usage:             2+| `+dataAsset.Usage.String()+`
-| Quantity:          2+| `+dataAsset.Quantity.String()+`
-| Tags:              2+| `+tagsUsedText+`
-| Origin:            2+| `+dataAsset.Origin+`
-| Owner:             2+| `+dataAsset.Owner+`
-| Confidentiality:     | `+dataAsset.Confidentiality.String()+` | `+dataAsset.Confidentiality.RatingStringInScale()+`
-| Integrity:           | `+dataAsset.Integrity.String()+` | `+dataAsset.Integrity.RatingStringInScale()+`
-| Availability:        | `+dataAsset.Availability.String()+` | `+dataAsset.Availability.RatingStringInScale()+`
-| CIA-Justification: 2+| `+dataAsset.JustificationCiaRating+`
-| Processed by:      2+| `+processedByText+`
-| Stored by:         2+| `+storedByText+`
-| Sent via:          2+| `+sentViaText+`
-| Received via:      2+| `+receivedViaText+`
-| Data Breach:       2+| `+colorPrefix+riskText+colorSuffix+`
-| Data Breach Risks: 2+| `+dataBreachText)
+| ID:                | `+dataAsset.Id+`
+| Usage:             | `+dataAsset.Usage.String()+`
+| Quantity:          | `+dataAsset.Quantity.String()+`
+| Tags:              | `+tagsUsedText+`
+| Origin:            | `+dataAsset.Origin+`
+| Owner:             | `+dataAsset.Owner+`
+| Confidentiality:   | `+dataAsset.Confidentiality.String()+`<<ref-confidentiality-values,*>>
+| Integrity:         | `+dataAsset.Integrity.String()+`<<ref-criticality-values,*>>
+| Availability:      | `+dataAsset.Availability.String()+`<<ref-criticality-values,*>>
+| CIA-Justification: | `+dataAsset.JustificationCiaRating+`
+| Processed by:      | `+processedByText+`
+| Stored by:         | `+storedByText+`
+| Sent via:          | `+sentViaText+`
+| Received via:      | `+receivedViaText+`
+| Data Breach:       | `+colorPrefix+riskText+colorSuffix+`
+| Data Breach Risks: | `+dataBreachText)
 
 		if len(dataBreachRisksStillAtRisk) > 0 {
 			for _, dataBreachRisk := range dataBreachRisksStillAtRisk {
@@ -2214,7 +2218,67 @@ func (adoc adocReport) writeRiskRulesChecked(modelFilename string, skipRiskRules
 	return nil
 }
 
+func (adoc adocReport) appendixRating(f *os.File) {
+	writeLine(f, "[appendix]")
+	writeLine(f, "= Ratings")
+
+	confValues := map[types.Confidentiality]string{
+		types.Public:               "1",
+		types.Internal:             "2",
+		types.Restricted:           "3",
+		types.Confidential:         "4",
+		types.StrictlyConfidential: "5",
+	}
+
+	critValues := map[types.Criticality]string{
+		types.Archive:         "1",
+		types.Operational:     "2",
+		types.Important:       "3",
+		types.Critical:        "4",
+		types.MissionCritical: "5",
+	}
+
+	writeLine(f, "")
+	writeLine(f, "[[ref-confidentiality-values]]")
+	writeLine(f, ".Confidentiality Values")
+	writeLine(f, "[%header,cols=\"3,1,8\"]")
+	writeLine(f, "|===")
+	writeLine(f, "| Name | Value | Description")
+	writeLine(f, "")
+	for key, value := range confValues {
+		writeLine(f, "| "+key.String()+" | "+value+" | "+key.Explain())
+	}
+	writeLine(f, "|===")
+	writeLine(f, "")
+
+	writeLine(f, "[[ref-criticality-values]]")
+	writeLine(f, ".Criticality Values")
+	writeLine(f, "[%header,cols=\"3,1,8\"]")
+	writeLine(f, "|===")
+	writeLine(f, "| Name | Value | Description")
+	writeLine(f, "")
+	for key, value := range critValues {
+		writeLine(f, "| "+key.String()+" | "+value+" | "+key.Explain())
+	}
+	writeLine(f, "|===")
+}
+
+func (adoc adocReport) writeAppendixRating() error {
+	filename := "400_AppendixRating.adoc"
+	f, err := os.Create(filepath.Join(adoc.targetDirectory, filename))
+	defer func() { _ = f.Close() }()
+	if err != nil {
+		return err
+	}
+	adoc.writeMainLine("<<<")
+	adoc.writeMainLine("include::" + filename + "[leveloffset=+1]")
+
+	adoc.appendixRating(f)
+	return nil
+}
+
 func (adoc adocReport) disclaimer(f *os.File) {
+	writeLine(f, "[appendix]")
 	writeLine(f, "= Disclaimer")
 
 	disclaimerColor := "\n[.Silver]\n"
@@ -2263,7 +2327,7 @@ func (adoc adocReport) disclaimer(f *os.File) {
 }
 
 func (adoc adocReport) writeDisclaimer() error {
-	filename := "230_Disclaimer.adoc"
+	filename := "500_Disclaimer.adoc"
 	f, err := os.Create(filepath.Join(adoc.targetDirectory, filename))
 	defer func() { _ = f.Close() }()
 	if err != nil {
