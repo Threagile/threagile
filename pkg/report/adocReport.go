@@ -1121,8 +1121,12 @@ func (adoc adocReport) stride(f *os.File) {
 	for _, strideValue := range strides {
 		writeLine(f, "== "+strideValue.Title())
 		risksSTRIDE := reduceToSTRIDERisk(adoc.model, adoc.model.GeneratedRisksByCategoryWithCurrentStatus(), strideValue)
-		for _, critValue := range reverseRiskSeverity {
-			adoc.addCategories(f, risksSTRIDE, true, critValue, true, true)
+		if len(risksSTRIDE) > 0 {
+			for _, critValue := range reverseRiskSeverity {
+				adoc.addCategories(f, risksSTRIDE, true, critValue, true, true)
+			}
+		} else {
+			writeLine(f, "No risk identified.")
 		}
 		writeLine(f, "")
 	}
