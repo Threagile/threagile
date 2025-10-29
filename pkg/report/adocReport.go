@@ -1511,7 +1511,7 @@ func (adoc adocReport) riskTrackingStatus(f *os.File, risk *types.Risk) {
 			ticket = "-"
 		}
 		writeLine(f, `
-[cols="a,c,c,c",frame=none,grid=none,options="unbreakable"]
+[cols="a,c,c,2c",frame=none,grid=none,options="unbreakable"]
 |===
 | [.`+colorName+`.small]#`+bold+tracking.Status.Title()+bold+`#
 | [.GreyText.small]#`+dateStr+`#
@@ -1523,7 +1523,7 @@ func (adoc adocReport) riskTrackingStatus(f *os.File, risk *types.Risk) {
 `)
 	} else {
 		writeLine(f, `
-[cols="a,c,c,c",frame=none,grid=none,options="unbreakable"]
+[cols="a,c,c,2c",frame=none,grid=none,options="unbreakable"]
 |===
 4+| [.`+colorName+`.small]#`+bold+tracking.Status.Title()+bold+`#
 |===
