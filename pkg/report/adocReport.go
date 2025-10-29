@@ -498,6 +498,20 @@ func titleOfSeverity(severity types.RiskSeverity) string {
 	}
 }
 
+func riskSuffix(remainingRisks int, totalRisks int) string {
+	suffix := ""
+	if remainingRisks > 0 {
+		suffix = strconv.Itoa(remainingRisks) + "/" + strconv.Itoa(totalRisks) + " unmitigated Risk"
+	} else {
+		suffix = strconv.Itoa(totalRisks) + " mitigated Risk"
+	}
+	if totalRisks != 1 {
+		suffix += "s"
+	}
+
+	return suffix
+}
+
 func (adoc adocReport) addCategories(f *os.File, risksByCategory map[string][]*types.Risk, initialRisks bool, severity types.RiskSeverity, bothInitialAndRemainingRisks bool, describeDescription bool) {
 	describeImpact := true
 	riskCategories := getRiskCategories(adoc.model, reduceToSeverityRisk(risksByCategory, initialRisks, severity))
@@ -540,11 +554,11 @@ func (adoc adocReport) addCategories(f *os.File, risksByCategory map[string][]*t
 		}
 		remainingRisks := types.ReduceToOnlyStillAtRisk(risksStr)
 		suffix := strconv.Itoa(count) + " " + initialStr + " Risk"
-		if bothInitialAndRemainingRisks {
-			suffix = strconv.Itoa(len(remainingRisks)) + " / " + strconv.Itoa(count) + " Risk"
-		}
 		if count != 1 {
 			suffix += "s"
+		}
+		if bothInitialAndRemainingRisks {
+			suffix = riskSuffix(len(remainingRisks), count)
 		}
 		suffix += " - Exploitation likelihood is _"
 		if initialRisks {
@@ -1370,15 +1384,6 @@ func (adoc adocReport) writeOutOfScopeAssets() error {
 	return nil
 }
 
-func titleRiskSuffix(remainingRisks int, totalRisks int) string {
-	suffix := strconv.Itoa(remainingRisks) + " / " + strconv.Itoa(totalRisks) + " Risk"
-	if totalRisks != 1 {
-		suffix += "s"
-	}
-
-	return suffix
-}
-
 func (adoc adocReport) modelFailures(f *os.File) {
 	modelFailures := flattenRiskSlice(filterByModelFailures(adoc.model, adoc.model.GeneratedRisksByCategoryWithCurrentStatus()))
 	count := len(modelFailures)
@@ -1389,7 +1394,7 @@ func (adoc adocReport) modelFailures(f *os.File) {
 		colorPrefix = "[ModelFailure]#"
 		colorSuffix = "#"
 	}
-	suffix := titleRiskSuffix(countStillAtRisk, count)
+	suffix := riskSuffix(countStillAtRisk, count)
 	writeLine(f, "= "+colorPrefix+"Potential Model Failures: "+suffix+colorSuffix)
 	writeLine(f, ":fn-risk-findings: footnote:riskfinding[Risk finding paragraphs are clickable and link to the corresponding chapter.]")
 	writeLine(f, "")
@@ -1562,7 +1567,7 @@ func (adoc adocReport) riskCategories(f *os.File) {
 
 		// category title
 		countStillAtRisk := len(types.ReduceToOnlyStillAtRisk(risksStr))
-		suffix := titleRiskSuffix(countStillAtRisk, len(risksStr))
+		suffix := riskSuffix(countStillAtRisk, len(risksStr))
 		title := colorPrefix + category.Title + ": " + suffix + colorSuffix
 		writeLine(f, "[["+category.ID+"]]")
 		writeLine(f, "== "+title)
@@ -1741,7 +1746,7 @@ func (adoc adocReport) technicalAssets(f *os.File) {
 	for _, technicalAsset := range sortedTechnicalAssetsByRiskSeverityAndTitle(adoc.model) {
 		risksStr := adoc.model.GeneratedRisks(technicalAsset)
 		countStillAtRisk := len(types.ReduceToOnlyStillAtRisk(risksStr))
-		suffix := titleRiskSuffix(countStillAtRisk, len(risksStr))
+		suffix := riskSuffix(countStillAtRisk, len(risksStr))
 		colorPrefix, colorSuffix := colorPrefixBySeverity(types.HighestSeverityStillAtRisk(risksStr), false)
 		if technicalAsset.OutOfScope {
 			colorPrefix = "[OutOfScope]#"
@@ -1920,7 +1925,7 @@ func (adoc adocReport) dataAssets(f *os.File) {
 		}
 		risksStr := adoc.model.IdentifiedDataBreachProbabilityRisks(dataAsset)
 		countStillAtRisk := len(types.ReduceToOnlyStillAtRisk(risksStr))
-		suffix := titleRiskSuffix(countStillAtRisk, len(risksStr))
+		suffix := riskSuffix(countStillAtRisk, len(risksStr))
 		writeLine(f, "<<<")
 		writeLine(f, "[[dataAsset:"+dataAsset.Id+"]]")
 		writeLine(f, "== "+colorPrefix+dataAsset.Title+": "+suffix+colorSuffix)
