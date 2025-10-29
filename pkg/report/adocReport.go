@@ -1804,25 +1804,18 @@ func (adoc adocReport) technicalAssets(f *os.File) {
 		formatsAcceptedText := dataFormatTitleJoinOrNone(technicalAsset.DataFormatsAcceptedSorted(), "[GrayText]#none of the special data formats accepted#")
 
 		writeLine(f, `
-[cols="h,5",frame=none,grid=none]
+[cols="h,1,h,1",frame=none,grid=none]
 |===
-| ID:               | `+technicalAsset.Id+`
-| Type:             | `+technicalAsset.Type.String()+`
-| Usage:            | `+technicalAsset.Usage.String()+`
-| RAA:              | `+textRAA+`
-| Size:             | `+technicalAsset.Size.String()+`
-| Technology:       | `+technicalAsset.Technologies.String()+`
-| Tags:             | `+tagsUsedText+`
-| Internet:         | `+strconv.FormatBool(technicalAsset.Internet)+`
-| Machine:          | `+technicalAsset.Machine.String()+`
-| Encryption:       | `+technicalAsset.Encryption.String()+`
-| Multi-Tenant:     | `+strconv.FormatBool(technicalAsset.MultiTenant)+`
-| Redundant:        | `+strconv.FormatBool(technicalAsset.Redundant)+`
-| Custom-Developed: | `+strconv.FormatBool(technicalAsset.CustomDevelopedParts)+`
-| Client by Human:  | `+strconv.FormatBool(technicalAsset.UsedAsClientByHuman)+`
-| Data Processed:   | `+dataAssetsProcessedText+`
-| Data Stored:      | `+dataAssetsStoredText+`
-| Formats Accepted: | `+formatsAcceptedText+`
+| ID:             3+| `+technicalAsset.Id+`
+| Type:             | `+technicalAsset.Type.String()+`| Usage: | `+technicalAsset.Usage.String()+`
+| RAA:              | `+textRAA+`| Size: | `+technicalAsset.Size.String()+`
+| Technology:       | `+technicalAsset.Technologies.String()+`| Tags: | `+tagsUsedText+`
+| Internet:         | `+strconv.FormatBool(technicalAsset.Internet)+`| Machine: | `+technicalAsset.Machine.String()+`
+| Encryption:       | `+technicalAsset.Encryption.String()+`| Multi-Tenant: | `+strconv.FormatBool(technicalAsset.MultiTenant)+`
+| Redundant:        | `+strconv.FormatBool(technicalAsset.Redundant)+`| Custom-Developed: | `+strconv.FormatBool(technicalAsset.CustomDevelopedParts)+`
+| Client by Human:  | `+strconv.FormatBool(technicalAsset.UsedAsClientByHuman)+`| Formats Accepted: | `+formatsAcceptedText+`
+| Data Processed: 3+| `+dataAssetsProcessedText+`
+| Data Stored:    3+| `+dataAssetsStoredText+`
 |===
 `)
 
@@ -1851,20 +1844,14 @@ func (adoc adocReport) technicalAssets(f *os.File) {
 				dataAssetsReceivedText := dataAssetListTitleJoinOrNone(adoc.model.DataAssetsReceivedSorted(outgoingCommLink), "")
 
 				writeLine(f, `
-[cols="h,1",frame=none,grid=none]
+[cols="h,1,h,1",frame=none,grid=none]
 |===
-| Target:         | <<`+outgoingCommLink.TargetId+`,`+adoc.model.TechnicalAssets[outgoingCommLink.TargetId].Title+`>>
-| Protocol:       | `+outgoingCommLink.Protocol.String()+`
-| Encrypted:      | `+strconv.FormatBool(outgoingCommLink.Protocol.IsEncrypted())+`
-| Authentication: | `+outgoingCommLink.Authentication.String()+`
-| Authorization:  | `+outgoingCommLink.Authorization.String()+`
-| Read-Only:      | `+strconv.FormatBool(outgoingCommLink.Readonly)+`
-| Usage:          | `+outgoingCommLink.Usage.String()+`
-| Tags:           | `+tagsUsedText+`
-| VPN:            | `+strconv.FormatBool(outgoingCommLink.VPN)+`
-| IP-Filtered:    | `+strconv.FormatBool(outgoingCommLink.IpFiltered)+`
-| Data Sent:      | `+dataAssetsSentText+`
-| Data Received:  | `+dataAssetsReceivedText+`
+| Target:         | <<`+outgoingCommLink.TargetId+`,`+adoc.model.TechnicalAssets[outgoingCommLink.TargetId].Title+`>>| Protocol:       | `+outgoingCommLink.Protocol.String()+`
+| Encrypted:      | `+strconv.FormatBool(outgoingCommLink.Protocol.IsEncrypted())+`| Authentication: | `+outgoingCommLink.Authentication.String()+`
+| Authorization:  | `+outgoingCommLink.Authorization.String()+`| Read-Only:      | `+strconv.FormatBool(outgoingCommLink.Readonly)+`
+| Usage:          | `+outgoingCommLink.Usage.String()+`| Tags:           | `+tagsUsedText+`
+| VPN:            | `+strconv.FormatBool(outgoingCommLink.VPN)+`| IP-Filtered:    | `+strconv.FormatBool(outgoingCommLink.IpFiltered)+`
+| Data Sent:      | `+dataAssetsSentText+`| Data Received:  | `+dataAssetsReceivedText+`
 |===
 `)
 			}
@@ -1882,20 +1869,14 @@ func (adoc adocReport) technicalAssets(f *os.File) {
 				dataAssetsReceivedText := dataAssetListTitleJoinOrNone(adoc.model.DataAssetsReceivedSorted(incomingCommLink), "")
 
 				writeLine(f, `
-[cols="h,1",frame=none,grid=none]
+[cols="h,1,h,1",frame=none,grid=none]
 |===
-| Source:         | <<`+incomingCommLink.SourceId+`,`+adoc.model.TechnicalAssets[incomingCommLink.SourceId].Title+`>>
-| Protocol:       | `+incomingCommLink.Protocol.String()+`
-| Encrypted:      | `+strconv.FormatBool(incomingCommLink.Protocol.IsEncrypted())+`
-| Authentication: | `+incomingCommLink.Authentication.String()+`
-| Authorization:  | `+incomingCommLink.Authorization.String()+`
-| Read-Only:      | `+strconv.FormatBool(incomingCommLink.Readonly)+`
-| Usage:          | `+incomingCommLink.Usage.String()+`
-| Tags:           | `+tagsUsedText+`
-| VPN:            | `+strconv.FormatBool(incomingCommLink.VPN)+`
-| IP-Filtered:    | `+strconv.FormatBool(incomingCommLink.IpFiltered)+`
-| Data Sent:      | `+dataAssetsSentText+`
-| Data Received:  | `+dataAssetsReceivedText+`
+| Source:         | <<`+incomingCommLink.SourceId+`,`+adoc.model.TechnicalAssets[incomingCommLink.SourceId].Title+`>>| Protocol:       | `+incomingCommLink.Protocol.String()+`
+| Encrypted:      | `+strconv.FormatBool(incomingCommLink.Protocol.IsEncrypted())+`| Authentication: | `+incomingCommLink.Authentication.String()+`
+| Authorization:  | `+incomingCommLink.Authorization.String()+`| Read-Only:      | `+strconv.FormatBool(incomingCommLink.Readonly)+`
+| Usage:          | `+incomingCommLink.Usage.String()+`| Tags:           | `+tagsUsedText+`
+| VPN:            | `+strconv.FormatBool(incomingCommLink.VPN)+`| IP-Filtered:    | `+strconv.FormatBool(incomingCommLink.IpFiltered)+`
+| Data Sent:      | `+dataAssetsSentText+`| Data Received:  | `+dataAssetsReceivedText+`
 |===
 `)
 			}
@@ -1973,24 +1954,19 @@ func (adoc adocReport) dataAssets(f *os.File) {
 		}
 
 		writeLine(f, `
-[cols="h,2",frame=none,grid=none]
+[cols="h,1,h,1",frame=none,grid=none]
 |===
-| ID:                | `+dataAsset.Id+`
-| Usage:             | `+dataAsset.Usage.String()+`
-| Quantity:          | `+dataAsset.Quantity.String()+`
-| Tags:              | `+tagsUsedText+`
-| Origin:            | `+dataAsset.Origin+`
-| Owner:             | `+dataAsset.Owner+`
-| Confidentiality:   | `+dataAsset.Confidentiality.String()+`<<ref-confidentiality-values,*>>
-| Integrity:         | `+dataAsset.Integrity.String()+`<<ref-criticality-values,*>>
-| Availability:      | `+dataAsset.Availability.String()+`<<ref-criticality-values,*>>
-| CIA-Justification: | `+dataAsset.JustificationCiaRating+`
-| Processed by:      | `+processedByText+`
-| Stored by:         | `+storedByText+`
-| Sent via:          | `+sentViaText+`
-| Received via:      | `+receivedViaText+`
-| Data Breach:       | `+colorPrefix+riskText+colorSuffix+`
-| Data Breach Risks: | `+dataBreachText)
+| ID:                3+| `+dataAsset.Id+`
+| Usage:               | `+dataAsset.Usage.String()+`| Quantity:          | `+dataAsset.Quantity.String()+`
+| Tags:                | `+tagsUsedText+`| Origin:            | `+dataAsset.Origin+`
+| Owner:               | `+dataAsset.Owner+`| Confidentiality:   | `+dataAsset.Confidentiality.String()+`<<ref-confidentiality-values,*>>
+| Integrity:           | `+dataAsset.Integrity.String()+`<<ref-criticality-values,*>>| Availability:      | `+dataAsset.Availability.String()+`<<ref-criticality-values,*>>
+| CIA-Justification: 3+| `+dataAsset.JustificationCiaRating+`
+| Processed by:      3+| `+processedByText+`
+| Stored by:         3+| `+storedByText+`
+| Sent via:            | `+sentViaText+`| Received via:        | `+receivedViaText+`
+| Data Breach:       3+| `+colorPrefix+riskText+colorSuffix+`
+| Data Breach Risks: 3+| `+dataBreachText)
 
 		if len(dataBreachRisksStillAtRisk) > 0 {
 			for _, dataBreachRisk := range dataBreachRisksStillAtRisk {
