@@ -30,8 +30,8 @@ const (
 
 func darkenHexColor(hexString string) string {
 	colorBytes, _ := hex.DecodeString(hexString[1:])
-	adjusted := make([]byte, 3)
-	for i := 0; i < 3; i++ {
+	adjusted := make([]byte, len(colorBytes))
+	for i := range colorBytes {
 		if colorBytes[i] > 0x22 {
 			adjusted[i] = colorBytes[i] - 0x20
 		} else {
@@ -43,8 +43,8 @@ func darkenHexColor(hexString string) string {
 
 func brightenHexColor(hexString string) string {
 	colorBytes, _ := hex.DecodeString(hexString[1:])
-	adjusted := make([]byte, 3)
-	for i := 0; i < 3; i++ {
+	adjusted := make([]byte, len(colorBytes))
+	for i := range colorBytes {
 		if colorBytes[i] < 0xDD {
 			adjusted[i] = colorBytes[i] + 0x20
 		} else {
