@@ -3904,7 +3904,7 @@ func (r *pdfReporter) createDataAssets(parsedModel *types.Model) {
 			r.pdf.MultiCell(145, 6, "This data asset has no data breach potential.", "0", "0", false)
 		} else {
 			r.pdfColorBlack()
-			riskRemainingStr := "risksStr"
+			riskRemainingStr := "risks"
 			if countStillAtRisk == 1 {
 				riskRemainingStr = "risk"
 			}
