@@ -16,8 +16,8 @@ import (
 	"github.com/jung-kurt/gofpdf"
 	"github.com/jung-kurt/gofpdf/contrib/gofpdi"
 	"github.com/threagile/threagile/pkg/types"
-	"github.com/wcharczuk/go-chart"
-	"github.com/wcharczuk/go-chart/drawing"
+	chart "github.com/go-analyze/charts/chartdraw"
+	"github.com/go-analyze/charts/chartdraw/drawing"
 )
 
 const fontSizeHeadline, fontSizeHeadlineSmall, fontSizeBody, fontSizeSmall, fontSizeVerySmall = 20, 16, 12, 9, 7
@@ -910,28 +910,33 @@ func (r *pdfReporter) createManagementSummary(parsedModel *types.Model, tempFold
 			{Value: float64(countLow), //Label: strconv.Itoa(countLow) + " Low",
 				Style: chart.Style{
 					FillColor: makeColor(rgbHexColorLowRisk()).WithAlpha(98),
-					//FontColor: makeColor(rgbHexColorLowRisk()),
-					FontSize: 65}},
+					FontStyle: chart.FontStyle{
+						//FontColor: makeColor(rgbHexColorLowRisk()),
+						FontSize: 65}}},
 			{Value: float64(countMedium), //Label: strconv.Itoa(countMedium) + " Medium",
 				Style: chart.Style{
 					FillColor: makeColor(rgbHexColorMediumRisk()).WithAlpha(98),
-					//FontColor: makeColor(rgbHexColorMediumRisk()),
-					FontSize: 65}},
+					FontStyle: chart.FontStyle{
+						//FontColor: makeColor(rgbHexColorMediumRisk()),
+						FontSize: 65}}},
 			{Value: float64(countElevated), //Label: strconv.Itoa(countElevated) + " Elevated",
 				Style: chart.Style{
 					FillColor: makeColor(rgbHexColorElevatedRisk()).WithAlpha(98),
-					//FontColor: makeColor(rgbHexColorElevatedRisk()),
-					FontSize: 65}},
+					FontStyle: chart.FontStyle{
+						//FontColor: makeColor(rgbHexColorElevatedRisk()),
+						FontSize: 65}}},
 			{Value: float64(countHigh), //Label: strconv.Itoa(countHigh) + " High",
 				Style: chart.Style{
 					FillColor: makeColor(rgbHexColorHighRisk()).WithAlpha(98),
-					//FontColor: makeColor(rgbHexColorHighRisk()),
-					FontSize: 65}},
+					FontStyle: chart.FontStyle{
+						//FontColor: makeColor(rgbHexColorHighRisk()),
+						FontSize: 65}}},
 			{Value: float64(countCritical), //Label: strconv.Itoa(countCritical) + " Critical",
 				Style: chart.Style{
 					FillColor: makeColor(rgbHexColorCriticalRisk()).WithAlpha(98),
-					//FontColor: makeColor(rgbHexColorCriticalRisk()),
-					FontSize: 65}},
+					FontStyle: chart.FontStyle{
+						//FontColor: makeColor(rgbHexColorCriticalRisk()),
+						FontSize: 65}}},
 		},
 	}
 
@@ -943,33 +948,39 @@ func (r *pdfReporter) createManagementSummary(parsedModel *types.Model, tempFold
 			{Value: float64(countStatusFalsePositive), //Label: strconv.Itoa(countStatusFalsePositive) + " False Positive",
 				Style: chart.Style{
 					FillColor: makeColor(rgbHexColorRiskStatusFalsePositive()).WithAlpha(98),
-					//FontColor: makeColor(rgbHexColorRiskStatusFalsePositive()),
-					FontSize: 65}},
+					FontStyle: chart.FontStyle{
+						//FontColor: makeColor(rgbHexColorRiskStatusFalsePositive()),
+						FontSize: 65}}},
 			{Value: float64(countStatusMitigated), //Label: strconv.Itoa(countStatusMitigated) + " Mitigated",
 				Style: chart.Style{
 					FillColor: makeColor(rgbHexColorRiskStatusMitigated()).WithAlpha(98),
-					//FontColor: makeColor(rgbHexColorRiskStatusMitigated()),
-					FontSize: 65}},
+					FontStyle: chart.FontStyle{
+						//FontColor: makeColor(rgbHexColorRiskStatusMitigated()),
+						FontSize: 65}}},
 			{Value: float64(countStatusInProgress), //Label: strconv.Itoa(countStatusInProgress) + " InProgress",
 				Style: chart.Style{
 					FillColor: makeColor(rgbHexColorRiskStatusInProgress()).WithAlpha(98),
-					//FontColor: makeColor(rgbHexColorRiskStatusInProgress()),
-					FontSize: 65}},
+					FontStyle: chart.FontStyle{
+						//FontColor: makeColor(rgbHexColorRiskStatusInProgress()),
+						FontSize: 65}}},
 			{Value: float64(countStatusAccepted), //Label: strconv.Itoa(countStatusAccepted) + " Accepted",
 				Style: chart.Style{
 					FillColor: makeColor(rgbHexColorRiskStatusAccepted()).WithAlpha(98),
-					//FontColor: makeColor(rgbHexColorRiskStatusAccepted()),
-					FontSize: 65}},
+					FontStyle: chart.FontStyle{
+						//FontColor: makeColor(rgbHexColorRiskStatusAccepted()),
+						FontSize: 65}}},
 			{Value: float64(countStatusInDiscussion), //Label: strconv.Itoa(countStatusInDiscussion) + " InDiscussion",
 				Style: chart.Style{
 					FillColor: makeColor(rgbHexColorRiskStatusInDiscussion()).WithAlpha(98),
-					//FontColor: makeColor(rgbHexColorRiskStatusInDiscussion()),
-					FontSize: 65}},
+					FontStyle: chart.FontStyle{
+						//FontColor: makeColor(rgbHexColorRiskStatusInDiscussion()),
+						FontSize: 65}}},
 			{Value: float64(countStatusUnchecked), //Label: strconv.Itoa(countStatusUnchecked) + " Unchecked",
 				Style: chart.Style{
 					FillColor: makeColor(RgbHexColorRiskStatusUnchecked()).WithAlpha(98),
-					//FontColor: makeColor(RgbHexColorRiskStatusUnchecked()),
-					FontSize: 65}},
+					FontStyle: chart.FontStyle{
+						//FontColor: makeColor(RgbHexColorRiskStatusUnchecked()),
+						FontSize: 65}}},
 		},
 	}
 
@@ -1021,8 +1032,8 @@ func (r *pdfReporter) createRiskMitigationStatus(parsedModel *types.Model, tempF
 	stackedBarChartRiskTracking := chart.StackedBarChart{
 		Width: 4000,
 		//Height: 2500,
-		XAxis: chart.Style{Show: false, FontSize: 26, TextVerticalAlign: chart.TextVerticalAlignBottom},
-		YAxis: chart.Style{Show: true, FontSize: 26, TextVerticalAlign: chart.TextVerticalAlignBottom},
+		XAxis: chart.Style{Hidden: true, FontStyle: chart.FontStyle{FontSize: 26}, TextVerticalAlign: chart.TextVerticalAlignBottom},
+		YAxis: chart.Style{Hidden: false, FontStyle: chart.FontStyle{FontSize: 26}, TextVerticalAlign: chart.TextVerticalAlignBottom},
 		Bars: []chart.StackedBar{
 			{
 				Name:  types.LowSeverity.Title(),
@@ -1200,28 +1211,33 @@ func (r *pdfReporter) createRiskMitigationStatus(parsedModel *types.Model, tempF
 				{Value: float64(countLow), //Label: strconv.Itoa(countLow) + " Low",
 					Style: chart.Style{
 						FillColor: makeColor(rgbHexColorLowRisk()).WithAlpha(98),
-						//FontColor: makeColor(rgbHexColorLowRisk()),
-						FontSize: 65}},
+						FontStyle: chart.FontStyle{
+							//FontColor: makeColor(rgbHexColorLowRisk()),
+							FontSize: 65}}},
 				{Value: float64(countMedium), //Label: strconv.Itoa(countMedium) + " Medium",
 					Style: chart.Style{
 						FillColor: makeColor(rgbHexColorMediumRisk()).WithAlpha(98),
-						//FontColor: makeColor(rgbHexColorMediumRisk()),
-						FontSize: 65}},
+						FontStyle: chart.FontStyle{
+							//FontColor: makeColor(rgbHexColorMediumRisk()),
+							FontSize: 65}}},
 				{Value: float64(countElevated), //Label: strconv.Itoa(countElevated) + " Elevated",
 					Style: chart.Style{
 						FillColor: makeColor(rgbHexColorElevatedRisk()).WithAlpha(98),
-						//FontColor: makeColor(rgbHexColorElevatedRisk()),
-						FontSize: 65}},
+						FontStyle: chart.FontStyle{
+							//FontColor: makeColor(rgbHexColorElevatedRisk()),
+							FontSize: 65}}},
 				{Value: float64(countHigh), //Label: strconv.Itoa(countHigh) + " High",
 					Style: chart.Style{
 						FillColor: makeColor(rgbHexColorHighRisk()).WithAlpha(98),
-						//FontColor: makeColor(rgbHexColorHighRisk()),
-						FontSize: 65}},
+						FontStyle: chart.FontStyle{
+							//FontColor: makeColor(rgbHexColorHighRisk()),
+							FontSize: 65}}},
 				{Value: float64(countCritical), //Label: strconv.Itoa(countCritical) + " Critical",
 					Style: chart.Style{
 						FillColor: makeColor(rgbHexColorCriticalRisk()).WithAlpha(98),
-						//FontColor: makeColor(rgbHexColorCriticalRisk()),
-						FontSize: 65}},
+						FontStyle: chart.FontStyle{
+							//FontColor: makeColor(rgbHexColorCriticalRisk()),
+							FontSize: 65}}},
 			},
 		}
 
@@ -1232,19 +1248,19 @@ func (r *pdfReporter) createRiskMitigationStatus(parsedModel *types.Model, tempF
 				{Value: float64(countBusinessSide),
 					Style: chart.Style{
 						FillColor: makeColor(rgbHexColorBusiness()).WithAlpha(98),
-						FontSize:  65}},
+						FontStyle: chart.FontStyle{FontSize:  65}}},
 				{Value: float64(countArchitecture),
 					Style: chart.Style{
 						FillColor: makeColor(rgbHexColorArchitecture()).WithAlpha(98),
-						FontSize:  65}},
+						FontStyle: chart.FontStyle{FontSize:  65}}},
 				{Value: float64(countDevelopment),
 					Style: chart.Style{
 						FillColor: makeColor(rgbHexColorDevelopment()).WithAlpha(98),
-						FontSize:  65}},
+						FontStyle: chart.FontStyle{FontSize:  65}}},
 				{Value: float64(countOperation),
 					Style: chart.Style{
 						FillColor: makeColor(rgbHexColorOperation()).WithAlpha(98),
-						FontSize:  65}},
+						FontStyle: chart.FontStyle{FontSize:  65}}},
 			},
 		}
 
