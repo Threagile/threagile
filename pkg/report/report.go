@@ -38,8 +38,10 @@ type pdfReporter struct {
 	riskRules types.RiskRules
 }
 
-func newPdfReporter(types.RiskRules) *pdfReporter {
-	return &pdfReporter{}
+func newPdfReporter(riskRules types.RiskRules) *pdfReporter {
+	return &pdfReporter{
+		riskRules: riskRules,
+	}
 }
 
 func (r *pdfReporter) initReport() {
