@@ -26,8 +26,9 @@ type adocReport struct {
 
 	riskRules types.RiskRules
 
-	iconsType string
-	tocDepth  int
+	iconsType        string
+	tocDepth         int
+	hideEmptyChapter bool
 }
 
 func copyFile(source string, destination string) error {
@@ -68,13 +69,14 @@ func fixBasicHtml(inputWithHtml string) string {
 	return result
 }
 
-func NewAdocReport(targetDirectory string, riskRules types.RiskRules) adocReport {
+func NewAdocReport(targetDirectory string, riskRules types.RiskRules, hideEmptyChapter bool) adocReport {
 	adoc := adocReport{
-		targetDirectory: filepath.Join(targetDirectory, "adocReport"),
-		iconsType:       "font",
-		tocDepth:        2,
-		imagesDir:       filepath.Join(targetDirectory, "adocReport", "images"),
-		riskRules:       riskRules,
+		targetDirectory:  filepath.Join(targetDirectory, "adocReport"),
+		iconsType:        "font",
+		tocDepth:         2,
+		imagesDir:        filepath.Join(targetDirectory, "adocReport", "images"),
+		riskRules:        riskRules,
+		hideEmptyChapter: hideEmptyChapter,
 	}
 	return adoc
 }
@@ -323,6 +325,10 @@ func (adoc adocReport) WriteReport(model *types.Model,
 			return fmt.Errorf("error creating risk rules checked: %w", err)
 		}
 	}
+	err = adoc.writeAppendixRating()
+	if err != nil {
+		return fmt.Errorf("error creating appendix for the rating mappings")
+	}
 	err = adoc.writeDisclaimer()
 	if err != nil {
 		return fmt.Errorf("error creating disclaimer: %w", err)
@@ -492,6 +498,20 @@ func titleOfSeverity(severity types.RiskSeverity) string {
 	}
 }
 
+func riskSuffix(remainingRisks int, totalRisks int) string {
+	suffix := ""
+	if remainingRisks > 0 {
+		suffix = strconv.Itoa(remainingRisks) + "/" + strconv.Itoa(totalRisks) + " unmitigated Risk"
+	} else {
+		suffix = strconv.Itoa(totalRisks) + " mitigated Risk"
+	}
+	if totalRisks != 1 {
+		suffix += "s"
+	}
+
+	return suffix
+}
+
 func (adoc adocReport) addCategories(f *os.File, risksByCategory map[string][]*types.Risk, initialRisks bool, severity types.RiskSeverity, bothInitialAndRemainingRisks bool, describeDescription bool) {
 	describeImpact := true
 	riskCategories := getRiskCategories(adoc.model, reduceToSeverityRisk(risksByCategory, initialRisks, severity))
@@ -534,11 +554,11 @@ func (adoc adocReport) addCategories(f *os.File, risksByCategory map[string][]*t
 		}
 		remainingRisks := types.ReduceToOnlyStillAtRisk(risksStr)
 		suffix := strconv.Itoa(count) + " " + initialStr + " Risk"
-		if bothInitialAndRemainingRisks {
-			suffix = strconv.Itoa(len(remainingRisks)) + " / " + strconv.Itoa(count) + " Risk"
-		}
 		if count != 1 {
 			suffix += "s"
+		}
+		if bothInitialAndRemainingRisks {
+			suffix = riskSuffix(len(remainingRisks), count)
 		}
 		suffix += " - Exploitation likelihood is _"
 		if initialRisks {
@@ -561,7 +581,7 @@ func (adoc adocReport) addCategories(f *os.File, risksByCategory map[string][]*t
 	}
 }
 
-func (adoc adocReport) impactAnalysis(f *os.File, initialRisks bool) {
+func (adoc adocReport) impactAnalysis(f *os.File, initialRisks bool) int {
 
 	count := 0
 	catCount := 0
@@ -600,6 +620,8 @@ func (adoc adocReport) impactAnalysis(f *os.File, initialRisks bool) {
 	adoc.addCategories(f, adoc.model.GeneratedRisksByCategoryWithCurrentStatus(), initialRisks, types.ElevatedSeverity, false, false)
 	adoc.addCategories(f, adoc.model.GeneratedRisksByCategoryWithCurrentStatus(), initialRisks, types.MediumSeverity, false, false)
 	adoc.addCategories(f, adoc.model.GeneratedRisksByCategoryWithCurrentStatus(), initialRisks, types.LowSeverity, false, false)
+
+	return count
 }
 
 func (adoc adocReport) writeImpactInitialRisks() error {
@@ -826,10 +848,13 @@ func (adoc adocReport) writeImpactRemainingRisks() error {
 	if err != nil {
 		return err
 	}
-	adoc.writeMainLine("<<<")
-	adoc.writeMainLine("include::" + filename + "[leveloffset=+1]")
 
-	adoc.impactAnalysis(irr, false)
+	nRemaining := adoc.impactAnalysis(irr, false)
+	if nRemaining > 0 || !adoc.hideEmptyChapter {
+		adoc.writeMainLine("<<<")
+		adoc.writeMainLine("include::" + filename + "[leveloffset=+1]")
+	}
+
 	return nil
 }
 
@@ -943,12 +968,13 @@ func (adoc adocReport) writeDataFlowDiagram(diagramFilenamePNG string) error {
 	return nil
 }
 
-func (adoc adocReport) securityRequirements(f *os.File) {
+func (adoc adocReport) securityRequirements(f *os.File) int {
 	writeLine(f, "= Security Requirements")
 	writeLine(f, "This chapter lists the custom security requirements which have been defined for the modeled target.")
 
 	writeLine(f, "\n")
-	for _, title := range sortedKeysOfSecurityRequirements(adoc.model) {
+	requirements := sortedKeysOfSecurityRequirements(adoc.model)
+	for _, title := range requirements {
 		description := adoc.model.SecurityRequirements[title]
 		writeLine(f, title+"::")
 		writeLine(f, "  "+description)
@@ -957,6 +983,7 @@ func (adoc adocReport) securityRequirements(f *os.File) {
 	writeLine(f, "\n\n")
 	writeLine(f, "_This list is not complete and regulatory or law relevant security requirements have to be "+
 		"taken into account as well. Also custom individual security requirements might exist for the project._")
+	return len(requirements)
 }
 
 func (adoc adocReport) writeSecurityRequirements() error {
@@ -966,18 +993,21 @@ func (adoc adocReport) writeSecurityRequirements() error {
 	if err != nil {
 		return err
 	}
-	adoc.writeMainLine("<<<")
-	adoc.writeMainLine("include::" + filename + "[leveloffset=+1]")
 
-	adoc.securityRequirements(sr)
+	nRequirements := adoc.securityRequirements(sr)
+	if nRequirements > 0 || !adoc.hideEmptyChapter {
+		adoc.writeMainLine("<<<")
+		adoc.writeMainLine("include::" + filename + "[leveloffset=+1]")
+	}
 	return nil
 }
 
-func (adoc adocReport) abuseCases(f *os.File) {
+func (adoc adocReport) abuseCases(f *os.File) int {
 	writeLine(f, "= Abuse Cases")
 	writeLine(f, "This chapter lists the custom abuse cases which have been defined for the modeled target.")
 	writeLine(f, "\n")
-	for _, title := range sortedKeysOfAbuseCases(adoc.model) {
+	cases := sortedKeysOfAbuseCases(adoc.model)
+	for _, title := range cases {
 		description := adoc.model.AbuseCases[title]
 		writeLine(f, title+"::")
 		writeLine(f, "  "+description)
@@ -986,6 +1016,7 @@ func (adoc adocReport) abuseCases(f *os.File) {
 	writeLine(f, "\n\n")
 	writeLine(f, "_This list is not complete and regulatory or law relevant abuse cases have to be "+
 		"taken into account as well. Also custom individual abuse cases might exist for the project._")
+	return len(cases)
 }
 
 func (adoc adocReport) writeAbuseCases() error {
@@ -995,10 +1026,12 @@ func (adoc adocReport) writeAbuseCases() error {
 	if err != nil {
 		return err
 	}
-	adoc.writeMainLine("<<<")
-	adoc.writeMainLine("include::" + filename + "[leveloffset=+1]")
 
-	adoc.abuseCases(ac)
+	nCases := adoc.abuseCases(ac)
+	if nCases > 0 || !adoc.hideEmptyChapter {
+		adoc.writeMainLine("<<<")
+		adoc.writeMainLine("include::" + filename + "[leveloffset=+1]")
+	}
 	return nil
 }
 
@@ -1121,8 +1154,12 @@ func (adoc adocReport) stride(f *os.File) {
 	for _, strideValue := range strides {
 		writeLine(f, "== "+strideValue.Title())
 		risksSTRIDE := reduceToSTRIDERisk(adoc.model, adoc.model.GeneratedRisksByCategoryWithCurrentStatus(), strideValue)
-		for _, critValue := range reverseRiskSeverity {
-			adoc.addCategories(f, risksSTRIDE, true, critValue, true, true)
+		if len(risksSTRIDE) > 0 {
+			for _, critValue := range reverseRiskSeverity {
+				adoc.addCategories(f, risksSTRIDE, true, critValue, true, true)
+			}
+		} else {
+			writeLine(f, "No risk identified.")
 		}
 		writeLine(f, "")
 	}
@@ -1316,9 +1353,14 @@ Each one should be checked in the model whether it should better be included in 
 	outOfScopeAssetCount := 0
 	for _, technicalAsset := range sortedTechnicalAssetsByRAAAndTitle(adoc.model) {
 		if technicalAsset.OutOfScope {
+			JustificationOutOfScope := technicalAsset.JustificationOutOfScope
+			if len(JustificationOutOfScope) == 0 {
+				JustificationOutOfScope = "Missing out of scope justification."
+			}
+
 			outOfScopeAssetCount++
 			writeLine(f, "<<"+technicalAsset.Id+",[OutOfScope]#"+technicalAsset.Title+" : out-of-scope#>>::")
-			writeLine(f, "  "+technicalAsset.JustificationOutOfScope)
+			writeLine(f, "  "+JustificationOutOfScope)
 			writeLine(f, "")
 		}
 	}
@@ -1344,11 +1386,7 @@ func (adoc adocReport) writeOutOfScopeAssets() error {
 
 func (adoc adocReport) modelFailures(f *os.File) {
 	modelFailures := flattenRiskSlice(filterByModelFailures(adoc.model, adoc.model.GeneratedRisksByCategoryWithCurrentStatus()))
-	risksStr := "Risk"
 	count := len(modelFailures)
-	if count > 1 {
-		risksStr += "s"
-	}
 	countStillAtRisk := len(types.ReduceToOnlyStillAtRisk(modelFailures))
 	colorPrefix := ""
 	colorSuffix := ""
@@ -1356,7 +1394,8 @@ func (adoc adocReport) modelFailures(f *os.File) {
 		colorPrefix = "[ModelFailure]#"
 		colorSuffix = "#"
 	}
-	writeLine(f, "= "+colorPrefix+"Potential Model Failures: "+strconv.Itoa(countStillAtRisk)+" / "+strconv.Itoa(count)+" "+risksStr+colorSuffix)
+	suffix := riskSuffix(countStillAtRisk, count)
+	writeLine(f, "= "+colorPrefix+"Potential Model Failures: "+suffix+colorSuffix)
 	writeLine(f, ":fn-risk-findings: footnote:riskfinding[Risk finding paragraphs are clickable and link to the corresponding chapter.]")
 	writeLine(f, "")
 
@@ -1392,11 +1431,11 @@ func (adoc adocReport) writeModelFailures() error {
 	return nil
 }
 
-func (adoc adocReport) questions(f *os.File) {
-	questions := "Question"
+func (adoc adocReport) questions(f *os.File) int {
+	questionStr := "Question"
 	count := len(adoc.model.Questions)
 	if count > 1 {
-		questions += "s"
+		questionStr += "s"
 	}
 	colorPrefix := ""
 	colorSuffix := ""
@@ -1404,7 +1443,7 @@ func (adoc adocReport) questions(f *os.File) {
 		colorPrefix = "[ModelFailure]#"
 		colorSuffix = "#"
 	}
-	writeLine(f, "= "+colorPrefix+"Questions: "+strconv.Itoa(questionsUnanswered(adoc.model))+" / "+strconv.Itoa(count)+" "+questions+colorSuffix)
+	writeLine(f, "= "+colorPrefix+"Questions: "+strconv.Itoa(questionsUnanswered(adoc.model))+" / "+strconv.Itoa(count)+" "+questionStr+colorSuffix)
 	writeLine(f, "")
 	writeLine(f, "This chapter lists custom questions that arose during the threat modeling process.")
 	writeLine(f, "")
@@ -1415,7 +1454,8 @@ func (adoc adocReport) questions(f *os.File) {
 	}
 	writeLine(f, "")
 
-	for _, question := range sortedKeysOfQuestions(adoc.model) {
+	questions := sortedKeysOfQuestions(adoc.model)
+	for _, question := range questions {
 		answer := adoc.model.Questions[question]
 		if len(strings.TrimSpace(answer)) > 0 {
 			writeLine(f, "*"+question+"*::")
@@ -1426,6 +1466,7 @@ func (adoc adocReport) questions(f *os.File) {
 		}
 		writeLine(f, "")
 	}
+	return len(questions)
 }
 
 func (adoc adocReport) writeQuestions() error {
@@ -1435,10 +1476,13 @@ func (adoc adocReport) writeQuestions() error {
 	if err != nil {
 		return err
 	}
-	adoc.writeMainLine("<<<")
-	adoc.writeMainLine("include::" + filename + "[leveloffset=+1]")
 
-	adoc.questions(f)
+	nQuestions := adoc.questions(f)
+	if nQuestions > 0 || !adoc.hideEmptyChapter {
+		adoc.writeMainLine("<<<")
+		adoc.writeMainLine("include::" + filename + "[leveloffset=+1]")
+	}
+
 	return nil
 }
 
@@ -1478,7 +1522,7 @@ func (adoc adocReport) riskTrackingStatus(f *os.File, risk *types.Risk) {
 			ticket = "-"
 		}
 		writeLine(f, `
-[cols="a,c,c,c",frame=none,grid=none,options="unbreakable"]
+[cols="a,c,c,2c",frame=none,grid=none,options="unbreakable"]
 |===
 | [.`+colorName+`.small]#`+bold+tracking.Status.Title()+bold+`#
 | [.GreyText.small]#`+dateStr+`#
@@ -1490,7 +1534,7 @@ func (adoc adocReport) riskTrackingStatus(f *os.File, risk *types.Risk) {
 `)
 	} else {
 		writeLine(f, `
-[cols="a,c,c,c",frame=none,grid=none,options="unbreakable"]
+[cols="a,c,c,2c",frame=none,grid=none,options="unbreakable"]
 |===
 4+| [.`+colorName+`.small]#`+bold+tracking.Status.Title()+bold+`#
 |===
@@ -1523,10 +1567,7 @@ func (adoc adocReport) riskCategories(f *os.File) {
 
 		// category title
 		countStillAtRisk := len(types.ReduceToOnlyStillAtRisk(risksStr))
-		suffix := strconv.Itoa(countStillAtRisk) + " / " + strconv.Itoa(len(risksStr)) + " Risk"
-		if len(risksStr) != 1 {
-			suffix += "s"
-		}
+		suffix := riskSuffix(countStillAtRisk, len(risksStr))
 		title := colorPrefix + category.Title + ": " + suffix + colorSuffix
 		writeLine(f, "[["+category.ID+"]]")
 		writeLine(f, "== "+title)
@@ -1587,7 +1628,6 @@ func (adoc adocReport) riskCategories(f *os.File) {
 
 		// risk details
 		writeLine(f, "")
-		writeLine(f, "<<<")
 		writeLine(f, "=== Risk Findings")
 		writeLine(f, ":fn-risk-findings: footnote:riskfinding[Risk finding paragraphs are clickable and link to the corresponding chapter.]")
 		times := strconv.Itoa(len(risksStr)) + " time"
@@ -1706,10 +1746,7 @@ func (adoc adocReport) technicalAssets(f *os.File) {
 	for _, technicalAsset := range sortedTechnicalAssetsByRiskSeverityAndTitle(adoc.model) {
 		risksStr := adoc.model.GeneratedRisks(technicalAsset)
 		countStillAtRisk := len(types.ReduceToOnlyStillAtRisk(risksStr))
-		suffix := strconv.Itoa(countStillAtRisk) + " / " + strconv.Itoa(len(risksStr)) + " Risk"
-		if len(risksStr) != 1 {
-			suffix += "s"
-		}
+		suffix := riskSuffix(countStillAtRisk, len(risksStr))
 		colorPrefix, colorSuffix := colorPrefixBySeverity(types.HighestSeverityStillAtRisk(risksStr), false)
 		if technicalAsset.OutOfScope {
 			colorPrefix = "[OutOfScope]#"
@@ -1772,38 +1809,30 @@ func (adoc adocReport) technicalAssets(f *os.File) {
 		formatsAcceptedText := dataFormatTitleJoinOrNone(technicalAsset.DataFormatsAcceptedSorted(), "[GrayText]#none of the special data formats accepted#")
 
 		writeLine(f, `
-[cols="h,5",frame=none,grid=none]
+[cols="h,1,h,1",frame=none,grid=none]
 |===
-| ID:               | `+technicalAsset.Id+`
-| Type:             | `+technicalAsset.Type.String()+`
-| Usage:            | `+technicalAsset.Usage.String()+`
-| RAA:              | `+textRAA+`
-| Size:             | `+technicalAsset.Size.String()+`
-| Technology:       | `+technicalAsset.Technologies.String()+`
-| Tags:             | `+tagsUsedText+`
-| Internet:         | `+strconv.FormatBool(technicalAsset.Internet)+`
-| Machine:          | `+technicalAsset.Machine.String()+`
-| Encryption:       | `+technicalAsset.Encryption.String()+`
-| Encryption:       | `+technicalAsset.Encryption.String()+`
-| Multi-Tenant:     | `+strconv.FormatBool(technicalAsset.MultiTenant)+`
-| Redundant:        | `+strconv.FormatBool(technicalAsset.Redundant)+`
-| Custom-Developed: | `+strconv.FormatBool(technicalAsset.CustomDevelopedParts)+`
-| Client by Human:  | `+strconv.FormatBool(technicalAsset.UsedAsClientByHuman)+`
-| Data Processed:   | `+dataAssetsProcessedText+`
-| Data Stored:      | `+dataAssetsStoredText+`
-| Formats Accepted: | `+formatsAcceptedText+`
+| ID:             3+| `+technicalAsset.Id+`
+| Type:             | `+technicalAsset.Type.String()+`| Usage: | `+technicalAsset.Usage.String()+`
+| RAA:              | `+textRAA+`| Size: | `+technicalAsset.Size.String()+`
+| Technology:       | `+technicalAsset.Technologies.String()+`| Tags: | `+tagsUsedText+`
+| Internet:         | `+strconv.FormatBool(technicalAsset.Internet)+`| Machine: | `+technicalAsset.Machine.String()+`
+| Encryption:       | `+technicalAsset.Encryption.String()+`| Multi-Tenant: | `+strconv.FormatBool(technicalAsset.MultiTenant)+`
+| Redundant:        | `+strconv.FormatBool(technicalAsset.Redundant)+`| Custom-Developed: | `+strconv.FormatBool(technicalAsset.CustomDevelopedParts)+`
+| Client by Human:  | `+strconv.FormatBool(technicalAsset.UsedAsClientByHuman)+`| Formats Accepted: | `+formatsAcceptedText+`
+| Data Processed: 3+| `+dataAssetsProcessedText+`
+| Data Stored:    3+| `+dataAssetsStoredText+`
 |===
 `)
 
 		writeLine(f, "=== Asset Rating")
 		writeLine(f, `
-[cols="h,2,1",frame=none,grid=none]
+[cols="h,2",frame=none,grid=none]
 |===
-| Owner:             2+| `+technicalAsset.Owner+`
-| Confidentiality:     | `+technicalAsset.Confidentiality.String()+` | `+technicalAsset.Confidentiality.RatingStringInScale()+`
-| Integrity:           | `+technicalAsset.Integrity.String()+` | `+technicalAsset.Integrity.RatingStringInScale()+`
-| Availability:        | `+technicalAsset.Availability.String()+` | `+technicalAsset.Availability.RatingStringInScale()+`
-| CIA-Justification: 2+| `+technicalAsset.JustificationCiaRating)
+| Owner:             | `+technicalAsset.Owner+`
+| Confidentiality:   | `+technicalAsset.Confidentiality.String()+`<<ref-confidentiality-values,*>>
+| Integrity:         | `+technicalAsset.Integrity.String()+`<<ref-criticality-values,*>>
+| Availability:      | `+technicalAsset.Availability.String()+`<<ref-criticality-values,*>>
+| CIA-Justification: | `+technicalAsset.JustificationCiaRating)
 		if technicalAsset.OutOfScope {
 			writeLine(f, "| Asset Out-of-Scope Justification: 2+| "+technicalAsset.JustificationOutOfScope)
 		}
@@ -1820,20 +1849,14 @@ func (adoc adocReport) technicalAssets(f *os.File) {
 				dataAssetsReceivedText := dataAssetListTitleJoinOrNone(adoc.model.DataAssetsReceivedSorted(outgoingCommLink), "")
 
 				writeLine(f, `
-[cols="h,1",frame=none,grid=none]
+[cols="h,1,h,1",frame=none,grid=none]
 |===
-| Target:         | <<`+outgoingCommLink.TargetId+`,`+adoc.model.TechnicalAssets[outgoingCommLink.TargetId].Title+`>>
-| Protocol:       | `+outgoingCommLink.Protocol.String()+`
-| Encrypted:      | `+strconv.FormatBool(outgoingCommLink.Protocol.IsEncrypted())+`
-| Authentication: | `+outgoingCommLink.Authentication.String()+`
-| Authorization:  | `+outgoingCommLink.Authorization.String()+`
-| Read-Only:      | `+strconv.FormatBool(outgoingCommLink.Readonly)+`
-| Usage:          | `+outgoingCommLink.Usage.String()+`
-| Tags:           | `+tagsUsedText+`
-| VPN:            | `+strconv.FormatBool(outgoingCommLink.VPN)+`
-| IP-Filtered:    | `+strconv.FormatBool(outgoingCommLink.IpFiltered)+`
-| Data Sent:      | `+dataAssetsSentText+`
-| Data Received:  | `+dataAssetsReceivedText+`
+| Target:         | <<`+outgoingCommLink.TargetId+`,`+adoc.model.TechnicalAssets[outgoingCommLink.TargetId].Title+`>>| Protocol:       | `+outgoingCommLink.Protocol.String()+`
+| Encrypted:      | `+strconv.FormatBool(outgoingCommLink.Protocol.IsEncrypted())+`| Authentication: | `+outgoingCommLink.Authentication.String()+`
+| Authorization:  | `+outgoingCommLink.Authorization.String()+`| Read-Only:      | `+strconv.FormatBool(outgoingCommLink.Readonly)+`
+| Usage:          | `+outgoingCommLink.Usage.String()+`| Tags:           | `+tagsUsedText+`
+| VPN:            | `+strconv.FormatBool(outgoingCommLink.VPN)+`| IP-Filtered:    | `+strconv.FormatBool(outgoingCommLink.IpFiltered)+`
+| Data Sent:      | `+dataAssetsSentText+`| Data Received:  | `+dataAssetsReceivedText+`
 |===
 `)
 			}
@@ -1843,7 +1866,7 @@ func (adoc adocReport) technicalAssets(f *os.File) {
 		if len(incomingCommLinks) > 0 {
 			writeLine(f, "=== Incoming Communication Links: "+strconv.Itoa(len(incomingCommLinks)))
 			for _, incomingCommLink := range incomingCommLinks {
-				writeLine(f, "==== "+incomingCommLink.Title+" (outgoing)")
+				writeLine(f, "==== "+incomingCommLink.Title+" (incoming)")
 				writeLine(f, fixBasicHtml(incomingCommLink.Description))
 
 				tagsUsedText := joinedOrNoneString(incomingCommLink.Tags, "")
@@ -1851,20 +1874,14 @@ func (adoc adocReport) technicalAssets(f *os.File) {
 				dataAssetsReceivedText := dataAssetListTitleJoinOrNone(adoc.model.DataAssetsReceivedSorted(incomingCommLink), "")
 
 				writeLine(f, `
-[cols="h,1",frame=none,grid=none]
+[cols="h,1,h,1",frame=none,grid=none]
 |===
-| Source:         | <<`+incomingCommLink.SourceId+`,`+adoc.model.TechnicalAssets[incomingCommLink.SourceId].Title+`>>
-| Protocol:       | `+incomingCommLink.Protocol.String()+`
-| Encrypted:      | `+strconv.FormatBool(incomingCommLink.Protocol.IsEncrypted())+`
-| Authentication: | `+incomingCommLink.Authentication.String()+`
-| Authorization:  | `+incomingCommLink.Authorization.String()+`
-| Read-Only:      | `+strconv.FormatBool(incomingCommLink.Readonly)+`
-| Usage:          | `+incomingCommLink.Usage.String()+`
-| Tags:           | `+tagsUsedText+`
-| VPN:            | `+strconv.FormatBool(incomingCommLink.VPN)+`
-| IP-Filtered:    | `+strconv.FormatBool(incomingCommLink.IpFiltered)+`
-| Data Sent:      | `+dataAssetsSentText+`
-| Data Received:  | `+dataAssetsReceivedText+`
+| Source:         | <<`+incomingCommLink.SourceId+`,`+adoc.model.TechnicalAssets[incomingCommLink.SourceId].Title+`>>| Protocol:       | `+incomingCommLink.Protocol.String()+`
+| Encrypted:      | `+strconv.FormatBool(incomingCommLink.Protocol.IsEncrypted())+`| Authentication: | `+incomingCommLink.Authentication.String()+`
+| Authorization:  | `+incomingCommLink.Authorization.String()+`| Read-Only:      | `+strconv.FormatBool(incomingCommLink.Readonly)+`
+| Usage:          | `+incomingCommLink.Usage.String()+`| Tags:           | `+tagsUsedText+`
+| VPN:            | `+strconv.FormatBool(incomingCommLink.VPN)+`| IP-Filtered:    | `+strconv.FormatBool(incomingCommLink.IpFiltered)+`
+| Data Sent:      | `+dataAssetsSentText+`| Data Received:  | `+dataAssetsReceivedText+`
 |===
 `)
 			}
@@ -1904,13 +1921,11 @@ func (adoc adocReport) dataAssets(f *os.File) {
 		colorPrefix, colorSuffix := colorPrefixByDataBreachProbability(dataBreachProbability, false)
 		if !isDataBreachPotentialStillAtRisk(adoc.model, dataAsset) {
 			colorPrefix = ""
+			colorSuffix = ""
 		}
 		risksStr := adoc.model.IdentifiedDataBreachProbabilityRisks(dataAsset)
 		countStillAtRisk := len(types.ReduceToOnlyStillAtRisk(risksStr))
-		suffix := strconv.Itoa(countStillAtRisk) + " / " + strconv.Itoa(len(risksStr)) + " Risk"
-		if len(risksStr) != 1 {
-			suffix += "s"
-		}
+		suffix := riskSuffix(countStillAtRisk, len(risksStr))
 		writeLine(f, "<<<")
 		writeLine(f, "[[dataAsset:"+dataAsset.Id+"]]")
 		writeLine(f, "== "+colorPrefix+dataAsset.Title+": "+suffix+colorSuffix)
@@ -1941,24 +1956,19 @@ func (adoc adocReport) dataAssets(f *os.File) {
 		}
 
 		writeLine(f, `
-[cols="h,2,1",frame=none,grid=none]
+[cols="h,1,h,1",frame=none,grid=none]
 |===
-| ID:                2+| `+dataAsset.Id+`
-| Usage:             2+| `+dataAsset.Usage.String()+`
-| Quantity:          2+| `+dataAsset.Quantity.String()+`
-| Tags:              2+| `+tagsUsedText+`
-| Origin:            2+| `+dataAsset.Origin+`
-| Owner:             2+| `+dataAsset.Owner+`
-| Confidentiality:     | `+dataAsset.Confidentiality.String()+` | `+dataAsset.Confidentiality.RatingStringInScale()+`
-| Integrity:           | `+dataAsset.Integrity.String()+` | `+dataAsset.Integrity.RatingStringInScale()+`
-| Availability:        | `+dataAsset.Availability.String()+` | `+dataAsset.Availability.RatingStringInScale()+`
-| CIA-Justification: 2+| `+dataAsset.JustificationCiaRating+`
-| Processed by:      2+| `+processedByText+`
-| Stored by:         2+| `+storedByText+`
-| Sent via:          2+| `+sentViaText+`
-| Received via:      2+| `+receivedViaText+`
-| Data Breach:       2+| `+colorPrefix+riskText+colorSuffix+`
-| Data Breach Risks: 2+| `+dataBreachText)
+| ID:                3+| `+dataAsset.Id+`
+| Usage:               | `+dataAsset.Usage.String()+`| Quantity:          | `+dataAsset.Quantity.String()+`
+| Tags:                | `+tagsUsedText+`| Origin:            | `+dataAsset.Origin+`
+| Owner:               | `+dataAsset.Owner+`| Confidentiality:   | `+dataAsset.Confidentiality.String()+`<<ref-confidentiality-values,*>>
+| Integrity:           | `+dataAsset.Integrity.String()+`<<ref-criticality-values,*>>| Availability:      | `+dataAsset.Availability.String()+`<<ref-criticality-values,*>>
+| CIA-Justification: 3+| `+dataAsset.JustificationCiaRating+`
+| Processed by:      3+| `+processedByText+`
+| Stored by:         3+| `+storedByText+`
+| Sent via:            | `+sentViaText+`| Received via:        | `+receivedViaText+`
+| Data Breach:       3+| `+colorPrefix+riskText+colorSuffix+`
+| Data Breach Risks: 3+| `+dataBreachText)
 
 		if len(dataBreachRisksStillAtRisk) > 0 {
 			for _, dataBreachRisk := range dataBreachRisksStillAtRisk {
@@ -2184,7 +2194,67 @@ func (adoc adocReport) writeRiskRulesChecked(modelFilename string, skipRiskRules
 	return nil
 }
 
+func (adoc adocReport) appendixRating(f *os.File) {
+	writeLine(f, "[appendix]")
+	writeLine(f, "= Ratings")
+
+	confValues := map[types.Confidentiality]string{
+		types.Public:               "1",
+		types.Internal:             "2",
+		types.Restricted:           "3",
+		types.Confidential:         "4",
+		types.StrictlyConfidential: "5",
+	}
+
+	critValues := map[types.Criticality]string{
+		types.Archive:         "1",
+		types.Operational:     "2",
+		types.Important:       "3",
+		types.Critical:        "4",
+		types.MissionCritical: "5",
+	}
+
+	writeLine(f, "")
+	writeLine(f, "[[ref-confidentiality-values]]")
+	writeLine(f, ".Confidentiality Values")
+	writeLine(f, "[%header,cols=\"3,1,8\"]")
+	writeLine(f, "|===")
+	writeLine(f, "| Name | Value | Description")
+	writeLine(f, "")
+	for key, value := range confValues {
+		writeLine(f, "| "+key.String()+" | "+value+" | "+key.Explain())
+	}
+	writeLine(f, "|===")
+	writeLine(f, "")
+
+	writeLine(f, "[[ref-criticality-values]]")
+	writeLine(f, ".Criticality Values")
+	writeLine(f, "[%header,cols=\"3,1,8\"]")
+	writeLine(f, "|===")
+	writeLine(f, "| Name | Value | Description")
+	writeLine(f, "")
+	for key, value := range critValues {
+		writeLine(f, "| "+key.String()+" | "+value+" | "+key.Explain())
+	}
+	writeLine(f, "|===")
+}
+
+func (adoc adocReport) writeAppendixRating() error {
+	filename := "400_AppendixRating.adoc"
+	f, err := os.Create(filepath.Join(adoc.targetDirectory, filename))
+	defer func() { _ = f.Close() }()
+	if err != nil {
+		return err
+	}
+	adoc.writeMainLine("<<<")
+	adoc.writeMainLine("include::" + filename + "[leveloffset=+1]")
+
+	adoc.appendixRating(f)
+	return nil
+}
+
 func (adoc adocReport) disclaimer(f *os.File) {
+	writeLine(f, "[appendix]")
 	writeLine(f, "= Disclaimer")
 
 	disclaimerColor := "\n[.Silver]\n"
@@ -2233,7 +2303,7 @@ func (adoc adocReport) disclaimer(f *os.File) {
 }
 
 func (adoc adocReport) writeDisclaimer() error {
-	filename := "230_Disclaimer.adoc"
+	filename := "500_Disclaimer.adoc"
 	f, err := os.Create(filepath.Join(adoc.targetDirectory, filename))
 	defer func() { _ = f.Close() }()
 	if err != nil {

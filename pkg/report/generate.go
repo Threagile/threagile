@@ -78,6 +78,8 @@ type reportConfigReader interface {
 	GetAddModelTitle() bool
 	GetAddLegend() bool
 	GetReportConfigurationHideChapters() map[ChaptersToShowHide]bool
+
+	GetHideEmptyChapters() bool
 }
 
 func Generate(config reportConfigReader, readResult *model.ReadResult, commands *GenerateCommands, riskRules types.RiskRules, progressReporter progressReporter) error {
@@ -249,7 +251,7 @@ func Generate(config reportConfigReader, readResult *model.ReadResult, commands 
 		modelHash := hex.EncodeToString(hasher.Sum(nil))
 		// report ADOC
 		progressReporter.Info("Writing report adoc")
-		adocReporter := NewAdocReport(config.GetOutputFolder(), riskRules)
+		adocReporter := NewAdocReport(config.GetOutputFolder(), riskRules, config.GetHideEmptyChapters())
 		err = adocReporter.WriteReport(readResult.ParsedModel,
 			filepath.Join(config.GetOutputFolder(), config.GetDataFlowDiagramFilenamePNG()),
 			filepath.Join(config.GetOutputFolder(), config.GetDataAssetDiagramFilenamePNG()),
