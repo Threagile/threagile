@@ -68,3 +68,13 @@ func (what TechnologyList) IsUnknown() bool {
 
 	return true
 }
+
+func (what TechnologyList) HasAuthenticatingTechnology() bool {
+	for _, technology := range what {
+		t := *technology
+		if t.IsAuthenticatingTechnology() {
+			return true
+		}
+	}
+	return false
+}

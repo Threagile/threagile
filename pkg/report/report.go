@@ -108,6 +108,7 @@ func (r *pdfReporter) WriteReportPDF(reportFilename string,
 	r.createModelFailures(model)
 	r.createQuestions(model)
 	r.createRiskCategories(model)
+	//r.createPrivacyListing(model)
 	r.createTechnicalAssets(model)
 	r.createDataAssets(model)
 	r.createTrustBoundaries(model)
@@ -3960,6 +3961,9 @@ func identifiedDataBreachProbabilityRisksStillAtRisk(parsedModel *types.Model, d
 	result := make([]*types.Risk, 0)
 	for _, risk := range filteredByStillAtRisk(parsedModel) {
 		for _, techAsset := range risk.DataBreachTechnicalAssetIDs {
+			if parsedModel.TechnicalAssets[techAsset] == nil || dataAsset == nil {
+				continue
+			}
 			if contains(parsedModel.TechnicalAssets[techAsset].DataAssetsProcessed, dataAsset.Id) {
 				result = append(result, risk)
 				break
@@ -3972,6 +3976,9 @@ func identifiedDataBreachProbabilityRisksStillAtRisk(parsedModel *types.Model, d
 func isDataBreachPotentialStillAtRisk(parsedModel *types.Model, dataAsset *types.DataAsset) bool {
 	for _, risk := range filteredByStillAtRisk(parsedModel) {
 		for _, techAsset := range risk.DataBreachTechnicalAssetIDs {
+			if parsedModel.TechnicalAssets[techAsset] == nil || dataAsset == nil {
+				continue
+			}
 			if contains(parsedModel.TechnicalAssets[techAsset].DataAssetsProcessed, dataAsset.Id) {
 				return true
 			}

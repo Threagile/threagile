@@ -35,13 +35,13 @@ func TestInferConfidentiality_ExpectHighestConfidentiality(t *testing.T) {
 	ta := make(map[string]input.TechnicalAsset)
 	da := make(map[string]input.DataAsset)
 
-	daConfidentialConfidentiality := createDataAsset(types.Confidential, types.Critical, types.Critical)
+	daConfidentialConfidentiality := createDataAsset(types.Confidential, types.Critical, types.Critical, types.OtherPIDirectIdentifier)
 	da[daConfidentialConfidentiality.ID] = daConfidentialConfidentiality
 
-	daRestrictedConfidentiality := createDataAsset(types.Restricted, types.Important, types.Important)
+	daRestrictedConfidentiality := createDataAsset(types.Restricted, types.Important, types.Important, types.OtherPIQuasiIdentifier)
 	da[daRestrictedConfidentiality.ID] = daRestrictedConfidentiality
 
-	daPublicConfidentiality := createDataAsset(types.Public, types.Archive, types.Archive)
+	daPublicConfidentiality := createDataAsset(types.Public, types.Archive, types.Archive, types.OtherNonPI)
 	da[daPublicConfidentiality.ID] = daPublicConfidentiality
 
 	taWithConfidentialConfidentialityDataAsset := createTechnicalAsset(types.Internal, types.Operational, types.Operational)
@@ -78,13 +78,13 @@ func TestInferIntegrity_ExpectHighestIntegrity(t *testing.T) {
 	ta := make(map[string]input.TechnicalAsset)
 	da := make(map[string]input.DataAsset)
 
-	daCriticalIntegrity := createDataAsset(types.Confidential, types.Critical, types.Critical)
+	daCriticalIntegrity := createDataAsset(types.Confidential, types.Critical, types.Critical, types.OtherPIDirectIdentifier)
 	da[daCriticalIntegrity.ID] = daCriticalIntegrity
 
-	daImportantIntegrity := createDataAsset(types.Restricted, types.Important, types.Important)
+	daImportantIntegrity := createDataAsset(types.Restricted, types.Important, types.Important, types.OtherPIQuasiIdentifier)
 	da[daImportantIntegrity.ID] = daImportantIntegrity
 
-	daArchiveIntegrity := createDataAsset(types.Public, types.Archive, types.Archive)
+	daArchiveIntegrity := createDataAsset(types.Public, types.Archive, types.Archive, types.OtherNonPI)
 	da[daArchiveIntegrity.ID] = daArchiveIntegrity
 
 	taWithCriticalIntegrityDataAsset := createTechnicalAsset(types.Internal, types.Operational, types.Operational)
@@ -120,13 +120,13 @@ func TestInferAvailability_ExpectHighestAvailability(t *testing.T) {
 	ta := make(map[string]input.TechnicalAsset)
 	da := make(map[string]input.DataAsset)
 
-	daCriticalAvailability := createDataAsset(types.Confidential, types.Critical, types.Critical)
+	daCriticalAvailability := createDataAsset(types.Confidential, types.Critical, types.Critical, types.OtherPIDirectIdentifier)
 	da[daCriticalAvailability.ID] = daCriticalAvailability
 
-	daImportantAvailability := createDataAsset(types.Restricted, types.Important, types.Important)
+	daImportantAvailability := createDataAsset(types.Restricted, types.Important, types.Important, types.OtherPIQuasiIdentifier)
 	da[daImportantAvailability.ID] = daImportantAvailability
 
-	daArchiveAvailability := createDataAsset(types.Public, types.Archive, types.Archive)
+	daArchiveAvailability := createDataAsset(types.Public, types.Archive, types.Archive, types.OtherNonPI)
 	da[daArchiveAvailability.ID] = daArchiveAvailability
 
 	taWithCriticalAvailabilityDataAsset := createTechnicalAsset(types.Internal, types.Operational, types.Operational)
@@ -175,7 +175,7 @@ func createTechnicalAsset(confidentiality types.Confidentiality, integrity types
 	}
 }
 
-func createDataAsset(confidentiality types.Confidentiality, integrity types.Criticality, availability types.Criticality) input.DataAsset {
+func createDataAsset(confidentiality types.Confidentiality, integrity types.Criticality, availability types.Criticality, pinametype types.PINameType) input.DataAsset {
 	return input.DataAsset{
 		ID:              uuid.New().String(),
 		Usage:           "business",
@@ -183,6 +183,7 @@ func createDataAsset(confidentiality types.Confidentiality, integrity types.Crit
 		Confidentiality: confidentiality.String(),
 		Integrity:       integrity.String(),
 		Availability:    availability.String(),
+		PINameType:      pinametype.String(),
 	}
 }
 

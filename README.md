@@ -21,6 +21,8 @@ Efforts on UI are ongoing and there are few attempts to do it although that is f
 
 [Here](./docs/how-to.md) may be useful use cases on how others are using the tool and may be helpful to simplify onboarding of Threagile tool for your team.
 
+Threagile now contains 12 privacy rules that detect privacy risks for a given architecture model (in a YAML file). These privacy rules detect risks which could be classified under threat categories like `Linking`, `Identifying`, `Data Disclosure`, `Unawareness` and `Non-compliance` found in the [LINDDUN](https://linddun.org/) privacy threat modeling framework. More details can be found in the [privacy-rules doc](./docs/privacy-rules.md).
+
 ## Execution via Docker Container
 The easiest way to execute Threagile on the commandline is via its Docker container:
 

@@ -49,6 +49,11 @@ type Model struct { // TODO: Eventually remove this and directly use ParsedModel
 	DiagramTweakLayoutLeftToRight                 bool                      `yaml:"diagram_tweak_layout_left_to_right,omitempty" json:"diagram_tweak_layout_left_to_right,omitempty"`
 	DiagramTweakInvisibleConnectionsBetweenAssets []string                  `yaml:"diagram_tweak_invisible_connections_between_assets,omitempty" json:"diagram_tweak_invisible_connections_between_assets,omitempty"`
 	DiagramTweakSameRankAssets                    []string                  `yaml:"diagram_tweak_same_rank_assets,omitempty" json:"diagram_tweak_same_rank_assets,omitempty"`
+	DeletePostFunctionalNeed                      bool                      `yaml:"delete_post_functional_need,omitempty" json:"delete_post_functional_need,omitempty"`
+	Deidentified                                  bool                      `yaml:"deidentified,omitempty" json:"deidentified,omitempty"`
+	PublicDisclosureSigned                        bool                      `yaml:"public_disclosure_signed,omitempty" json:"public_disclosure_signed,omitempty"`
+	HasDataLifeCycleMgmt                          bool                      `yaml:"hasdatalifecyclemgmt,omitempty" json:"hasdatalifecyclemgmt,omitempty"`
+	PIUserAccessMechanism                         bool                      `yaml:"piuseraccessmechanism,omitempty" json:"piuseraccessmechanism,omitempty"`
 }
 
 func (model *Model) Defaults() *Model {

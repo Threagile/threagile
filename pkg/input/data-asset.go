@@ -1,6 +1,8 @@
 package input
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type DataAsset struct {
 	ID                     string   `yaml:"id,omitempty" json:"id,omitempty"`
@@ -14,6 +16,7 @@ type DataAsset struct {
 	Integrity              string   `yaml:"integrity,omitempty" json:"integrity,omitempty"`
 	Availability           string   `yaml:"availability,omitempty" json:"availability,omitempty"`
 	JustificationCiaRating string   `yaml:"justification_cia_rating,omitempty" json:"justification_cia_rating,omitempty"`
+	PINameType             string   `yaml:"pinametype,omitempty" json:"pinametype,omitempty"`
 }
 
 func (what *DataAsset) Merge(other DataAsset) error {

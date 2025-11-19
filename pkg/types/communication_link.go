@@ -32,6 +32,15 @@ func (what CommunicationLink) IsBidirectional() bool {
 	return len(what.DataAssetsSent) > 0 && len(what.DataAssetsReceived) > 0
 }
 
+func Contains(str_slice []string, key string) bool {
+	for _, n := range str_slice {
+		if key == n {
+			return true
+		}
+	}
+	return false
+}
+
 type ByTechnicalCommunicationLinkIdSort []*CommunicationLink
 
 func (what ByTechnicalCommunicationLinkIdSort) Len() int      { return len(what) }

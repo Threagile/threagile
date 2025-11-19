@@ -17,6 +17,7 @@ type DataAsset struct {
 	Integrity              Criticality     `yaml:"integrity,omitempty" json:"integrity,omitempty"`
 	Availability           Criticality     `yaml:"availability,omitempty" json:"availability,omitempty"`
 	JustificationCiaRating string          `yaml:"justification_cia_rating,omitempty" json:"justification_cia_rating,omitempty"`
+	PINameType             PINameType      `yaml:"pinametype,omitempty" json:"pinametype,omitempty"`
 }
 
 func (what DataAsset) IsTaggedWithAny(tags ...string) bool {
