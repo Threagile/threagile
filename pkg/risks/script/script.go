@@ -484,10 +484,12 @@ func (what *Script) getItem(value any, path ...string) (any, bool) {
 		return nil, false
 	}
 
+	head, rest := path[0], path[1:] // #nosec G602 -- len(path) > 0 is guaranteed above
+
 	for name, item := range object {
-		if strings.EqualFold(path[0], name) {
-			if len(path[1:]) > 0 {
-				return what.getItem(item, path[1:]...)
+		if strings.EqualFold(head, name) {
+			if len(rest) > 0 {
+				return what.getItem(item, rest...)
 			}
 
 			return item, true
