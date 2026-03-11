@@ -1682,7 +1682,7 @@ func (r *pdfReporter) createRAA(parsedModel *types.Model, introTextRAA string) {
 			strBuilder.WriteString(": out-of-scope")
 		} else {
 			strBuilder.WriteString(": RAA ")
-			strBuilder.WriteString(fmt.Sprintf("%.0f", technicalAsset.RAA))
+			fmt.Fprintf(&strBuilder, "%.0f", technicalAsset.RAA)
 			strBuilder.WriteString("%")
 		}
 		strBuilder.WriteString("<br>")
