@@ -17,6 +17,8 @@ We know that modifying yaml file via text editor may be tough and to simplify it
 - [includes](./docs/includes.md)
 - [macros](./docs/macros.md)
 
+Custom risk rules can be written as YAML scripts without compiling Go code. See the [script language reference](./docs/scripts/language-reference.md), the [guide for writing custom risk rules](./docs/scripts/guide.md), and how to [test your scripts](./docs/scripts/testing.md).
+
 Efforts on UI are ongoing and there are few attempts to do it although that is far from being ready.
 
 [Here](./docs/how-to.md) may be useful use cases on how others are using the tool and may be helpful to simplify onboarding of Threagile tool for your team.
