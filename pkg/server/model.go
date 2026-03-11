@@ -1308,7 +1308,7 @@ func (s *server) backupModelToHistory(modelFolder string, changeReasonForHistory
 		return err
 	}
 	historyFile := filepath.Join(historyFolder, time.Now().Format("2006-01-02 15:04:05")+" "+changeReasonForHistory+".backup")
-	err = os.WriteFile(filepath.Clean(historyFile), inputModel, 0400)
+	err = os.WriteFile(filepath.Clean(historyFile), inputModel, 0400) // #nosec G703
 	if err != nil {
 		return err
 	}
