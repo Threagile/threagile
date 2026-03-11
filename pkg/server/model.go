@@ -1297,8 +1297,18 @@ func (s *server) unlockFolder(folderName string) {
 
 func (s *server) backupModelToHistory(modelFolder string, changeReasonForHistory string) (err error) {
 	// Sanitize inputs to prevent path traversal
-	cleanModelFolder := filepath.Clean(modelFolder)
 	safeReason := filepath.Base(changeReasonForHistory)
+	baseDir, resolveErr := filepath.Abs(s.config.GetDataFolder())
+	if resolveErr != nil {
+		return fmt.Errorf("failed to resolve data folder: %w", resolveErr)
+	}
+	cleanModelFolder, resolveErr := filepath.Abs(modelFolder)
+	if resolveErr != nil {
+		return fmt.Errorf("failed to resolve model folder: %w", resolveErr)
+	}
+	if !strings.HasPrefix(cleanModelFolder, baseDir) {
+		return fmt.Errorf("model folder %q is outside data directory", modelFolder)
+	}
 	historyFolder := filepath.Join(cleanModelFolder, "history")
 	if _, err := os.Stat(historyFolder); os.IsNotExist(err) {
 		err = os.Mkdir(historyFolder, 0700)
@@ -1312,7 +1322,7 @@ func (s *server) backupModelToHistory(modelFolder string, changeReasonForHistory
 		return err
 	}
 	historyFile := filepath.Join(historyFolder, time.Now().Format("2006-01-02 15:04:05")+" "+safeReason+".backup")
-	err = os.WriteFile(filepath.Clean(historyFile), inputModel, 0400) // #nosec G703
+	err = os.WriteFile(historyFile, inputModel, 0400) // #nosec G703
 	if err != nil {
 		return err
 	}
