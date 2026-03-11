@@ -487,7 +487,7 @@ func (what *Script) getItem(value any, path ...string) (any, bool) {
 	for name, item := range object {
 		if strings.EqualFold(path[0], name) {
 			if len(path[1:]) > 0 {
-				return what.getItem(item)
+				return what.getItem(item, path[1:]...)
 			}
 
 			return item, true

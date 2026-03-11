@@ -517,3 +517,107 @@ func TestParseScripts_InvalidRiskScriptFormat(t *testing.T) {
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "unexpected format")
 }
+
+func TestGetItem_SingleLevel(t *testing.T) {
+	f := &mockFormatter{}
+	s := NewScript(f)
+
+	data := map[string]any{
+		"name": "hello",
+	}
+
+	result, ok := s.getItem(data, "name")
+	assert.True(t, ok)
+	assert.Equal(t, "hello", result)
+}
+
+func TestGetItem_NestedPath(t *testing.T) {
+	f := &mockFormatter{}
+	s := NewScript(f)
+
+	data := map[string]any{
+		"level1": map[string]any{
+			"level2": map[string]any{
+				"level3": "deep-value",
+			},
+		},
+	}
+
+	result, ok := s.getItem(data, "level1", "level2", "level3")
+	assert.True(t, ok)
+	assert.Equal(t, "deep-value", result)
+}
+
+func TestGetItem_NestedPathMiddleLevel(t *testing.T) {
+	f := &mockFormatter{}
+	s := NewScript(f)
+
+	data := map[string]any{
+		"level1": map[string]any{
+			"level2": map[string]any{
+				"value": "found",
+			},
+		},
+	}
+
+	result, ok := s.getItem(data, "level1", "level2")
+	assert.True(t, ok)
+	nested, isMap := result.(map[string]any)
+	assert.True(t, isMap)
+	assert.Equal(t, "found", nested["value"])
+}
+
+func TestGetItem_NotFound(t *testing.T) {
+	f := &mockFormatter{}
+	s := NewScript(f)
+
+	data := map[string]any{
+		"name": "hello",
+	}
+
+	_, ok := s.getItem(data, "missing")
+	assert.False(t, ok)
+}
+
+func TestGetItem_NestedNotFound(t *testing.T) {
+	f := &mockFormatter{}
+	s := NewScript(f)
+
+	data := map[string]any{
+		"level1": map[string]any{
+			"level2": "not-a-map",
+		},
+	}
+
+	_, ok := s.getItem(data, "level1", "level2", "level3")
+	assert.False(t, ok)
+}
+
+func TestGetItem_EmptyPath(t *testing.T) {
+	f := &mockFormatter{}
+	s := NewScript(f)
+
+	_, ok := s.getItem(map[string]any{})
+	assert.False(t, ok)
+}
+
+func TestGetItem_NonMapValue(t *testing.T) {
+	f := &mockFormatter{}
+	s := NewScript(f)
+
+	_, ok := s.getItem("not-a-map", "key")
+	assert.False(t, ok)
+}
+
+func TestGetItem_CaseInsensitive(t *testing.T) {
+	f := &mockFormatter{}
+	s := NewScript(f)
+
+	data := map[string]any{
+		"Name": "hello",
+	}
+
+	result, ok := s.getItem(data, "name")
+	assert.True(t, ok)
+	assert.Equal(t, "hello", result)
+}
