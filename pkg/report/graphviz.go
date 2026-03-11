@@ -442,7 +442,7 @@ func GenerateDataFlowDiagramGraphvizImage(dotFile *os.File, targetDir string,
 	if err != nil {
 		return fmt.Errorf("error reading %s: %w", dotFile.Name(), err)
 	}
-	err = os.WriteFile(tmpFileDOT.Name(), inputDOT, 0600) // #nosec G703 -- temp file path from os.CreateTemp
+	err = os.WriteFile(tmpFileDOT.Name(), inputDOT, 0600) // #nosec G703
 	if err != nil {
 		return fmt.Errorf("error creating %s: %w", tmpFileDOT.Name(), err)
 	}
@@ -462,7 +462,7 @@ func GenerateDataFlowDiagramGraphvizImage(dotFile *os.File, targetDir string,
 		return fmt.Errorf("failed to copy to file %s: %w", tmpFilePNG.Name(), err)
 	}
 	outputFile := filepath.Clean(filepath.Join(targetDir, dataFlowDiagramFilenamePNG))
-	err = os.WriteFile(outputFile, inputPNG, 0600) // #nosec G703 -- path is cleaned
+	err = os.WriteFile(outputFile, inputPNG, 0600) // #nosec G703
 	if err != nil {
 		return fmt.Errorf("failed to create %s: %w", outputFile, err)
 	}
@@ -840,7 +840,7 @@ func GenerateDataAssetDiagramGraphvizImage(dotFile *os.File, targetDir string,
 	if err != nil {
 		return fmt.Errorf("error reading %s: %w", dotFile.Name(), err)
 	}
-	err = os.WriteFile(tmpFileDOT.Name(), inputDOT, 0600) // #nosec G703 -- temp file path from os.CreateTemp
+	err = os.WriteFile(tmpFileDOT.Name(), inputDOT, 0600) // #nosec G703
 	if err != nil {
 		return fmt.Errorf("error creating %s: %w", tmpFileDOT.Name(), err)
 	}
@@ -859,7 +859,7 @@ func GenerateDataAssetDiagramGraphvizImage(dotFile *os.File, targetDir string,
 		return fmt.Errorf("failed to copy to file %s: %w", tmpFilePNG.Name(), err)
 	}
 	outputFile := filepath.Clean(filepath.Join(targetDir, dataAssetDiagramFilenamePNG))
-	err = os.WriteFile(outputFile, inputPNG, 0600) // #nosec G703 -- path is cleaned
+	err = os.WriteFile(outputFile, inputPNG, 0600) // #nosec G703
 	if err != nil {
 		return fmt.Errorf("failed to create %s: %w", outputFile, err)
 	}
