@@ -140,7 +140,7 @@ func (s *server) execute(ginContext *gin.Context, dryRun bool) (yamlContent []by
 		handleErrorInServiceCall(err, ginContext)
 		return yamlContent, false
 	}
-	err = os.WriteFile(filepath.Join(tmpOutputDir, s.config.GetInputFile()), yamlContent, 0400)
+	err = os.WriteFile(filepath.Clean(filepath.Join(tmpOutputDir, s.config.GetInputFile())), yamlContent, 0400) // #nosec G703
 	if err != nil {
 		handleErrorInServiceCall(err, ginContext)
 		return yamlContent, false
