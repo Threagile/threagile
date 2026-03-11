@@ -1,6 +1,6 @@
 module github.com/threagile/threagile
 
-go 1.24.2
+go 1.26.1
 
 require (
 	github.com/chzyer/readline v1.5.1
@@ -12,8 +12,8 @@ require (
 	github.com/shopspring/decimal v1.4.0
 	github.com/wcharczuk/go-chart v2.0.1+incompatible
 	github.com/xuri/excelize/v2 v2.9.0
-	golang.org/x/crypto v0.37.0
-	golang.org/x/text v0.24.0
+	golang.org/x/crypto v0.48.0
+	golang.org/x/text v0.34.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -38,7 +38,7 @@ require (
 	github.com/richardlehane/msoleps v1.0.4 // indirect
 	github.com/spf13/pflag v1.0.6 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
-	golang.org/x/sys v0.33.0 // indirect
+	golang.org/x/sys v0.41.0 // indirect
 )
 
 require (
@@ -59,6 +59,6 @@ require (
 	github.com/xuri/nfp v0.0.0-20250226145837-86d5fc24b2ba // indirect
 	golang.org/x/arch v0.17.0 // indirect
 	golang.org/x/image v0.26.0 // indirect
-	golang.org/x/net v0.39.0 // indirect
+	golang.org/x/net v0.51.0 // indirect
 	google.golang.org/protobuf v1.36.6 // indirect
 )
