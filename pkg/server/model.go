@@ -1089,7 +1089,7 @@ func (s *server) getModel(ginContext *gin.Context) {
 			handleErrorInServiceCall(err, ginContext)
 			return
 		}
-		err = os.WriteFile(tmpResultFile.Name(), []byte(yamlText), 0400)
+		err = os.WriteFile(tmpResultFile.Name(), []byte(yamlText), 0400) // #nosec G703
 		if err != nil {
 			log.Println(err)
 			ginContext.JSON(http.StatusInternalServerError, gin.H{
@@ -1097,7 +1097,7 @@ func (s *server) getModel(ginContext *gin.Context) {
 			})
 			return
 		}
-		defer func() { _ = os.Remove(tmpResultFile.Name()) }()
+		defer func() { _ = os.Remove(tmpResultFile.Name()) }() // #nosec G703
 		ginContext.FileAttachment(tmpResultFile.Name(), s.config.GetInputFile())
 	}
 }
@@ -1165,7 +1165,7 @@ func (s *server) analyzeModelOnServerDirectly(ginContext *gin.Context) {
 		handleErrorInServiceCall(err, ginContext)
 		return
 	}
-	defer func() { _ = os.Remove(tmpModelFile.Name()) }()
+	defer func() { _ = os.Remove(tmpModelFile.Name()) }() // #nosec G703
 	tmpOutputDir, err := os.MkdirTemp(s.config.GetTempFolder(), "threagile-direct-analyze-")
 	if err != nil {
 		handleErrorInServiceCall(err, ginContext)
@@ -1177,9 +1177,9 @@ func (s *server) analyzeModelOnServerDirectly(ginContext *gin.Context) {
 		handleErrorInServiceCall(err, ginContext)
 		return
 	}
-	defer func() { _ = os.Remove(tmpResultFile.Name()) }()
+	defer func() { _ = os.Remove(tmpResultFile.Name()) }() // #nosec G703
 
-	err = os.WriteFile(tmpModelFile.Name(), []byte(yamlText), 0400)
+	err = os.WriteFile(tmpModelFile.Name(), []byte(yamlText), 0400) // #nosec G703
 
 	s.doItViaRuntimeCall(tmpModelFile.Name(), tmpOutputDir, true, true, true, true, true, true, true, true, dpi)
 	if err != nil {
@@ -1296,18 +1296,22 @@ func (s *server) unlockFolder(folderName string) {
 }
 
 func (s *server) backupModelToHistory(modelFolder string, changeReasonForHistory string) (err error) {
-	historyFolder := filepath.Join(modelFolder, "history")
+	// Sanitize inputs to prevent path traversal
+	cleanModelFolder := filepath.Clean(modelFolder)
+	safeReason := filepath.Base(changeReasonForHistory)
+	historyFolder := filepath.Join(cleanModelFolder, "history")
 	if _, err := os.Stat(historyFolder); os.IsNotExist(err) {
 		err = os.Mkdir(historyFolder, 0700)
 		if err != nil {
 			return err
 		}
 	}
-	inputModel, err := os.ReadFile(filepath.Clean(filepath.Join(modelFolder, s.config.GetInputFile())))
+	inputFile := filepath.Join(cleanModelFolder, filepath.Base(s.config.GetInputFile()))
+	inputModel, err := os.ReadFile(filepath.Clean(inputFile))
 	if err != nil {
 		return err
 	}
-	historyFile := filepath.Join(historyFolder, time.Now().Format("2006-01-02 15:04:05")+" "+changeReasonForHistory+".backup")
+	historyFile := filepath.Join(historyFolder, time.Now().Format("2006-01-02 15:04:05")+" "+safeReason+".backup")
 	err = os.WriteFile(filepath.Clean(historyFile), inputModel, 0400) // #nosec G703
 	if err != nil {
 		return err
