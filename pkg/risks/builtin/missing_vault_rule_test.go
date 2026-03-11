@@ -147,3 +147,135 @@ func TestMissingVaultRuleGenerateRisksRiskCreatedWithMoreSensitiveAsset(t *testi
 	assert.Equal(t, types.MediumImpact, risks[0].ExploitationImpact)
 	assert.Equal(t, "<b>Missing Vault (Secret Storage)</b> in the threat model (referencing asset <b>More Relevant Technical Asset</b> as an example)", risks[0].Title)
 }
+
+func TestMissingVaultRuleGenerateRisksRestrictedConfidentialityLowImpact(t *testing.T) {
+	rule := NewMissingVaultRule()
+	risks, err := rule.GenerateRisks(&types.Model{
+		TechnicalAssets: map[string]*types.TechnicalAsset{
+			"ta1": {
+				Id:              "ta1",
+				Title:           "Test Technical Asset",
+				Confidentiality: types.Restricted,
+				Integrity:       types.Important,
+				Availability:    types.Important,
+				Technologies: types.TechnologyList{
+					{
+						Name: "some-tech",
+						Attributes: map[string]bool{
+							types.Vault: false,
+						},
+					},
+				},
+			},
+		},
+	})
+
+	assert.Nil(t, err)
+	assert.Len(t, risks, 1)
+	assert.Equal(t, types.LowImpact, risks[0].ExploitationImpact)
+}
+
+func TestMissingVaultRuleGenerateRisksVaultPresentWithOtherSensitiveAssetsNoRiskCreated(t *testing.T) {
+	rule := NewMissingVaultRule()
+	risks, err := rule.GenerateRisks(&types.Model{
+		TechnicalAssets: map[string]*types.TechnicalAsset{
+			"ta-vault": {
+				Id:    "ta-vault",
+				Title: "Vault Asset",
+				Technologies: types.TechnologyList{
+					{
+						Name: "vault",
+						Attributes: map[string]bool{
+							types.Vault: true,
+						},
+					},
+				},
+			},
+			"ta-sensitive": {
+				Id:              "ta-sensitive",
+				Title:           "Sensitive Asset",
+				Confidentiality: types.StrictlyConfidential,
+				Integrity:       types.MissionCritical,
+				Availability:    types.MissionCritical,
+				Technologies: types.TechnologyList{
+					{
+						Name: "some-tech",
+						Attributes: map[string]bool{
+							types.Vault: false,
+						},
+					},
+				},
+			},
+		},
+	})
+
+	assert.Nil(t, err)
+	assert.Empty(t, risks)
+}
+
+func TestMissingVaultRuleGenerateRisksTwoAssetsWithSameSensitivityDeterministicSelection(t *testing.T) {
+	rule := NewMissingVaultRule()
+	risks, err := rule.GenerateRisks(&types.Model{
+		TechnicalAssets: map[string]*types.TechnicalAsset{
+			"asset-aaa": {
+				Id:              "asset-aaa",
+				Title:           "Asset AAA",
+				Confidentiality: types.Confidential,
+				Integrity:       types.Important,
+				Availability:    types.Important,
+				Technologies: types.TechnologyList{
+					{
+						Name: "some-tech",
+						Attributes: map[string]bool{
+							types.Vault: false,
+						},
+					},
+				},
+			},
+			"asset-zzz": {
+				Id:              "asset-zzz",
+				Title:           "Asset ZZZ",
+				Confidentiality: types.Confidential,
+				Integrity:       types.Important,
+				Availability:    types.Important,
+				Technologies: types.TechnologyList{
+					{
+						Name: "some-tech",
+						Attributes: map[string]bool{
+							types.Vault: false,
+						},
+					},
+				},
+			},
+		},
+	})
+
+	assert.Nil(t, err)
+	assert.Len(t, risks, 1)
+	// The rule iterates in sorted ID order, so the last asset encountered with the same score wins.
+	// Both have identical sensitivity scores; the sorted iteration ensures deterministic behavior.
+	assert.Equal(t, types.MediumImpact, risks[0].ExploitationImpact)
+}
+
+func TestMissingVaultRuleGenerateRisksSingleAssetWithVaultTechnologyNoRiskCreated(t *testing.T) {
+	rule := NewMissingVaultRule()
+	risks, err := rule.GenerateRisks(&types.Model{
+		TechnicalAssets: map[string]*types.TechnicalAsset{
+			"ta1": {
+				Id:    "ta1",
+				Title: "Vault Asset",
+				Technologies: types.TechnologyList{
+					{
+						Name: "vault",
+						Attributes: map[string]bool{
+							types.Vault: true,
+						},
+					},
+				},
+			},
+		},
+	})
+
+	assert.Nil(t, err)
+	assert.Empty(t, risks)
+}

@@ -118,3 +118,96 @@ func TestXmlExternalEntityRuleSendDataAssetRisksCreated(t *testing.T) {
 		})
 	}
 }
+
+func TestXmlExternalEntityRuleAssetAcceptingCsvXmlJsonCreatesOnlyOneRisk(t *testing.T) {
+	rule := NewXmlExternalEntityRule()
+
+	risks, err := rule.GenerateRisks(&types.Model{
+		TechnicalAssets: map[string]*types.TechnicalAsset{
+			"ta": {
+				Id:    "ta",
+				Title: "Multi-Format Asset",
+				DataFormatsAccepted: []types.DataFormat{
+					types.CSV,
+					types.XML,
+					types.JSON,
+				},
+			},
+		},
+	})
+
+	assert.Nil(t, err)
+	assert.Len(t, risks, 1)
+	expTitle := fmt.Sprintf("<b>XML External Entity (XXE)</b> risk at <b>%s</b>", "Multi-Format Asset")
+	assert.Equal(t, expTitle, risks[0].Title)
+}
+
+func TestXmlExternalEntityRuleMultipleAssetsAcceptingXmlEachGeneratesOwnRisk(t *testing.T) {
+	rule := NewXmlExternalEntityRule()
+
+	risks, err := rule.GenerateRisks(&types.Model{
+		TechnicalAssets: map[string]*types.TechnicalAsset{
+			"ta1": {
+				Id:                  "ta1",
+				Title:               "First XML Asset",
+				DataFormatsAccepted: []types.DataFormat{types.XML},
+			},
+			"ta2": {
+				Id:                  "ta2",
+				Title:               "Second XML Asset",
+				DataFormatsAccepted: []types.DataFormat{types.XML},
+			},
+		},
+	})
+
+	assert.Nil(t, err)
+	assert.Len(t, risks, 2)
+	riskAssetIDs := []string{risks[0].MostRelevantTechnicalAssetId, risks[1].MostRelevantTechnicalAssetId}
+	assert.Contains(t, riskAssetIDs, "ta1")
+	assert.Contains(t, riskAssetIDs, "ta2")
+}
+
+func TestXmlExternalEntityRuleAssetWithXmlButNoDataProcessedOrStoredCreatesMediumImpactRisk(t *testing.T) {
+	rule := NewXmlExternalEntityRule()
+
+	risks, err := rule.GenerateRisks(&types.Model{
+		TechnicalAssets: map[string]*types.TechnicalAsset{
+			"ta": {
+				Id:                  "ta",
+				Title:               "XML Asset No Data",
+				DataFormatsAccepted: []types.DataFormat{types.XML},
+			},
+		},
+	})
+
+	assert.Nil(t, err)
+	assert.Len(t, risks, 1)
+	assert.Equal(t, types.MediumImpact, risks[0].ExploitationImpact)
+}
+
+func TestXmlExternalEntityRuleAllThreeSensitivityConditionsTrueCreatesHighImpactRisk(t *testing.T) {
+	rule := NewXmlExternalEntityRule()
+
+	risks, err := rule.GenerateRisks(&types.Model{
+		TechnicalAssets: map[string]*types.TechnicalAsset{
+			"ta": {
+				Id:                  "ta",
+				Title:               "Highly Sensitive XML Asset",
+				DataFormatsAccepted: []types.DataFormat{types.XML},
+				DataAssetsProcessed: []string{"sensitive-data"},
+			},
+		},
+		DataAssets: map[string]*types.DataAsset{
+			"sensitive-data": {
+				Id:             "sensitive-data",
+				Confidentiality: types.StrictlyConfidential,
+				Integrity:       types.MissionCritical,
+				Availability:    types.MissionCritical,
+			},
+		},
+	})
+
+	assert.Nil(t, err)
+	assert.Len(t, risks, 1)
+	assert.Equal(t, types.HighImpact, risks[0].ExploitationImpact)
+}
