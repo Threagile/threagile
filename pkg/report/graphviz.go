@@ -442,7 +442,7 @@ func GenerateDataFlowDiagramGraphvizImage(dotFile *os.File, targetDir string,
 	if err != nil {
 		return fmt.Errorf("error reading %s: %w", dotFile.Name(), err)
 	}
-	err = os.WriteFile(tmpFileDOT.Name(), inputDOT, 0600)
+	err = os.WriteFile(tmpFileDOT.Name(), inputDOT, 0600) // #nosec G703 -- temp file path from os.CreateTemp
 	if err != nil {
 		return fmt.Errorf("error creating %s: %w", tmpFileDOT.Name(), err)
 	}
@@ -461,9 +461,10 @@ func GenerateDataFlowDiagramGraphvizImage(dotFile *os.File, targetDir string,
 	if err != nil {
 		return fmt.Errorf("failed to copy to file %s: %w", tmpFilePNG.Name(), err)
 	}
-	err = os.WriteFile(filepath.Join(targetDir, dataFlowDiagramFilenamePNG), inputPNG, 0600)
+	outputFile := filepath.Clean(filepath.Join(targetDir, dataFlowDiagramFilenamePNG))
+	err = os.WriteFile(outputFile, inputPNG, 0600) // #nosec G703 -- path is cleaned
 	if err != nil {
-		return fmt.Errorf("failed to create %s: %w", filepath.Join(targetDir, dataFlowDiagramFilenamePNG), err)
+		return fmt.Errorf("failed to create %s: %w", outputFile, err)
 	}
 	return nil
 }
@@ -839,7 +840,7 @@ func GenerateDataAssetDiagramGraphvizImage(dotFile *os.File, targetDir string,
 	if err != nil {
 		return fmt.Errorf("error reading %s: %w", dotFile.Name(), err)
 	}
-	err = os.WriteFile(tmpFileDOT.Name(), inputDOT, 0600)
+	err = os.WriteFile(tmpFileDOT.Name(), inputDOT, 0600) // #nosec G703 -- temp file path from os.CreateTemp
 	if err != nil {
 		return fmt.Errorf("error creating %s: %w", tmpFileDOT.Name(), err)
 	}
@@ -857,9 +858,10 @@ func GenerateDataAssetDiagramGraphvizImage(dotFile *os.File, targetDir string,
 	if err != nil {
 		return fmt.Errorf("failed to copy to file %s: %w", tmpFilePNG.Name(), err)
 	}
-	err = os.WriteFile(filepath.Join(targetDir, dataAssetDiagramFilenamePNG), inputPNG, 0600)
+	outputFile := filepath.Clean(filepath.Join(targetDir, dataAssetDiagramFilenamePNG))
+	err = os.WriteFile(outputFile, inputPNG, 0600) // #nosec G703 -- path is cleaned
 	if err != nil {
-		return fmt.Errorf("failed to create %s: %w", filepath.Join(targetDir, dataAssetDiagramFilenamePNG), err)
+		return fmt.Errorf("failed to create %s: %w", outputFile, err)
 	}
 	return nil
 }
