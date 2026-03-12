@@ -131,3 +131,131 @@ func TestAccidentalSecretLeakRuleGenerateRisksTechAssetProcessStrictlyConfidenti
 	assert.Equal(t, len(risks), 1)
 	assert.Equal(t, types.HighImpact, risks[0].ExploitationImpact)
 }
+
+func TestAccidentalSecretLeakRuleGenerateRisksAssetWithMultipleTagsIncludingGitCreatesGitPrefixRisk(t *testing.T) {
+	rule := NewAccidentalSecretLeakRule()
+
+	risks, err := rule.GenerateRisks(&types.Model{
+		TechnicalAssets: map[string]*types.TechnicalAsset{
+			"ta1": {
+				Technologies: types.TechnologyList{
+					{
+						Name: "artifact registry",
+						Attributes: map[string]bool{
+							types.MayContainSecrets: true,
+						},
+					},
+				},
+				Tags: []string{"git", "nexus"},
+			},
+		},
+	})
+
+	assert.Nil(t, err)
+	assert.Equal(t, 1, len(risks))
+	assert.Contains(t, risks[0].Title, "Accidental Secret Leak (Git)")
+}
+
+func TestAccidentalSecretLeakRuleGenerateRisksAssetWithGitTagButMayContainSecretsFalseNoRiskCreated(t *testing.T) {
+	rule := NewAccidentalSecretLeakRule()
+
+	risks, err := rule.GenerateRisks(&types.Model{
+		TechnicalAssets: map[string]*types.TechnicalAsset{
+			"ta1": {
+				Technologies: types.TechnologyList{
+					{
+						Name: "tool",
+						Attributes: map[string]bool{
+							types.MayContainSecrets: false,
+						},
+					},
+				},
+				Tags: []string{"git"},
+			},
+		},
+	})
+
+	assert.Nil(t, err)
+	assert.Empty(t, risks)
+}
+
+func TestAccidentalSecretLeakRuleGenerateRisksAssetWithConfidentialDataCreatesMediumImpactRisk(t *testing.T) {
+	rule := NewAccidentalSecretLeakRule()
+
+	risks, err := rule.GenerateRisks(&types.Model{
+		TechnicalAssets: map[string]*types.TechnicalAsset{
+			"ta1": {
+				Technologies: types.TechnologyList{
+					{
+						Name: "sourcecode repository",
+						Attributes: map[string]bool{
+							types.MayContainSecrets: true,
+						},
+					},
+				},
+				DataAssetsProcessed: []string{"confidential-data"},
+			},
+		},
+		DataAssets: map[string]*types.DataAsset{
+			"confidential-data": {
+				Confidentiality: types.Confidential,
+			},
+		},
+	})
+
+	assert.Nil(t, err)
+	assert.Equal(t, 1, len(risks))
+	assert.Equal(t, types.MediumImpact, risks[0].ExploitationImpact)
+}
+
+func TestAccidentalSecretLeakRuleGenerateRisksAssetWithCriticalIntegrityDataCreatesMediumImpactRisk(t *testing.T) {
+	rule := NewAccidentalSecretLeakRule()
+
+	risks, err := rule.GenerateRisks(&types.Model{
+		TechnicalAssets: map[string]*types.TechnicalAsset{
+			"ta1": {
+				Technologies: types.TechnologyList{
+					{
+						Name: "sourcecode repository",
+						Attributes: map[string]bool{
+							types.MayContainSecrets: true,
+						},
+					},
+				},
+				DataAssetsProcessed: []string{"critical-integrity-data"},
+			},
+		},
+		DataAssets: map[string]*types.DataAsset{
+			"critical-integrity-data": {
+				Integrity: types.Critical,
+			},
+		},
+	})
+
+	assert.Nil(t, err)
+	assert.Equal(t, 1, len(risks))
+	assert.Equal(t, types.MediumImpact, risks[0].ExploitationImpact)
+}
+
+func TestAccidentalSecretLeakRuleGenerateRisksAssetWithMayContainSecretsTrueButNoDataCreatesLowImpactRisk(t *testing.T) {
+	rule := NewAccidentalSecretLeakRule()
+
+	risks, err := rule.GenerateRisks(&types.Model{
+		TechnicalAssets: map[string]*types.TechnicalAsset{
+			"ta1": {
+				Technologies: types.TechnologyList{
+					{
+						Name: "sourcecode repository",
+						Attributes: map[string]bool{
+							types.MayContainSecrets: true,
+						},
+					},
+				},
+			},
+		},
+	})
+
+	assert.Nil(t, err)
+	assert.Equal(t, 1, len(risks))
+	assert.Equal(t, types.LowImpact, risks[0].ExploitationImpact)
+}

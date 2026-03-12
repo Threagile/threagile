@@ -171,3 +171,172 @@ func TestMissingHardeningRuleRisksCreated(t *testing.T) {
 		})
 	}
 }
+
+func TestMissingHardeningRuleRAAExactlyAtBoundary40NonDatastoreNonHighValueNoRiskCreated(t *testing.T) {
+	rule := NewMissingHardeningRule()
+	input := &types.Model{
+		TechnicalAssets: map[string]*types.TechnicalAsset{
+			"ta1": {
+				Id:    "ta1",
+				Title: "Test Technical Asset",
+				Type:  types.Process,
+				Technologies: types.TechnologyList{
+					{
+						Name: "some-technology",
+						Attributes: map[string]bool{
+							types.IsDevelopmentRelevant: true,
+						},
+					},
+				},
+			},
+		},
+	}
+	input.TechnicalAssets["ta1"].RAA = 40
+
+	risks, err := rule.GenerateRisks(input)
+
+	assert.Nil(t, err)
+	assert.Empty(t, risks)
+}
+
+func TestMissingHardeningRuleRAAExactlyAtBoundary55NonDatastoreNonHighValueRiskCreated(t *testing.T) {
+	rule := NewMissingHardeningRule()
+	input := &types.Model{
+		TechnicalAssets: map[string]*types.TechnicalAsset{
+			"ta1": {
+				Id:    "ta1",
+				Title: "Test Technical Asset",
+				Type:  types.Process,
+				Technologies: types.TechnologyList{
+					{
+						Name: "some-technology",
+						Attributes: map[string]bool{
+							types.IsDevelopmentRelevant: true,
+						},
+					},
+				},
+			},
+		},
+	}
+	input.TechnicalAssets["ta1"].RAA = 55
+
+	risks, err := rule.GenerateRisks(input)
+
+	assert.Nil(t, err)
+	assert.Len(t, risks, 1)
+	assert.Equal(t, types.LowImpact, risks[0].ExploitationImpact)
+	assert.Equal(t, "<b>Missing Hardening</b> risk at <b>Test Technical Asset</b>", risks[0].Title)
+}
+
+func TestMissingHardeningRuleAssetBothDatastoreAndHighValueTargetWithRAA40OnlyOneRiskCreated(t *testing.T) {
+	rule := NewMissingHardeningRule()
+	input := &types.Model{
+		TechnicalAssets: map[string]*types.TechnicalAsset{
+			"ta1": {
+				Id:   "ta1",
+				Title: "Test Technical Asset",
+				Type: types.Datastore,
+				Technologies: types.TechnologyList{
+					{
+						Name: "some-technology",
+						Attributes: map[string]bool{
+							types.IsHighValueTarget: true,
+						},
+					},
+				},
+			},
+		},
+	}
+	input.TechnicalAssets["ta1"].RAA = 40
+
+	risks, err := rule.GenerateRisks(input)
+
+	assert.Nil(t, err)
+	assert.Len(t, risks, 1)
+	assert.Equal(t, types.LowImpact, risks[0].ExploitationImpact)
+}
+
+func TestMissingHardeningRuleConfidentialDataNotStrictlyConfidentialWithRAA55LowImpact(t *testing.T) {
+	rule := NewMissingHardeningRule()
+	input := &types.Model{
+		TechnicalAssets: map[string]*types.TechnicalAsset{
+			"ta1": {
+				Id:    "ta1",
+				Title: "Test Technical Asset",
+				Type:  types.Process,
+				Technologies: types.TechnologyList{
+					{
+						Name:       "some-technology",
+						Attributes: map[string]bool{},
+					},
+				},
+				DataAssetsProcessed: []string{"da1"},
+			},
+		},
+		DataAssets: map[string]*types.DataAsset{
+			"da1": {
+				Title:           "Test Data Asset",
+				Confidentiality: types.Confidential,
+			},
+		},
+	}
+	input.TechnicalAssets["ta1"].RAA = 55
+
+	risks, err := rule.GenerateRisks(input)
+
+	assert.Nil(t, err)
+	assert.Len(t, risks, 1)
+	// Confidential is not StrictlyConfidential, so rule uses == check -> LowImpact
+	assert.Equal(t, types.LowImpact, risks[0].ExploitationImpact)
+}
+
+func TestMissingHardeningRuleMultipleAssetsMeetingThresholdEachGeneratesIndependentRisk(t *testing.T) {
+	rule := NewMissingHardeningRule()
+	input := &types.Model{
+		TechnicalAssets: map[string]*types.TechnicalAsset{
+			"ta1": {
+				Id:    "ta1",
+				Title: "Asset One",
+				Type:  types.Process,
+				Technologies: types.TechnologyList{
+					{
+						Name:       "some-technology",
+						Attributes: map[string]bool{},
+					},
+				},
+			},
+			"ta2": {
+				Id:    "ta2",
+				Title: "Asset Two",
+				Type:  types.Datastore,
+				Technologies: types.TechnologyList{
+					{
+						Name:       "some-technology",
+						Attributes: map[string]bool{},
+					},
+				},
+			},
+			"ta3": {
+				Id:    "ta3",
+				Title: "Asset Three",
+				Type:  types.Process,
+				Technologies: types.TechnologyList{
+					{
+						Name: "high-value-tech",
+						Attributes: map[string]bool{
+							types.IsHighValueTarget: true,
+						},
+					},
+				},
+			},
+		},
+	}
+	input.TechnicalAssets["ta1"].RAA = 55
+	input.TechnicalAssets["ta2"].RAA = 40
+	input.TechnicalAssets["ta3"].RAA = 40
+
+	risks, err := rule.GenerateRisks(input)
+
+	assert.Nil(t, err)
+	assert.Len(t, risks, 3)
+}
