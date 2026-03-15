@@ -2969,7 +2969,7 @@ func (r *pdfReporter) createTechnicalAssets(parsedModel *types.Model) {
 			r.pdfColorGray()
 			r.pdf.SetFont("Helvetica", "", fontSizeBody)
 			r.pdf.SetLeftMargin(15)
-			text := "No risksStr were identified."
+			text := "No risks were identified."
 			if technicalAsset.OutOfScope {
 				text = "Asset was defined as out-of-scope."
 			}
@@ -3904,7 +3904,7 @@ func (r *pdfReporter) createDataAssets(parsedModel *types.Model) {
 			r.pdf.MultiCell(145, 6, "This data asset has no data breach potential.", "0", "0", false)
 		} else {
 			r.pdfColorBlack()
-			riskRemainingStr := "risksStr"
+			riskRemainingStr := "risks"
 			if countStillAtRisk == 1 {
 				riskRemainingStr = "risk"
 			}
