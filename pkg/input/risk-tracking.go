@@ -3,11 +3,11 @@ package input
 import "fmt"
 
 type RiskTracking struct {
-	Status        string `yaml:"status,omitempty" json:"status,omitempty"`
-	Justification string `yaml:"justification,omitempty" json:"justification,omitempty"`
-	Ticket        string `yaml:"ticket,omitempty" json:"ticket,omitempty"`
-	Date          string `yaml:"date,omitempty" json:"date,omitempty"`
-	CheckedBy     string `yaml:"checked_by,omitempty" json:"checked_by,omitempty"`
+	Status        string `yaml:"status" json:"status"`
+	Justification string `yaml:"justification" json:"justification"`
+	Ticket        string `yaml:"ticket" json:"ticket"`
+	Date          string `yaml:"date" json:"date"`
+	CheckedBy     string `yaml:"checked_by" json:"checked_by"`
 }
 
 func (what *RiskTracking) Merge(other RiskTracking) error {

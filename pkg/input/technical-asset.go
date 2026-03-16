@@ -3,33 +3,33 @@ package input
 import "fmt"
 
 type TechnicalAsset struct {
-	ID                      string                       `yaml:"id,omitempty" json:"id,omitempty"`
-	Description             string                       `yaml:"description,omitempty" json:"description,omitempty"`
-	Type                    string                       `yaml:"type,omitempty" json:"type,omitempty"`
-	Usage                   string                       `yaml:"usage,omitempty" json:"usage,omitempty"`
-	UsedAsClientByHuman     bool                         `yaml:"used_as_client_by_human,omitempty" json:"used_as_client_by_human,omitempty"`
-	OutOfScope              bool                         `yaml:"out_of_scope,omitempty" json:"out_of_scope,omitempty"`
+	ID                      string                       `yaml:"id" json:"id"`
+	Description             string                       `yaml:"description" json:"description"`
+	Type                    string                       `yaml:"type" json:"type"`
+	Usage                   string                       `yaml:"usage" json:"usage"`
+	UsedAsClientByHuman     bool                         `yaml:"used_as_client_by_human" json:"used_as_client_by_human"`
+	OutOfScope              bool                         `yaml:"out_of_scope" json:"out_of_scope"`
 	JustificationOutOfScope string                       `yaml:"justification_out_of_scope,omitempty" json:"justification_out_of_scope,omitempty"`
-	Size                    string                       `yaml:"size,omitempty" json:"size,omitempty"`
+	Size                    string                       `yaml:"size" json:"size"`
 	Technology              string                       `yaml:"technology,omitempty" json:"technology,omitempty"`
 	Technologies            []string                     `yaml:"technologies,omitempty" json:"technologies,omitempty"`
 	Tags                    []string                     `yaml:"tags,omitempty" json:"tags,omitempty"`
-	Internet                bool                         `yaml:"internet,omitempty" json:"internet,omitempty"`
-	Machine                 string                       `yaml:"machine,omitempty" json:"machine,omitempty"`
-	Encryption              string                       `yaml:"encryption,omitempty" json:"encryption,omitempty"`
-	Owner                   string                       `yaml:"owner,omitempty" json:"owner,omitempty"`
-	Confidentiality         string                       `yaml:"confidentiality,omitempty" json:"confidentiality,omitempty"`
-	Integrity               string                       `yaml:"integrity,omitempty" json:"integrity,omitempty"`
-	Availability            string                       `yaml:"availability,omitempty" json:"availability,omitempty"`
+	Internet                bool                         `yaml:"internet" json:"internet"`
+	Machine                 string                       `yaml:"machine" json:"machine"`
+	Encryption              string                       `yaml:"encryption" json:"encryption"`
+	Owner                   string                       `yaml:"owner" json:"owner"`
+	Confidentiality         string                       `yaml:"confidentiality" json:"confidentiality"`
+	Integrity               string                       `yaml:"integrity" json:"integrity"`
+	Availability            string                       `yaml:"availability" json:"availability"`
 	JustificationCiaRating  string                       `yaml:"justification_cia_rating,omitempty" json:"justification_cia_rating,omitempty"`
-	MultiTenant             bool                         `yaml:"multi_tenant,omitempty" json:"multi_tenant,omitempty"`
-	Redundant               bool                         `yaml:"redundant,omitempty" json:"redundant,omitempty"`
-	CustomDevelopedParts    bool                         `yaml:"custom_developed_parts,omitempty" json:"custom_developed_parts,omitempty"`
-	DataAssetsProcessed     []string                     `yaml:"data_assets_processed,omitempty" json:"data_assets_processed,omitempty"`
-	DataAssetsStored        []string                     `yaml:"data_assets_stored,omitempty" json:"data_assets_stored,omitempty"`
-	DataFormatsAccepted     []string                     `yaml:"data_formats_accepted,omitempty" json:"data_formats_accepted,omitempty"`
+	MultiTenant             bool                         `yaml:"multi_tenant" json:"multi_tenant"`
+	Redundant               bool                         `yaml:"redundant" json:"redundant"`
+	CustomDevelopedParts    bool                         `yaml:"custom_developed_parts" json:"custom_developed_parts"`
+	DataAssetsProcessed     []string                     `yaml:"data_assets_processed" json:"data_assets_processed"`
+	DataAssetsStored        []string                     `yaml:"data_assets_stored" json:"data_assets_stored"`
+	DataFormatsAccepted     []string                     `yaml:"data_formats_accepted" json:"data_formats_accepted"`
 	DiagramTweakOrder       int                          `yaml:"diagram_tweak_order,omitempty" json:"diagram_tweak_order,omitempty"`
-	CommunicationLinks      map[string]CommunicationLink `yaml:"communication_links,omitempty" json:"communication_links,omitempty"`
+	CommunicationLinks      map[string]CommunicationLink `yaml:"communication_links" json:"communication_links"`
 }
 
 func (what *TechnicalAsset) Merge(other TechnicalAsset) error {
