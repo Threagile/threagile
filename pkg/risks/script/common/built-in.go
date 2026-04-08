@@ -41,13 +41,21 @@ func calculateSeverityFunc(parameters []Value) (Value, error) {
 	if likelihoodError != nil {
 		return nil, fmt.Errorf("failed to calculate severity: %w", likelihoodError)
 	}
-	likelihoodDecimal := likelihoodValue.Value().(decimal.Decimal).IntPart()
+	likelihoodDecimalValue, ok := likelihoodValue.Value().(decimal.Decimal)
+	if !ok {
+		return nil, fmt.Errorf("failed to calculate severity: likelihood is not a decimal, got %T", likelihoodValue.Value())
+	}
+	likelihoodDecimal := likelihoodDecimalValue.IntPart()
 
 	impactValue, impactError := toImpact(parameters[1])
 	if impactError != nil {
 		return nil, fmt.Errorf("failed to calculate severity: %w", impactError)
 	}
-	impactDecimal := impactValue.Value().(decimal.Decimal).IntPart()
+	impactDecimalValue, ok := impactValue.Value().(decimal.Decimal)
+	if !ok {
+		return nil, fmt.Errorf("failed to calculate severity: impact is not a decimal, got %T", impactValue.Value())
+	}
+	impactDecimal := impactDecimalValue.IntPart()
 
 	return SomeStringValue(types.CalculateSeverity(types.RiskExploitationLikelihood(likelihoodDecimal), types.RiskExploitationImpact(impactDecimal)).String(), nil), nil
 }

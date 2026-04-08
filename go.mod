@@ -1,6 +1,6 @@
 module github.com/threagile/threagile
 
-go 1.24.2
+go 1.26.0
 
 require (
 	github.com/chzyer/readline v1.5.1
@@ -38,7 +38,7 @@ require (
 	github.com/richardlehane/msoleps v1.0.4 // indirect
 	github.com/spf13/pflag v1.0.6 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
-	golang.org/x/sys v0.38.0 // indirect
+	golang.org/x/sys v0.41.0 // indirect
 )
 
 require (
@@ -59,6 +59,6 @@ require (
 	github.com/xuri/nfp v0.0.0-20250226145837-86d5fc24b2ba // indirect
 	golang.org/x/arch v0.17.0 // indirect
 	golang.org/x/image v0.26.0 // indirect
-	golang.org/x/net v0.47.0 // indirect
+	golang.org/x/net v0.51.0 // indirect
 	google.golang.org/protobuf v1.36.6 // indirect
 )

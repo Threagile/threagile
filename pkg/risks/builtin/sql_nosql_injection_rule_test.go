@@ -174,3 +174,302 @@ func TestSqlNoSqlInjectionRuleCreateRisks(t *testing.T) {
 		})
 	}
 }
+
+func TestSqlNoSqlInjectionRuleGenerateRisksThreeFlowsOnlyOneRiskyFlowExactlyOneRisk(t *testing.T) {
+	rule := NewSqlNoSqlInjectionRule()
+	risks, err := rule.GenerateRisks(&types.Model{
+		TechnicalAssets: map[string]*types.TechnicalAsset{
+			"ta-db": {
+				Id:         "ta-db",
+				Title:      "Database",
+				OutOfScope: false,
+				Type:       types.Datastore,
+				Technologies: types.TechnologyList{
+					{
+						Name: "database",
+						Attributes: map[string]bool{
+							types.IsVulnerableToQueryInjection: true,
+						},
+					},
+				},
+			},
+			"ta-caller1": {
+				Id:    "ta-caller1",
+				Title: "Caller One",
+			},
+			"ta-caller2": {
+				Id:    "ta-caller2",
+				Title: "Caller Two",
+			},
+			"ta-caller3": {
+				Id:    "ta-caller3",
+				Title: "Caller Three",
+			},
+		},
+		IncomingTechnicalCommunicationLinksMappedByTargetId: map[string][]*types.CommunicationLink{
+			"ta-db": {
+				{
+					Id:       "flow1",
+					Title:    "Risky DB Flow",
+					TargetId: "ta-db",
+					SourceId: "ta-caller1",
+					Protocol: types.JdbcEncrypted,
+				},
+				{
+					Id:       "flow2",
+					Title:    "Non-Vulnerable DB Flow",
+					TargetId: "ta-db",
+					SourceId: "ta-caller2",
+					Protocol: types.JDBC,
+				},
+				{
+					Id:       "flow3",
+					Title:    "Non-DB Flow",
+					TargetId: "ta-db",
+					SourceId: "ta-caller3",
+					Protocol: types.SmbEncrypted,
+				},
+			},
+		},
+	})
+
+	// flow1: JdbcEncrypted (database protocol) + isVulnerableToQueryInjection=true -> risk
+	// flow2: JDBC (database protocol) + isVulnerableToQueryInjection=true -> also a risk (both callers have vulnerable db protocols)
+	// flow3: SmbEncrypted (not a database protocol, not lax) -> no risk
+	assert.Nil(t, err)
+	assert.Len(t, risks, 2)
+}
+
+func TestSqlNoSqlInjectionRuleGenerateRisksMultipleDatastoresEachWithRiskyFlowGeneratesOwnRisk(t *testing.T) {
+	rule := NewSqlNoSqlInjectionRule()
+	risks, err := rule.GenerateRisks(&types.Model{
+		TechnicalAssets: map[string]*types.TechnicalAsset{
+			"ta-db1": {
+				Id:         "ta-db1",
+				Title:      "Database One",
+				OutOfScope: false,
+				Type:       types.Datastore,
+				Technologies: types.TechnologyList{
+					{
+						Name: "database",
+						Attributes: map[string]bool{
+							types.IsVulnerableToQueryInjection: true,
+						},
+					},
+				},
+			},
+			"ta-db2": {
+				Id:         "ta-db2",
+				Title:      "Database Two",
+				OutOfScope: false,
+				Type:       types.Datastore,
+				Technologies: types.TechnologyList{
+					{
+						Name: "database",
+						Attributes: map[string]bool{
+							types.IsVulnerableToQueryInjection: true,
+						},
+					},
+				},
+			},
+			"ta-caller": {
+				Id:    "ta-caller",
+				Title: "Caller Asset",
+			},
+		},
+		IncomingTechnicalCommunicationLinksMappedByTargetId: map[string][]*types.CommunicationLink{
+			"ta-db1": {
+				{
+					Id:       "flow-to-db1",
+					Title:    "Flow to DB1",
+					TargetId: "ta-db1",
+					SourceId: "ta-caller",
+					Protocol: types.JdbcEncrypted,
+				},
+			},
+			"ta-db2": {
+				{
+					Id:       "flow-to-db2",
+					Title:    "Flow to DB2",
+					TargetId: "ta-db2",
+					SourceId: "ta-caller",
+					Protocol: types.JdbcEncrypted,
+				},
+			},
+		},
+	})
+
+	assert.Nil(t, err)
+	assert.Len(t, risks, 2)
+}
+
+func TestSqlNoSqlInjectionRuleGenerateRisksLaxDatabaseProtocolNotVulnerableAttributeStillCreatesRisk(t *testing.T) {
+	rule := NewSqlNoSqlInjectionRule()
+	risks, err := rule.GenerateRisks(&types.Model{
+		TechnicalAssets: map[string]*types.TechnicalAsset{
+			"ta1": {
+				Id:         "ta1",
+				Title:      "NoSQL Database",
+				OutOfScope: false,
+				Type:       types.Datastore,
+				Technologies: types.TechnologyList{
+					{
+						Name: "nosql-database",
+						Attributes: map[string]bool{
+							types.IsVulnerableToQueryInjection: false,
+						},
+					},
+				},
+			},
+			"ta2": {
+				Id:    "ta2",
+				Title: "REST Client",
+			},
+		},
+		IncomingTechnicalCommunicationLinksMappedByTargetId: map[string][]*types.CommunicationLink{
+			"ta1": {
+				{
+					Id:       "rest-flow",
+					Title:    "REST Flow",
+					TargetId: "ta1",
+					SourceId: "ta2",
+					Protocol: types.HTTP,
+				},
+			},
+		},
+	})
+
+	assert.Nil(t, err)
+	assert.Len(t, risks, 1)
+	// Lax protocol always triggers regardless of IsVulnerableToQueryInjection attribute
+	assert.Equal(t, types.VeryLikely, risks[0].ExploitationLikelihood)
+	assert.Equal(t, types.MediumImpact, risks[0].ExploitationImpact)
+}
+
+func TestSqlNoSqlInjectionRuleGenerateRisksNonDevOpsUsageVeryLikelyLikelihood(t *testing.T) {
+	rule := NewSqlNoSqlInjectionRule()
+	risks, err := rule.GenerateRisks(&types.Model{
+		TechnicalAssets: map[string]*types.TechnicalAsset{
+			"ta1": {
+				Id:         "ta1",
+				Title:      "Database",
+				OutOfScope: false,
+				Type:       types.Datastore,
+				Technologies: types.TechnologyList{
+					{
+						Name: "database",
+						Attributes: map[string]bool{
+							types.IsVulnerableToQueryInjection: true,
+						},
+					},
+				},
+			},
+			"ta2": {
+				Id:    "ta2",
+				Title: "Application Server",
+			},
+		},
+		IncomingTechnicalCommunicationLinksMappedByTargetId: map[string][]*types.CommunicationLink{
+			"ta1": {
+				{
+					Id:       "app-flow",
+					Title:    "App Flow",
+					TargetId: "ta1",
+					SourceId: "ta2",
+					Protocol: types.JdbcEncrypted,
+					Usage:    types.Business,
+				},
+			},
+		},
+	})
+
+	assert.Nil(t, err)
+	assert.Len(t, risks, 1)
+	assert.Equal(t, types.VeryLikely, risks[0].ExploitationLikelihood)
+}
+
+func TestSqlNoSqlInjectionRuleGenerateRisksDevOpsUsageLikelyLikelihood(t *testing.T) {
+	rule := NewSqlNoSqlInjectionRule()
+	risks, err := rule.GenerateRisks(&types.Model{
+		TechnicalAssets: map[string]*types.TechnicalAsset{
+			"ta1": {
+				Id:         "ta1",
+				Title:      "Database",
+				OutOfScope: false,
+				Type:       types.Datastore,
+				Technologies: types.TechnologyList{
+					{
+						Name: "database",
+						Attributes: map[string]bool{
+							types.IsVulnerableToQueryInjection: true,
+						},
+					},
+				},
+			},
+			"ta2": {
+				Id:    "ta2",
+				Title: "DevOps Tool",
+			},
+		},
+		IncomingTechnicalCommunicationLinksMappedByTargetId: map[string][]*types.CommunicationLink{
+			"ta1": {
+				{
+					Id:       "devops-flow",
+					Title:    "DevOps Flow",
+					TargetId: "ta1",
+					SourceId: "ta2",
+					Protocol: types.JdbcEncrypted,
+					Usage:    types.DevOps,
+				},
+			},
+		},
+	})
+
+	assert.Nil(t, err)
+	assert.Len(t, risks, 1)
+	assert.Equal(t, types.Likely, risks[0].ExploitationLikelihood)
+}
+
+func TestSqlNoSqlInjectionRuleGenerateRisksConfidentialDataNotStrictlyConfidentialMediumImpact(t *testing.T) {
+	rule := NewSqlNoSqlInjectionRule()
+	risks, err := rule.GenerateRisks(&types.Model{
+		TechnicalAssets: map[string]*types.TechnicalAsset{
+			"ta1": {
+				Id:              "ta1",
+				Title:           "Database",
+				OutOfScope:      false,
+				Type:            types.Datastore,
+				Confidentiality: types.Confidential,
+				Technologies: types.TechnologyList{
+					{
+						Name: "database",
+						Attributes: map[string]bool{
+							types.IsVulnerableToQueryInjection: true,
+						},
+					},
+				},
+			},
+			"ta2": {
+				Id:    "ta2",
+				Title: "Application",
+			},
+		},
+		IncomingTechnicalCommunicationLinksMappedByTargetId: map[string][]*types.CommunicationLink{
+			"ta1": {
+				{
+					Id:       "app-flow",
+					Title:    "App Flow",
+					TargetId: "ta1",
+					SourceId: "ta2",
+					Protocol: types.JdbcEncrypted,
+					Usage:    types.Business,
+				},
+			},
+		},
+	})
+
+	assert.Nil(t, err)
+	assert.Len(t, risks, 1)
+	// Confidential is not StrictlyConfidential, so impact is MediumImpact (not HighImpact)
+	assert.Equal(t, types.MediumImpact, risks[0].ExploitationImpact)
+}

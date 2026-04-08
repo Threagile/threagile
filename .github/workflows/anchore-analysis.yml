@@ -1,18 +1,9 @@
-# This workflow checks out code, performs an Anchore container image
-# vulnerability and compliance scan, and integrates the results with
-# GitHub Advanced Security code scanning feature.  For more information on
-# the Anchore scan action usage and parameters, see
-# https://github.com/anchore/scan-action.  For more information on
-# Anchore container image scanning in general, see
-# https://docs.anchore.com.
-
 name: Anchore Container Scan
 
 on:
   push:
     branches: [master]
   pull_request:
-    # The branches below must be a subset of the branches above
     branches: [master]
   schedule:
     - cron: '0 0 1 * *'
@@ -32,7 +23,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Build the Docker image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           tags: localbuild/threagile:latest
           file: Dockerfile.local
@@ -40,12 +31,12 @@ jobs:
           load: true
 
       - name: Scan image
-        uses: anchore/scan-action@v3
+        uses: anchore/scan-action@v5
         with:
           image: "localbuild/threagile:latest"
           fail-build: false
 
       - name: Upload Anchore Scan Report
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: results.sarif

@@ -171,13 +171,13 @@ func (what *AnyExpression) evalBool(scope *common.Scope, inValue common.Value) (
 			}
 
 			if value.BoolValue() {
-				return common.SomeBoolValue(false, value.Event()), "", nil
+				return common.SomeBoolValue(true, value.Event()), "", nil
 			}
 
 			values = append(values, value)
 		}
 
-		return common.SomeBoolValue(true, common.NewEvent(common.NewFalseProperty(), inValue.Event().Origin).From(values...)), "", nil
+		return common.SomeBoolValue(false, common.NewEvent(common.NewFalseProperty(), inValue.Event().Origin).From(values...)), "", nil
 
 	case common.Value:
 		return what.evalBool(scope, common.SomeValue(castValue.Value(), inValue.Event()))
