@@ -141,12 +141,31 @@ type ByTechnicalAssetQuickWinsAndTitleSort []TechnicalAsset
 
 func (what ByTechnicalAssetQuickWinsAndTitleSort) Len() int      { return len(what) }
 func (what ByTechnicalAssetQuickWinsAndTitleSort) Swap(i, j int) { what[i], what[j] = what[j], what[i] }
-func (what ByTechnicalAssetQuickWinsAndTitleSort) Less(i, j int) bool {
-	qwLeft := what[i].QuickWins()
-	qwRight := what[j].QuickWins()
-	if qwLeft == qwRight {
-		return what[i].Title < what[j].Title
+
+	func (what ByTechnicalAssetQuickWinsAndTitleSort) Less(i, j int) bool {
+		qwLeft := what[i].QuickWins()
+		qwRight := what[j].QuickWins()
+		if qwLeft == qwRight {
+			return what[i].Title < what[j].Title
+		}
+		return qwLeft > qwRight
 	}
-	return qwLeft > qwRight
-}
 */
+func (what TechnicalAsset) IsPersistentStorageIDS() bool {
+	var flag = false
+	if what.Type == Datastore {
+		return true
+	}
+	_, isPersistentStgTech := persistStgTech[what.Technologies.String()]
+	if isPersistentStgTech {
+		return true
+	}
+
+	for _, tag := range what.Tags {
+		_, isOrgPersistStgTags := orgPersistStgTags[tag]
+		if isOrgPersistStgTags {
+			return true
+		}
+	}
+	return flag
+}

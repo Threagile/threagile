@@ -303,6 +303,10 @@ func (adoc adocReport) WriteReport(model *types.Model,
 	if err != nil {
 		return fmt.Errorf("error creating risk categories: %w", err)
 	}
+	err = adoc.privacyParameters()
+	if err != nil {
+		return fmt.Errorf("error creating privacy parameters: %w", err)
+	}
 	err = adoc.writeTechnicalAssets()
 	if err != nil {
 		return fmt.Errorf("error creating technical assets: %w", err)
@@ -1483,6 +1487,58 @@ func (adoc adocReport) writeQuestions() error {
 		adoc.writeMainLine("include::" + filename + "[leveloffset=+1]")
 	}
 
+	return nil
+}
+
+func (adoc adocReport) privacyParameters() error {
+	filename := "Privacy_Parameters.adoc"
+	f, err := os.Create(filepath.Join(adoc.targetDirectory, filename))
+	defer func() { _ = f.Close() }()
+	if err != nil {
+		return err
+	}
+	adoc.writeMainLine("<<<")
+	adoc.writeMainLine("include::" + filename + "[leveloffset=+1]")
+
+	writeLine(f, "")
+	writeLine(f, "This chapter lists privacy parameters for the model.")
+	writeLine(f, "")
+
+	writeLine(f, "")
+	writeLine(f, "*"+"delete_post_functional_need"+"*::")
+	if adoc.model.DeletePostFunctionalNeed {
+		writeLine(f, "_"+"TRUE"+"_")
+	} else {
+		writeLine(f, "_"+"FALSE"+"_")
+	}
+	writeLine(f, "")
+	writeLine(f, "*"+"deidentified"+"*::")
+	if adoc.model.Deidentified {
+		writeLine(f, "_"+"TRUE"+"_")
+	} else {
+		writeLine(f, "_"+"FALSE"+"_")
+	}
+	writeLine(f, "")
+	writeLine(f, "*"+"public_disclosure_signed"+"*::")
+	if adoc.model.PublicDisclosureSigned {
+		writeLine(f, "_"+"TRUE"+"_")
+	} else {
+		writeLine(f, "_"+"FALSE"+"_")
+	}
+	writeLine(f, "")
+	writeLine(f, "*"+"hasdatalifecyclemgmt"+"*::")
+	if adoc.model.HasDataLifeCycleMgmt {
+		writeLine(f, "_"+"TRUE"+"_")
+	} else {
+		writeLine(f, "_"+"FALSE"+"_")
+	}
+	writeLine(f, "")
+	writeLine(f, "*"+"piuseraccessmechanism"+"*::")
+	if adoc.model.PIUserAccessMechanism {
+		writeLine(f, "_"+"TRUE"+"_")
+	} else {
+		writeLine(f, "_"+"FALSE"+"_")
+	}
 	return nil
 }
 
