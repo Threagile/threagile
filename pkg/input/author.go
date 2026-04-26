@@ -7,7 +7,7 @@ import (
 )
 
 type Author struct {
-	Name     string `yaml:"name,omitempty" json:"name,omitempty"`
+	Name     string `yaml:"name" json:"name"`
 	Contact  string `yaml:"contact,omitempty" json:"contact,omitempty"`
 	Homepage string `yaml:"homepage,omitempty" json:"homepage,omitempty"`
 }

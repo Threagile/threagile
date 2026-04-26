@@ -3,16 +3,16 @@ package input
 import "fmt"
 
 type CommunicationLink struct {
-	Target                 string   `yaml:"target,omitempty" json:"target,omitempty"`
-	Description            string   `yaml:"description,omitempty" json:"description,omitempty"`
-	Protocol               string   `yaml:"protocol,omitempty" json:"protocol,omitempty"`
-	Authentication         string   `yaml:"authentication,omitempty" json:"authentication,omitempty"`
-	Authorization          string   `yaml:"authorization,omitempty" json:"authorization,omitempty"`
+	Target                 string   `yaml:"target" json:"target"`
+	Description            string   `yaml:"description" json:"description"`
+	Protocol               string   `yaml:"protocol" json:"protocol"`
+	Authentication         string   `yaml:"authentication" json:"authentication"`
+	Authorization          string   `yaml:"authorization" json:"authorization"`
 	Tags                   []string `yaml:"tags,omitempty" json:"tags,omitempty"`
-	VPN                    bool     `yaml:"vpn,omitempty" json:"vpn,omitempty"`
-	IpFiltered             bool     `yaml:"ip_filtered,omitempty" json:"ip_filtered,omitempty"`
-	Readonly               bool     `yaml:"readonly,omitempty" json:"readonly,omitempty"`
-	Usage                  string   `yaml:"usage,omitempty" json:"usage,omitempty"`
+	VPN                    bool     `yaml:"vpn" json:"vpn"`
+	IpFiltered             bool     `yaml:"ip_filtered" json:"ip_filtered"`
+	Readonly               bool     `yaml:"readonly" json:"readonly"`
+	Usage                  string   `yaml:"usage" json:"usage"`
 	DataAssetsSent         []string `yaml:"data_assets_sent,omitempty" json:"data_assets_sent,omitempty"`
 	DataAssetsReceived     []string `yaml:"data_assets_received,omitempty" json:"data_assets_received,omitempty"`
 	DiagramTweakWeight     int      `yaml:"diagram_tweak_weight,omitempty" json:"diagram_tweak_weight,omitempty"`
