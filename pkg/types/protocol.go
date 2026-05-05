@@ -63,6 +63,16 @@ const (
 	InProcessLibraryCall
 	InterProcessCommunication
 	ContainerSpawning
+	// Field bus systems
+	Modbus
+	OPC
+	S7comm
+	IEC104
+	OPCUA // encrypted
+	Profibus
+	Profinet
+	CAN
+	INTERBUS
 )
 
 func ProtocolValues() []TypeEnum {
@@ -115,6 +125,16 @@ func ProtocolValues() []TypeEnum {
 		InProcessLibraryCall,
 		InterProcessCommunication,
 		ContainerSpawning,
+		// Field bus systems
+		Modbus,
+		OPC,
+		S7comm,
+		IEC104,
+		OPCUA, // encrypted
+		Profibus,
+		Profinet,
+		CAN,
+		INTERBUS,
 	}
 }
 
@@ -167,6 +187,16 @@ var ProtocolTypeDescription = [...]TypeDescription{
 	{"in-process-library-call", "Call to local library"},
 	{"inter-process-communication", "Communication between processes via system sockets or systems like dbus"},
 	{"container-spawning", "Spawn a container"},
+	// Field bus systems
+	{"modbus", "Modbus fieldbus system"},
+	{"opc", "OPC fieldbus system"},
+	{"s7comm", "S7comm fieldbus system"},
+	{"iec104", "IEC104 fieldbus system"},
+	{"opcua", "OPCUA fieldbus system"},
+	{"profibus", "Profibus fieldbus system"},
+	{"profinet", "Profinet fieldbus system"},
+	{"can", "CAN fieldbus system"},
+	{"interbus", "Interbus fieldbus system"},
 }
 
 func ParseProtocol(value string) (protocol Protocol, err error) {
@@ -202,6 +232,11 @@ func (what Protocol) IsEncrypted() bool {
 func (what Protocol) IsPotentialDatabaseAccessProtocol() bool {
 	return what == JdbcEncrypted || what == OdbcEncrypted ||
 		what == NosqlAccessProtocolEncrypted || what == SqlAccessProtocolEncrypted || what == JDBC || what == ODBC || what == NosqlAccessProtocol || what == SqlAccessProtocol
+}
+
+func (what Protocol) IsFieldbusProtocol() bool {
+	return what == Modbus || what == OPC ||
+		what == S7comm || what == IEC104 || what == OPCUA || what == Profibus || what == Profinet || what == CAN || what == INTERBUS
 }
 
 func (what Protocol) IsPotentialLaxDatabaseAccessProtocol() bool {

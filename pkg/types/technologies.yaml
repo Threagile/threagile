@@ -190,6 +190,10 @@ function:
         function: true
         propagate_identity_to_outgoing_targets: true
 gateway:
+    aliases:
+        - jump-host
+        - jump-server
+        - jump-box
     description: A gateway connecting two systems or trust boundaries
     attributes:
         gateway: true
@@ -197,6 +201,12 @@ gateway:
         ftp_internet_access_ok: true
         http_internet_access_ok: true
         propagate_identity_to_outgoing_targets: true
+hmi:
+    aliases:
+        - human-machine-interface
+    description: Human machine interface
+    attributes:
+        high_value_target: true
 hsm:
     aliases:
         - hardware-security-module
@@ -247,6 +257,16 @@ ids:
         security_control_related: true
         unnecessary_data_tolerated: true
         unprotected_communications_tolerated: true
+industrial-control-actor:
+    description: An industrial control actor
+    attributes:
+        embedded_component: true
+        high_value_target: true
+industrial-control-sensor:
+    description: An industrial control sensor
+    attributes:
+        embedded_component: true
+        high_value_target: true
 iot-device:
     aliases:
         - iot
@@ -346,6 +366,20 @@ monitoring:
         less_protected_type: true
         unnecessary_data_tolerated: true
         unprotected_communications_tolerated: true
+operational-historian:
+    aliases:
+        - historian
+    description: Database for operational process data
+    attributes:
+        may_contain_secrets: true
+        database: true
+        vulnerable_to_query_injection: true
+plc:
+    aliases:
+        - programmable-logic-controller
+    description: A programmable logic controller
+    attributes:
+        high_value_target: true
 report-engine:
     aliases:
         - reporting
@@ -367,6 +401,10 @@ reverse-proxy:
         no_storage_at_rest: true
         propagate_identity_to_outgoing_targets: true
         traffic_forwarding: true
+scada:
+    description: Supervisory control and data acquisition, an industrial control system
+    attributes:
+        high_value_target: true
 scheduler:
     aliases:
         - cron
