@@ -215,6 +215,43 @@ func TestParseProtocol(t *testing.T) {
 			input:         "unknown",
 			expectedError: fmt.Errorf("unable to parse into type: unknown"),
 		},
+		// Fieldbus
+		"modbus": {
+			input:    "modbus",
+			expected: Modbus,
+		},
+		"opc": {
+			input:    "opc",
+			expected: OPC,
+		},
+		"s7comm": {
+			input:    "s7comm",
+			expected: S7comm,
+		},
+		"iec104": {
+			input:    "iec104",
+			expected: IEC104,
+		},
+		"opcua": {
+			input:    "opcua",
+			expected: OPCUA,
+		},
+		"profibus": {
+			input:    "profibus",
+			expected: Profibus,
+		},
+		"profinet": {
+			input:    "profinet",
+			expected: Profinet,
+		},
+		"can": {
+			input:    "can",
+			expected: CAN,
+		},
+		"interbus": {
+			input:    "interbus",
+			expected: INTERBUS,
+		},
 	}
 
 	for name, testCase := range testCases {
