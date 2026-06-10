@@ -14,19 +14,25 @@ RUN git clone https://github.com/threagile/threagile.git
 ######
 ## Stage 2: Build application with Go's build tools
 ######
-FROM golang AS build
+# Build on the native platform and cross-compile to the requested target platform.
+# BuildKit injects BUILDPLATFORM/TARGETOS/TARGETARCH automatically (multi-arch builds).
+FROM --platform=$BUILDPLATFORM golang AS build
 WORKDIR /app
 
-ENV GO111MODULE=on
-
-# https://stackoverflow.com/questions/36279253/go-compiled-binary-wont-run-in-an-alpine-docker-container-on-ubuntu-host
-#ENV CGO_ENABLED=0 # cannot be set as otherwise plugins don't run
+ARG TARGETOS
+ARG TARGETARCH
+# CGO is disabled so binaries are static and can be cross-compiled cleanly.
+# Threagile uses no cgo and no Go plugins (custom risk rules are external executables
+# invoked via os/exec), so disabling CGO is safe.
+ENV GO111MODULE=on CGO_ENABLED=0
 COPY --from=clone /app/threagile /app
 
 RUN go version
-RUN go test ./...
-RUN GOOS=linux go build -ldflags="-X main.buildTimestamp=$(date '+%Y%m%d%H%M%S')" -o risk_demo_rule cmd/risk_demo/main.go
-RUN GOOS=linux go build -ldflags="-X main.buildTimestamp=$(date '+%Y%m%d%H%M%S')" -o threagile
+# Tests can only be executed for the native build architecture; cross-compiled test
+# binaries cannot run on the builder. Run them only when not cross-compiling.
+RUN if [ "$TARGETARCH" = "$(go env GOHOSTARCH)" ]; then go test ./...; else echo "skip tests (cross-compile to $TARGETARCH)"; fi
+RUN GOOS=$TARGETOS GOARCH=$TARGETARCH go build -ldflags="-X main.buildTimestamp=$(date '+%Y%m%d%H%M%S')" -o risk_demo_rule cmd/risk_demo/main.go
+RUN GOOS=$TARGETOS GOARCH=$TARGETARCH go build -ldflags="-X main.buildTimestamp=$(date '+%Y%m%d%H%M%S')" -o threagile
 # add the -race parameter to go build call in order to instrument with race condition detector: https://blog.golang.org/race-detector
 # NOTE: copy files with final name to send to final build
 RUN cp /app/demo/example/threagile.yaml /app/demo/example/threagile-example-model.yaml

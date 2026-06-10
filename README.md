@@ -30,6 +30,19 @@ The easiest way to execute Threagile on the commandline is via its Docker contai
     docker run --rm -it threagile/threagile --help
 ```
 
+Native multi-arch images (`linux/amd64` and `linux/arm64`, e.g. for Apple Silicon Macs) are
+also published to the GitHub Container Registry and run without emulation:
+
+```shell
+    docker run --rm -it ghcr.io/threagile/threagile --help
+```
+
+To build a multi-arch image locally:
+
+```shell
+    docker buildx build --platform linux/amd64,linux/arm64 -f Dockerfile.local -t threagile .
+```
+
 Which will give you an output with possible flags that can be used with Threagile.
 
 ```

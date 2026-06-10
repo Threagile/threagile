@@ -3,24 +3,31 @@
 ######
 ## Stage 1: Build application with Go's build tools
 ######
-FROM docker.io/library/golang:alpine AS build
+# Build on the native platform and cross-compile to the requested target platform.
+# BuildKit injects BUILDPLATFORM/TARGETOS/TARGETARCH automatically (multi-arch builds).
+FROM --platform=$BUILDPLATFORM docker.io/library/golang:alpine AS build
 
 COPY . /app
 WORKDIR /app
 
-ARG GOOS=linux
-ENV GO111MODULE=on
+ARG TARGETOS
+ARG TARGETARCH
+# CGO is disabled so binaries are static and can be cross-compiled cleanly.
+# Threagile uses no cgo and no Go plugins (custom risk rules are external executables
+# invoked via os/exec), so disabling CGO is safe.
+ENV GO111MODULE=on CGO_ENABLED=0
 
 # download dependencies
 RUN go mod download
 
-# Set build-time variables
 RUN go version
-RUN go test ./...
+# Tests can only be executed for the native build architecture; cross-compiled test
+# binaries cannot run on the builder. Run them only when not cross-compiling.
+RUN if [ "$TARGETARCH" = "$(go env GOHOSTARCH)" ]; then go test ./...; else echo "skip tests (cross-compile to $TARGETARCH)"; fi
 
-# build binaries
-RUN go build -ldflags="-X main.buildTimestamp=$(date '+%Y%m%d%H%M%S')" -o risk_demo_rule cmd/risk_demo/main.go
-RUN go build -ldflags="-X main.buildTimestamp=$(date '+%Y%m%d%H%M%S')" -o threagile cmd/threagile/main.go
+# build binaries for the target platform
+RUN GOOS=$TARGETOS GOARCH=$TARGETARCH go build -ldflags="-X main.buildTimestamp=$(date '+%Y%m%d%H%M%S')" -o risk_demo_rule cmd/risk_demo/main.go
+RUN GOOS=$TARGETOS GOARCH=$TARGETARCH go build -ldflags="-X main.buildTimestamp=$(date '+%Y%m%d%H%M%S')" -o threagile cmd/threagile/main.go
 
 # add the -race parameter to go build call in order to instrument with race condition detector: https://blog.golang.org/race-detector
 # NOTE: copy files with final name to send to final build
